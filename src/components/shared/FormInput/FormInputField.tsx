@@ -1,7 +1,12 @@
 import { FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { forwardRef } from "react";
+import FormSelect from "../FormSelect/FormSelect";
 
+interface Option {
+  value: string;
+  label: string;
+}
 interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   type?: string;
   id?: string;
@@ -12,6 +17,9 @@ interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: { message?: string };
   containerClass?: string;
   isMandatory?: boolean | number;
+  options?: Option[];
+  selectedCodeValue?: string;
+  onCountryCodeChange?: (value: string) => void;
 }
 
 const FormInputField = forwardRef<HTMLInputElement, FormInputProps>(
@@ -24,10 +32,15 @@ const FormInputField = forwardRef<HTMLInputElement, FormInputProps>(
       containerClass = "",
       error,
       isMandatory = false,
+      options,
+      selectedCodeValue,
+      onCountryCodeChange,
       ...rest
     },
     ref,
   ) => {
+    const handleCodeChange: (value: string) => void =
+      onCountryCodeChange || (() => {});
     return (
       <FormItem className={containerClass}>
         {label && (
@@ -35,15 +48,26 @@ const FormInputField = forwardRef<HTMLInputElement, FormInputProps>(
             {label} {isMandatory && <span className="text-red-500">*</span>}
           </FormLabel>
         )}
-        <FormControl>
-          <Input
-            id={id}
-            placeholder={placeholder}
-            className={className}
-            {...rest}
-            ref={ref}
-          />
-        </FormControl>
+        <div className="flex gap-x-2">
+          {options && (
+            <FormSelect
+              id={`${id}-select`}
+              options={options}
+              value={selectedCodeValue}
+              onChange={handleCodeChange}
+              disabled={rest.disabled}
+            />
+          )}
+          <FormControl>
+            <Input
+              id={id}
+              placeholder={placeholder}
+              className={className}
+              {...rest}
+              ref={ref}
+            />
+          </FormControl>
+        </div>
         {error?.message && (
           <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
             {error.message}

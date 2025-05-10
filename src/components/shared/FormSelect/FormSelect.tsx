@@ -22,6 +22,7 @@ interface FormSelectProps {
   disabled?: boolean;
   error?: { message?: string };
   placeholder?: string;
+  className?: string;
 }
 
 export default function FormSelect({
@@ -32,10 +33,11 @@ export default function FormSelect({
   options,
   disabled = false,
   error,
+  className,
   placeholder = "Select an option",
 }: FormSelectProps) {
   return (
-    <div className="space-y-1 w-full">
+    <div className={className}>
       {label && (
         <FormLabel className="mb-2" htmlFor={id}>
           {label}

@@ -22,8 +22,8 @@ const Login: React.FC = () => {
     // companies,
     // isCompanyModalOpen,
     // handleLogin,
-    // countryCode,
-    // setCountryCode,
+    countryCode,
+    setCountryCode,
     // setCompanyModalOpen,
     // handleSubmit,
   } = useLogin();
@@ -85,11 +85,11 @@ const Login: React.FC = () => {
                 className=""
                 error={errors.mobile}
                 placeholder="Enter mobile number"
-                // options={[{ value: "+91", label: "+91" }]}
-                // disabled={statusSentOtp}
+                disabled={false}
                 required={true}
-                // selectedCodeValue={countryCode}
-                // onCountryCodeChange={setCountryCode}
+                options={[{ value: "+91", label: "+91" }]}
+                selectedCodeValue={countryCode ? countryCode : "+91"}
+                onCountryCodeChange={setCountryCode}
               />
               {/* 
               {statusSentOtp && (

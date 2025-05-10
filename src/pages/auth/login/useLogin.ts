@@ -1,5 +1,5 @@
 // import axios from "axios";
-// import { useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 // import { toast } from "react-toastify";
 // import { useAuth } from "~/context/AuthProvider";
@@ -12,7 +12,7 @@ const useLogin = () => {
   // const [companies, setCompanies] = useState([]); // Store multiple companies
   // const [isCompanyModalOpen, setCompanyModalOpen] = useState(false); // Modal state
   // const [loginDetails, setLoginDetails] = useState(false); // Modal state
-  // const [countryCode, setCountryCode] = useState("+91");
+  const [countryCode, setCountryCode] = useState("+91");
   const {
     register,
     handleSubmit,
@@ -91,17 +91,15 @@ const useLogin = () => {
     //       company?.loginDetails?.userType?.value,
     //   });
     //   if (response.data?.status) {
-    //     // Complete the login process
-    //     setToken(response.data.user.token, response.data.user); // Save token and user data
+    //     setToken(response.data.user.token, response.data.user);
     //     toast.success("Login successful!");
-    //     reset(); // Reset the form
-    //     setCompanyModalOpen(false); // Close the modal
+    //     reset();
+    //     setCompanyModalOpen(false);
     //     setLoginDetails(null);
     //     if (company?.isReload) {
     //       setTimeout(() => {
-    //         // eslint-disable-next-line no-self-assign
-    //         window.location.href = window.location.href; // Hard refresh
-    //       }, 500); // Slight delay to ensure state updates
+    //         window.location.href = window.location.href;
+    //       }, 500);
     //     }
     //   } else {
     //     throw new Error(response.data?.message || "Failed to select company");
@@ -112,7 +110,7 @@ const useLogin = () => {
     //     err.response?.data?.message || err.message || "Failed to select company"
     //   );
     // } finally {
-    //   setLoading(false); // Stop loading spinner
+    //   setLoading(false);
     // }
   };
 
@@ -157,8 +155,8 @@ const useLogin = () => {
     // companies,
     // isCompanyModalOpen,
     handleLogin,
-    // countryCode,
-    // setCountryCode,
+    countryCode,
+    setCountryCode,
     // setCompanyModalOpen,
     reset,
   };
