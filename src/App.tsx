@@ -1,9 +1,13 @@
-import Login from "./pages/auth/login/Login";
+import { QueryClientProvider } from "@tanstack/react-query";
+import AppRoutes from "./routes";
+import { queryClient } from "./queryClient";
 
 function App() {
   return (
     <>
-      <Login />
+      <QueryClientProvider client={queryClient}>
+        <AppRoutes />
+      </QueryClientProvider>
     </>
   );
 }

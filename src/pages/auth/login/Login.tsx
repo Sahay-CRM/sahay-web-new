@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useMemo } from "react";
 import useLogin from "./useLogin";
 import logoImg from "@/assets/logo_1.png";
 import FormSelect from "@/components/shared/FormSelect/FormSelect";
@@ -8,16 +8,22 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Controller, useForm } from "react-hook-form";
 import { Card } from "@/components/ui/card";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
+import { Label } from "@/components/ui/label";
 
 const Login: React.FC = () => {
   const {
     register,
     handleFormSubmit,
-    // statusSentOtp,
+    statusSentOtp,
     errors,
     // loading,
     // trigger,
-    // setValue,
+    setValue,
     control,
     // companies,
     // isCompanyModalOpen,
@@ -28,13 +34,15 @@ const Login: React.FC = () => {
     // handleSubmit,
   } = useLogin();
 
-  const onSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      handleFormSubmit();
-    },
-    [handleFormSubmit],
-  );
+  const REGEXP_ONLY_DIGITS = "^[0-9]+$";
+
+  // const onSubmit = useCallback(
+  //   (e: React.FormEvent) => {
+  //     e.preventDefault();
+  //     handleFormSubmit();
+  //   },
+  //   [handleFormSubmit],
+  // );
 
   const loginOptions = useMemo(
     () => [
@@ -50,7 +58,7 @@ const Login: React.FC = () => {
     <Form {...methods}>
       <form
         className="min-h-screen flex flex-col justify-center items-center p-4"
-        onSubmit={onSubmit}
+        onSubmit={handleFormSubmit}
       >
         <Card className={""}>
           <div className="flex p-2 rounded-tr-lg rounded-tl-lg">
@@ -91,32 +99,57 @@ const Login: React.FC = () => {
                 selectedCodeValue={countryCode ? countryCode : "+91"}
                 onCountryCodeChange={setCountryCode}
               />
-              {/* 
+
               {statusSentOtp && (
-                <> */}
-              {/* <InputOTP
-                length={4}
-                name="otp"
-                register={register}
-                setValue={setValue}
-                trigger={trigger}
-                validation={{
-                  minLength: {
-                    value: 4,
-                    message: "OTP must be 4 digits",
-                  },
-                }}
-                onComplete={handleFormSubmit}
-                errors={errors}
-              /> */}
-              {/* {errors.otp && (
-                  <p className="text-red-500 mt-1">{errors.otp.message}</p>
-                )} */}
-              {/* </>
-              )} */}
+                <>
+                  <div className="space-y-3 text-center w-full">
+                    <Label className="text-white text-base font-medium after:content-['_*'] after:text-red-500">
+                      Enter Otp
+                    </Label>
+                    <div className="flex justify-center w-full">
+                      <InputOTP
+                        maxLength={4}
+                        pattern={REGEXP_ONLY_DIGITS}
+                        // value={otpValue}
+                        onChange={(val) => {
+                          // setOtpValue(val);
+                          setValue("otp", val, { shouldValidate: true });
+                        }}
+                        className="text-white bg-transparent w-full max-w-xs"
+                      >
+                        <InputOTPGroup className="flex justify-center gap-2 sm:gap-3 md:gap-4 w-full">
+                          {[...Array(4)].map((_, i) => (
+                            <InputOTPSlot
+                              key={i}
+                              index={i}
+                              autoFocus={i === 0}
+                              className="w-10 h-12 sm:w-13 sm:h-14 text-center text-lg sm:text-xl bg-black text-white rounded-md border border-zinc-700 focus:border-white focus:ring-2 focus:ring-white outline-none transition-all"
+                            />
+                          ))}
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </div>
+                    <input
+                      type="hidden"
+                      {...register("otp", {
+                        required: "Please Enter Otp",
+                        maxLength: {
+                          value: 6,
+                          message: "OTP must be 6 digits",
+                        },
+                      })}
+                    />
+                    {errors.otp && (
+                      <p className="text-sm text-red-500 text-center mt-1">
+                        {errors.otp.message}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
 
               <Button
-                onClick={onSubmit}
+                onClick={handleFormSubmit}
                 // disabled={loading}
                 className="w-full mt-4"
               >

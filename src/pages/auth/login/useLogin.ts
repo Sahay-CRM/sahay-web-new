@@ -1,13 +1,20 @@
 // import axios from "axios";
+import { sendOtpMutation, verifyOtpMutation } from "@/features/api/login";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 // import { toast } from "react-toastify";
 // import { useAuth } from "~/context/AuthProvider";
 // import { baseUrl } from "~/utils/app.utils";
 
 const useLogin = () => {
+  const { mutate: sendOtp } = sendOtpMutation();
+  const { mutate: VerifyOtp } = verifyOtpMutation();
+
   // const [loading, setLoading] = useState(false);
-  // const [statusSentOtp, setStatusSentOtp] = useState(false);
+  const [statusSentOtp, setStatusSentOtp] = useState(false);
+
+  const navigate = useNavigate();
   // const [number, setNumber] = useState(null);
   // const [companies, setCompanies] = useState([]); // Store multiple companies
   // const [isCompanyModalOpen, setCompanyModalOpen] = useState(false); // Modal state
@@ -21,7 +28,13 @@ const useLogin = () => {
     formState: { errors },
     reset,
     control,
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      mobile: "",
+      userType: "",
+      otp: "",
+    },
+  });
 
   // const sendOtpApi = async (mobileNumber, userType) => {
   //   setNumber(mobileNumber); // Save the number to state for later use
@@ -114,7 +127,31 @@ const useLogin = () => {
     // }
   };
 
-  const onSubmit = async () => {
+  const onSubmit = async (data: Login) => {
+    if (!statusSentOtp) {
+      const sendData = {
+        mobile: countryCode + data.mobile,
+        userType: data.userType,
+      };
+
+      sendOtp(sendData, {
+        onSuccess: (response) => {
+          setStatusSentOtp(response.status);
+        },
+      });
+    } else {
+      const verifyData = {
+        mobile: countryCode + data.mobile,
+        userType: data.userType,
+        otp: data.otp,
+      };
+      VerifyOtp(verifyData, {
+        onSuccess: () => {
+          navigate("/dashboard"); // Corrected route
+        },
+      });
+    }
+
     // setLoginDetails({ ...data, mobile: countryCode + data.mobile });
     // let mobileNum = countryCode + data.mobile;
     // if (!statusSentOtp) {
@@ -141,14 +178,12 @@ const useLogin = () => {
     // }
   };
 
-  const handleFormSubmit = handleSubmit(onSubmit);
-
   return {
     register,
-    handleFormSubmit,
+    handleFormSubmit: handleSubmit(onSubmit),
     errors,
     // loading,
-    // statusSentOtp,
+    statusSentOtp,
     trigger,
     setValue,
     control,
@@ -159,6 +194,7 @@ const useLogin = () => {
     setCountryCode,
     // setCompanyModalOpen,
     reset,
+    onSubmit,
   };
 };
 
