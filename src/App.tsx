@@ -5,9 +5,11 @@ import AuthProvider from "./features/auth/AuthProvider";
 import { PermissionsProvider } from "./features/auth/permissions/PermissionsProvider";
 import { SidebarThemeProvider } from "./features/auth/SidebarThemeProvider";
 
+
 function App() {
   return (
     <>
+
       <AuthProvider>
         <SidebarThemeProvider>
           <PermissionsProvider>
@@ -17,6 +19,11 @@ function App() {
           </PermissionsProvider>
         </SidebarThemeProvider>
       </AuthProvider>
+
+      <QueryClientProvider client={queryClient}>
+        <AppRoutes />
+      </QueryClientProvider>
+
     </>
   );
 }
