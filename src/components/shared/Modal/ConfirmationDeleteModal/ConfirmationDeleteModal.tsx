@@ -1,7 +1,9 @@
 import ModalData from "../ModalData";
 
 interface TeamModalProps {
-  modalData: TeamData;
+  modalData: string;
+  label: string;
+  title: string;
   isModalOpen: boolean;
   modalClose: () => void;
   onSubmit: () => void;
@@ -9,6 +11,8 @@ interface TeamModalProps {
 }
 
 const ConfirmationDeleteModal: React.FC<TeamModalProps> = ({
+  title,
+  label,
   modalData,
   isModalOpen,
   modalClose,
@@ -19,7 +23,7 @@ const ConfirmationDeleteModal: React.FC<TeamModalProps> = ({
     <div>
       <ModalData
         isModalOpen={isModalOpen}
-        modalTitle="Team Delete"
+        modalTitle={title}
         modalClose={modalClose}
         isCloseButton={true}
         buttons={[
@@ -38,8 +42,8 @@ const ConfirmationDeleteModal: React.FC<TeamModalProps> = ({
         <div>
           <div>
             <div>
-              <span className="font-semibold">Team Name:</span>{" "}
-              <span>{modalData.teamName}</span>
+              <span className="font-semibold">{label}</span>{" "}
+              <span>{modalData}</span>
             </div>
           </div>
           {isChildData && (

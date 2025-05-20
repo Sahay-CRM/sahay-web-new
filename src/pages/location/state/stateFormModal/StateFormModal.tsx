@@ -1,7 +1,7 @@
 import { FormProvider, useForm } from "react-hook-form";
-import useCountryFormModal from "./useCountryFormModal";
 import ModalData from "@/components/shared/Modal/ModalData";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
+import useStateFormModal from "./useStateFormModal";
 
 interface TeamModalProps {
   isModalOpen: boolean;
@@ -9,23 +9,29 @@ interface TeamModalProps {
   modalData: TeamData;
 }
 
-const CountryFormModal: React.FC<TeamModalProps> = ({
+const StateFormModal: React.FC<TeamModalProps> = ({
   isModalOpen,
   modalClose,
   modalData,
 }) => {
   const methods = useForm();
-  const { register, errors, onSubmit, handleModalClose } = useCountryFormModal({
-    modalClose,
-    modalData,
-  });
+  const {
+    register,
+    errors,
+    currentPagePermission,
+    onSubmit,
+    handleModalClose,
+  } = useStateFormModal({ modalClose, modalData });
 
+  if (!currentPagePermission && !currentPagePermission.add) {
+    return;
+  }
   return (
     <FormProvider {...methods}>
       <div>
         <ModalData
           isModalOpen={isModalOpen}
-          modalTitle={"Add Country"}
+          modalTitle={"modalTitle"}
           modalClose={handleModalClose}
           buttons={[
             {
@@ -37,11 +43,11 @@ const CountryFormModal: React.FC<TeamModalProps> = ({
         >
           <div>
             <FormInputField
-              id="countryName"
-              {...register("countryName", { required: "Enter Country Name" })}
-              error={errors.countryName}
-              label="Country Name"
-              placeholder={"Enter country name"}
+              id="teamName"
+              {...register("teamName")}
+              error={errors.teamName}
+              label="Team Name"
+              placeholder={"placeholder"}
               containerClass="mt-0 tb:mt-0"
               className="text-lg"
               isMandatory={true}
@@ -52,4 +58,4 @@ const CountryFormModal: React.FC<TeamModalProps> = ({
     </FormProvider>
   );
 };
-export default CountryFormModal;
+export default StateFormModal;

@@ -1,7 +1,7 @@
 import { FormProvider, useForm } from "react-hook-form";
-import useCountryFormModal from "./useCountryFormModal";
 import ModalData from "@/components/shared/Modal/ModalData";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
+import useCityFormModal from "./useCityFormModal";
 
 interface TeamModalProps {
   isModalOpen: boolean;
@@ -9,13 +9,13 @@ interface TeamModalProps {
   modalData: TeamData;
 }
 
-const CountryFormModal: React.FC<TeamModalProps> = ({
+const CityFormModal: React.FC<TeamModalProps> = ({
   isModalOpen,
   modalClose,
   modalData,
 }) => {
   const methods = useForm();
-  const { register, errors, onSubmit, handleModalClose } = useCountryFormModal({
+  const { register, errors, onSubmit, handleModalClose } = useCityFormModal({
     modalClose,
     modalData,
   });
@@ -25,7 +25,7 @@ const CountryFormModal: React.FC<TeamModalProps> = ({
       <div>
         <ModalData
           isModalOpen={isModalOpen}
-          modalTitle={"Add Country"}
+          modalTitle={"Add City"}
           modalClose={handleModalClose}
           buttons={[
             {
@@ -37,11 +37,11 @@ const CountryFormModal: React.FC<TeamModalProps> = ({
         >
           <div>
             <FormInputField
-              id="countryName"
-              {...register("countryName", { required: "Enter Country Name" })}
-              error={errors.countryName}
-              label="Country Name"
-              placeholder={"Enter country name"}
+              id="cityName"
+              {...register("cityName", { required: "Enter City Name" })}
+              error={errors.cityName}
+              label="City Name"
+              placeholder={"Enter city name"}
               containerClass="mt-0 tb:mt-0"
               className="text-lg"
               isMandatory={true}
@@ -52,4 +52,4 @@ const CountryFormModal: React.FC<TeamModalProps> = ({
     </FormProvider>
   );
 };
-export default CountryFormModal;
+export default CityFormModal;

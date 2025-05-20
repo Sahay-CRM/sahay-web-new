@@ -10,7 +10,7 @@ interface UseTeamFormModalProps {
   modalData: TeamData; // You can replace `any` with a more specific type if available
 }
 
-export default function useCountryFormModal({
+export default function useStateFormModal({
   modalClose,
   modalData,
 }: UseTeamFormModalProps) {
@@ -44,12 +44,13 @@ export default function useCountryFormModal({
   };
 
   useEffect(() => {
-    reset(modalData);
+    reset(modalData); // Sync form data with modalData when it changes
   }, [modalData, reset]);
 
   return {
     register,
     errors,
+    currentPagePermission,
     onSubmit,
     handleModalClose,
   };

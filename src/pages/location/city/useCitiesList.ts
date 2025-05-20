@@ -1,43 +1,43 @@
 import { useCallback, useState } from "react";
 
-export default function useCountriesList() {
+export default function useCitiesList() {
   // const userPermission = useSelector(getUserPermission);
   // const currentPagePermission = usePermissionFromLocation("marketing");
 
   // const [selectedItems, setSelectedItems] = useState<TeamData[]>([]);
   const [addCountryModal, setAddCountryModal] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [countryList, setCountryList] = useState({
+  const [cityList, setCityList] = useState({
     success: true,
     status: 200,
-    message: "Country List Fetched",
+    message: "City List Fetched",
     currentPage: 1,
     totalCount: 6,
     hasMore: false,
     pageSize: 10,
     totalPage: 1,
-    sortBy: "countryName",
+    sortBy: "cityName",
     sortOrder: "asc",
     data: [
       {
-        countryId: "1c7ea9a8-3ad3-4db0-862d-a3ace75c9ad0",
-        countryName: "India",
+        cityId: "1c7ea9a8-3ad3-4db0-862d-a3ace75c9ad0",
+        cityName: "India",
       },
       {
-        countryId: "433dac93-3317-4ee0-ac61-11937a26393c",
-        countryName: "Europe",
+        cityId: "433dac93-3317-4ee0-ac61-11937a26393c",
+        cityName: "Europe",
       },
       {
-        countryId: "46330f51-074d-4146-add0-aa3c843cb71b",
-        countryName: "USA",
+        cityId: "46330f51-074d-4146-add0-aa3c843cb71b",
+        cityName: "USA",
       },
       {
-        countryId: "8b68c967-69a2-422e-9d05-f5f4660ec153",
-        countryName: "Nepal",
+        cityId: "8b68c967-69a2-422e-9d05-f5f4660ec153",
+        cityName: "Nepal",
       },
       {
-        countryId: "5175f7a4-da98-4507-8ec3-2070722aa84c",
-        countryName: "Japan",
+        cityId: "5175f7a4-da98-4507-8ec3-2070722aa84c",
+        cityName: "Japan",
       },
     ],
   });
@@ -106,7 +106,7 @@ export default function useCountriesList() {
   };
 
   return {
-    countryList,
+    cityList,
     // isLoading,
     closeDeleteModal,
     setPaginationFilter,

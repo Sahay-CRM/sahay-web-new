@@ -1,27 +1,25 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import TableData from "@/components/shared/DataTable/DataTable";
-import useCountriesList from "./useCountriesList";
-import CountryFormModal from "./countryFormModal/CountryFormModal";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import { FormProvider, useForm } from "react-hook-form";
-// import CountryFormModal from "./countryFormModal/CountryFormModal";
-// import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
+import useStateList from "./useStateList";
+import StateFormModal from "./stateFormModal/StateFormModal";
 
-export default function CountriesList() {
+export default function StatesList() {
   const {
-    countryList,
+    team,
     closeDeleteModal,
     setPaginationFilter,
     openModal,
     onDelete,
-    addCountryModal,
-    handleAddCountry,
+    addTeamModal,
+    handleAddTeam,
     modalData,
     isDeleteModalOpen,
-    confirmDelete,
+    conformDelete,
     isChildData,
-  } = useCountriesList();
+  } = useStateList();
   const methods = useForm();
   // const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -33,7 +31,7 @@ export default function CountriesList() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
-    { key: "countryName", label: "Country Name", visible: true },
+    { key: "teamName", label: "Country Name", visible: true },
   ]);
 
   // Filter visible columns
@@ -67,11 +65,11 @@ export default function CountriesList() {
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
         <div className="flex mb-5 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
-            Countries
+            States
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
-            <Button className="py-2 w-fit" onClick={handleAddCountry}>
-              Add Country
+            <Button className="py-2 w-fit" onClick={handleAddTeam}>
+              Add State
             </Button>
             {/* {canToggleColumns && (
             <DropdownSearchMenu
@@ -84,35 +82,33 @@ export default function CountriesList() {
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           {/* ✅ Custom TableData Component */}
           <TableData
-            tableData={countryList?.data.map((item, index) => ({
+            tableData={team?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,
             }))}
             columns={visibleColumns}
-            primaryKey="countryId"
+            primaryKey="teamId"
             onEdit={openModal}
             onDelete={onDelete}
-            paginationDetails={countryList}
+            paginationDetails={team}
             setPaginationFilter={setPaginationFilter}
             permissionKey="marketing"
           />
         </div>
 
-        {addCountryModal && (
-          <CountryFormModal
-            isModalOpen={addCountryModal}
+        {addTeamModal && (
+          <StateFormModal
+            isModalOpen={addTeamModal}
             modalClose={closeDeleteModal}
             modalData={modalData}
           />
         )}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
-            title={"Delete Country Name"}
-            label={"Country Name :"}
-            modalData={modalData?.countryName}
+            modalData={modalData}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
-            onSubmit={confirmDelete}
+            onSubmit={conformDelete}
             isChildData={isChildData}
           />
         )}

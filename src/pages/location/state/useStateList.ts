@@ -1,43 +1,63 @@
 import { useCallback, useState } from "react";
 
-export default function useCountriesList() {
+export default function useStateList() {
   // const userPermission = useSelector(getUserPermission);
   // const currentPagePermission = usePermissionFromLocation("marketing");
 
   // const [selectedItems, setSelectedItems] = useState<TeamData[]>([]);
-  const [addCountryModal, setAddCountryModal] = useState(false);
+  const [addTeamModal, setAddTeamModal] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [countryList, setCountryList] = useState({
+  const [team, setTeam] = useState({
     success: true,
     status: 200,
-    message: "Country List Fetched",
+    message: "Ent Team Fetched",
     currentPage: 1,
     totalCount: 6,
     hasMore: false,
     pageSize: 10,
     totalPage: 1,
-    sortBy: "countryName",
+    sortBy: "teamName",
     sortOrder: "asc",
     data: [
       {
-        countryId: "1c7ea9a8-3ad3-4db0-862d-a3ace75c9ad0",
-        countryName: "India",
+        teamId: "1c7ea9a8-3ad3-4db0-862d-a3ace75c9ad0",
+        teamName: "India",
+        createBy: "b457786d-b015-42b6-9372-8b52cc3cf446",
+        updateBy: "b457786d-b015-42b6-9372-8b52cc3cf446",
+        createdAt: "2025-03-25T11:31:04.738Z",
+        updatedAt: "2025-03-25T11:31:04.738Z",
       },
       {
-        countryId: "433dac93-3317-4ee0-ac61-11937a26393c",
-        countryName: "Europe",
+        teamId: "433dac93-3317-4ee0-ac61-11937a26393c",
+        teamName: "Europe",
+        createBy: "self",
+        updateBy: "self",
+        createdAt: "2025-03-12T05:32:52.603Z",
+        updatedAt: "2025-03-12T05:32:52.603Z",
       },
       {
-        countryId: "46330f51-074d-4146-add0-aa3c843cb71b",
-        countryName: "USA",
+        teamId: "46330f51-074d-4146-add0-aa3c843cb71b",
+        teamName: "USA",
+        createBy: "b457786d-b015-42b6-9372-8b52cc3cf446",
+        updateBy: "b457786d-b015-42b6-9372-8b52cc3cf446",
+        createdAt: "2025-03-13T13:48:45.496Z",
+        updatedAt: "2025-03-13T13:48:45.496Z",
       },
       {
-        countryId: "8b68c967-69a2-422e-9d05-f5f4660ec153",
-        countryName: "Nepal",
+        teamId: "8b68c967-69a2-422e-9d05-f5f4660ec153",
+        teamName: "Nepal",
+        createBy: "b457786d-b015-42b6-9372-8b52cc3cf446",
+        updateBy: "b457786d-b015-42b6-9372-8b52cc3cf446",
+        createdAt: "2025-03-24T10:38:19.616Z",
+        updatedAt: "2025-03-24T10:38:19.616Z",
       },
       {
-        countryId: "5175f7a4-da98-4507-8ec3-2070722aa84c",
-        countryName: "Japan",
+        teamId: "5175f7a4-da98-4507-8ec3-2070722aa84c",
+        teamName: "Japan",
+        createBy: "b457786d-b015-42b6-9372-8b52cc3cf446",
+        updateBy: "b457786d-b015-42b6-9372-8b52cc3cf446",
+        createdAt: "2025-03-27T12:48:53.581Z",
+        updatedAt: "2025-03-27T12:49:02.653Z",
       },
     ],
   });
@@ -60,19 +80,19 @@ export default function useCountriesList() {
 
   const closeDeleteModal = (): void => {
     setModalData({ teamId: "", teamName: "" });
-    setAddCountryModal(false);
+    setAddTeamModal(false);
     setIsChildData("");
     setIsDeleteModalOpen(false);
   };
 
-  const handleAddCountry = () => {
+  const handleAddTeam = () => {
     setModalData({ teamId: "", teamName: "" });
-    setAddCountryModal(true);
+    setAddTeamModal(true);
     setIsChildData("");
   };
 
   const openModal = useCallback((data = { teamId: "", teamName: "" }) => {
-    setAddCountryModal(true);
+    setAddTeamModal(true);
     setModalData(data);
     setIsChildData("");
   }, []);
@@ -83,7 +103,7 @@ export default function useCountriesList() {
     setIsChildData("");
   }, []);
 
-  const confirmDelete = async () => {
+  const conformDelete = async () => {
     // deleteTeam(modalData.teamId, {
     //   onSuccess: () => {
     //     closeDeleteModal();
@@ -106,7 +126,7 @@ export default function useCountriesList() {
   };
 
   return {
-    countryList,
+    team,
     // isLoading,
     closeDeleteModal,
     setPaginationFilter,
@@ -115,13 +135,13 @@ export default function useCountriesList() {
     openModal,
     onDelete,
     // selectedItems,
-    addCountryModal,
-    handleAddCountry,
+    addTeamModal,
+    handleAddTeam,
     modalData,
     // isAuthorized: currentPagePermission.view,
     // currentPagePermission,
     isDeleteModalOpen,
-    confirmDelete,
+    conformDelete,
     isChildData,
   };
 }

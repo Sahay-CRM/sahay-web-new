@@ -123,14 +123,14 @@ export const navigationData = [
       {
         id: 2,
         label: "States",
-        link: "/",
+        link: "/administrator-panel/location/states",
         permission: "View",
         moduleKey: "STATE",
       },
       {
         id: 3,
         label: "Cities",
-        link: "/",
+        link: "/administrator-panel/location/cities",
         permission: "View",
         moduleKey: "CITY",
       },
@@ -161,7 +161,7 @@ export const navigationData = [
       {
         id: 2,
         label: "Admin User",
-        link: "/",
+        link: "/administrator-panel/admin/user",
         permission: "View",
         moduleKey: "ADMIN_USER",
       },
