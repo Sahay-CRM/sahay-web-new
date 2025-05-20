@@ -95,7 +95,7 @@ function FormLabel({
     <Label
       data-slot="form-label"
       data-error={!!error}
-      className={cn("data-[error=true]:text-destructive", className)}
+      className={cn("data-[error=true]:text-destructive text-md", className)}
       htmlFor={formItemId}
       {...props}
     />
@@ -155,7 +155,7 @@ function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
 }
 
 export {
-  useFormField,
+  // useFormField,
   Form,
   FormItem,
   FormLabel,

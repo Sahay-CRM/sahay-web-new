@@ -1,25 +1,40 @@
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom"; // Added Routes import
+import { useAuth } from "@/features/auth/useAuth";
+import EmployeeRoutes from "./employeeRoutes";
+import SuperAdminRoutes from "./superAdminRoutes";
 
 const Login = lazy(() => import("../pages/auth/login"));
-const Dashboard = lazy(() => import("../pages/homePage/HomePage"));
 
-export default function AppRoutes() {
+const AppRoutes = () => {
+  const { isAuthenticated, user } = useAuth();
+  const isSuperAdmin = user?.role == "SUPERADMIN";
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route
-          path="/login"
-          element={
-            <Suspense fallback={<div>Loading...</div>}>
-              <Login />
-            </Suspense>
-          }
-        />
-        <Route path="/dashboard" Component={Dashboard}>
-          <Route index Component={Dashboard} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <Router>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          {isAuthenticated ? (
+            isSuperAdmin ? (
+              <Route path="/*" element={<SuperAdminRoutes />} />
+            ) : (
+              <Route path="/*" element={<EmployeeRoutes />} />
+            )
+          ) : (
+            <>
+              <Route path="/login" Component={Login} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </>
+          )}
+        </Routes>
+      </Suspense>
+    </Router>
   );
-}
+};
+
+export default AppRoutes;

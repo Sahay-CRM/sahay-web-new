@@ -1,19 +1,18 @@
 import React, { useMemo } from "react";
 import useLogin from "./useLogin";
 import logoImg from "@/assets/logo_1.png";
-import FormSelect from "@/components/shared/FormSelect/FormSelect";
-import FormInputField from "@/components/shared/FormInput/FormInputField";
+import background from "@/assets/background.png";
+import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
+import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { Button } from "@/components/ui/button";
-// import { InputOTP } from "@/components/ui/input-otp";
-import { Form } from "@/components/ui/form";
+import { Form, FormLabel } from "@/components/ui/form";
 import { Controller, useForm } from "react-hook-form";
-import { Card } from "@/components/ui/card";
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { Label } from "@/components/ui/label";
+import CompanyModal from "./CompanyModal";
 
 const Login: React.FC = () => {
   const {
@@ -21,28 +20,17 @@ const Login: React.FC = () => {
     handleFormSubmit,
     statusSentOtp,
     errors,
-    // loading,
-    // trigger,
     setValue,
     control,
-    // companies,
-    // isCompanyModalOpen,
-    // handleLogin,
+    companies,
+    isCompanyModalOpen,
+    handleLogin,
     countryCode,
     setCountryCode,
-    // setCompanyModalOpen,
-    // handleSubmit,
+    setCompanyModalOpen,
   } = useLogin();
 
   const REGEXP_ONLY_DIGITS = "^[0-9]+$";
-
-  // const onSubmit = useCallback(
-  //   (e: React.FormEvent) => {
-  //     e.preventDefault();
-  //     handleFormSubmit();
-  //   },
-  //   [handleFormSubmit],
-  // );
 
   const loginOptions = useMemo(
     () => [
@@ -53,36 +41,49 @@ const Login: React.FC = () => {
     ],
     [],
   );
+
   const methods = useForm();
+
   return (
     <Form {...methods}>
       <form
-        className="min-h-screen flex flex-col justify-center items-center p-4"
+        className="w-full h-screen grid grid-cols-1 md:grid-cols-2 overflow-hidden"
         onSubmit={handleFormSubmit}
       >
-        <Card className={""}>
-          <div className="flex p-2 rounded-tr-lg rounded-tl-lg">
-            <img src={logoImg} alt="logo" className="w-[50%] m-auto p-4" />
+        {/* Left - Background + Text + Logo */}
+        <div
+          className="flex flex-col justify-between bg-cover bg-center p-6 text-white"
+          style={{ backgroundImage: `url(${background})` }}
+        >
+          <div className="mt-8 ml-15">
+            <p className="text-[30px] font-semibold">Smarter workflows.</p>
+            <p className="text-[30px] font-semibold">Happier customers.</p>
           </div>
-          <div className="px-6 relative bg-white">
-            <div className="mt-2">
-              <div className="mb-4 w-full">
-                <Controller
-                  name="userType"
-                  control={control}
-                  rules={{ required: "Please select a role" }}
-                  render={({ field }) => (
-                    <FormSelect
-                      {...field}
-                      label="Login as"
-                      options={loginOptions}
-                      placeholder="Select login type"
-                      // disabled={statusSentOtp}
-                      error={errors.userType}
-                    />
-                  )}
-                />
-              </div>
+        </div>
+
+        {/* Right - Centered Small Form */}
+        <div className="flex items-center justify-center bg-white">
+          <div className="w-full max-w-xl px-8 py-10">
+            <div className="flex justify-center py-4">
+              <img src={logoImg} alt="logo" className="w-[60%]" />
+            </div>
+            <div className="space-y-6">
+              <Controller
+                name="userType"
+                control={control}
+                rules={{ required: "Please select a role" }}
+                render={({ field }) => (
+                  <FormSelect
+                    {...field}
+                    label="Login as"
+                    options={loginOptions}
+                    placeholder="Select login type"
+                    disabled={statusSentOtp}
+                    error={errors.userType}
+                    className="text-base"
+                  />
+                )}
+              />
 
               <FormInputField
                 id="mobile"
@@ -90,86 +91,81 @@ const Login: React.FC = () => {
                 {...register("mobile", {
                   required: "Please enter your mobile number",
                 })}
-                className=""
                 error={errors.mobile}
                 placeholder="Enter mobile number"
-                disabled={false}
-                required={true}
+                disabled={statusSentOtp}
                 options={[{ value: "+91", label: "+91" }]}
-                selectedCodeValue={countryCode ? countryCode : "+91"}
+                selectedCodeValue={countryCode || "+91"}
                 onCountryCodeChange={setCountryCode}
+                className="text-lg"
               />
 
               {statusSentOtp && (
-                <>
-                  <div className="space-y-3 text-center w-full">
-                    <Label className="text-white text-base font-medium after:content-['_*'] after:text-red-500">
-                      Enter Otp
-                    </Label>
-                    <div className="flex justify-center w-full">
-                      <InputOTP
-                        maxLength={4}
-                        pattern={REGEXP_ONLY_DIGITS}
-                        // value={otpValue}
-                        onChange={(val) => {
-                          // setOtpValue(val);
-                          setValue("otp", val, { shouldValidate: true });
-                        }}
-                        className="text-white bg-transparent w-full max-w-xs"
-                      >
-                        <InputOTPGroup className="flex justify-center gap-2 sm:gap-3 md:gap-4 w-full">
-                          {[...Array(4)].map((_, i) => (
-                            <InputOTPSlot
-                              key={i}
-                              index={i}
-                              autoFocus={i === 0}
-                              className="w-10 h-12 sm:w-13 sm:h-14 text-center text-lg sm:text-xl bg-black text-white rounded-md border border-zinc-700 focus:border-white focus:ring-2 focus:ring-white outline-none transition-all"
-                            />
-                          ))}
-                        </InputOTPGroup>
-                      </InputOTP>
-                    </div>
-                    <input
-                      type="hidden"
-                      {...register("otp", {
-                        required: "Please Enter Otp",
-                        maxLength: {
-                          value: 6,
-                          message: "OTP must be 6 digits",
-                        },
-                      })}
-                    />
-                    {errors.otp && (
-                      <p className="text-sm text-red-500 text-center mt-1">
-                        {errors.otp.message}
-                      </p>
-                    )}
-                  </div>
-                </>
+                <div className="space-y-3 text-center w-full">
+                  <FormLabel className="text-base font-medium">
+                    Enter OTP
+                  </FormLabel>
+                  <InputOTP
+                    maxLength={4}
+                    pattern={REGEXP_ONLY_DIGITS}
+                    onChange={(val) => {
+                      setValue("otp", val, { shouldValidate: true });
+                    }}
+                    className="w-full"
+                  >
+                    <InputOTPGroup className="grid grid-cols-4 gap-4 w-full">
+                      {[...Array(4)].map((_, i) => (
+                        <InputOTPSlot
+                          key={i}
+                          index={i}
+                          autoFocus={i === 0}
+                          className="w-full text-xl text-center border border-zinc-700 rounded-md focus:border-black focus:ring-0 outline-none bg-transparent"
+                        />
+                      ))}
+                    </InputOTPGroup>
+                  </InputOTP>
+
+                  <input
+                    type="hidden"
+                    {...register("otp", {
+                      required: "Please enter OTP",
+                      maxLength: {
+                        value: 6,
+                        message: "OTP must be 6 digits",
+                      },
+                    })}
+                  />
+                  {errors.otp && (
+                    <span className="text-red-600 text-sm">
+                      {errors.otp.message}
+                    </span>
+                  )}
+                </div>
               )}
 
-              <Button
-                onClick={handleFormSubmit}
-                // disabled={loading}
-                className="w-full mt-4"
-              >
-                Send OTP
+              <Button type="submit" className="w-full text-base py-2.5 mt-2">
+                {statusSentOtp ? "Login" : "Send OTP"}
               </Button>
             </div>
           </div>
+        </div>
 
-          {/* <CompanyModal
-          companies={companies}
-          isOpen={isCompanyModalOpen}
-          onSelect={handleLogin}
-          onClose={() => {
+        {/* Company Selection Modal */}
+        <CompanyModal
+          companies={companies?.map((c) => ({
+            companyId: c?.companyId,
+            consultantId: c?.consultantId,
+            companyName: c?.companyName,
+          }))}
+          isModalOpen={isCompanyModalOpen}
+          onSelect={(company) => handleLogin(company)}
+          modalClose={() => {
             setCompanyModalOpen(false);
             setTimeout(() => {
               window.location.reload();
             }, 300);
           }}
-        /> */}
-        </Card>
+        />
       </form>
     </Form>
   );

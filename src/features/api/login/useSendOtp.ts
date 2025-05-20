@@ -1,7 +1,7 @@
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useMutation } from "@tanstack/react-query";
-import { AxiosError } from "axios";
+// import { AxiosError } from "axios";
 
 export default function useSendOtp() {
   const sendOtpMutation = useMutation({
@@ -16,9 +16,9 @@ export default function useSendOtp() {
       });
       return resData;
     },
-    onError: (error) => {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      console.log(axiosError);
+    onError: () => {
+      // const axiosError = error as AxiosError<{ message?: string }>;
+      // console.log(axiosError);
     },
   });
   return sendOtpMutation;

@@ -7,7 +7,7 @@ export default function useVerifyOtp() {
   const verifyOtpMutation = useMutation({
     mutationKey: ["verify-otp"],
     mutationFn: async (data: VerifyOtp) => {
-      const { data: resData } = await Api.post({
+      const { data: resData } = await Api.post<VerifyOtpResponse>({
         url: Urls.loginVerifyOtp(),
         data: {
           ...data,

@@ -46,7 +46,7 @@ export default function FormSelect({
 
       <Select value={value} onValueChange={onChange} disabled={disabled}>
         <FormControl>
-          <SelectTrigger className="w-full" id={id}>
+          <SelectTrigger className="w-full mb-1" id={id}>
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
         </FormControl>

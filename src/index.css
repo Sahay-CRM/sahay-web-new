@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "boxicons/css/boxicons.min.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -51,6 +52,8 @@
   --popover-foreground: oklch(0.145 0 0);
   /* --primary: #556ee6; */
   --primary: #2e3090;
+  --theme-bg-accent: "#2a3042";
+  --grey: "grey";
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);

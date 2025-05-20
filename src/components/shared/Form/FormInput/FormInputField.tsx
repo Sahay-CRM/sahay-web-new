@@ -2,6 +2,7 @@ import { FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { forwardRef } from "react";
 import FormSelect from "../FormSelect/FormSelect";
+import { cn } from "@/lib/utils";
 
 interface Option {
   value: string;
@@ -45,10 +46,11 @@ const FormInputField = forwardRef<HTMLInputElement, FormInputProps>(
       <FormItem className={containerClass}>
         {label && (
           <FormLabel>
-            {label} {isMandatory && <span className="text-red-500">*</span>}
+            {label}{" "}
+            {isMandatory && <span className="text-red-500 text-[20px]">*</span>}
           </FormLabel>
         )}
-        <div className="flex gap-x-2">
+        <div className="flex gap-x-2 text-[20px]">
           {options && (
             <FormSelect
               id={`${id}-select`}
@@ -62,7 +64,7 @@ const FormInputField = forwardRef<HTMLInputElement, FormInputProps>(
             <Input
               id={id}
               placeholder={placeholder}
-              className={className}
+              className={cn("text-[20px]", className)}
               {...rest}
               ref={ref}
             />
