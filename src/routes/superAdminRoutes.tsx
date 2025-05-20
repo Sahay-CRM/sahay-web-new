@@ -1,3 +1,4 @@
+
 import { Navigate, Route, Routes } from "react-router-dom";
 import DashboardLayout from "@/features/layouts/DashboardLayout/dashboardLayout";
 import { lazy } from "react";
@@ -26,5 +27,18 @@ export default function SuperAdminRoutes() {
         element={<Navigate to="/administrator-panel" replace />}
       />
     </Routes>
+import { BrowserRouter, Routes } from "react-router-dom";
+
+// const Dashboard = lazy(() => import("../pages/auth/login"));
+
+export default function SuperAdminRoutes() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* <Route path="/" Component={CMsLayout}>
+          <Route index Component={Dashboard} />
+        </Route> */}
+      </Routes>
+    </BrowserRouter>
   );
 }
