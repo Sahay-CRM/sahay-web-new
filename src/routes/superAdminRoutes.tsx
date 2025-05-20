@@ -1,4 +1,3 @@
-
 import { Navigate, Route, Routes } from "react-router-dom";
 import DashboardLayout from "@/features/layouts/DashboardLayout/dashboardLayout";
 import { lazy } from "react";
@@ -6,9 +5,6 @@ import { lazy } from "react";
 const Dashboard = lazy(() => import("../pages/homePage/HomePage"));
 const Profile = lazy(() => import("../pages/profile/Profile"));
 const Theme = lazy(() => import("../pages/theme/Theme"));
-const StatesList = lazy(() => import("../pages/location/state/StatesList"));
-const CitiesList = lazy(() => import("../pages/location/city/CitiesList"));
-const AdminUser = lazy(() => import("../pages/admin/adminUser/AdminUser"));
 const CountriesList = lazy(
   () => import("../pages/location/country/CountriesList"),
 );
@@ -23,12 +19,6 @@ export default function SuperAdminRoutes() {
         <Route path="settings" Component={Theme} />
         <Route path="location">
           <Route path="countries" Component={CountriesList} />
-          <Route path="states" Component={StatesList} />
-          <Route path="cities" Component={CitiesList} />
-          <Route path="user" Component={AdminUser} />
-        </Route>
-        <Route path="admin">
-          <Route path="user" Component={AdminUser} />
         </Route>
       </Route>
       <Route
@@ -36,18 +26,5 @@ export default function SuperAdminRoutes() {
         element={<Navigate to="/administrator-panel" replace />}
       />
     </Routes>
-import { BrowserRouter, Routes } from "react-router-dom";
-
-// const Dashboard = lazy(() => import("../pages/auth/login"));
-
-export default function SuperAdminRoutes() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        {/* <Route path="/" Component={CMsLayout}>
-          <Route index Component={Dashboard} />
-        </Route> */}
-      </Routes>
-    </BrowserRouter>
   );
 }
