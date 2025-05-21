@@ -7,7 +7,7 @@ export default function useCitiesList() {
   // const [selectedItems, setSelectedItems] = useState<TeamData[]>([]);
   const [addCountryModal, setAddCountryModal] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [cityList, setCityList] = useState({
+  const [cityList, _setCityList] = useState({
     success: true,
     status: 200,
     message: "City List Fetched",
@@ -41,7 +41,9 @@ export default function useCitiesList() {
       },
     ],
   });
-  const [modalData, setModalData] = useState<TeamData>({} as TeamData);
+  const [modalData, setModalData] = useState<CityDataProps>(
+    {} as CityDataProps,
+  );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // const { mutate: deleteTeam } = deleteTeamMutation();
@@ -49,7 +51,7 @@ export default function useCitiesList() {
   const [isChildData, setIsChildData] = useState<string | undefined>();
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
+  const [_paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 10,
     search: "",
@@ -59,25 +61,25 @@ export default function useCitiesList() {
   // });
 
   const closeDeleteModal = (): void => {
-    setModalData({ teamId: "", teamName: "" });
+    setModalData({ cityId: "", cityName: "" });
     setAddCountryModal(false);
     setIsChildData("");
     setIsDeleteModalOpen(false);
   };
 
   const handleAddCountry = () => {
-    setModalData({ teamId: "", teamName: "" });
+    setModalData({ cityId: "", cityName: "" });
     setAddCountryModal(true);
     setIsChildData("");
   };
 
-  const openModal = useCallback((data = { teamId: "", teamName: "" }) => {
+  const openModal = useCallback((data = { cityId: "", cityName: "" }) => {
     setAddCountryModal(true);
     setModalData(data);
     setIsChildData("");
   }, []);
 
-  const onDelete = useCallback((data: TeamData) => {
+  const onDelete = useCallback((data: CityDataProps) => {
     setIsDeleteModalOpen(true);
     setModalData(data);
     setIsChildData("");

@@ -1,23 +1,15 @@
 import { useForm } from "react-hook-form";
-
-// import { teamMutation } from "@/share/data/hooks/marketing";
-
-// import usePermissionFromLocation from "@/share/data/hooks/userPermissionFromLocation";
 import { useEffect } from "react";
 
 interface UseTeamFormModalProps {
-  modalClose: () => void; // Explicitly type the modalClose function
-  modalData: TeamData; // You can replace `any` with a more specific type if available
+  modalClose: () => void;
+  modalData: UpdateState | undefined;
 }
 
 export default function useStateFormModal({
   modalClose,
   modalData,
 }: UseTeamFormModalProps) {
-  //   const currentPagePermission = usePermissionFromLocation("team");
-
-  //   const { mutate: addUpdateTeam } = teamMutation();
-
   const {
     handleSubmit,
     register,
@@ -50,7 +42,7 @@ export default function useStateFormModal({
   return {
     register,
     errors,
-    currentPagePermission,
+    // currentPagePermission,
     onSubmit,
     handleModalClose,
   };

@@ -31,7 +31,7 @@ export default function CountriesList() {
 
   // Column visibility state
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [columnToggleOptions, setColumnToggleOptions] = useState([
+  const [columnToggleOptions, _setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "countryName", label: "Country Name", visible: true },
   ]);
@@ -90,7 +90,7 @@ export default function CountriesList() {
             }))}
             columns={visibleColumns}
             primaryKey="countryId"
-            onEdit={openModal}
+            onEdit={() => openModal}
             onDelete={onDelete}
             paginationDetails={countryList}
             setPaginationFilter={setPaginationFilter}

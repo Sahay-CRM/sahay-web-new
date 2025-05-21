@@ -7,7 +7,7 @@ export default function useCountriesList() {
   // const [selectedItems, setSelectedItems] = useState<TeamData[]>([]);
   const [addCountryModal, setAddCountryModal] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [countryList, setCountryList] = useState({
+  const [countryList, _setCountryList] = useState({
     success: true,
     status: 200,
     message: "Country List Fetched",
@@ -41,7 +41,7 @@ export default function useCountriesList() {
       },
     ],
   });
-  const [modalData, setModalData] = useState<TeamData>({} as TeamData);
+  const [modalData, setModalData] = useState<CountryData>({} as CountryData);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // const { mutate: deleteTeam } = deleteTeamMutation();
@@ -49,7 +49,7 @@ export default function useCountriesList() {
   const [isChildData, setIsChildData] = useState<string | undefined>();
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
+  const [_paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 10,
     search: "",
@@ -59,32 +59,32 @@ export default function useCountriesList() {
   // });
 
   const closeDeleteModal = (): void => {
-    setModalData({ teamId: "", teamName: "" });
+    setModalData({ countryId: "", countryName: "" });
     setAddCountryModal(false);
     setIsChildData("");
     setIsDeleteModalOpen(false);
   };
 
   const handleAddCountry = () => {
-    setModalData({ teamId: "", teamName: "" });
+    setModalData({ countryId: "", countryName: "" });
     setAddCountryModal(true);
     setIsChildData("");
   };
 
-  const openModal = useCallback((data = { teamId: "", teamName: "" }) => {
+  const openModal = useCallback((data = { countryId: "", countryName: "" }) => {
     setAddCountryModal(true);
     setModalData(data);
     setIsChildData("");
   }, []);
 
-  const onDelete = useCallback((data: TeamData) => {
+  const onDelete = useCallback((data: CountryData) => {
     setIsDeleteModalOpen(true);
     setModalData(data);
     setIsChildData("");
   }, []);
 
   const confirmDelete = async () => {
-    // deleteTeam(modalData.teamId, {
+    // deleteTeam(modalData.countryId, {
     //   onSuccess: () => {
     //     closeDeleteModal();
     //     setIsChildData("");
@@ -98,7 +98,7 @@ export default function useCountriesList() {
     //       setIsChildData(axiosError.response?.data?.message);
     //     } else if (axiosError.response?.data.status !== 417) {
     //       toast.error(
-    //         `Error: ${axiosError.response?.data?.message || "An error occurred"}`
+    //         Error: ${axiosError.response?.data?.message || "An error occurred"}
     //       );
     //     }
     //   },

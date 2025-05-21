@@ -7,7 +7,7 @@ import { useEffect } from "react";
 
 interface UseTeamFormModalProps {
   modalClose: () => void; // Explicitly type the modalClose function
-  modalData: TeamData; // You can replace `any` with a more specific type if available
+  modalData: CityDataProps; // You can replace `any` with a more specific type if available
 }
 
 export default function useCityFormModal({

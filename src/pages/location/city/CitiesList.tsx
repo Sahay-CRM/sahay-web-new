@@ -31,7 +31,7 @@ export default function CitiesList() {
 
   // Column visibility state
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [columnToggleOptions, setColumnToggleOptions] = useState([
+  const [columnToggleOptions, _setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "cityName", label: "City Name", visible: true },
   ]);

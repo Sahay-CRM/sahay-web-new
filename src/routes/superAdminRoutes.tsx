@@ -11,6 +11,9 @@ const CountriesList = lazy(
 const StatesList = lazy(() => import("../pages/location/state/StatesList"));
 const CitiesList = lazy(() => import("../pages/location/city/CitiesList"));
 const AdminUser = lazy(() => import("../pages/admin/adminUser/AdminUser"));
+const AddAdminUser = lazy(
+  () => import("../pages/admin/adminUser/addAdminUser/AddAdminUser"),
+);
 
 export default function SuperAdminRoutes() {
   return (
@@ -27,6 +30,7 @@ export default function SuperAdminRoutes() {
         </Route>
         <Route path="admin">
           <Route path="user" Component={AdminUser} />
+          <Route path="user-add" Component={AddAdminUser} />
         </Route>
       </Route>
       <Route

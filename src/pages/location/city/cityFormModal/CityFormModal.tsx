@@ -6,7 +6,7 @@ import useCityFormModal from "./useCityFormModal";
 interface TeamModalProps {
   isModalOpen: boolean;
   modalClose: () => void;
-  modalData: TeamData;
+  modalData: CityDataProps;
 }
 
 const CityFormModal: React.FC<TeamModalProps> = ({

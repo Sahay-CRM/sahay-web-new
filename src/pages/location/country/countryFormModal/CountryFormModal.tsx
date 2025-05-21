@@ -6,7 +6,7 @@ import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 interface TeamModalProps {
   isModalOpen: boolean;
   modalClose: () => void;
-  modalData: TeamData;
+  modalData: CountryData;
 }
 
 const CountryFormModal: React.FC<TeamModalProps> = ({

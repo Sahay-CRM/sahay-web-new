@@ -5,46 +5,50 @@ import { useEffect, useState } from "react";
 
 export default function Profile() {
   const { user } = useAuth();
-  const [userDetails, setUserDetails] = useState({});
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
 
   useEffect(() => {
+    if (!user) return;
+
     setUserDetails({
       photo:
-        user?.role === "COMPANYADMIN" ||
-        user?.role === "EMPLOYEE" ||
-        user?.role === "CONSULTANT"
+        user.role === "COMPANYADMIN" ||
+        user.role === "EMPLOYEE" ||
+        user.role === "CONSULTANT"
           ? null
-          : user.photo,
+          : (user.photo ?? null), // convert undefined to null
       userName:
-        user?.role === "COMPANYADMIN" || user?.role === "EMPLOYEE"
-          ? user.employeeName
-          : user?.role === "CONSULTANT"
-            ? user.consultantName
-            : user.adminUserName,
+        user.role === "COMPANYADMIN" || user.role === "EMPLOYEE"
+          ? (user.employeeName ?? "")
+          : user.role === "CONSULTANT"
+            ? (user.consultantName ?? "")
+            : (user.adminUserName ?? ""),
       userMobile:
-        user?.role === "COMPANYADMIN" || user?.role === "EMPLOYEE"
-          ? user.employeeMobile
-          : user?.role === "CONSULTANT"
-            ? user.consultantMobile
-            : user.adminUserMobile,
+        user.role === "COMPANYADMIN" || user.role === "EMPLOYEE"
+          ? (user.employeeMobile ?? "")
+          : user.role === "CONSULTANT"
+            ? (user.consultantMobile ?? "")
+            : (user.adminUserMobile ?? ""),
       userEmail:
-        user?.role === "COMPANYADMIN" || user?.role === "EMPLOYEE"
-          ? user.employeeEmail
-          : user?.role === "CONSULTANT"
-            ? user.consultantEmail
-            : user.adminUserEmail,
-      role: user.role,
+        user.role === "COMPANYADMIN" || user.role === "EMPLOYEE"
+          ? (user.employeeEmail ?? "")
+          : user.role === "CONSULTANT"
+            ? (user.consultantEmail ?? "")
+            : (user.adminUserEmail ?? ""),
+      role: user.role ?? "",
     });
   }, [user]);
 
-  const details = [
-    { label: "Name", value: userDetails?.userName },
-    { label: "Position", value: userDetails?.role?.toLowerCase() },
-    { label: "Mobile No", value: userDetails?.userMobile },
-    { label: "Email", value: userDetails?.userEmail },
-    { label: "Followers", value: "64" },
-    { label: "Following", value: "326" },
-  ];
+  const details = userDetails
+    ? [
+        { label: "Name", value: userDetails.userName },
+        { label: "Position", value: userDetails.role.toLowerCase() },
+        { label: "Mobile No", value: userDetails.userMobile },
+        { label: "Email", value: userDetails.userEmail },
+        { label: "Followers", value: "64" },
+        { label: "Following", value: "326" },
+      ]
+    : [];
 
   return (
     <div className="w-full h-full flex">

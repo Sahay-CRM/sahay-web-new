@@ -5,15 +5,15 @@ import { useForm } from "react-hook-form";
 // import usePermissionFromLocation from "@/share/data/hooks/userPermissionFromLocation";
 import { useEffect } from "react";
 
-interface UseTeamFormModalProps {
+interface UseCountryFormModalProps {
   modalClose: () => void; // Explicitly type the modalClose function
-  modalData: TeamData; // You can replace `any` with a more specific type if available
+  modalData: CountryData; // You can replace any with a more specific type if available
 }
 
 export default function useCountryFormModal({
   modalClose,
   modalData,
-}: UseTeamFormModalProps) {
+}: UseCountryFormModalProps) {
   //   const currentPagePermission = usePermissionFromLocation("team");
 
   //   const { mutate: addUpdateTeam } = teamMutation();
@@ -24,7 +24,7 @@ export default function useCountryFormModal({
     formState: { errors },
     reset,
   } = useForm({
-    values: modalData, // Use defaultValues instead of `values`
+    values: modalData, // Use defaultValues instead of values
   });
 
   const onSubmit = handleSubmit(async () => {

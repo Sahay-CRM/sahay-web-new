@@ -3,7 +3,6 @@ import { Input } from "@/components/ui/input";
 import { forwardRef } from "react";
 import FormSelect from "../FormSelect/FormSelect";
 import { cn } from "@/lib/utils";
-
 interface Option {
   value: string;
   label: string;
@@ -56,15 +55,16 @@ const FormInputField = forwardRef<HTMLInputElement, FormInputProps>(
               id={`${id}-select`}
               options={options}
               value={selectedCodeValue}
-              onChange={handleCodeChange}
+              onChange={() => handleCodeChange}
               disabled={rest.disabled}
+              containerClass="w-16"
             />
           )}
           <FormControl>
             <Input
               id={id}
               placeholder={placeholder}
-              className={cn("text-[20px]", className)}
+              className={cn("text-[20px] mt-2", className)}
               {...rest}
               ref={ref}
             />

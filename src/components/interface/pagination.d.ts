@@ -1,5 +1,5 @@
 interface PaginationFilter {
-  status?: string | number;
+  status?: number;
   currentPage?: number;
   message?: string;
   totalCount?: number;

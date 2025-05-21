@@ -2,12 +2,12 @@ import { useCallback, useState } from "react";
 
 export default function useAdminUser() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-  const [modalData, setModalData] = useState<UserData | undefined>();
+  const [modalData, setModalData] = useState<User | undefined>();
   const [currentStatus, setCurrentStatus] = useState<number>(1); // Add state for currentStatus
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [user, setUser] = useState({
+  const [user, _setUser] = useState({
     success: true,
     status: 200,
     message: "ent Users Fetched",
@@ -137,7 +137,7 @@ export default function useAdminUser() {
     });
   };
 
-  const openModal = useCallback((data: UserData) => {
+  const openModal = useCallback((data: User) => {
     setIsUserModalOpen(true);
     setModalData(data); // Set the data for the modal
   }, []);
@@ -148,7 +148,7 @@ export default function useAdminUser() {
     setIsChildData("");
   };
 
-  const onDelete = useCallback((data: UserData) => {
+  const onDelete = useCallback((data: User) => {
     setModalData(data);
     setIsUserModalOpen(true);
     setIsChildData("");

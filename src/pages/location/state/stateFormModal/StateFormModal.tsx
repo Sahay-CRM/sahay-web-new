@@ -6,7 +6,7 @@ import useStateFormModal from "./useStateFormModal";
 interface TeamModalProps {
   isModalOpen: boolean;
   modalClose: () => void;
-  modalData: TeamData;
+  modalData: UpdateState | undefined;
 }
 
 const StateFormModal: React.FC<TeamModalProps> = ({
@@ -18,14 +18,14 @@ const StateFormModal: React.FC<TeamModalProps> = ({
   const {
     register,
     errors,
-    currentPagePermission,
+    // currentPagePermission,
     onSubmit,
     handleModalClose,
   } = useStateFormModal({ modalClose, modalData });
 
-  if (!currentPagePermission && !currentPagePermission.add) {
-    return;
-  }
+  // if (!currentPagePermission && !currentPagePermission.add) {
+  //   return;
+  // }
   return (
     <FormProvider {...methods}>
       <div>
@@ -43,9 +43,9 @@ const StateFormModal: React.FC<TeamModalProps> = ({
         >
           <div>
             <FormInputField
-              id="teamName"
-              {...register("teamName")}
-              error={errors.teamName}
+              id="stateName"
+              {...register("stateName")}
+              error={errors.stateName}
               label="Team Name"
               placeholder={"placeholder"}
               containerClass="mt-0 tb:mt-0"

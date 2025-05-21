@@ -76,7 +76,7 @@ export default function AdminUser() {
               setPaginationFilter={setPaginationFilter}
               className="w-96"
             />
-            <Link to="">
+            <Link to="/administrator-panel/admin/user-add">
               <Button className="py-2 w-fit">Add User</Button>
             </Link>
             {canToggleColumns && (
@@ -96,12 +96,8 @@ export default function AdminUser() {
             }))}
             columns={visibleColumns} // Pass only visible columns to the Table
             primaryKey="userId"
-            onEdit={openModal}
-            onDelete={(row) => {
-              if (!row.isSuperAdmin) {
-                onDelete(row);
-              }
-            }}
+            onEdit={() => openModal}
+            onDelete={() => onDelete}
             canDelete={(row) => !row.isSuperAdmin}
             paginationDetails={user}
             setPaginationFilter={setPaginationFilter}

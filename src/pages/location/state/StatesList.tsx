@@ -8,17 +8,17 @@ import StateFormModal from "./stateFormModal/StateFormModal";
 
 export default function StatesList() {
   const {
-    team,
+    stateData,
     closeDeleteModal,
     setPaginationFilter,
     openModal,
     onDelete,
-    addTeamModal,
-    handleAddTeam,
     modalData,
     isDeleteModalOpen,
-    conformDelete,
     isChildData,
+    addStateModal,
+    handleAdd,
+    handleDeleteState,
   } = useStateList();
   const methods = useForm();
   // const { setBreadcrumbs } = useBreadcrumbs();
@@ -29,7 +29,7 @@ export default function StatesList() {
 
   // Column visibility state
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [columnToggleOptions, setColumnToggleOptions] = useState([
+  const [columnToggleOptions, _setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "teamName", label: "Country Name", visible: true },
   ]);
@@ -68,7 +68,7 @@ export default function StatesList() {
             States
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
-            <Button className="py-2 w-fit" onClick={handleAddTeam}>
+            <Button className="py-2 w-fit" onClick={handleAdd}>
               Add State
             </Button>
             {/* {canToggleColumns && (
@@ -82,34 +82,33 @@ export default function StatesList() {
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           {/* ✅ Custom TableData Component */}
           <TableData
-            tableData={team?.data.map((item, index) => ({
-              ...item,
-              srNo: index + 1,
-            }))}
+            tableData={stateData?.data}
             columns={visibleColumns}
             primaryKey="teamId"
-            onEdit={openModal}
-            onDelete={onDelete}
-            paginationDetails={team}
+            onEdit={() => openModal}
+            onDelete={() => onDelete}
+            // paginationDetails={stateData}
             setPaginationFilter={setPaginationFilter}
             permissionKey="marketing"
           />
         </div>
 
-        {addTeamModal && (
+        {addStateModal && (
           <StateFormModal
-            isModalOpen={addTeamModal}
+            isModalOpen={addStateModal}
             modalClose={closeDeleteModal}
             modalData={modalData}
           />
         )}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
-            modalData={modalData}
+            modalData={modalData?.stateName}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
-            onSubmit={conformDelete}
+            onSubmit={handleDeleteState}
             isChildData={isChildData}
+            label="State"
+            title={`Are you sure you want to delete ${modalData?.stateName}?`}
           />
         )}
       </div>
