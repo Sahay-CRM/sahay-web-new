@@ -68,6 +68,7 @@ export default function AddAdminUser() {
                   label="User Type"
                   id={`select`}
                   options={userTypeOptions}
+                  placeholder="Selete User Type"
                 />
               )}
             </Card>

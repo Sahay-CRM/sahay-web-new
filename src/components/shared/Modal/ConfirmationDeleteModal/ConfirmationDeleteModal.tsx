@@ -1,6 +1,6 @@
 import ModalData from "../ModalData";
 
-interface TeamModalProps {
+interface DeleteModalProps {
   modalData: string;
   label: string;
   title: string;
@@ -10,7 +10,7 @@ interface TeamModalProps {
   isChildData?: string | undefined;
 }
 
-const ConfirmationDeleteModal: React.FC<TeamModalProps> = ({
+const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
   title,
   label,
   modalData,

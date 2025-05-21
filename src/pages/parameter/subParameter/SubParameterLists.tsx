@@ -3,25 +3,23 @@ import { Button } from "@/components/ui/button";
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import { FormProvider, useForm } from "react-hook-form";
-import useCitiesList from "./useCitiesList";
-import CityFormModal from "./cityFormModal/CityFormModal";
-// import CountryFormModal from "./countryFormModal/CountryFormModal";
-// import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
+import { CoreParameterModal } from "./CoreParameterModal/CoreParameterModal";
+import useSubParameterLists from "./useSubParameterLists";
 
-export default function CitiesList() {
+export default function SubParameterLists() {
   const {
-    cityList,
+    dataList,
     closeDeleteModal,
     setPaginationFilter,
     openModal,
     onDelete,
-    addCountryModal,
-    handleAddCountry,
+    addModal,
+    handleAdd,
     modalData,
     isDeleteModalOpen,
     confirmDelete,
     isChildData,
-  } = useCitiesList();
+  } = useSubParameterLists();
   const methods = useForm();
   // const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -33,7 +31,8 @@ export default function CitiesList() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [columnToggleOptions, _setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
-    { key: "cityName", label: "City Name", visible: true },
+    { key: "coreParameterName", label: "Core Parameter Name", visible: true },
+    { key: "departmentName", label: "Department Name", visible: true },
   ]);
 
   // Filter visible columns
@@ -67,48 +66,43 @@ export default function CitiesList() {
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
         <div className="flex mb-5 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
-            Cities
+            Sub Parameter Lists
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
-            <Button className="py-2 w-fit" onClick={handleAddCountry}>
-              Add City
+            <Button className="py-2 w-fit" onClick={handleAdd}>
+              Add Sub Parameter
             </Button>
-            {/* {canToggleColumns && (
-            <DropdownSearchMenu
-              columns={columnToggleOptions}
-              onToggleColumn={onToggleColumn}
-            />
-          )} */}
           </div>
         </div>
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           {/* ✅ Custom TableData Component */}
           <TableData
-            tableData={cityList?.data.map((item, index) => ({
+            tableData={dataList?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,
+              departmentName: item.department?.departmentName,
             }))}
             columns={visibleColumns}
-            primaryKey="cityId"
+            primaryKey="coreParameterId"
             onEdit={(row) => openModal(row)}
             onDelete={(row) => onDelete(row)}
-            paginationDetails={cityList}
+            paginationDetails={dataList}
             setPaginationFilter={setPaginationFilter}
           />
         </div>
 
-        {addCountryModal && (
-          <CityFormModal
-            isModalOpen={addCountryModal}
+        {addModal && (
+          <CoreParameterModal
+            isModalOpen={addModal}
             modalClose={closeDeleteModal}
             modalData={modalData}
           />
         )}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
-            title={"Delete City"}
-            label={"City Name :"}
-            modalData={modalData?.cityName}
+            title={"Delete Core Parameter"}
+            label={"Core Parameter Name :"}
+            modalData={modalData?.coreParameterName}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={confirmDelete}

@@ -85,8 +85,8 @@ export default function StatesList() {
             tableData={stateData?.data}
             columns={visibleColumns}
             primaryKey="teamId"
-            onEdit={() => openModal}
-            onDelete={() => onDelete}
+            onEdit={(row) => openModal(row)}
+            onDelete={(row) => onDelete(row)}
             // paginationDetails={stateData}
             setPaginationFilter={setPaginationFilter}
             permissionKey="marketing"
@@ -102,7 +102,7 @@ export default function StatesList() {
         )}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
-            modalData={modalData?.stateName}
+            modalData={modalData?.stateName || ""}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={handleDeleteState}

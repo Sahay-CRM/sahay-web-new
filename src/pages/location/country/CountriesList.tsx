@@ -90,8 +90,8 @@ export default function CountriesList() {
             }))}
             columns={visibleColumns}
             primaryKey="countryId"
-            onEdit={() => openModal}
-            onDelete={onDelete}
+            onEdit={(row) => openModal(row)}
+            onDelete={(row) => onDelete(row)}
             paginationDetails={countryList}
             setPaginationFilter={setPaginationFilter}
             permissionKey="marketing"

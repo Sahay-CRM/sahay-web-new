@@ -3,25 +3,23 @@ import { Button } from "@/components/ui/button";
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import { FormProvider, useForm } from "react-hook-form";
-import useCitiesList from "./useCitiesList";
-import CityFormModal from "./cityFormModal/CityFormModal";
-// import CountryFormModal from "./countryFormModal/CountryFormModal";
-// import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
+import EngagementTypeModal from "./IndustryModal/IndustryModal";
+import useIndustryLists from "./useIndustryLists";
 
-export default function CitiesList() {
+export default function IndustryLists() {
   const {
-    cityList,
+    dataList,
     closeDeleteModal,
     setPaginationFilter,
     openModal,
     onDelete,
-    addCountryModal,
-    handleAddCountry,
+    addModal,
+    handleAdd,
     modalData,
     isDeleteModalOpen,
     confirmDelete,
     isChildData,
-  } = useCitiesList();
+  } = useIndustryLists();
   const methods = useForm();
   // const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -33,7 +31,7 @@ export default function CitiesList() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [columnToggleOptions, _setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
-    { key: "cityName", label: "City Name", visible: true },
+    { key: "industryName", label: "Industry Name", visible: true },
   ]);
 
   // Filter visible columns
@@ -67,48 +65,42 @@ export default function CitiesList() {
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
         <div className="flex mb-5 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
-            Cities
+            Industry
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
-            <Button className="py-2 w-fit" onClick={handleAddCountry}>
-              Add City
+            <Button className="py-2 w-fit" onClick={handleAdd}>
+              Add Industry
             </Button>
-            {/* {canToggleColumns && (
-            <DropdownSearchMenu
-              columns={columnToggleOptions}
-              onToggleColumn={onToggleColumn}
-            />
-          )} */}
           </div>
         </div>
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           {/* ✅ Custom TableData Component */}
           <TableData
-            tableData={cityList?.data.map((item, index) => ({
+            tableData={dataList?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,
             }))}
             columns={visibleColumns}
-            primaryKey="cityId"
+            primaryKey="industryId"
             onEdit={(row) => openModal(row)}
             onDelete={(row) => onDelete(row)}
-            paginationDetails={cityList}
+            paginationDetails={dataList}
             setPaginationFilter={setPaginationFilter}
           />
         </div>
 
-        {addCountryModal && (
-          <CityFormModal
-            isModalOpen={addCountryModal}
+        {addModal && (
+          <EngagementTypeModal
+            isModalOpen={addModal}
             modalClose={closeDeleteModal}
             modalData={modalData}
           />
         )}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
-            title={"Delete City"}
-            label={"City Name :"}
-            modalData={modalData?.cityName}
+            title={"Delete Industry"}
+            label={"Industry Name :"}
+            modalData={modalData?.industryName}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={confirmDelete}
