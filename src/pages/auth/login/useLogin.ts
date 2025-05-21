@@ -4,10 +4,13 @@ import {
   verifyOtpMutation,
 } from "@/features/api/login";
 import { useAuth } from "@/features/auth/useAuth";
+import { setAuth } from "@/features/reducers/auth.reducer";
+import { useDispatch } from "react-redux";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 const useLogin = () => {
+  const dispatch = useDispatch();
   const { mutate: sendOtp } = sendOtpMutation();
   const { mutate: verifyOtp } = verifyOtpMutation();
   const { mutate: companyVerifyOtp } = verifyCompanyOtpMutation();
@@ -46,6 +49,14 @@ const useLogin = () => {
       onSuccess: (response) => {
         if (response?.status) {
           setToken(response?.user?.token, response?.user);
+          dispatch(
+            setAuth({
+              token: response.user.token,
+              isLoading: false,
+              isAuthenticated: true,
+              user: response.user,
+            }),
+          );
           reset();
           setCompanyModalOpen(false);
           setLoginDetails(null);
@@ -84,6 +95,15 @@ const useLogin = () => {
       verifyOtp(verifyData, {
         onSuccess: (response) => {
           if (response.status) {
+            console.log(response.user.token);
+            dispatch(
+              setAuth({
+                token: response.user.token,
+                isLoading: false,
+                isAuthenticated: true,
+                user: response.user,
+              }),
+            );
             const companiesList = response.companies || [];
             if (companiesList.length > 1) {
               setCompanies(companiesList);
