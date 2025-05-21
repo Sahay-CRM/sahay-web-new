@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import DrawerAccordion from "../DrawerAccordion";
 import { useAuth } from "@/features/auth/useAuth";
 import { usePermissions } from "@/features/auth/permissions/usePermissions";
@@ -21,6 +21,7 @@ import { UserIcon } from "../Icons";
 import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
+import { AuthContext } from "@/features/auth/AuthContext";
 
 const FullNavBar = ({ data }: FullNavBarProps) => {
   const [activeIndex, setActiveIndex] = useState<number>(-1);
@@ -35,7 +36,11 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
 
   const navigate = useNavigate();
   const { bgColor } = useSidebarTheme();
+  const { clearToken } = useContext(AuthContext);
 
+  const handleLogout = () => {
+    clearToken();
+  };
   return (
     <div
       style={{
@@ -137,9 +142,7 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-          // onClick={openLogoutModal}
-          >
+          <DropdownMenuItem onClick={handleLogout}>
             <LogOut />
             Log out
           </DropdownMenuItem>
