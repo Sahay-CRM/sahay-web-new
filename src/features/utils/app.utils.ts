@@ -1,7 +1,5 @@
 import { toast } from "sonner";
 
-export const baseUrl = import.meta.env.REACT_APP_APP_URL;
-
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

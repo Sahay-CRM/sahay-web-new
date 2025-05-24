@@ -2,26 +2,29 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
-import useAdminUser from "./useAdminUser";
+import useCompanyTaskList from "./useCompanyTaskList";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-export default function AdminUser() {
+// import DesignationAddFormModal from "./DesignationAddFormModal";
+export default function CompanyTaskList() {
   const {
-    user,
+    designationData,
     // isLoading,
     closeDeleteModal,
     setPaginationFilter,
     // currentStatus,
+    handleAdd,
     openModal,
     onDelete,
     modalData,
     conformDelete,
+    isDeleteModalOpen,
     paginationFilter,
-    isUserModalOpen,
+    // isUserModalOpen,
     isChildData,
-  } = useAdminUser();
+  } = useCompanyTaskList();
 
   //   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -36,14 +39,22 @@ export default function AdminUser() {
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
-    { key: "userFirstName", label: "User First Name", visible: true },
-    { key: "userLastName", label: "User Last Name", visible: true },
-    { key: "userEmail", label: "Email", visible: true },
-    { key: "departmentName", label: "Department", visible: true },
-    { key: "designationName", label: "Designation", visible: true },
-    { key: "cityName", label: "City Name", visible: true },
-    { key: "localityName", label: "Locality Name", visible: true },
+    { key: "KPINameWithLabel", label: "KPI Name - Label", visible: true },
+    {
+      key: "dataPointName",
+      label: "KPI Name",
+      visible: true,
+    },
+    { key: "dataPointLabel", label: "KPI Label", visible: true },
+    { key: "validationTypeName", label: "Validation Type", visible: true },
+    { key: "frequencyType", label: "Frequency", visible: true },
   ]);
+  function formatString(str: string): string {
+    return str
+      .replace(/_/g, " ") // Replace underscores with spaces
+      .toLowerCase() // Convert to lowercase
+      .replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalize first letter of each word
+  }
 
   // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
@@ -70,7 +81,9 @@ export default function AdminUser() {
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
         <div className="flex mb-5 justify-between items-center">
-          <h1 className="font-semibold capitalize text-xl text-black">User</h1>
+          <h1 className="font-semibold capitalize text-xl text-black">
+            KPI List
+          </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
             <SearchInput
               placeholder="Search..."
@@ -79,7 +92,12 @@ export default function AdminUser() {
               className="w-96"
             />
             <Link to="">
-              <Button className="py-2 w-fit">Add User</Button>
+              <Button className="py-2 w-fit" onClick={handleAdd}>
+                Add KPI
+              </Button>
+            </Link>
+            <Link to="/dashboard/datapoint/add">
+              <Button className="py-2 w-fit">Add Company Project</Button>
             </Link>
             {canToggleColumns && (
               <DropdownSearchMenu
@@ -92,12 +110,15 @@ export default function AdminUser() {
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            tableData={user?.data.map((item, index) => ({
+            tableData={designationData?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,
+              KPINameWithLabel: `${item.KPIMaster.KPIName} - ${item.KPIMaster.KPILabel}`,
+              validationTypeName: formatString(item.validationType),
+              //   assigneeNames: item.assignees[0]?.employeeName,
             }))}
             columns={visibleColumns} // Pass only visible columns to the Table
-            primaryKey="userId"
+            primaryKey="dataPointId"
             onEdit={openModal}
             onDelete={(row) => {
               if (!row.isSuperAdmin) {
@@ -105,22 +126,29 @@ export default function AdminUser() {
               }
             }}
             canDelete={(row) => !row.isSuperAdmin}
-            paginationDetails={user}
+            paginationDetails={designationData}
             setPaginationFilter={setPaginationFilter}
             //   isLoading={isLoading}
             permissionKey="users"
-            showIndexColumn={false}
-            localStorageId="AdminuserList"
+            localStorageId="DatapointList"
           />
         </div>
 
+        {/* {isUserModalOpen && (
+          <DesignationAddFormModal
+            isModalOpen={isUserModalOpen}
+            modalClose={closeDeleteModal}
+            modalData={modalData}
+          />
+        )} */}
+
         {/* Modal Component */}
-        {isUserModalOpen && (
+        {isDeleteModalOpen && (
           <ConfirmationDeleteModal
             title={"Delete User"}
             label={"User Name :"}
-            modalData={`${modalData?.userFirstName} + ${modalData?.userLastName}`}
-            isModalOpen={isUserModalOpen}
+            modalData={`${modalData?.departmentName}`}
+            isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}
             isChildData={isChildData}

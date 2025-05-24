@@ -25,7 +25,6 @@ const ConfirmationDeleteModal: React.FC<TeamModalProps> = ({
         isModalOpen={isModalOpen}
         modalTitle={title}
         modalClose={modalClose}
-        isCloseButton={true}
         buttons={[
           {
             btnText: "Cancel",

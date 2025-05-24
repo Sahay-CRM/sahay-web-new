@@ -4,3 +4,223 @@ interface StepProgressProps {
   stepNames: string[];
   isLoading?: boolean;
 }
+
+//designation interface add krishna
+interface DesignationData {
+  designationId: string;
+  designationName: string;
+  companyId: string;
+  departmentId: string;
+  department: {
+    departmentId: string;
+    departmentName: string;
+  };
+  company: {
+    companyId: string;
+    companyName: string;
+  };
+}
+// kk
+interface DesignationAddFormProps {
+  isModalOpen: boolean;
+  modalClose: () => void;
+  modalData?: DesignationData;
+}
+// kk
+interface Company {
+  companyAdminName: string;
+  companyId: string;
+}
+// kk
+interface EmployeeData {
+  employeeId: string;
+  employeeName: string;
+  employeeEmail: string;
+  employeeMobile: string;
+  companyId: string;
+  employeeType: string;
+  departmentId: string | null;
+  designationId: string | null;
+  isSuperAdmin: boolean;
+  sahayEmId: string | null;
+  reportingManagerId: string | null;
+  company: Company;
+  reportingManager: ReportingManager | null;
+  departmentName: string | null;
+  designationName: string | null;
+}
+// kk
+interface CompanyTaskData {
+  taskId: string;
+  taskName: string;
+  taskDescription: string;
+  taskDeadline: string; // ISO format string (e.g., from backend); use Date if you're converting it
+  taskActualEndDate: string | null;
+  taskStatusId: string;
+  taskStatusName: string;
+  taskTypeId: string;
+  taskTypeName: string;
+  createdByEmployee: Employee;
+  assignees: Employee[];
+}
+// kk
+interface Employee {
+  employeeId: string;
+  employeeName: string;
+}
+//kk
+interface CoreParameter {
+  coreParameterId: string;
+  departmentId: string;
+  coreParameterName: string;
+  createdBy: string;
+  updatedBy: string;
+  isDelete: boolean;
+  createdDatetime: string;
+  updatedDatetime: string;
+}
+
+interface SubParameter {
+  subParameterId: string;
+  subParameterName: string;
+  coreParameterId: string;
+  coreParameter: CoreParameter;
+}
+
+interface MeetingsData {
+  meetingId: string;
+  topic: string;
+  agenda: string;
+  meetingDate: string;
+}
+
+interface ImportantDateData {
+  dateId: string;
+  label: string;
+  note: string;
+  date: string;
+}
+
+interface TaskData {
+  taskId: string;
+  taskName: string;
+  taskDescription: string;
+  taskDeadline: string;
+}
+
+interface EventData {
+  eventId: string;
+  title: string;
+  description: string;
+  start: Date;
+  end: Date;
+}
+
+//kk
+interface MeetingData {
+  meetingId: string;
+  meetingName: string;
+  meetingDescription: string;
+  meetingDateTime: string; // ISO string format
+  companyId: string;
+  createdBy: string;
+  meetingTypeId: string;
+  meetingStatusId: string;
+
+  meetingType: {
+    meetingTypeId: string;
+    meetingTypeName: string;
+  };
+
+  companyEmployee: {
+    employeeId: string;
+    employeeName: string;
+    employeeMobile: string;
+  };
+
+  company: {
+    companyId: string;
+    companyAdminEmail: string;
+    companyAdminMobile: string;
+  };
+
+  meetingStatus: {
+    meetingStatusId: string;
+    meetingStatus: string;
+  };
+
+  joiners: {
+    companyEmployee: {
+      employeeId: string;
+      employeeName: string;
+      employeeMobile: string;
+    };
+  }[];
+}
+///kk
+interface IProjectFormData {
+  projectId?: string;
+  projectName: string;
+  projectDescription: string;
+  projectDeadline: string;
+  projectStatusId: string;
+
+  employeeIds: string[];
+
+  subParameterIds: string[];
+
+  createdBy?: {
+    employeeId: string;
+    employeeName: string;
+    employeeEmail: string;
+    employeeMobile: string;
+  };
+
+  ProjectEmployees?: {
+    employeeId: string;
+    employeeName: string;
+    employeeEmail: string;
+  }[];
+
+  ProjectSubParameterJunction?: {
+    projectSubParameterId: string;
+    subPara: {
+      subParameterId: string;
+      subParameterName: string;
+      coreParameterId: string;
+      coreParameter: {
+        coreParameterId: string;
+        coreParameterName: string;
+      };
+    };
+  }[];
+}
+
+//
+interface RolePermission {
+  employeeId: string;
+  employeeName: string;
+  employeeEmail: string;
+  employeeMobile: string;
+  companyId: string;
+  employeeType: string; // You can restrict this more based on allowed values
+  departmentId: string;
+  designationId: string;
+  isSuperAdmin: boolean;
+  sahayEmId: string | null;
+  reportingManagerId: string;
+
+  company: {
+    companyAdminName: string;
+    companyId: string;
+  };
+
+  reportingManager: {
+    employeeEmail: string;
+    employeeId: string;
+    employeeName: string;
+  };
+
+  departmentName: string;
+  designationName: string;
+}

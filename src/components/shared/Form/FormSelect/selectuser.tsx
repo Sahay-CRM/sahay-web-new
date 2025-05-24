@@ -72,7 +72,7 @@ const FormSelect = React.forwardRef<HTMLDivElement, FormSelectProps>(
     const displayValue = selectedOption?.label || "";
     return (
       <div
-        className={twMerge("mt-2 w-full tb:mt-3 min-w-32", containerClass)}
+        className={twMerge("mt-2 w-full tb:mt-3  min-w-32", containerClass)}
         ref={ref}
       >
         {label && (
@@ -92,7 +92,7 @@ const FormSelect = React.forwardRef<HTMLDivElement, FormSelectProps>(
         <Select value={selectedValue?.toString()} onValueChange={handleSelect}>
           <SelectTrigger
             className={twMerge(
-              "w-full bg-white border border-dark-600/70 p-2 text-left text-sm rounded-md",
+              "w-full bg-white border border-dark-600/70 p-2 text-left text-sm mb-2 rounded-md",
               className,
             )}
           >

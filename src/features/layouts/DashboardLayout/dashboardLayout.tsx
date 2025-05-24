@@ -1,4 +1,5 @@
 import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
+// import { useBreadcrumbs } from "@/components/shared/context/BreadcrumbContext";
 import VerticalNavBar from "@/components/shared/VerticalNavBar/VerticalNavBar";
 import { useAuth } from "@/features/auth/useAuth";
 import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
@@ -20,9 +21,11 @@ const DashboardLayout = () => {
 
   const breadcrumbs = [
     { label: "Admin", href: "/" },
-    { label: "Country", href: "/" },
+    { label: "Countrysss", href: "/" },
   ];
+  //  const { breadcrumbs } = useBreadcrumbs();
   const { bgColor } = useSidebarTheme();
+  <Breadcrumbs items={breadcrumbs} />;
   return (
     <div className="flex h-screen bg-gray-200 gap-x-4">
       <div
@@ -51,7 +54,7 @@ const DashboardLayout = () => {
             >
               <i className={`bx bx-menu text-2xl`} />
             </div>
-            <Breadcrumbs items={breadcrumbs} />
+            {/* <Breadcrumbs items={breadcrumbs} /> */}
           </div>
           <div className="text-primary font-semibold">{user?.companyName}</div>
         </div>

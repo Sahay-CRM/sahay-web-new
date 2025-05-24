@@ -2,47 +2,49 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
-import useAdminUser from "./useAdminUser";
+import useCompanyDesignation from "./useCompanyDesignation";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-import SearchInput from "@/components/shared/SearchInput";
+// import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-export default function AdminUser() {
+import DesignationAddFormModal from "./designationFormModal/DesignationAddFormModal";
+
+export default function CompanyDesignation() {
   const {
-    user,
-    // isLoading,
+    designationData,
     closeDeleteModal,
     setPaginationFilter,
-    // currentStatus,
+    handleAdd,
     openModal,
     onDelete,
     modalData,
     conformDelete,
-    paginationFilter,
-    isUserModalOpen,
+    isDeleteModalOpen,
+    // paginationFilter,
+    addDesignationModal,
     isChildData,
-  } = useAdminUser();
+  } = useCompanyDesignation();
 
-  //   const { setBreadcrumbs } = useBreadcrumbs();
+  // const { setBreadcrumbs } = useBreadcrumbs();
 
-  //   useEffect(() => {
-  //     setBreadcrumbs([
-  //       { label: "Admin Tools", href: "/admin-tools" },
-  //       { label: "User" },
-  //     ]);
-  //   }, [setBreadcrumbs]);
+  // useEffect(() => {
+  //   setBreadcrumbs([
+  //     { label: "Admin Tools", href: "/admin-tools" },
+  //     { label: "User" },
+  //   ]);
+  // }, [setBreadcrumbs]);
 
   // Column visibility state
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
-    { key: "userFirstName", label: "User First Name", visible: true },
-    { key: "userLastName", label: "User Last Name", visible: true },
-    { key: "userEmail", label: "Email", visible: true },
-    { key: "departmentName", label: "Department", visible: true },
-    { key: "designationName", label: "Designation", visible: true },
-    { key: "cityName", label: "City Name", visible: true },
-    { key: "localityName", label: "Locality Name", visible: true },
+    { key: "designationName", label: "Designation Name", visible: true },
+    {
+      key: "departmentName",
+      label: "Department Name",
+      visible: true,
+    },
+    { key: "companyName", label: "Company Name", visible: true },
   ]);
 
   // Filter visible columns
@@ -70,16 +72,20 @@ export default function AdminUser() {
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
         <div className="flex mb-5 justify-between items-center">
-          <h1 className="font-semibold capitalize text-xl text-black">User</h1>
+          <h1 className="font-semibold capitalize text-xl text-black">
+            Designation List
+          </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
-            <SearchInput
+            {/* <SearchInput
               placeholder="Search..."
               searchValue={paginationFilter?.search || ""}
               setPaginationFilter={setPaginationFilter}
               className="w-96"
-            />
+            /> */}
             <Link to="">
-              <Button className="py-2 w-fit">Add User</Button>
+              <Button className="py-2 w-fit" onClick={handleAdd}>
+                Add Designation
+              </Button>
             </Link>
             {canToggleColumns && (
               <DropdownSearchMenu
@@ -92,12 +98,14 @@ export default function AdminUser() {
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            tableData={user?.data.map((item, index) => ({
+            tableData={designationData?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,
+              departmentName: item.department?.departmentName,
+              companyName: item.company?.companyName,
             }))}
             columns={visibleColumns} // Pass only visible columns to the Table
-            primaryKey="userId"
+            primaryKey="designationId"
             onEdit={openModal}
             onDelete={(row) => {
               if (!row.isSuperAdmin) {
@@ -105,22 +113,28 @@ export default function AdminUser() {
               }
             }}
             canDelete={(row) => !row.isSuperAdmin}
-            paginationDetails={user}
+            paginationDetails={designationData}
             setPaginationFilter={setPaginationFilter}
             //   isLoading={isLoading}
             permissionKey="users"
-            showIndexColumn={false}
-            localStorageId="AdminuserList"
+            localStorageId="designationList"
           />
         </div>
+        {addDesignationModal && (
+          <DesignationAddFormModal
+            isModalOpen={addDesignationModal}
+            modalClose={closeDeleteModal}
+            modalData={modalData}
+          />
+        )}
 
         {/* Modal Component */}
-        {isUserModalOpen && (
+        {isDeleteModalOpen && (
           <ConfirmationDeleteModal
-            title={"Delete User"}
-            label={"User Name :"}
-            modalData={`${modalData?.userFirstName} + ${modalData?.userLastName}`}
-            isModalOpen={isUserModalOpen}
+            title={"Delete Designation Name"}
+            label={"Designation Name :"}
+            modalData={`${modalData?.designationName}`}
+            isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}
             isChildData={isChildData}
