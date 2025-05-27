@@ -5,7 +5,6 @@ interface Login {
 }
 interface SendOtp {
   mobile: string;
-  userType: string;
 }
 
 interface LoginResponse {
@@ -15,16 +14,13 @@ interface LoginResponse {
 
 interface VerifyOtp {
   mobile: string;
-  userType: string;
   otp?: string;
 }
 
 interface VerifyOtpResponse {
   status: boolean;
   message?: string;
-  companies?: Company[];
-  company?: Company[];
-  user: User;
+  data: User;
 }
 
 interface VerifyCompanyOtp {

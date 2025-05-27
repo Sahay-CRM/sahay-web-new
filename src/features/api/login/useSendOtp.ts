@@ -11,7 +11,6 @@ export default function useSendOtp() {
         url: Urls.loginSendOtp(),
         data: {
           mobile: data.mobile,
-          userType: data.userType,
         },
       });
       return resData;

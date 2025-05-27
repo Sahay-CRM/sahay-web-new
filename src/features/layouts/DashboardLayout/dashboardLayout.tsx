@@ -2,17 +2,13 @@ import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
 import VerticalNavBar from "@/components/shared/VerticalNavBar/VerticalNavBar";
 import { useAuth } from "@/features/auth/useAuth";
 import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
-import {
-  companyNavigationData,
-  navigationData,
-} from "@/features/utils/navigation.data";
+import { navigationData } from "@/features/utils/navigation.data";
 import { useCallback, useState } from "react";
 import { Outlet } from "react-router-dom";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
   const { user } = useAuth();
-
   const toggleDrawer = useCallback((e: { preventDefault: () => void }) => {
     e?.preventDefault();
     setOpen((prev) => !prev);
@@ -30,12 +26,7 @@ const DashboardLayout = () => {
           open ? "w-[260px]" : "hidden sm:block sm:w-16"
         } bg-white rounded-tr-2xl transition-all duration-300`}
       >
-        <VerticalNavBar
-          isExpanded={open}
-          data={
-            user?.role === "SUPERADMIN" ? navigationData : companyNavigationData
-          }
-        />
+        <VerticalNavBar isExpanded={open} data={navigationData} />
       </div>
       <div className="flex flex-col flex-1 overflow-hidden gap-y-4">
         <div

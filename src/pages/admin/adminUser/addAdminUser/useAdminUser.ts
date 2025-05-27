@@ -68,11 +68,7 @@ export const useAddAdminUser = () => {
     setStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const onSubmit = async (data: FormValues): Promise<void> => {
-    if (await validateStep()) {
-      console.log("Submitted Data:", data);
-    }
-  };
+  const onSubmit = async (): Promise<void> => {};
 
   return {
     step,

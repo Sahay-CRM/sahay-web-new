@@ -39,6 +39,8 @@ const SubParameterLists = lazy(
 
 const CompaniesLists = lazy(() => import("../pages/companies/CompaniesLists"));
 
+const Calendar = lazy(() => import("../pages/Calendar"));
+
 export default function SuperAdminRoutes() {
   return (
     <Routes>
@@ -46,6 +48,7 @@ export default function SuperAdminRoutes() {
       <Route path="/administrator-panel" element={<DashboardLayout />}>
         <Route index Component={Dashboard} />
         <Route path="profile" Component={Profile} />
+        <Route path="calendar" Component={Calendar} />
         <Route path="settings" Component={Theme} />
         <Route path="departments" Component={DepartmentList} />
         <Route path="consultants" Component={ConsultantList} />

@@ -1,12 +1,11 @@
-import React, { useMemo } from "react";
+import React from "react";
 import useLogin from "./useLogin";
 import logoImg from "@/assets/logo_1.png";
 import background from "@/assets/background.png";
-import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { Button } from "@/components/ui/button";
 import { Form, FormLabel } from "@/components/ui/form";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import {
   InputOTP,
   InputOTPGroup,
@@ -21,7 +20,6 @@ const Login: React.FC = () => {
     statusSentOtp,
     errors,
     setValue,
-    control,
     companies,
     isCompanyModalOpen,
     handleLogin,
@@ -31,16 +29,6 @@ const Login: React.FC = () => {
   } = useLogin();
 
   const REGEXP_ONLY_DIGITS = "^[0-9]+$";
-
-  const loginOptions = useMemo(
-    () => [
-      { label: "Consultant", value: "CONSULTANT" },
-      { label: "Company", value: "COMPANYADMIN" },
-      { label: "Employee", value: "EMPLOYEE" },
-      { label: "Admin", value: "SUPERADMIN" },
-    ],
-    [],
-  );
 
   const methods = useForm();
 
@@ -68,7 +56,7 @@ const Login: React.FC = () => {
               <img src={logoImg} alt="logo" className="w-[60%]" />
             </div>
             <div className="space-y-6">
-              <Controller
+              {/* <Controller
                 name="userType"
                 control={control}
                 rules={{ required: "Please select a role" }}
@@ -83,7 +71,7 @@ const Login: React.FC = () => {
                     className="text-base"
                   />
                 )}
-              />
+              /> */}
 
               <FormInputField
                 id="mobile"

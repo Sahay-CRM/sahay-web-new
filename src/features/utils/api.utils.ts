@@ -1,36 +1,23 @@
 import Axios, {
   AxiosRequestConfig,
   AxiosResponse,
-  //   InternalAxiosRequestConfig,
+  InternalAxiosRequestConfig,
 } from "axios";
-
-// //   import store from "../data/store";
-// import { get } from "lodash";
+import store from "../store";
+import { size } from "lodash";
 
 const axiosInstance = Axios.create({
   timeout: 900000,
 });
 
-// // Passing token if found in authorization
-// axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-//   // const token = store.getState().auth.token;
-//   // if (config.headers && size(token)) {
-//   //   config.headers["Authorization"] = token ? token : "";
-//   // }
-//   return config;
-// });
-
-// axiosInstance.interceptors.response.use(
-//   (res: AxiosResponse) => res,
-//   (err) => {
-//     // Dispatch logout action if request unauthorized
-//     const status = get(err, "response.status", 0);
-//     if (status === 401) {
-//       // TODO: Clear all reducers and redirect to login
-//     }
-//     return Promise.reject(err);
-//   }
-// );
+axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  const token = store.getState().auth.token;
+  // const token = store.getState().user.token;
+  if (config.headers && size(token)) {
+    config.headers["authorization"] = token ? `Bearer ${token}` : "";
+  }
+  return config;
+});
 
 export default class Api {
   //   /**

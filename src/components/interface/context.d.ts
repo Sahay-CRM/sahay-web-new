@@ -10,6 +10,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: User | null;
+  token: string | null;
 }
 
 interface CustomError {
@@ -18,4 +19,8 @@ interface CustomError {
       message?: string;
     };
   };
+}
+
+interface RootState {
+  auth: AuthState;
 }

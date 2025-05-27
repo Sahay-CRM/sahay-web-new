@@ -31,9 +31,7 @@ export const useAddConsultant = () => {
     mode: "onChange",
   });
 
-  const onSubmit = async (data: FormValues): Promise<void> => {
-    console.log("Submitted Data:", data);
-  };
+  const onSubmit = async (): Promise<void> => {};
 
   return {
     onSubmit,
