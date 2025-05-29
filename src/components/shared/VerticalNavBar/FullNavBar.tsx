@@ -21,9 +21,12 @@ import {
 import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "@/features/reducers/auth.reducer";
-import { useHasPermission } from "@/features/layouts/DashboardLayout/hasPermission";
+import { useDispatch, useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 
 const FullNavBar = ({ data }: FullNavBarProps) => {
+  const permissions = useSelector(getUserPermission);
+
   const [activeIndex, setActiveIndex] = useState<number>(-1);
 
   const { user } = useAuth();
@@ -33,14 +36,22 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
     setActiveIndex((prevIndex) => (prevIndex === index ? -1 : index));
   };
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogout = () => {
-    logout();
+    dispatch(logout());
   };
-  const accessibleItems = data?.filter((item) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useHasPermission(item.moduleKey, item.permission),
-  );
+  const filteredMenuItems = data?.filter((item) => {
+    // If item has children, check if any child has permission
+    if (item.items) {
+      return item.items.some((child) => permissions?.[child.moduleKey]?.View);
+    }
+    // For items without children, check the item's own permission
+    const moduleKeys = Array.isArray(item.moduleKey)
+      ? item.moduleKey
+      : [item.moduleKey];
+    return moduleKeys.some((key) => permissions?.[key]?.View);
+  });
 
   return (
     <div className="flex flex-col w-[260px] h-screen bg-white border-r">
@@ -51,7 +62,7 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
 
       {/* Menu Items */}
       <nav className="flex-1 overflow-y-auto px-2 space-y-1 py-4 scrollbar-none">
-        {accessibleItems?.map((item, index) => {
+        {filteredMenuItems?.map((item, index) => {
           return (
             <DrawerAccordion
               key={index}

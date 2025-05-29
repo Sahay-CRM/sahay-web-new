@@ -7,7 +7,7 @@ import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownS
 // import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import DesignationAddFormModal from "./designationFormModal/DesignationAddFormModal";
+import DesignationAddFormModal from "./designationFormModal/designationAddFormModal";
 
 export default function CompanyDesignation() {
   const {

@@ -28,7 +28,7 @@ const DashboardLayout = () => {
   const { bgColor } = useSidebarTheme();
   useEffect(() => {
     if (permission) {
-      dispatch(setUserPermission(permission?.data));
+      dispatch(setUserPermission(permission));
     }
   }, [dispatch, permission]);
 
