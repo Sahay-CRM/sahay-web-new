@@ -1,8 +1,8 @@
-import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import type { FC } from "react";
-import { hasPermission } from "@/features/utils/app.utils";
 import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 
 interface ChildItem {
   label: string;
@@ -16,6 +16,8 @@ interface NavItem {
   label?: string;
   link?: string;
   items?: ChildItem[];
+  moduleKey?: string | string[];
+  permission?: string;
 }
 
 interface DrawerAccordionProps {
@@ -23,8 +25,7 @@ interface DrawerAccordionProps {
   isOpen: boolean;
   changeActiveIndex: () => void;
   postOnClick?: () => void;
-  permissions: Array<{ moduleKey: string | string[]; permissions: string[] }>;
-  user: unknown; // Replace with actual type if possible
+  user: unknown;
 }
 
 const DrawerAccordion: FC<DrawerAccordionProps> = ({
@@ -32,16 +33,28 @@ const DrawerAccordion: FC<DrawerAccordionProps> = ({
   isOpen,
   changeActiveIndex,
   postOnClick = () => {},
-  permissions,
 }) => {
   const navigate = useNavigate();
   const hasChildren = Array.isArray(item.items) && item.items.length > 0;
   const { bgColor } = useSidebarTheme();
-  const onClick = useMemo(() => {
-    if (hasChildren) return changeActiveIndex;
-    if (item?.link) return () => navigate(item.link!);
+  const permissions = useSelector(getUserPermission);
+
+  const onClick = () => {
+    if (hasChildren) return changeActiveIndex();
+    if (item?.link) return navigate(item.link);
+  };
+
+  // Check if parent item has permission
+  const hasParentPermission = item.moduleKey
+    ? Array.isArray(item.moduleKey)
+      ? item.moduleKey.some((key) => permissions?.[key]?.View)
+      : permissions?.[item.moduleKey]?.View
+    : true;
+
+  // If parent's View permission is false, don't render
+  if (item.moduleKey && !hasParentPermission) {
     return null;
-  }, [changeActiveIndex, hasChildren, item?.link, navigate]);
+  }
 
   return (
     <div
@@ -50,7 +63,7 @@ const DrawerAccordion: FC<DrawerAccordionProps> = ({
     >
       <button
         className="flex items-center justify-between w-full py-1 text-left focus:outline-none text-sm hover:text-primary font-medium py-2 rounded-lg"
-        onClick={onClick ?? undefined}
+        onClick={onClick}
       >
         <div className="flex flex-1 items-center">
           <div className="w-6 flex items-center justify-center mr-3">
@@ -79,15 +92,10 @@ const DrawerAccordion: FC<DrawerAccordionProps> = ({
 
       {isOpen && hasChildren && (
         <div className="pr-4 py-2 text-sm ml-12 leading-5">
-          <ul className="">
+          <ul>
             {item.items?.map((child, index) => {
-              const hasRoutePermission = hasPermission(
-                permissions,
-                child.moduleKey,
-                child.permission,
-              );
-
-              if (!hasRoutePermission) return null;
+              // Only show child items that have permission
+              if (!permissions?.[child.moduleKey]?.View) return null;
 
               return (
                 <li

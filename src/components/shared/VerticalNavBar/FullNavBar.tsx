@@ -1,33 +1,36 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+
 import DrawerAccordion from "../DrawerAccordion";
+import { UserIcon } from "../Icons";
+
 import { useAuth } from "@/features/auth/useAuth";
-import { usePermissions } from "@/features/auth/permissions/usePermissions";
-import { hasPermission } from "@/features/utils/app.utils";
 import logoImg from "@/assets/logo_1.png";
 import { baseUrl } from "@/features/utils/urls.utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+
+import { logout } from "@/features/reducers/auth.reducer";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { UserIcon } from "../Icons";
 import { LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
-import { AuthContext } from "@/features/auth/AuthContext";
 
 const FullNavBar = ({ data }: FullNavBarProps) => {
   const [activeIndex, setActiveIndex] = useState<number>(-1);
-  const { permissions } = usePermissions();
-  const { user } = useAuth();
+  const permissions = useSelector(getUserPermission);
 
+  const { user } = useAuth();
   const profileImage = `${baseUrl}/share/profilePics/${user?.photo}`;
 
   const handleAccordionToggle = (index: number) => {
@@ -35,19 +38,28 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
   };
 
   const navigate = useNavigate();
-  const { bgColor } = useSidebarTheme();
-  const { clearToken } = useContext(AuthContext);
+
+  const dispatch = useDispatch();
 
   const handleLogout = () => {
-    clearToken();
+    dispatch(logout());
   };
+
+  // Filter menu items based on permissions
+  const filteredMenuItems = data?.filter((item) => {
+    // If item has children, check if any child has permission
+    if (item.items) {
+      return item.items.some((child) => permissions?.[child.moduleKey]?.View);
+    }
+    // For items without children, check the item's own permission
+    const moduleKeys = Array.isArray(item.moduleKey)
+      ? item.moduleKey
+      : [item.moduleKey];
+    return moduleKeys.some((key) => permissions?.[key]?.View);
+  });
+
   return (
-    <div
-      style={{
-        backgroundColor: bgColor,
-      }}
-      className="flex flex-col w-[260px] h-screen bg-white border-r"
-    >
+    <div className="flex flex-col w-[260px] h-screen bg-white border-r">
       {/* Logo */}
       <div className="p-4 border-b">
         <img src={logoImg} alt="logo" className="w-[80%] mx-auto" />
@@ -55,26 +67,16 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
 
       {/* Menu Items */}
       <nav className="flex-1 overflow-y-auto px-2 space-y-1 py-4 scrollbar-none">
-        {data?.map((item, index) => {
-          const hasRoutePermission = hasPermission(
-            permissions,
-            item.moduleKey,
-            item.permission,
-          );
-          if (!hasRoutePermission) return null;
-
-          return (
-            <DrawerAccordion
-              key={index}
-              item={item}
-              isOpen={activeIndex === index}
-              changeActiveIndex={() => handleAccordionToggle(index)}
-              postOnClick={() => {}}
-              permissions={permissions}
-              user={user}
-            />
-          );
-        })}
+        {filteredMenuItems?.map((item, index) => (
+          <DrawerAccordion
+            key={index}
+            item={item}
+            isOpen={activeIndex === index}
+            changeActiveIndex={() => handleAccordionToggle(index)}
+            postOnClick={() => {}}
+            user={user}
+          />
+        ))}
       </nav>
 
       <DropdownMenu>

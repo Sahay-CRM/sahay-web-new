@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { usePermissions } from "@/features/auth/permissions/usePermissions";
 import { useAuth } from "@/features/auth/useAuth";
 import { hasPermission } from "@/features/utils/app.utils";
 import logoImg from "@/assets/logo_mobile.png";
 import { baseUrl } from "@/features/utils/urls.utils";
 import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+import { useSelector } from "react-redux";
 
 interface ChildItem {
   label: string;
@@ -63,7 +64,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ icon, label, items }) => {
 };
 
 const IconHoverVerticalNav: React.FC<FullNavBarProps> = ({ data }) => {
-  const { permissions } = usePermissions();
+  const permissions = useSelector(getUserPermission);
   const { user } = useAuth();
   const { bgColor } = useSidebarTheme();
 
