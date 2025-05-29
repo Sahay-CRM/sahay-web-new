@@ -12,7 +12,9 @@ function App() {
         <SidebarThemeProvider>
           <PermissionsProvider>
             <QueryClientProvider client={queryClient}>
+              {/* <BreadcrumbProvider> */}
               <AppRoutes />
+              {/* </BreadcrumbProvider> */}
             </QueryClientProvider>
           </PermissionsProvider>
         </SidebarThemeProvider>

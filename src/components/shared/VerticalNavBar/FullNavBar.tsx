@@ -1,8 +1,6 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import DrawerAccordion from "../DrawerAccordion";
 import { useAuth } from "@/features/auth/useAuth";
-import { usePermissions } from "@/features/auth/permissions/usePermissions";
-import { hasPermission } from "@/features/utils/app.utils";
 import logoImg from "@/assets/logo_1.png";
 import { baseUrl } from "@/features/utils/urls.utils";
 import {
@@ -21,11 +19,15 @@ import { UserIcon } from "../Icons";
 import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
-import { AuthContext } from "@/features/auth/AuthContext";
+import { useDispatch, useSelector } from "react-redux";
+import { setAuth } from "@/features/reducers/auth.reducer";
+import { useHasPermission } from "@/features/layouts/DashboardLayout/hasPermission";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 
 const FullNavBar = ({ data }: FullNavBarProps) => {
   const [activeIndex, setActiveIndex] = useState<number>(-1);
-  const { permissions } = usePermissions();
+  const permissions = useSelector(getUserPermission);
+
   const { user } = useAuth();
 
   const profileImage = `${baseUrl}/share/profilePics/${user?.photo}`;
@@ -33,14 +35,19 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
   const handleAccordionToggle = (index: number) => {
     setActiveIndex((prevIndex) => (prevIndex === index ? -1 : index));
   };
-
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { bgColor } = useSidebarTheme();
-  const { clearToken } = useContext(AuthContext);
 
   const handleLogout = () => {
     clearToken();
+    dispatch(setAuth({}));
   };
+  const accessibleItems = data?.filter((item) =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useHasPermission(item.moduleKey, item.permission),
+  );
+
   return (
     <div
       style={{
@@ -55,14 +62,7 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
 
       {/* Menu Items */}
       <nav className="flex-1 overflow-y-auto px-2 space-y-1 py-4 scrollbar-none">
-        {data?.map((item, index) => {
-          const hasRoutePermission = hasPermission(
-            permissions,
-            item.moduleKey,
-            item.permission,
-          );
-          if (!hasRoutePermission) return null;
-
+        {accessibleItems?.map((item, index) => {
           return (
             <DrawerAccordion
               key={index}
