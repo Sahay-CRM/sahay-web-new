@@ -21,6 +21,7 @@ export default function CompanyDesignation() {
     isDeleteModalOpen,
     paginationFilter,
     isChildData,
+    permission,
   } = useCompanyEmployee();
 
   //   const { setBreadcrumbs } = useBreadcrumbs();
@@ -80,9 +81,11 @@ export default function CompanyDesignation() {
               setPaginationFilter={setPaginationFilter}
               className="w-96"
             />
-            <Link to="/dashboard/employees/add">
-              <Button className="py-2 w-fit">Add Employee</Button>
-            </Link>
+            {permission.Add && (
+              <Link to="/dashboard/employees/add">
+                <Button className="py-2 w-fit">Add Employee</Button>
+              </Link>
+            )}
             {canToggleColumns && (
               <DropdownSearchMenu
                 columns={columnToggleOptions}
@@ -100,19 +103,24 @@ export default function CompanyDesignation() {
             }))}
             columns={visibleColumns}
             primaryKey="employeeId"
-            onEdit={(row) =>
-              navigate(`/dashboard/employees/edit/${row.employeeId}`)
+            onEdit={
+              permission.Edit
+                ? (row) =>
+                    navigate(`/dashboard/employees/edit/${row.employeeId}`)
+                : undefined
             }
             onDelete={(row) => {
               if (!row.isSuperAdmin) {
                 onDelete(row);
               }
             }}
+            isActionButton={true}
             canDelete={(row) => !row.isSuperAdmin}
             paginationDetails={employeedata}
             setPaginationFilter={setPaginationFilter}
-            permissionKey="users"
+            permissionKey="employeeId"
             localStorageId="EmployeeList"
+            moduleKey="EMPLOYEE"
           />
         </div>
 

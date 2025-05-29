@@ -11,7 +11,7 @@ import DesignationAddFormModal from "./designationFormModal/designationAddFormMo
 
 export default function CompanyDesignation() {
   const {
-    designationData,
+    designationList,
     closeDeleteModal,
     setPaginationFilter,
     handleAdd,
@@ -23,6 +23,7 @@ export default function CompanyDesignation() {
     // paginationFilter,
     addDesignationModal,
     isChildData,
+    permission,
   } = useCompanyDesignation();
 
   // const { setBreadcrumbs } = useBreadcrumbs();
@@ -82,11 +83,13 @@ export default function CompanyDesignation() {
               setPaginationFilter={setPaginationFilter}
               className="w-96"
             /> */}
-            <Link to="">
-              <Button className="py-2 w-fit" onClick={handleAdd}>
-                Add Designation
-              </Button>
-            </Link>
+            {(permission.Add || permission.Edit) && (
+              <Link to="">
+                <Button className="py-2 w-fit" onClick={handleAdd}>
+                  Add Designation
+                </Button>
+              </Link>
+            )}
             {canToggleColumns && (
               <DropdownSearchMenu
                 columns={columnToggleOptions}
@@ -98,26 +101,26 @@ export default function CompanyDesignation() {
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            tableData={designationData?.data.map((item, index) => ({
-              ...item,
-              srNo: index + 1,
-              departmentName: item.department?.departmentName,
-              companyName: item.company?.companyName,
-            }))}
+            tableData={designationList?.data.map(
+              (item: DesignationDataProps, index: number) => ({
+                ...item,
+                srNo:
+                  (designationList.currentPage - 1) * designationList.pageSize +
+                  index +
+                  1,
+              }),
+            )}
             columns={visibleColumns} // Pass only visible columns to the Table
             primaryKey="designationId"
-            onEdit={openModal}
-            onDelete={(row) => {
-              if (!row.isSuperAdmin) {
-                onDelete(row);
-              }
-            }}
-            canDelete={(row) => !row.isSuperAdmin}
-            paginationDetails={designationData}
+            onEdit={(row) => openModal(row as unknown as DesignationData)}
+            onDelete={(row) => onDelete(row as unknown as DesignationData)}
+            isActionButton
+            paginationDetails={designationList}
             setPaginationFilter={setPaginationFilter}
             //   isLoading={isLoading}
             permissionKey="users"
-            localStorageId="designationList"
+            localStorageId="designationdata"
+            moduleKey="DESIGNATION"
           />
         </div>
         {addDesignationModal && (

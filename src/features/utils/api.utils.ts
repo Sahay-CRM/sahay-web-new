@@ -48,6 +48,16 @@ export default class Api {
     const { url } = config;
     return axiosInstance.delete<T>(url!);
   }
+
+  /**
+   * PUT METHOD
+   * @param {AxiosRequestConfig} config
+   * @returns {Promise<AxiosResponse<T>>}
+   */
+  static put<T>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+    const { url, data, ...restConfig } = config;
+    return axiosInstance.put<T>(url!, data, restConfig);
+  }
 }
 
 // To cancel API

@@ -1,3 +1,4 @@
-export { default as useAddDepartment } from "./useAddDepartment";
-export { default as deleteDepartmentMutation } from "./useDeleteDesignation";
-export { default as getDepartmentList } from "./useGetDesignation";
+export { default as addUpdateDesignation } from "./useAddDesignation";
+export { default as deleteDesignationMutation } from "./useDeleteDesignation";
+export { default as getDesignationList } from "./useGetDesignation";
+export { default as getDesignaationDropdown } from "./useGetDropdownDesignation";

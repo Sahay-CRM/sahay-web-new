@@ -8,9 +8,18 @@ const Urls = {
     `${baseUrl}/admin/user-permission/get/${id}`,
   CompanyTask: () => `${baseUrl}/company/tasks/employee`,
 
+  dropdownDepartment: () => `${baseUrl}/department/get-all`,
+  //designation
   getDesignationList: () => `${baseUrl}/company/designation/get`,
   deletedesignation: (id: string) =>
-    `${baseUrl}company/designation/delete/${id}`,
+    `${baseUrl}/company/designation/delete/${id}`,
+  updateDesignation: (id: string) =>
+    `${baseUrl}/company/designation/update/${id}`,
+  addDesignation: () => `${baseUrl}/company/designation/create`,
+  dropdownDesignation: () => `${baseUrl}/company/designation/get-all`,
+
+  //employee
+  getEmployeeList: () => `${baseUrl}/company/employee/get`,
 };
 
 export default Urls;
