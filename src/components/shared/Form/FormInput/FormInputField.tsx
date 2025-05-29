@@ -57,7 +57,7 @@ const FormInputField = forwardRef<HTMLInputElement, FormInputProps>(
               value={selectedCodeValue}
               onChange={() => handleCodeChange}
               disabled={rest.disabled}
-              containerClass="w-16"
+              className="mt-2"
             />
           )}
           <FormControl>

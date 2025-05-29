@@ -1,24 +1,38 @@
 import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
+// import { useBreadcrumbs } from "@/components/shared/context/BreadcrumbContext";
 import VerticalNavBar from "@/components/shared/VerticalNavBar/VerticalNavBar";
 import { useAuth } from "@/features/auth/useAuth";
 import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
-import { companyNavigationData } from "@/features/utils/navigation.data";
-import { useCallback, useState } from "react";
+import { setUserPermission } from "@/features/reducers/auth.reducer";
+import { useCallback, useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { Outlet } from "react-router-dom";
+import useGetUserPermission from "./useGetUserPermission";
+import { companyNavigationData } from "@/features/utils/navigation.data";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
   const { user } = useAuth();
+  const dispatch = useDispatch();
   const toggleDrawer = useCallback((e: { preventDefault: () => void }) => {
     e?.preventDefault();
     setOpen((prev) => !prev);
   }, []);
+  const { data: permission } = useGetUserPermission();
 
   const breadcrumbs = [
     { label: "Admin", href: "/" },
-    { label: "Country", href: "/" },
+    { label: "Countrysss", href: "/" },
   ];
+  //  const { breadcrumbs } = useBreadcrumbs();
   const { bgColor } = useSidebarTheme();
+  useEffect(() => {
+    if (permission) {
+      dispatch(setUserPermission(permission?.data));
+    }
+  }, [dispatch, permission]);
+
+  <Breadcrumbs items={breadcrumbs} />;
   return (
     <div className="flex h-screen bg-gray-200 gap-x-4">
       <div
@@ -42,7 +56,7 @@ const DashboardLayout = () => {
             >
               <i className={`bx bx-menu text-2xl`} />
             </div>
-            <Breadcrumbs items={breadcrumbs} />
+            {/* <Breadcrumbs items={breadcrumbs} /> */}
           </div>
           <div className="text-primary font-semibold">{user?.companyName}</div>
         </div>

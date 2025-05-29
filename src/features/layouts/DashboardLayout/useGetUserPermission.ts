@@ -12,9 +12,9 @@ export default function useGetUserPermission() {
   const query = useQuery({
     queryKey: ["userPermission", id],
     queryFn: async () => {
-      if (!id) throw new Error("Missing user ID");
-      const { data: resData } = await Api.post<{ data: PermissionsResponse }>({
-        url: Urls.getUserPermission(id),
+      if (!user?.employeeId) throw new Error("Missing user ID");
+      const { data: resData } = await Api.post<Response>({
+        url: Urls.getUserPermission(user?.employeeId),
         data: {
           formatted: 1,
         },
