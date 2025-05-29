@@ -224,3 +224,56 @@ interface RolePermission {
   departmentName: string;
   designationName: string;
 }
+
+interface ApiResponse<T> {
+  success: boolean;
+  status: number;
+  message: string;
+  currentPage: number;
+  totalCount: number;
+  hasMore: boolean;
+  pageSize: number;
+  totalPage: number;
+  sortBy: string;
+  sortOrder: string;
+  data: T[];
+}
+
+interface VerifyOtpResponse {
+  status: boolean;
+  message?: string;
+  data: User | User[];
+}
+
+interface SendOtp {
+  mobile: string;
+  userType: string;
+}
+
+interface VerifyOtp {
+  mobile: string;
+  otp: string;
+  userType: string;
+}
+
+interface CompanyLogin {
+  companyId: string;
+  mobile: string;
+}
+
+interface Login {
+  mobile: string;
+  userType: string;
+  otp?: string;
+}
+
+interface CountryData {
+  countryName: string;
+  countryId: string;
+}
+
+interface StateData {
+  stateName: string;
+  stateId: string;
+  countryId?: string;
+}

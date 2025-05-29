@@ -1,56 +1,85 @@
 import { useForm } from "react-hook-form";
-
-// import { teamMutation } from "@/share/data/hooks/marketing";
-
-// import usePermissionFromLocation from "@/share/data/hooks/userPermissionFromLocation";
 import { useEffect } from "react";
+import { addCityMutation } from "@/features/api/city";
+import useGetStateDropdown from "@/features/api/state/useGetStateDropdown";
+import { useGetCountryDropdown } from "@/features/api/country";
 
-interface UseTeamFormModalProps {
-  modalClose: () => void; // Explicitly type the modalClose function
-  modalData: TeamData; // You can replace `any` with a more specific type if available
+interface UseCityFormModalProps {
+  modalClose: () => void;
+  modalData: CityData | undefined;
 }
 
 export default function useCityFormModal({
   modalClose,
   modalData,
-}: UseTeamFormModalProps) {
-  //   const currentPagePermission = usePermissionFromLocation("team");
-
-  //   const { mutate: addUpdateTeam } = teamMutation();
+}: UseCityFormModalProps) {
+  const { mutate: addCity } = addCityMutation();
 
   const {
+    reset,
     handleSubmit,
     register,
+    control,
     formState: { errors },
-    reset,
+    watch,
   } = useForm({
-    values: modalData, // Use defaultValues instead of `values`
+    values: modalData,
   });
 
-  const onSubmit = handleSubmit(async () => {
-    // try {
-    //   addUpdateTeam(data);
-    //   // Close the modal after successful submission
-    //   reset();
-    //   handleModalClose();
-    // } catch (error) {
-    // console.error("Error while adding or updating team:", error);
-    // }
+  const countryId = watch("countryId");
+
+  const { data: country } = useGetCountryDropdown();
+  const { data: stateList } = useGetStateDropdown(countryId);
+
+  const countryOptions = [
+    {
+      label: "Please select country",
+      value: "",
+      disabled: true,
+    },
+    ...(country?.data ?? []).map((item) => ({
+      label: item.countryName,
+      value: item.countryId,
+    })),
+  ];
+  
+  const stateOptions = [
+    {
+      label: "Please select State",
+      value: "",
+      disabled: true,
+    },
+    ...(stateList?.data ?? []).map((item) => ({
+      label: item.stateName,
+      value: item.stateId,
+    })),
+  ];
+
+  const onSubmit = handleSubmit((data) => {
+    addCity(data, {
+      onSuccess: () => {
+        handleModalClose();
+      },
+    });
   });
 
   const handleModalClose = () => {
-    reset(); // Reset the form data when modal is closed
-    modalClose(); // Close the modal
+    reset();
+    modalClose();
   };
 
   useEffect(() => {
-    reset(modalData); // Sync form data with modalData when it changes
+    reset(modalData);
   }, [modalData, reset]);
 
   return {
+    stateOptions,
     register,
     errors,
     onSubmit,
     handleModalClose,
+    control,
+    countryOptions,
+    countryId
   };
 }

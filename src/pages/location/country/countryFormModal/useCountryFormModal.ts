@@ -4,19 +4,18 @@ import { useForm } from "react-hook-form";
 
 // import usePermissionFromLocation from "@/share/data/hooks/userPermissionFromLocation";
 import { useEffect } from "react";
+import { addCountryMutation } from "@/features/api/country";
 
-interface UseTeamFormModalProps {
+interface UseCountryFormModalProps {
   modalClose: () => void; // Explicitly type the modalClose function
-  modalData: TeamData; // You can replace `any` with a more specific type if available
+  modalData: CountryData; // You can replace any with a more specific type if available
 }
 
 export default function useCountryFormModal({
   modalClose,
   modalData,
-}: UseTeamFormModalProps) {
-  //   const currentPagePermission = usePermissionFromLocation("team");
-
-  //   const { mutate: addUpdateTeam } = teamMutation();
+}: UseCountryFormModalProps) {
+  const { mutate: addCountry } = addCountryMutation();
 
   const {
     handleSubmit,
@@ -24,23 +23,20 @@ export default function useCountryFormModal({
     formState: { errors },
     reset,
   } = useForm({
-    values: modalData, // Use defaultValues instead of `values`
+    values: modalData,
   });
 
-  const onSubmit = handleSubmit(async () => {
-    // try {
-    //   addUpdateTeam(data);
-    //   // Close the modal after successful submission
-    //   reset();
-    //   handleModalClose();
-    // } catch (error) {
-    // console.error("Error while adding or updating team:", error);
-    // }
+  const onSubmit = handleSubmit(async (data) => {
+    addCountry(data, {
+      onSuccess: () => {
+        handleModalClose();
+      },
+    });
   });
 
   const handleModalClose = () => {
-    reset(); // Reset the form data when modal is closed
-    modalClose(); // Close the modal
+    reset();
+    modalClose();
   };
 
   useEffect(() => {

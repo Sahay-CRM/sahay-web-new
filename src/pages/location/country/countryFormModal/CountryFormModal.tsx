@@ -6,7 +6,7 @@ import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 interface TeamModalProps {
   isModalOpen: boolean;
   modalClose: () => void;
-  modalData: TeamData;
+  modalData: CountryData;
 }
 
 const CountryFormModal: React.FC<TeamModalProps> = ({
@@ -25,7 +25,7 @@ const CountryFormModal: React.FC<TeamModalProps> = ({
       <div>
         <ModalData
           isModalOpen={isModalOpen}
-          modalTitle={"Add Country"}
+          modalTitle={modalData?.countryId ? "Edit Country" : "Add Country"}
           modalClose={handleModalClose}
           buttons={[
             {

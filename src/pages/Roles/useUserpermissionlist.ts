@@ -11,7 +11,7 @@ export default function useAdminUser() {
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [meetingData, setUser] = useState({
+  const [meetingData, _setUser] = useState({
     success: true,
     status: 200,
     message: "Important dates fetched successfully.",

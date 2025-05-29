@@ -1,57 +1,65 @@
-import { useForm } from "react-hook-form";
-
-// import { teamMutation } from "@/share/data/hooks/marketing";
-
-// import usePermissionFromLocation from "@/share/data/hooks/userPermissionFromLocation";
+import { useFormContext } from "react-hook-form";
 import { useEffect } from "react";
+import { addStateMutation } from "@/features/api/state";
+import { useGetCountryDropdown } from "@/features/api/country";
 
-interface UseTeamFormModalProps {
-  modalClose: () => void; // Explicitly type the modalClose function
-  modalData: TeamData; // You can replace `any` with a more specific type if available
+interface UseStateFormModalProps {
+  modalClose: () => void;
+  modalData: StateData | undefined;
 }
 
 export default function useStateFormModal({
   modalClose,
   modalData,
-}: UseTeamFormModalProps) {
-  //   const currentPagePermission = usePermissionFromLocation("team");
-
-  //   const { mutate: addUpdateTeam } = teamMutation();
-
+}: UseStateFormModalProps) {
+  const { mutate: addState } = addStateMutation();
+  const methods = useFormContext<StateData>();
   const {
+    reset,
     handleSubmit,
     register,
+    control,
     formState: { errors },
-    reset,
-  } = useForm({
-    values: modalData, // Use defaultValues instead of `values`
-  });
+  } = methods;
 
-  const onSubmit = handleSubmit(async () => {
-    // try {
-    //   addUpdateTeam(data);
-    //   // Close the modal after successful submission
-    //   reset();
-    //   handleModalClose();
-    // } catch (error) {
-    // console.error("Error while adding or updating team:", error);
-    // }
+  const { data: countryList } = useGetCountryDropdown();
+  
+  const countryOptions = [
+    {
+      label: "Please select country",
+      value: "",
+      disabled: true,
+    },
+    ...(countryList?.data ?? []).map((item) => ({
+      label: item.countryName,
+      value: item.countryId,
+    })),
+  ];
+
+  const onSubmit = handleSubmit((data) => {
+    
+    addState(data, {
+      onSuccess: () => {
+        handleModalClose();
+      },
+    });
   });
 
   const handleModalClose = () => {
-    reset(); // Reset the form data when modal is closed
-    modalClose(); // Close the modal
+    reset();
+    modalClose();
   };
 
   useEffect(() => {
-    reset(modalData); // Sync form data with modalData when it changes
+    reset(modalData);
   }, [modalData, reset]);
 
   return {
+    countryOptions,
     register,
     errors,
-    currentPagePermission,
     onSubmit,
     handleModalClose,
+    control,
   };
 }

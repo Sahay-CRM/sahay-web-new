@@ -16,3 +16,14 @@ interface PermissionsContextType {
   permissions: PermissionItem[];
   loading: boolean;
 }
+
+interface Permission {
+  Add: boolean;
+  Edit: boolean;
+  Delete: boolean;
+  View: boolean;
+}
+
+interface PermissionsResponse {
+  [moduleKey: string]: Permission;
+}

@@ -40,3 +40,6 @@ interface CustomError {
     };
   };
 }
+interface RootState {
+  auth: AuthState;
+}

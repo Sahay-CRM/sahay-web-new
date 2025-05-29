@@ -1,14 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import TableData from "@/components/shared/DataTable/DataTable";
 import useCountriesList from "./useCountriesList";
 import CountryFormModal from "./countryFormModal/CountryFormModal";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import { FormProvider, useForm } from "react-hook-form";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 // import CountryFormModal from "./countryFormModal/CountryFormModal";
 // import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 
 export default function CountriesList() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "Admin", href: "/" },
+      {
+        label: "Country List",
+        href: "",
+      },
+    ]);
+  }, [setBreadcrumbs]);
+
   const {
     countryList,
     closeDeleteModal,
@@ -21,6 +34,7 @@ export default function CountriesList() {
     isDeleteModalOpen,
     confirmDelete,
     isChildData,
+    permission,
   } = useCountriesList();
   const methods = useForm();
   // const { setBreadcrumbs } = useBreadcrumbs();
@@ -31,7 +45,7 @@ export default function CountriesList() {
 
   // Column visibility state
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [columnToggleOptions, setColumnToggleOptions] = useState([
+  const [columnToggleOptions, _setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "countryName", label: "Country Name", visible: true },
   ]);
@@ -42,7 +56,7 @@ export default function CountriesList() {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
 
   // Toggle column visibility
@@ -69,32 +83,29 @@ export default function CountriesList() {
           <h1 className="font-semibold capitalize text-xl text-black">
             Countries
           </h1>
-          <div className="flex items-center space-x-5 tb:space-x-7">
-            <Button className="py-2 w-fit" onClick={handleAddCountry}>
-              Add Country
-            </Button>
-            {/* {canToggleColumns && (
-            <DropdownSearchMenu
-              columns={columnToggleOptions}
-              onToggleColumn={onToggleColumn}
-            />
-          )} */}
-          </div>
+          {(permission.Add || permission.Edit) && (
+            <div className="flex items-center space-x-5 tb:space-x-7">
+              <Button className="py-2 w-fit" onClick={handleAddCountry}>
+                Add Country
+              </Button>
+            </div>
+          )}
         </div>
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
-          {/* ✅ Custom TableData Component */}
           <TableData
             tableData={countryList?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,
             }))}
+            isActionButton
             columns={visibleColumns}
             primaryKey="countryId"
-            onEdit={openModal}
-            onDelete={onDelete}
+            onEdit={(row) => openModal(row)}
+            onDelete={(row) => onDelete(row)}
             paginationDetails={countryList}
             setPaginationFilter={setPaginationFilter}
-            permissionKey="marketing"
+            localStorageId="countryList"
+            moduleKey="COUNTRY"
           />
         </div>
 

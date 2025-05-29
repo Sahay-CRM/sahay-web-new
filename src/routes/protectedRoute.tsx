@@ -1,6 +1,6 @@
 import { usePermissions } from "@/features/auth/permissions/usePermissions";
 import { hasPermission } from "@/features/utils/app.utils";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface ProtectedRouteProps {
   children: ReactNode;
