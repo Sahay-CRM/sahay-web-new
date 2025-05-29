@@ -55,9 +55,15 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
 
   return (
     <div className="flex flex-col w-[260px] h-screen bg-white border-r">
-      {/* Logo */}
-      <div className="p-4 border-b">
-        <img src={logoImg} alt="logo" className="w-[80%] mx-auto" />
+      <div className="flex items-center mt-4 px-4 py-4 shadow-sm mt-auto cursor-pointer mb-4">
+        <div className="flex w-[70px] h-[50px]">
+          <img
+            src={logoImg}
+            alt="profile"
+            className="w-full rounded-full object-contain bg-black"
+          />
+        </div>
+        <span className="ml-2 mr-1">{user?.companyName}</span>
       </div>
 
       {/* Menu Items */}
@@ -78,27 +84,9 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          {user?.role === "SUPERADMIN" ? (
-            <div className="flex items-center mt-4 px-4 py-4 shadow-sm mt-auto cursor-pointer mb-4">
-              <div className="flex w-[50px]">
-                <img
-                  src={profileImage}
-                  alt="profile"
-                  className="w-full rounded-full bg-black"
-                />
-              </div>
-              <span className="ml-2 mr-1">
-                {user?.adminUserName ||
-                  user?.employeeName ||
-                  user?.consultantName}
-                <span className="flex font-normal text-xs">{user?.role}</span>
-              </span>
-            </div>
-          ) : (
-            <div className="flex justify-center mb-4 cursor-pointer">
-              <img src={logoImg} alt="logo" className="w-[60%]" />
-            </div>
-          )}
+          <div className="flex justify-center mb-4 cursor-pointer">
+            <img src={logoImg} alt="logo" className="w-[60%]" />
+          </div>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
