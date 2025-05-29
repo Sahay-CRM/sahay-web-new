@@ -30,7 +30,7 @@ const userpermissionlist = lazy(
   () => import("../pages/Roles/Userpermissionlist"),
 );
 const UserPermissionEdit = lazy(
-  () => import("../pages/Roles/UserpermissionEdit"),
+  () => import("../pages/Roles/userPermissionTable"),
 );
 const Healthscore = lazy(
   () => import("../pages/HealthscoreWrapper/DatapointList"),
@@ -75,11 +75,11 @@ export default function EmployeeRoutes() {
         />
         <Route path="datapoint" Component={DatapointList} />
         <Route path="healthscore-achieve" Component={Healthscore} />
-        <Route path="roles/userpermissionlist" Component={userpermissionlist} />
-        <Route
-          path="roles/userpermissionlist/edit"
-          element={<UserPermissionEdit />}
-        />
+
+        <Route path="roles/user-permission">
+          <Route index Component={userpermissionlist} />
+          <Route path="edit/:id" Component={UserPermissionEdit} />
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

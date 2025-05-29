@@ -3,6 +3,7 @@ import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useUserpermissionlist from "./useUserpermissionlist";
 import { FormProvider, useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
 export default function MeetingList() {
   const {
@@ -14,7 +15,6 @@ export default function MeetingList() {
     conformDelete,
     isDeleteModalOpen,
     isChildData,
-    onPermissionButton,
   } = useUserpermissionlist();
 
   //   const { setBreadcrumbs } = useBreadcrumbs();
@@ -45,6 +45,7 @@ export default function MeetingList() {
   );
 
   const methods = useForm();
+  const navigate = useNavigate();
 
   return (
     <FormProvider {...methods}>
@@ -63,25 +64,21 @@ export default function MeetingList() {
             }))}
             columns={visibleColumns}
             primaryKey="employeeId"
-            canDelete={(row) => !row.isSuperAdmin}
             paginationDetails={meetingData}
             setPaginationFilter={setPaginationFilter}
             //   isLoading={isLoading}
             permissionKey="users"
             additionalButton={true}
             isActionButton={true}
-            onAdditionButton={onPermissionButton} // Passes the full row object
             localStorageId="UserPermissionList"
+            moduleKey="ROLES_PERMISSION"
+            onAdditionButton={(data) => {
+              navigate(
+                `/dashboard/roles/user-permission/edit/${data.employeeId}`,
+              );
+            }}
           />
         </div>
-        {/* {isUserModalOpen && (
-          <DesignationAddFormModal
-            isModalOpen={isUserModalOpen}
-            modalClose={closeDeleteModal}
-            modalData={modalData}
-          />
-        )} */}
-
         {/* Modal Component */}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal

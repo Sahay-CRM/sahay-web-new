@@ -75,7 +75,7 @@ export const companyNavigationData = [
     id: 10,
     icon: "bx bxs-lock-alt",
     label: "Role & Permission",
-    link: "/dashboard/roles/userpermissionlist",
+    link: "/dashboard/roles/user-permission",
     permission: "View",
     moduleKey: "ROLES_PERMISSION",
   },
