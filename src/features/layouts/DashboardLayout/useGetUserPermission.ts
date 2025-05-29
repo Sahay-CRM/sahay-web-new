@@ -4,26 +4,24 @@ import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 
-interface Response {
-  data: PermissionData;
-}
-
 export default function useGetUserPermission() {
   const user = useSelector(getUserDetail);
 
+  const id = user?.adminUserId;
+
   const query = useQuery({
-    queryKey: ["userPermission", user?.employeeId],
+    queryKey: ["userPermission", id],
     queryFn: async () => {
-      if (!user?.employeeId) throw new Error("Missing user ID");
-      const { data: resData } = await Api.get<Response>({
-        url: Urls.getUserPermission(user?.employeeId),
+      if (!id) throw new Error("Missing user ID");
+      const { data: resData } = await Api.post<{ data: PermissionsResponse }>({
+        url: Urls.getUserPermission(id),
         data: {
-          formatted: "0",
+          formatted: 1,
         },
       });
-      return resData;
+      return resData.data;
     },
-    enabled: !!user?.employeeId,
+    enabled: !!id,
   });
 
   return query;

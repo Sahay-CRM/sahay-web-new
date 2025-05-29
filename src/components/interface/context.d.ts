@@ -11,6 +11,7 @@ interface AuthState {
   isLoading: boolean;
   user: User | null;
   token: string | null;
+  userPermission?: PermissionsResponse;
 }
 
 interface CustomError {

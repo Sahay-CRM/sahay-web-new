@@ -72,3 +72,28 @@ interface ImportantDateData {
   note: string;
   date: string;
 }
+
+interface BaseResponse<T> {
+  success: boolean;
+  status: number;
+  message: string;
+  currentPage: number;
+  totalCount: number;
+  hasMore: boolean;
+  pageSize: number;
+  totalPage: number;
+  sortBy: string;
+  sortOrder: string;
+  data: T[];
+}
+
+interface DesignationDetails {
+  srNo: number;
+  designationId: string;
+  designationName: string;
+  parentId: null;
+  companyId: string;
+  departmentId: string;
+  departmentName: string;
+  companyName: string;
+}

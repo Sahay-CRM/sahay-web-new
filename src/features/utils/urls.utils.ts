@@ -7,6 +7,10 @@ const Urls = {
   getUserPermission: (id: string) =>
     `${baseUrl}/admin/user-permission/get/${id}`,
   CompanyTask: () => `${baseUrl}/company/tasks/employee`,
+
+  getDesignationList: () => `${baseUrl}/company/designation/get`,
+  deletedesignation: (id: string) =>
+    `${baseUrl}company/designation/delete/${id}`,
 };
 
 export default Urls;
