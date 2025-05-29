@@ -1,7 +1,4 @@
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-
 import DrawerAccordion from "../DrawerAccordion";
 import { UserIcon } from "../Icons";
 
@@ -9,9 +6,6 @@ import { useAuth } from "@/features/auth/useAuth";
 import logoImg from "@/assets/logo_1.png";
 import { baseUrl } from "@/features/utils/urls.utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getUserPermission } from "@/features/selectors/auth.selector";
-
-import { logout } from "@/features/reducers/auth.reducer";
 
 import {
   DropdownMenu,
@@ -25,10 +19,15 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { logout } from "@/features/reducers/auth.reducer";
+import { useDispatch, useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 
 const FullNavBar = ({ data }: FullNavBarProps) => {
-  const [activeIndex, setActiveIndex] = useState<number>(-1);
   const permissions = useSelector(getUserPermission);
+
+  const [activeIndex, setActiveIndex] = useState<number>(-1);
 
   const { user } = useAuth();
   const profileImage = `${baseUrl}/share/profilePics/${user?.photo}`;
@@ -36,16 +35,12 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
   const handleAccordionToggle = (index: number) => {
     setActiveIndex((prevIndex) => (prevIndex === index ? -1 : index));
   };
-
   const navigate = useNavigate();
-
   const dispatch = useDispatch();
 
   const handleLogout = () => {
     dispatch(logout());
   };
-
-  // Filter menu items based on permissions
   const filteredMenuItems = data?.filter((item) => {
     // If item has children, check if any child has permission
     if (item.items) {
@@ -67,16 +62,18 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
 
       {/* Menu Items */}
       <nav className="flex-1 overflow-y-auto px-2 space-y-1 py-4 scrollbar-none">
-        {filteredMenuItems?.map((item, index) => (
-          <DrawerAccordion
-            key={index}
-            item={item}
-            isOpen={activeIndex === index}
-            changeActiveIndex={() => handleAccordionToggle(index)}
-            postOnClick={() => {}}
-            user={user}
-          />
-        ))}
+        {filteredMenuItems?.map((item, index) => {
+          return (
+            <DrawerAccordion
+              key={index}
+              item={item}
+              isOpen={activeIndex === index}
+              changeActiveIndex={() => handleAccordionToggle(index)}
+              postOnClick={() => {}}
+              user={user}
+            />
+          );
+        })}
       </nav>
 
       <DropdownMenu>

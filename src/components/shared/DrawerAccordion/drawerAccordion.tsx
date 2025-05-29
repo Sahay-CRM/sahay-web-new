@@ -62,7 +62,7 @@ const DrawerAccordion: FC<DrawerAccordionProps> = ({
       className="w-full overflow-hidden py-1 px-4 text-gray-700"
     >
       <button
-        className="flex items-center justify-between w-full py-1 text-left focus:outline-none text-sm hover:text-primary font-medium py-2 rounded-lg"
+        className="flex items-center justify-between w-full text-left focus:outline-none text-sm hover:text-primary font-medium py-2 rounded-lg"
         onClick={onClick}
       >
         <div className="flex flex-1 items-center">

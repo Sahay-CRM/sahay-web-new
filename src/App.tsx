@@ -10,7 +10,9 @@ function App() {
       <AuthProvider>
         <SidebarThemeProvider>
           <QueryClientProvider client={queryClient}>
+            {/* <BreadcrumbProvider> */}
             <AppRoutes />
+            {/* </BreadcrumbProvider> */}
           </QueryClientProvider>
         </SidebarThemeProvider>
       </AuthProvider>

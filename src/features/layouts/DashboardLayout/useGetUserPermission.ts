@@ -7,21 +7,19 @@ import { useSelector } from "react-redux";
 export default function useGetUserPermission() {
   const user = useSelector(getUserDetail);
 
-  const id = user?.adminUserId;
-
   const query = useQuery({
-    queryKey: ["userPermission", id],
+    queryKey: ["userPermission"],
     queryFn: async () => {
-      if (!id) throw new Error("Missing user ID");
+      if (!user?.employeeId) throw new Error("Missing user ID");
       const { data: resData } = await Api.post<{ data: PermissionsResponse }>({
-        url: Urls.getUserPermission(id),
+        url: Urls.getUserPermission(user?.employeeId),
         data: {
           formatted: 1,
         },
       });
       return resData.data;
     },
-    enabled: !!id,
+    enabled: !!user?.employeeId,
   });
 
   return query;

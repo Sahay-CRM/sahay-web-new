@@ -1,7 +1,9 @@
+import KpiDashoard from "../kpiDashboard/KpiDashboard";
+
 function HomePage() {
   return (
     <div className="">
-      <p>Home Screen</p>
+      <KpiDashoard />
     </div>
   );
 }
