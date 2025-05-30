@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function MeetingList() {
   const {
-    meetingData,
+    employeeData,
     closeDeleteModal,
     setPaginationFilter,
     // currentStatus,
@@ -58,13 +58,13 @@ export default function MeetingList() {
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            tableData={meetingData?.data.map((item, index) => ({
+            tableData={employeeData?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,
             }))}
             columns={visibleColumns}
             primaryKey="employeeId"
-            paginationDetails={meetingData}
+            paginationDetails={employeeData}
             setPaginationFilter={setPaginationFilter}
             //   isLoading={isLoading}
             permissionKey="users"
