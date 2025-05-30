@@ -24,6 +24,9 @@ const Urls = {
     `${baseUrl}/company/imp-date/delete/${id}`,
   getAllImportantDatesByPage: () => `${baseUrl}/company/imp-date/get`,
 
+  getAllMeetingStatus: () => `${baseUrl}/meeting-status/get`,
+  getAllMeetingType: () => `${baseUrl}/meeting-type/get`,
+
   getAllCompanyMeeting: () => `${baseUrl}/company/meeting/get-all`,
   addCompanyMeeting: () => `${baseUrl}/company/meeting/create`,
   updateCompanyMeeting: (id: string) =>

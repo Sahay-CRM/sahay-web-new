@@ -85,7 +85,7 @@ export default function MeetingList() {
               srNo: index + 1,
               joinerNames: item.joiners?.length
                 ? item.joiners
-                    .map((joiner) => joiner.companyEmployee?.employeeName)
+                    .map((joiner) => joiner?.employeeName)
                     .filter(Boolean)
                     .join(", ")
                 : "-",

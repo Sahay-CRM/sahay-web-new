@@ -178,10 +178,7 @@ interface MeetingData {
     companyAdminMobile: string;
   };
 
-  meetingStatus: {
-    meetingStatusId: string;
-    meetingStatus: string;
-  };
+  meetingStatus: MeetingStatusDataProps;
 
   joiners: {
     companyEmployee: {
@@ -277,15 +274,25 @@ interface ImportantDatesDataProps {
 }
 
 interface CompanyMeetingDataProps {
-  meetingId: string;
+  meetingId?: string;
   meetingName: string;
   meetingDescription: string;
   meetingDateTime: string;
-  companyId: string;
-  createdBy: string;
   meetingTypeId: string;
   meetingStatusId: string;
   joiners?: string[];
+}
+
+interface CompanyMeetingStatusDataProps {
+  meetingStatusId: string;
+  meetingStatus: string;
+  meetingStatusOrder: number;
+  winLostMeeting: null;
+}
+
+interface CompanyMeetingTypeDataProps {
+  meetingTypeId: string;
+  meetingTypeName: string;
 }
 
 interface CompanyProjectDataProps {
@@ -331,6 +338,10 @@ interface DesignationDataProps {
 interface ConsultantDataProps {
   consultantId: string;
   consultantName: string;
+}
+interface MeetingStatusDataProps {
+  meetingStatusId: string;
+  meetingStatus: string;
 }
 
 interface AdminUserTypeDataProps {

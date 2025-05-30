@@ -16,6 +16,8 @@ export default function useAddUpdateCompanyMeeting() {
         meetingName: data?.meetingName,
         meetingDescription: data?.meetingDescription,
         meetingDateTime: data?.meetingDateTime,
+        meetingStatusId: data?.meetingStatusId,
+        meetingTypeId: data?.meetingTypeId,
         joiners: data?.joiners,
       };
 

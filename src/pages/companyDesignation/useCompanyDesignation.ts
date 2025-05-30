@@ -15,6 +15,7 @@ export default function useAdminUser() {
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
 
   const permission = useSelector(getUserPermission).DESIGNATION;
+
   const [isChildData, setIsChildData] = useState<string | undefined>();
   const { mutate: deleteDesignation } = deleteDesignationMutation();
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({

@@ -115,24 +115,15 @@ export default function AddMeeting({
                 error={errors.meetingDescription}
               />
 
-              {/* <FormInputField
-                type="date"
-                label="Meeting Date"
+              <FormInputField
+                id=""
+                type="datetime-local"
+                label="Meeting Date & Time"
                 {...register("meetingDateTime", {
                   required: "Date & Time is required",
                 })}
                 error={errors.meetingDateTime}
-              /> */}
-              {/* <Controller
-                name="dueDate"
-                control={methods.control}
-                render={({ field }) => (
-                  <FormDatePicker
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              /> */}
+              />
             </Card>
           </div>
         )}

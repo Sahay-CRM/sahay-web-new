@@ -4,11 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 type DesignationRes = BaseResponse<DesignationDetails>;
 
-export default function useGetCompany({
-  filter,
-}: {
-  filter: PaginationFilter;
-}) {
+export default function useGetDesignation({ filter }: FilterDataProps) {
   return useQuery({
     queryKey: ["get-designation-list", filter],
     queryFn: async () => {

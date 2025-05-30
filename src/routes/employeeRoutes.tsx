@@ -1,9 +1,9 @@
 import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import DashboardLayout from "@/features/layouts/DashboardLayout/dashboardLayout";
-import AddCompanyEmployee from "@/pages/companyEmployee/AddTask/addEmployee";
+import AddCompanyEmployee from "@/pages/companyEmployee/AddEmployeeFormModal/addEmployee";
 import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
-import AddCompanyMeeting from "@/pages/Meeting/CompanyEmployeeFormModal/AddCompanyMeeting";
+import AddCompanyMeeting from "@/pages/Meeting/AddMeetingFormModal/addMeeting";
 import AddCompanyProjectList from "@/pages/companyProjects/CompanyProjectFormModal/AddCompanyProjectList";
 
 const Dashboard = lazy(() => import("../pages/homePage/HomePage"));
@@ -57,10 +57,7 @@ export default function EmployeeRoutes() {
         />
         <Route path="meeting" Component={CompanyMeeting} />
         <Route path="meeting/add" element={<AddCompanyMeeting />} />
-        <Route
-          path="meeting/edit/:id"
-          element={<AddCompanyMeeting isEditMode />}
-        />
+        <Route path="meeting/edit/:id" element={<AddCompanyMeeting />} />
         <Route path="tasks" Component={CompanyTask} />
         <Route path="tasks/add" element={<AddCompanyTaskList />} />
         <Route

@@ -1,21 +1,20 @@
 import { useCallback, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
-import FormSelect from "@/components/shared/Form/FormSelect";
-import useAddOrUpdateEmployee from "@/features/api/companyEmployee/useAddEmployee";
-import { getALLDepartmentList } from "@/features/api/department";
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-import { getDesignaationDropdown } from "@/features/api/designation";
 import { getEmployee } from "@/features/api/companyEmployee";
+import {
+  useAddUpdateCompanyMeeting,
+  useGetCompanyMeetingStatus,
+} from "@/features/api/companyMeeting";
+import { getMeetingType } from "@/features/api/meetingType";
 
 export default function useAddEmployee() {
-  const { id: employeeId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
 
-  const { mutate: addEmployee } = useAddOrUpdateEmployee();
+  const { mutate: addMeeting } = useAddUpdateCompanyMeeting();
 
   const {
     register,
@@ -25,15 +24,10 @@ export default function useAddEmployee() {
     trigger,
     reset,
     getValues,
-    watch,
   } = useForm({
     mode: "onChange",
     // values: employeeApiData, // If you have employee data to prefill
   });
-
-  // Watch employeeType field
-  const employeeTypeValue = watch("employeeType");
-  const showNextStep = employeeTypeValue !== "owner";
 
   const handleClose = () => setModalOpen(false);
 
@@ -45,7 +39,17 @@ export default function useAddEmployee() {
   }, [trigger]);
 
   const onSubmit = handleSubmit(async (data) => {
-    addEmployee(data, {
+    const payload = {
+      meetingName: data?.meetingName,
+      meetingDescription: data?.meetingDescription,
+      meetingDateTime: data?.meetingDateTime,
+      meetingTypeId: data?.meetingTypeId?.meetingTypeId,
+      meetingStatusId: data?.meetingStatusId?.meetingStatusId,
+      joiners: data?.joiners,
+    };
+    // console.log(payload.meetingStatusId);
+    // console.log(payload);
+    addMeeting(payload, {
       onSuccess: () => {
         handleModalClose();
       },
@@ -57,77 +61,52 @@ export default function useAddEmployee() {
     setModalOpen(false);
   };
 
-  const EmployeeStatus = () => {
-    const [countryCode, setCountryCode] = useState<string>("+91");
-    const employeeTypeOptions = [
-      { value: "employee", label: "Employee" },
-      { value: "owner", label: "Owner" },
-    ];
+  const MeetingInfo = () => {
     return (
       <div className="grid grid-cols-2 gap-4">
         <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
           <FormInputField
-            label="Employee Name"
-            {...register("employeeName", { required: "Name is required" })}
-            error={errors.employeeName}
+            label="Meeting Name"
+            {...register("meetingName", { required: "Name is required" })}
+            error={errors.meetingName}
           />
+
           <FormInputField
-            label="Email"
-            {...register("employeeEmail", {
-              required: "Email is required",
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: "Enter valid email",
-              },
+            label="Meeting Description"
+            {...register("meetingDescription", {
+              required: "Description is required",
             })}
-            error={errors.employeeEmail}
+            error={errors.meetingDescription}
           />
+
           <FormInputField
-            id="employeeMobile"
-            label="Mobile Number"
-            {...register("employeeMobile", {
-              required: "Please enter your mobile number",
+            id=""
+            type="datetime-local"
+            label="Meeting Date & Time"
+            {...register("meetingDateTime", {
+              required: "Date & Time is required",
             })}
-            error={errors.employeeMobile}
-            placeholder="Enter mobile number"
-            options={[{ value: "+91", label: "+91" }]}
-            selectedCodeValue={countryCode || "+91"}
-            onCountryCodeChange={setCountryCode}
-            className="text-lg"
-          />
-          <Controller
-            control={control}
-            name="employeeType"
-            rules={{ required: "Employee Type is required" }}
-            render={({ field }) => (
-              <FormSelect
-                label="Employee Type"
-                value={field.value}
-                onChange={field.onChange}
-                options={employeeTypeOptions}
-                error={errors.employeeType}
-              />
-            )}
+            error={errors.meetingDateTime}
           />
         </Card>
       </div>
     );
   };
 
-  const DepartmentSelect = () => {
-    const { data: departmentData } = getALLDepartmentList();
-    // const designationData = [
-    //   { value: "des1", label: "Executive" },
-    //   { value: "des2", label: "Manager" },
-    // ];
-    // const employees = [
-    //   { value: "emp1", label: "John Doe" },
-    //   { value: "emp2", label: "Jane Smith" },
-    // ];
+  const MeetingStatus = () => {
+    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 10,
+      search: "",
+    });
+
+    const { data: meeetingStatusData } = useGetCompanyMeetingStatus({
+      filter: paginationFilter,
+    });
 
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
-      { key: "departmentName", label: "Department Name", visible: true },
+      { key: "meetingStatus", label: "Meeting Status", visible: true },
     ]);
 
     // Filter visible columns
@@ -164,21 +143,21 @@ export default function useAddEmployee() {
         </div>
 
         <Controller
-          name="departmentId"
+          name="meetingStatusId"
           control={control}
           rules={{ required: "Please select a Task Priority" }}
           render={({ field }) => (
             <TableData
               {...field}
-              tableData={departmentData?.data.map((item, index) => ({
+              tableData={meeetingStatusData?.data.map((item, index) => ({
                 ...item,
                 srNo: index + 1,
               }))}
               isActionButton={false}
               columns={visibleColumns}
-              primaryKey="departmentId"
-              paginationDetails={departmentData}
-              // setPaginationFilter={setPaginationFilter}
+              primaryKey="meetingStatusId"
+              paginationDetails={meeetingStatusData}
+              setPaginationFilter={setPaginationFilter}
               multiSelect={false}
               selectedValue={field.value}
               handleChange={field.onChange}
@@ -190,17 +169,19 @@ export default function useAddEmployee() {
     );
   };
 
-  const EmployeeType = () => {
-    const { data: designationData } = getDesignaationDropdown();
+  const MeetingType = () => {
+    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 10,
+      search: "",
+    });
 
-    // const employees = [
-    //   { value: "emp1", label: "John Doe" },
-    //   { value: "emp2", label: "Jane Smith" },
-    // ];
-
+    const { data: meetingTypeData } = getMeetingType({
+      filter: paginationFilter,
+    });
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
-      { key: "designationName", label: "Designation Name", visible: true },
+      { key: "meetingTypeName", label: "Designation Name", visible: true },
     ]);
 
     // Filter visible columns
@@ -237,21 +218,21 @@ export default function useAddEmployee() {
         </div>
 
         <Controller
-          name="departmentId"
+          name="meetingTypeId"
           control={control}
           rules={{ required: "Please select a Task Priority" }}
           render={({ field }) => (
             <TableData
               {...field}
-              tableData={designationData?.data.map((item, index) => ({
+              tableData={meetingTypeData?.data.map((item, index) => ({
                 ...item,
                 srNo: index + 1,
               }))}
               isActionButton={false}
               columns={visibleColumns}
-              primaryKey="departmentId"
-              paginationDetails={designationData}
-              // setPaginationFilter={setPaginationFilter}
+              primaryKey="meetingTypeId"
+              paginationDetails={meetingTypeData}
+              setPaginationFilter={setPaginationFilter}
               multiSelect={false}
               selectedValue={field.value}
               handleChange={field.onChange}
@@ -262,7 +243,8 @@ export default function useAddEmployee() {
       </div>
     );
   };
-  const ReportingManage = () => {
+
+  const Joiners = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
       pageSize: 10,
@@ -275,7 +257,8 @@ export default function useAddEmployee() {
     });
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
-      { key: "employeeName", label: "Reporting Manager", visible: true },
+      { key: "employeeName", label: "Joiners", visible: true },
+      { key: "employeeMobile", label: "Mobile", visible: true },
     ]);
 
     // Filter visible columns
@@ -322,14 +305,14 @@ export default function useAddEmployee() {
                 ...item,
                 srNo: index + 1,
               }))}
-              isActionButton={false}
               columns={visibleColumns}
               primaryKey="employeeId"
               paginationDetails={employeedata}
               setPaginationFilter={setPaginationFilter}
-              multiSelect={false}
+              multiSelect={true}
               selectedValue={field.value}
               handleChange={field.onChange}
+
               // permissionKey="--"
             />
           )}
@@ -343,13 +326,12 @@ export default function useAddEmployee() {
     handleClose,
     onFinish,
     onSubmit,
-    EmployeeStatus,
-    DepartmentSelect,
-    EmployeeType,
-    ReportingManage,
-    employeePreview: getValues(),
-    employeeId,
+    MeetingInfo,
+    MeetingStatus,
+    MeetingType,
+    Joiners,
+    meetingPreview: getValues(),
+    // employeeId,
     trigger,
-    showNextStep,
   };
 }

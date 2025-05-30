@@ -1,9 +1,9 @@
-import StepProgress from "./StepProgress";
-import useStepForm from "./StepProgress/useStepForm";
 import { Button } from "@/components/ui/button";
-import AddEmployeeModal from "./addEmployeeModal";
-import useAddEmployee from "./useAddEmployee";
+import AddEmployeeModal from "./addMeetingModal";
+import useAddEmployee from "./useAddMeeting";
 import { FormProvider, useForm } from "react-hook-form";
+import useStepForm from "@/components/shared/StepProgress/useStepForm";
+import StepProgress from "@/components/shared/StepProgress/stepProgress";
 
 const AddEmployee = () => {
   const {
@@ -11,24 +11,21 @@ const AddEmployee = () => {
     isModalOpen,
     handleClose,
     onSubmit,
-    DepartmentSelect,
-    EmployeeStatus,
-    EmployeeType,
-    ReportingManage,
+    MeetingInfo,
+    MeetingStatus,
+    MeetingType,
+    Joiners,
     trigger,
-    employeePreview,
-    showNextStep, // <-- get this from hook
+    meetingPreview,
   } = useAddEmployee();
 
   // Build steps array based on showNextStep
-  const steps = showNextStep
-    ? [
-        <EmployeeStatus />,
-        <DepartmentSelect />,
-        <EmployeeType />,
-        <ReportingManage />,
-      ]
-    : [<EmployeeStatus />];
+  const steps = [
+    <MeetingInfo />,
+    <MeetingStatus />,
+    <MeetingType />,
+    <Joiners />,
+  ];
 
   const {
     back,
@@ -41,10 +38,10 @@ const AddEmployee = () => {
   } = useStepForm(steps, trigger);
 
   const stepNames = [
-    "Basic Info",
-    "Department",
-    "Designation",
-    "Reporting Manager",
+    "Meeting Info",
+    "Meeting Status",
+    "Meeting Type",
+    "Joiners",
   ];
 
   const methods = useForm({
@@ -76,7 +73,7 @@ const AddEmployee = () => {
         {/* Modal Component */}
         {isModalOpen && (
           <AddEmployeeModal
-            modalData={employeePreview}
+            modalData={meetingPreview as MeetingData}
             isModalOpen={isModalOpen}
             modalClose={handleClose}
             onSubmit={onSubmit}
