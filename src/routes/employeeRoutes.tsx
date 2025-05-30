@@ -4,7 +4,7 @@ import DashboardLayout from "@/features/layouts/DashboardLayout/dashboardLayout"
 import AddCompanyEmployee from "@/pages/companyEmployee/AddEmployeeFormModal/addEmployee";
 import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
 import AddCompanyMeeting from "@/pages/Meeting/AddMeetingFormModal/addMeeting";
-import AddCompanyProjectList from "@/pages/companyProjects/CompanyProjectFormModal/AddCompanyProjectList";
+import AddCompanyProjectList from "@/pages/companyProjects/AddMeetingFormModal/addProject";
 
 const Dashboard = lazy(() => import("../pages/homePage/HomePage"));
 const Theme = lazy(() => import("../pages/theme/Theme"));

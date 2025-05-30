@@ -44,6 +44,7 @@ const Urls = {
     `${baseUrl}/company/project/delete/${id}`,
   getCompanyProjectById: (id: string) => `${baseUrl}/company/project/get/${id}`,
   getAllCompanyProjectByPage: () => `${baseUrl}/company/project/get`,
+  getAllCorParameter: () => `${baseUrl}/core-param/get`,
 
   getAllCompanyTask: () => `${baseUrl}/company/task/get-all`,
   addCompanyTask: () => `${baseUrl}/company/task/create`,

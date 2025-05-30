@@ -114,7 +114,7 @@ export default function CompanyDesignation() {
             primaryKey="designationId"
             onEdit={(row) => openModal(row as unknown as DesignationData)}
             onDelete={(row) => onDelete(row as unknown as DesignationData)}
-            isActionButton
+            isActionButton={() => true}
             paginationDetails={designationList}
             setPaginationFilter={setPaginationFilter}
             //   isLoading={isLoading}
