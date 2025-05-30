@@ -45,7 +45,7 @@ interface TableProps<T extends Record<string, unknown>> {
   paginationDetails?: PaginationFilter;
   setPaginationFilter?: (filter: PaginationFilter) => void;
   isLoading?: boolean;
-  isActionButton?: boolean;
+  isActionButton?: (item: T) => boolean;
   additionalButton?: React.ReactNode;
   onAdditionButton?: (item: T) => void;
   permissionKey?: string | undefined;
@@ -131,7 +131,7 @@ const TableData = <T extends Record<string, unknown>>({
   paginationDetails,
   setPaginationFilter,
   isLoading = false,
-  isActionButton = false,
+  isActionButton,
   onAdditionButton = () => {},
   additionalButton,
   onMoveRowUp,
@@ -415,15 +415,17 @@ const TableData = <T extends Record<string, unknown>>({
                       className="text-right whitespace-nowrap"
                     >
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
+                        {isActionButton && isActionButton(item) && (
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                        )}
                         <DropdownMenuContent align="end" className="w-36">
                           {customActions?.(item)}
 

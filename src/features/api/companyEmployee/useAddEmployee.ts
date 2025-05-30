@@ -9,7 +9,7 @@ export default function useAddOrUpdateEmployee() {
   const addUpdateEmployee = useMutation({
     mutationKey: ["add-or-update-employee"],
     mutationFn: async (data: EmployeeData) => {
-      const isUpdate = Boolean(data.employeeId);
+      const isUpdate = Boolean(data.companyEmployeeId);
       const payload = {
         departmentId: data.departmentId,
         designationId: data.designationId,
@@ -17,11 +17,11 @@ export default function useAddOrUpdateEmployee() {
         employeeMobile: data.employeeMobile,
         employeeName: data.employeeName,
         employeeType: data.employeeType,
-        reportingManagerId: data.reportingManagerId,
+        reportingManagerId: data.employeeId,
       };
       const config = {
         url: isUpdate
-          ? Urls.updateEmployee(data.employeeId!)
+          ? Urls.updateEmployee(data.companyEmployeeId!)
           : Urls.addEmployee(),
         data: payload,
       };

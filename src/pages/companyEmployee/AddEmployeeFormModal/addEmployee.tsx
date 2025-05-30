@@ -1,5 +1,5 @@
-import StepProgress from "./StepProgress";
-import useStepForm from "./StepProgress/useStepForm";
+import StepProgress from "../../../components/shared/StepProgress";
+import useStepForm from "../../../components/shared/StepProgress/useStepForm";
 import { Button } from "@/components/ui/button";
 import AddEmployeeModal from "./addEmployeeModal";
 import useAddEmployee from "./useAddEmployee";
@@ -17,7 +17,7 @@ const AddEmployee = () => {
     ReportingManage,
     trigger,
     employeePreview,
-    showNextStep, // <-- get this from hook
+    showNextStep,
   } = useAddEmployee();
 
   // Build steps array based on showNextStep

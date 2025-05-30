@@ -4,11 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 type EmployeeRes = BaseResponse<EmployeeDetails>;
 
-export default function useGetEmployee({
-  filter,
-}: {
-  filter: PaginationFilter;
-}) {
+export default function useGetEmployee({ filter }: FilterDataProps) {
   return useQuery({
     queryKey: ["get-employee-list", filter],
     queryFn: async () => {

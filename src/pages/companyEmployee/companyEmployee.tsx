@@ -44,6 +44,7 @@ export default function CompanyDesignation() {
       visible: true,
     },
     { key: "employeeMobile", label: "Employee Mobile", visible: true },
+    { key: "employeeType", label: "Employee Type", visible: true },
   ]);
 
   // Filter visible columns
@@ -103,18 +104,17 @@ export default function CompanyDesignation() {
             }))}
             columns={visibleColumns}
             primaryKey="employeeId"
+            isActionButton={(row) =>
+              row?.employeeType == "OWNER" || row?.employeeType == "EMPLOYEE"
+            }
             onEdit={
               permission.Edit
-                ? (row) =>
-                    navigate(`/dashboard/employees/edit/${row.employeeId}`)
+                ? (row) => {
+                    navigate(`/dashboard/employees/edit/${row.employeeId}`);
+                  }
                 : undefined
             }
-            onDelete={(row) => {
-              if (!row.isSuperAdmin) {
-                onDelete(row);
-              }
-            }}
-            isActionButton={true}
+            onDelete={(row) => onDelete(row as unknown as EmployeeData)}
             canDelete={(row) => !row.isSuperAdmin}
             paginationDetails={employeedata}
             setPaginationFilter={setPaginationFilter}
@@ -132,7 +132,7 @@ export default function CompanyDesignation() {
             modalData={`${modalData?.employeeName}`}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
-            onSubmit={conformDelete}
+            onSubmit={() => conformDelete}
             isChildData={isChildData}
           />
         )}

@@ -4,6 +4,7 @@ import { queryClient } from "./queryClient";
 import AuthProvider from "./features/auth/AuthProvider";
 import { SidebarThemeProvider } from "./features/auth/SidebarThemeProvider";
 import { BreadcrumbProvider } from "./components/shared/context/BreadcrumbContext";
+import { Toaster } from "sonner";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <QueryClientProvider client={queryClient}>
             <BreadcrumbProvider>
               <AppRoutes />
+              <Toaster richColors position="bottom-right" />
             </BreadcrumbProvider>
           </QueryClientProvider>
         </SidebarThemeProvider>
