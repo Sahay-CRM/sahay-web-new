@@ -4,27 +4,57 @@ interface StepProgressProps {
   stepNames: string[];
   isLoading?: boolean;
 }
-
+interface DepartmentData {
+  departmentId?: string;
+  departmentName: string;
+}
+interface DepartmentResponse {
+  message: string;
+  currentPage: number;
+  totalCount: number;
+  hasMore: boolean;
+  pageSize: number;
+  totalPage: number;
+  data: DepartmentData[];
+}
+interface FilterDataProps {
+  filter: T | null;
+  enable?: boolean;
+}
 //designation interface add krishna
 interface DesignationData {
   designationId: string;
   designationName: string;
+  parentId: null;
   companyId: string;
   departmentId: string;
-  department: {
-    departmentId: string;
-    departmentName: string;
-  };
-  company: {
-    companyId: string;
-    companyName: string;
-  };
+  departmentName: string;
+  companyName: string;
 }
 // kk
 interface DesignationAddFormProps {
   isModalOpen: boolean;
   modalClose: () => void;
   modalData?: DesignationData;
+}
+
+interface designationResponse {
+  message: string;
+  currentPage: number;
+  totalCount: number;
+  hasMore: boolean;
+  pageSize: number;
+  totalPage: number;
+  data: DesignationData[];
+}
+interface EmployeeResponse {
+  message: string;
+  currentPage: number;
+  totalCount: number;
+  hasMore: boolean;
+  pageSize: number;
+  totalPage: number;
+  data: EmployeeData[];
 }
 // kk
 interface Company {
@@ -39,15 +69,15 @@ interface EmployeeData {
   employeeMobile: string;
   companyId: string;
   employeeType: string;
-  departmentId: string | null;
-  designationId: string | null;
+  departmentId?: string | null;
+  designationId?: string | null;
   isSuperAdmin: boolean;
-  sahayEmId: string | null;
-  reportingManagerId: string | null;
+  sahayEmId?: string | null;
+  reportingManagerId?: string | null;
   company: Company;
-  reportingManager: ReportingManager | null;
-  departmentName: string | null;
-  designationName: string | null;
+  reportingManager?: ReportingManager | null;
+  departmentName?: string | null;
+  designationName?: string | null;
 }
 // kk
 interface CompanyTaskData {
@@ -292,6 +322,12 @@ interface CoreParameter {
   updatedDatetime: string;
 }
 
+interface DesignationDataProps {
+  designationId: string;
+  designationName: string;
+  departmentName: string;
+}
+
 interface ConsultantDataProps {
   consultantId: string;
   consultantName: string;
@@ -350,4 +386,48 @@ interface BaseResponse<T> {
   sortBy: string;
   sortOrder: string;
   data: T[];
+}
+
+interface BaseResponse<T> {
+  success: boolean;
+  status: number;
+  message: string;
+  currentPage: number;
+  totalCount: number;
+  hasMore: boolean;
+  pageSize: number;
+  totalPage: number;
+  sortBy: string;
+  sortOrder: string;
+  data: T[];
+}
+
+interface DesignationDetails {
+  srNo: number;
+  designationId: string;
+  designationName: string;
+  parentId: null;
+  companyId: string;
+  departmentId: string;
+  departmentName: string;
+  companyName: string;
+}
+
+interface EmployeeDetails {
+  srNo: number;
+  employeeId: string;
+  employeeName: string;
+  employeeEmail: string;
+  employeeMobile: string;
+  companyId: string;
+  employeeType: string;
+  departmentId: string;
+  designationId: string;
+  isSuperAdmin: false;
+  sahayEmId: null;
+  departmentName: null;
+  designationName: null;
+  reportingManagerId: null;
+  companyAdminName: string;
+  reportingManager: null;
 }

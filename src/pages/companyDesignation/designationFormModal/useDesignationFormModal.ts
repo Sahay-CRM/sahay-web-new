@@ -1,5 +1,10 @@
 import { useForm } from "react-hook-form";
 import { useEffect } from "react";
+import { getALLDepartmentList } from "@/features/api/department";
+import {
+  addUpdateDesignation,
+  getDesignaationDropdown,
+} from "@/features/api/designation";
 
 interface UseDesignationFormModalProps {
   modalClose: () => void;
@@ -10,26 +15,35 @@ export default function useDesignationFormModal({
   modalClose,
   modalData,
 }: UseDesignationFormModalProps) {
+  const { mutate: addDesignation } = addUpdateDesignation();
   const {
     handleSubmit,
     register,
     formState: { errors },
     reset,
+    watch,
+    control,
   } = useForm({
     values: modalData,
   });
 
-  const departmentData = [
-    { label: "Marketing", value: "marketing-id" },
-    { label: "Sales", value: "sales-id" },
-    { label: "Engineering", value: "engineering-id" },
-    { label: "HR", value: "hr-id" },
-  ];
+  const { data: departmentData } = getALLDepartmentList();
+  const DepartmentOptions = (departmentData?.data ?? []).map((item) => ({
+    label: item.departmentName,
+    value: item.departmentId,
+  }));
+  const { data: designationData } = getDesignaationDropdown();
+  const designationOptions = (designationData?.data ?? []).map((item) => ({
+    label: item.designationName,
+    value: item.designationId,
+  }));
 
-  const onSubmit = handleSubmit(async () => {
-    // Add submission logic here
-    reset();
-    handleModalClose();
+  const onSubmit = handleSubmit(async (data) => {
+    addDesignation(data, {
+      onSuccess: () => {
+        handleModalClose();
+      },
+    });
   });
 
   const handleModalClose = () => {
@@ -45,7 +59,10 @@ export default function useDesignationFormModal({
     register,
     errors,
     onSubmit,
+    watch,
     handleModalClose,
-    departmentData,
+    DepartmentOptions,
+    designationOptions,
+    control,
   };
 }

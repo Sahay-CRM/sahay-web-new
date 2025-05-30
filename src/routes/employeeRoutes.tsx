@@ -1,7 +1,7 @@
 import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import DashboardLayout from "@/features/layouts/DashboardLayout/dashboardLayout";
-import AddCompanyEmployee from "@/pages/companyEmployee/CompanyEmployeeFormModal/AddCompanyEmployee";
+import AddCompanyEmployee from "@/pages/companyEmployee/AddTask/addEmployee";
 import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
 import AddCompanyMeeting from "@/pages/Meeting/CompanyEmployeeFormModal/AddCompanyMeeting";
 import AddCompanyProjectList from "@/pages/companyProjects/CompanyProjectFormModal/AddCompanyProjectList";
@@ -47,10 +47,10 @@ export default function EmployeeRoutes() {
         <Route path="company-designation" Component={companydesignation} />
         <Route path="company-employee" Component={companyemployee} />
         <Route path="employees/add" element={<AddCompanyEmployee />} />
-        <Route
+        {/* <Route
           path="employees/edit/:id"
           element={<AddCompanyEmployee isEditMode />}
-        />
+        /> */}
         <Route
           path="company-important-dates"
           Component={CompanyImportantDates}
