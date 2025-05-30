@@ -145,6 +145,7 @@ const TableData = <T extends Record<string, unknown>>({
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   const showCheckboxes = multiSelect || (!!selectedValue && !!handleChange);
+
   const tableRef = useRef<HTMLDivElement>(null);
   const permission = useSelector(getUserPermission)?.[moduleKey];
   const DEFAULT_COLUMN_WIDTH = 150;

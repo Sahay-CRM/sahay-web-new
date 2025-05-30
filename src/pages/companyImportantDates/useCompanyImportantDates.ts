@@ -1,6 +1,12 @@
+import { useGetImportantDates } from "@/features/api/importantDates";
+import { useState } from "react";
+
 export default function useCalendar() {
   // const { data: taskData } = useCompanyTask();
-
+  const [modalData, setModalData] = useState<ImportantDatesDataProps>(
+    {} as ImportantDatesDataProps,
+  );
+  const [addImportantDate, setAddImportantDateModal] = useState(false);
   const taskData = [
     {
       taskId: "b513908d-4eac-48a5-9355-08900b358722",
@@ -33,18 +39,21 @@ export default function useCalendar() {
 
   const importantDatesData: ImportantDateData[] = [
     {
-      dateId: "d1",
-      label: "Product Launch",
-      note: "Go-live for v2.0",
-      date: "2025-05-20T00:00:00.000Z",
+      importantDateId: "d1",
+      importantDateName: "Product Launch",
+      importantDateRemarks: "Go-live for v2.0",
+      importantDate: "2025-05-20T00:00:00.000Z",
     },
     {
-      dateId: "d2",
-      label: "Company Anniversary",
-      note: "5 years celebration",
-      date: "2025-05-30T00:00:00.000Z",
+      importantDateId: "d2",
+      importantDateName: "Company Anniversary",
+      importantDateRemarks: "5 years celebration",
+      importantDate: "2025-05-30T00:00:00.000Z",
     },
   ];
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: importantDatesList } = useGetImportantDates();
 
   const transformTaskDataToEvents = (data: TaskData[]): EventData[] =>
     data.map((item) => {
@@ -84,15 +93,12 @@ export default function useCalendar() {
       };
     });
 
-  const transformImportantDateDataToEvents = (
-    data: ImportantDateData[],
-  ): EventData[] =>
+  const transformImportantDateDataToEvents = (data: ImportantDateData[]) =>
     data.map((item) => {
       const deadline = item.date ? new Date(item.date) : null;
-
       return {
-        title: item.label || "Important Date",
-        description: item.note || "No Notes",
+        title: item.importantDateName || "Important Date",
+        description: item.importantDateRemarks || "No Notes",
         start:
           deadline instanceof Date && !isNaN(deadline.getTime())
             ? deadline
@@ -101,7 +107,7 @@ export default function useCalendar() {
           deadline instanceof Date && !isNaN(deadline.getTime())
             ? deadline
             : new Date(),
-        eventId: item.dateId,
+        eventId: item.importantDateId,
       };
     });
 
@@ -110,5 +116,28 @@ export default function useCalendar() {
   const importantDateEvents =
     transformImportantDateDataToEvents(importantDatesData);
 
-  return { taskEvents, meetingEvents, importantDateEvents };
+  const handleAddModal = () => {
+    setModalData({
+      importantDateName: "",
+      importantDate: "",
+      importantDateRemarks: "",
+    });
+    setAddImportantDateModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setAddImportantDateModal(false);
+  };
+
+  return {
+    taskEvents,
+    meetingEvents,
+    importantDateEvents,
+    handleAddModal,
+    handleCloseModal,
+    addImportantDate,
+    setAddImportantDateModal,
+    setModalData,
+    modalData,
+  };
 }

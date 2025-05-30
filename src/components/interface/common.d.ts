@@ -95,10 +95,10 @@ interface MeetingsData {
 }
 
 interface ImportantDateData {
-  dateId: string;
-  label: string;
-  note: string;
-  date: string;
+  importantDateRemarks: string;
+  importantDateName: string;
+  importantDate: string;
+  importantDateId?: string;
 }
 
 interface TaskData {
@@ -114,6 +114,10 @@ interface EventData {
   description: string;
   start: Date;
   end: Date;
+  importantDateRemarks?: string;
+  importantDateName?: string;
+  importantDate?: string;
+  importantDateId?: string;
 }
 
 //kk
@@ -235,9 +239,57 @@ interface ErrorType {
   message?: string;
 }
 
-interface DepartmentDataProps {
+interface ImportantDatesDataProps {
+  importantDateRemarks: string;
+  importantDateName: string;
+  importantDate: string;
+  importantDateId?: string;
+}
+
+interface CompanyMeetingDataProps {
+  meetingId: string;
+  meetingName: string;
+  meetingDescription: string;
+  meetingDateTime: string;
+  companyId: string;
+  createdBy: string;
+  meetingTypeId: string;
+  meetingStatusId: string;
+  joiners?: string[];
+}
+
+interface CompanyProjectDataProps {
+  srNo: number;
+  projectId: string;
+  projectName: string;
+  projectDescription: string;
+  projectActualEndDate: string;
+  projectDeadline: string;
+  employeeId: string;
+  ProjectSubParameterJunction: ProjectSubParameterJunctionItem[];
+}
+
+interface ProjectSubParameterJunctionItem {
+  projectSubParameterId: string;
+  subPara: SubParameter;
+}
+
+interface SubParameter {
+  subParameterId: string;
+  subParameterName: string;
+  coreParameterId: string;
+  coreParameter: CoreParameter;
+}
+
+interface CoreParameter {
+  coreParameterId: string;
   departmentId: string;
-  departmentName: string;
+  coreParameterName: string;
+  createdBy: string;
+  updatedBy: string;
+  isDelete: boolean;
+  createdDatetime: string;
+  updatedDatetime: string;
 }
 
 interface ConsultantDataProps {
@@ -286,9 +338,16 @@ interface MeetingData {
   meetingDate: string;
 }
 
-interface ImportantDateData {
-  dateId: string;
-  label: string;
-  note: string;
-  date: string;
+interface BaseResponse<T> {
+  success: boolean;
+  status: number;
+  message: string;
+  currentPage: number;
+  totalCount: number;
+  hasMore: boolean;
+  pageSize: number;
+  totalPage: number;
+  sortBy: string;
+  sortOrder: string;
+  data: T[];
 }

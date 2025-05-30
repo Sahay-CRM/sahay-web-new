@@ -42,7 +42,6 @@ const DashboardLayout = () => {
   const { bgColor } = useSidebarTheme();
   const user = useSelector(getUserDetail);
   const profileImage = `${baseUrl}/share/profilePics/${user?.photo}`;
-  console.log(user, "<==");
 
   useEffect(() => {
     if (permission) {

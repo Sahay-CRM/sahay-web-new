@@ -54,7 +54,6 @@ export default function PermissionTable({
   const { data: moduleData } = useGetAllModule();
   const { data: permissionData } = useGetAllPermission();
   const { data: userPerm } = useGetUserPerById(data || "");
-  console.log(moduleData);
 
   const [permissions, setPermissions] = useState<PermissionState>({});
   const [isInitialized, setIsInitialized] = useState(false);

@@ -7,37 +7,20 @@ import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownS
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-// import DesignationAddFormModal from "./DesignationAddFormModal";
 import { format } from "date-fns";
 
 export default function MeetingList() {
   const {
     meetingData,
-    // isLoading,
     closeDeleteModal,
     setPaginationFilter,
-    // currentStatus,
-    // handleAdd,
-    // openModal,
     onDelete,
     modalData,
     conformDelete,
     isDeleteModalOpen,
     paginationFilter,
-    // isUserModalOpen,
     isChildData,
   } = useMeeting();
-
-  //   const { setBreadcrumbs } = useBreadcrumbs();
-
-  //   useEffect(() => {
-  //     setBreadcrumbs([
-  //       { label: "Admin Tools", href: "/admin-tools" },
-  //       { label: "User" },
-  //     ]);
-  //   }, [setBreadcrumbs]);
-
-  // Column visibility state
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -51,7 +34,6 @@ export default function MeetingList() {
     { key: "joinerNames", label: "Joiners", visible: true },
   ]);
 
-  // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
       if (col.visible) acc[col.key] = col.label;
@@ -60,7 +42,6 @@ export default function MeetingList() {
     {} as Record<string, string>,
   );
 
-  // Toggle column visibility
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
@@ -68,7 +49,6 @@ export default function MeetingList() {
       ),
     );
   };
-  // Check if the number of columns is more than 3
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
   const navigate = useNavigate();
@@ -86,11 +66,6 @@ export default function MeetingList() {
               setPaginationFilter={setPaginationFilter}
               className="w-96"
             />
-            {/* <Link to="">
-              <Button className="py-2 w-fit" onClick={handleAdd}>
-                Add Meeting
-              </Button>
-            </Link> */}
             <Link to="/dashboard/meeting/add">
               <Button className="py-2 w-fit">Add Meeting</Button>
             </Link>
@@ -123,6 +98,8 @@ export default function MeetingList() {
             onEdit={(row) =>
               navigate(`/dashboard/meeting/edit/${row.meetingId}`)
             }
+            moduleKey="MEETING_LIST"
+            isActionButton
             onDelete={(row) => {
               if (!row.isSuperAdmin) {
                 onDelete(row);
@@ -136,15 +113,6 @@ export default function MeetingList() {
             localStorageId="MeetingList"
           />
         </div>
-        {/* {isUserModalOpen && (
-          <DesignationAddFormModal
-            isModalOpen={isUserModalOpen}
-            modalClose={closeDeleteModal}
-            modalData={modalData}
-          />
-        )} */}
-
-        {/* Modal Component */}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
             title={"Delete User"}

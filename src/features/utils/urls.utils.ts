@@ -15,6 +15,39 @@ const Urls = {
     `${baseUrl}/admin/user-permission/update/${id}`,
   userPermissionById: (id: string) =>
     `${baseUrl}/admin/user-permission/get/${id}`,
+
+  getAllImportantDates: () => `${baseUrl}/company/imp-date/get-all`,
+  addImportantDates: () => `${baseUrl}/company/imp-date/create`,
+  updateImportantDates: (id: string) =>
+    `${baseUrl}/company/imp-date/update/${id}`,
+  deleteImportantDates: (id: string) =>
+    `${baseUrl}/company/imp-date/delete/${id}`,
+  getAllImportantDatesByPage: () => `${baseUrl}/company/imp-date/get`,
+
+  getAllCompanyMeeting: () => `${baseUrl}/company/meeting/get-all`,
+  addCompanyMeeting: () => `${baseUrl}/company/meeting/create`,
+  updateCompanyMeeting: (id: string) =>
+    `${baseUrl}/company/meeting/update/${id}`,
+  deleteCompanyMeeting: (id: string) =>
+    `${baseUrl}/company/meeting/delete/${id}`,
+  getCompanyMeetingById: (id: string) => `${baseUrl}/company/meeting/get/${id}`,
+  getAllCompanyMeetingByPage: () => `${baseUrl}/company/meeting/get`,
+
+  getAllCompanyProject: () => `${baseUrl}/company/project/get-all`,
+  addCompanyProject: () => `${baseUrl}/company/project/create`,
+  updateCompanyProject: (id: string) =>
+    `${baseUrl}/company/project/update/${id}`,
+  deleteCompanyProject: (id: string) =>
+    `${baseUrl}/company/project/delete/${id}`,
+  getCompanyProjectById: (id: string) => `${baseUrl}/company/project/get/${id}`,
+  getAllCompanyProjectByPage: () => `${baseUrl}/company/project/get`,
+
+  getAllCompanyTask: () => `${baseUrl}/company/task/get-all`,
+  addCompanyTask: () => `${baseUrl}/company/task/create`,
+  updateCompanyTask: (id: string) => `${baseUrl}/company/task/update/${id}`,
+  deleteCompanyTask: (id: string) => `${baseUrl}/company/task/delete/${id}`,
+  getCompanyTaskById: (id: string) => `${baseUrl}/company/task/get/${id}`,
+  getAllCompanyTaskByPage: () => `${baseUrl}/company/task/get`,
 };
 
 export default Urls;

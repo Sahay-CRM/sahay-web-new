@@ -10,6 +10,7 @@ import { dateFnsLocalizer } from "react-big-calendar";
 import { Calendar as BigCalendar } from "react-big-calendar";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { FormProvider, useForm } from "react-hook-form";
+import CalenderFormModal from "./calenderFormModal/CalenderFormModal";
 
 const locales = {
   "en-US": enUS,
@@ -24,7 +25,18 @@ const localizer = dateFnsLocalizer({
 });
 
 function Calendar() {
-  const { taskEvents, meetingEvents, importantDateEvents } = useCalendar();
+  const methods = useForm();
+  const {
+    taskEvents,
+    meetingEvents,
+    importantDateEvents,
+    handleAddModal,
+    handleCloseModal,
+    addImportantDate,
+    setAddImportantDateModal,
+    setModalData,
+    modalData,
+  } = useCalendar();
 
   const [selectedOption, setSelectedOption] = useState<
     "all" | "task" | "meeting" | "importantDate"
@@ -35,7 +47,7 @@ function Calendar() {
       event.target.value as "all" | "task" | "meeting" | "importantDate",
     );
   };
-  const methods = useForm();
+
   const events = useMemo(() => {
     switch (selectedOption) {
       case "task":
@@ -54,7 +66,7 @@ function Calendar() {
       <div className="px-4 h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto">
         <div className="mb-4 flex justify-between gap-5">
           <div>
-            <Button>Add Important Date</Button>
+            <Button onClick={() => handleAddModal()}>Add Important Date</Button>
           </div>
           <div>
             <FormSelect
@@ -71,12 +83,23 @@ function Calendar() {
             />
           </div>
         </div>
+        {addImportantDate && (
+          <CalenderFormModal
+            isModalOpen={addImportantDate}
+            modalClose={handleCloseModal}
+            modalData={modalData}
+          />
+        )}
         <BigCalendar
           localizer={localizer}
           events={events}
           startAccessor="start"
           endAccessor="end"
           className="rounded-lg p-1 shadow-sm"
+          onSelectEvent={(event) => {
+            setAddImportantDateModal(true);
+            setModalData(event);
+          }}
           style={{
             overflowY: "auto",
             height: "88%",

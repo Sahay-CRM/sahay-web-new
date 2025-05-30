@@ -23,7 +23,8 @@ interface FormSelectProps {
   error?: { message?: string };
   placeholder?: string;
   className?: string;
-  isMulti?: boolean; // NEW prop for multi-select support
+  isMulti?: boolean;
+  isMandatory?: boolean;
 }
 
 export default function FormSelect({
@@ -37,6 +38,7 @@ export default function FormSelect({
   className,
   placeholder = "Select an option",
   isMulti = false,
+  isMandatory = false,
 }: FormSelectProps) {
   // Helper to toggle selection for multi-select
   const toggleValue = (val: string) => {
@@ -76,7 +78,8 @@ export default function FormSelect({
     <div className={className}>
       {label && (
         <FormLabel className="mb-2" htmlFor={id}>
-          {label}
+          {label}{" "}
+          {isMandatory && <span className="text-red-500 text-[20px]">*</span>}
         </FormLabel>
       )}
 

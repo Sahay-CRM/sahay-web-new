@@ -1,6 +1,9 @@
 // hooks/useAddCompanyEmployee.ts
-import { useState } from "react";
+import { useGetCompanyMeetingById } from "@/features/api/companyMeeting";
+import useAddUpdateCompanyMeeting from "@/features/api/companyMeeting/useAddUpdateCompanyMeeting";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useParams } from "react-router-dom";
 
 interface FormValues {
   name: string;
@@ -11,7 +14,7 @@ interface FormValues {
   reportingManagerId: string;
 }
 
-const steps = ["Meeting Info", "Organization Details"];
+const steps = ["Meeting Info", "Meeting Status", "Meeting Type", "Joiners"];
 
 export const userTypeOptions = [
   { value: "admin", label: "Administrator" },
@@ -20,6 +23,8 @@ export const userTypeOptions = [
 ];
 
 export const useAddCompanyEmployee = () => {
+  const { id } = useParams<{ id?: string }>();
+
   const methods = useForm<FormValues>({
     defaultValues: {
       name: "", // ✅ Add
@@ -69,9 +74,23 @@ export const useAddCompanyEmployee = () => {
     setStep((prev) => Math.max(prev - 1, 1));
   };
 
+  const { data: fetchedData } = useGetCompanyMeetingById(id);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { mutate: addOrUpdateConsultant } = useAddUpdateCompanyMeeting();
+
+  useEffect(() => {
+    if (id && fetchedData) {
+      methods.reset({
+        meetingName: fetchedData?.data?.meetingName,
+        meetingDescription: fetchedData?.data?.meetingDescription,
+        meetingDateTime: fetchedData?.data?.meetingDateTime,
+      });
+    }
+  }, [id, fetchedData, methods]);
+
   const onSubmit = async () => {};
 
-  // NEW: Fetch employee by ID (mock)
   const fetchEmployeeById = async (): Promise<
     FormValues & { countryCode?: string }
   > => {

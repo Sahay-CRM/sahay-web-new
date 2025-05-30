@@ -19,14 +19,14 @@ const FormCheckbox = forwardRef<HTMLInputElement, FormCheckboxProps>(
   ) => {
     return (
       <div
-        className={twMerge("flex items-center mt-0 tb:mt-3", containerClass)}
+        className={twMerge("flex items-center mt-2 tb:mt-3", containerClass)}
       >
         <input
           {...rest}
           type="checkbox"
           id={id}
           className={twMerge(
-            "accent-gray-700 aspect-square cursor-pointer w-4 h-4 tb:w-4 disabled:cursor-not-allowed",
+            "accent-gray-700 aspect-square cursor-pointer w-3 tb:w-4 disabled:cursor-not-allowed",
             className,
           )}
           ref={ref}
