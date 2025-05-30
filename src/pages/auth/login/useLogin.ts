@@ -18,8 +18,7 @@ const useLogin = () => {
   const [statusSentOtp, setStatusSentOtp] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isCompanyModalOpen, setCompanyModalOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_loginDetails, setLoginDetails] = useState<Login | null>(null);
+  const [loginDetails, setLoginDetails] = useState<Login | null>(null);
   const [countryCode, setCountryCode] = useState("+91");
 
   const {
@@ -41,8 +40,8 @@ const useLogin = () => {
   const handleLogin = async (data: CompanyLogin) => {
     const verifyCompanyData = {
       selectedCompanyId: data.companyId,
-      mobile: data.mobile,
-      userType: data.userType,
+      mobile: countryCode + data.mobile,
+      userType: "EMPLOYEE",
     };
 
     companyVerifyOtp(verifyCompanyData, {
@@ -60,8 +59,6 @@ const useLogin = () => {
           reset();
           setCompanyModalOpen(false);
           setLoginDetails(null);
-        } else {
-          throw new Error(response.message || "Failed to select company");
         }
       },
     });
@@ -69,49 +66,47 @@ const useLogin = () => {
 
   const onSubmit = async (data: Login) => {
     setLoginDetails(data);
+
     if (!statusSentOtp) {
-      const sendData = {
-        mobile: countryCode + data.mobile,
-      };
-
-      sendOtp(sendData, {
-        onSuccess: (response) => {
-          setStatusSentOtp(response.status);
+      sendOtp(
+        { mobile: countryCode + data.mobile },
+        {
+          onSuccess: (response) => {
+            setStatusSentOtp(response.status);
+          },
         },
-      });
+      );
     } else {
-      const verifyData = {
-        mobile: countryCode + data.mobile,
-        otp: data.otp,
-      };
-
-      verifyOtp(verifyData, {
-        onSuccess: (response) => {
-          if (response.status) {
-            const data = response.data;
-            if (Array.isArray(data) && data.length > 1) {
-              setCompanies(data);
-              setCompanyModalOpen(true);
-            } else if (!Array.isArray(data)) {
-              const token = data.token;
-              dispatch(
-                setAuth({
-                  token: token,
-                  isLoading: false,
-                  isAuthenticated: true,
-                  user: data,
-                }),
-              );
-              setToken(token, data);
-              setLoginDetails(null);
+      verifyOtp(
+        { mobile: countryCode + data.mobile, otp: data.otp },
+        {
+          onSuccess: (response) => {
+            if (response.status) {
+              const dataRes = response.data;
+              if (Array.isArray(dataRes) && dataRes.length > 1) {
+                setCompanies(dataRes);
+                setCompanyModalOpen(true);
+              } else if (!Array.isArray(dataRes)) {
+                const token = dataRes.token;
+                dispatch(
+                  setAuth({
+                    token: token,
+                    isLoading: false,
+                    isAuthenticated: true,
+                    user: dataRes,
+                  }),
+                );
+                setToken(token, dataRes);
+                setLoginDetails(null);
+              } else {
+                throw new Error("No companies found.");
+              }
             } else {
-              throw new Error("No companies found.");
+              throw new Error(response.message || "Invalid OTP");
             }
-          } else {
-            throw new Error(response.message || "Invalid OTP");
-          }
+          },
         },
-      });
+      );
     }
   };
 
@@ -131,6 +126,7 @@ const useLogin = () => {
     setCompanyModalOpen,
     reset,
     onSubmit,
+    loginDetails,
   };
 };
 

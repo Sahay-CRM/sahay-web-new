@@ -40,13 +40,23 @@ export default class Api {
     return axiosInstance.post<T>(url!, data, restConfig);
   }
   /**
-   * POST METHOD
+   * DELETE METHOD
    * @param {AxiosRequestConfig} config
    * @returns {Promise<AxiosResponse<T>>}
    */
   static delete<T>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     const { url } = config;
     return axiosInstance.delete<T>(url!);
+  }
+
+  /**
+   * PUT METHOD
+   * @param {AxiosRequestConfig} config
+   * @returns {Promise<AxiosResponse<T>>}
+   */
+  static put<T>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+    const { url, data, ...restConfig } = config;
+    return axiosInstance.put<T>(url!, data, restConfig);
   }
 }
 

@@ -3,18 +3,20 @@ import AppRoutes from "./routes";
 import { queryClient } from "./queryClient";
 import AuthProvider from "./features/auth/AuthProvider";
 import { SidebarThemeProvider } from "./features/auth/SidebarThemeProvider";
-import { PermissionsProvider } from "./features/auth/permissions/PermissionsProvider";
+import { BreadcrumbProvider } from "./components/shared/context/BreadcrumbContext";
+import { Toaster } from "sonner";
 
 function App() {
   return (
     <>
       <AuthProvider>
         <SidebarThemeProvider>
-          <PermissionsProvider>
-            <QueryClientProvider client={queryClient}>
+          <QueryClientProvider client={queryClient}>
+            <BreadcrumbProvider>
               <AppRoutes />
-            </QueryClientProvider>
-          </PermissionsProvider>
+              <Toaster richColors position="bottom-right" />
+            </BreadcrumbProvider>
+          </QueryClientProvider>
         </SidebarThemeProvider>
       </AuthProvider>
     </>

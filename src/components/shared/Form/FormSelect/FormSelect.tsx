@@ -1,131 +1,139 @@
-"use client";
-
-import React from "react";
-import { twMerge } from "tailwind-merge";
 import {
   Select,
   SelectTrigger,
+  SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select"; // ShadCN components
-import { FormLabel } from "@/components/ui/form";
+} from "@/components/ui/select";
+import { FormLabel, FormControl } from "@/components/ui/form";
 
-// Define the type for each option in the select dropdown
 interface Option {
   id?: string | number;
   value?: string | number;
   label?: string | number;
 }
 
-// Define the props for the FormSelect component
-interface FormSelectProps
-  extends React.SelectHTMLAttributes<HTMLSelectElement> {
-  label?: string;
-  labelClass?: string;
-  containerClass?: string;
-  className?: string;
+interface FormSelectProps {
   id?: string;
-  placeholder?: string;
+  label?: string;
+  value?: string | string[]; // support string or string[]
+  onChange: (value: string | string[]) => void;
   options: Option[];
+  disabled?: boolean;
   error?: { message?: string };
+  placeholder?: string;
+  className?: string;
+  isMulti?: boolean;
   isMandatory?: boolean;
 }
 
-const FormSelect = React.forwardRef<HTMLDivElement, FormSelectProps>(
-  function FormSelect(
-    {
-      label,
-      options,
-      error,
-      className,
-      labelClass,
-      containerClass,
-      isMandatory,
-      placeholder,
-      ...rest
-    },
-    ref,
-  ) {
-    const [selectedValue, setSelectedValue] = React.useState<
-      string | number | undefined
-    >(
-      Array.isArray(rest.value)
-        ? rest.value[0]
-        : (rest.value ?? rest.defaultValue),
-    );
+export default function FormSelect({
+  id,
+  label,
+  value,
+  onChange,
+  options,
+  disabled = false,
+  error,
+  className,
+  placeholder = "Select an option",
+  isMulti = false,
+  isMandatory = false,
+}: FormSelectProps) {
+  // Helper to toggle selection for multi-select
+  const toggleValue = (val: string) => {
+    if (!Array.isArray(value)) {
+      onChange([val]);
+    } else {
+      if (value.includes(val)) {
+        onChange(value.filter((v) => v !== val));
+      } else {
+        onChange([...value, val]);
+      }
+    }
+  };
 
-    // Sync when value/defaultValue changes
-    React.useEffect(() => {
-      const newVal = Array.isArray(rest.value)
-        ? rest.value[0]
-        : (rest.value ?? rest.defaultValue);
-      setSelectedValue(newVal);
-    }, [rest.value, rest.defaultValue]);
+  // Display string for selected values
+  const displayValue = () => {
+    if (isMulti) {
+      if (Array.isArray(value) && value.length > 0) {
+        // Show labels of selected values joined by commas
+        const selectedLabels = options
+          .filter((opt) => value.includes(String(opt.value)))
+          .map((opt) => opt.label)
+          .join(", ");
+        return selectedLabels || placeholder;
+      }
+      return placeholder;
+    } else {
+      // Single select
+      const selectedOption = options.find(
+        (opt) => String(opt.value) === String(value),
+      );
+      return selectedOption?.label ?? placeholder;
+    }
+  };
 
-    const handleSelect = (value: string) => {
-      setSelectedValue(value);
-      rest.onChange?.({
-        target: { value },
-      } as React.ChangeEvent<HTMLSelectElement>);
-    };
+  return (
+    <div className={className}>
+      {label && (
+        <FormLabel className="mb-2" htmlFor={id}>
+          {label}{" "}
+          {isMandatory && <span className="text-red-500 text-[20px]">*</span>}
+        </FormLabel>
+      )}
 
-    const selectedOption =
-      options.find((opt) => String(opt.value) === String(selectedValue)) ||
-      null;
-    const displayValue = selectedOption?.label ?? placeholder;
-
-    return (
-      <div
-        className={twMerge("mt-2 w-full tb:mt-3 min-w-32", containerClass)}
-        ref={ref}
+      <Select
+        value={isMulti ? undefined : (value as string | undefined)}
+        onValueChange={(val) => {
+          if (isMulti) {
+            toggleValue(val);
+          } else {
+            onChange(val);
+          }
+        }}
+        disabled={disabled}
       >
-        {label && (
-          <FormLabel className={twMerge("mb-2", labelClass)}>
-            {label} {isMandatory && <span className="text-red-500">*</span>}
-          </FormLabel>
-        )}
-
-        <Select value={selectedValue?.toString()} onValueChange={handleSelect}>
-          <SelectTrigger
-            className={twMerge(
-              "w-full bg-white border border-dark-600/70 p-2 text-left text-sm rounded-md",
-              className,
-            )}
-          >
-            <div
-              className={`${!selectedOption ? "text-muted-foreground" : ""}`}
-            >
-              {displayValue}
-            </div>
+        <FormControl>
+          <SelectTrigger className="w-full mb-1" id={id}>
+            <SelectValue placeholder={placeholder}>
+              {/* For multi-select, override default display with custom */}
+              {isMulti ? displayValue() : undefined}
+            </SelectValue>
           </SelectTrigger>
+        </FormControl>
 
-          <SelectContent className="bg-white border border-dark-600/600 shadow rounded-md">
-            {options
-              .filter(
-                (opt) =>
-                  opt.value !== undefined &&
-                  opt.value !== null &&
-                  opt.value !== "",
-              )
-              .map((opt) => (
-                <SelectItem
-                  key={opt.id ?? String(opt.value)}
-                  value={String(opt.value)}
-                >
+        <SelectContent className="w-full max-h-60 overflow-auto">
+          {options
+            .filter((opt) => opt.value !== undefined && opt.value !== "")
+            .map((opt) => {
+              const stringVal = String(opt.value);
+              const checked = isMulti
+                ? Array.isArray(value) && value.includes(stringVal)
+                : false;
+              return (
+                <SelectItem key={stringVal} value={stringVal}>
+                  {/* Show checkbox in multi-select */}
+                  {isMulti && (
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      readOnly
+                      className="mr-2"
+                    />
+                  )}
                   {opt.label}
                 </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
+              );
+            })}
+        </SelectContent>
+      </Select>
 
-        {error?.message && (
-          <span className="text-red-600 text-sm mt-1">{error.message}</span>
-        )}
-      </div>
-    );
-  },
-);
-
-FormSelect.displayName = "FormSelect";
-
-export default FormSelect;
+      {error?.message && (
+        <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+          {error.message}
+        </span>
+      )}
+    </div>
+  );
+}

@@ -22,6 +22,7 @@ export default function AdminUser() {
     isUserModalOpen,
     isChildData,
   } = useAdminUser();
+
   //   const { setBreadcrumbs } = useBreadcrumbs();
 
   //   useEffect(() => {
@@ -32,6 +33,7 @@ export default function AdminUser() {
   //   }, [setBreadcrumbs]);
 
   // Column visibility state
+
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "userFirstName", label: "User First Name", visible: true },
@@ -104,6 +106,7 @@ export default function AdminUser() {
             //   isLoading={isLoading}
             permissionKey="users"
             showIndexColumn={false}
+            localStorageId="AdminuserList"
           />
         </div>
 
