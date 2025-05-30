@@ -42,16 +42,28 @@ const AddEmployeeModal: React.FC<TaskModalProps> = ({
             <span>Mobile: {modalData?.employeeMobile}</span>
           </div>
           <div>
-            <span>Department: {modalData?.departmentId}</span>
-          </div>
-          <div>
-            <span>Designation: {modalData?.designationId}</span>
-          </div>
-          <div>
             <span>Employee Type: {modalData?.employeeType}</span>
           </div>
           <div>
-            <span>Reporting Manager: {modalData?.reportingManagerId}</span>
+            <span>
+              Department:{" "}
+              {modalData?.departmentName ||
+                (typeof modalData?.departmentId === "object" &&
+                  modalData?.departmentId?.departmentName) ||
+                ""}
+            </span>
+          </div>
+          <div>
+            <span>
+              Designation:{" "}
+              {modalData?.designationName ||
+                (typeof modalData?.designationId === "object" &&
+                  modalData?.designationId?.designationName) ||
+                ""}
+            </span>
+          </div>
+          <div>
+            <span>Reporting Manager: {modalData?.employeeName}</span>
           </div>
         </div>
       </ModalData>

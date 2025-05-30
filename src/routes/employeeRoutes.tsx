@@ -47,10 +47,7 @@ export default function EmployeeRoutes() {
         <Route path="company-designation" Component={companydesignation} />
         <Route path="company-employee" Component={companyemployee} />
         <Route path="employees/add" element={<AddCompanyEmployee />} />
-        {/* <Route
-          path="employees/edit/:id"
-          element={<AddCompanyEmployee isEditMode />}
-        /> */}
+        <Route path="employees/edit/:id" element={<AddCompanyEmployee />} />
         <Route
           path="company-important-dates"
           Component={CompanyImportantDates}

@@ -1,22 +1,25 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import useAddOrUpdateEmployee from "@/features/api/companyEmployee/useAddEmployee";
-import { getALLDepartmentList } from "@/features/api/department";
+import { getDepartmentList } from "@/features/api/department";
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import { getDesignaationDropdown } from "@/features/api/designation";
 import { getEmployee } from "@/features/api/companyEmployee";
+import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 
 export default function useAddEmployee() {
-  const { id: employeeId } = useParams();
+  const { id: companyEmployeeId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
 
   const { mutate: addEmployee } = useAddOrUpdateEmployee();
+  const { data: employeeApiData } = useGetEmployeeById(companyEmployeeId || "");
 
+  const navigate = useNavigate();
   const {
     register,
     formState: { errors },
@@ -26,14 +29,30 @@ export default function useAddEmployee() {
     reset,
     getValues,
     watch,
-  } = useForm({
+  } = useForm<EmployeeData>({
     mode: "onChange",
-    // values: employeeApiData, // If you have employee data to prefill
   });
 
+  useEffect(() => {
+    if (employeeApiData?.data) {
+      const data = employeeApiData?.data;
+
+      reset({
+        employeeName: data.employeeName || "",
+        employeeEmail: data.employeeEmail || "",
+        employeeMobile: data.employeeMobile || "",
+        employeeType: data.employeeType || "",
+        departmentId: data.department || undefined,
+        designationId: data.designation || undefined,
+        employeeId: data.reportingManager || undefined,
+      });
+    }
+  }, [employeeApiData, reset]);
+
   // Watch employeeType field
+
   const employeeTypeValue = watch("employeeType");
-  const showNextStep = employeeTypeValue !== "owner";
+  const showNextStep = employeeTypeValue !== "OWNER";
 
   const handleClose = () => setModalOpen(false);
 
@@ -45,9 +64,14 @@ export default function useAddEmployee() {
   }, [trigger]);
 
   const onSubmit = handleSubmit(async (data) => {
-    addEmployee(data, {
+    const payload = {
+      ...data,
+      companyEmployeeId: companyEmployeeId,
+    };
+    addEmployee(payload, {
       onSuccess: () => {
         handleModalClose();
+        navigate("/dashboard/company-employee");
       },
     });
   });
@@ -60,8 +84,8 @@ export default function useAddEmployee() {
   const EmployeeStatus = () => {
     const [countryCode, setCountryCode] = useState<string>("+91");
     const employeeTypeOptions = [
-      { value: "employee", label: "Employee" },
-      { value: "owner", label: "Owner" },
+      { value: "EMPLOYEE", label: "EMPLOYEE" },
+      { value: "OWNER", label: "OWNER" },
     ];
     return (
       <div className="grid grid-cols-2 gap-4">
@@ -115,8 +139,15 @@ export default function useAddEmployee() {
   };
 
   const DepartmentSelect = () => {
-    const { data: departmentData } = getALLDepartmentList();
+    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 10,
+      search: "",
+    });
 
+    const { data: departmentData } = getDepartmentList({
+      filter: paginationFilter,
+    });
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
       { key: "departmentName", label: "Department Name", visible: true },
@@ -158,24 +189,33 @@ export default function useAddEmployee() {
         <Controller
           name="departmentId"
           control={control}
-          rules={{ required: "Please select a Task Priority" }}
+          rules={{ required: "Please select a Department" }}
           render={({ field }) => (
-            <TableData
-              {...field}
-              tableData={departmentData?.data.map((item, index) => ({
-                ...item,
-                srNo: index + 1,
-              }))}
-              isActionButton={false}
-              columns={visibleColumns}
-              primaryKey="departmentId"
-              paginationDetails={departmentData}
-              // setPaginationFilter={setPaginationFilter}
-              multiSelect={false}
-              selectedValue={field.value}
-              handleChange={field.onChange}
-              // permissionKey="--"
-            />
+            <>
+              <div className="mb-4">
+                {errors?.departmentId && (
+                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                    {String(errors?.departmentId?.message || "")}
+                  </span>
+                )}
+              </div>
+              <TableData
+                {...field}
+                tableData={departmentData?.data.map((item, index) => ({
+                  ...item,
+                  srNo: index + 1,
+                }))}
+                isActionButton={() => false}
+                columns={visibleColumns}
+                primaryKey="departmentId"
+                paginationDetails={departmentData}
+                setPaginationFilter={setPaginationFilter}
+                multiSelect={false}
+                selectedValue={field.value}
+                handleChange={field.onChange}
+                // permissionKey="--"
+              />
+            </>
           )}
         />
       </div>
@@ -229,26 +269,35 @@ export default function useAddEmployee() {
         </div>
 
         <Controller
-          name="departmentId"
+          name="designationId"
           control={control}
-          rules={{ required: "Please select a Task Priority" }}
+          rules={{ required: "Please select a Designation" }}
           render={({ field }) => (
-            <TableData
-              {...field}
-              tableData={designationData?.data.map((item, index) => ({
-                ...item,
-                srNo: index + 1,
-              }))}
-              isActionButton={false}
-              columns={visibleColumns}
-              primaryKey="departmentId"
-              paginationDetails={designationData}
-              // setPaginationFilter={setPaginationFilter}
-              multiSelect={false}
-              selectedValue={field.value}
-              handleChange={field.onChange}
-              // permissionKey="--"
-            />
+            <>
+              <div className="mb-4">
+                {errors?.designationId && (
+                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                    {String(errors?.designationId?.message || "")}
+                  </span>
+                )}
+              </div>
+              <TableData
+                {...field}
+                tableData={designationData?.data.map((item, index) => ({
+                  ...item,
+                  srNo: index + 1,
+                }))}
+                isActionButton={() => false}
+                columns={visibleColumns}
+                primaryKey="designationId"
+                // paginationDetails={designationData}
+                // setPaginationFilter={setPaginationFilter}
+                multiSelect={false}
+                selectedValue={field.value}
+                handleChange={field.onChange}
+                // permissionKey="--"
+              />
+            </>
           )}
         />
       </div>
@@ -306,24 +355,26 @@ export default function useAddEmployee() {
         <Controller
           name="employeeId"
           control={control}
-          rules={{ required: "Please select a Task Priority" }}
+          rules={{ required: "Please select a report manager" }}
           render={({ field }) => (
-            <TableData
-              {...field}
-              tableData={employeedata?.data.map((item, index) => ({
-                ...item,
-                srNo: index + 1,
-              }))}
-              isActionButton={false}
-              columns={visibleColumns}
-              primaryKey="employeeId"
-              paginationDetails={employeedata}
-              setPaginationFilter={setPaginationFilter}
-              multiSelect={false}
-              selectedValue={field.value}
-              handleChange={field.onChange}
-              // permissionKey="--"
-            />
+            <>
+              <TableData
+                {...field}
+                tableData={employeedata?.data.map((item, index) => ({
+                  ...item,
+                  srNo: index + 1,
+                }))}
+                isActionButton={() => false}
+                columns={visibleColumns}
+                primaryKey="employeeId"
+                paginationDetails={employeedata}
+                setPaginationFilter={setPaginationFilter}
+                multiSelect={false}
+                selectedValue={field.value}
+                handleChange={field.onChange}
+                // permissionKey="--"
+              />
+            </>
           )}
         />
       </div>
@@ -340,7 +391,7 @@ export default function useAddEmployee() {
     EmployeeType,
     ReportingManage,
     employeePreview: getValues(),
-    employeeId,
+    companyEmployeeId,
     trigger,
     showNextStep,
   };

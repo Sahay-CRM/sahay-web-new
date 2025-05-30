@@ -1,4 +1,4 @@
-import { getEmployee } from "@/features/api/companyEmployee";
+import { deleteEmployee, getEmployee } from "@/features/api/companyEmployee";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
@@ -24,6 +24,7 @@ export default function useAdminUser() {
   const { data: employeedata } = getEmployee({
     filter: paginationFilter,
   });
+  const { mutate: deleteEmployeeById } = deleteEmployee();
 
   const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = Number(event.target.value);
@@ -41,7 +42,7 @@ export default function useAdminUser() {
   const setPaginationFilterWithStatus = (filter: PaginationFilter) => {
     setPaginationFilter({
       ...filter,
-      status: currentStatus, // Always include the currentStatus
+      status: currentStatus,
     });
   };
   const handleAdd = () => {
@@ -66,7 +67,7 @@ export default function useAdminUser() {
       reportingManager: null,
       departmentName: null,
       designationName: null,
-    }); // or undefined
+    });
     setIsUserModalOpen(true);
   };
 
@@ -110,7 +111,15 @@ export default function useAdminUser() {
     setIsChildData("");
   }, []);
 
-  const conformDelete = async () => {};
+  const conformDelete = async () => {
+    if (modalData && modalData.employeeId) {
+      deleteEmployeeById(modalData.employeeId, {
+        onSuccess: () => {
+          closeDeleteModal();
+        },
+      });
+    }
+  };
 
   const openImportModal = useCallback(() => {
     setIsImportExportModalOpen(true);

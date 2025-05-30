@@ -52,6 +52,7 @@ const Urls = {
   getCompanyTaskById: (id: string) => `${baseUrl}/company/task/get/${id}`,
   getAllCompanyTaskByPage: () => `${baseUrl}/company/task/get`,
   dropdownDepartment: () => `${baseUrl}/department/get-all`,
+  getDepartmentList: () => `${baseUrl}/department/get`,
   //designation
   getDesignationList: () => `${baseUrl}/company/designation/get`,
   deletedesignation: (id: string) =>
@@ -63,8 +64,10 @@ const Urls = {
 
   //employee
   getEmployeeList: () => `${baseUrl}/company/employee/get`,
+  getEmployeeById: (id: string) => `${baseUrl}/company/employee/get/${id}`,
   addEmployee: () => `${baseUrl}/company/employee/create`,
   updateEmployee: (id: string) => `${baseUrl}/company/employee/update/${id}`,
+  deleteEmployee: (id: string) => `${baseUrl}/company/employee/delete/${id}`,
 };
 
 export default Urls;

@@ -99,7 +99,7 @@ export default function MeetingList() {
               navigate(`/dashboard/meeting/edit/${row.meetingId}`)
             }
             moduleKey="MEETING_LIST"
-            isActionButton
+            isActionButton={() => true}
             onDelete={(row) => {
               if (!row.isSuperAdmin) {
                 onDelete(row);

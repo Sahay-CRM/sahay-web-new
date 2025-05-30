@@ -69,7 +69,7 @@ export default function MeetingList() {
             //   isLoading={isLoading}
             permissionKey="users"
             additionalButton={true}
-            isActionButton={true}
+            isActionButton={() => true}
             localStorageId="UserPermissionList"
             moduleKey="ROLES_PERMISSION"
             onAdditionButton={(data) => {

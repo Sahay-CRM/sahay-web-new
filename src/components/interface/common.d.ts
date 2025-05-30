@@ -69,8 +69,8 @@ interface EmployeeData {
   employeeMobile: string;
   companyId: string;
   employeeType: string;
-  departmentId?: string | null;
-  designationId?: string | null;
+  departmentId?: string | null | DepartmentData;
+  designationId?: string | null | Designation;
   isSuperAdmin: boolean;
   sahayEmId?: string | null;
   reportingManagerId?: string | null;
@@ -78,6 +78,7 @@ interface EmployeeData {
   reportingManager?: ReportingManager | null;
   departmentName?: string | null;
   designationName?: string | null;
+  companyEmployeeId?: string | null;
 }
 // kk
 interface CompanyTaskData {
@@ -399,20 +400,6 @@ interface BaseResponse<T> {
   data: T[];
 }
 
-interface BaseResponse<T> {
-  success: boolean;
-  status: number;
-  message: string;
-  currentPage: number;
-  totalCount: number;
-  hasMore: boolean;
-  pageSize: number;
-  totalPage: number;
-  sortBy: string;
-  sortOrder: string;
-  data: T[];
-}
-
 interface DesignationDetails {
   srNo: number;
   designationId: string;
@@ -441,4 +428,43 @@ interface EmployeeDetails {
   reportingManagerId: null;
   companyAdminName: string;
   reportingManager: null;
+}
+
+interface EmployeeCompany {
+  companyAdminName: string;
+  companyId: string;
+}
+
+interface EmployeeDetailsById {
+  employeeId: string;
+  employeeName: string;
+  employeeEmail: string;
+  employeeMobile: string;
+  companyId: string;
+  employeeType: string;
+  departmentId: string | null;
+  department: string | null;
+  designationId: string | null;
+  designation: string | null;
+  reportingManagerId: string | null;
+  company: EmployeeCompany;
+  reportingManager: string | null;
+}
+
+interface Designation {
+  designationName: string;
+}
+
+interface EmployeeDataModal {
+  employeeName: string;
+  employeeEmail: string;
+  employeeMobile: string;
+  employeeType: string;
+  departmentId?: {
+    departmentName: string;
+  };
+  designationId?: Designation;
+  employeeId?: {
+    employeeName: string;
+  };
 }
