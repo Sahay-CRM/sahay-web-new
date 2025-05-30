@@ -47,6 +47,15 @@ interface designationResponse {
   totalPage: number;
   data: DesignationData[];
 }
+interface EmployeeResponse {
+  message: string;
+  currentPage: number;
+  totalCount: number;
+  hasMore: boolean;
+  pageSize: number;
+  totalPage: number;
+  data: EmployeeData[];
+}
 // kk
 interface Company {
   companyAdminName: string;
@@ -60,15 +69,15 @@ interface EmployeeData {
   employeeMobile: string;
   companyId: string;
   employeeType: string;
-  departmentId: string | null;
-  designationId: string | null;
+  departmentId?: string | null;
+  designationId?: string | null;
   isSuperAdmin: boolean;
-  sahayEmId: string | null;
-  reportingManagerId: string | null;
+  sahayEmId?: string | null;
+  reportingManagerId?: string | null;
   company: Company;
-  reportingManager: ReportingManager | null;
-  departmentName: string | null;
-  designationName: string | null;
+  reportingManager?: ReportingManager | null;
+  departmentName?: string | null;
+  designationName?: string | null;
 }
 // kk
 interface CompanyTaskData {

@@ -20,6 +20,8 @@ const Urls = {
 
   //employee
   getEmployeeList: () => `${baseUrl}/company/employee/get`,
+  addEmployee: () => `${baseUrl}/company/employee/create`,
+  updateEmployee: (id: string) => `${baseUrl}/company/employee/update/${id}`,
 };
 
 export default Urls;

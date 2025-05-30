@@ -9,15 +9,19 @@ export default function useAddOrUpdateEmployee() {
   const addUpdateEmployee = useMutation({
     mutationKey: ["add-or-update-employee"],
     mutationFn: async (data: EmployeeData) => {
-      const isUpdate = Boolean(data.EmployeeId);
+      const isUpdate = Boolean(data.employeeId);
       const payload = {
-        EmployeeName: data.employeeName,
         departmentId: data.departmentId,
-        parentId: data.parentId,
+        designationId: data.designationId,
+        employeeEmail: data.employeeEmail,
+        employeeMobile: data.employeeMobile,
+        employeeName: data.employeeName,
+        employeeType: data.employeeType,
+        reportingManagerId: data.reportingManagerId,
       };
       const config = {
         url: isUpdate
-          ? Urls.updateEmployee(data.EmployeeId!)
+          ? Urls.updateEmployee(data.employeeId!)
           : Urls.addEmployee(),
         data: payload,
       };
