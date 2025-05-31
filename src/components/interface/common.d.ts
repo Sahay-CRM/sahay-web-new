@@ -372,12 +372,12 @@ interface EventData {
   end: Date;
 }
 
-interface TaskData {
-  taskId: string;
-  taskName: string;
-  taskDescription: string;
-  taskDeadline: string;
-}
+// interface TaskData {
+//   taskId: string;
+//   taskName: string;
+//   taskDescription: string;
+//   taskDeadline: string;
+// }
 
 interface MeetingData {
   meetingId: string;
@@ -504,4 +504,165 @@ interface TaskStatusAllRes {
 interface TaskTypeData {
   taskTypeId?: string;
   taskTypeName: string;
+}
+
+interface AddUpdateTask {
+  taskId?: string;
+  taskName: string;
+  taskDescription: string;
+  taskStartDate: Date | null;
+  taskDeadline: Date | null;
+  repetition?: string;
+  taskStatusId?: string;
+  taskTypeId?: string;
+  comment?: string;
+  assigneeIds?: string[];
+  projectId: string;
+}
+
+interface TaskGetPaging {
+  employeeId: string;
+  taskId: string;
+  taskName: string;
+  taskStatusId: string;
+  taskDescription: string;
+  taskStatus: string;
+  createdBy?: Employee;
+  updatedBy?: string;
+  isDelete?: boolean;
+  createdDatetime?: string;
+  updatedDatetime?: string;
+  taskTypeId: string;
+  taskTypeName?: string;
+  taskActualEndDate?: string | null;
+  companyId?: string;
+  taskDeadline?: string;
+  TaskCommentMaster?: TaskComment[];
+  TaskEmployeeJunction?: TaskEmployee[];
+  TaskMeetingJunction?: TaskMeeting[];
+  companyAdminName?: string;
+  companyAdminEmail?: string;
+  employees?: Employee;
+  projectDetails?: TaskProject;
+  taskDeadline?: string;
+  taskStartDate?: string;
+}
+
+interface TaskProject {
+  projectId: string;
+  CompanyProjectMaster: {
+    projectId: string;
+    projectName: string;
+  };
+}
+
+interface Employee {
+  employeeId: string;
+  employeeName: string;
+  employeeEmail: string;
+  employeeMobile: string;
+  companyId: string;
+  employeeType: string;
+  departmentId: string | null;
+  department: string | null;
+  designationId: string | null;
+  designation: string | null;
+  reportingManagerId: string | null;
+  company: {
+    companyAdminName: string;
+    companyId: string;
+  };
+  reportingManager: string;
+}
+
+interface TaskComment {
+  comment: string;
+  commentDate: string;
+  employeeId: string;
+  Employee: {
+    employeeName: string;
+    employeeId: string;
+  };
+}
+
+interface TaskEmployee {
+  employeeId: string;
+  Employee: {
+    employeeId: string;
+    employeeName: string;
+  };
+}
+
+interface TaskMeeting {
+  meetingId: string;
+  meetings: {
+    meetingId: string;
+    companyId: string;
+    employeeId: string;
+    meetingTypeId: string;
+    meetingStatusId: string;
+    meetingName: string;
+    meetingDescription: string;
+    meetingDateTime: string;
+    createdBy: string;
+    updatedBy: string;
+    isDelete: boolean;
+    createdDatetime: string;
+    updatedDatetime: string;
+  };
+}
+
+interface Task {
+  taskId: string;
+  taskName: string;
+  taskDescription: string;
+  taskStatusId: string;
+  taskStatusName: string;
+  taskTypeId: string;
+  taskTypeName: string;
+  taskActualEndDate: string | null;
+  taskStartDate: string;
+  taskDeadline: string;
+  projectId: string;
+  projectName: string | null;
+  assignUsers: AssignedUser[];
+  meetingId: string[];
+  meetings: Meeting[];
+  comments: TaskComment[];
+  createdBy: CreatedBy;
+}
+
+interface AssignedUser {
+  employeeId: string;
+  employeeName: string;
+}
+
+interface Meeting {
+  meetingId: string;
+  companyId: string;
+  employeeId: string;
+  meetingTypeId: string;
+  meetingStatusId: string;
+  meetingName: string;
+  meetingDescription: string;
+  meetingDateTime: string;
+  meetingDocuments: unknown; // Replace with correct type if known
+  createdBy: string;
+  updatedBy: string;
+  isDelete: boolean;
+  createdDatetime: string;
+  updatedDatetime: string;
+}
+
+interface TaskComment {
+  commentId: string;
+  comment: string;
+  commentDate: string;
+  employeeId: string;
+  employeeName: string;
+}
+
+interface CreatedBy {
+  employeeId: string;
+  employeeName: string;
 }

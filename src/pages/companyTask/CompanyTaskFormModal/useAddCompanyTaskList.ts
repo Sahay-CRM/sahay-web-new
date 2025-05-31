@@ -1,35 +1,38 @@
 // hooks/useAddCompanyTaskList.ts
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGetCompanyProjectAll } from "@/features/api/companyProject";
 import {
   useGetAllTaskStatus,
   useAllTaskType,
+  addUpdateCompanyTaskMutation,
+  useGetCompanyTaskById,
 } from "@/features/api/companyTask";
+import { getEmployee } from "@/features/api/companyEmployee";
+import { useParams } from "react-router-dom";
 
 interface FormValues {
+  taskId?: string; // <-- make it optional
   project: string;
   taskName: string;
   taskDescription: string;
   taskStartDate: Date | null;
   taskDeadline: Date | null;
   repetition: string;
-  taskStatus?: string;
-  taskType?: string;
+  taskStatus?: TaskStatusAllRes;
+  taskType?: TaskTypeData;
+  assignUser: string[]; // always an array of employeeIds
   comment?: string;
 }
 
-const steps = [
-  "Basic Info",
-  "Schedule & Repetition",
-  "Task Status",
-  "Task Type",
-  "Comment",
-];
-
 export const useAddCompanyEmployee = () => {
+  const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
+  const { id: taskId } = useParams();
+  const { data: taskDataById } = useGetCompanyTaskById(taskId || "");
+
   const methods = useForm<FormValues>({
     defaultValues: {
+      taskId: "", // <-- add this
       project: "",
       taskName: "",
       taskDescription: "",
@@ -38,10 +41,48 @@ export const useAddCompanyEmployee = () => {
       repetition: "",
       taskStatus: undefined,
       taskType: undefined,
+      assignUser: [], // always an array
       comment: "",
     },
     mode: "onChange",
   });
+  const { reset } = methods;
+
+  // Set form values when editing (taskId present and data loaded)
+  useEffect(() => {
+    if (taskId && taskDataById?.data) {
+      reset({
+        taskId: taskDataById.data.taskId || "", // <-- add this
+        project: taskDataById.data?.projectId || "",
+        taskName: taskDataById.data.taskName || "",
+        taskDescription: taskDataById.data.taskDescription || "",
+        taskStartDate: taskDataById.data.taskStartDate
+          ? new Date(taskDataById.data.taskStartDate)
+          : null,
+        taskDeadline: taskDataById.data.taskDeadline
+          ? new Date(taskDataById.data.taskDeadline)
+          : null,
+        repetition: "", // or map if available
+        taskStatus:
+          taskDataById.data.taskStatusId && taskDataById.data.taskStatusName
+            ? {
+                taskStatusId: taskDataById.data.taskStatusId,
+                taskStatus: taskDataById.data.taskStatusName,
+              }
+            : undefined,
+        taskType:
+          taskDataById && taskDataById.data
+            ? {
+                taskTypeId: taskDataById.data.taskTypeId,
+                taskTypeName: taskDataById.data.taskTypeName,
+              }
+            : undefined,
+        assignUser: taskDataById.data.assignUsers
+          ? taskDataById.data.assignUsers.map((user) => user.employeeId)
+          : [],
+      });
+    }
+  }, [taskId, taskDataById, reset]);
 
   const [step, setStep] = useState(1);
 
@@ -57,6 +98,12 @@ export const useAddCompanyEmployee = () => {
       pageSize: 10,
       search: "",
     });
+  const [paginationFilterEmployee, setPaginationFilterEmployee] =
+    useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 10,
+      search: "",
+    });
 
   const { data: projectList } = useGetCompanyProjectAll();
   const { data: taskStatus } = useGetAllTaskStatus({
@@ -65,6 +112,10 @@ export const useAddCompanyEmployee = () => {
   const { data: taskTypeData } = useAllTaskType({
     filter: paginationFilterTaskType,
   });
+  const { data: employeedata } = getEmployee({
+    filter: paginationFilterEmployee,
+  });
+
   const taskType = {
     data: Array.isArray(taskTypeData?.data) ? taskTypeData.data : [],
   };
@@ -92,14 +143,41 @@ export const useAddCompanyEmployee = () => {
     { value: "annually", label: "Annually" },
   ];
 
+  // Dynamically set steps based on taskId
+  const steps = taskId
+    ? [
+        "Basic Info",
+        "Schedule & Repetition",
+        "Task Status",
+        "Task Type",
+        "Assign User",
+      ]
+    : [
+        "Basic Info",
+        "Schedule & Repetition",
+        "Task Status",
+        "Task Type",
+        "Assign User",
+        "Comment",
+      ];
+
   // Only validate relevant fields for each step
-  const fieldsToValidate: Record<number, (keyof FormValues)[]> = {
-    1: ["project", "taskName", "taskDescription"],
-    2: ["taskStartDate", "taskDeadline", "repetition"],
-    3: ["taskStatus"],
-    4: ["taskType"],
-    5: ["comment"],
-  };
+  const fieldsToValidate: Record<number, (keyof FormValues)[]> = taskId
+    ? {
+        1: ["project", "taskName", "taskDescription"],
+        2: ["taskStartDate", "taskDeadline", "repetition"],
+        3: ["taskStatus"],
+        4: ["taskType"],
+        5: ["assignUser"],
+      }
+    : {
+        1: ["project", "taskName", "taskDescription"],
+        2: ["taskStartDate", "taskDeadline", "repetition"],
+        3: ["taskStatus"],
+        4: ["taskType"],
+        5: ["assignUser"],
+        6: ["comment"],
+      };
 
   const validateStep = async (): Promise<boolean> => {
     return methods.trigger(fieldsToValidate[step]);
@@ -116,19 +194,39 @@ export const useAddCompanyEmployee = () => {
   };
 
   const onSubmit = async (data: FormValues) => {
-    // Convert dates to UTC ISO strings if present
-    const payload = {
-      ...data,
-      taskStartDate: data.taskStartDate
-        ? new Date(data.taskStartDate).toISOString()
-        : null,
-      taskDeadline: data.taskDeadline
-        ? new Date(data.taskDeadline).toISOString()
-        : null,
-    };
+    // assignUser is always string[]
+    const assigneeIds = data.assignUser;
 
-    console.log(payload);
+    const payload = data.taskId
+      ? {
+          taskId: taskId,
+          taskName: data.taskName,
+          taskDescription: data.taskDescription,
+          taskStartDate: data.taskStartDate
+            ? new Date(data.taskStartDate)
+            : null,
+          taskDeadline: data.taskDeadline ? new Date(data.taskDeadline) : null,
+          taskStatusId: data.taskStatus?.taskStatusId,
+          taskTypeId: data.taskType?.taskTypeId,
+          comment: data.comment,
+          employeeIds: assigneeIds,
+          projectId: data.project,
+        }
+      : {
+          taskName: data.taskName,
+          taskDescription: data.taskDescription,
+          taskStartDate: data.taskStartDate
+            ? new Date(data.taskStartDate)
+            : null,
+          taskDeadline: data.taskDeadline ? new Date(data.taskDeadline) : null,
+          taskStatusId: data.taskStatus?.taskStatusId,
+          taskTypeId: data.taskType?.taskTypeId,
+          comment: data.comment,
+          employeeIds: assigneeIds,
+          projectId: data.project,
+        };
 
+    addUpdateTask(payload);
     // handle payload
   };
 
@@ -143,7 +241,10 @@ export const useAddCompanyEmployee = () => {
     repetitionOptions,
     taskStatus,
     taskType,
+    employeedata,
     setPaginationFilterTaskStatus,
     setPaginationFilterTaskType,
+    setPaginationFilterEmployee,
+    taskId, // expose taskId for component
   };
 };

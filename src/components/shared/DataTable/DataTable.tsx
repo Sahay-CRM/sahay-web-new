@@ -388,7 +388,7 @@ const TableData = <T extends Record<string, unknown>>({
                     {columnKeys.map((clm) => (
                       <TableCell
                         key={`${item[primaryKey]}_${clm}`}
-                        className={`whitespace-nowrap ${
+                        className={`whitespace-normal break-words ${
                           clm === "srNo" ? "pl-4 pr-0" : "px-6"
                         }`}
                         style={{

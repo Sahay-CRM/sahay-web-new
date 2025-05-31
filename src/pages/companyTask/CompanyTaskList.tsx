@@ -46,7 +46,7 @@ export default function CompanyTaskList() {
     },
     { key: "taskDeadline", label: "Task Deadline", visible: true },
     { key: "assigneeNames", label: "Assignees", visible: true },
-    { key: "status", label: "Status", visible: true },
+    { key: "taskStatus", label: "Status", visible: true },
   ]);
 
   // Filter visible columns
@@ -66,6 +66,9 @@ export default function CompanyTaskList() {
       ),
     );
   };
+
+  console.log(companyTaskData);
+
   // Check if the number of columns is more than 3
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
@@ -99,25 +102,33 @@ export default function CompanyTaskList() {
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            tableData={companyTaskData?.data.map((item, index) => ({
-              ...item,
-              srNo: index + 1,
-              assigneeNames: item.assignees[0]?.employeeName,
-            }))}
-            columns={visibleColumns} // Pass only visible columns to the Table
+            tableData={companyTaskData?.data.map(
+              (item: TaskGetPaging, index: number) => ({
+                ...item,
+                srNo: index + 1,
+                assigneeNames: item.TaskEmployeeJunction
+                  ? item.TaskEmployeeJunction.map(
+                      (j) => j.Employee?.employeeName,
+                    )
+                      .filter(Boolean)
+                      .join(", ")
+                  : "",
+              }),
+            )}
+            columns={visibleColumns}
             primaryKey="taskId"
             onEdit={(row) => navigate(`/dashboard/tasks/edit/${row.taskId}`)}
             onDelete={(row) => {
-              if (!row.isSuperAdmin) {
-                onDelete(row);
-              }
+              onDelete(row);
             }}
-            canDelete={(row) => !row.isSuperAdmin}
+            isActionButton={() => true}
+            // canDelete={(row) => !row.isSuperAdmin}
             paginationDetails={companyTaskData}
             setPaginationFilter={setPaginationFilter}
             //   isLoading={isLoading}
             permissionKey="users"
             localStorageId="CompanyTaskList"
+            moduleKey="TASK"
           />
         </div>
 

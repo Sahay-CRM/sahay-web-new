@@ -10,23 +10,17 @@ type DatePaging = BaseResponse<CompanyProjectDataProps>;
 export default function useAddUpdateCompanyTask() {
   const addUpdateCompanyTaskMutation = useMutation({
     mutationKey: ["add-or-update-task-list"],
-    mutationFn: async (data: CompanyProjectDataProps) => {
-      const isUpdate = Boolean(data.projectId);
-      const payload = {
-        meetingName: data?.meetingName,
-        meetingDescription: data?.meetingDescription,
-        meetingDateTime: data?.meetingDateTime,
-        joiners: data?.joiners,
-      };
-
+    mutationFn: async (data: AddUpdateTask) => {
       const config = {
-        url: isUpdate
-          ? Urls.updateCompanyProject(data.projectId!)
-          : Urls.addCompanyProject(),
-        data: payload,
+        url: data.taskId
+          ? Urls.updateCompanyTask(data.taskId!)
+          : Urls.addCompanyTask(),
+        data: data,
       };
 
-      const { data: resData } = isUpdate
+      console.log(data);
+
+      const { data: resData } = data.taskId
         ? await Api.put<DatePaging>(config)
         : await Api.post<DatePaging>(config);
 

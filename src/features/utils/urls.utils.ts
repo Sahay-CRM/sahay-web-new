@@ -52,6 +52,7 @@ const Urls = {
   deleteCompanyTask: (id: string) => `${baseUrl}/company/task/delete/${id}`,
   getCompanyTaskById: (id: string) => `${baseUrl}/company/task/get/${id}`,
   getAllCompanyTaskByPage: () => `${baseUrl}/company/task/get`,
+
   dropdownDepartment: () => `${baseUrl}/department/get-all`,
   getDepartmentList: () => `${baseUrl}/department/get`,
   //designation

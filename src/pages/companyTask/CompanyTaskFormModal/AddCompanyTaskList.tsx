@@ -27,7 +27,11 @@ export default function AddMeeting({
     repetitionOptions,
     taskStatus,
     taskType,
-    setPaginationFilter,
+    employeedata,
+    setPaginationFilterTaskStatus,
+    setPaginationFilterTaskType,
+    setPaginationFilterEmployee,
+    taskId,
   } = useAddCompanyEmployee();
 
   const {
@@ -44,11 +48,15 @@ export default function AddMeeting({
           {isEditMode ? "Update Add Company Task" : "Add Add Company Task"}
         </h2>
 
-        <StepProgress currentStep={step} totalSteps={5} stepNames={steps} />
+        <StepProgress
+          currentStep={step}
+          totalSteps={steps.length}
+          stepNames={steps}
+        />
 
         <div className="flex items-end justify-end gap-2 mt-2 mb-4">
           {step > 1 && <Button onClick={prevStep}>Back</Button>}
-          {step < 5 ? (
+          {step < steps.length ? (
             <Button onClick={nextStep}>Next</Button>
           ) : (
             <Button onClick={handleSubmit(onSubmit)}>
@@ -99,7 +107,6 @@ export default function AddMeeting({
             <Controller
               control={control}
               name="taskStartDate"
-              rules={{ required: "Task Start Date is required" }}
               render={({ field }) => (
                 <FormDateTimePicker
                   label="Task Start Date"
@@ -112,7 +119,6 @@ export default function AddMeeting({
             <Controller
               control={control}
               name="taskDeadline"
-              rules={{ required: "Task Deadline is required" }}
               render={({ field }) => (
                 <FormDateTimePicker
                   label="Task Deadline"
@@ -125,7 +131,6 @@ export default function AddMeeting({
             <Controller
               control={control}
               name="repetition"
-              rules={{ required: "Repetition is required" }}
               render={({ field }) => (
                 <FormSelect
                   label="Repetition"
@@ -163,7 +168,7 @@ export default function AddMeeting({
                   selectedValue={field.value}
                   handleChange={field.onChange}
                   paginationDetails={taskStatus as PaginationFilter}
-                  setPaginationFilter={setPaginationFilter}
+                  setPaginationFilter={setPaginationFilterTaskStatus}
                 />
               )}
             />
@@ -193,15 +198,63 @@ export default function AddMeeting({
                   selectedValue={field.value}
                   handleChange={field.onChange}
                   paginationDetails={taskType as PaginationFilter}
-                  setPaginationFilter={setPaginationFilter}
+                  setPaginationFilter={setPaginationFilterTaskType}
                 />
               )}
             />
           </Card>
         )}
 
-        {/* Step 5 - Comment */}
+        {/* Step 5 - Assign User */}
         {step === 5 && (
+          <Card className="px-4 py-4">
+            <Controller
+              name="assignUser"
+              control={control}
+              rules={{ required: "Please select a User" }}
+              render={({ field }) => {
+                // Map selected IDs to employee objects for default selection
+                const selectedEmployees =
+                  Array.isArray(field.value) &&
+                  Array.isArray(employeedata?.data)
+                    ? employeedata.data.filter((emp) =>
+                        field.value.includes(emp.employeeId),
+                      )
+                    : [];
+                return (
+                  <TableData
+                    {...field}
+                    tableData={employeedata?.data?.map((item, index) => ({
+                      ...item,
+                      srNo: index + 1,
+                    }))}
+                    isActionButton={() => false}
+                    columns={{
+                      employeeName: "User Name",
+                    }}
+                    primaryKey="employeeId"
+                    multiSelect={true}
+                    selectedValue={
+                      selectedEmployees as unknown as Record<string, unknown>[]
+                    }
+                    handleChange={(selected) => {
+                      // Convert selected employee objects to array of IDs for form state
+                      const ids = Array.isArray(selected)
+                        ? selected.map((emp) => emp.employeeId)
+                        : [];
+                      field.onChange(ids);
+                    }}
+                    paginationDetails={employeedata as PaginationFilter}
+                    setPaginationFilter={setPaginationFilterEmployee}
+                  />
+                );
+              }}
+            />
+          </Card>
+        )}
+
+        {/* Step 6 - Comment (only if not editing) */}
+        {!taskId && step === 6 && (
           <Card className="px-4 py-4">
             <FormInputField
               label="Comment"
