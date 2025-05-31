@@ -319,16 +319,16 @@ interface SubParameter {
   coreParameter: CoreParameter;
 }
 
-interface CoreParameter {
-  coreParameterId: string;
-  departmentId: string;
-  coreParameterName: string;
-  createdBy: string;
-  updatedBy: string;
-  isDelete: boolean;
-  createdDatetime: string;
-  updatedDatetime: string;
-}
+// interface CoreParameter {
+//   coreParameterId: string;
+//   departmentId: string;
+//   coreParameterName: string;
+//   createdBy: string;
+//   updatedBy: string;
+//   isDelete: boolean;
+//   createdDatetime: string;
+//   updatedDatetime: string;
+// }
 
 interface DesignationDataProps {
   designationId: string;
@@ -467,4 +467,30 @@ interface EmployeeDataModal {
   employeeId?: {
     employeeName: string;
   };
+}
+
+interface LevelDataProps {
+  levelId?: string;
+  levelName: string;
+  isDefault?: boolean;
+  sequence?: number;
+}
+
+interface CompanyLevelJunction {
+  companyLevelJunctionId: string;
+  coreParameterId: string;
+  currentLevelId: string;
+}
+
+interface HealthScore {
+  scoreArray: {
+    subParameterId: string;
+    score: string;
+  }[];
+}
+
+interface HealthScoreData {
+  defaultScore: number;
+  subParameterId: string;
+  subParameterName: string;
 }

@@ -68,6 +68,20 @@ const Urls = {
   addEmployee: () => `${baseUrl}/company/employee/create`,
   updateEmployee: (id: string) => `${baseUrl}/company/employee/update/${id}`,
   deleteEmployee: (id: string) => `${baseUrl}/company/employee/delete/${id}`,
+
+  dropdownCoreParameter: () => `${baseUrl}/core-param/get-all`,
+
+  dropdownSubParameter: () => `${baseUrl}/sub-param/get-all`,
+  ddLevelsListAll: () => `${baseUrl}/level/get-all`,
+
+  getAllCompanyLevel: (id: string) => `${baseUrl}/level/company/get/${id}`,
+
+  updateComLevelsAssign: (id: string) =>
+    `${baseUrl}/level/company/update/${id}`,
+
+  updateHealthScore: () => `${baseUrl}/company/health/update`,
+  getHealthScoreByParam: (id: string) =>
+    `${baseUrl}/company/health/score/get-by-core/${id}`,
 };
 
 export default Urls;

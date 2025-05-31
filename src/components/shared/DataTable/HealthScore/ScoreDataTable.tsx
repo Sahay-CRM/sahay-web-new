@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -18,15 +18,24 @@ export type SubParameterScore = {
 type EditableScoreTableProps = {
   data: SubParameterScore[];
   onChange?: (updated: SubParameterScore[]) => void;
+  disabled?: boolean;
+  mode?: "percent" | "number"; // <-- add mode prop
 };
 
 export default function ScoreDataTable({
   data,
   onChange,
+  disabled = false,
+  mode = "percent", // <-- default to percent
 }: EditableScoreTableProps) {
   const [scores, setScores] = useState<SubParameterScore[]>(data);
 
+  useEffect(() => {
+    setScores(data);
+  }, [data]);
+
   const handleScoreClick = (id: string, value: number) => {
+    if (disabled) return;
     const updated = scores.map((item) =>
       item.subParameterId === id
         ? { ...item, score: item.score === value ? 0 : value }
@@ -55,19 +64,29 @@ export default function ScoreDataTable({
                   <div className="flex gap-2">
                     {Array.from({ length: 10 }, (_, i) => {
                       const value = i + 1;
-                      const isSelected = value <= param.score;
-                      const isActive = value === param.score;
-
+                      let isSelected, isActive, handleValue;
+                      if (mode === "percent") {
+                        const selectedDots = Math.ceil(param.score / 10);
+                        isSelected = value <= selectedDots;
+                        isActive = value === selectedDots;
+                        handleValue = value * 10;
+                      } else {
+                        isSelected = value <= param.score;
+                        isActive = value === param.score;
+                        handleValue = value;
+                      }
                       return (
                         <button
                           key={value}
+                          disabled={disabled}
                           onClick={() =>
-                            handleScoreClick(param.subParameterId, value)
+                            handleScoreClick(param.subParameterId, handleValue)
                           }
                           className={cn(
                             "h-5 w-5 rounded-full border border-gray-300 transition-all",
-                            isSelected ? "bg-blue-500" : "bg-gray-200",
-                            isActive && "ring-2 ring-blue-600",
+                            isSelected ? "bg-[#30338d]" : "bg-gray-200",
+                            isActive && "ring-2 ring-[#30338d]",
+                            disabled && "cursor-not-allowed opacity-80",
                           )}
                         />
                       );
@@ -77,7 +96,7 @@ export default function ScoreDataTable({
                   <div className="flex gap-2 text-xs text-muted-foreground">
                     {Array.from({ length: 10 }, (_, i) => (
                       <span key={i} className="w-5 text-center">
-                        {i + 1}
+                        {mode === "percent" ? (i + 1) * 10 + "%" : i + 1}
                       </span>
                     ))}
                   </div>
