@@ -6,68 +6,88 @@ interface TaskModalProps {
   modalClose: () => void;
   onSubmit: () => void;
 }
+
 const AddEmployeeModal: React.FC<TaskModalProps> = ({
   modalData,
   isModalOpen,
   modalClose,
   onSubmit,
 }) => {
+  const department =
+    modalData?.departmentName ||
+    (typeof modalData?.departmentId === "object" &&
+      modalData?.departmentId?.departmentName);
+
+  const designation =
+    modalData?.designationName ||
+    (typeof modalData?.designationId === "object" &&
+      modalData?.designationId?.designationName);
+
   return (
-    <div>
-      <ModalData
-        isModalOpen={isModalOpen}
-        modalTitle="Add Employee"
-        modalClose={modalClose}
-        buttons={[
-          {
-            btnText: "Cancel",
-            buttonCss: "py-1.5 px-5",
-            btnClick: modalClose,
-          },
-          {
-            btnText: "Submit",
-            buttonCss: "py-1.5 px-5",
-            btnClick: onSubmit,
-          },
-        ]}
-      >
-        <div>
+    <ModalData
+      isModalOpen={isModalOpen}
+      modalTitle="Add Employee"
+      modalClose={modalClose}
+      buttons={[
+        {
+          btnText: "Cancel",
+          buttonCss: "py-1.5 px-5",
+          btnClick: modalClose,
+        },
+        {
+          btnText: "Submit",
+          buttonCss: "py-1.5 px-5",
+          btnClick: onSubmit,
+        },
+      ]}
+    >
+      <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-700">
+        {modalData?.employeeName && (
           <div>
-            <span>Employee Name: {modalData?.employeeName}</span>
+            <span className="font-medium text-primary">Employee Name: </span>
+            {modalData.employeeName}
           </div>
+        )}
+        {modalData?.employeeEmail && (
           <div>
-            <span>Email: {modalData?.employeeEmail}</span>
+            <span className="font-medium text-primary">Email: </span>
+            {modalData.employeeEmail}
           </div>
+        )}
+        {modalData?.employeeMobile && (
           <div>
-            <span>Mobile: {modalData?.employeeMobile}</span>
+            <span className="font-medium text-primary">Mobile: </span>
+            {modalData.employeeMobile}
           </div>
+        )}
+        {modalData?.employeeType && (
           <div>
-            <span>Employee Type: {modalData?.employeeType}</span>
+            <span className="font-medium text-primary">Employee Type: </span>
+            {modalData.employeeType}
           </div>
+        )}
+        {department && (
           <div>
-            <span>
-              Department:{" "}
-              {modalData?.departmentName ||
-                (typeof modalData?.departmentId === "object" &&
-                  modalData?.departmentId?.departmentName) ||
-                ""}
+            <span className="font-medium text-primary">Department: </span>
+            {department}
+          </div>
+        )}
+        {designation && (
+          <div>
+            <span className="font-medium text-primary">Designation: </span>
+            {designation}
+          </div>
+        )}
+        {modalData?.employeeName && (
+          <div className="col-span-2">
+            <span className="font-medium text-primary">
+              Reporting Manager:{" "}
             </span>
+            {modalData.employeeName}
           </div>
-          <div>
-            <span>
-              Designation:{" "}
-              {modalData?.designationName ||
-                (typeof modalData?.designationId === "object" &&
-                  modalData?.designationId?.designationName) ||
-                ""}
-            </span>
-          </div>
-          <div>
-            <span>Reporting Manager: {modalData?.employeeName}</span>
-          </div>
-        </div>
-      </ModalData>
-    </div>
+        )}
+      </div>
+    </ModalData>
   );
 };
 

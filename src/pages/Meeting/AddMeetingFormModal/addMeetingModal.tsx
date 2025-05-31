@@ -1,74 +1,84 @@
 import ModalData from "@/components/shared/Modal/ModalData";
 
 interface MeetingModalProps {
-  modalData: MeetingData; // Use the correct type if available, e.g., CompanyMeetingDataProps
+  modalData: MeetingData;
   isModalOpen: boolean;
   modalClose: () => void;
   onSubmit: () => void;
 }
+
 const AddMeetingModal: React.FC<MeetingModalProps> = ({
   modalData,
   isModalOpen,
   modalClose,
   onSubmit,
 }) => {
-  console.log(modalData, "<=====");
+  const joiners = modalData?.employeeId
+    ?.map((joiner) => joiner?.employeeName)
+    .filter(Boolean)
+    .join(", ");
 
   return (
-    <div>
-      <ModalData
-        isModalOpen={isModalOpen}
-        modalTitle="Add Meeting"
-        modalClose={modalClose}
-        buttons={[
-          {
-            btnText: "Cancel",
-            buttonCss: "py-1.5 px-5",
-            btnClick: modalClose,
-          },
-          {
-            btnText: "Submit",
-            buttonCss: "py-1.5 px-5",
-            btnClick: onSubmit,
-          },
-        ]}
-      >
-        <div>
+    <ModalData
+      isModalOpen={isModalOpen}
+      modalTitle="Add Meeting"
+      modalClose={modalClose}
+      buttons={[
+        {
+          btnText: "Cancel",
+          buttonCss: "py-1.5 px-5",
+          btnClick: modalClose,
+        },
+        {
+          btnText: "Submit",
+          buttonCss: "py-1.5 px-5",
+          btnClick: onSubmit,
+        },
+      ]}
+    >
+      <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-700">
+        {modalData?.meetingName && (
           <div>
-            <span>Meeting Name: {modalData?.meetingName || "-"}</span>
+            <span className="font-medium text-primary">Meeting Name: </span>
+            {modalData.meetingName}
           </div>
+        )}
+        {modalData?.meetingDescription && (
           <div>
-            <span>
-              Meeting Description: {modalData?.meetingDescription || "-"}
+            <span className="font-medium text-primary">
+              Meeting Description:{" "}
             </span>
+            {modalData.meetingDescription}
           </div>
+        )}
+        {modalData?.meetingDateTime && (
           <div>
-            <span>
-              Meeting Date & Time: {modalData?.meetingDateTime || "-"}
+            <span className="font-medium text-primary">
+              Meeting Date & Time:{" "}
             </span>
+            {modalData.meetingDateTime}
           </div>
+        )}
+        {modalData?.meetingStatusId?.meetingStatus && (
           <div>
-            <span>
-              Meeting Status: {modalData?.meetingStatusId?.meetingStatus || "-"}
-            </span>
+            <span className="font-medium text-primary">Meeting Status: </span>
+            {modalData.meetingStatusId.meetingStatus}
           </div>
+        )}
+        {modalData?.meetingTypeId?.meetingTypeName && (
           <div>
-            <span>
-              Meeting Type: {modalData?.meetingTypeId?.meetingTypeName || "-"}
-            </span>
+            <span className="font-medium text-primary">Meeting Type: </span>
+            {modalData.meetingTypeId.meetingTypeName}
           </div>
-          <div>
-            <span>
-              Joiners:
-              {modalData.employeeId
-                .map((joiner) => joiner?.employeeName)
-                .filter(Boolean)
-                .join(", ")}
-            </span>
+        )}
+        {joiners && (
+          <div className="col-span-2">
+            <span className="font-medium text-primary">Joiners: </span>
+            {joiners}
           </div>
-        </div>
-      </ModalData>
-    </div>
+        )}
+      </div>
+    </ModalData>
   );
 };
 

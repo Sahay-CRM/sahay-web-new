@@ -4,7 +4,7 @@ import DashboardLayout from "@/features/layouts/DashboardLayout/dashboardLayout"
 import AddCompanyEmployee from "@/pages/companyEmployee/AddEmployeeFormModal/addEmployee";
 import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
 import AddCompanyMeeting from "@/pages/Meeting/AddMeetingFormModal/addMeeting";
-import AddCompanyProjectList from "@/pages/companyProjects/AddMeetingFormModal/addProject";
+import AddCompanyProjectList from "@/pages/companyProjects/AddProject/addProject";
 
 const Dashboard = lazy(() => import("../pages/homePage/HomePage"));
 const Theme = lazy(() => import("../pages/theme/Theme"));
@@ -22,6 +22,9 @@ const CompanyMeeting = lazy(() => import("../pages/Meeting/MeetingList"));
 const CompanyTask = lazy(() => import("../pages/companyTask/CompanyTaskList"));
 const CompanyProjects = lazy(
   () => import("../pages/companyProjects/CompanyProjects"),
+);
+const CompanyProjectView = lazy(
+  () => import("../pages/companyProjects/ViewProject/ViewProject"),
 );
 const DatapointList = lazy(
   () => import("../pages/datapointList/DatapointList"),
@@ -63,10 +66,8 @@ export default function EmployeeRoutes() {
         />
         <Route path="projects" Component={CompanyProjects} />
         <Route path="projects/add" element={<AddCompanyProjectList />} />
-        <Route
-          path="projects/edit/:id"
-          element={<AddCompanyProjectList isEditMode />}
-        />
+        <Route path="projects/edit/:id" element={<AddCompanyProjectList />} />
+        <Route path="projects/view/:id" Component={CompanyProjectView} />
         <Route path="datapoint" Component={DatapointList} />
         <Route path="healthscore-achieve" Component={Healthscore} />
 

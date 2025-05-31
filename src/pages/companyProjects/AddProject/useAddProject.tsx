@@ -6,24 +6,26 @@ import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import { getEmployee } from "@/features/api/companyEmployee";
 import {
-  useAddUpdateCompanyMeeting,
-  useGetCompanyMeetingById,
-  useGetCompanyMeetingStatus,
-} from "@/features/api/companyMeeting";
-import { getMeetingType } from "@/features/api/meetingType";
-import { useNavigate, useParams } from "react-router-dom";
+  getAllSubParameter,
+  useAddUpdateCompanyProject,
+  useGetCompanyProjectById,
+  useGetCorparameter,
+  useGetProjectStatus,
+} from "@/features/api/companyProject";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 
-export default function useAddEmployee() {
-  const { id: companyMeetingId } = useParams();
+export default function useAddProject() {
+  const { id: companyProjectId } = useParams();
+  const [searchParams] = useSearchParams();
+  const source = searchParams.get("source") || "";
   const [isModalOpen, setModalOpen] = useState(false);
 
-  const { mutate: addMeeting } = useAddUpdateCompanyMeeting();
-  const navigate = useNavigate();
-  const { data: meetingApiData } = useGetCompanyMeetingById(
-    companyMeetingId || "",
+  const { mutate: addProject } = useAddUpdateCompanyProject();
+  const { data: projectApiData } = useGetCompanyProjectById(
+    companyProjectId || "",
   );
-
+  const navigate = useNavigate();
   const {
     register,
     formState: { errors },
@@ -32,25 +34,27 @@ export default function useAddEmployee() {
     trigger,
     reset,
     getValues,
+    watch,
   } = useForm({
     mode: "onChange",
   });
 
   useEffect(() => {
-    if (meetingApiData?.data) {
-      const data = meetingApiData?.data;
+    if (projectApiData?.data) {
+      const data = projectApiData?.data;
       reset({
-        meetingName: data.meetingName || "",
-        meetingDescription: data.meetingDescription || "",
-        meetingDateTime: data.meetingDateTime
-          ? format(parseISO(data?.meetingDateTime), "yyyy-MM-dd")
+        projectName: data.projectName || "",
+        projectDescription: data.projectDescription || "",
+        projectDeadline: data.projectDeadline
+          ? format(parseISO(data?.projectDeadline), "yyyy-MM-dd")
           : "",
-        meetingStatusId: data.meetingStatus || "",
-        meetingTypeId: data.meetingType || undefined,
-        employeeId: data.joiners || undefined,
+        projectStatusId: data.projectStatus || "",
+        subParameterId: data.ProjectParameters?.subParameters || undefined,
+        coreParameterId: data.ProjectParameters?.coreParameter || undefined,
+        employeeId: data.ProjectEmployees || undefined,
       });
     }
-  }, [meetingApiData, reset]);
+  }, [projectApiData, reset]);
 
   const handleClose = () => setModalOpen(false);
 
@@ -63,20 +67,20 @@ export default function useAddEmployee() {
 
   const onSubmit = handleSubmit(async (data) => {
     const payload = {
-      meetingName: data?.meetingName,
-      meetingDescription: data?.meetingDescription,
-      meetingDateTime: data?.meetingDateTime,
-      meetingTypeId: data?.meetingTypeId?.meetingTypeId,
-      meetingStatusId: data?.meetingStatusId?.meetingStatusId,
-      joiners: data?.employeeId?.map((ele) => ele?.employeeId),
-      companyMeetingId: companyMeetingId || "",
+      ...data,
+      projectId: companyProjectId,
     };
-    addMeeting(payload, {
+    addProject(payload, {
       onSuccess: () => {
         handleModalClose();
       },
     });
-    navigate("/dashboard/meeting");
+
+    if (source == "view") {
+      navigate(`/dashboard/projects/view/${companyProjectId}`);
+    } else {
+      navigate("/dashboard/projects");
+    }
   });
 
   const handleModalClose = () => {
@@ -84,55 +88,52 @@ export default function useAddEmployee() {
     setModalOpen(false);
   };
 
-  const MeetingInfo = () => {
+  const ProjectInfo = () => {
     return (
       <div className="grid grid-cols-2 gap-4">
         <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
           <FormInputField
-            label="Meeting Name"
-            {...register("meetingName", { required: "Name is required" })}
-            error={errors.meetingName}
-            isMandatory
+            label="Project Name"
+            {...register("projectName", { required: "Name is required" })}
+            error={errors.projectName}
           />
 
           <FormInputField
-            label="Meeting Description"
-            {...register("meetingDescription", {
+            label="Project Description"
+            {...register("projectDescription", {
               required: "Description is required",
             })}
-            error={errors.meetingDescription}
-            isMandatory
+            error={errors.projectDescription}
           />
 
           <FormInputField
             id=""
             type="date"
-            label="Meeting Date & Time"
-            {...register("meetingDateTime", {
+            label="Project Deadline"
+            {...register("projectDeadline", {
               required: "Date & Time is required",
             })}
-            error={errors.meetingDateTime}
-            isMandatory
+            error={errors.projectDeadline}
           />
         </Card>
       </div>
     );
   };
 
-  const MeetingStatus = () => {
+  const ProjectStatus = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
       pageSize: 10,
       search: "",
     });
 
-    const { data: meeetingStatusData } = useGetCompanyMeetingStatus({
+    const { data: projectlistdata } = useGetProjectStatus({
       filter: paginationFilter,
     });
 
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
-      { key: "meetingStatus", label: "Meeting Status", visible: true },
+      { key: "projectStatus", label: "Project Status", visible: true },
     ]);
 
     // Filter visible columns
@@ -169,28 +170,28 @@ export default function useAddEmployee() {
         </div>
 
         <Controller
-          name="meetingStatusId"
+          name="projectStatusId"
           control={control}
-          rules={{ required: "Please select a meeting status" }}
+          rules={{ required: "Please select a project status" }}
           render={({ field }) => (
             <>
               <div className="mb-4">
-                {errors?.meetingStatusId && (
+                {errors?.projectStatusId && (
                   <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors?.meetingStatusId?.message || "")}
+                    {String(errors?.projectStatusId?.message || "")}
                   </span>
                 )}
               </div>
               <TableData
                 {...field}
-                tableData={meeetingStatusData?.data.map((item, index) => ({
+                tableData={projectlistdata?.data.map((item, index) => ({
                   ...item,
                   srNo: index + 1,
                 }))}
                 isActionButton={() => false}
                 columns={visibleColumns}
-                primaryKey="meetingStatusId"
-                paginationDetails={meeetingStatusData}
+                primaryKey="projectStatusId"
+                paginationDetails={projectlistdata}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
                 selectedValue={field.value}
@@ -204,19 +205,19 @@ export default function useAddEmployee() {
     );
   };
 
-  const MeetingType = () => {
+  const CoreParameter = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
       pageSize: 10,
       search: "",
     });
 
-    const { data: meetingTypeData } = getMeetingType({
+    const { data: mcoreparameter } = useGetCorparameter({
       filter: paginationFilter,
     });
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
-      { key: "meetingTypeName", label: "Meeting Type Name", visible: true },
+      { key: "coreParameterName", label: "Core Parameter", visible: true },
     ]);
 
     // Filter visible columns
@@ -253,28 +254,28 @@ export default function useAddEmployee() {
         </div>
 
         <Controller
-          name="meetingTypeId"
+          name="coreParameterId"
           control={control}
-          rules={{ required: "Please select a meeting type" }}
+          rules={{ required: "Please select a core parameter" }}
           render={({ field }) => (
             <>
               <div className="mb-4">
-                {errors?.meetingTypeId && (
+                {errors?.coreParameterId && (
                   <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors?.meetingTypeId?.message || "")}
+                    {String(errors?.coreParameterId?.message || "")}
                   </span>
                 )}
               </div>
               <TableData
                 {...field}
-                tableData={meetingTypeData?.data.map((item, index) => ({
+                tableData={mcoreparameter?.data.map((item, index) => ({
                   ...item,
                   srNo: index + 1,
                 }))}
                 isActionButton={() => false}
                 columns={visibleColumns}
-                primaryKey="meetingTypeId"
-                paginationDetails={meetingTypeData}
+                primaryKey="coreParameterId"
+                paginationDetails={mcoreparameter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
                 selectedValue={field.value}
@@ -287,8 +288,95 @@ export default function useAddEmployee() {
       </div>
     );
   };
+  const SubParameter = () => {
+    const coreParameter = watch("coreParameterId");
 
-  const Joiners = () => {
+    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 10,
+      search: "",
+    });
+
+    const { data: subparameter } = getAllSubParameter({
+      filter: {
+        ...paginationFilter,
+        coreParameterId: coreParameter?.coreParameterId,
+      },
+    });
+    const [columnToggleOptions, setColumnToggleOptions] = useState([
+      { key: "srNo", label: "Sr No", visible: true },
+      { key: "subParameterName", label: "Sub Parameter", visible: true },
+    ]);
+
+    // Filter visible columns
+    const visibleColumns = columnToggleOptions.reduce(
+      (acc, col) => {
+        if (col.visible) acc[col.key] = col.label;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+
+    // Toggle column visibility
+    const onToggleColumn = (key: string) => {
+      setColumnToggleOptions((prev) =>
+        prev.map((col) =>
+          col.key === key ? { ...col, visible: !col.visible } : col,
+        ),
+      );
+    };
+    // Check if the number of columns is more than 3
+    const canToggleColumns = columnToggleOptions.length > 3;
+
+    return (
+      <div>
+        <div className=" mt-1 flex items-center justify-between">
+          {canToggleColumns && (
+            <div className="ml-4 ">
+              <DropdownSearchMenu
+                columns={columnToggleOptions}
+                onToggleColumn={onToggleColumn}
+              />
+            </div>
+          )}
+        </div>
+
+        <Controller
+          name="subParameterId"
+          control={control}
+          rules={{ required: "Please select a sub parameter" }}
+          render={({ field }) => (
+            <>
+              <div className="mb-4">
+                {errors?.subParameterId && (
+                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                    {String(errors?.subParameterId?.message || "")}
+                  </span>
+                )}
+              </div>
+              <TableData
+                {...field}
+                tableData={subparameter?.data.map((item, index) => ({
+                  ...item,
+                  srNo: index + 1,
+                }))}
+                isActionButton={() => false}
+                columns={visibleColumns}
+                primaryKey="subParameterId"
+                paginationDetails={subparameter}
+                setPaginationFilter={setPaginationFilter}
+                multiSelect={true}
+                selectedValue={field.value}
+                handleChange={field.onChange}
+                // permissionKey="--"
+              />
+            </>
+          )}
+        />
+      </div>
+    );
+  };
+  const Employees = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
       pageSize: 10,
@@ -341,8 +429,16 @@ export default function useAddEmployee() {
         <Controller
           name="employeeId"
           control={control}
+          rules={{ required: "Please select a Employee" }}
           render={({ field }) => (
             <>
+              <div className="mb-4">
+                {errors?.employeeId && (
+                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                    {String(errors?.employeeId?.message || "")}
+                  </span>
+                )}
+              </div>
               <TableData
                 {...field}
                 tableData={employeedata?.data.map((item, index) => ({
@@ -356,6 +452,8 @@ export default function useAddEmployee() {
                 multiSelect={true}
                 selectedValue={field.value}
                 handleChange={field.onChange}
+
+                // permissionKey="--"
               />
             </>
           )}
@@ -369,10 +467,11 @@ export default function useAddEmployee() {
     handleClose,
     onFinish,
     onSubmit,
-    MeetingInfo,
-    MeetingStatus,
-    MeetingType,
-    Joiners,
+    ProjectInfo,
+    ProjectStatus,
+    CoreParameter,
+    SubParameter,
+    Employees,
     meetingPreview: getValues(),
     // employeeId,
     trigger,

@@ -3,17 +3,19 @@ import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 type DatePaging = BaseResponse<CompanyProjectDataProps>;
 
-export default function useGetCompanyProjectById(id: string) {
+export default function useGetSubparameter({ filter }: FilterDataProps) {
   const query = useQuery({
-    queryKey: ["get-project-by-id", id],
+    queryKey: ["get-sub-parameter-list", filter],
     queryFn: async () => {
       const { data: resData } = await Api.post<DatePaging>({
-        url: Urls.getCompanyProjectById(id),
+        url: Urls.getAllSubParameter(),
+        data: {
+          ...filter,
+        },
       });
 
       return resData;
     },
-    enabled: !!id,
   });
   return query;
 }

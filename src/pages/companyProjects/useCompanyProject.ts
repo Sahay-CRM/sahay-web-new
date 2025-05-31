@@ -1,7 +1,14 @@
-import { useGetCompanyProject } from "@/features/api/companyProject";
+import {
+  useAddUpdateCompanyProject,
+  useDeleteCompanyProject,
+  useGetAllProjectStatus,
+  useGetCompanyProject,
+} from "@/features/api/companyProject";
 import { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function useAdminUser() {
+  const navigate = useNavigate();
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [modalData, setModalData] = useState<IProjectFormData>(
@@ -24,7 +31,12 @@ export default function useAdminUser() {
   const { data: projectlistdata } = useGetCompanyProject({
     filter: paginationFilter,
   });
-
+  const { mutate: deleteProjectById } = useDeleteCompanyProject();
+  const { data: projectStatusList } = useGetAllProjectStatus();
+  const statusOptions = (projectStatusList?.data ?? []).map((item) => ({
+    label: item.projectStatus,
+    value: item.projectStatusId,
+  }));
   const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = Number(event.target.value);
     setCurrentStatus(newStatus); // Update currentStatus state
@@ -36,6 +48,7 @@ export default function useAdminUser() {
       currentPage: 1, // Reset to the first page
     }));
   };
+  const { mutate: addProject } = useAddUpdateCompanyProject();
 
   // Ensure currentStatus is passed when updating the pagination filter
   const setPaginationFilterWithStatus = (filter: PaginationFilter) => {
@@ -68,7 +81,15 @@ export default function useAdminUser() {
     setIsChildData("");
   }, []);
 
-  const conformDelete = async () => {};
+  const conformDelete = async () => {
+    if (modalData && modalData.projectId) {
+      deleteProjectById(modalData.projectId, {
+        onSuccess: () => {
+          closeDeleteModal();
+        },
+      });
+    }
+  };
 
   const openImportModal = useCallback(() => {
     setIsImportExportModalOpen(true);
@@ -78,6 +99,20 @@ export default function useAdminUser() {
     setIsImportExportModalOpen(true);
     setIsImport(false);
   }, []);
+
+  const handleStatusChange = (data, row) => {
+    const payload = {
+      projectStatusId: {
+        projectStatusId: data,
+      },
+      projectId: row?.projectId,
+    };
+    addProject(payload, {
+      onSuccess: () => {
+        navigate("/dashboard/projects");
+      },
+    });
+  };
 
   return {
     // isLoading,
@@ -101,5 +136,7 @@ export default function useAdminUser() {
     isDeleteModalOpen,
     setIsImportExportModalOpen,
     isChildData,
+    statusOptions,
+    handleStatusChange,
   };
 }
