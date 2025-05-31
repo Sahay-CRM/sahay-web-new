@@ -5,6 +5,7 @@ import AddCompanyEmployee from "@/pages/companyEmployee/AddEmployeeFormModal/add
 import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
 import AddCompanyMeeting from "@/pages/Meeting/AddMeetingFormModal/addMeeting";
 import AddCompanyProjectList from "@/pages/companyProjects/AddMeetingFormModal/addProject";
+import AddCompanyDatapoint from "@/pages/datapointList/AddDatapointFormModal/addDatapoint";
 
 const Dashboard = lazy(() => import("../pages/homePage/HomePage"));
 const Theme = lazy(() => import("../pages/theme/Theme"));
@@ -42,8 +43,8 @@ export default function EmployeeRoutes() {
       <Route index element={<Navigate to="/dashboard" replace />} />
       <Route path="/dashboard" element={<DashboardLayout />}>
         <Route index Component={Dashboard} />
-        <Route path="settings" Component={Theme} />
         <Route path="calendar" Component={Calendar} />
+        <Route path="settings" Component={Theme} />
         <Route path="company-designation" Component={companydesignation} />
         <Route path="company-employee" Component={companyemployee} />
         <Route path="employees/add" element={<AddCompanyEmployee />} />
@@ -68,6 +69,8 @@ export default function EmployeeRoutes() {
           element={<AddCompanyProjectList isEditMode />}
         />
         <Route path="datapoint" Component={DatapointList} />
+        <Route path="datapoint/add" element={<AddCompanyDatapoint />} />
+        <Route path="datapoint/edit/:id" element={<AddCompanyDatapoint />} />
         <Route path="healthscore-achieve" Component={Healthscore} />
 
         <Route path="roles/user-permission">

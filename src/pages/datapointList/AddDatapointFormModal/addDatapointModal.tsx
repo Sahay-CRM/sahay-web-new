@@ -1,24 +1,22 @@
 import ModalData from "@/components/shared/Modal/ModalData";
 
-interface MeetingModalProps {
-  modalData: MeetingData; // Use the correct type if available, e.g., CompanyMeetingDataProps
+interface DatapointModalProps {
+  modalData: KPIFormDatas; // Use the correct type if available, e.g., CompanyMeetingDataProps
   isModalOpen: boolean;
   modalClose: () => void;
   onSubmit: () => void;
 }
-const AddMeetingModal: React.FC<MeetingModalProps> = ({
+const AddDatapointModal: React.FC<DatapointModalProps> = ({
   modalData,
   isModalOpen,
   modalClose,
   onSubmit,
 }) => {
-  // console.log(modalData, "<=====");
-
   return (
     <div>
       <ModalData
         isModalOpen={isModalOpen}
-        modalTitle="Add Meeting"
+        modalTitle="Add Datapoint"
         modalClose={modalClose}
         buttons={[
           {
@@ -35,36 +33,38 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
       >
         <div>
           <div>
-            <span>Meeting Name: {modalData?.meetingName || "-"}</span>
+            <span>Kpi Name : {modalData?.KPIMasterId?.KPIName || "-"}</span>
           </div>
           <div>
             <span>
-              Meeting Description: {modalData?.meetingDescription || "-"}
+              Frequency : {modalData?.frequencyId?.frequencyName || "-"}
             </span>
           </div>
           <div>
             <span>
-              Meeting Date & Time: {modalData?.meetingDateTime || "-"}
+              Validation Type :{" "}
+              {modalData?.validationTypeId?.validationTypeName || "-"}
             </span>
           </div>
           <div>
             <span>
-              Meeting Status: {modalData?.meetingStatusId?.meetingStatus || "-"}
+              Assign User :
+              {Array.isArray(modalData.employeeId)
+                ? modalData.employeeId
+                    .map((joiner) => joiner?.employeeName)
+                    .filter(Boolean)
+                    .join(", ")
+                : "-"}
             </span>
           </div>
           <div>
             <span>
-              Meeting Type: {modalData?.meetingTypeId?.meetingTypeName || "-"}
+              Goal Value : <br></br>
             </span>
-          </div>
-          <div>
             <span>
-              Joiners:
-              {modalData.employeeId
-                .map((joiner) => joiner?.employeeName)
-                .filter(Boolean)
-                .join(", ")}
+              Goal Value 1 :{modalData?.goalValue1 || "-"} <br></br>
             </span>
+            <span>Goal Value 2 :{modalData?.goalValue2 || "-"}</span>
           </div>
         </div>
       </ModalData>
@@ -72,4 +72,4 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
   );
 };
 
-export default AddMeetingModal;
+export default AddDatapointModal;

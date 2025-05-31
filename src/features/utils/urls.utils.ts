@@ -69,6 +69,14 @@ const Urls = {
   addEmployee: () => `${baseUrl}/company/employee/create`,
   updateEmployee: (id: string) => `${baseUrl}/company/employee/update/${id}`,
   deleteEmployee: (id: string) => `${baseUrl}/company/employee/delete/${id}`,
+
+  //Datapoint
+  getDatapointList: () => `${baseUrl}/company/kpi/get`,
+  getKpinonselectList: () => `${baseUrl}/kpi/get/non-select`,
+  updateCompanyDatapoint: (id: string) => `${baseUrl}/company/kpi/update/${id}`,
+  addCompanyDatapoint: () => `${baseUrl}/company/kpi/create`,
+  getKpiById: (id: string) => `${baseUrl}/company/kpi/get/${id}`,
+  deleteDatapointMeeting: (id: string) => `${baseUrl}/company/kpi/delete/${id}`,
 };
 
 export default Urls;

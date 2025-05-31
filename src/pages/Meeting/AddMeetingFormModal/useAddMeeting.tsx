@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Card } from "@/components/ui/card";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
@@ -7,14 +7,22 @@ import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownS
 import { getEmployee } from "@/features/api/companyEmployee";
 import {
   useAddUpdateCompanyMeeting,
+  useGetCompanyMeetingById,
   useGetCompanyMeetingStatus,
 } from "@/features/api/companyMeeting";
 import { getMeetingType } from "@/features/api/meetingType";
+import { useNavigate, useParams } from "react-router-dom";
+import { format, parseISO } from "date-fns";
 
 export default function useAddEmployee() {
+  const { id: companyMeetingId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
 
   const { mutate: addMeeting } = useAddUpdateCompanyMeeting();
+  const navigate = useNavigate();
+  const { data: meetingApiData } = useGetCompanyMeetingById(
+    companyMeetingId || "",
+  );
 
   const {
     register,
@@ -26,8 +34,23 @@ export default function useAddEmployee() {
     getValues,
   } = useForm({
     mode: "onChange",
-    // values: employeeApiData, // If you have employee data to prefill
   });
+
+  useEffect(() => {
+    if (meetingApiData?.data) {
+      const data = meetingApiData?.data;
+      reset({
+        meetingName: data.meetingName || "",
+        meetingDescription: data.meetingDescription || "",
+        meetingDateTime: data.meetingDateTime
+          ? format(parseISO(data?.meetingDateTime), "yyyy-MM-dd")
+          : "",
+        meetingStatusId: data.meetingStatus || "",
+        meetingTypeId: data.meetingType || undefined,
+        employeeId: data.joiners || undefined,
+      });
+    }
+  }, [meetingApiData, reset]);
 
   const handleClose = () => setModalOpen(false);
 
@@ -45,15 +68,15 @@ export default function useAddEmployee() {
       meetingDateTime: data?.meetingDateTime,
       meetingTypeId: data?.meetingTypeId?.meetingTypeId,
       meetingStatusId: data?.meetingStatusId?.meetingStatusId,
-      joiners: data?.joiners,
+      joiners: data?.employeeId?.map((ele) => ele?.employeeId),
+      companyMeetingId: companyMeetingId || "",
     };
-    // console.log(payload.meetingStatusId);
-    // console.log(payload);
     addMeeting(payload, {
       onSuccess: () => {
         handleModalClose();
       },
     });
+    navigate("/dashboard/meeting");
   });
 
   const handleModalClose = () => {
@@ -81,7 +104,7 @@ export default function useAddEmployee() {
 
           <FormInputField
             id=""
-            type="datetime-local"
+            type="date"
             label="Meeting Date & Time"
             {...register("meetingDateTime", {
               required: "Date & Time is required",
@@ -153,7 +176,7 @@ export default function useAddEmployee() {
                 ...item,
                 srNo: index + 1,
               }))}
-              isActionButton={false}
+              isActionButton={() => false}
               columns={visibleColumns}
               primaryKey="meetingStatusId"
               paginationDetails={meeetingStatusData}
@@ -228,7 +251,7 @@ export default function useAddEmployee() {
                 ...item,
                 srNo: index + 1,
               }))}
-              isActionButton={false}
+              isActionButton={() => false}
               columns={visibleColumns}
               primaryKey="meetingTypeId"
               paginationDetails={meetingTypeData}

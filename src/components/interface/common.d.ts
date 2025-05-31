@@ -80,6 +80,7 @@ interface EmployeeData {
   designationName?: string | null;
   companyEmployeeId?: string | null;
 }
+
 // kk
 interface CompanyTaskData {
   taskId: string;
@@ -151,37 +152,55 @@ interface EventData {
   importantDateId?: string;
 }
 
+export interface AssignUser {
+  employeeId: string;
+  employeeName: string;
+  value1: string;
+  value2: string;
+  yesno: string; // optional if not BETWEEN, but keep as string for consistency
+}
+
+export interface KPIFormData {
+  employeeId: string;
+  dataPointName: string;
+  KPIMasterId: string;
+  dataPointLabel: string;
+  validationType: string;
+  frequencyType: string;
+  selectedType: string; // optional fallback if not set
+  assignUser: AssignUser[];
+}
+
 //kk
 interface MeetingData {
-  meetingId: string;
-  meetingName: string;
-  meetingDescription: string;
-  meetingDateTime: string; // ISO string format
-  companyId: string;
-  createdBy: string;
-  meetingTypeId: string;
-  meetingStatusId: string;
+  meetingId?: string;
+  meetingName?: string;
+  meetingDescription?: string;
+  meetingDateTime?: string; // ISO string format
+  companyId?: string;
+  meetingTypeId?: string;
+  meetingStatusId?: string;
 
-  meetingType: {
+  meetingType?: {
     meetingTypeId: string;
     meetingTypeName: string;
   };
 
-  companyEmployee: {
+  companyEmployee?: {
     employeeId: string;
     employeeName: string;
     employeeMobile: string;
   };
 
-  company: {
+  company?: {
     companyId: string;
     companyAdminEmail: string;
     companyAdminMobile: string;
   };
 
-  meetingStatus: MeetingStatusDataProps;
+  meetingStatus?: MeetingStatusDataProps;
 
-  joiners: {
+  joiners?: {
     companyEmployee: {
       employeeId: string;
       employeeName: string;
@@ -281,7 +300,25 @@ interface CompanyMeetingDataProps {
   meetingDateTime: string;
   meetingTypeId: string;
   meetingStatusId: string;
+  companyMeetingId?: string;
   joiners?: string[];
+}
+
+interface CompanyDatapointDataProps {
+  KPIName: string;
+  KPIMasterId: string;
+  KPILabel: string;
+  industryId: string;
+  industryName: string;
+  isIndustrySpecific: true;
+}
+interface DatapointListData {
+  KPIName: string;
+  KPIMasterId: string;
+  KPILabel: string;
+  industryId: string;
+  industryName: string;
+  isIndustrySpecific: true;
 }
 
 interface CompanyMeetingStatusDataProps {
@@ -379,13 +416,6 @@ interface TaskData {
   taskDeadline: string;
 }
 
-interface MeetingData {
-  meetingId: string;
-  topic: string;
-  agenda: string;
-  meetingDate: string;
-}
-
 interface BaseResponse<T> {
   success: boolean;
   status: number;
@@ -467,4 +497,33 @@ interface EmployeeDataModal {
   employeeId?: {
     employeeName: string;
   };
+}
+
+interface MeetingJoiner {
+  employeeId: string;
+  employeeName: string;
+}
+
+interface MeetingType {
+  meetingTypeId: string;
+  meetingTypeName: string;
+}
+
+interface MeetingStatus {
+  meetingStatusId: string;
+  meetingStatus: string;
+}
+
+interface MeetingDataById {
+  meetingId: string;
+  meetingName: string;
+  meetingDescription: string;
+  meetingDateTime: string;
+  companyId: string;
+  employeeId: string;
+  meetingTypeId: string;
+  meetingType: MeetingType;
+  meetingStatusId: string;
+  meetingStatus: MeetingStatus;
+  joiners: MeetingJoiner[];
 }

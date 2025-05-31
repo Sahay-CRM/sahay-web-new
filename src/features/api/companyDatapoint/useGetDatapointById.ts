@@ -3,12 +3,12 @@ import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 type DatePaging = BaseResponse<CompanyMeetingDataProps>;
 
-export default function useGetCompanyMeetingById(id: string) {
+export default function useGetDatapointById(id: string) {
   const query = useQuery({
-    queryKey: ["get-meeting-list-by-id", id],
+    queryKey: ["get-kpi-by-id", id],
     queryFn: async () => {
       const { data: resData } = await Api.post<DatePaging>({
-        url: Urls.getCompanyMeetingById(id),
+        url: Urls.getKpiById(id),
       });
 
       return resData;

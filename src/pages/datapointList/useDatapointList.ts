@@ -1,15 +1,25 @@
-import { useDeleteCompanyMeeting } from "@/features/api/companyMeeting";
-import useGetCompanyMeeting from "@/features/api/companyMeeting/useGetCompanyMeeting";
+import { KPIFormData } from "@/components/interface/common";
+import {
+  useDeleteDatapoint,
+  useGetCompanyDatapoint,
+} from "@/features/api/companyDatapoint";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useCallback, useState } from "react";
+import { useSelector } from "react-redux";
 
 export default function useAdminUser() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [modalData, setModalData] = useState<MeetingData>({} as MeetingData);
+  const [modalData, setModalData] = useState<KPIFormData>({} as KPIFormData);
   const [currentStatus, setCurrentStatus] = useState<number>(1); // Add state for currentStatus
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
+  const permission = useSelector(getUserPermission).DATAPOINT_LIST;
+
+  const { mutate: deleteDatapointById } = useDeleteDatapoint();
   const [isChildData, setIsChildData] = useState<string | undefined>();
+
+  // Pagination Details and Filter
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 10,
@@ -17,7 +27,7 @@ export default function useAdminUser() {
     status: currentStatus, // Use currentStatus state
   });
 
-  const { data: meetingData } = useGetCompanyMeeting({
+  const { data: datpointData } = useGetCompanyDatapoint({
     filter: paginationFilter,
   });
 
@@ -29,10 +39,9 @@ export default function useAdminUser() {
     setPaginationFilter((prevFilter) => ({
       ...prevFilter,
       status: newStatus,
-      currentPage: 1,
+      currentPage: 1, // Reset to the first page
     }));
   };
-  const { mutate: deleteMeetingById } = useDeleteCompanyMeeting();
 
   // Ensure currentStatus is passed when updating the pagination filter
   const setPaginationFilterWithStatus = (filter: PaginationFilter) => {
@@ -51,7 +60,7 @@ export default function useAdminUser() {
     setIsUserModalOpen(true);
   };
 
-  const openModal = useCallback((data: MeetingData) => {
+  const openModal = useCallback((data: KPIFormData) => {
     setModalData(data); // Set the data for the modal
     setIsUserModalOpen(true);
   }, []);
@@ -68,7 +77,7 @@ export default function useAdminUser() {
     setIsChildData("");
   };
 
-  const onDelete = useCallback((data: MeetingData) => {
+  const onDelete = useCallback((data: KPIFormData) => {
     setIsDeleteModalOpen(true);
     setModalData(data);
     setIsUserModalOpen(false);
@@ -76,8 +85,8 @@ export default function useAdminUser() {
   }, []);
 
   const conformDelete = async () => {
-    if (modalData && modalData.meetingId) {
-      deleteMeetingById(modalData.meetingId, {
+    if (modalData && modalData.KPIMasterId) {
+      deleteDatapointById(modalData.KPIMasterId, {
         onSuccess: () => {
           closeDeleteModal();
         },
@@ -96,16 +105,17 @@ export default function useAdminUser() {
 
   return {
     // isLoading,
-    meetingData,
+    datpointData,
     closeDeleteModal,
-    setPaginationFilter: setPaginationFilterWithStatus,
+    setPaginationFilter: setPaginationFilterWithStatus, // Use the updated function
     onStatusChange,
-    currentStatus,
+    currentStatus, // Return currentStatus state
     openModal,
     onDelete,
     modalData,
     conformDelete,
     handleAdd,
+    // Removed 'control' as it is not declared or initialized
     paginationFilter,
     isUserModalOpen,
     openImportModal,
@@ -115,5 +125,6 @@ export default function useAdminUser() {
     isDeleteModalOpen,
     setIsImportExportModalOpen,
     isChildData,
+    permission,
   };
 }
