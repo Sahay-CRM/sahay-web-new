@@ -44,6 +44,7 @@ const Urls = {
     `${baseUrl}/company/project/delete/${id}`,
   getCompanyProjectById: (id: string) => `${baseUrl}/company/project/get/${id}`,
   getAllCompanyProjectByPage: () => `${baseUrl}/company/project/get`,
+  getAllCompanyProjectDropdown: () => `${baseUrl}/company/project/get-all`,
 
   getAllCompanyTask: () => `${baseUrl}/company/task/get-all`,
   addCompanyTask: () => `${baseUrl}/company/task/create`,
@@ -82,6 +83,9 @@ const Urls = {
   updateHealthScore: () => `${baseUrl}/company/health/update`,
   getHealthScoreByParam: (id: string) =>
     `${baseUrl}/company/health/score/get-by-core/${id}`,
+
+  getAllTaskTypeStatus: () => `${baseUrl}/task-status/get-all`,
+  AllTaskTypeList: () => `${baseUrl}/task-type/get`,
 };
 
 export default Urls;

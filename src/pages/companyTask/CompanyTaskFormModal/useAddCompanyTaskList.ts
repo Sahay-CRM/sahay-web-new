@@ -1,6 +1,11 @@
 // hooks/useAddCompanyTaskList.ts
 import { useForm } from "react-hook-form";
 import { useState } from "react";
+import { useGetCompanyProjectAll } from "@/features/api/companyProject";
+import {
+  useGetAllTaskStatus,
+  useAllTaskType,
+} from "@/features/api/companyTask";
 
 interface FormValues {
   project: string;
@@ -8,14 +13,19 @@ interface FormValues {
   taskDescription: string;
   taskStartDate: Date | null;
   taskDeadline: Date | null;
-  taskStatusId: string;
-  taskTypeId: string;
-  meeting?: string;
-  assignees: string[]; // assuming it's a multi-select
+  repetition: string;
+  taskStatus?: string;
+  taskType?: string;
   comment?: string;
 }
 
-const steps = ["Basic Info", "Details & Assignment"];
+const steps = [
+  "Basic Info",
+  "Schedule & Repetition",
+  "Task Status",
+  "Task Type",
+  "Comment",
+];
 
 export const useAddCompanyEmployee = () => {
   const methods = useForm<FormValues>({
@@ -25,10 +35,9 @@ export const useAddCompanyEmployee = () => {
       taskDescription: "",
       taskStartDate: null,
       taskDeadline: null,
-      taskStatusId: "",
-      taskTypeId: "",
-      meeting: "",
-      assignees: [],
+      repetition: "",
+      taskStatus: undefined,
+      taskType: undefined,
       comment: "",
     },
     mode: "onChange",
@@ -36,32 +45,60 @@ export const useAddCompanyEmployee = () => {
 
   const [step, setStep] = useState(1);
 
-  const employees = [
-    { value: "emp1", label: "John Doe" },
-    { value: "emp2", label: "Jane Smith" },
+  const [paginationFilterTaskStatus, setPaginationFilterTaskStatus] =
+    useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 10,
+      search: "",
+    });
+  const [paginationFilterTaskType, setPaginationFilterTaskType] =
+    useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 10,
+      search: "",
+    });
+
+  const { data: projectList } = useGetCompanyProjectAll();
+  const { data: taskStatus } = useGetAllTaskStatus({
+    filter: paginationFilterTaskStatus,
+  });
+  const { data: taskTypeData } = useAllTaskType({
+    filter: paginationFilterTaskType,
+  });
+  const taskType = {
+    data: Array.isArray(taskTypeData?.data) ? taskTypeData.data : [],
+  };
+
+  const projectListOption = [
+    {
+      label: "Please select Project",
+      value: "",
+      disabled: true,
+    },
+    ...(Array.isArray(projectList?.data)
+      ? projectList.data.map((item) => ({
+          label: item.projectName,
+          value: item.projectId,
+        }))
+      : []),
   ];
 
-  const statusOptions = [
-    { value: "todo", label: "To Do" },
-    { value: "in_progress", label: "In Progress" },
-    { value: "done", label: "Done" },
+  // Repetition options
+  const repetitionOptions = [
+    { value: "none", label: "No Repetition" },
+    { value: "daily", label: "Daily" },
+    { value: "weekly", label: "Weekly" },
+    { value: "monthly", label: "Monthly" },
+    { value: "annually", label: "Annually" },
   ];
 
-  const taskTypeOptions = [
-    { value: "bug", label: "Bug" },
-    { value: "feature", label: "Feature" },
-    { value: "improvement", label: "Improvement" },
-  ];
-
+  // Only validate relevant fields for each step
   const fieldsToValidate: Record<number, (keyof FormValues)[]> = {
-    1: [
-      "project",
-      "taskName",
-      "taskDescription",
-      "taskStartDate",
-      "taskDeadline",
-    ],
-    2: ["taskStatusId", "taskTypeId", "assignees"],
+    1: ["project", "taskName", "taskDescription"],
+    2: ["taskStartDate", "taskDeadline", "repetition"],
+    3: ["taskStatus"],
+    4: ["taskType"],
+    5: ["comment"],
   };
 
   const validateStep = async (): Promise<boolean> => {
@@ -78,28 +115,21 @@ export const useAddCompanyEmployee = () => {
     setStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const onSubmit = async () => {};
+  const onSubmit = async (data: FormValues) => {
+    // Convert dates to UTC ISO strings if present
+    const payload = {
+      ...data,
+      taskStartDate: data.taskStartDate
+        ? new Date(data.taskStartDate).toISOString()
+        : null,
+      taskDeadline: data.taskDeadline
+        ? new Date(data.taskDeadline).toISOString()
+        : null,
+    };
 
-  const fetchEmployeeById = async (): Promise<
-    FormValues & { countryCode?: string }
-  > => {
-    return new Promise((resolve) =>
-      setTimeout(() => {
-        resolve({
-          project: "Apollo",
-          taskName: "Kickoff Call",
-          taskDescription: "Initial project kickoff with stakeholders",
-          taskStartDate: new Date(),
-          taskDeadline: new Date(),
-          taskStatusId: "in_progress",
-          taskTypeId: "feature",
-          meeting: "Zoom Link",
-          assignees: ["emp1", "emp2"],
-          comment: "Ensure all teams are present",
-          countryCode: "+91",
-        });
-      }, 300),
-    );
+    console.log(payload);
+
+    // handle payload
   };
 
   return {
@@ -109,9 +139,11 @@ export const useAddCompanyEmployee = () => {
     prevStep,
     onSubmit,
     methods,
-    employees,
-    statusOptions,
-    taskTypeOptions,
-    fetchEmployeeById,
+    projectListOption,
+    repetitionOptions,
+    taskStatus,
+    taskType,
+    setPaginationFilterTaskStatus,
+    setPaginationFilterTaskType,
   };
 };

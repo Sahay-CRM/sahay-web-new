@@ -31,7 +31,7 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
 
   return (
     <div className="flex flex-col w-[260px] h-screen bg-white border-r">
-      <div className="flex items-center mt-4 px-4 py-4 shadow-sm mt-auto cursor-pointer mb-4">
+      <div className="flex items-center px-4 py-4 shadow-sm mt-auto cursor-pointer mb-4">
         <div className="flex w-[70px] h-[50px]">
           <img
             src={logoImg}

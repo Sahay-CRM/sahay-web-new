@@ -494,3 +494,14 @@ interface HealthScoreData {
   subParameterId: string;
   subParameterName: string;
 }
+interface TaskStatusAllRes {
+  taskStatusId: string;
+  taskStatus: string;
+  taskStatusOrder: number;
+  winLostTask: string | null;
+}
+
+interface TaskTypeData {
+  taskTypeId?: string;
+  taskTypeName: string;
+}

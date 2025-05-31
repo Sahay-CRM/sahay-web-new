@@ -2,3 +2,5 @@ export { default as useAddUpdateCompanyProject } from "./useAddUpdateCompanyProj
 export { default as useDeleteCompanyProject } from "./useDeleteCompanyProject";
 export { default as useGetCompanyProject } from "./useGetCompanyProject";
 export { default as useGetCompanyProjectById } from "./useGetCompanyProjectById";
+
+export { default as useGetCompanyProjectAll } from "./useGetCompanyProjectAll";
