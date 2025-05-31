@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyProject from "./useCompanyProject";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import TableWithDropdown from "@/components/shared/DataTable/DropdownTable/DropdownTable";
 // import DesignationAddFormModal from "./DesignationAddFormModal";
 export default function CompanyProject() {
   const {
@@ -22,6 +22,8 @@ export default function CompanyProject() {
     paginationFilter,
     // isUserModalOpen,
     isChildData,
+    statusOptions,
+    handleStatusChange,
   } = useCompanyProject();
 
   //   const { setBreadcrumbs } = useBreadcrumbs();
@@ -95,28 +97,33 @@ export default function CompanyProject() {
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
-          <TableData
+          <TableWithDropdown
             tableData={projectlistdata?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,
-              //   assigneeNames: item.assignees[0]?.employeeName,
+              status: item?.projectStatus?.projectStatusId ?? "",
             }))}
-            columns={visibleColumns} // Pass only visible columns to the Table
+            columns={visibleColumns}
             primaryKey="projectId"
             onEdit={(row) =>
               navigate(`/dashboard/projects/edit/${row.projectId}`)
             }
             onDelete={(row) => {
-              if (!row.isSuperAdmin) {
-                onDelete(row);
-              }
+              onDelete(row);
             }}
-            canDelete={(row) => !row.isSuperAdmin}
+            isActionButton={() => true}
+            viewButton={true}
+            onViewButton={(row) => {
+              navigate(`/dashboard/projects/view/${row.projectId}`);
+            }}
+            showDropdown={true}
+            statusOptions={statusOptions}
+            handleStatusChange={handleStatusChange}
             paginationDetails={projectlistdata}
             setPaginationFilter={setPaginationFilter}
-            //   isLoading={isLoading}
             permissionKey="users"
             localStorageId="CompanyProjectList"
+            moduleKey="PROJECT_LIST"
           />
         </div>
 

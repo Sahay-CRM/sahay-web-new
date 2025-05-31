@@ -25,10 +25,11 @@ import {
   RefreshCw,
   EyeIcon,
 } from "lucide-react";
-import Pagination from "../Pagination/Pagination";
-import FormCheckbox from "../Form/FormCheckbox/FormCheckbox";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import FormCheckbox from "../../Form/FormCheckbox/FormCheckbox";
+import Pagination from "../../Pagination/Pagination";
+import FormSelect from "../../Form/FormSelect";
 
 interface DetailsPermission {
   view: boolean;
@@ -58,9 +59,12 @@ interface TableProps<T extends Record<string, unknown>> {
   onMoveRowUp?: (index: number) => void;
   onMoveRowDown?: (index: number) => void;
   showIndexColumn?: boolean;
+  showDropdown?: boolean;
   customActions?: (row: T) => React.ReactNode;
   multiSelect?: boolean;
   selectedValue?: T[] | T;
+  statusOptions?: T[] | T;
+  handleStatusChange?: (index: number) => void;
   onCheckbox?: (selectedItems: T[]) => void;
   handleChange?: (selected: T[] | T) => void;
   localStorageId?: string; // Unique identifier for localStorage
@@ -123,7 +127,7 @@ const ResizableTableHead = ({
   );
 };
 
-const TableData = <T extends Record<string, unknown>>({
+const TableWithDropdown = <T extends Record<string, unknown>>({
   tableData = [],
   columns = {},
   primaryKey,
@@ -136,6 +140,8 @@ const TableData = <T extends Record<string, unknown>>({
   isLoading = false,
   isActionButton,
   onAdditionButton = () => {},
+  handleStatusChange = () => {},
+  statusOptions,
   onViewButton = () => {},
   additionalButton,
   viewButton,
@@ -145,8 +151,9 @@ const TableData = <T extends Record<string, unknown>>({
   multiSelect,
   selectedValue = [],
   handleChange,
-  localStorageId = "defaultLocalStorageId", // Default ID for localStorage
+  localStorageId = "defaultLocalStorageId",
   moduleKey = "",
+  showDropdown = false,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   const showCheckboxes = multiSelect || (!!selectedValue && !!handleChange);
@@ -247,7 +254,6 @@ const TableData = <T extends Record<string, unknown>>({
       if (isChecked) handleChange?.(item);
     }
   };
-
   return (
     <Card className="w-full p-2 mb-5 overflow-hidden">
       <div className="flex justify-end mb-2">
@@ -383,28 +389,58 @@ const TableData = <T extends Record<string, unknown>>({
                     )}
 
                     {columnKeys.map((clm) => (
-                      <TableCell
-                        key={`${item[primaryKey]}_${clm}`}
-                        className={`whitespace-normal break-words ${
-                          clm === "srNo" ? "pl-4 pr-0" : "px-6"
-                        }`}
-                        style={{
-                          width:
-                            clm === "srNo"
-                              ? `${FIXED_WIDTHS.srNo}px`
-                              : columnWidths[clm]
-                                ? `${columnWidths[clm]}px`
-                                : "150px",
-                          maxWidth:
-                            clm === "srNo"
-                              ? `${FIXED_WIDTHS.srNo}px`
-                              : columnWidths[clm]
-                                ? `${columnWidths[clm]}px`
-                                : "150px",
-                        }}
-                      >
-                        {String(item[clm] || " - ")}
-                      </TableCell>
+                      <>
+                        {clm == "status" && showDropdown ? (
+                          <>
+                            <TableCell
+                              key={`${item[primaryKey]}_${clm}`}
+                              className={`whitespace-nowrap ${"px-6"}`}
+                              style={{
+                                width: columnWidths[clm]
+                                  ? `${columnWidths[clm]}px`
+                                  : "150px",
+                                maxWidth: columnWidths[clm]
+                                  ? `${columnWidths[clm]}px`
+                                  : "150px",
+                              }}
+                            >
+                              <FormSelect
+                                id={item?.status}
+                                options={statusOptions}
+                                value={item?.status}
+                                onChange={(selectedStatus) => {
+                                  // setSelectedStatus(selectedStatus.value);
+                                  handleStatusChange(selectedStatus, item);
+                                }}
+                                className="mt-1 w-full"
+                              />
+                            </TableCell>
+                          </>
+                        ) : (
+                          <TableCell
+                            key={`${item[primaryKey]}_${clm}`}
+                            className={`whitespace-nowrap ${
+                              clm === "srNo" ? "pl-4 pr-0" : "px-6"
+                            }`}
+                            style={{
+                              width:
+                                clm === "srNo"
+                                  ? `${FIXED_WIDTHS.srNo}px`
+                                  : columnWidths[clm]
+                                    ? `${columnWidths[clm]}px`
+                                    : "150px",
+                              maxWidth:
+                                clm === "srNo"
+                                  ? `${FIXED_WIDTHS.srNo}px`
+                                  : columnWidths[clm]
+                                    ? `${columnWidths[clm]}px`
+                                    : "150px",
+                            }}
+                          >
+                            {String(item[clm] || " - ")}
+                          </TableCell>
+                        )}
+                      </>
                     ))}
 
                     <TableCell
@@ -502,4 +538,4 @@ const TableData = <T extends Record<string, unknown>>({
   );
 };
 
-export default TableData;
+export default TableWithDropdown;

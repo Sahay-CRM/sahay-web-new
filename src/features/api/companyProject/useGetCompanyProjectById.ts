@@ -13,6 +13,7 @@ export default function useGetCompanyProjectById(id: string) {
 
       return resData;
     },
+    enabled: !!id,
   });
   return query;
 }

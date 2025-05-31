@@ -3,15 +3,12 @@ import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 type DatePaging = BaseResponse<CompanyProjectDataProps>;
 
-export default function useGetCompanyProject({ filter }: FilterDataProps) {
+export default function useGetAllProjectStatus() {
   const query = useQuery({
-    queryKey: ["get-project-list", filter],
+    queryKey: ["get-all-project-status-list"],
     queryFn: async () => {
       const { data: resData } = await Api.post<DatePaging>({
-        url: Urls.getAllCompanyProjectByPage(),
-        data: {
-          ...filter,
-        },
+        url: Urls.getAllDropdownProjectStatus(),
       });
 
       return resData;

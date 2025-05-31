@@ -45,6 +45,10 @@ const Urls = {
   getCompanyProjectById: (id: string) => `${baseUrl}/company/project/get/${id}`,
   getAllCompanyProjectByPage: () => `${baseUrl}/company/project/get`,
   getAllCompanyProjectDropdown: () => `${baseUrl}/company/project/get-all`,
+  getAllCorParameter: () => `${baseUrl}/core-param/get`,
+  getAllSubParameter: () => `${baseUrl}/sub-param/get`,
+  getAllProjectStatus: () => `${baseUrl}/project-status/get`,
+  getAllDropdownProjectStatus: () => `${baseUrl}/project-status/get-all`,
 
   getAllCompanyTask: () => `${baseUrl}/company/task/get-all`,
   addCompanyTask: () => `${baseUrl}/company/task/create`,
