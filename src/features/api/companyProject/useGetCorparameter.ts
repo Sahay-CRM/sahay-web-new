@@ -5,10 +5,10 @@ type DatePaging = BaseResponse<CompanyProjectDataProps>;
 
 export default function useGetCompanyProject({ filter }: FilterDataProps) {
   const query = useQuery({
-    queryKey: ["get-project-list", filter],
+    queryKey: ["get-coreparameter-list", filter],
     queryFn: async () => {
       const { data: resData } = await Api.post<DatePaging>({
-        url: Urls.getAllCompanyProjectByPage(),
+        url: Urls.getAllCorParameter(),
         data: {
           ...filter,
         },
