@@ -1,3 +1,4 @@
+import { useDeleteCompanyMeeting } from "@/features/api/companyMeeting";
 import useGetCompanyMeeting from "@/features/api/companyMeeting/useGetCompanyMeeting";
 import { useCallback, useState } from "react";
 
@@ -31,6 +32,7 @@ export default function useAdminUser() {
       currentPage: 1,
     }));
   };
+  const { mutate: deleteMeetingById } = useDeleteCompanyMeeting();
 
   // Ensure currentStatus is passed when updating the pagination filter
   const setPaginationFilterWithStatus = (filter: PaginationFilter) => {
@@ -73,7 +75,15 @@ export default function useAdminUser() {
     setIsChildData("");
   }, []);
 
-  const conformDelete = async () => {};
+  const conformDelete = async () => {
+    if (modalData && modalData.meetingId) {
+      deleteMeetingById(modalData.meetingId, {
+        onSuccess: () => {
+          closeDeleteModal();
+        },
+      });
+    }
+  };
 
   const openImportModal = useCallback(() => {
     setIsImportExportModalOpen(true);

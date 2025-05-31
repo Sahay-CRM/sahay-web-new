@@ -13,6 +13,7 @@ export default function useGetCompanyMeetingById(id: string) {
 
       return resData;
     },
+    enabled: !!id,
   });
   return query;
 }

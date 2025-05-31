@@ -153,35 +153,34 @@ interface EventData {
 
 //kk
 interface MeetingData {
-  meetingId: string;
-  meetingName: string;
-  meetingDescription: string;
-  meetingDateTime: string; // ISO string format
-  companyId: string;
-  createdBy: string;
-  meetingTypeId: string;
-  meetingStatusId: string;
+  meetingId?: string;
+  meetingName?: string;
+  meetingDescription?: string;
+  meetingDateTime?: string; // ISO string format
+  companyId?: string;
+  meetingTypeId?: string;
+  meetingStatusId?: string;
 
-  meetingType: {
+  meetingType?: {
     meetingTypeId: string;
     meetingTypeName: string;
   };
 
-  companyEmployee: {
+  companyEmployee?: {
     employeeId: string;
     employeeName: string;
     employeeMobile: string;
   };
 
-  company: {
+  company?: {
     companyId: string;
     companyAdminEmail: string;
     companyAdminMobile: string;
   };
 
-  meetingStatus: MeetingStatusDataProps;
+  meetingStatus?: MeetingStatusDataProps;
 
-  joiners: {
+  joiners?: {
     companyEmployee: {
       employeeId: string;
       employeeName: string;
@@ -281,6 +280,7 @@ interface CompanyMeetingDataProps {
   meetingDateTime: string;
   meetingTypeId: string;
   meetingStatusId: string;
+  companyMeetingId?: string;
   joiners?: string[];
 }
 
@@ -379,13 +379,6 @@ interface TaskData {
   taskDeadline: string;
 }
 
-interface MeetingData {
-  meetingId: string;
-  topic: string;
-  agenda: string;
-  meetingDate: string;
-}
-
 interface BaseResponse<T> {
   success: boolean;
   status: number;
@@ -467,4 +460,33 @@ interface EmployeeDataModal {
   employeeId?: {
     employeeName: string;
   };
+}
+
+interface MeetingJoiner {
+  employeeId: string;
+  employeeName: string;
+}
+
+interface MeetingType {
+  meetingTypeId: string;
+  meetingTypeName: string;
+}
+
+interface MeetingStatus {
+  meetingStatusId: string;
+  meetingStatus: string;
+}
+
+interface MeetingDataById {
+  meetingId: string;
+  meetingName: string;
+  meetingDescription: string;
+  meetingDateTime: string;
+  companyId: string;
+  employeeId: string;
+  meetingTypeId: string;
+  meetingType: MeetingType;
+  meetingStatusId: string;
+  meetingStatus: MeetingStatus;
+  joiners: MeetingJoiner[];
 }

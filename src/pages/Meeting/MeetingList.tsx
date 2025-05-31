@@ -101,11 +101,8 @@ export default function MeetingList() {
             moduleKey="MEETING_LIST"
             isActionButton={() => true}
             onDelete={(row) => {
-              if (!row.isSuperAdmin) {
-                onDelete(row);
-              }
+              onDelete(row);
             }}
-            canDelete={(row) => !row.isSuperAdmin}
             paginationDetails={meetingData}
             setPaginationFilter={setPaginationFilter}
             //   isLoading={isLoading}
