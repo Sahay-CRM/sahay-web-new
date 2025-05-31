@@ -41,7 +41,7 @@ const useLogin = () => {
     const verifyCompanyData = {
       selectedCompanyId: data.companyId,
       mobile: countryCode + data.mobile,
-      userType: "EMPLOYEE",
+      userType: data.userType,
     };
 
     companyVerifyOtp(verifyCompanyData, {

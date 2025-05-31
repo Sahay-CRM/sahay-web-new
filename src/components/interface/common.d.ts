@@ -330,6 +330,13 @@ interface SubParameter {
 //   updatedDatetime: string;
 // }
 
+interface ProjectStatusRes {
+  projectStatusId: string;
+  projectStatus: string;
+  projectStatusOrder: number;
+  winLostProject: null;
+}
+
 interface DesignationDataProps {
   designationId: string;
   designationName: string;
@@ -501,16 +508,16 @@ interface TaskTypeData {
 
 interface AddUpdateTask {
   taskId?: string;
-  taskName: string;
-  taskDescription: string;
-  taskStartDate: Date | null;
-  taskDeadline: Date | null;
+  taskName?: string;
+  taskDescription?: string;
+  taskStartDate?: Date | null;
+  taskDeadline?: Date | null;
   repetition?: string;
   taskStatusId?: string;
   taskTypeId?: string;
   comment?: string;
   assigneeIds?: string[];
-  projectId: string;
+  projectId?: string;
 }
 
 interface TaskGetPaging {

@@ -1,4 +1,8 @@
-import { useGetCompanyTask } from "@/features/api/companyTask";
+import {
+  useGetAllTaskStatus,
+  useGetCompanyTask,
+} from "@/features/api/companyTask";
+import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
 import { useCallback, useState } from "react";
 
 export default function useAdminUser() {
@@ -13,6 +17,8 @@ export default function useAdminUser() {
 
   const [isChildData, setIsChildData] = useState<string | undefined>();
 
+  const { mutate: updateCompanyTask } = useAddUpdateCompanyTask();
+
   // Pagination Details and Filter
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
@@ -24,6 +30,15 @@ export default function useAdminUser() {
   const { data: companyTaskData } = useGetCompanyTask({
     filter: paginationFilter,
   });
+
+  const { data: taskStatus } = useGetAllTaskStatus({
+    filter: {},
+  });
+
+  const statusOptions = (taskStatus?.data ?? []).map((item) => ({
+    label: item.taskStatus,
+    value: item.taskStatusId,
+  }));
 
   const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = Number(event.target.value);
@@ -102,6 +117,15 @@ export default function useAdminUser() {
     setIsImport(false);
   }, []);
 
+  const handleStatusChange = (data: string, row: TaskGetPaging) => {
+    const payload = {
+      taskStatusId: data,
+      taskId: row?.taskId,
+    };
+
+    updateCompanyTask(payload);
+  };
+
   return {
     // isLoading,
     companyTaskData,
@@ -124,5 +148,7 @@ export default function useAdminUser() {
     isDeleteModalOpen,
     setIsImportExportModalOpen,
     isChildData,
+    statusOptions,
+    handleStatusChange,
   };
 }

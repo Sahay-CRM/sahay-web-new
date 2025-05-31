@@ -63,8 +63,8 @@ interface TableProps<T extends Record<string, unknown>> {
   customActions?: (row: T) => React.ReactNode;
   multiSelect?: boolean;
   selectedValue?: T[] | T;
-  statusOptions?: T[] | T;
-  handleStatusChange?: (index: number) => void;
+  statusOptions?: { label: string; value: string }[];
+  handleStatusChange?: (selectedStatus: string, item: T) => void;
   onCheckbox?: (selectedItems: T[]) => void;
   handleChange?: (selected: T[] | T) => void;
   localStorageId?: string; // Unique identifier for localStorage
@@ -141,7 +141,7 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
   isActionButton,
   onAdditionButton = () => {},
   handleStatusChange = () => {},
-  statusOptions,
+  statusOptions = [],
   onViewButton = () => {},
   additionalButton,
   viewButton,
@@ -157,6 +157,7 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   const showCheckboxes = multiSelect || (!!selectedValue && !!handleChange);
+  // console.log(tableData);
 
   const tableRef = useRef<HTMLDivElement>(null);
   const permission = useSelector(getUserPermission)?.[moduleKey];
@@ -388,37 +389,36 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
                       </TableCell>
                     )}
 
-                    {columnKeys.map((clm) => (
-                      <>
+                    {columnKeys.map((clm, index) => (
+                      <React.Fragment
+                        key={`${item[primaryKey]}_${clm}_${index}`}
+                      >
                         {clm == "status" && showDropdown ? (
-                          <>
-                            <TableCell
-                              key={`${item[primaryKey]}_${clm}`}
-                              className={`whitespace-nowrap ${"px-6"}`}
-                              style={{
-                                width: columnWidths[clm]
-                                  ? `${columnWidths[clm]}px`
-                                  : "150px",
-                                maxWidth: columnWidths[clm]
-                                  ? `${columnWidths[clm]}px`
-                                  : "150px",
+                          <TableCell
+                            className={`whitespace-nowrap ${"px-6"}`}
+                            style={{
+                              width: columnWidths[clm]
+                                ? `${columnWidths[clm]}px`
+                                : "150px",
+                              maxWidth: columnWidths[clm]
+                                ? `${columnWidths[clm]}px`
+                                : "150px",
+                            }}
+                          >
+                            <FormSelect
+                              id={String(item?.status)}
+                              options={statusOptions}
+                              value={item?.status}
+                              onChange={(selectedStatus) => {
+                                // console.log(selectedStatus, item);
+
+                                handleStatusChange(selectedStatus, item);
                               }}
-                            >
-                              <FormSelect
-                                id={item?.status}
-                                options={statusOptions}
-                                value={item?.status}
-                                onChange={(selectedStatus) => {
-                                  // setSelectedStatus(selectedStatus.value);
-                                  handleStatusChange(selectedStatus, item);
-                                }}
-                                className="mt-1 w-full"
-                              />
-                            </TableCell>
-                          </>
+                              className="mt-1 w-full"
+                            />
+                          </TableCell>
                         ) : (
                           <TableCell
-                            key={`${item[primaryKey]}_${clm}`}
                             className={`whitespace-nowrap ${
                               clm === "srNo" ? "pl-4 pr-0" : "px-6"
                             }`}
@@ -440,7 +440,7 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
                             {String(item[clm] || " - ")}
                           </TableCell>
                         )}
-                      </>
+                      </React.Fragment>
                     ))}
 
                     <TableCell

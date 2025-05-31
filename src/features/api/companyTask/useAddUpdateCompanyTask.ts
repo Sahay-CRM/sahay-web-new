@@ -17,9 +17,6 @@ export default function useAddUpdateCompanyTask() {
           : Urls.addCompanyTask(),
         data: data,
       };
-
-      console.log(data);
-
       const { data: resData } = data.taskId
         ? await Api.put<DatePaging>(config)
         : await Api.post<DatePaging>(config);
@@ -29,6 +26,7 @@ export default function useAddUpdateCompanyTask() {
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["get-task-list"] });
+      queryClient.resetQueries({ queryKey: ["get-task-by-id"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

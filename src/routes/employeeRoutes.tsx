@@ -40,6 +40,7 @@ const Healthscore = lazy(() => import("../pages/healthScore"));
 const HealthWeightage = lazy(() => import("../pages/HealthWeightage"));
 
 const CompanyLevelAssign = lazy(() => import("../pages/CompanyLevel"));
+const CompanyTaskView = lazy(() => import("../pages/companyTask/ViewProject"));
 
 export default function EmployeeRoutes() {
   return (
@@ -62,6 +63,7 @@ export default function EmployeeRoutes() {
         <Route path="meeting/edit/:id" element={<AddCompanyMeeting />} />
         <Route path="tasks" Component={CompanyTask} />
         <Route path="tasks/add" element={<AddCompanyTaskList />} />
+        <Route path="tasks/view/:id" element={<CompanyTaskView />} />
         <Route
           path="tasks/edit/:id"
           element={<AddCompanyTaskList isEditMode />}

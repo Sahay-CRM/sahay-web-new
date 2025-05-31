@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyTaskList from "./useCompanyTaskList";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import TableWithDropdown from "@/components/shared/DataTable/DropdownTable/DropdownTable";
 // import DesignationAddFormModal from "./DesignationAddFormModal";
 export default function CompanyTaskList() {
   const {
@@ -23,6 +23,8 @@ export default function CompanyTaskList() {
     paginationFilter,
     // isUserModalOpen,
     isChildData,
+    statusOptions,
+    handleStatusChange,
   } = useCompanyTaskList();
 
   //   const { setBreadcrumbs } = useBreadcrumbs();
@@ -46,7 +48,7 @@ export default function CompanyTaskList() {
     },
     { key: "taskDeadline", label: "Task Deadline", visible: true },
     { key: "assigneeNames", label: "Assignees", visible: true },
-    { key: "taskStatus", label: "Status", visible: true },
+    { key: "status", label: "Status", visible: true },
   ]);
 
   // Filter visible columns
@@ -66,8 +68,6 @@ export default function CompanyTaskList() {
       ),
     );
   };
-
-  console.log(companyTaskData);
 
   // Check if the number of columns is more than 3
   const canToggleColumns = columnToggleOptions.length > 3;
@@ -101,11 +101,12 @@ export default function CompanyTaskList() {
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
-          <TableData
+          <TableWithDropdown
             tableData={companyTaskData?.data.map(
               (item: TaskGetPaging, index: number) => ({
                 ...item,
                 srNo: index + 1,
+                status: item.taskStatusId,
                 assigneeNames: item.TaskEmployeeJunction
                   ? item.TaskEmployeeJunction.map(
                       (j) => j.Employee?.employeeName,
@@ -121,6 +122,7 @@ export default function CompanyTaskList() {
             onDelete={(row) => {
               onDelete(row);
             }}
+            viewButton={true}
             isActionButton={() => true}
             // canDelete={(row) => !row.isSuperAdmin}
             paginationDetails={companyTaskData}
@@ -128,6 +130,12 @@ export default function CompanyTaskList() {
             //   isLoading={isLoading}
             permissionKey="users"
             localStorageId="CompanyTaskList"
+            statusOptions={statusOptions}
+            showDropdown={true}
+            handleStatusChange={handleStatusChange}
+            onViewButton={(row) => {
+              navigate(`/dashboard/tasks/view/${row.taskId}`);
+            }}
             moduleKey="TASK"
           />
         </div>

@@ -33,10 +33,12 @@ export default function useAdminUser() {
   });
   const { mutate: deleteProjectById } = useDeleteCompanyProject();
   const { data: projectStatusList } = useGetAllProjectStatus();
-  const statusOptions = (projectStatusList?.data ?? []).map((item) => ({
-    label: item.projectStatus,
-    value: item.projectStatusId,
-  }));
+  const statusOptions = Array.isArray(projectStatusList?.data)
+    ? projectStatusList.data.map((item: ProjectStatusRes) => ({
+        label: item.projectStatus,
+        value: item.projectStatusId,
+      }))
+    : [];
   const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = Number(event.target.value);
     setCurrentStatus(newStatus); // Update currentStatus state
