@@ -12,6 +12,8 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
   modalClose,
   onSubmit,
 }) => {
+  console.log(modalData, "<=====");
+
   return (
     <div>
       <ModalData
@@ -47,22 +49,21 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
           </div>
           <div>
             <span>
-              Meeting Status: {modalData?.meetingStatus?.meetingStatus || "-"}
+              Meeting Status: {modalData?.meetingStatusId?.meetingStatus || "-"}
             </span>
           </div>
           <div>
             <span>
-              Meeting Type: {modalData?.meetingType?.meetingTypeName || "-"}
+              Meeting Type: {modalData?.meetingTypeId?.meetingTypeName || "-"}
             </span>
           </div>
           <div>
             <span>
-              Joiners:{" "}
-              {
-                // Array.isArray(modalData?.joiners)
-                //   ? modalData.joiners.map((j: any) => j.employeeName || j.label || j).join(", ")
-                //   : modalData?.joiners || "-"
-              }
+              Joiners:
+              {modalData.employeeId
+                .map((joiner) => joiner?.employeeName)
+                .filter(Boolean)
+                .join(", ")}
             </span>
           </div>
         </div>
