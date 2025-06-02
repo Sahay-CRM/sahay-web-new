@@ -94,11 +94,6 @@ interface CompanyTaskData {
   createdByEmployee: Employee;
   assignees: Employee[];
 }
-// kk
-interface Employee {
-  employeeId: string;
-  employeeName: string;
-}
 //kk
 interface CoreParameter {
   coreParameterId: string;
@@ -171,11 +166,13 @@ interface MeetingData {
     meetingTypeName: string;
   };
 
-  companyEmployee?: {
-    employeeId: string;
-    employeeName: string;
-    employeeMobile: string;
-  };
+  companyEmployee?: [
+    {
+      employeeId: string;
+      employeeName: string;
+      employeeMobile: string;
+    }[],
+  ];
 
   company?: {
     companyId: string;
@@ -287,6 +284,8 @@ interface CompanyMeetingDataProps {
   meetingStatusId: string;
   companyMeetingId?: string;
   joiners?: string[];
+  meetingStatus?: CompanyMeetingStatusDataProps;
+  meetingType?: CompanyMeetingTypeDataProps;
 }
 
 interface CompanyMeetingStatusDataProps {
@@ -310,6 +309,9 @@ interface CompanyProjectDataProps {
   projectDeadline: string;
   employeeId: string;
   ProjectSubParameterJunction: ProjectSubParameterJunctionItem[];
+  projectStatusId: string;
+  projectStatus: ProjectStatusRes;
+  subParameterId: SubParameter[];
 }
 
 interface ProjectSubParameterJunctionItem {

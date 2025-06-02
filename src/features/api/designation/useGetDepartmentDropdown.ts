@@ -6,11 +6,9 @@ export default function useGetDepartmentDropdown() {
   const query = useQuery({
     queryKey: ["get-department-dropdown"],
     queryFn: async () => {
-      const { data: resData } = await Api.post<{ data: DepartmentDataProps[] }>(
-        {
-          url: Urls.dropdownDepartment(),
-        },
-      );
+      const { data: resData } = await Api.post<{ data: DepartmentData[] }>({
+        url: Urls.dropdownDepartment(),
+      });
       return resData;
     },
   });

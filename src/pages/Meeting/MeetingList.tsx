@@ -85,7 +85,13 @@ export default function MeetingList() {
               srNo: index + 1,
               joinerNames: item.joiners?.length
                 ? item.joiners
-                    .map((joiner) => joiner?.employeeName)
+                    .map((joiner) =>
+                      typeof joiner === "object" &&
+                      joiner !== null &&
+                      "employeeName" in joiner
+                        ? (joiner as { employeeName?: string }).employeeName
+                        : undefined,
+                    )
                     .filter(Boolean)
                     .join(", ")
                 : "-",
@@ -101,7 +107,7 @@ export default function MeetingList() {
             moduleKey="MEETING_LIST"
             isActionButton={() => true}
             onDelete={(row) => {
-              onDelete(row);
+              onDelete(row as unknown as MeetingData);
             }}
             paginationDetails={meetingData}
             setPaginationFilter={setPaginationFilter}

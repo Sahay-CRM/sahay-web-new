@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState, ChangeEvent } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Card } from "@/components/ui/card";
-import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import { getEmployee } from "@/features/api/companyEmployee";
@@ -13,6 +12,7 @@ import {
 import { getMeetingType } from "@/features/api/meetingType";
 import { useNavigate, useParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
+import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 
 export default function useAddEmployee() {
   const { id: companyMeetingId } = useParams();
@@ -32,22 +32,28 @@ export default function useAddEmployee() {
     trigger,
     reset,
     getValues,
+    setValue, // <-- add setValue
   } = useForm({
     mode: "onChange",
   });
+  console.log(getValues());
 
   useEffect(() => {
     if (meetingApiData?.data) {
-      const data = meetingApiData?.data;
+      const data = meetingApiData.data;
       reset({
         meetingName: data.meetingName || "",
         meetingDescription: data.meetingDescription || "",
         meetingDateTime: data.meetingDateTime
-          ? format(parseISO(data?.meetingDateTime), "yyyy-MM-dd")
+          ? format(parseISO(data.meetingDateTime), "yyyy-MM-dd")
           : "",
-        meetingStatusId: data.meetingStatus || "",
+        meetingStatusId: data.meetingStatus || undefined,
         meetingTypeId: data.meetingType || undefined,
-        employeeId: data.joiners || undefined,
+        employeeId:
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          data.joiners?.map((ele: any) => ({
+            employeeId: ele.employeeId,
+          })),
       });
     }
   }, [meetingApiData, reset]);
@@ -68,7 +74,7 @@ export default function useAddEmployee() {
       meetingDateTime: data?.meetingDateTime,
       meetingTypeId: data?.meetingTypeId?.meetingTypeId,
       meetingStatusId: data?.meetingStatusId?.meetingStatusId,
-      joiners: data?.employeeId?.map((ele) => ele?.employeeId),
+      joiners: data?.employeeId?.map((ele: EmployeeData) => ele?.employeeId),
       companyMeetingId: companyMeetingId || "",
     };
     addMeeting(payload, {
@@ -364,6 +370,85 @@ export default function useAddEmployee() {
     );
   };
 
+  // State to store uploaded files for preview
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+
+  // File input ref
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // File upload handler for multiple files
+  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    setUploadedFiles((prev) => [...prev, ...files]);
+
+    // Store files in react-hook-form
+    setValue("meetingDocuments", [...uploadedFiles, ...files]);
+
+    // Log each upload (replace with actual API call if needed)
+    files.forEach((file) => {
+      const formData = new FormData();
+      formData.append("refId", companyMeetingId || "");
+      formData.append("imageType", "MEETING");
+      formData.append("isMaster", "0");
+      formData.append("file", file);
+
+      console.log("Uploading file:", {
+        name: file.name,
+        type: file.type,
+        imageType: "MEETING",
+      });
+    });
+  };
+
+  // Remove a specific file from the list
+  const handleRemoveFile = (index: number) => {
+    const newFiles = uploadedFiles.filter((_, idx) => idx !== index);
+    setUploadedFiles(newFiles);
+    setValue("meetingDocuments", newFiles);
+  };
+
+  // UploadDoc step component with file list and remove option, no preview
+  const UploadDoc = () => (
+    <div className="flex flex-col gap-4">
+      <label className="font-semibold mb-2">
+        Upload Documents (Image, Doc, Video, etc.)
+      </label>
+      <button
+        type="button"
+        className="w-fit px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+        onClick={() => fileInputRef.current?.click()}
+      >
+        Choose Files
+      </button>
+      <input
+        type="file"
+        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.avi,.mov,.mkv"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        className="hidden"
+        name="meetingDocuments"
+        multiple
+      />
+      {uploadedFiles.length > 0 && (
+        <div className="mt-3 flex flex-col gap-2">
+          {uploadedFiles.map((file, idx) => (
+            <div key={idx} className="flex items-center gap-3">
+              <span className="font-medium">{file.name}</span>
+              <button
+                type="button"
+                className="ml-2 px-2 py-1 bg-red-500 text-white rounded text-xs"
+                onClick={() => handleRemoveFile(idx)}
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return {
     isModalOpen,
     handleClose,
@@ -374,7 +459,7 @@ export default function useAddEmployee() {
     MeetingType,
     Joiners,
     meetingPreview: getValues(),
-    // employeeId,
     trigger,
+    UploadDoc,
   };
 }

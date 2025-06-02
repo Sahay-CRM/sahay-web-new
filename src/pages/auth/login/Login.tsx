@@ -125,8 +125,7 @@ const Login: React.FC = () => {
         <CompanyModal
           companies={companies?.map((c) => ({
             companyId: c?.companyId,
-            consultantId: c?.consultantId,
-            companyName: c?.companyName,
+            companyAdminName: c?.companyAdminName || "",
           }))}
           isModalOpen={isCompanyModalOpen}
           onSelect={(company) => {

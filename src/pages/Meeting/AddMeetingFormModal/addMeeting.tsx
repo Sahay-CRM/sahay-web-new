@@ -15,6 +15,7 @@ const AddEmployee = () => {
     MeetingStatus,
     MeetingType,
     Joiners,
+    UploadDoc, // <-- Add this
     trigger,
     meetingPreview,
   } = useAddEmployee();
@@ -25,6 +26,7 @@ const AddEmployee = () => {
     <MeetingStatus />,
     <MeetingType />,
     <Joiners />,
+    <UploadDoc />, // <-- Add new step here
   ];
 
   const {
@@ -42,6 +44,7 @@ const AddEmployee = () => {
     "Meeting Status",
     "Meeting Type",
     "Joiners",
+    "Upload Document", // <-- Add step name
   ];
 
   const methods = useForm({

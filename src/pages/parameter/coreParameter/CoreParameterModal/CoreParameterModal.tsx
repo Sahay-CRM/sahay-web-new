@@ -47,6 +47,7 @@ export const CoreParameterModal: React.FC<AddModalProps> = ({
               id={`select`}
               options={departmentOptions}
               placeholder="Selete Department"
+              onChange={() => {}}
             />
 
             <FormInputField

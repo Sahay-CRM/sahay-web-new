@@ -13,10 +13,14 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
   modalClose,
   onSubmit,
 }) => {
-  const joiners = modalData?.employeeId
-    ?.map((joiner) => joiner?.employeeName)
-    .filter(Boolean)
-    .join(", ");
+  // Flatten companyEmployee if it's an array of arrays
+  const joinersArr = Array.isArray(modalData?.companyEmployee)
+    ? (modalData.companyEmployee.flat?.() ?? modalData.companyEmployee)
+    : [];
+
+  const joiners = joinersArr
+    ?.filter((joiner) => !Array.isArray(joiner))
+    .map((joiner) => joiner?.employeeName);
 
   return (
     <ModalData
@@ -59,16 +63,16 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
             {modalData.meetingDateTime}
           </div>
         )}
-        {modalData?.meetingStatusId?.meetingStatus && (
+        {modalData?.meetingStatus && (
           <div>
             <span className="font-medium text-primary">Meeting Status: </span>
-            {modalData.meetingStatusId.meetingStatus}
+            {modalData.meetingStatus?.meetingStatus}
           </div>
         )}
-        {modalData?.meetingTypeId?.meetingTypeName && (
+        {modalData?.meetingType && (
           <div>
             <span className="font-medium text-primary">Meeting Type: </span>
-            {modalData.meetingTypeId.meetingTypeName}
+            {modalData.meetingType?.meetingTypeName}
           </div>
         )}
         {joiners && (

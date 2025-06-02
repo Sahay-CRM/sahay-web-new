@@ -57,7 +57,15 @@ import { toast } from "sonner";
 type DatePaging = BaseResponse<CompanyProjectDataProps>;
 
 // Utility to clean undefined, null, empty string, and empty array values
-const cleanPayload = (obj: Record<string>) =>
+interface CleanPayloadInput {
+  [key: string]: unknown;
+}
+
+interface CleanPayloadOutput {
+  [key: string]: unknown;
+}
+
+const cleanPayload = (obj: CleanPayloadInput): CleanPayloadOutput =>
   Object.fromEntries(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     Object.entries(obj).filter(([_, v]) => {
@@ -77,11 +85,11 @@ export default function useAddUpdateCompanyProject() {
         projectName: data?.projectName,
         projectDescription: data?.projectDescription,
         projectDeadline: data?.projectDeadline,
-        projectStatusId: data?.projectStatusId?.projectStatusId,
+        projectStatusId: data?.projectStatusId,
         subParameterIds: data?.subParameterId?.map(
           (ele) => ele?.subParameterId,
         ),
-        otherProjectEmployees: data?.employeeId?.map((ele) => ele?.employeeId),
+        otherProjectEmployees: data?.employeeId,
       };
 
       // Clean the payload

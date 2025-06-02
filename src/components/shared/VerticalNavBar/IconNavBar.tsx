@@ -92,7 +92,7 @@ const IconHoverVerticalNav: React.FC<FullNavBarProps> = ({ data }) => {
       <div className="flex-1 overflow-y-auto py-2">
         {data.map((item, index) => {
           const hasRoutePermission = hasPermission(
-            permissions,
+            permissions?.data ?? [],
             item.moduleKey,
             item.permission,
           );

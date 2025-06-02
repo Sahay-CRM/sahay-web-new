@@ -60,7 +60,11 @@ const Pagination: React.FC<PaginationProps> = ({
             <span>Rows:</span>
             <FormSelect
               id="pageSizeSelect"
-              onChange={(val) => onPageSizeChange(val)}
+              onChange={(val) =>
+                onPageSizeChange({
+                  target: { value: Array.isArray(val) ? val[0] : val },
+                } as React.ChangeEvent<HTMLSelectElement>)
+              }
               options={paginationOptions}
               className="text-center ps-2"
               value={pageSize?.toString() || ""}

@@ -408,11 +408,14 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
                             <FormSelect
                               id={String(item?.status)}
                               options={statusOptions}
-                              value={item?.status}
+                              value={item?.status as string}
                               onChange={(selectedStatus) => {
                                 // console.log(selectedStatus, item);
 
-                                handleStatusChange(selectedStatus, item);
+                                handleStatusChange(
+                                  selectedStatus as string,
+                                  item,
+                                );
                               }}
                               className="mt-1 w-full"
                             />

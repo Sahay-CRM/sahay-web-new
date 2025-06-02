@@ -4,7 +4,6 @@ import ScoreDataTable from "@/components/shared/DataTable/HealthScore/ScoreDataT
 import FormSelect from "@/components/shared/Form/FormSelect";
 import useHealthWeightage from "./useHealthWeightage";
 import useUpdateHealthWeightage from "@/features/api/Business/useUpdateHealthWeightage";
-import React from "react";
 
 export default function HealthWeightage() {
   const {
