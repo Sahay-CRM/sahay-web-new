@@ -68,10 +68,11 @@ export default function MeetingList() {
             setPaginationFilter={setPaginationFilter}
             //   isLoading={isLoading}
             permissionKey="users"
-            additionalButton={true}
             isActionButton={() => true}
             localStorageId="UserPermissionList"
             moduleKey="ROLES_PERMISSION"
+            additionalButton={true}
+            isEditDelete={false}
             onAdditionButton={(data) => {
               navigate(
                 `/dashboard/roles/user-permission/edit/${data.employeeId}`,

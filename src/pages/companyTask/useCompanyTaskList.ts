@@ -3,7 +3,9 @@ import {
   useGetCompanyTask,
 } from "@/features/api/companyTask";
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useCallback, useState } from "react";
+import { useSelector } from "react-redux";
 
 export default function useAdminUser() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -14,7 +16,7 @@ export default function useAdminUser() {
   const [currentStatus, setCurrentStatus] = useState<number>(1); // Add state for currentStatus
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
-
+  const permission = useSelector(getUserPermission).TASK;
   const [isChildData, setIsChildData] = useState<string | undefined>();
 
   const { mutate: updateCompanyTask } = useAddUpdateCompanyTask();
@@ -150,5 +152,6 @@ export default function useAdminUser() {
     isChildData,
     statusOptions,
     handleStatusChange,
+    permission,
   };
 }

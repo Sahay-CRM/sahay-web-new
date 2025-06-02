@@ -14,6 +14,7 @@ export default function CompanyLevelAssign() {
     allLevel,
     selectedLevel,
     handleLevelSelect,
+    permission,
     companyLevelAssign, // <-- add this
   } = useCompanyLevel();
 
@@ -30,14 +31,16 @@ export default function CompanyLevelAssign() {
           Company Level Assign
         </h1>
         <div className="flex justify-end">
-          <button
-            type="button"
-            className="mt-4 mb-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
-            onClick={handleSave}
-            disabled={isSaving}
-          >
-            {isSaving ? "Saving..." : "Update"}
-          </button>
+          {(permission.Add || permission.Edit) && (
+            <button
+              type="button"
+              className="mt-4 mb-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? "Saving..." : "Update"}
+            </button>
+          )}
         </div>
 
         <div className="flex gap-10">

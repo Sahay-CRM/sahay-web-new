@@ -25,6 +25,7 @@ export default function CompanyTaskList() {
     isChildData,
     statusOptions,
     handleStatusChange,
+    permission,
   } = useCompanyTaskList();
 
   //   const { setBreadcrumbs } = useBreadcrumbs();
@@ -87,10 +88,12 @@ export default function CompanyTaskList() {
               setPaginationFilter={setPaginationFilter}
               className="w-96"
             />
+            {permission.Add && (
+              <Link to="/dashboard/tasks/add">
+                <Button className="py-2 w-fit">Add Company Task</Button>
+              </Link>
+            )}
 
-            <Link to="/dashboard/tasks/add">
-              <Button className="py-2 w-fit">Add Company Task</Button>
-            </Link>
             {canToggleColumns && (
               <DropdownSearchMenu
                 columns={columnToggleOptions}
@@ -118,7 +121,13 @@ export default function CompanyTaskList() {
             )}
             columns={visibleColumns}
             primaryKey="taskId"
-            onEdit={(row) => navigate(`/dashboard/tasks/edit/${row.taskId}`)}
+            onEdit={
+              permission.Edit
+                ? (row) => {
+                    navigate(`/dashboard/tasks/edit/${row.taskId}`);
+                  }
+                : undefined
+            }
             onDelete={(row) => {
               onDelete(row);
             }}

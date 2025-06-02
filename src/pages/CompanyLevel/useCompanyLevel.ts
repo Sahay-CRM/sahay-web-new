@@ -4,7 +4,9 @@ import {
   useGetCompanyLevelAssign,
   useGetCoreParameterDropdown,
 } from "@/features/api/Business";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useCallback, useState } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 interface Selection {
@@ -22,7 +24,7 @@ export default function useCompanyLevel() {
   const [selectedCoreParameters, setCoreParameters] = useState<string>("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
-
+  const permission = useSelector(getUserPermission).COMPANY_LEVEL_ASSIGN;
   const navigate = useNavigate();
 
   // New state to track all selections in the requested format
@@ -222,5 +224,6 @@ export default function useCompanyLevel() {
     isSaving,
     companyLevelAssign,
     allSelections,
+    permission,
   };
 }

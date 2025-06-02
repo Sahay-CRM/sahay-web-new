@@ -20,6 +20,7 @@ export default function MeetingList() {
     isDeleteModalOpen,
     paginationFilter,
     isChildData,
+    permission,
   } = useMeeting();
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -66,9 +67,11 @@ export default function MeetingList() {
               setPaginationFilter={setPaginationFilter}
               className="w-96"
             />
-            <Link to="/dashboard/meeting/add">
-              <Button className="py-2 w-fit">Add Meeting</Button>
-            </Link>
+            {permission.Add && (
+              <Link to="/dashboard/meeting/add">
+                <Button className="py-2 w-fit">Add Meeting</Button>
+              </Link>
+            )}
             {canToggleColumns && (
               <DropdownSearchMenu
                 columns={columnToggleOptions}
@@ -101,10 +104,13 @@ export default function MeetingList() {
             }))}
             columns={visibleColumns} // Pass only visible columns to the Table
             primaryKey="meetingId"
-            onEdit={(row) =>
-              navigate(`/dashboard/meeting/edit/${row.meetingId}`)
+            onEdit={
+              permission.Edit
+                ? (row) => {
+                    navigate(`/dashboard/meeting/edit/${row.meetingId}`);
+                  }
+                : undefined
             }
-            moduleKey="MEETING_LIST"
             isActionButton={() => true}
             onDelete={(row) => {
               onDelete(row as unknown as MeetingData);
@@ -114,6 +120,7 @@ export default function MeetingList() {
             //   isLoading={isLoading}
             permissionKey="users"
             localStorageId="MeetingList"
+            moduleKey="MEETING_LIST"
           />
         </div>
         {isDeleteModalOpen && (

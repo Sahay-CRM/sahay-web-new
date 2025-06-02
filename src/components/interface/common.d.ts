@@ -750,4 +750,5 @@ interface KPIFormData {
   frequencyType: "YEARLY" | "MONTHLY" | "WEEKLY" | string; // Add other types if needed
   selectedType: "COMPANY" | "DEPARTMENT" | "USER" | string; // Add other types if needed
   dataPointEmployeeJunction: DataPointEmployee[];
+  hasData: boolean;
 }

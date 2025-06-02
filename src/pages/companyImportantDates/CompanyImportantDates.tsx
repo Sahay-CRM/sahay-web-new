@@ -36,6 +36,7 @@ function Calendar() {
     setAddImportantDateModal,
     setModalData,
     modalData,
+    permission,
   } = useCalendar();
 
   const [selectedOption, setSelectedOption] = useState<
@@ -65,9 +66,13 @@ function Calendar() {
     <FormProvider {...methods}>
       <div className="px-4 h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto">
         <div className="mb-4 flex justify-between gap-5">
-          <div>
-            <Button onClick={() => handleAddModal()}>Add Important Date</Button>
-          </div>
+          {(permission.Add || permission.Edit) && (
+            <div>
+              <Button onClick={() => handleAddModal()}>
+                Add Important Date
+              </Button>
+            </div>
+          )}
           <div>
             <FormSelect
               value={selectedOption}

@@ -19,7 +19,7 @@ const AddDatapoint = () => {
     GoalValue,
     trigger,
     KpiPreview,
-    skipToStep, // <-- get skipToStep flag
+    skipToStep,
   } = useAddDatapoint();
 
   // Build steps array based on showNextStep
@@ -36,7 +36,7 @@ const AddDatapoint = () => {
   const visibleSteps = skipToStep > 0 ? steps.slice(skipToStep) : steps;
   const visibleStepNames =
     skipToStep > 0
-      ? ["Validation Type", "Assign User", "Goal Value"]
+      ? ["Goal Value"]
       : [
           "Kpi",
           "Frequency",

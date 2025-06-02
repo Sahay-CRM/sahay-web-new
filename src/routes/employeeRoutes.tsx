@@ -45,6 +45,10 @@ const AddCompanyProjectList = lazy(
   () => import("../pages/companyProjects/AddProject"),
 );
 
+const AddCompanyDatapoint = lazy(
+  () => import("../pages/datapointList/AddDatapointFormModal"),
+);
+
 export default function EmployeeRoutes() {
   return (
     <Routes>
@@ -76,6 +80,9 @@ export default function EmployeeRoutes() {
         <Route path="projects/edit/:id" element={<AddCompanyProjectList />} />
         <Route path="projects/view/:id" Component={CompanyProjectView} />
         <Route path="datapoint" Component={DatapointList} />
+        <Route path="datapoint/add" element={<AddCompanyDatapoint />} />
+        <Route path="datapoint/edit/:id" element={<AddCompanyDatapoint />} />
+
         <Route path="healthscore-achieve" Component={Healthscore} />
 
         <Route path="business">

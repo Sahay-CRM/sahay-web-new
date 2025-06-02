@@ -1,6 +1,8 @@
 import { useDeleteCompanyMeeting } from "@/features/api/companyMeeting";
 import useGetCompanyMeeting from "@/features/api/companyMeeting/useGetCompanyMeeting";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useCallback, useState } from "react";
+import { useSelector } from "react-redux";
 
 export default function useAdminUser() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -16,7 +18,7 @@ export default function useAdminUser() {
     search: "",
     status: currentStatus, // Use currentStatus state
   });
-
+  const permission = useSelector(getUserPermission).MEETING_LIST;
   const { data: meetingData } = useGetCompanyMeeting({
     filter: paginationFilter,
   });
@@ -115,5 +117,6 @@ export default function useAdminUser() {
     isDeleteModalOpen,
     setIsImportExportModalOpen,
     isChildData,
+    permission,
   };
 }

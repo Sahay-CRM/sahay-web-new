@@ -1,11 +1,14 @@
 import { useGetImportantDates } from "@/features/api/importantDates";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useState } from "react";
+import { useSelector } from "react-redux";
 
 export default function useCalendar() {
   // const { data: taskData } = useCompanyTask();
   const [modalData, setModalData] = useState<ImportantDatesDataProps>(
     {} as ImportantDatesDataProps,
   );
+  const permission = useSelector(getUserPermission).IMPORTANT_DATE;
   const [addImportantDate, setAddImportantDateModal] = useState(false);
   const taskData = [
     {
@@ -139,5 +142,6 @@ export default function useCalendar() {
     setAddImportantDateModal,
     setModalData,
     modalData,
+    permission,
   };
 }

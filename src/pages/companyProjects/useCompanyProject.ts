@@ -4,7 +4,9 @@ import {
   useGetAllProjectStatus,
   useGetCompanyProject,
 } from "@/features/api/companyProject";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useCallback, useState } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 export default function useAdminUser() {
@@ -14,6 +16,7 @@ export default function useAdminUser() {
   const [modalData, setModalData] = useState<IProjectFormData>(
     {} as IProjectFormData,
   );
+  const permission = useSelector(getUserPermission).PROJECT_LIST;
   const [currentStatus, setCurrentStatus] = useState<number>(1); // Add state for currentStatus
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
@@ -140,5 +143,6 @@ export default function useAdminUser() {
     isChildData,
     statusOptions,
     handleStatusChange,
+    permission,
   };
 }

@@ -24,6 +24,7 @@ export default function CompanyProject() {
     isChildData,
     statusOptions,
     handleStatusChange,
+    permission,
   } = useCompanyProject();
 
   //   const { setBreadcrumbs } = useBreadcrumbs();
@@ -84,9 +85,11 @@ export default function CompanyProject() {
               setPaginationFilter={setPaginationFilter}
               className="w-96"
             />
-            <Link to="/dashboard/projects/add">
-              <Button className="py-2 w-fit">Add Company Project</Button>
-            </Link>
+            {permission.Add && (
+              <Link to="/dashboard/projects/add">
+                <Button className="py-2 w-fit">Add Company Project</Button>
+              </Link>
+            )}
             {canToggleColumns && (
               <DropdownSearchMenu
                 columns={columnToggleOptions}
@@ -105,8 +108,12 @@ export default function CompanyProject() {
             }))}
             columns={visibleColumns}
             primaryKey="projectId"
-            onEdit={(row) =>
-              navigate(`/dashboard/projects/edit/${row.projectId}`)
+            onEdit={
+              permission.Edit
+                ? (row) => {
+                    navigate(`/dashboard/projects/edit/${row.projectId}`);
+                  }
+                : undefined
             }
             onDelete={(row) => {
               onDelete(row);

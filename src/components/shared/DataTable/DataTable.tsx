@@ -50,6 +50,7 @@ interface TableProps<T extends Record<string, unknown>> {
   additionalButton?: React.ReactNode;
   viewButton?: React.ReactNode;
   onAdditionButton?: (item: T) => void;
+  isEditDelete?: boolean;
   onViewButton?: (item: T) => void;
   permissionKey?: string | undefined;
   detailPageLink?: string;
@@ -145,6 +146,7 @@ const TableData = <T extends Record<string, unknown>>({
   multiSelect,
   selectedValue = [],
   handleChange,
+  isEditDelete = true,
   localStorageId = "defaultLocalStorageId", // Default ID for localStorage
   moduleKey = "",
 }: TableProps<T>) => {
@@ -426,14 +428,17 @@ const TableData = <T extends Record<string, unknown>>({
                         <DropdownMenuContent align="end" className="w-36">
                           {customActions?.(item)}
 
-                          {isActionButton && permission?.Edit && (
-                            <DropdownMenuItem onClick={() => onEdit?.(item)}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                          )}
+                          {isEditDelete &&
+                            isActionButton &&
+                            permission?.Edit && (
+                              <DropdownMenuItem onClick={() => onEdit?.(item)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                            )}
 
-                          {isActionButton &&
+                          {isEditDelete &&
+                            isActionButton &&
                             permission?.Delete &&
                             (!canDelete || canDelete(item)) && (
                               <DropdownMenuItem

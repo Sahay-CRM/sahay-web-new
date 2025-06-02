@@ -36,7 +36,7 @@ export default function useHealthWeightage() {
   // console.log(healthScoreList);
 
   // const { data: healthScoreList } = useGetHealthScoreByCore(coreParameterId);
-  const permission = useSelector(getUserPermission).HEALTH_SCORE;
+  const permission = useSelector(getUserPermission).HEALTH_WEIGHTAGE;
 
   const [scores, setScores] = useState<Score[]>([]);
 
