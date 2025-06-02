@@ -94,6 +94,16 @@ const Urls = {
   getSubParaByCorePara: () => `${baseUrl}/company/health/weightage/sub-param`,
 
   updateHealthWeightage: () => `${baseUrl}/company/health/weightage/update`,
+  //Datapoint
+  getDatapointList: () => `${baseUrl}/company/kpi/get`,
+  getKpinonselectList: () => `${baseUrl}/kpi/get/non-select`,
+  updateCompanyDatapoint: (id: string) => `${baseUrl}/company/kpi/update/${id}`,
+  addCompanyDatapoint: () => `${baseUrl}/company/kpi/create`,
+  getKpiById: (id: string) => `${baseUrl}/company/kpi/get/${id}`,
+  deleteDatapointMeeting: (id: string) => `${baseUrl}/company/kpi/delete/${id}`,
+
+  //CoreParameter
+  getCoreParameter: () => `${baseUrl}/core-param/get`,
 };
 
 export default Urls;

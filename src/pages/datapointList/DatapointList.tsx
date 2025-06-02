@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
-import useCompanyTaskList from "./useCompanyTaskList";
+import useCompanyTaskList from "./useDatapointList";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
@@ -10,13 +10,14 @@ import { Button } from "@/components/ui/button";
 // import DesignationAddFormModal from "./DesignationAddFormModal";
 export default function CompanyTaskList() {
   const {
-    designationData,
+    datpointData,
     // isLoading,
     closeDeleteModal,
     setPaginationFilter,
     // currentStatus,
-    handleAdd,
-    openModal,
+    // handleAdd,
+    // openModal,
+    permission,
     onDelete,
     modalData,
     conformDelete,
@@ -41,20 +42,20 @@ export default function CompanyTaskList() {
     { key: "srNo", label: "Sr No", visible: true },
     { key: "KPINameWithLabel", label: "KPI Name - Label", visible: true },
     {
-      key: "dataPointName",
+      key: "KPIName",
       label: "KPI Name",
       visible: true,
     },
-    { key: "dataPointLabel", label: "KPI Label", visible: true },
-    { key: "validationTypeName", label: "Validation Type", visible: true },
+    { key: "KPILabel", label: "KPI Label", visible: true },
+    { key: "validationType", label: "Validation Type", visible: true },
     { key: "frequencyType", label: "Frequency", visible: true },
   ]);
-  function formatString(str: string): string {
-    return str
-      .replace(/_/g, " ") // Replace underscores with spaces
-      .toLowerCase() // Convert to lowercase
-      .replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalize first letter of each word
-  }
+  // function formatString(str: string): string {
+  //   return str
+  //     .replace(/_/g, " ") // Replace underscores with spaces
+  //     .toLowerCase() // Convert to lowercase
+  //     .replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalize first letter of each word
+  // }
 
   // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
@@ -76,7 +77,7 @@ export default function CompanyTaskList() {
   // Check if the number of columns is more than 3
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
-
+  const navigate = useNavigate();
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
@@ -91,14 +92,13 @@ export default function CompanyTaskList() {
               setPaginationFilter={setPaginationFilter}
               className="w-96"
             />
-            <Link to="">
-              <Button className="py-2 w-fit" onClick={handleAdd}>
-                Add KPI
-              </Button>
-            </Link>
-            <Link to="/dashboard/datapoint/add">
-              <Button className="py-2 w-fit">Add Company Project</Button>
-            </Link>
+
+            {permission.Add && (
+              <Link to="/dashboard/datapoint/add">
+                <Button className="py-2 w-fit">Add Kpi</Button>
+              </Link>
+            )}
+
             {canToggleColumns && (
               <DropdownSearchMenu
                 columns={columnToggleOptions}
@@ -110,44 +110,41 @@ export default function CompanyTaskList() {
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            tableData={designationData?.data.map((item, index) => ({
+            tableData={datpointData?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,
-              KPINameWithLabel: `${item.KPIMaster.KPIName} - ${item.KPIMaster.KPILabel}`,
-              validationTypeName: formatString(item.validationType),
+              KPINameWithLabel: `${item.KPIName} - ${item.KPILabel}`,
+              // validationTypeName: formatString(item.validationType),
               //   assigneeNames: item.assignees[0]?.employeeName,
             }))}
             columns={visibleColumns} // Pass only visible columns to the Table
             primaryKey="dataPointId"
-            onEdit={openModal}
             onDelete={(row) => {
-              if (!row.isSuperAdmin) {
-                onDelete(row);
-              }
+              onDelete(row);
             }}
-            canDelete={(row) => !row.isSuperAdmin}
-            paginationDetails={designationData}
+            onEdit={
+              permission.Edit
+                ? (row) => {
+                    navigate(`/dashboard/datapoint/edit/${row.dataPointId}`);
+                  }
+                : undefined
+            }
+            isActionButton={() => true}
+            paginationDetails={datpointData}
             setPaginationFilter={setPaginationFilter}
             //   isLoading={isLoading}
             permissionKey="users"
             localStorageId="DatapointList"
+            moduleKey="DATAPOINT_LIST"
           />
         </div>
-
-        {/* {isUserModalOpen && (
-          <DesignationAddFormModal
-            isModalOpen={isUserModalOpen}
-            modalClose={closeDeleteModal}
-            modalData={modalData}
-          />
-        )} */}
 
         {/* Modal Component */}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
-            title={"Delete User"}
-            label={"User Name :"}
-            modalData={`${modalData?.departmentName}`}
+            title={"Delete KPI"}
+            label={"KPI Name :"}
+            modalData={`${modalData?.dataPointLabel}`}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}

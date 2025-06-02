@@ -54,6 +54,7 @@
     "react-hook-form": "^7.56.3",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.0",
+    "recharts": "^2.15.3",
     "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
     "redux-persist-transform-encrypt": "^5.1.1",
