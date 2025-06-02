@@ -10,7 +10,7 @@ type HealthScoreRes = BaseResponse<HealthScore>;
 export default function useUpdateHealthScore() {
   const updateHealthScoreMutation = useMutation({
     mutationKey: ["add-or-update-health-score-by-core-param"],
-    mutationFn: async (data: HealthScore) => {
+    mutationFn: async (data: HealthScore[]) => {
       const config = {
         url: Urls.updateHealthScore(),
         data: data,

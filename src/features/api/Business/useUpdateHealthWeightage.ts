@@ -3,16 +3,17 @@ import Urls from "@/features/utils/urls.utils";
 import { queryClient } from "@/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 type HealthWeightageRes = BaseResponse<SubParaByCorePara>;
 
 export default function useUpdateHealthWeightage() {
+  const navigate = useNavigate();
+
   const updateHealthWeightageMutation = useMutation({
     mutationKey: ["update-health-Weightage-by-core-param"],
     mutationFn: async (data: CoreParameterData) => {
-      console.log(data);
-
       const config = {
         url: Urls.updateHealthWeightage(),
         data: data,
@@ -30,6 +31,7 @@ export default function useUpdateHealthWeightage() {
       queryClient.resetQueries({
         queryKey: ["get-Sub-ParaByCore"],
       });
+      navigate("/dashboard/business/health-weightage");
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

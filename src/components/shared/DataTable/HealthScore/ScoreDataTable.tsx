@@ -25,6 +25,7 @@ type EditableScoreTableProps = {
   mode?: "percent" | "number";
   onSwitchChange?: (switchStates: Record<string, boolean>) => void;
   rowIsDisabled?: (row: SubParameterScore) => boolean;
+  showSwitch?: boolean; // <-- add this line
 };
 
 export default function ScoreDataTable({
@@ -34,6 +35,7 @@ export default function ScoreDataTable({
   mode = "percent",
   onSwitchChange,
   rowIsDisabled,
+  showSwitch = true,
 }: EditableScoreTableProps) {
   const [scores, setScores] = useState<SubParameterScore[]>(data);
 
@@ -80,7 +82,9 @@ export default function ScoreDataTable({
           <TableRow>
             <TableHead className="w-1/2">Sub Parameter Name</TableHead>
             <TableHead className="text-center">Score</TableHead>
-            <TableHead className="text-center">Disabled</TableHead>
+            {showSwitch && (
+              <TableHead className="text-center">Disabled</TableHead>
+            )}
             {/* New column */}
           </TableRow>
         </TableHeader>
@@ -137,23 +141,25 @@ export default function ScoreDataTable({
                   </div>
                 </div>
               </TableCell>
-              <TableCell className="text-center">
-                <Switch
-                  checked={!!switchStates[param.subParameterId]}
-                  onCheckedChange={(checked) =>
-                    !disabled &&
-                    handleSwitchChange(param.subParameterId, checked)
-                  }
-                  className={cn(
-                    (disabled ||
-                      (typeof rowIsDisabled === "function"
-                        ? rowIsDisabled(param)
-                        : false)) &&
-                      "cursor-pointer ",
-                  )}
-                  disabled={disabled}
-                />
-              </TableCell>
+              {showSwitch && (
+                <TableCell className="text-center">
+                  <Switch
+                    checked={!!switchStates[param.subParameterId]}
+                    onCheckedChange={(checked) =>
+                      !disabled &&
+                      handleSwitchChange(param.subParameterId, checked)
+                    }
+                    className={cn(
+                      (disabled ||
+                        (typeof rowIsDisabled === "function"
+                          ? rowIsDisabled(param)
+                          : false)) &&
+                        "cursor-pointer ",
+                    )}
+                    disabled={disabled}
+                  />
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

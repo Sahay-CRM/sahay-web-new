@@ -40,6 +40,16 @@ export default function useHealthWeightage() {
 
   const [scores, setScores] = useState<Score[]>([]);
 
+  // Add this handler to update isDisabled in scores
+  const handleSwitchChange = (switchStates: Record<string, boolean>) => {
+    setScores((prevScores) =>
+      prevScores.map((item) => ({
+        ...item,
+        isDisabled: !!switchStates[item.subParameterId],
+      })),
+    );
+  };
+
   useEffect(() => {
     if (healthScoreList) {
       setScores(
@@ -86,5 +96,6 @@ export default function useHealthWeightage() {
     permission,
     companyLevel,
     level,
+    handleSwitchChange, // <-- expose the handler
   };
 }

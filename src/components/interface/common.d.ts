@@ -469,14 +469,12 @@ interface CompanyLevelJunction {
 }
 
 interface HealthScore {
-  scoreArray: {
-    subParameterId: string;
-    score: string;
-  }[];
+  subParameterId: string;
+  score: number;
 }
 
 interface HealthScoreData {
-  defaultScore: number;
+  score: number;
   subParameterId: string;
   subParameterName: string;
 }

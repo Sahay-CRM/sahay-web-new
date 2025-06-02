@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useForm, useWatch } from "react-hook-form";
 
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import {
   updateHealthScoreMutation,
+  useGetCompanyLevel,
   useGetCoreParameterDropdown,
+  useGetHealthScoreByCore,
   // useGetHealthScoreByCore,
 } from "@/features/api/Business";
+import { useNavigate } from "react-router-dom";
 
 interface Score {
   subParameterId: string;
@@ -18,44 +21,26 @@ export default function useHealthScore() {
   const formMethods = useForm();
   const { control } = formMethods;
   const coreParameterId = useWatch({ control, name: "coreParameterId" });
+  const levelId = useWatch({ control, name: "levelId" });
 
   const [isEditing, setIsEditing] = useState(false);
   const { mutate: updateHealthScore } = updateHealthScoreMutation();
   const { data: coreParams } = useGetCoreParameterDropdown();
-  // const { data: healthScoreList } = useGetHealthScoreByCore(coreParameterId);
+
+  const { data: companyLevel } = useGetCompanyLevel(coreParameterId);
+
   const permission = useSelector(getUserPermission).HEALTH_SCORE;
+  const navigate = useNavigate();
 
   const [scores, setScores] = useState<Score[]>([]);
+  const { reset } = formMethods;
 
-  const healthScoreList = useMemo(
-    () => [
-      {
-        subParameterId: "dd08266b-301f-4e66-bb48-649c2989464c",
-        scoreAchive: 50,
-        companyHealthScore: 3,
-        subParameterName: "Pricing",
-      },
-      {
-        subParameterId: "dfe9dbca-54c3-4b14-a4ef-a2ac1596b73c",
-        scoreAchive: 0,
-        companyHealthScore: 9,
-        subParameterName: "Market Research",
-      },
-      {
-        subParameterId: "6ad8a22e-6b92-42ee-9bea-f8849e7a3c4b",
-        scoreAchive: 5,
-        companyHealthScore: 0,
-        subParameterName: "IG Campaign1",
-      },
-      {
-        subParameterId: "c1220520-98cd-4d1d-8864-64178ce47f2c",
-        scoreAchive: 0,
-        companyHealthScore: 0,
-        subParameterName: "Whatsapp Marketing Campaign",
-      },
-    ],
-    [],
-  );
+  const { data: healthScoreList } = useGetHealthScoreByCore({
+    filter: {
+      coreParameterId: coreParameterId,
+      levelId: levelId,
+    },
+  });
 
   useEffect(() => {
     if (healthScoreList) {
@@ -63,7 +48,7 @@ export default function useHealthScore() {
         healthScoreList.map((item) => ({
           subParameterId: item.subParameterId,
           name: item.subParameterName,
-          score: item.scoreAchive,
+          score: item.score * 10,
         })),
       );
     } else {
@@ -77,10 +62,20 @@ export default function useHealthScore() {
 
       const scoreArray = scores.map((item) => ({
         subParameterId: item.subParameterId,
-        score: String(item.score),
+        score: item.score / 10,
       }));
 
-      updateHealthScore({ scoreArray });
+      updateHealthScore(scoreArray, {
+        onSuccess: () => {
+          reset();
+          reset({
+            coreParameterId: "",
+            levelId: "",
+          });
+          navigate("/dashboard/business/healthscore-achieve");
+          setIsEditing(false);
+        },
+      });
     }
 
     setIsEditing((prev) => !prev);
@@ -93,7 +88,7 @@ export default function useHealthScore() {
         healthScoreList.map((item) => ({
           subParameterId: item.subParameterId,
           name: item.subParameterName,
-          score: item.scoreAchive,
+          score: item.score,
         })),
       );
     } else {
@@ -112,5 +107,7 @@ export default function useHealthScore() {
     coreParameterId,
     healthScoreList,
     permission,
+    companyLevel,
+    levelId,
   };
 }

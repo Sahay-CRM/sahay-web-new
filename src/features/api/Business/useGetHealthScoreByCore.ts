@@ -2,16 +2,17 @@ import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 
-export default function useGetHealthScoreByCore(id?: string) {
+export default function useGetHealthScoreByCore({ filter }: FilterDataProps) {
   const query = useQuery({
-    queryKey: ["get-health-score-by-core-param-id", id], // ✅ Include id
+    queryKey: ["get-health-score-by-core-param-id", filter],
     queryFn: async () => {
-      const { data } = await Api.post<{ data: HealthScoreData[] }>({
-        url: Urls.getHealthScoreByParam(id!),
+      const { data: resData } = await Api.post<{ data: HealthScoreData[] }>({
+        url: Urls.getHealthScoreByParam(),
+        data: filter,
       });
-      return data;
+      return resData.data;
     },
-    enabled: !!id,
+    enabled: !!filter.coreParameterId && !!filter.levelId,
   });
   return query;
 }

@@ -16,6 +16,8 @@ export default function HealthScoreList() {
     coreParameterId,
     healthScoreList,
     permission,
+    companyLevel,
+    levelId,
   } = useHealthScore();
 
   const { control } = formMethods;
@@ -49,7 +51,7 @@ export default function HealthScoreList() {
         </div>
 
         {/* Core Parameter Select */}
-        <div className="max-w-xs mb-4">
+        <div className="flex flex-col sm:flex-row gap-10">
           <Controller
             control={control}
             name="coreParameterId"
@@ -67,10 +69,31 @@ export default function HealthScoreList() {
               />
             )}
           />
+          {isCoreSelected && (
+            <div className="mb-4">
+              <Controller
+                control={control}
+                name="levelId"
+                render={({ field }) => (
+                  <FormSelect
+                    {...field}
+                    label="Level"
+                    options={
+                      companyLevel?.data?.map((level: CompanyLevelRes) => ({
+                        label: level.levelName,
+                        value: level.levelId,
+                      })) ?? []
+                    }
+                    placeholder="Select Level"
+                  />
+                )}
+              />
+            </div>
+          )}
         </div>
 
         {/* Score Table or No Data */}
-        {isCoreSelected ? (
+        {isCoreSelected && levelId ? (
           healthScoreList?.length == 0 ? (
             <div className="text-center text-muted-foreground mt-8">
               No data found
@@ -81,6 +104,7 @@ export default function HealthScoreList() {
               onChange={setScores}
               disabled={!isEditing}
               mode="percent"
+              showSwitch={false}
             />
           )
         ) : (

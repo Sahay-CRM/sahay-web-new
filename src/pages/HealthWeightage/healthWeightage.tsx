@@ -4,7 +4,7 @@ import ScoreDataTable from "@/components/shared/DataTable/HealthScore/ScoreDataT
 import FormSelect from "@/components/shared/Form/FormSelect";
 import useHealthWeightage from "./useHealthWeightage";
 import useUpdateHealthWeightage from "@/features/api/Business/useUpdateHealthWeightage";
-import { useNavigate } from "react-router-dom";
+import React from "react";
 
 export default function HealthWeightage() {
   const {
@@ -20,12 +20,12 @@ export default function HealthWeightage() {
     permission,
     companyLevel,
     level,
+    handleSwitchChange,
   } = useHealthWeightage();
 
-  const updateHealthWeightage = useUpdateHealthWeightage();
-  const navigate = useNavigate();
+  const { mutate: updateHealthWeightage } = useUpdateHealthWeightage();
 
-  const { control } = formMethods;
+  const { control, reset } = formMethods;
 
   const isCoreSelected = !!coreParameterId;
 
@@ -47,11 +47,17 @@ export default function HealthWeightage() {
         subParameterIds,
         removedSubParameterIds:
           removedIds.length === 0 ? "" : removedIds.join(","),
+        levelId: level,
       };
 
-      updateHealthWeightage.mutate(dataToSend, {
+      updateHealthWeightage(dataToSend, {
         onSuccess: () => {
-          navigate("/dashboard/business/health-weightage");
+          reset();
+          onEdit();
+          reset({
+            coreParameterId: "",
+            level: "",
+          });
         },
       });
     } else {
@@ -87,7 +93,7 @@ export default function HealthWeightage() {
 
         <div className="flex flex-col sm:flex-row gap-10">
           {/* Core Parameter Select */}
-          <div className="max-w-xs mb-4">
+          <div className="mb-4">
             <Controller
               control={control}
               name="coreParameterId"
@@ -143,6 +149,7 @@ export default function HealthWeightage() {
               disabled={!isEditable}
               mode="number"
               rowIsDisabled={(row) => !!row.isDisabled}
+              onSwitchChange={handleSwitchChange} // <-- pass handler
             />
           )
         ) : (

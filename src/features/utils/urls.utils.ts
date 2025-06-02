@@ -85,9 +85,8 @@ const Urls = {
   updateComLevelsAssign: (id: string) =>
     `${baseUrl}/level/company/update/${id}`,
 
-  updateHealthScore: () => `${baseUrl}/company/health/update`,
-  getHealthScoreByParam: (id: string) =>
-    `${baseUrl}/company/health/score/get-by-core/${id}`,
+  updateHealthScore: () => `${baseUrl}/company/health/score/update`,
+  getHealthScoreByParam: () => `${baseUrl}/company/health/score/sub-param`,
 
   getAllTaskTypeStatus: () => `${baseUrl}/task-status/get-all`,
   AllTaskTypeList: () => `${baseUrl}/task-type/get`,
