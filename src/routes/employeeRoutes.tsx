@@ -39,6 +39,11 @@ const Healthscore = lazy(
   () => import("../pages/HealthscoreWrapper/DatapointList"),
 );
 
+const KPIDashboard = lazy(() => import("../pages/kpiDashboard/KpiDashboard"));
+const KPIVisualize = lazy(
+  () => import("../pages/kpiDashboard/KpiVisualizePage"),
+);
+
 export default function EmployeeRoutes() {
   return (
     <Routes>
@@ -69,6 +74,8 @@ export default function EmployeeRoutes() {
         <Route path="projects/edit/:id" element={<AddCompanyProjectList />} />
         <Route path="projects/view/:id" Component={CompanyProjectView} />
         <Route path="datapoint" Component={DatapointList} />
+        <Route path="kpi-dashboard" Component={KPIDashboard} />
+        <Route path="kpi-Visualize" Component={KPIVisualize} />
         <Route path="healthscore-achieve" Component={Healthscore} />
 
         <Route path="roles/user-permission">

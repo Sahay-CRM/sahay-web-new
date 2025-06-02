@@ -53,11 +53,9 @@ export default function FormSelect({
     }
   };
 
-  // Display string for selected values
   const displayValue = () => {
     if (isMulti) {
       if (Array.isArray(value) && value.length > 0) {
-        // Show labels of selected values joined by commas
         const selectedLabels = options
           .filter((opt) => value.includes(String(opt.value)))
           .map((opt) => opt.label)
@@ -66,7 +64,6 @@ export default function FormSelect({
       }
       return placeholder;
     } else {
-      // Single select
       const selectedOption = options.find(
         (opt) => String(opt.value) === String(value),
       );
@@ -97,7 +94,6 @@ export default function FormSelect({
         <FormControl>
           <SelectTrigger className="w-full mb-1" id={id}>
             <SelectValue placeholder={placeholder}>
-              {/* For multi-select, override default display with custom */}
               {isMulti ? displayValue() : undefined}
             </SelectValue>
           </SelectTrigger>
@@ -119,7 +115,7 @@ export default function FormSelect({
                       type="checkbox"
                       checked={checked}
                       readOnly
-                      className="mr-2"
+                      className="mr-2 text-sm"
                     />
                   )}
                   {opt.label}

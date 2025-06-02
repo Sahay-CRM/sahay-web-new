@@ -490,3 +490,17 @@ interface MeetingDataById {
   meetingStatus: MeetingStatus;
   joiners: MeetingJoiner[];
 }
+
+interface DataPoint {
+  dataPointId: string;
+  dataPointName: string;
+  dataPointLabel: string;
+}
+
+interface FrequencyData {
+  srNo: number;
+  frequencyType: string;
+  dataPoint: DataPoint[];
+}
+
+type FrequencyDataArray = FrequencyData[];

@@ -1,11 +1,5 @@
-import KpiDashoard from "../kpiDashboard/KpiDashboard";
-
 function HomePage() {
-  return (
-    <div className="">
-      <KpiDashoard />
-    </div>
-  );
+  return <div className="">Home Page</div>;
 }
 
 export default HomePage;

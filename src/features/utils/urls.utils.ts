@@ -72,6 +72,9 @@ const Urls = {
   addEmployee: () => `${baseUrl}/company/employee/create`,
   updateEmployee: (id: string) => `${baseUrl}/company/employee/update/${id}`,
   deleteEmployee: (id: string) => `${baseUrl}/company/employee/delete/${id}`,
+
+  kpiStructureGet: () => `${baseUrl}/company/kpi-data/frame`,
+  kpiDataGet: () => `${baseUrl}/company/kpi-data/get`,
 };
 
 export default Urls;
