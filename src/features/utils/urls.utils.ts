@@ -91,6 +91,10 @@ const Urls = {
 
   getAllTaskTypeStatus: () => `${baseUrl}/task-status/get-all`,
   AllTaskTypeList: () => `${baseUrl}/task-type/get`,
+  getCompanyLevelByCore: () => `${baseUrl}/company/health/weightage/level`,
+  getSubParaByCorePara: () => `${baseUrl}/company/health/weightage/sub-param`,
+
+  updateHealthWeightage: () => `${baseUrl}/company/health/weightage/update`,
 };
 
 export default Urls;

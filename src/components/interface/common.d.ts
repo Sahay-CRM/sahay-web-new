@@ -118,6 +118,11 @@ interface SubParameter {
   coreParameter: CoreParameter;
 }
 
+interface CompanyLevelRes {
+  levelId: string;
+  levelName: string;
+}
+
 interface MeetingsData {
   meetingId: string;
   topic: string;
@@ -311,25 +316,6 @@ interface ProjectSubParameterJunctionItem {
   projectSubParameterId: string;
   subPara: SubParameter;
 }
-
-interface SubParameter {
-  subParameterId: string;
-  subParameterName: string;
-  coreParameterId: string;
-  coreParameter: CoreParameter;
-}
-
-// interface CoreParameter {
-//   coreParameterId: string;
-//   departmentId: string;
-//   coreParameterName: string;
-//   createdBy: string;
-//   updatedBy: string;
-//   isDelete: boolean;
-//   createdDatetime: string;
-//   updatedDatetime: string;
-// }
-
 interface ProjectStatusRes {
   projectStatusId: string;
   projectStatus: string;
@@ -687,4 +673,21 @@ interface MeetingDataById {
   meetingStatusId: string;
   meetingStatus: MeetingStatus;
   joiners: MeetingJoiner[];
+}
+
+interface SubParaByCorePara {
+  subParameterId: string;
+  subParameterName: string;
+  isDisabled?: boolean;
+  companyHealthWeightage: number;
+}
+
+interface CoreParameterData {
+  coreParameterId: string;
+  subParameterIds: SubParameterByWeightage[];
+  removedSubParameterIds: string;
+}
+interface SubParameterByWeightage {
+  subParameterId: string;
+  companyHealthScore: number;
 }

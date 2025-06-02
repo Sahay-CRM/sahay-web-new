@@ -8,29 +8,49 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
 
 export type SubParameterScore = {
   subParameterId: string;
   name: string;
   score: number;
+  isDisabled?: boolean;
+  isActive?: boolean;
 };
 
 type EditableScoreTableProps = {
   data: SubParameterScore[];
   onChange?: (updated: SubParameterScore[]) => void;
   disabled?: boolean;
-  mode?: "percent" | "number"; // <-- add mode prop
+  mode?: "percent" | "number";
+  onSwitchChange?: (switchStates: Record<string, boolean>) => void;
+  rowIsDisabled?: (row: SubParameterScore) => boolean;
 };
 
 export default function ScoreDataTable({
   data,
   onChange,
   disabled = false,
-  mode = "percent", // <-- default to percent
+  mode = "percent",
+  onSwitchChange,
+  rowIsDisabled,
 }: EditableScoreTableProps) {
   const [scores, setScores] = useState<SubParameterScore[]>(data);
 
+  // Track switch state for each row
+  const [switchStates, setSwitchStates] = useState<Record<string, boolean>>({});
+
   useEffect(() => {
+    // Set switch ON if isDisabled is true, OFF if false
+    setSwitchStates(
+      data.reduce(
+        (acc, item) => {
+          acc[item.subParameterId] = !!item.isDisabled;
+          return acc;
+        },
+        {} as Record<string, boolean>,
+      ),
+    );
     setScores(data);
   }, [data]);
 
@@ -45,6 +65,14 @@ export default function ScoreDataTable({
     onChange?.(updated);
   };
 
+  const handleSwitchChange = (id: string, checked: boolean) => {
+    setSwitchStates((prev) => {
+      const updated = { ...prev, [id]: checked };
+      onSwitchChange?.(updated);
+      return updated;
+    });
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -52,11 +80,16 @@ export default function ScoreDataTable({
           <TableRow>
             <TableHead className="w-1/2">Sub Parameter Name</TableHead>
             <TableHead className="text-center">Score</TableHead>
+            <TableHead className="text-center">Disabled</TableHead>
+            {/* New column */}
           </TableRow>
         </TableHeader>
         <TableBody>
           {scores.map((param) => (
-            <TableRow key={param.subParameterId}>
+            <TableRow
+              key={param.subParameterId}
+              className={cn(param.isDisabled === true ? "bg-gray-200" : "")}
+            >
               <TableCell className="font-medium">{param.name}</TableCell>
               <TableCell>
                 <div className="flex flex-col items-center justify-center gap-1">
@@ -78,15 +111,17 @@ export default function ScoreDataTable({
                       return (
                         <button
                           key={value}
-                          disabled={disabled}
-                          onClick={() =>
-                            handleScoreClick(param.subParameterId, handleValue)
-                          }
+                          disabled={disabled || param.isDisabled === true}
+                          onClick={() => {
+                            if (disabled || param.isDisabled === true) return;
+                            handleScoreClick(param.subParameterId, handleValue);
+                          }}
                           className={cn(
                             "h-5 w-5 rounded-full border border-gray-300 transition-all",
                             isSelected ? "bg-[#30338d]" : "bg-gray-200",
                             isActive && "ring-2 ring-[#30338d]",
-                            disabled && "cursor-not-allowed opacity-80",
+                            (disabled || param.isDisabled === true) &&
+                              "cursor-not-allowed opacity-80",
                           )}
                         />
                       );
@@ -101,6 +136,23 @@ export default function ScoreDataTable({
                     ))}
                   </div>
                 </div>
+              </TableCell>
+              <TableCell className="text-center">
+                <Switch
+                  checked={!!switchStates[param.subParameterId]}
+                  onCheckedChange={(checked) =>
+                    !disabled &&
+                    handleSwitchChange(param.subParameterId, checked)
+                  }
+                  className={cn(
+                    (disabled ||
+                      (typeof rowIsDisabled === "function"
+                        ? rowIsDisabled(param)
+                        : false)) &&
+                      "cursor-pointer ",
+                  )}
+                  disabled={disabled}
+                />
               </TableCell>
             </TableRow>
           ))}

@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useForm, useWatch } from "react-hook-form";
 
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import {
-  updateHealthScoreMutation,
+  useGetCompanyLevel,
   useGetCoreParameterDropdown,
+  useGetSubParaByLevel,
   // useGetHealthScoreByCore,
 } from "@/features/api/Business";
 
@@ -13,49 +14,31 @@ interface Score {
   subParameterId: string;
   name: string;
   score: number;
+  isDisabled?: boolean;
 }
 export default function useHealthWeightage() {
   const formMethods = useForm();
   const { control } = formMethods;
   const coreParameterId = useWatch({ control, name: "coreParameterId" });
+  const level = useWatch({ control, name: "level" });
 
-  const [isEditing, setIsEditing] = useState(false);
-  const { mutate: updateHealthScore } = updateHealthScoreMutation();
+  const { data: companyLevel } = useGetCompanyLevel(coreParameterId);
+
+  const [isEditable, setIsEditable] = useState(false);
   const { data: coreParams } = useGetCoreParameterDropdown();
+  const { data: healthScoreList } = useGetSubParaByLevel({
+    filter: {
+      coreParameterId: coreParameterId,
+      levelId: level,
+    },
+    enable: !!coreParameterId && !!level,
+  });
+  // console.log(healthScoreList);
+
   // const { data: healthScoreList } = useGetHealthScoreByCore(coreParameterId);
   const permission = useSelector(getUserPermission).HEALTH_SCORE;
 
   const [scores, setScores] = useState<Score[]>([]);
-
-  const healthScoreList = useMemo(
-    () => [
-      {
-        subParameterId: "dd08266b-301f-4e66-bb48-649c2989464c",
-        scoreAchive: 9,
-        companyHealthScore: 3,
-        subParameterName: "Pricing",
-      },
-      {
-        subParameterId: "dfe9dbca-54c3-4b14-a4ef-a2ac1596b73c",
-        scoreAchive: 2,
-        companyHealthScore: 9,
-        subParameterName: "Market Research",
-      },
-      {
-        subParameterId: "6ad8a22e-6b92-42ee-9bea-f8849e7a3c4b",
-        scoreAchive: 5,
-        companyHealthScore: 0,
-        subParameterName: "IG Campaign1",
-      },
-      {
-        subParameterId: "c1220520-98cd-4d1d-8864-64178ce47f2c",
-        scoreAchive: 1,
-        companyHealthScore: 0,
-        subParameterName: "Whatsapp Marketing Campaign",
-      },
-    ],
-    [],
-  );
 
   useEffect(() => {
     if (healthScoreList) {
@@ -63,7 +46,8 @@ export default function useHealthWeightage() {
         healthScoreList.map((item) => ({
           subParameterId: item.subParameterId,
           name: item.subParameterName,
-          score: item.scoreAchive,
+          score: item.companyHealthWeightage,
+          isDisabled: item.isDisabled,
         })),
       );
     } else {
@@ -71,29 +55,17 @@ export default function useHealthWeightage() {
     }
   }, [healthScoreList]);
 
-  const handleEditToggle = () => {
-    if (isEditing) {
-      if (!coreParameterId) return;
-
-      const scoreArray = scores.map((item) => ({
-        subParameterId: item.subParameterId,
-        score: String(item.score),
-      }));
-
-      updateHealthScore({ scoreArray });
-    }
-
-    setIsEditing((prev) => !prev);
-  };
+  const onEdit = () => setIsEditable((prev) => !prev);
 
   const handleCancel = () => {
-    setIsEditing(false);
+    setIsEditable(false);
     if (healthScoreList) {
       setScores(
         healthScoreList.map((item) => ({
           subParameterId: item.subParameterId,
           name: item.subParameterName,
-          score: item.scoreAchive,
+          score: item.companyHealthWeightage,
+          isDisabled: item.isDisabled,
         })),
       );
     } else {
@@ -103,8 +75,8 @@ export default function useHealthWeightage() {
 
   return {
     formMethods,
-    isEditing,
-    handleEditToggle,
+    isEditable,
+    onEdit,
     handleCancel,
     scores,
     setScores,
@@ -112,5 +84,7 @@ export default function useHealthWeightage() {
     coreParameterId,
     healthScoreList,
     permission,
+    companyLevel,
+    level,
   };
 }
