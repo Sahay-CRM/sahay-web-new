@@ -118,7 +118,7 @@ export default function CompanyTaskList() {
               //   assigneeNames: item.assignees[0]?.employeeName,
             }))}
             columns={visibleColumns} // Pass only visible columns to the Table
-            primaryKey="KPIMasterId"
+            primaryKey="dataPointId"
             onDelete={(row) => {
               onDelete(row);
             }}
@@ -139,20 +139,12 @@ export default function CompanyTaskList() {
           />
         </div>
 
-        {/* {isUserModalOpen && (
-          <DesignationAddFormModal
-            isModalOpen={isUserModalOpen}
-            modalClose={closeDeleteModal}
-            modalData={modalData}
-          />
-        )} */}
-
         {/* Modal Component */}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
             title={"Delete KPI"}
             label={"KPI Name :"}
-            modalData={`${modalData?.KPIName}`}
+            modalData={`${modalData?.dataPointLabel}`}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}

@@ -3,7 +3,7 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import { getEmployee } from "@/features/api/companyEmployee";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { Label } from "@/components/ui/label";
 import FormSelect from "@/components/shared/Form/FormSelect";
@@ -12,12 +12,12 @@ import {
   useGetDatapointById,
   useGetKpiNonSel,
 } from "@/features/api/companyDatapoint";
-import { AssignUser, EmployeeData } from "@/components/interface/common";
 export default function useAddEmployee() {
   const { id: companykpimasterId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
 
   const { mutate: addDatapoint } = useAddUpdateDatapoint();
+  const navigate = useNavigate();
 
   const { data: datapointApiData } = useGetDatapointById(
     companykpimasterId || "",
@@ -33,19 +33,66 @@ export default function useAddEmployee() {
     getValues,
   } = useForm({
     mode: "onChange",
+    defaultValues: {
+      validationTypeId: "1", // Set as string to match your options
+    },
   });
 
+  const filterOptionsData = {
+    data: [
+      { validationTypeId: "1", validationTypeName: "EQUAL_TO" },
+      {
+        validationTypeId: "2",
+        validationTypeName: "GREATER_THAN_OR_EQUAL_TO",
+      },
+      {
+        validationTypeId: "3",
+        validationTypeName: "GREATER_THAN",
+      },
+      { validationTypeId: "4", validationTypeName: "LESS_THAN" },
+      { validationTypeId: "5", validationTypeName: "LESS_THAN_OR_EQUAL_TO" },
+      { validationTypeId: "6", validationTypeName: "BETWEEN" },
+      { validationTypeId: "7", validationTypeName: "YES_NO" },
+    ],
+    totalPages: 1,
+    currentPage: 1,
+    totalRecords: 8,
+  };
+
   useEffect(() => {
-    if (datapointApiData?.data) {
-      const data = datapointApiData?.data;
-      // console.log(data);
-      reset({
-        dataPointName: data?.KPIMasterId?.KPILabel,
-        KPIMasterId: data?.KPIMasterId?.KPIMasterId,
-        dataPointLabel: data?.KPIMasterId?.KPIName,
-      });
+    if (datapointApiData) {
+      const data = datapointApiData;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const resetObj: any = {
+        dataPointName: data?.KPIMaster?.KPILabel || data?.dataPointName,
+        KPIMasterId: data?.KPIMasterId,
+        dataPointLabel: data?.KPIMaster?.KPIName || data?.dataPointLabel,
+        frequencyId: data?.frequencyType,
+        validationTypeId: data?.validationType
+          ? filterOptionsData.data.find(
+              (item) => item.validationTypeName === data.validationType,
+            )?.validationTypeId
+          : undefined,
+      };
+
+      if (Array.isArray(data?.dataPointEmployeeJunction)) {
+        resetObj.employeeId = data.dataPointEmployeeJunction.map(
+          (u: AssignUser) => ({
+            employeeId: u.employeeId,
+            employeeName: u.employeeName,
+          }),
+        );
+        data.dataPointEmployeeJunction.forEach((u: AssignUser) => {
+          resetObj[`goalValue1_${u.employeeId}`] = u.value1;
+          resetObj[`goalValue2_${u.employeeId}`] = u.value2;
+        });
+      }
+
+      reset(resetObj);
     }
   }, [datapointApiData, reset]);
+
+  console.log(getValues());
 
   const handleClose = () => setModalOpen(false);
 
@@ -71,42 +118,40 @@ export default function useAddEmployee() {
       const obj: AssignUser = {
         employeeId: emp.employeeId,
         employeeName: emp.employeeName,
-        // value1: "",
-        // value2: "",
-        // yesno: ""
       };
       if (String(validationTypeId) === "6") {
         // Between: value1 and value2
-        obj.value1 = data[`goalValue1`];
-        obj.value2 = data[`goalValue2`];
+        obj.value1 = data[`goalValue1_${emp.employeeId}`];
+        obj.value2 = data[`goalValue2_${emp.employeeId}`];
       } else if (String(validationTypeId) === "7") {
-        // Yes/No
-        obj.yesno = data[`yesno`];
+        // Yes/No as value1: "1" for Yes, "0" for No
+        const yesnoValue = data[`yesno_${emp.employeeId}`];
+        obj.value1 = yesnoValue === "yes" ? "1" : "0";
       } else {
         // Single value
-        obj.value1 = data[`goalValue1`];
+        obj.value1 = data[`goalValue1_${emp.employeeId}`];
       }
       return obj;
     });
-
     const payload = {
       ...data,
-      companykpimasterId: companykpimasterId,
+      companykpimasterId: companykpimasterId || "",
       assignUser,
     };
-    // console.log(payload, "<====data");
     addDatapoint(payload, {
       onSuccess: () => {
         handleModalClose();
       },
     });
-    // navigate("/dashboard/meeting");
+    navigate("/dashboard/datapoint");
   });
 
   const handleModalClose = () => {
     reset();
     setModalOpen(false);
   };
+
+  const isUpdateMode = !!datapointApiData?.data;
 
   const Kpi = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
@@ -294,27 +339,6 @@ export default function useAddEmployee() {
   };
 
   const ValidationType = () => {
-    const filterOptionsData = {
-      data: [
-        { validationTypeId: "1", validationTypeName: "EQUAL_TO" },
-        {
-          validationTypeId: "2",
-          validationTypeName: "GREATER_THAN_OR_EQUAL_TO",
-        },
-        {
-          validationTypeId: "3",
-          validationTypeName: "GREATER_THAN",
-        },
-        { validationTypeId: "4", validationTypeName: "LESS_THAN" },
-        { validationTypeId: "5", validationTypeName: "LESS_THAN_OR_EQUAL_TO" },
-        { validationTypeId: "6", validationTypeName: "BETWEEN" },
-        { validationTypeId: "7", validationTypeName: "YES_NO" },
-      ],
-      totalPages: 1,
-      currentPage: 1,
-      totalRecords: 8,
-    };
-
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
       { key: "validationTypeName", label: "Condition", visible: true },
@@ -481,6 +505,7 @@ export default function useAddEmployee() {
       { label: "Yes", value: "yes" },
       { label: "No", value: "no" },
     ];
+
     return (
       <div className="flex flex-col gap-6">
         {selectedEmployees.map((emp: DatapointListData, index: number) => (
@@ -496,26 +521,26 @@ export default function useAddEmployee() {
                   <FormInputField
                     label="Goal Value 1"
                     isMandatory
-                    {...register(`goalValue1`, {
+                    {...register(`goalValue1_${emp.employeeId}`, {
                       required: "Please enter Goal Value 1",
                     })}
-                    error={errors?.[`goalValue1`]}
+                    error={errors?.[`goalValue1_${emp.employeeId}`]}
                   />
                   {showBoth && (
                     <FormInputField
                       isMandatory
                       label="Goal Value 2"
-                      {...register(`goalValue2`, {
+                      {...register(`goalValue2_${emp.employeeId}`, {
                         required: "Please enter Goal Value 2",
                       })}
-                      error={errors?.[`goalValue2`]}
+                      error={errors?.[`goalValue2_${emp.employeeId}`]}
                     />
                   )}
                 </>
               )}
               {showYesNo && (
                 <Controller
-                  name={`yesno`}
+                  name={`yesno_${emp.employeeId}`}
                   control={control}
                   rules={{ required: "Please select Yes or No" }}
                   render={({ field, fieldState }) => (
@@ -549,5 +574,6 @@ export default function useAddEmployee() {
     KpiPreview: getValues(),
     // employeeId,
     trigger,
+    skipToStep: isUpdateMode ? 2 : 0,
   };
 }

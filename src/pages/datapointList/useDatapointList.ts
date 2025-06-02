@@ -1,4 +1,3 @@
-import { KPIFormData } from "@/components/interface/common";
 import {
   useDeleteDatapoint,
   useGetCompanyDatapoint,
@@ -85,8 +84,8 @@ export default function useAdminUser() {
   }, []);
 
   const conformDelete = async () => {
-    if (modalData && modalData.KPIMasterId) {
-      deleteDatapointById(modalData.KPIMasterId, {
+    if (modalData && modalData.dataPointId) {
+      deleteDatapointById(modalData.dataPointId, {
         onSuccess: () => {
           closeDeleteModal();
         },

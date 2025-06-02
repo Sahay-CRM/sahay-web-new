@@ -1,7 +1,7 @@
 import ModalData from "@/components/shared/Modal/ModalData";
 
 interface DatapointModalProps {
-  modalData: KPIFormDatas; // Use the correct type if available, e.g., CompanyMeetingDataProps
+  modalData: KPIFormData; // Use the correct type if available, e.g., CompanyMeetingDataProps
   isModalOpen: boolean;
   modalClose: () => void;
   onSubmit: () => void;

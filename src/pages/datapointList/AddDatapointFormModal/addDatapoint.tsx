@@ -4,7 +4,6 @@ import useAddDatapoint from "./useAddDatapoint";
 import { FormProvider, useForm } from "react-hook-form";
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
-import { KPIFormData } from "@/components/interface/common";
 
 const AddDatapoint = () => {
   const {
@@ -15,10 +14,12 @@ const AddDatapoint = () => {
     Kpi,
     Frequency,
     ValidationType,
+    // CoreParameter,
     AssignUser,
     GoalValue,
     trigger,
     KpiPreview,
+    skipToStep, // <-- get skipToStep flag
   } = useAddDatapoint();
 
   // Build steps array based on showNextStep
@@ -26,9 +27,24 @@ const AddDatapoint = () => {
     <Kpi />,
     <Frequency />,
     <ValidationType />,
+    // <CoreParameter/>,
     <AssignUser />,
     <GoalValue />,
   ];
+
+  // If skipToStep > 0, only show steps from skipToStep onwards
+  const visibleSteps = skipToStep > 0 ? steps.slice(skipToStep) : steps;
+  const visibleStepNames =
+    skipToStep > 0
+      ? ["Validation Type", "Assign User", "Goal Value"]
+      : [
+          "Kpi",
+          "Frequency",
+          "Validation Type",
+          // "Core Parameter",
+          "Assign User",
+          "Goal Value",
+        ];
 
   const {
     back,
@@ -38,15 +54,7 @@ const AddDatapoint = () => {
     currentStep,
     isFirstStep,
     isLastStep,
-  } = useStepForm(steps, trigger);
-
-  const stepNames = [
-    "Kpi",
-    "Frequency",
-    "Validation Type",
-    "Assign User",
-    "Goal Value",
-  ];
+  } = useStepForm(visibleSteps, trigger, skipToStep > 0 ? 0 : 0);
 
   const methods = useForm({
     mode: "onChange",
@@ -57,7 +65,7 @@ const AddDatapoint = () => {
       <div>
         <StepProgress
           currentStep={currentStep}
-          stepNames={stepNames}
+          stepNames={visibleStepNames}
           totalSteps={totalSteps}
         />
 

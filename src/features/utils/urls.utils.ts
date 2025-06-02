@@ -77,6 +77,9 @@ const Urls = {
   addCompanyDatapoint: () => `${baseUrl}/company/kpi/create`,
   getKpiById: (id: string) => `${baseUrl}/company/kpi/get/${id}`,
   deleteDatapointMeeting: (id: string) => `${baseUrl}/company/kpi/delete/${id}`,
+
+  //CoreParameter
+  getCoreParameter: () => `${baseUrl}/core-param/get`,
 };
 
 export default Urls;

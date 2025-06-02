@@ -100,17 +100,6 @@ interface Employee {
   employeeId: string;
   employeeName: string;
 }
-//kk
-interface CoreParameter {
-  coreParameterId: string;
-  departmentId: string;
-  coreParameterName: string;
-  createdBy: string;
-  updatedBy: string;
-  isDelete: boolean;
-  createdDatetime: string;
-  updatedDatetime: string;
-}
 
 interface SubParameter {
   subParameterId: string;
@@ -150,25 +139,6 @@ interface EventData {
   importantDateName?: string;
   importantDate?: string;
   importantDateId?: string;
-}
-
-export interface AssignUser {
-  employeeId: string;
-  employeeName: string;
-  value1: string;
-  value2: string;
-  yesno: string; // optional if not BETWEEN, but keep as string for consistency
-}
-
-export interface KPIFormData {
-  employeeId: string;
-  dataPointName: string;
-  KPIMasterId: string;
-  dataPointLabel: string;
-  validationType: string;
-  frequencyType: string;
-  selectedType: string; // optional fallback if not set
-  assignUser: AssignUser[];
 }
 
 //kk
@@ -358,13 +328,9 @@ interface SubParameter {
 
 interface CoreParameter {
   coreParameterId: string;
-  departmentId: string;
   coreParameterName: string;
-  createdBy: string;
-  updatedBy: string;
-  isDelete: boolean;
-  createdDatetime: string;
-  updatedDatetime: string;
+  departmentId: string;
+  departmentName: string;
 }
 
 interface DesignationDataProps {
@@ -526,4 +492,28 @@ interface MeetingDataById {
   meetingStatusId: string;
   meetingStatus: MeetingStatus;
   joiners: MeetingJoiner[];
+}
+
+interface KPIMaster {
+  KPIName: string;
+  KPILabel: string;
+}
+
+interface DataPointEmployee {
+  employeeId: string;
+  employeeName: string;
+  value1: string;
+  value2?: string;
+}
+
+interface KPIFormData {
+  dataPointId: string;
+  dataPointName: string;
+  dataPointLabel: string;
+  KPIMasterId: string;
+  KPIMaster: KPIMaster;
+  validationType: "EQUAL_TO" | "GREATER_THAN" | "LESS_THAN" | string; // Add other types if needed
+  frequencyType: "YEARLY" | "MONTHLY" | "WEEKLY" | string; // Add other types if needed
+  selectedType: "COMPANY" | "DEPARTMENT" | "USER" | string; // Add other types if needed
+  dataPointEmployeeJunction: DataPointEmployee[];
 }
