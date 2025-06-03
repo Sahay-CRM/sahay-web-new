@@ -7,3 +7,6 @@ export const getUserDetail = (store: RootState): User =>
 
 export const getUserPermission = (store: RootState): PermissionsResponse =>
   store.auth.userPermission as PermissionsResponse;
+
+export const getKpiData = (store: RootState): KpiData =>
+  store.auth.kpiData as KpiData;

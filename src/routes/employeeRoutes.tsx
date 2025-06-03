@@ -75,7 +75,7 @@ export default function EmployeeRoutes() {
         <Route path="projects/view/:id" Component={CompanyProjectView} />
         <Route path="datapoint" Component={DatapointList} />
         <Route path="kpi-dashboard" Component={KPIDashboard} />
-        <Route path="kpi-Visualize" Component={KPIVisualize} />
+        <Route path="kpi-visualize" Component={KPIVisualize} />
         <Route path="healthscore-achieve" Component={Healthscore} />
 
         <Route path="roles/user-permission">

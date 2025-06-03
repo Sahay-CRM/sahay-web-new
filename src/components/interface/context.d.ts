@@ -12,6 +12,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   userPermission?: PermissionsResponse;
+  kpiData?: KpiData;
 }
 
 interface CustomError {

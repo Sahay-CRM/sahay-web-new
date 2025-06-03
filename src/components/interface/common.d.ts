@@ -504,3 +504,10 @@ interface FrequencyData {
 }
 
 type FrequencyDataArray = FrequencyData[];
+
+interface KpiData {
+  dataPointEmpId: string;
+  startDate: string;
+  endDate: string;
+  selectFrequency: string;
+}

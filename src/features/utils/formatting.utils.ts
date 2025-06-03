@@ -18,6 +18,7 @@ interface KpiDataEntry {
 interface KpiHeader {
   label: string;
   year: string;
+  data: object;
 }
 
 export function getKpiHeadersFromData(
@@ -36,36 +37,43 @@ export function getKpiHeadersFromData(
         return {
           label: `${format(start, "yyyy")}-${format(end, "yyyy")}`,
           year: "",
+          data: entry,
         };
       case "HALFYEARLY":
         return {
           label: `${format(start, "MMM")}-${format(end, "MMM")}`,
           year,
+          data: entry,
         };
       case "QUARTERLY":
         return {
           label: `${format(start, "MMM")}-${format(end, "MMM")}`,
           year,
+          data: entry,
         };
       case "MONTHLY":
         return {
           label: format(start, "MMM"),
           year,
+          data: entry,
         };
       case "WEEKLY":
         return {
           label: `${format(start, "dd MMM")} - ${format(end, "dd MMM")}`,
           year,
+          data: entry,
         };
       case "DAILY":
         return {
           label: format(start, "dd MMM"),
           year,
+          data: entry,
         };
       default:
         return {
           label: format(start, "dd MMM"),
           year,
+          data: entry,
         };
     }
   });
@@ -174,4 +182,16 @@ export function getColorFromName(name?: string) {
   }
   const index = Math.abs(hash) % colors.length;
   return colors[index];
+}
+
+export function formatTempValuesToPayload(tempValues: Record<string, string>) {
+  return Object.entries(tempValues).map(([key, value]) => {
+    const [dataPointEmpId, startDate, endDate] = key.split("/");
+    return {
+      dataPointEmpId,
+      startDate,
+      endDate,
+      data: value,
+    };
+  });
 }

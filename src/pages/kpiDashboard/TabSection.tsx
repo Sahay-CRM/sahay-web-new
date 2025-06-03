@@ -16,7 +16,7 @@ export default function TabsSection({
       onValueChange={onSelectPeriod}
       className="w-full px-4"
     >
-      <TabsList className="bg-transparent p-0 flex space-x-6 border-b border-gray-200">
+      <TabsList className="bg-transparent h-auto p-0 flex flex-wrap items-start justify-start space-x-6 border-b border-gray-200">
         {kpiStructure?.data?.map((tab) => (
           <TabsTrigger
             key={tab.frequencyType}
