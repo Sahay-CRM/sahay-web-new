@@ -98,7 +98,9 @@ export default function CompanyTaskList() {
                 <Button className="py-2 w-fit">Add Kpi</Button>
               </Link>
             )}
-
+            <Link to="/dashboard/kpi/graph">
+              <Button className="py-2 w-fit">Graph</Button>
+            </Link>
             {canToggleColumns && (
               <DropdownSearchMenu
                 columns={columnToggleOptions}

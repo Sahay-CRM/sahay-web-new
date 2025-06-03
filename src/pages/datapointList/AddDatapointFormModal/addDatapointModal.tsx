@@ -39,7 +39,7 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
   modalClose,
   onSubmit,
 }) => {
-  // console.log(modalData);
+  console.log(modalData);
 
   // Helper to check if validation type is YES_NO
   const isYesNo =

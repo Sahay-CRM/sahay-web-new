@@ -12,6 +12,7 @@ import {
   useGetDatapointById,
   useGetKpiNonSel,
 } from "@/features/api/companyDatapoint";
+import useGetCoreParameter from "@/features/api/coreParameter/useGetCoreParameter";
 export default function useAddEmployee() {
   const { id: companykpimasterId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
@@ -437,6 +438,88 @@ export default function useAddEmployee() {
     );
   };
 
+  const CoreParameter = () => {
+    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 10,
+      search: "",
+      //   status: currentStatus, // Use currentStatus state
+    });
+
+    const { data: coreparameterData } = useGetCoreParameter({
+      filter: paginationFilter,
+    });
+    const [columnToggleOptions, setColumnToggleOptions] = useState([
+      { key: "srNo", label: "Sr No", visible: true },
+      { key: "coreParameterName", label: "CoreParameter Name", visible: true },
+    ]);
+
+    // Filter visible columns
+    const visibleColumns = columnToggleOptions.reduce(
+      (acc, col) => {
+        if (col.visible) acc[col.key] = col.label;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+
+    // Toggle column visibility
+    const onToggleColumn = (key: string) => {
+      setColumnToggleOptions((prev) =>
+        prev.map((col) =>
+          col.key === key ? { ...col, visible: !col.visible } : col,
+        ),
+      );
+    };
+    // Check if the number of columns is more than 3
+    const canToggleColumns = columnToggleOptions.length > 3;
+
+    return (
+      <div>
+        <div className=" mt-1 flex items-center justify-between">
+          {canToggleColumns && (
+            <div className="ml-4 ">
+              <DropdownSearchMenu
+                columns={columnToggleOptions}
+                onToggleColumn={onToggleColumn}
+              />
+            </div>
+          )}
+        </div>
+
+        <Controller
+          name="coreParameterId"
+          control={control}
+          rules={{ required: "Please select a CoreParameter" }}
+          render={({ field }) => (
+            <>
+              <div className="mb-4">
+                {errors?.coreParameterId && (
+                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                    {String(errors?.coreParameterId?.message || "")}
+                  </span>
+                )}
+              </div>
+              <TableData
+                {...field}
+                tableData={coreparameterData?.data.map((item, index) => ({
+                  ...item,
+                  srNo: index + 1,
+                }))}
+                columns={visibleColumns}
+                primaryKey="coreParameterId"
+                paginationDetails={coreparameterData}
+                setPaginationFilter={setPaginationFilter}
+                multiSelect={true}
+                selectedValue={field.value}
+                handleChange={field.onChange}
+              />
+            </>
+          )}
+        />
+      </div>
+    );
+  };
   const AssignUser = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
@@ -611,6 +694,7 @@ export default function useAddEmployee() {
     Kpi,
     Frequency,
     ValidationType,
+    CoreParameter,
     AssignUser,
     GoalValue,
     KpiPreview: getValues(),

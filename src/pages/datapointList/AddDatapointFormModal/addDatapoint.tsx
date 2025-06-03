@@ -15,6 +15,7 @@ const AddDatapoint = () => {
     Kpi,
     Frequency,
     ValidationType,
+    CoreParameter,
     AssignUser,
     GoalValue,
     trigger,
@@ -26,6 +27,7 @@ const AddDatapoint = () => {
     <Kpi />,
     <Frequency />,
     <ValidationType />,
+    <CoreParameter />,
     <AssignUser />,
     <GoalValue />,
   ];
@@ -36,8 +38,21 @@ const AddDatapoint = () => {
     skipToStep === 4
       ? ["Goal Value"]
       : skipToStep === 1
-        ? ["Frequency", "Validation Type", "Assign User", "Goal Value"]
-        : ["Kpi", "Frequency", "Validation Type", "Assign User", "Goal Value"];
+        ? [
+            "Frequency",
+            "Validation Type",
+            "Core Parameter",
+            "Assign User",
+            "Goal Value",
+          ]
+        : [
+            "Kpi",
+            "Frequency",
+            "Validation Type",
+            "Core Parameter",
+            "Assign User",
+            "Goal Value",
+          ];
 
   const {
     back,
