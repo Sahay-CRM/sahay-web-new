@@ -155,6 +155,9 @@ interface EventData {
   importantDateName?: string;
   importantDate?: string;
   importantDateId?: string;
+  bgColor?: string;
+  textColor?: string;
+  eventType?: string;
 }
 
 //kk
@@ -279,6 +282,9 @@ interface ImportantDatesDataProps {
   importantDateName: string;
   importantDate: string;
   importantDateId?: string;
+  bgColor?: string;
+  textColor?: string;
+  eventType?: string;
 }
 
 interface CompanyMeetingDataProps {

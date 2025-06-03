@@ -43,10 +43,10 @@ function Calendar() {
     "all" | "task" | "meeting" | "importantDate"
   >("all");
 
-  const handleOptionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedOption(
-      event.target.value as "all" | "task" | "meeting" | "importantDate",
-    );
+  // Change handler to accept string value
+  const handleOptionChange = (value: string | string[]) => {
+    // Only single select, so value is string
+    setSelectedOption(value as "all" | "task" | "meeting" | "importantDate");
   };
 
   const events = useMemo(() => {
@@ -83,7 +83,6 @@ function Calendar() {
                 { value: "meeting", label: "Meeting" },
                 { value: "importantDate", label: "ImportantDate" },
               ]}
-              containerClass="min-w-[180px]"
               className="h-9"
             />
           </div>
@@ -101,14 +100,34 @@ function Calendar() {
           startAccessor="start"
           endAccessor="end"
           className="rounded-lg p-1 shadow-sm"
-          onSelectEvent={(event) => {
-            setAddImportantDateModal(true);
-            setModalData(event);
+          onSelectEvent={(event: EventData) => {
+            if (event.eventType === "importantDate") {
+              setAddImportantDateModal(true);
+              setModalData({
+                importantDateName: event.importantDateName || event.title || "",
+                importantDate:
+                  event.importantDate ||
+                  (event.start &&
+                  typeof event.start === "object" &&
+                  event.start.toISOString
+                    ? event.start.toISOString()
+                    : ""),
+                importantDateRemarks:
+                  event.importantDateRemarks || event.description || "",
+                importantDateId: event.importantDateId || event.eventId,
+                bgColor: event.bgColor,
+                textColor: event.textColor,
+                eventType: event.eventType,
+              });
+            }
           }}
-          style={{
-            overflowY: "auto",
-            height: "88%",
-          }}
+          eventPropGetter={(event) => ({
+            style: {
+              minHeight: 28,
+              backgroundColor: event.bgColor,
+              color: event.textColor,
+            },
+          })}
         />
       </div>
     </FormProvider>
