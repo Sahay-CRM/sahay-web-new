@@ -758,3 +758,40 @@ interface KPIFormData {
   dataPointEmployeeJunction: DataPointEmployee[];
   hasData: boolean;
 }
+
+interface BrandFormModalProps {
+  isModalOpen: boolean;
+  modalClose: () => void;
+  modalData?: BrandData;
+}
+
+interface BrandData {
+  brandId?: string;
+  brandName: string;
+  brandDescription?: string;
+  brandLogo?: string;
+}
+
+interface CommonResponse<T> {
+  message: string;
+  currentPage: number;
+  totalCount: number;
+  hasMore: boolean;
+  pageSize: number;
+  totalPage: number;
+  data: T;
+}
+
+interface ProductData {
+  brandId?: string;
+  productId?: string;
+  productName: string;
+  productDescription?: string;
+  productImage?: string;
+}
+
+interface ProductFormModalProps {
+  isModalOpen: boolean;
+  modalClose: () => void;
+  modalData?: ProductData;
+}

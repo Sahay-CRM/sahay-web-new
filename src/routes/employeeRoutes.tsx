@@ -49,6 +49,9 @@ const AddCompanyDatapoint = lazy(
   () => import("../pages/datapointList/AddDatapointFormModal"),
 );
 
+const Brand = lazy(() => import("../pages/Brand"));
+const Product = lazy(() => import("../pages/Product"));
+
 export default function EmployeeRoutes() {
   return (
     <Routes>
@@ -95,6 +98,8 @@ export default function EmployeeRoutes() {
           <Route index Component={userpermissionlist} />
           <Route path="edit/:id" Component={UserPermissionEdit} />
         </Route>
+        <Route path="brand" Component={Brand} />
+        <Route path="product" Component={Product} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

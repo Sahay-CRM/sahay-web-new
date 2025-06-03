@@ -110,6 +110,22 @@ export const companyNavigationData = [
     moduleKey: "ROLES_PERMISSION",
   },
   {
+    id: 11,
+    icon: "bx bxs-lock-alt",
+    label: "Brand",
+    link: "/dashboard/brand",
+    permission: "View",
+    moduleKey: "BRAND",
+  },
+  {
+    id: 12,
+    icon: "bx bxs-lock-alt",
+    label: "Product",
+    link: "/dashboard/product",
+    permission: "View",
+    moduleKey: "PRODUCT",
+  },
+  {
     id: 15,
     icon: "bx bx-cog",
     label: "Settings",

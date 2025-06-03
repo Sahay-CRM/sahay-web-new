@@ -29,6 +29,7 @@ import Pagination from "../Pagination/Pagination";
 import FormCheckbox from "../Form/FormCheckbox/FormCheckbox";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { SpinnerIcon } from "../Icons";
 
 interface DetailsPermission {
   view: boolean;
@@ -324,7 +325,9 @@ const TableData = <T extends Record<string, unknown>>({
                     className="py-6"
                   >
                     <div className="flex justify-center items-center h-20">
-                      <div className="animate-spin">loading...</div>
+                      <div className="animate-spin">
+                        <SpinnerIcon />
+                      </div>
                     </div>
                   </TableCell>
                 </TableRow>

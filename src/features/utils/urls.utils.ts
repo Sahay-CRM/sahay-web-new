@@ -104,6 +104,18 @@ const Urls = {
 
   //CoreParameter
   getCoreParameter: () => `${baseUrl}/core-param/get`,
+
+  updateBrand: (id: string) => `${baseUrl}/company/brand/update/${id}`,
+  addBrand: () => `${baseUrl}/company/brand/create`,
+  getBrandList: () => `${baseUrl}/company/brand/get`,
+  gelAllBrand: () => `${baseUrl}/company/brand/get-all`,
+  brandDeleteById: (id: string) => `${baseUrl}/company/brand/delete/${id}`,
+
+  updateProduct: (id: string) => `${baseUrl}/company/product/update/${id}`,
+  addProduct: () => `${baseUrl}/company/product/create`,
+  getProductList: () => `${baseUrl}/company/product/get`,
+  productDeleteById: (id: string) => `${baseUrl}/company/product/delete/${id}`,
+  gelAllProduct: () => `${baseUrl}/company/product/get-all`,
 };
 
 export default Urls;
