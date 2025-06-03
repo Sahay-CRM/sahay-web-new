@@ -25,6 +25,7 @@ const Urls = {
   getAllImportantDatesByPage: () => `${baseUrl}/company/imp-date/get`,
 
   getAllMeetingStatus: () => `${baseUrl}/meeting-status/get`,
+  ddMeetingStatus: () => `${baseUrl}/meeting-status/get-all`,
   getAllMeetingType: () => `${baseUrl}/meeting-type/get`,
 
   getAllCompanyMeeting: () => `${baseUrl}/company/meeting/get-all`,

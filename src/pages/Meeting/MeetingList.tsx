@@ -8,6 +8,7 @@ import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import DateRangePicker from "@/components/shared/DateRange";
 
 export default function MeetingList() {
   const {
@@ -21,6 +22,11 @@ export default function MeetingList() {
     paginationFilter,
     isChildData,
     permission,
+    handleDateRangeChange,
+    filteredTaskData,
+    statusOptions,
+    filters,
+    handleFilterChange,
   } = useMeeting();
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -67,23 +73,40 @@ export default function MeetingList() {
               setPaginationFilter={setPaginationFilter}
               className="w-96"
             />
-            {permission.Add && (
-              <Link to="/dashboard/meeting/add">
-                <Button className="py-2 w-fit">Add Meeting</Button>
-              </Link>
-            )}
+            <div className="flex gap-4">
+              <div className="z-10 relative">
+                <DateRangePicker onChange={handleDateRangeChange} />
+              </div>
+              <div>
+                <DropdownSearchMenu
+                  label="Status"
+                  options={statusOptions}
+                  selected={filters.taskStatusName || []}
+                  onChange={(selected) => {
+                    handleFilterChange("taskStatusName", selected);
+                    console.log("Selected Status:", selected);
+                  }}
+                  multiSelect
+                />
+              </div>
+            </div>
             {canToggleColumns && (
               <DropdownSearchMenu
                 columns={columnToggleOptions}
                 onToggleColumn={onToggleColumn}
               />
             )}
+            {permission.Add && (
+              <Link to="/dashboard/meeting/add">
+                <Button className="py-2 w-fit">Add Meeting</Button>
+              </Link>
+            )}
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            tableData={meetingData?.data.map((item, index) => ({
+            tableData={filteredTaskData?.map((item, index) => ({
               ...item,
               srNo: index + 1,
               joinerNames: item.joiners?.length
@@ -102,7 +125,7 @@ export default function MeetingList() {
                 ? format(new Date(item.meetingDateTime), "dd-MM-yyyy")
                 : "-",
             }))}
-            columns={visibleColumns} // Pass only visible columns to the Table
+            columns={visibleColumns}
             primaryKey="meetingId"
             onEdit={
               permission.Edit

@@ -1,7 +1,10 @@
 import { useDeleteCompanyMeeting } from "@/features/api/companyMeeting";
 import useGetCompanyMeeting from "@/features/api/companyMeeting/useGetCompanyMeeting";
+import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { useCallback, useState } from "react";
+import { isWithinInterval, parseISO } from "date-fns";
+import { useCallback, useMemo, useState } from "react";
+import { DateRange } from "react-day-picker";
 import { useSelector } from "react-redux";
 
 export default function useAdminUser() {
@@ -12,6 +15,16 @@ export default function useAdminUser() {
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
   const [isChildData, setIsChildData] = useState<string | undefined>();
+  const [selectedDateRange, setSelectedDateRange] = useState<
+    DateRange | undefined
+  >({
+    from: new Date(),
+  });
+
+  const [filters, setFilters] = useState<{ taskStatusName: string[] }>({
+    taskStatusName: [],
+  });
+
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 10,
@@ -22,6 +35,8 @@ export default function useAdminUser() {
   const { data: meetingData } = useGetCompanyMeeting({
     filter: paginationFilter,
   });
+
+  const { data: meetingStatus } = useDdMeetingStatus();
 
   const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = Number(event.target.value);
@@ -96,6 +111,47 @@ export default function useAdminUser() {
     setIsImport(false);
   }, []);
 
+  const filteredTaskData = useMemo(() => {
+    let filtered = meetingData?.data;
+
+    // Apply date range filter if selected
+    if (selectedDateRange?.from) {
+      filtered = filtered?.filter((task) => {
+        if (!task.meetingDateTime) return false;
+
+        const deadlineDate = parseISO(task.meetingDateTime);
+
+        // Check if any of the dates fall within the selected range
+        const isDeadlineInRange = isWithinInterval(deadlineDate, {
+          start: selectedDateRange.from!,
+          end: selectedDateRange.to || selectedDateRange.from!,
+        });
+
+        return isDeadlineInRange;
+      });
+    }
+
+    return filtered;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDateRange, meetingData?.data, filters.taskStatusName]);
+
+  const handleDateRangeChange: HandleDateRangeChange = (range) => {
+    setSelectedDateRange(range);
+    console.log("Selected Date Range:", range);
+  };
+
+  const statusOptions = meetingStatus?.map((item) => ({
+    label: item.meetingStatus,
+    value: item.meetingStatusId,
+  }));
+
+  const handleFilterChange = (col: string, selected: string[]) => {
+    setFilters((prev) => ({
+      ...prev,
+      [col]: selected,
+    }));
+  };
+
   return {
     // isLoading,
     meetingData,
@@ -118,5 +174,11 @@ export default function useAdminUser() {
     setIsImportExportModalOpen,
     isChildData,
     permission,
+    handleDateRangeChange,
+    filteredTaskData,
+    selectedDateRange,
+    statusOptions,
+    filters,
+    handleFilterChange,
   };
 }

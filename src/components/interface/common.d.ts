@@ -795,3 +795,7 @@ interface ProductFormModalProps {
   modalClose: () => void;
   modalData?: ProductData;
 }
+
+interface HandleDateRangeChange {
+  (range: DateRange | undefined): void;
+}

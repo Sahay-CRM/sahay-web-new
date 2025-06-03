@@ -4,10 +4,13 @@ import {
 } from "@/features/api/companyTask";
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { useCallback, useState } from "react";
+import { isWithinInterval, parseISO, isBefore } from "date-fns";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { DateRange } from "react-day-picker";
 import { useSelector } from "react-redux";
 
-export default function useAdminUser() {
+// Accept showOverdue as a parameter
+export default function useCompanyTaskList() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [modalData, setModalData] = useState<TaskGetPaging>(
@@ -18,6 +21,13 @@ export default function useAdminUser() {
   const [isImport, setIsImport] = useState(false);
   const permission = useSelector(getUserPermission).TASK;
   const [isChildData, setIsChildData] = useState<string | undefined>();
+  const [selectedDateRange, setSelectedDateRange] = useState<
+    DateRange | undefined
+  >({
+    from: new Date(),
+  });
+
+  const [showOverdue, setShowOverdue] = useState(false);
 
   const { mutate: updateCompanyTask } = useAddUpdateCompanyTask();
 
@@ -128,6 +138,100 @@ export default function useAdminUser() {
     updateCompanyTask(payload);
   };
 
+  // Define filters state
+  const [filters, setFilters] = useState<{ taskStatusName: string[] }>({
+    taskStatusName: [],
+  });
+
+  // Move filteredTaskData above filterOptions
+  const filteredTaskData = useMemo(() => {
+    let filtered = companyTaskData?.data;
+
+    // Apply overdue filter if enabled
+    if (showOverdue) {
+      filtered = filtered?.filter((task) => {
+        if (!task.taskDeadline) return false;
+        const deadlineDate = parseISO(task.taskDeadline);
+        // Overdue: deadline is before today and not completed
+        return (
+          isBefore(deadlineDate, new Date()) && task.taskStatus !== "Completed"
+        );
+      });
+    }
+
+    // Apply date range filter if selected
+    if (selectedDateRange?.from) {
+      filtered = filtered?.filter((task) => {
+        if (!task.taskDeadline) return false;
+
+        const deadlineDate = parseISO(task.taskDeadline);
+        const startDate = task.taskStartDate
+          ? parseISO(task.taskStartDate)
+          : null;
+        const endDate = task.taskActualEndDate
+          ? parseISO(task.taskActualEndDate)
+          : null;
+
+        // Check if any of the dates fall within the selected range
+        const isDeadlineInRange = isWithinInterval(deadlineDate, {
+          start: selectedDateRange.from!,
+          end: selectedDateRange.to || selectedDateRange.from!,
+        });
+
+        const isStartDateInRange = startDate
+          ? isWithinInterval(startDate, {
+              start: selectedDateRange.from!,
+              end: selectedDateRange.to || selectedDateRange.from!,
+            })
+          : false;
+
+        const isEndDateInRange = endDate
+          ? isWithinInterval(endDate, {
+              start: selectedDateRange.from!,
+              end: selectedDateRange.to || selectedDateRange.from!,
+            })
+          : false;
+
+        return isDeadlineInRange || isStartDateInRange || isEndDateInRange;
+      });
+    }
+
+    // Apply status filter if selected
+    if (filters?.taskStatusName?.length) {
+      filtered = filtered?.filter((task) =>
+        filters.taskStatusName.includes(task.taskStatus),
+      );
+    }
+
+    return filtered;
+  }, [
+    showOverdue,
+    selectedDateRange,
+    companyTaskData?.data,
+    filters.taskStatusName,
+  ]);
+
+  // Move handleFilterChange above the return statement
+  const handleFilterChange = (col: string, selected: string[]) => {
+    setFilters((prev) => ({
+      ...prev,
+      [col]: selected,
+    }));
+  };
+
+  useEffect(() => {
+    console.log(
+      "Selected Date Range:",
+      filters,
+      "(date range is managed in hook)",
+    );
+  }, [filters]);
+
+  const handleDateRangeChange: HandleDateRangeChange = (range) => {
+    setSelectedDateRange(range);
+    console.log("Selected Date Range:", range);
+  };
+
   return {
     // isLoading,
     companyTaskData,
@@ -140,7 +244,6 @@ export default function useAdminUser() {
     modalData,
     conformDelete,
     handleAdd,
-    // Removed 'control' as it is not declared or initialized
     paginationFilter,
     isUserModalOpen,
     openImportModal,
@@ -153,5 +256,12 @@ export default function useAdminUser() {
     statusOptions,
     handleStatusChange,
     permission,
+    setSelectedDateRange,
+    filters,
+    handleFilterChange,
+    handleDateRangeChange,
+    filteredTaskData,
+    showOverdue,
+    setShowOverdue,
   };
 }

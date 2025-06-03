@@ -417,7 +417,7 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
                                   item,
                                 );
                               }}
-                              className="mt-1 w-full"
+                              className="mt-0 w-full"
                             />
                           </TableCell>
                         ) : (

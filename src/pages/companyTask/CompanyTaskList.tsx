@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyTaskList from "./useCompanyTaskList";
@@ -7,37 +6,30 @@ import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import TableWithDropdown from "@/components/shared/DataTable/DropdownTable/DropdownTable";
-// import DesignationAddFormModal from "./DesignationAddFormModal";
+import DateRangePicker from "@/components/shared/DateRange";
+import { useState } from "react";
+
 export default function CompanyTaskList() {
   const {
     companyTaskData,
-    // isLoading,
     closeDeleteModal,
     setPaginationFilter,
-    // currentStatus,
-    // openModal,
     onDelete,
     modalData,
     conformDelete,
     isDeleteModalOpen,
     paginationFilter,
-    // isUserModalOpen,
     isChildData,
     statusOptions,
     handleStatusChange,
     permission,
+    filters,
+    handleFilterChange,
+    handleDateRangeChange,
+    filteredTaskData,
+    showOverdue,
+    setShowOverdue,
   } = useCompanyTaskList();
-
-  //   const { setBreadcrumbs } = useBreadcrumbs();
-
-  //   useEffect(() => {
-  //     setBreadcrumbs([
-  //       { label: "Admin Tools", href: "/admin-tools" },
-  //       { label: "User" },
-  //     ]);
-  //   }, [setBreadcrumbs]);
-
-  // Column visibility state
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -76,8 +68,8 @@ export default function CompanyTaskList() {
   const navigate = useNavigate();
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
-        <div className="flex mb-5 justify-between items-center">
+      <div className="w-full  overflow-x-auto">
+        <div className="flex mb-3 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             Company Task List
           </h1>
@@ -86,39 +78,89 @@ export default function CompanyTaskList() {
               placeholder="Search..."
               searchValue={paginationFilter?.search || ""}
               setPaginationFilter={setPaginationFilter}
-              className="w-96"
+              className="w-80"
             />
-            {permission.Add && (
-              <Link to="/dashboard/tasks/add">
-                <Button className="py-2 w-fit">Add Company Task</Button>
-              </Link>
-            )}
-
+            <div className="flex gap-4">
+              <div className="z-10 relative">
+                <DateRangePicker onChange={handleDateRangeChange} />
+              </div>
+              <div>
+                <DropdownSearchMenu
+                  label="Status"
+                  options={statusOptions}
+                  selected={filters.taskStatusName || []}
+                  onChange={(selected) => {
+                    handleFilterChange("taskStatusName", selected);
+                    console.log("Selected Status:", selected);
+                  }}
+                  multiSelect
+                />
+              </div>
+            </div>
+            {/* Toggle Overdue Button */}
+            <Button
+              variant={showOverdue ? "destructive" : "outline"}
+              onClick={() => {
+                setShowOverdue((prev: boolean) => {
+                  const next = !prev;
+                  console.log(
+                    "Overdue toggle clicked. Now:",
+                    next ? "Overdue" : "All Tasks",
+                  );
+                  return next;
+                });
+              }}
+              className="py-2 w-fit"
+            >
+              {showOverdue ? "Show All Tasks" : "Show Overdue"}
+            </Button>
             {canToggleColumns && (
               <DropdownSearchMenu
                 columns={columnToggleOptions}
                 onToggleColumn={onToggleColumn}
               />
             )}
+            {permission.Add && (
+              <Link to="/dashboard/tasks/add">
+                <Button className="py-2 w-fit">Add Company Task</Button>
+              </Link>
+            )}
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableWithDropdown
-            tableData={companyTaskData?.data.map(
-              (item: TaskGetPaging, index: number) => ({
-                ...item,
-                srNo: index + 1,
-                status: item.taskStatusId,
-                assigneeNames: item.TaskEmployeeJunction
-                  ? item.TaskEmployeeJunction.map(
-                      (j) => j.Employee?.employeeName,
-                    )
-                      .filter(Boolean)
-                      .join(", ")
-                  : "",
-              }),
-            )}
+            tableData={
+              showOverdue
+                ? filteredTaskData?.map(
+                    (item: TaskGetPaging, index: number) => ({
+                      ...item,
+                      srNo: index + 1,
+                      status: item.taskStatusId,
+                      assigneeNames: item.TaskEmployeeJunction
+                        ? item.TaskEmployeeJunction.map(
+                            (j) => j.Employee?.employeeName,
+                          )
+                            .filter(Boolean)
+                            .join(", ")
+                        : "",
+                    }),
+                  )
+                : companyTaskData?.data.map(
+                    (item: TaskGetPaging, index: number) => ({
+                      ...item,
+                      srNo: index + 1,
+                      status: item.taskStatusId,
+                      assigneeNames: item.TaskEmployeeJunction
+                        ? item.TaskEmployeeJunction.map(
+                            (j) => j.Employee?.employeeName,
+                          )
+                            .filter(Boolean)
+                            .join(", ")
+                        : "",
+                    }),
+                  )
+            }
             columns={visibleColumns}
             primaryKey="taskId"
             onEdit={
