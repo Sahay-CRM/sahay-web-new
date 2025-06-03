@@ -56,21 +56,52 @@ export default function useAddEmployee() {
     totalRecords: 8,
   };
 
-  useEffect(() => {
-    // console.log(datapointApiData, "datapointApiData");
+  const frequencyData = {
+    data: [
+      { frequencyId: "1", frequencyName: "DAILY" },
+      {
+        frequencyId: "2",
+        frequencyName: "WEEKLY",
+      },
+      {
+        frequencyId: "3",
+        frequencyName: "MONTHLY",
+      },
+      {
+        frequencyId: "4",
+        frequencyName: "QUARTERLY",
+      },
+      {
+        frequencyId: "5",
+        frequencyName: "YEARLY",
+      },
+      {
+        frequencyId: "6",
+        frequencyName: "HALFYEARLY",
+      },
+    ],
+    totalPages: 1,
+    currentPage: 1,
+    totalRecords: 5,
+  };
 
+  useEffect(() => {
     if (datapointApiData) {
       const data = datapointApiData;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resetObj: any = {
-        dataPointName: data?.KPIMaster?.KPILabel || data?.dataPointName,
+        KPIName: data?.KPIMaster?.KPILabel || data?.dataPointName,
         KPIMasterId: data?.KPIMasterId,
         dataPointLabel: data?.KPIMaster?.KPIName || data?.dataPointLabel,
-        frequencyId: data?.frequencyType,
+        frequencyId: data?.frequencyType
+          ? frequencyData.data.find(
+              (item) => item.frequencyName === data.frequencyType,
+            )
+          : undefined,
         validationTypeId: data?.validationType
           ? filterOptionsData.data.find(
               (item) => item.validationTypeName === data.validationType,
-            )?.validationTypeId
+            )
           : undefined,
       };
 
@@ -141,7 +172,16 @@ export default function useAddEmployee() {
       } else if (String(validationTypeId) === "7") {
         // Yes/No as value1: "1" for Yes, "0" for No
         const yesnoValue = data[`yesno_${emp.employeeId}`];
-        obj.value1 = yesnoValue === "yes" ? "1" : "0";
+        // yesnoValue can be { value: "1"|"0", label: "Yes"|"No" } or just "1"/"0"/"yes"/"no"
+        let value = yesnoValue;
+        if (typeof yesnoValue === "object" && yesnoValue !== null) {
+          value = yesnoValue.value;
+        }
+        if (value === "1" || value === 1 || value === "yes") {
+          obj.value1 = "1";
+        } else {
+          obj.value1 = "0";
+        }
       } else {
         // Single value
         obj.value1 = data[`goalValue1_${emp.employeeId}`];
@@ -168,6 +208,7 @@ export default function useAddEmployee() {
 
   // Go to GoalValue step directly if hasData is true
   const isUpdateMode = !!datapointApiData?.hasData;
+  const isUpdateModeforFalse = datapointApiData?.hasData === false;
 
   const Kpi = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
@@ -255,35 +296,6 @@ export default function useAddEmployee() {
   };
 
   const Frequency = () => {
-    const frequencyData = {
-      data: [
-        { frequencyId: "1", frequencyName: "DAILY" },
-        {
-          frequencyId: "2",
-          frequencyName: "WEEKLY",
-        },
-        {
-          frequencyId: "3",
-          frequencyName: "MONTHLY",
-        },
-        {
-          frequencyId: "4",
-          frequencyName: "QUARTERLY",
-        },
-        {
-          frequencyId: "5",
-          frequencyName: "YEARLY",
-        },
-        {
-          frequencyId: "6",
-          frequencyName: "HALFYEARLY",
-        },
-      ],
-      totalPages: 1,
-      currentPage: 1,
-      totalRecords: 5,
-    };
-
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
       { key: "frequencyName", label: "Frequency", visible: true },
@@ -603,6 +615,6 @@ export default function useAddEmployee() {
     GoalValue,
     KpiPreview: getValues(),
     trigger,
-    skipToStep: isUpdateMode ? 4 : 0,
+    skipToStep: isUpdateMode ? 4 : isUpdateModeforFalse ? 1 : 0,
   };
 }

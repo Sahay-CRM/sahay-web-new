@@ -6,6 +6,7 @@ import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 
 const AddDatapoint = () => {
+  // You can also compute isUpdateMode and isUpdateModeForFalse here if needed
   const {
     onFinish,
     isModalOpen,
@@ -14,37 +15,29 @@ const AddDatapoint = () => {
     Kpi,
     Frequency,
     ValidationType,
-    // CoreParameter,
     AssignUser,
     GoalValue,
     trigger,
     KpiPreview,
-    skipToStep,
+    skipToStep, // ← this already handles logic inside useAddDatapoint
   } = useAddDatapoint();
 
-  // Build steps array based on showNextStep
   const steps = [
     <Kpi />,
     <Frequency />,
     <ValidationType />,
-    // <CoreParameter/>,
     <AssignUser />,
     <GoalValue />,
   ];
 
-  // If skipToStep > 0, only show steps from skipToStep onwards
   const visibleSteps = skipToStep > 0 ? steps.slice(skipToStep) : steps;
+
   const visibleStepNames =
-    skipToStep > 0
+    skipToStep === 4
       ? ["Goal Value"]
-      : [
-          "Kpi",
-          "Frequency",
-          "Validation Type",
-          // "Core Parameter",
-          "Assign User",
-          "Goal Value",
-        ];
+      : skipToStep === 1
+        ? ["Frequency", "Validation Type", "Assign User", "Goal Value"]
+        : ["Kpi", "Frequency", "Validation Type", "Assign User", "Goal Value"];
 
   const {
     back,
@@ -54,12 +47,9 @@ const AddDatapoint = () => {
     currentStep,
     isFirstStep,
     isLastStep,
-  } = useStepForm(visibleSteps, trigger, skipToStep > 0 ? 0 : 0);
+  } = useStepForm(visibleSteps, trigger);
 
-  const methods = useForm({
-    mode: "onChange",
-  });
-
+  const methods = useForm({ mode: "onChange" });
   return (
     <FormProvider {...methods}>
       <div>
@@ -85,7 +75,7 @@ const AddDatapoint = () => {
         {/* Modal Component */}
         {isModalOpen && (
           <AddDatapointModal
-            modalData={KpiPreview as KPIFormData}
+            modalData={KpiPreview}
             isModalOpen={isModalOpen}
             modalClose={handleClose}
             onSubmit={onSubmit}

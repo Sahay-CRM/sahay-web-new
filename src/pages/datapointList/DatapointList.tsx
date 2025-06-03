@@ -94,7 +94,7 @@ export default function CompanyTaskList() {
             />
 
             {permission.Add && (
-              <Link to="/dashboard/datapoint/add">
+              <Link to="/dashboard/kpi/add">
                 <Button className="py-2 w-fit">Add Kpi</Button>
               </Link>
             )}
@@ -125,7 +125,7 @@ export default function CompanyTaskList() {
             onEdit={
               permission.Edit
                 ? (row) => {
-                    navigate(`/dashboard/datapoint/edit/${row.dataPointId}`);
+                    navigate(`/dashboard/kpi/edit/${row.dataPointId}`);
                   }
                 : undefined
             }
@@ -134,7 +134,7 @@ export default function CompanyTaskList() {
             setPaginationFilter={setPaginationFilter}
             //   isLoading={isLoading}
             permissionKey="users"
-            localStorageId="DatapointList"
+            localStorageId="KpiList"
             moduleKey="DATAPOINT_LIST"
           />
         </div>
