@@ -48,6 +48,7 @@ const AddCompanyProjectList = lazy(
 const AddCompanyDatapoint = lazy(
   () => import("../pages/datapointList/AddDatapointFormModal"),
 );
+const AddGraph = lazy(() => import("../pages/Graph/graph"));
 
 const Brand = lazy(() => import("../pages/Brand"));
 const Product = lazy(() => import("../pages/Product"));
@@ -82,10 +83,11 @@ export default function EmployeeRoutes() {
         <Route path="projects/add" element={<AddCompanyProjectList />} />
         <Route path="projects/edit/:id" element={<AddCompanyProjectList />} />
         <Route path="projects/view/:id" Component={CompanyProjectView} />
-        <Route path="datapoint" Component={DatapointList} />
-        <Route path="datapoint/add" element={<AddCompanyDatapoint />} />
-        <Route path="datapoint/edit/:id" element={<AddCompanyDatapoint />} />
+        <Route path="kpi" Component={DatapointList} />
+        <Route path="kpi/add" element={<AddCompanyDatapoint />} />
+        <Route path="kpi/edit/:id" element={<AddCompanyDatapoint />} />
 
+        <Route path="kpi/graph" element={<AddGraph />} />
         <Route path="healthscore-achieve" Component={Healthscore} />
 
         <Route path="business">

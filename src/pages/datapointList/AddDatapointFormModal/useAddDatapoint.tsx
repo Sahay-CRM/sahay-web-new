@@ -12,6 +12,7 @@ import {
   useGetDatapointById,
   useGetKpiNonSel,
 } from "@/features/api/companyDatapoint";
+import useGetCoreParameter from "@/features/api/coreParameter/useGetCoreParameter";
 export default function useAddEmployee() {
   const { id: companykpimasterId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
@@ -56,21 +57,52 @@ export default function useAddEmployee() {
     totalRecords: 8,
   };
 
-  useEffect(() => {
-    // console.log(datapointApiData, "datapointApiData");
+  const frequencyData = {
+    data: [
+      { frequencyId: "1", frequencyName: "DAILY" },
+      {
+        frequencyId: "2",
+        frequencyName: "WEEKLY",
+      },
+      {
+        frequencyId: "3",
+        frequencyName: "MONTHLY",
+      },
+      {
+        frequencyId: "4",
+        frequencyName: "QUARTERLY",
+      },
+      {
+        frequencyId: "5",
+        frequencyName: "YEARLY",
+      },
+      {
+        frequencyId: "6",
+        frequencyName: "HALFYEARLY",
+      },
+    ],
+    totalPages: 1,
+    currentPage: 1,
+    totalRecords: 5,
+  };
 
+  useEffect(() => {
     if (datapointApiData) {
       const data = datapointApiData;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resetObj: any = {
-        dataPointName: data?.KPIMaster?.KPILabel || data?.dataPointName,
+        KPIName: data?.KPIMaster?.KPILabel || data?.dataPointName,
         KPIMasterId: data?.KPIMasterId,
         dataPointLabel: data?.KPIMaster?.KPIName || data?.dataPointLabel,
-        frequencyId: data?.frequencyType,
+        frequencyId: data?.frequencyType
+          ? frequencyData.data.find(
+              (item) => item.frequencyName === data.frequencyType,
+            )
+          : undefined,
         validationTypeId: data?.validationType
           ? filterOptionsData.data.find(
               (item) => item.validationTypeName === data.validationType,
-            )?.validationTypeId
+            )
           : undefined,
       };
 
@@ -141,7 +173,16 @@ export default function useAddEmployee() {
       } else if (String(validationTypeId) === "7") {
         // Yes/No as value1: "1" for Yes, "0" for No
         const yesnoValue = data[`yesno_${emp.employeeId}`];
-        obj.value1 = yesnoValue === "yes" ? "1" : "0";
+        // yesnoValue can be { value: "1"|"0", label: "Yes"|"No" } or just "1"/"0"/"yes"/"no"
+        let value = yesnoValue;
+        if (typeof yesnoValue === "object" && yesnoValue !== null) {
+          value = yesnoValue.value;
+        }
+        if (value === "1" || value === 1 || value === "yes") {
+          obj.value1 = "1";
+        } else {
+          obj.value1 = "0";
+        }
       } else {
         // Single value
         obj.value1 = data[`goalValue1_${emp.employeeId}`];
@@ -168,6 +209,7 @@ export default function useAddEmployee() {
 
   // Go to GoalValue step directly if hasData is true
   const isUpdateMode = !!datapointApiData?.hasData;
+  const isUpdateModeforFalse = datapointApiData?.hasData === false;
 
   const Kpi = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
@@ -255,35 +297,6 @@ export default function useAddEmployee() {
   };
 
   const Frequency = () => {
-    const frequencyData = {
-      data: [
-        { frequencyId: "1", frequencyName: "DAILY" },
-        {
-          frequencyId: "2",
-          frequencyName: "WEEKLY",
-        },
-        {
-          frequencyId: "3",
-          frequencyName: "MONTHLY",
-        },
-        {
-          frequencyId: "4",
-          frequencyName: "QUARTERLY",
-        },
-        {
-          frequencyId: "5",
-          frequencyName: "YEARLY",
-        },
-        {
-          frequencyId: "6",
-          frequencyName: "HALFYEARLY",
-        },
-      ],
-      totalPages: 1,
-      currentPage: 1,
-      totalRecords: 5,
-    };
-
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
       { key: "frequencyName", label: "Frequency", visible: true },
@@ -425,6 +438,88 @@ export default function useAddEmployee() {
     );
   };
 
+  const CoreParameter = () => {
+    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 10,
+      search: "",
+      //   status: currentStatus, // Use currentStatus state
+    });
+
+    const { data: coreparameterData } = useGetCoreParameter({
+      filter: paginationFilter,
+    });
+    const [columnToggleOptions, setColumnToggleOptions] = useState([
+      { key: "srNo", label: "Sr No", visible: true },
+      { key: "coreParameterName", label: "CoreParameter Name", visible: true },
+    ]);
+
+    // Filter visible columns
+    const visibleColumns = columnToggleOptions.reduce(
+      (acc, col) => {
+        if (col.visible) acc[col.key] = col.label;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+
+    // Toggle column visibility
+    const onToggleColumn = (key: string) => {
+      setColumnToggleOptions((prev) =>
+        prev.map((col) =>
+          col.key === key ? { ...col, visible: !col.visible } : col,
+        ),
+      );
+    };
+    // Check if the number of columns is more than 3
+    const canToggleColumns = columnToggleOptions.length > 3;
+
+    return (
+      <div>
+        <div className=" mt-1 flex items-center justify-between">
+          {canToggleColumns && (
+            <div className="ml-4 ">
+              <DropdownSearchMenu
+                columns={columnToggleOptions}
+                onToggleColumn={onToggleColumn}
+              />
+            </div>
+          )}
+        </div>
+
+        <Controller
+          name="coreParameterId"
+          control={control}
+          rules={{ required: "Please select a CoreParameter" }}
+          render={({ field }) => (
+            <>
+              <div className="mb-4">
+                {errors?.coreParameterId && (
+                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                    {String(errors?.coreParameterId?.message || "")}
+                  </span>
+                )}
+              </div>
+              <TableData
+                {...field}
+                tableData={coreparameterData?.data.map((item, index) => ({
+                  ...item,
+                  srNo: index + 1,
+                }))}
+                columns={visibleColumns}
+                primaryKey="coreParameterId"
+                paginationDetails={coreparameterData}
+                setPaginationFilter={setPaginationFilter}
+                multiSelect={true}
+                selectedValue={field.value}
+                handleChange={field.onChange}
+              />
+            </>
+          )}
+        />
+      </div>
+    );
+  };
   const AssignUser = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
@@ -599,10 +694,11 @@ export default function useAddEmployee() {
     Kpi,
     Frequency,
     ValidationType,
+    CoreParameter,
     AssignUser,
     GoalValue,
     KpiPreview: getValues(),
     trigger,
-    skipToStep: isUpdateMode ? 4 : 0,
+    skipToStep: isUpdateMode ? 4 : isUpdateModeforFalse ? 1 : 0,
   };
 }

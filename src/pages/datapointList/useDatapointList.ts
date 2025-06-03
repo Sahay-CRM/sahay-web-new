@@ -51,10 +51,12 @@ export default function useAdminUser() {
   };
   const handleAdd = () => {
     setModalData({
-      meetingName: "",
-      meetingDescription: "",
-      meetingDateTime: "",
-      joiners: [],
+      dataPointName: "",
+      KPIMasterId: "",
+      dataPointLabel: "",
+      validationType: "",
+      frequencyType: "",
+      assignUser: [],
     });
     setIsUserModalOpen(true);
   };
@@ -66,10 +68,12 @@ export default function useAdminUser() {
 
   const closeDeleteModal = (): void => {
     setModalData({
-      meetingName: "",
-      meetingDescription: "",
-      meetingDateTime: "",
-      joiners: [],
+      dataPointName: "",
+      KPIMasterId: "",
+      dataPointLabel: "",
+      validationType: "",
+      frequencyType: "",
+      assignUser: [],
     }); // Clear modal data
     setIsUserModalOpen(false);
     setIsDeleteModalOpen(false);

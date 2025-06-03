@@ -36,7 +36,7 @@ export default function useAddEmployee() {
   } = useForm({
     mode: "onChange",
   });
-  console.log(getValues());
+  // console.log(getValues());
 
   useEffect(() => {
     if (meetingApiData?.data) {
@@ -393,11 +393,11 @@ export default function useAddEmployee() {
       formData.append("isMaster", "0");
       formData.append("file", file);
 
-      console.log("Uploading file:", {
-        name: file.name,
-        type: file.type,
-        imageType: "MEETING",
-      });
+      // console.log("Uploading file:", {
+      //   name: file.name,
+      //   type: file.type,
+      //   imageType: "MEETING",
+      // });
     });
   };
 
