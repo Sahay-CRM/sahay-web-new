@@ -15,24 +15,36 @@ import { Calendar } from "@/components/ui/calendar";
 interface DateRangePickerProps {
   className?: string;
   onChange?: (range: DateRange | undefined) => void;
+  onApply?: (range: DateRange | undefined) => void;
 }
 
 export default function DateRangePicker({
   className,
   onChange,
+  onApply,
 }: DateRangePickerProps) {
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: new Date(),
   });
+  const [tempDate, setTempDate] = React.useState<DateRange | undefined>({
+    from: new Date(),
+  });
+  const [isOpen, setIsOpen] = React.useState(false);
 
   const handleSelect = (range: DateRange | undefined) => {
-    setDate(range);
-    onChange?.(range); // notify parent
+    setTempDate(range);
+    onChange?.(range); // notify parent for preview purposes
+  };
+
+  const handleApply = () => {
+    setDate(tempDate);
+    onApply?.(tempDate); // trigger API call
+    setIsOpen(false);
   };
 
   return (
     <div className={cn("grid gap-2 bg-white", className)}>
-      <Popover>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
             id="date"
@@ -64,11 +76,23 @@ export default function DateRangePicker({
           <Calendar
             initialFocus
             mode="range"
-            defaultMonth={date?.from}
-            selected={date}
+            defaultMonth={tempDate?.from}
+            selected={tempDate}
             onSelect={handleSelect}
             numberOfMonths={2}
           />
+          <div className="flex justify-end gap-2 mt-3 pt-3 border-t">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleApply} disabled={!tempDate?.from}>
+              Apply
+            </Button>
+          </div>
         </PopoverContent>
       </Popover>
     </div>

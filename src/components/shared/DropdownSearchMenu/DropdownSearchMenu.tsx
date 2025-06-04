@@ -4,11 +4,10 @@ import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
-  // DropdownMenuItem,
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { Columns3 } from "lucide-react";
 
 interface DropdownSearchMenuProps {
   columns?: ColumnToggleOption[];
@@ -29,7 +28,7 @@ interface ColumnToggleOption {
 const DropdownSearchMenu = ({
   columns,
   onToggleColumn,
-  label = "Toggle Visible Columns",
+  label,
   options,
   selected = [],
   onChange,
@@ -50,7 +49,8 @@ const DropdownSearchMenu = ({
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="px-4">
           {label}
-          <PlusCircle className="h-4 w-4 ml-2" />
+          {/* <PlusCircle className="h-4 w-4 ml-2" /> */}
+          <Columns3 className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">

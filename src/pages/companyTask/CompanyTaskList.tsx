@@ -26,9 +26,9 @@ export default function CompanyTaskList() {
     filters,
     handleFilterChange,
     handleDateRangeChange,
-    filteredTaskData,
+    handleDateRangeApply,
     showOverdue,
-    setShowOverdue,
+    handleOverdueToggle,
   } = useCompanyTaskList();
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -44,7 +44,6 @@ export default function CompanyTaskList() {
     { key: "status", label: "Status", visible: true },
   ]);
 
-  // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
       if (col.visible) acc[col.key] = col.label;
@@ -74,42 +73,43 @@ export default function CompanyTaskList() {
             Company Task List
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
+            {permission.Add && (
+              <Link to="/dashboard/tasks/add">
+                <Button className="py-2 w-fit">Add Company Task</Button>
+              </Link>
+            )}
+          </div>
+        </div>
+        <div className="flex justify-between items-center mb-4">
+          <div>
             <SearchInput
               placeholder="Search..."
               searchValue={paginationFilter?.search || ""}
               setPaginationFilter={setPaginationFilter}
               className="w-80"
             />
-            <div className="flex gap-4">
-              <div className="z-10 relative">
-                <DateRangePicker onChange={handleDateRangeChange} />
-              </div>
-              <div>
-                <DropdownSearchMenu
-                  label="Status"
-                  options={statusOptions}
-                  selected={filters.taskStatusName || []}
-                  onChange={(selected) => {
-                    handleFilterChange("taskStatusName", selected);
-                    console.log("Selected Status:", selected);
-                  }}
-                  multiSelect
-                />
-              </div>
+          </div>
+          <div className="flex gap-4">
+            <div className="z-10 relative flex items-center gap-2">
+              <DateRangePicker
+                onChange={handleDateRangeChange}
+                onApply={handleDateRangeApply}
+              />
             </div>
-            {/* Toggle Overdue Button */}
+            <div>
+              <DropdownSearchMenu
+                label="Status"
+                options={statusOptions}
+                selected={filters.taskStatusName || []}
+                onChange={(selected) => {
+                  handleFilterChange("taskStatusName", selected);
+                }}
+                multiSelect
+              />
+            </div>
             <Button
               variant={showOverdue ? "destructive" : "outline"}
-              onClick={() => {
-                setShowOverdue((prev: boolean) => {
-                  const next = !prev;
-                  console.log(
-                    "Overdue toggle clicked. Now:",
-                    next ? "Overdue" : "All Tasks",
-                  );
-                  return next;
-                });
-              }}
+              onClick={handleOverdueToggle}
               className="py-2 w-fit"
             >
               {showOverdue ? "Show All Tasks" : "Show Overdue"}
@@ -120,47 +120,28 @@ export default function CompanyTaskList() {
                 onToggleColumn={onToggleColumn}
               />
             )}
-            {permission.Add && (
-              <Link to="/dashboard/tasks/add">
-                <Button className="py-2 w-fit">Add Company Task</Button>
-              </Link>
-            )}
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableWithDropdown
-            tableData={
-              showOverdue
-                ? filteredTaskData?.map(
-                    (item: TaskGetPaging, index: number) => ({
-                      ...item,
-                      srNo: index + 1,
-                      status: item.taskStatusId,
-                      assigneeNames: item.TaskEmployeeJunction
-                        ? item.TaskEmployeeJunction.map(
-                            (j) => j.Employee?.employeeName,
-                          )
-                            .filter(Boolean)
-                            .join(", ")
-                        : "",
-                    }),
-                  )
-                : companyTaskData?.data.map(
-                    (item: TaskGetPaging, index: number) => ({
-                      ...item,
-                      srNo: index + 1,
-                      status: item.taskStatusId,
-                      assigneeNames: item.TaskEmployeeJunction
-                        ? item.TaskEmployeeJunction.map(
-                            (j) => j.Employee?.employeeName,
-                          )
-                            .filter(Boolean)
-                            .join(", ")
-                        : "",
-                    }),
-                  )
-            }
+            tableData={companyTaskData?.data.map(
+              (item: TaskGetPaging, index: number) => ({
+                ...item,
+                srNo: index + 1,
+                status: item.taskStatusId,
+                taskDeadline: item.taskDeadline
+                  ? new Date(item.taskDeadline).toISOString().split("T")[0]
+                  : "",
+                assigneeNames: item.TaskEmployeeJunction
+                  ? item.TaskEmployeeJunction.map(
+                      (j) => j.Employee?.employeeName,
+                    )
+                      .filter(Boolean)
+                      .join(", ")
+                  : "",
+              }),
+            )}
             columns={visibleColumns}
             primaryKey="taskId"
             onEdit={

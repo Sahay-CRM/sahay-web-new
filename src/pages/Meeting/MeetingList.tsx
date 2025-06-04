@@ -84,7 +84,6 @@ export default function MeetingList() {
                   selected={filters.taskStatusName || []}
                   onChange={(selected) => {
                     handleFilterChange("taskStatusName", selected);
-                    console.log("Selected Status:", selected);
                   }}
                   multiSelect
                 />

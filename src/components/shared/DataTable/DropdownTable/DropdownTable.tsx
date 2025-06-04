@@ -265,7 +265,7 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
           className="flex items-center gap-2 cursor-pointer"
         >
           <RefreshCw className="h-4 w-4" />
-          Reset Column Widths
+          Reset Column
         </Button>
       </div>
       <div
@@ -395,7 +395,7 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
                       >
                         {clm == "status" && showDropdown ? (
                           <TableCell
-                            className={`whitespace-nowrap ${"px-6"} text-red-600`}
+                            className={`break-words overflow-wrap-anywhere ${"px-6"} text-red-600`}
                             style={{
                               width: columnWidths[clm]
                                 ? `${columnWidths[clm]}px`
@@ -403,6 +403,8 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
                               maxWidth: columnWidths[clm]
                                 ? `${columnWidths[clm]}px`
                                 : "150px",
+                              wordBreak: "break-word",
+                              whiteSpace: "normal",
                             }}
                           >
                             <FormSelect
@@ -422,7 +424,7 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
                           </TableCell>
                         ) : (
                           <TableCell
-                            className={`whitespace-nowrap ${
+                            className={`break-words overflow-wrap-anywhere ${
                               clm === "srNo" ? "pl-4 pr-0" : "px-6"
                             }`}
                             style={{
@@ -438,6 +440,8 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
                                   : columnWidths[clm]
                                     ? `${columnWidths[clm]}px`
                                     : "150px",
+                              wordBreak: "break-word",
+                              whiteSpace: "normal",
                             }}
                           >
                             {String(item[clm] || " - ")}
@@ -448,7 +452,7 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
 
                     <TableCell
                       style={{ width: `${FIXED_WIDTHS.action}px` }}
-                      className="text-right whitespace-nowrap"
+                      className="text-right break-words overflow-wrap-anywhere"
                     >
                       <DropdownMenu>
                         {isActionButton && isActionButton(item) && (

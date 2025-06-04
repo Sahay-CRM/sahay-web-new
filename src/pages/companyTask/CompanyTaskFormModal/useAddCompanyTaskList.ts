@@ -9,7 +9,7 @@ import {
   useGetCompanyTaskById,
 } from "@/features/api/companyTask";
 import { getEmployee } from "@/features/api/companyEmployee";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface FormValues {
   taskId?: string; // <-- make it optional
@@ -29,6 +29,8 @@ export const useAddCompanyEmployee = () => {
   const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
   const { id: taskId } = useParams();
   const { data: taskDataById } = useGetCompanyTaskById(taskId || "");
+
+  const navigate = useNavigate();
 
   const methods = useForm<FormValues>({
     defaultValues: {
@@ -226,7 +228,11 @@ export const useAddCompanyEmployee = () => {
           projectId: data.project,
         };
 
-    addUpdateTask(payload);
+    addUpdateTask(payload, {
+      onSuccess: () => {
+        navigate("/dashboard/tasks");
+      },
+    });
     // handle payload
   };
 

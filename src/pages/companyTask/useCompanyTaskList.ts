@@ -4,12 +4,10 @@ import {
 } from "@/features/api/companyTask";
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { isWithinInterval, parseISO, isBefore } from "date-fns";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { useSelector } from "react-redux";
 
-// Accept showOverdue as a parameter
 export default function useCompanyTaskList() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -21,10 +19,21 @@ export default function useCompanyTaskList() {
   const [isImport, setIsImport] = useState(false);
   const permission = useSelector(getUserPermission).TASK;
   const [isChildData, setIsChildData] = useState<string | undefined>();
-  const [selectedDateRange, setSelectedDateRange] = useState<
-    DateRange | undefined
-  >({
-    from: new Date(),
+
+  const [taskDateRange, setTaskDateRange] = useState<{
+    taskStartDate: Date | undefined;
+    taskDeadline: Date | undefined;
+  }>({
+    taskStartDate: new Date(),
+    taskDeadline: new Date(),
+  });
+
+  const [appliedDateRange, setAppliedDateRange] = useState<{
+    taskStartDate: Date | undefined;
+    taskDeadline: Date | undefined;
+  }>({
+    taskStartDate: new Date(),
+    taskDeadline: new Date(),
   });
 
   const [showOverdue, setShowOverdue] = useState(false);
@@ -39,9 +48,40 @@ export default function useCompanyTaskList() {
     status: currentStatus,
   });
 
-  const { data: companyTaskData } = useGetCompanyTask({
-    filter: paginationFilter,
+  const [filters, setFilters] = useState<{ taskStatusName: string[] }>({
+    taskStatusName: [],
   });
+
+  // Helper function to convert date to YYYY-MM-DD format
+  const toLocalISOString = (date: Date | undefined) => {
+    if (!date) return undefined;
+
+    // Use local date methods to avoid timezone conversion
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
+  const { data: companyTaskData, refetch } = useGetCompanyTask({
+    filter: {
+      ...paginationFilter,
+      statusArray: filters.taskStatusName,
+      ...(showOverdue
+        ? {}
+        : {
+            startDate: toLocalISOString(appliedDateRange.taskStartDate),
+            endDate: toLocalISOString(appliedDateRange.taskDeadline),
+          }),
+      overDue: showOverdue,
+    },
+  });
+
+  // Force refetch when overdue state changes
+  useEffect(() => {
+    refetch();
+  }, [showOverdue, refetch]);
 
   const { data: taskStatus } = useGetAllTaskStatus({
     filter: {},
@@ -60,7 +100,7 @@ export default function useCompanyTaskList() {
     setPaginationFilter((prevFilter) => ({
       ...prevFilter,
       status: newStatus,
-      currentPage: 1, // Reset to the first page
+      currentPage: 1,
     }));
   };
 
@@ -68,7 +108,7 @@ export default function useCompanyTaskList() {
   const setPaginationFilterWithStatus = (filter: PaginationFilter) => {
     setPaginationFilter({
       ...filter,
-      status: currentStatus, // Always include the currentStatus
+      status: currentStatus,
     });
   };
   const handleAdd = () => {
@@ -89,7 +129,7 @@ export default function useCompanyTaskList() {
   };
 
   const openModal = useCallback((data: TaskGetPaging) => {
-    setModalData(data); // Set the data for the modal
+    setModalData(data);
     setIsUserModalOpen(true);
   }, []);
 
@@ -106,7 +146,7 @@ export default function useCompanyTaskList() {
       taskTypeId: "",
       taskTypeName: "",
       companyId: "",
-    }); // Clear modal data
+    });
     setIsUserModalOpen(false);
     setIsDeleteModalOpen(false);
     setIsChildData("");
@@ -139,79 +179,6 @@ export default function useCompanyTaskList() {
     updateCompanyTask(payload);
   };
 
-  // Define filters state
-  const [filters, setFilters] = useState<{ taskStatusName: string[] }>({
-    taskStatusName: [],
-  });
-
-  // Move filteredTaskData above filterOptions
-  const filteredTaskData = useMemo(() => {
-    let filtered = companyTaskData?.data;
-
-    // Apply overdue filter if enabled
-    if (showOverdue) {
-      filtered = filtered?.filter((task) => {
-        if (!task.taskDeadline) return false;
-        const deadlineDate = parseISO(task.taskDeadline);
-        // Overdue: deadline is before today and not completed
-        return (
-          isBefore(deadlineDate, new Date()) && task.taskStatus !== "Completed"
-        );
-      });
-    }
-
-    // Apply date range filter if selected
-    if (selectedDateRange?.from) {
-      filtered = filtered?.filter((task) => {
-        if (!task.taskDeadline) return false;
-
-        const deadlineDate = parseISO(task.taskDeadline);
-        const startDate = task.taskStartDate
-          ? parseISO(task.taskStartDate)
-          : null;
-        const endDate = task.taskActualEndDate
-          ? parseISO(task.taskActualEndDate)
-          : null;
-
-        // Check if any of the dates fall within the selected range
-        const isDeadlineInRange = isWithinInterval(deadlineDate, {
-          start: selectedDateRange.from!,
-          end: selectedDateRange.to || selectedDateRange.from!,
-        });
-
-        const isStartDateInRange = startDate
-          ? isWithinInterval(startDate, {
-              start: selectedDateRange.from!,
-              end: selectedDateRange.to || selectedDateRange.from!,
-            })
-          : false;
-
-        const isEndDateInRange = endDate
-          ? isWithinInterval(endDate, {
-              start: selectedDateRange.from!,
-              end: selectedDateRange.to || selectedDateRange.from!,
-            })
-          : false;
-
-        return isDeadlineInRange || isStartDateInRange || isEndDateInRange;
-      });
-    }
-
-    // Apply status filter if selected
-    if (filters?.taskStatusName?.length) {
-      filtered = filtered?.filter((task) =>
-        filters.taskStatusName.includes(task.taskStatus),
-      );
-    }
-
-    return filtered;
-  }, [
-    showOverdue,
-    selectedDateRange,
-    companyTaskData?.data,
-    filters.taskStatusName,
-  ]);
-
   // Move handleFilterChange above the return statement
   const handleFilterChange = (col: string, selected: string[]) => {
     setFilters((prev) => ({
@@ -220,26 +187,73 @@ export default function useCompanyTaskList() {
     }));
   };
 
-  useEffect(() => {
-    console.log(
-      "Selected Date Range:",
-      filters,
-      "(date range is managed in hook)",
-    );
-  }, [filters]);
-
   const handleDateRangeChange: HandleDateRangeChange = (range) => {
-    setSelectedDateRange(range);
-    console.log("Selected Date Range:", range);
+    // Update taskDateRange for preview
+    if (range?.from && !range?.to) {
+      const newTaskDateRange = {
+        taskStartDate: range.from,
+        taskDeadline: range.from,
+      };
+      setTaskDateRange(newTaskDateRange);
+    } else if (range?.from && range?.to) {
+      const newTaskDateRange = {
+        taskStartDate: range.from,
+        taskDeadline: range.to,
+      };
+      setTaskDateRange(newTaskDateRange);
+    } else {
+      const newTaskDateRange = {
+        taskStartDate: undefined,
+        taskDeadline: undefined,
+      };
+      setTaskDateRange(newTaskDateRange);
+    }
+  };
+
+  const handleDateRangeApply = (range: DateRange | undefined) => {
+    // This is called when Apply button is clicked
+    if (range?.from && !range?.to) {
+      const newTaskDateRange = {
+        taskStartDate: range.from,
+        taskDeadline: range.from,
+      };
+      setTaskDateRange(newTaskDateRange);
+      setAppliedDateRange(newTaskDateRange);
+    } else if (range?.from && range?.to) {
+      const newTaskDateRange = {
+        taskStartDate: range.from,
+        taskDeadline: range.to,
+      };
+      setTaskDateRange(newTaskDateRange);
+      setAppliedDateRange(newTaskDateRange);
+    } else {
+      const newTaskDateRange = {
+        taskStartDate: undefined,
+        taskDeadline: undefined,
+      };
+      setTaskDateRange(newTaskDateRange);
+      setAppliedDateRange(newTaskDateRange);
+    }
+
+    // Reset pagination to first page
+    setPaginationFilter((prev) => ({
+      ...prev,
+      currentPage: 1,
+    }));
+  };
+
+  const handleOverdueToggle = () => {
+    const newOverdueState = !showOverdue;
+
+    setShowOverdue(newOverdueState);
   };
 
   return {
-    // isLoading,
     companyTaskData,
     closeDeleteModal,
-    setPaginationFilter: setPaginationFilterWithStatus, // Use the updated function
+    setPaginationFilter: setPaginationFilterWithStatus,
     onStatusChange,
-    currentStatus, // Return currentStatus state
+    currentStatus,
     openModal,
     onDelete,
     modalData,
@@ -257,12 +271,15 @@ export default function useCompanyTaskList() {
     statusOptions,
     handleStatusChange,
     permission,
-    setSelectedDateRange,
     filters,
     handleFilterChange,
     handleDateRangeChange,
-    filteredTaskData,
     showOverdue,
     setShowOverdue,
+    taskDateRange,
+    setTaskDateRange,
+    appliedDateRange,
+    handleDateRangeApply,
+    handleOverdueToggle,
   };
 }
