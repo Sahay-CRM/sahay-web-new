@@ -76,6 +76,7 @@ const Urls = {
   kpiStructureGet: () => `${baseUrl}/company/kpi-data/frame`,
   kpiDataGet: () => `${baseUrl}/company/kpi-data/get`,
   addUpdateKpi: () => `${baseUrl}/company/kpi-data/update`,
+  getKpiVisualize: () => `${baseUrl}/company/kpi-data/get/visual`,
 };
 
 export default Urls;

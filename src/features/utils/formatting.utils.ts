@@ -59,8 +59,8 @@ export function getKpiHeadersFromData(
         };
       case "WEEKLY":
         return {
-          label: `${format(start, "dd MMM")} - ${format(end, "dd MMM")}`,
-          year,
+          label: `${format(start, "dd MMM")}`,
+          year: `${format(end, "dd MMM")}`,
           data: entry,
         };
       case "DAILY":

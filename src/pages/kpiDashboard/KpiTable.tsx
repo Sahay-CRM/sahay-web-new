@@ -60,6 +60,7 @@ type KpiDataCell = {
   startDate: string;
   endDate: string;
   data: string | number | null;
+  value2?: string | number | null; // Added value2 property
 };
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
@@ -149,24 +150,28 @@ export default function KPITable() {
     value1: string | number | null,
     value2?: string | number | null,
   ) {
+    const formatted1 = formatCompactNumber(value1);
+    const formatted2 = formatCompactNumber(value2);
+
     if (validationType === "BETWEEN") {
-      return `${value1 ?? ""} - ${value2 ?? ""}`;
+      return `${formatted1} - ${formatted2}`;
     }
+
     switch (validationType) {
       case "EQUAL_TO":
-        return `= ${value1 ?? ""}`;
+        return `= ${formatted1}`;
       case "GREATER_THAN":
-        return `> ${value1 ?? ""}`;
+        return `> ${formatted1}`;
       case "LESS_THAN":
-        return `< ${value1 ?? ""}`;
+        return `< ${formatted1}`;
       case "GREATER_THAN_OR_EQUAL_TO":
-        return `≥ ${value1 ?? ""}`;
+        return `≥ ${formatted1}`;
       case "LESS_THAN_OR_EQUAL_TO":
-        return `≤ ${value1 ?? ""}`;
+        return `≤ ${formatted1}`;
       case "YES_NO":
         return value1 === "1" ? "✓(Yes)" : "✗(No)";
       default:
-        return value1 ?? "";
+        return formatted1;
     }
   }
 
@@ -316,14 +321,41 @@ export default function KPITable() {
                         "px-3 py-2 bg-gray-100 sticky left-[60px] z-10 w-[140px]",
                       )}
                     >
-                      {kpi?.kpiName}
+                      {/* {kpi?.kpiName} */}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-md font-semibold cursor-default">
+                              {kpi?.kpiName}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <span>{kpi?.kpiLabel}</span>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell className="px-3 py-2 w-[120px] bg-gray-100 sticky left-[200px] z-10">
-                      {getFormattedValue(
-                        kpi.validationType,
-                        assignee?.value1,
-                        assignee?.value2,
-                      )}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="truncate max-w-[100px] inline-block cursor-default">
+                              {getFormattedValue(
+                                kpi.validationType,
+                                assignee?.value1,
+                                assignee?.value2,
+                              )}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <span>
+                              {kpi.validationType === "BETWEEN"
+                                ? `${assignee?.value1 ?? ""} - ${assignee?.value2 ?? ""}`
+                                : (assignee?.value1 ?? "")}
+                            </span>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell className="w-[60px] bg-gray-100 sticky left-[320px] z-10 text-center">
                       <Search
@@ -340,9 +372,9 @@ export default function KPITable() {
                     {headers.map((_, colIdx) => {
                       const cell = dataRow?.[colIdx];
                       const key = `${assignee.dataPointEmpId}/${cell?.startDate}/${cell?.endDate}`;
-                      const validationType = kpi.validationType;
-                      const value1 = assignee?.value1;
-                      const value2 = assignee?.value2;
+                      const validationType = cell.validationType;
+                      const value1 = cell?.value1;
+                      const value2 = cell?.value2;
                       const inputVal =
                         inputValues[key] ?? cell?.data?.toString() ?? "";
                       if (validationType == "YES_NO") {
