@@ -50,6 +50,7 @@ export default function useCompanyTaskList() {
   const statusOptions = (taskStatus?.data ?? []).map((item) => ({
     label: item.taskStatus,
     value: item.taskStatusId,
+    color: item.color || "#2e3195",
   }));
 
   const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {

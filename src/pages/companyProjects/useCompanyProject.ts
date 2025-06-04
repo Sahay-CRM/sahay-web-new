@@ -40,6 +40,7 @@ export default function useAdminUser() {
     ? projectStatusList.data.map((item: ProjectStatusRes) => ({
         label: item.projectStatus,
         value: item.projectStatusId,
+        color: item.color || "#2e3195",
       }))
     : [];
   const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -105,11 +106,9 @@ export default function useAdminUser() {
     setIsImport(false);
   }, []);
 
-  const handleStatusChange = (data, row) => {
+  const handleStatusChange = (data: string, row: CompanyProjectDataProps) => {
     const payload = {
-      projectStatusId: {
-        projectStatusId: data,
-      },
+      projectStatusId: data,
       projectId: row?.projectId,
     };
     addProject(payload, {
@@ -120,18 +119,16 @@ export default function useAdminUser() {
   };
 
   return {
-    // isLoading,
     projectlistdata,
     closeDeleteModal,
-    setPaginationFilter: setPaginationFilterWithStatus, // Use the updated function
+    setPaginationFilter: setPaginationFilterWithStatus,
     onStatusChange,
-    currentStatus, // Return currentStatus state
+    currentStatus,
     openModal,
     onDelete,
     modalData,
     conformDelete,
     handleAdd,
-    // Removed 'control' as it is not declared or initialized
     paginationFilter,
     isUserModalOpen,
     openImportModal,

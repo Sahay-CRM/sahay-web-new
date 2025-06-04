@@ -240,14 +240,31 @@ const TableData = <T extends Record<string, unknown>>({
     const selectedItems = Array.isArray(selectedValue) ? selectedValue : [];
 
     if (multiSelect) {
-      const updatedSelection = isChecked
-        ? [...selectedItems, item]
-        : selectedItems.filter(
-            (selected) => selected[primaryKey] !== item[primaryKey],
-          );
-      handleChange?.(updatedSelection);
+      if (isChecked) {
+        // Add item to selection
+        const updatedSelection = [...selectedItems, item];
+        handleChange?.(updatedSelection);
+      } else {
+        // Remove item from selection - handle both string IDs and objects
+        const updatedSelection = selectedItems.filter((selected) => {
+          // Handle case where selected might be a string ID or an object
+          const selectedId =
+            typeof selected === "object" && selected !== null
+              ? selected[primaryKey]
+              : selected;
+          const itemId = item[primaryKey];
+          return selectedId !== itemId;
+        });
+        handleChange?.(updatedSelection);
+      }
     } else {
-      if (isChecked) handleChange?.(item);
+      if (isChecked) {
+        handleChange?.(item);
+      } else {
+        // For single select, clear selection when unchecked
+        // Use undefined instead of null for better type compatibility
+        handleChange?.([] as T[]);
+      }
     }
   };
 
@@ -348,10 +365,16 @@ const TableData = <T extends Record<string, unknown>>({
                           }
                           checked={
                             multiSelect
-                              ? (selectedValue as T[]).some(
-                                  (selected) =>
-                                    selected[primaryKey] === item[primaryKey],
-                                )
+                              ? Array.isArray(selectedValue) &&
+                                selectedValue.some((selected) => {
+                                  // Handle both ID strings and objects
+                                  const selectedId =
+                                    typeof selected === "object" &&
+                                    selected !== null
+                                      ? selected[primaryKey]
+                                      : selected;
+                                  return selectedId === item[primaryKey];
+                                })
                               : (selectedValue as T)?.[primaryKey] ===
                                 item[primaryKey]
                           }

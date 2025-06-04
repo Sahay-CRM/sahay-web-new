@@ -1,31 +1,37 @@
 import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Card } from "@/components/ui/card";
-import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import { getEmployee } from "@/features/api/companyEmployee";
 import {
-  getAllSubParameter,
   useAddUpdateCompanyProject,
   useGetCompanyProjectById,
   useGetCorparameter,
   useGetProjectStatus,
+  useGetSubParaFilter,
 } from "@/features/api/companyProject";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
+import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 
 export default function useAddProject() {
   const { id: companyProjectId } = useParams();
   const [searchParams] = useSearchParams();
   const source = searchParams.get("source") || "";
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [hasInitializedData, setHasInitializedData] = useState(false);
 
   const { mutate: addProject } = useAddUpdateCompanyProject();
   const { data: projectApiData } = useGetCompanyProjectById(
     companyProjectId || "",
   );
   const navigate = useNavigate();
+  const methods = useForm({
+    mode: "onChange",
+  });
+
   const {
     register,
     formState: { errors },
@@ -35,26 +41,79 @@ export default function useAddProject() {
     reset,
     getValues,
     watch,
-  } = useForm({
-    mode: "onChange",
-  });
+    setValue,
+  } = methods;
 
   useEffect(() => {
     if (projectApiData?.data) {
-      const data = projectApiData?.data;
+      setIsInitialLoad(true);
+      setHasInitializedData(false);
       reset({
-        projectName: data.projectName || "",
-        projectDescription: data.projectDescription || "",
-        projectDeadline: data.projectDeadline
-          ? format(parseISO(data?.projectDeadline), "yyyy-MM-dd")
+        projectName: projectApiData?.data.projectName || "",
+        projectDescription: projectApiData?.data.projectDescription || "",
+        projectDeadline: projectApiData?.data.projectDeadline
+          ? format(
+              parseISO(projectApiData?.data?.projectDeadline),
+              "yyyy-MM-dd",
+            )
           : "",
-        projectStatusId: data.projectStatus || "",
-        subParameterId: data.ProjectParameters?.subParameters || undefined,
-        coreParameterId: data.ProjectParameters?.coreParameter || undefined,
-        employeeId: data.ProjectEmployees || undefined,
+        projectStatusId: projectApiData?.data.projectStatus || "",
+        subParameterId:
+          projectApiData?.data.ProjectParameters?.subParameters?.map(
+            (item) => item.subParameterId,
+          ) || [],
+        coreParameterId:
+          projectApiData?.data.ProjectParameters?.coreParameter || undefined,
+        employeeId:
+          projectApiData?.data?.ProjectEmployees?.map(
+            (item) => item.employeeId,
+          ) || [],
       });
+      // Set flags after form data is set
+      setTimeout(() => {
+        setIsInitialLoad(false);
+        setHasInitializedData(true);
+      }, 200);
+    } else {
+      setIsInitialLoad(false);
+      setHasInitializedData(false);
     }
   }, [projectApiData, reset]);
+
+  // Watch for core parameter changes and clear dependent fields
+  const watchedCoreParameter = watch("coreParameterId");
+  const [previousCoreParameterId, setPreviousCoreParameterId] = useState<
+    string | null
+  >(null);
+
+  useEffect(() => {
+    const currentCoreParameterId = watchedCoreParameter?.coreParameterId;
+
+    // Only clear sub parameters if:
+    // 1. Not in initial load
+    // 2. Has initialized data (existing project)
+    // 3. Core parameter actually changed from previous value
+    if (
+      !isInitialLoad &&
+      hasInitializedData &&
+      currentCoreParameterId &&
+      previousCoreParameterId &&
+      currentCoreParameterId !== previousCoreParameterId
+    ) {
+      setValue("subParameterId", []);
+    }
+
+    // Update previous core parameter ID
+    if (currentCoreParameterId) {
+      setPreviousCoreParameterId(currentCoreParameterId);
+    }
+  }, [
+    watchedCoreParameter,
+    setValue,
+    isInitialLoad,
+    hasInitializedData,
+    previousCoreParameterId,
+  ]);
 
   const handleClose = () => setModalOpen(false);
 
@@ -66,21 +125,35 @@ export default function useAddProject() {
   }, [trigger]);
 
   const onSubmit = handleSubmit(async (data) => {
-    const payload = {
-      ...data,
-      projectId: companyProjectId,
-    };
+    const payload = companyProjectId
+      ? {
+          projectId: companyProjectId || "",
+          projectName: data.projectName,
+          projectDescription: data.projectDescription,
+          projectDeadline: data.projectDeadline,
+          projectStatusId: data.projectStatusId.projectStatusId,
+          subParameterIds: data.subParameterId,
+          otherProjectEmployees: data.employeeId,
+        }
+      : {
+          projectName: data.projectName,
+          projectDescription: data.projectDescription,
+          projectDeadline: data.projectDeadline,
+          projectStatusId: data.projectStatusId.projectStatusId,
+          subParameterIds: data.subParameterId,
+          otherProjectEmployees: data.employeeId,
+        };
+
     addProject(payload, {
       onSuccess: () => {
         handleModalClose();
+        if (source == "view") {
+          navigate(`/dashboard/projects/view/${companyProjectId}`);
+        } else {
+          navigate("/dashboard/projects");
+        }
       },
     });
-
-    if (source == "view") {
-      navigate(`/dashboard/projects/view/${companyProjectId}`);
-    } else {
-      navigate("/dashboard/projects");
-    }
   });
 
   const handleModalClose = () => {
@@ -297,7 +370,15 @@ export default function useAddProject() {
       search: "",
     });
 
-    const { data: subparameter } = getAllSubParameter({
+    // Reset pagination when core parameter changes
+    useEffect(() => {
+      setPaginationFilter((prev) => ({
+        ...prev,
+        currentPage: 1,
+      }));
+    }, [coreParameter?.coreParameterId]);
+
+    const { data: subparameter } = useGetSubParaFilter({
       filter: {
         ...paginationFilter,
         coreParameterId: coreParameter?.coreParameterId,
@@ -327,6 +408,47 @@ export default function useAddProject() {
     };
     // Check if the number of columns is more than 3
     const canToggleColumns = columnToggleOptions.length > 3;
+
+    // Helper to ensure selectedValue is always an array of IDs
+    const getSelectedSubParameterIds = (value: unknown) => {
+      if (!Array.isArray(value)) return [];
+      return value
+        .map((item: string | { subParameterId?: string }) => {
+          // Handle both string IDs and objects with subParameterId
+          if (typeof item === "string") return item;
+          if (
+            typeof item === "object" &&
+            item !== null &&
+            "subParameterId" in item &&
+            typeof item.subParameterId === "string"
+          ) {
+            return item.subParameterId;
+          }
+          return item;
+        })
+        .filter(Boolean); // Remove any undefined/null values
+    };
+
+    // Custom onChange handler to normalize data
+    const handleSubParameterChange = (
+      selectedItems: (string | { subParameterId?: string })[],
+      onChange: (value: string[]) => void,
+    ) => {
+      // Always store as array of string IDs, filter out undefined
+      const normalizedIds = selectedItems
+        .map((item) => (typeof item === "string" ? item : item.subParameterId))
+        .filter((id): id is string => typeof id === "string");
+      onChange(normalizedIds);
+    };
+
+    // Don't render the table if no core parameter is selected
+    if (!coreParameter?.coreParameterId) {
+      return (
+        <div className="text-center py-8 text-gray-500">
+          Please select a core parameter first
+        </div>
+      );
+    }
 
     return (
       <div>
@@ -366,8 +488,11 @@ export default function useAddProject() {
                 paginationDetails={subparameter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={true}
-                selectedValue={field.value}
-                handleChange={field.onChange}
+                selectedValue={getSelectedSubParameterIds(field.value)}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                handleChange={(selectedItems: any[]) =>
+                  handleSubParameterChange(selectedItems, field.onChange)
+                }
                 // permissionKey="--"
               />
             </>
@@ -413,6 +538,37 @@ export default function useAddProject() {
     // Check if the number of columns is more than 3
     const canToggleColumns = columnToggleOptions.length > 3;
 
+    // Helper to ensure selectedValue is always an array of IDs for employees
+    const getSelectedEmployeeIds = (value: unknown): string[] => {
+      if (!Array.isArray(value)) return [];
+      return value
+        .map((item) => {
+          // Handle both string IDs and objects with employeeId
+          if (typeof item === "string") return item;
+          if (
+            typeof item === "object" &&
+            item !== null &&
+            "employeeId" in item
+          ) {
+            return (item as { employeeId: string }).employeeId;
+          }
+          return item;
+        })
+        .filter((id): id is string => typeof id === "string");
+    };
+
+    // Custom onChange handler to normalize data
+    const handleEmployeeChange = (
+      selectedItems: (string | { employeeId?: string })[],
+      onChange: (value: string[]) => void,
+    ) => {
+      // Always store as array of string IDs, filter out undefined
+      const normalizedIds = selectedItems
+        .map((item) => (typeof item === "string" ? item : item.employeeId))
+        .filter((id): id is string => typeof id === "string");
+      onChange(normalizedIds);
+    };
+
     return (
       <div>
         <div className=" mt-1 flex items-center justify-between">
@@ -450,9 +606,11 @@ export default function useAddProject() {
                 paginationDetails={employeedata}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={true}
-                selectedValue={field.value}
-                handleChange={field.onChange}
-
+                selectedValue={getSelectedEmployeeIds(field.value)}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                handleChange={(selectedItems: any[]) =>
+                  handleEmployeeChange(selectedItems, field.onChange)
+                }
                 // permissionKey="--"
               />
             </>
@@ -473,7 +631,8 @@ export default function useAddProject() {
     SubParameter,
     Employees,
     meetingPreview: getValues(),
-    // employeeId,
     trigger,
+    setValue,
+    methods, // Return form methods for FormProvider
   };
 }

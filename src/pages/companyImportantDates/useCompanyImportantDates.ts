@@ -40,7 +40,7 @@ export default function useCalendar() {
             ? end
             : start,
         eventId: item.taskId || "", // ensure string
-        bgColor: "#359241",
+        bgColor: item.color || "#2e3195",
         textColor: "#ffffff",
         eventType: "task",
       };
@@ -64,7 +64,7 @@ export default function useCalendar() {
             ? eventDate
             : new Date(),
         eventId: item.meetingId || "", // ensure string
-        bgColor: "#359241",
+        bgColor: item.color || "#2e3195",
         textColor: "#ffffff",
         eventType: "meeting",
       };

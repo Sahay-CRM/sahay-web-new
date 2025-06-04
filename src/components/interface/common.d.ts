@@ -336,17 +336,35 @@ interface CompanyMeetingTypeDataProps {
 }
 
 interface CompanyProjectDataProps {
-  srNo: number;
-  projectId: string;
+  projectId?: string;
   projectName: string;
   projectDescription: string;
-  projectActualEndDate: string;
+  projectActualEndDate?: string | null;
   projectDeadline: string;
-  employeeId: string;
-  ProjectSubParameterJunction: ProjectSubParameterJunctionItem[];
+  employeeId?: string;
+  ProjectParameters?: ProjectParameters;
+  ProjectEmployees?: Employee[];
+  ProjectTasks?: Task[];
+  createdBy?: CreatedBy;
   projectStatusId: string;
-  projectStatus: ProjectStatusRes;
-  subParameterId: SubParameter[];
+  projectStatus?: ProjectStatus;
+  otherProjectEmployees?: string[];
+}
+
+interface ProjectParameters {
+  coreParameter: CoreParameter;
+  subParameters: SubParameter[];
+}
+
+interface CoreParameter {
+  coreParameterId: string;
+  coreParameterName: string;
+}
+
+interface SubParameter {
+  projectSubParameterId: string;
+  subParameterId: string;
+  subParameterName: string;
 }
 
 interface ProjectSubParameterJunctionItem {
@@ -358,6 +376,7 @@ interface ProjectStatusRes {
   projectStatus: string;
   projectStatusOrder: number;
   winLostProject: null;
+  color?: string;
 }
 
 interface SubParameter {
@@ -534,6 +553,7 @@ interface TaskStatusAllRes {
   taskStatus: string;
   taskStatusOrder: number;
   winLostTask: string | null;
+  color?: string;
 }
 
 interface TaskTypeData {
@@ -581,6 +601,7 @@ interface TaskGetPaging {
   projectDetails?: TaskProject;
   taskDeadline?: string;
   taskStartDate?: string;
+  color?: string;
 }
 
 interface TaskProject {
@@ -686,6 +707,7 @@ interface Meeting {
   isDelete: boolean;
   createdDatetime: string;
   updatedDatetime: string;
+  color?: string;
 }
 
 interface TaskComment {

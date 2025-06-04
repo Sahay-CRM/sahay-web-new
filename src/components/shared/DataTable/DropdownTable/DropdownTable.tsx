@@ -395,7 +395,7 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
                       >
                         {clm == "status" && showDropdown ? (
                           <TableCell
-                            className={`whitespace-nowrap ${"px-6"}`}
+                            className={`whitespace-nowrap ${"px-6"} text-red-600`}
                             style={{
                               width: columnWidths[clm]
                                 ? `${columnWidths[clm]}px`

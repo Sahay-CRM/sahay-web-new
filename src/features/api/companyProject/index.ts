@@ -8,3 +8,5 @@ export { default as useGetAllProjectStatus } from "./useGetAllProjectStatus";
 export { default as useGetCompanyProjectById } from "./useGetCompanyProjectById";
 
 export { default as useGetCompanyProjectAll } from "./useGetCompanyProjectAll";
+
+export { default as useGetSubParaFilter } from "./useGetSubParaFilter";

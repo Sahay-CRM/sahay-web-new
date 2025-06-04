@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider } from "react-hook-form";
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import useAddProject from "./useAddProject";
@@ -18,6 +18,7 @@ const AddProject = () => {
     Employees,
     trigger,
     meetingPreview,
+    methods, // Get form methods from the hook
   } = useAddProject();
 
   // Build steps array based on showNextStep
@@ -46,10 +47,6 @@ const AddProject = () => {
     "Sub Parameter",
     "Employees",
   ];
-
-  const methods = useForm({
-    mode: "onChange",
-  });
 
   return (
     <FormProvider {...methods}>

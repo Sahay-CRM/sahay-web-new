@@ -119,6 +119,8 @@ const Urls = {
   gelAllProduct: () => `${baseUrl}/company/product/get-all`,
 
   uploadDoc: () => `${baseUrl}/file/upload-docs`,
+
+  subParameterByFilter: () => `${baseUrl}/sub-param/get-by-level`,
 };
 
 export default Urls;
