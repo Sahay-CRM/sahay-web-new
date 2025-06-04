@@ -1,50 +1,72 @@
 import ModalData from "@/components/shared/Modal/ModalData";
+
 interface KPIFormDataProp {
   KPIName?: string;
+
   KPIMasterId?: {
+    srNo?: number;
     KPIName?: string;
-  };
-  KPIMaster?: {
-    KPIName?: string;
+    KPIMasterId?: string;
     KPILabel?: string;
+    industryName?: string | null;
+    KPINames?: string;
   };
-  KPIMasterId?: string;
-  dataPointName?: string;
-  dataPointLabel?: string;
-  frequencyId?: {
-    frequencyName?: string;
+
+  frequencyId?: string | { frequencyName: string };
+  validationTypeId?:
+    | string
+    | { validationTypeId: string; validationTypeName: string };
+  unit?: string;
+
+  coreParameterId?: {
+    srNo?: number;
+    coreParameterId: string;
+    coreParameterName: string;
+    departmentId: string;
+    departmentName: string;
   };
-  validationTypeId?: {
-    validationTypeId?: string;
-    validationTypeName?: string;
-  };
-  employeeId?: {
-    employeeId: string | number;
-    employeeName: string;
+
+  productId?: {
+    srNo: number;
+    productId: string;
+    productName: string;
+    productDescription?: string;
+    brandId?: string;
+    brandName?: string;
   }[];
-  // Dynamic keys for goal values
+
+  employeeId?: {
+    srNo?: number;
+    employeeId: string;
+    employeeName: string;
+    employeeEmail?: string;
+    employeeMobile?: string;
+    employeeType?: string;
+    departmentName?: string | null;
+    designationName?: string | null;
+  }[];
+
   [key: `goalValue1_${string}`]: string | number | undefined;
   [key: `goalValue2_${string}`]: string | number | undefined;
 }
 
 interface DatapointModalProps {
-  modalData: KPIFormDataProp; // Use the correct type if available, e.g., CompanyMeetingDataProps
+  modalData: KPIFormDataProp;
   isModalOpen: boolean;
   modalClose: () => void;
   onSubmit: () => void;
 }
+
 const AddDatapointModal: React.FC<DatapointModalProps> = ({
   modalData,
   isModalOpen,
   modalClose,
   onSubmit,
 }) => {
-  console.log(modalData);
-
-  // Helper to check if validation type is YES_NO
   const isYesNo =
-    modalData?.validationTypeId?.validationTypeName === "YES_NO" ||
-    modalData?.validationTypeId?.validationTypeId === "7";
+    typeof modalData?.validationTypeId === "object" &&
+    (modalData?.validationTypeId?.validationTypeName === "YES_NO" ||
+      modalData?.validationTypeId?.validationTypeId === "7");
 
   return (
     <div>
@@ -67,22 +89,49 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
       >
         <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-700">
           <div>
-            <span className="font-medium text-primary">KPI Name: </span>
+            <span className="font-medium text-primary">KPI Name : </span>
             {modalData?.KPIMasterId?.KPIName || modalData?.KPIName || "-"}
           </div>
 
           <div>
-            <span className="font-medium text-primary"></span>
-            Frequency: {modalData?.frequencyId?.frequencyName || "-"}
+            <span className="font-medium text-primary">Frequency : </span>
+            {typeof modalData?.frequencyId === "string"
+              ? modalData.frequencyId
+              : modalData?.frequencyId?.frequencyName || "-"}
           </div>
           <div>
-            <span className="font-medium text-primary">Validation Type: </span>
-            {modalData?.validationTypeId?.validationTypeName || "-"}
+            <span className="font-medium text-primary">Unit Type : </span>
+            {typeof modalData?.unit === "string"
+              ? modalData.unit
+              : modalData?.unit || "-"}
           </div>
+
           <div>
-            <span className="font-medium text-primary">
-              Assigned Users : <br />
-            </span>
+            <span className="font-medium text-primary">Validation Type : </span>
+            {typeof modalData?.validationTypeId === "string"
+              ? modalData.validationTypeId
+              : modalData?.validationTypeId?.validationTypeName || "-"}
+          </div>
+
+          {modalData.coreParameterId?.coreParameterName && (
+            <div>
+              <span className="font-medium text-primary">
+                Core Parameter :{" "}
+              </span>
+              {modalData.coreParameterId.coreParameterName}
+            </div>
+          )}
+
+          {Array.isArray(modalData.productId) &&
+            modalData.productId.length > 0 && (
+              <div className="col-span-2">
+                <span className="font-medium text-primary">Products : </span>
+                {modalData.productId.map((p) => p.productName).join(", ")}
+              </div>
+            )}
+
+          <div className="col-span-2">
+            <span className="font-medium text-primary">Assigned Users : </span>
             {Array.isArray(modalData.employeeId)
               ? modalData.employeeId
                   .map((user) => user?.employeeName)
@@ -90,15 +139,16 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
                   .join(", ")
               : "-"}
           </div>
-          <div>
-            <span className="font-medium text-primary">Goal Values:</span>
+
+          <div className="col-span-2">
+            <span className="font-medium text-primary">Goal Values :</span>
             <div className="mt-2 space-y-2">
               {Array.isArray(modalData.employeeId) &&
                 modalData.employeeId.map((employee) => {
                   const empId = employee.employeeId;
-                  const goal1 = modalData[`goalValue1_${empId}`] || "-";
-                  const goal2 = modalData[`goalValue2_${empId}`] || "-";
-                  // For YES_NO, show Yes/No instead of 1/0
+                  const goal1 = modalData[`goalValue1_${empId}`] ?? "-";
+                  const goal2 = modalData[`goalValue2_${empId}`] ?? "-";
+
                   const yesNoValue =
                     isYesNo && (goal1 === "1" || goal1 === 1)
                       ? "Yes"
@@ -111,12 +161,18 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
                       <div>
                         <strong>{employee.employeeName}</strong>
                       </div>
-                      <div className="font-medium text-primary">
-                        Goal Value 1: {isYesNo ? yesNoValue : goal1}
+                      <div>
+                        <span className="font-medium text-primary">
+                          Goal Value 1:{" "}
+                        </span>
+                        {isYesNo ? yesNoValue : goal1}
                       </div>
                       {!isYesNo && (
-                        <div className="font-medium text-primary">
-                          Goal Value 2: {goal2}{" "}
+                        <div>
+                          <span className="font-medium text-primary">
+                            Goal Value 2:{" "}
+                          </span>
+                          {goal2}
                         </div>
                       )}
                     </div>

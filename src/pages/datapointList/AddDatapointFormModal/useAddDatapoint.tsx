@@ -13,6 +13,8 @@ import {
   useGetKpiNonSel,
 } from "@/features/api/companyDatapoint";
 import useGetCoreParameter from "@/features/api/coreParameter/useGetCoreParameter";
+import { useGetProduct } from "@/features/api/Product";
+import { Card } from "@/components/ui/card";
 export default function useAddEmployee() {
   const { id: companykpimasterId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
@@ -36,56 +38,6 @@ export default function useAddEmployee() {
     mode: "onChange",
   });
 
-  const filterOptionsData = {
-    data: [
-      { validationTypeId: "1", validationTypeName: "EQUAL_TO" },
-      {
-        validationTypeId: "2",
-        validationTypeName: "GREATER_THAN_OR_EQUAL_TO",
-      },
-      {
-        validationTypeId: "3",
-        validationTypeName: "GREATER_THAN",
-      },
-      { validationTypeId: "4", validationTypeName: "LESS_THAN" },
-      { validationTypeId: "5", validationTypeName: "LESS_THAN_OR_EQUAL_TO" },
-      { validationTypeId: "6", validationTypeName: "BETWEEN" },
-      { validationTypeId: "7", validationTypeName: "YES_NO" },
-    ],
-    totalPages: 1,
-    currentPage: 1,
-    totalRecords: 8,
-  };
-
-  const frequencyData = {
-    data: [
-      { frequencyId: "1", frequencyName: "DAILY" },
-      {
-        frequencyId: "2",
-        frequencyName: "WEEKLY",
-      },
-      {
-        frequencyId: "3",
-        frequencyName: "MONTHLY",
-      },
-      {
-        frequencyId: "4",
-        frequencyName: "QUARTERLY",
-      },
-      {
-        frequencyId: "5",
-        frequencyName: "YEARLY",
-      },
-      {
-        frequencyId: "6",
-        frequencyName: "HALFYEARLY",
-      },
-    ],
-    totalPages: 1,
-    currentPage: 1,
-    totalRecords: 5,
-  };
-
   useEffect(() => {
     if (datapointApiData) {
       const data = datapointApiData;
@@ -94,18 +46,21 @@ export default function useAddEmployee() {
         KPIName: data?.KPIMaster?.KPILabel || data?.dataPointName,
         KPIMasterId: data?.KPIMasterId,
         dataPointLabel: data?.KPIMaster?.KPIName || data?.dataPointLabel,
-        frequencyId: data?.frequencyType
-          ? frequencyData.data.find(
-              (item) => item.frequencyName === data.frequencyType,
-            )
-          : undefined,
-        validationTypeId: data?.validationType
-          ? filterOptionsData.data.find(
-              (item) => item.validationTypeName === data.validationType,
-            )
-          : undefined,
+        coreParameterId: data?.coreParameter,
+        // frequencyId and validationTypeId now expect string values
+        frequencyId: data?.frequencyType || "",
+        unit: data?.unit || "",
+        validationTypeId: data?.validationType || "",
       };
 
+      if (Array.isArray(data?.DataPointProductJunction)) {
+        resetObj.productId = data.DataPointProductJunction.map(
+          (u: ProductData) => ({
+            productId: u.productId,
+            productName: u.productName,
+          }),
+        );
+      }
       if (Array.isArray(data?.dataPointEmployeeJunction)) {
         resetObj.employeeId = data.dataPointEmployeeJunction.map(
           (u: DataPointEmployee) => ({
@@ -118,7 +73,6 @@ export default function useAddEmployee() {
           resetObj[`yesno_${u.employeeId}`] = u.value1;
           resetObj[`goalValue2_${u.employeeId}`] = u.value2;
         });
-        // If validationType is YES_NO, set yesno field based on value1
         const isYesNo =
           (resetObj.validationType &&
             (resetObj.validationType.validationType === "YES_NO" ||
@@ -127,10 +81,11 @@ export default function useAddEmployee() {
         if (isYesNo) {
           datapointApiData.dataPointEmployeeJunction.forEach(
             (u: DataPointEmployee) => {
-              const yesNoValue = u.value1 === "1" ? "yes" : "no";
+              const yesNoValue = u.value1 === "1" ? "1" : "0";
+
               resetObj[`yesno_${u.employeeId}`] = {
                 value: yesNoValue,
-                label: yesNoValue === "yes" ? "Yes" : "No",
+                label: yesNoValue === "1" ? "Yes" : "No",
               };
             },
           );
@@ -156,24 +111,36 @@ export default function useAddEmployee() {
     if (!Array.isArray(selectedEmployees)) {
       selectedEmployees = selectedEmployees ? [selectedEmployees] : [];
     }
-
-    // Determine validation type for value keys
-    const validationTypeId =
-      data?.validationTypeId?.validationTypeId ?? data?.validationTypeId;
+    // Prepare productIds as array of strings, or blank array if not selected
+    let productIds: string[] = [];
+    if (Array.isArray(data.productId) && data.productId.length > 0) {
+      productIds = data.productId.map((p: ProductData) =>
+        typeof p === "object" && p !== null
+          ? String(p.productId ?? p.productId ?? "")
+          : String(p ?? ""),
+      );
+    }
+    // frequencyId and validationTypeId are now string values
+    const frequencyValue = data.frequencyId;
+    const unit = data.unit;
+    const validationTypeValue = data.validationTypeId;
 
     const assignUser = selectedEmployees.map((emp: DataPointEmployee) => {
       const obj: DataPointEmployee = {
         employeeId: emp.employeeId,
         employeeName: emp.employeeName,
       };
-      if (String(validationTypeId) === "6") {
-        // Between: value1 and value2
+      if (
+        String(validationTypeValue) === "6" ||
+        validationTypeValue === "BETWEEN"
+      ) {
         obj.value1 = data[`goalValue1_${emp.employeeId}`];
         obj.value2 = data[`goalValue2_${emp.employeeId}`];
-      } else if (String(validationTypeId) === "7") {
-        // Yes/No as value1: "1" for Yes, "0" for No
+      } else if (
+        String(validationTypeValue) === "7" ||
+        validationTypeValue === "YES_NO"
+      ) {
         const yesnoValue = data[`yesno_${emp.employeeId}`];
-        // yesnoValue can be { value: "1"|"0", label: "Yes"|"No" } or just "1"/"0"/"yes"/"no"
         let value = yesnoValue;
         if (typeof yesnoValue === "object" && yesnoValue !== null) {
           value = yesnoValue.value;
@@ -184,7 +151,6 @@ export default function useAddEmployee() {
           obj.value1 = "0";
         }
       } else {
-        // Single value
         obj.value1 = data[`goalValue1_${emp.employeeId}`];
       }
       return obj;
@@ -193,13 +159,17 @@ export default function useAddEmployee() {
       ...data,
       companykpimasterId: companykpimasterId || "",
       assignUser,
+      productIds, // will be [] if not selected
+      frequencyType: frequencyValue,
+      validationType: validationTypeValue,
+      unit: unit,
     };
     addDatapoint(payload, {
       onSuccess: () => {
         handleModalClose();
       },
     });
-    navigate("/dashboard/datapoint");
+    navigate("/dashboard/kpi");
   });
 
   const handleModalClose = () => {
@@ -297,143 +267,77 @@ export default function useAddEmployee() {
   };
 
   const Frequency = () => {
-    const [columnToggleOptions, setColumnToggleOptions] = useState([
-      { key: "srNo", label: "Sr No", visible: true },
-      { key: "frequencyName", label: "Frequency", visible: true },
-    ]);
-
-    const visibleColumns = columnToggleOptions.reduce(
-      (acc, col) => {
-        if (col.visible) acc[col.key] = col.label;
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-
-    const onToggleColumn = (key: string) => {
-      setColumnToggleOptions((prev) =>
-        prev.map((col) =>
-          col.key === key ? { ...col, visible: !col.visible } : col,
-        ),
-      );
-    };
-
-    const canToggleColumns = columnToggleOptions.length > 3;
-
+    const frequenceOptions = [
+      { value: "DAILY", label: "DAILY" },
+      { value: "WEEKLY", label: "WEEKLY" },
+      { value: "MONTHLY", label: "MONTHLY" },
+      { value: "QUARTERLY", label: "QUARTERLY" },
+      { value: "YEARLY", label: "YEARLY" },
+      { value: "HALFYEARLY", label: "HALFYEARLY" },
+    ];
+    const validationOptions = [
+      { value: "EQUAL_TO", label: "EQUAL_TO" },
+      { value: "GREATER_THAN_OR_EQUAL_TO", label: "GREATER_THAN_OR_EQUAL_TO" },
+      { value: "GREATER_THAN", label: "GREATER_THAN" },
+      { value: "LESS_THAN", label: "LESS_THAN" },
+      { value: "LESS_THAN_OR_EQUAL_TO", label: "LESS_THAN_OR_EQUAL_TO" },
+      { value: "BETWEEN", label: "BETWEEN" },
+      { value: "YES_NO", label: "YES_NO" },
+    ];
+    const unitTypeOptions = [
+      { value: "Number", label: "Number" },
+      { value: "Percentage", label: "Percentage" },
+      { value: "Dollar", label: "Dollar" },
+      { value: "Urros", label: "Urros" },
+      { value: "Pounds", label: "Pounds" },
+      { value: "INR", label: "INR" },
+    ];
     return (
-      <div>
-        <div className="mt-1 flex items-center justify-between">
-          {canToggleColumns && (
-            <div className="ml-4">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
+          <Controller
+            control={control}
+            name="frequencyId"
+            rules={{ required: "Frequency is required" }}
+            render={({ field }) => (
+              <FormSelect
+                label="Frequency"
+                value={field.value}
+                onChange={field.onChange}
+                options={frequenceOptions}
+                error={errors.frequencyId}
               />
-            </div>
-          )}
-        </div>
-
-        <Controller
-          name="frequencyId"
-          control={control}
-          rules={{ required: "Please select a Frequency" }}
-          render={({ field }) => (
-            <>
-              <div className="mb-4">
-                {errors?.frequencyId && (
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors?.frequencyId?.message || "")}
-                  </span>
-                )}
-              </div>
-              <TableData
-                {...field}
-                tableData={frequencyData.data.map((item, index) => ({
-                  ...item,
-                  srNo: index + 1,
-                }))}
-                isActionButton={() => false}
-                columns={visibleColumns}
-                primaryKey="frequencyId"
-                paginationDetails={frequencyData}
-                multiSelect={false}
-                selectedValue={field.value}
-                handleChange={field.onChange}
+            )}
+          />
+          <Controller
+            control={control}
+            name="validationTypeId"
+            rules={{ required: "Validation Type is required" }}
+            render={({ field }) => (
+              <FormSelect
+                label="Validation Type"
+                value={field.value}
+                onChange={field.onChange}
+                options={validationOptions}
+                error={errors.validationTypeId}
               />
-            </>
-          )}
-        />
-      </div>
-    );
-  };
-
-  const ValidationType = () => {
-    const [columnToggleOptions, setColumnToggleOptions] = useState([
-      { key: "srNo", label: "Sr No", visible: true },
-      { key: "validationTypeName", label: "Condition", visible: true },
-    ]);
-
-    const visibleColumns = columnToggleOptions.reduce(
-      (acc, col) => {
-        if (col.visible) acc[col.key] = col.label;
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-
-    const onToggleColumn = (key: string) => {
-      setColumnToggleOptions((prev) =>
-        prev.map((col) =>
-          col.key === key ? { ...col, visible: !col.visible } : col,
-        ),
-      );
-    };
-
-    const canToggleColumns = columnToggleOptions.length > 3;
-
-    return (
-      <div>
-        <div className="mt-1 flex items-center justify-between">
-          {canToggleColumns && (
-            <div className="ml-4">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
+            )}
+          />
+          <Controller
+            control={control}
+            name="unit"
+            rules={{ required: "Unit Type is required" }}
+            render={({ field }) => (
+              <FormSelect
+                label="Unit Type"
+                value={field.value}
+                onChange={field.onChange}
+                options={unitTypeOptions}
+                error={errors.unit}
               />
-            </div>
-          )}
-        </div>
-
-        <Controller
-          name="validationTypeId"
-          control={control}
-          rules={{ required: "Please select a Validation Type" }}
-          render={({ field }) => (
-            <>
-              <div className="mb-4">
-                {errors?.validationTypeId && (
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors?.validationTypeId?.message || "")}
-                  </span>
-                )}
-              </div>
-              <TableData
-                {...field}
-                tableData={filterOptionsData.data.map((item, index) => ({
-                  ...item,
-                  srNo: index + 1,
-                }))}
-                isActionButton={() => false}
-                columns={visibleColumns}
-                primaryKey="validationTypeId"
-                paginationDetails={filterOptionsData}
-                multiSelect={false}
-                selectedValue={field.value}
-                handleChange={field.onChange}
-              />
-            </>
-          )}
-        />
+            )}
+          />
+        </Card>
       </div>
     );
   };
@@ -510,6 +414,82 @@ export default function useAddEmployee() {
                 primaryKey="coreParameterId"
                 paginationDetails={coreparameterData}
                 setPaginationFilter={setPaginationFilter}
+                multiSelect={false}
+                selectedValue={field.value}
+                handleChange={field.onChange}
+              />
+            </>
+          )}
+        />
+      </div>
+    );
+  };
+
+  const Product = () => {
+    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 10,
+      search: "",
+      //   status: currentStatus, // Use currentStatus state
+    });
+
+    const { data: ProductData } = useGetProduct({
+      filter: paginationFilter,
+    });
+    const [columnToggleOptions, setColumnToggleOptions] = useState([
+      { key: "srNo", label: "Sr No", visible: true },
+      { key: "productName", label: "product Name", visible: true },
+    ]);
+
+    // Filter visible columns
+    const visibleColumns = columnToggleOptions.reduce(
+      (acc, col) => {
+        if (col.visible) acc[col.key] = col.label;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+
+    // Toggle column visibility
+    const onToggleColumn = (key: string) => {
+      setColumnToggleOptions((prev) =>
+        prev.map((col) =>
+          col.key === key ? { ...col, visible: !col.visible } : col,
+        ),
+      );
+    };
+    // Check if the number of columns is more than 3
+    const canToggleColumns = columnToggleOptions.length > 3;
+
+    return (
+      <div>
+        <div className=" mt-1 flex items-center justify-between">
+          {canToggleColumns && (
+            <div className="ml-4 ">
+              <DropdownSearchMenu
+                columns={columnToggleOptions}
+                onToggleColumn={onToggleColumn}
+              />
+            </div>
+          )}
+        </div>
+
+        <Controller
+          name="productId"
+          control={control}
+          // No rules here, so it's optional
+          render={({ field }) => (
+            <>
+              <TableData
+                {...field}
+                tableData={ProductData?.data.map((item, index) => ({
+                  ...item,
+                  srNo: index + 1,
+                }))}
+                columns={visibleColumns}
+                primaryKey="productId"
+                paginationDetails={ProductData}
+                setPaginationFilter={setPaginationFilter}
                 multiSelect={true}
                 selectedValue={field.value}
                 handleChange={field.onChange}
@@ -520,6 +500,7 @@ export default function useAddEmployee() {
       </div>
     );
   };
+
   const AssignUser = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
@@ -604,6 +585,7 @@ export default function useAddEmployee() {
   };
 
   const GoalValue = () => {
+    // Now validationTypeId is a string value
     const validationTypeId = useWatch({ name: "validationTypeId", control });
     const selectedEmployees = useWatch({ name: "employeeId", control }) || [];
 
@@ -612,10 +594,8 @@ export default function useAddEmployee() {
       filter: { currentPage: 1, pageSize: 1000, search: "" },
     });
 
-    const showBoth =
-      String(validationTypeId?.validationTypeId ?? validationTypeId) === "6";
-    const showYesNo =
-      String(validationTypeId?.validationTypeId ?? validationTypeId) === "7";
+    const showBoth = validationTypeId === "6" || validationTypeId === "BETWEEN";
+    const showYesNo = validationTypeId === "7" || validationTypeId === "YES_NO";
 
     const yesnoOptions = [
       { label: "Yes", value: "1" },
@@ -626,7 +606,7 @@ export default function useAddEmployee() {
     const getEmployeeName = (emp: DataPointEmployee) => {
       if (emp?.employeeName) return emp.employeeName;
       const found = employeedata?.data?.find(
-        (e: DataPointEmployee) => e.employeeId === emp.employeeId,
+        (e: EmployeeDetails) => e.employeeId === emp.employeeId,
       );
       return found?.employeeName || emp.employeeId || "";
     };
@@ -693,12 +673,12 @@ export default function useAddEmployee() {
     onSubmit,
     Kpi,
     Frequency,
-    ValidationType,
     CoreParameter,
+    Product,
     AssignUser,
     GoalValue,
     KpiPreview: getValues(),
     trigger,
-    skipToStep: isUpdateMode ? 4 : isUpdateModeforFalse ? 1 : 0,
+    skipToStep: isUpdateMode ? 5 : isUpdateModeforFalse ? 1 : 0,
   };
 }

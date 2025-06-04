@@ -747,15 +747,21 @@ interface DataPointEmployee {
 }
 
 interface KPIFormData {
+  companykpimasterId?: string;
   dataPointId: string;
   dataPointName: string;
   dataPointLabel: string;
   KPIMasterId: string;
-  KPIMaster: KPIMaster;
+  KPIMaster: KPIMaster | string;
+  coreParameter: string;
+  unit: string;
   validationType: "EQUAL_TO" | "GREATER_THAN" | "LESS_THAN" | string; // Add other types if needed
   frequencyType: "YEARLY" | "MONTHLY" | "WEEKLY" | string; // Add other types if needed
   selectedType: "COMPANY" | "DEPARTMENT" | "USER" | string; // Add other types if needed
   dataPointEmployeeJunction: DataPointEmployee[];
+  DataPointProductJunction: ProductData[];
+  productIds: ProductData[];
+  assignUser: DataPointEmployee[];
   hasData: boolean;
 }
 

@@ -5,22 +5,24 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-type DatePaging = BaseResponse<CompanyDatapointDataProps>;
+type DatePaging = BaseResponse<KPIFormData>;
 
 export default function useAddUpdateDataPoint() {
   const addUpdateCompanyDatapointMutation = useMutation({
     mutationKey: ["add-or-update-Datapoint-list"],
-    mutationFn: async (data: CompanyDatapointDataProps) => {
+    mutationFn: async (data: KPIFormData) => {
       const isUpdate = Boolean(data.companykpimasterId);
 
       const payload = {
         dataPointName: data?.KPIMasterId?.KPILabel,
         KPIMasterId: data?.KPIMasterId?.KPIMasterId,
+        coreParameterId: data?.coreParameterId?.coreParameterId,
         dataPointLabel: data?.KPIMasterId?.KPIName,
-        validationType: data?.validationTypeId?.validationTypeName,
-        frequencyType: data?.frequencyId?.frequencyName,
-        // selectedType: data?.meetingTypeId?.meetingTypeId ?? data?.meetingTypeId,
+        productIds: data.productIds,
         assignUser: data.assignUser,
+        validationType: data.validationType,
+        frequencyType: data.frequencyType,
+        unit: data.unit,
       };
 
       const config = {

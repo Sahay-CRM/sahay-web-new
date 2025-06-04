@@ -117,6 +117,9 @@ const Urls = {
   getProductList: () => `${baseUrl}/company/product/get`,
   productDeleteById: (id: string) => `${baseUrl}/company/product/delete/${id}`,
   gelAllProduct: () => `${baseUrl}/company/product/get-all`,
+
+  //HealthDashbord
+  getHealthScoreList: () => `${baseUrl}/company/health/dashboard/get`,
 };
 
 export default Urls;
