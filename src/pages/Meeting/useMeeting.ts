@@ -2,7 +2,6 @@ import { useDeleteCompanyMeeting } from "@/features/api/companyMeeting";
 import useGetCompanyMeeting from "@/features/api/companyMeeting/useGetCompanyMeeting";
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { isWithinInterval, parseISO } from "date-fns";
 import { useCallback, useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { useSelector } from "react-redux";
@@ -19,6 +18,7 @@ export default function useAdminUser() {
     DateRange | undefined
   >({
     from: new Date(),
+    to: new Date(), // Set to current date as well for exact date matching
   });
 
   const [filters, setFilters] = useState<{ taskStatusName: string[] }>({
@@ -114,20 +114,24 @@ export default function useAdminUser() {
   const filteredTaskData = useMemo(() => {
     let filtered = meetingData?.data;
 
-    // Apply date range filter if selected
+    // Apply date range filter - default filters by current date
     if (selectedDateRange?.from) {
       filtered = filtered?.filter((task) => {
         if (!task.meetingDateTime) return false;
 
-        const deadlineDate = parseISO(task.meetingDateTime);
+        const meetingDate = new Date(task.meetingDateTime);
+        const startDate = new Date(selectedDateRange.from!);
+        const endDate = selectedDateRange.to
+          ? new Date(selectedDateRange.to)
+          : new Date(selectedDateRange.from!);
 
-        // Check if any of the dates fall within the selected range
-        const isDeadlineInRange = isWithinInterval(deadlineDate, {
-          start: selectedDateRange.from!,
-          end: selectedDateRange.to || selectedDateRange.from!,
-        });
+        // Set time to start of day for accurate date comparison
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        meetingDate.setHours(0, 0, 0, 0);
 
-        return isDeadlineInRange;
+        // Check if meeting date falls within the selected range
+        return meetingDate >= startDate && meetingDate <= endDate;
       });
     }
 

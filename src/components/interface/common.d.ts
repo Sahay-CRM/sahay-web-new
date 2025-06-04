@@ -298,6 +298,12 @@ interface CompanyMeetingDataProps {
   joiners?: string[];
   meetingStatus?: CompanyMeetingStatusDataProps;
   meetingType?: CompanyMeetingTypeDataProps;
+  files?: [
+    {
+      fileId: string;
+      fileName: string;
+    },
+  ];
 }
 
 interface CompanyDatapointDataProps {

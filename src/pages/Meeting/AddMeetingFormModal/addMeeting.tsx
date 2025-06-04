@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import AddEmployeeModal from "./addMeetingModal";
 import useAddEmployee from "./useAddMeeting";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider } from "react-hook-form";
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 
@@ -15,9 +15,10 @@ const AddEmployee = () => {
     MeetingStatus,
     MeetingType,
     Joiners,
-    UploadDoc, // <-- Add this
+    UploadDoc,
     trigger,
     meetingPreview,
+    methods, // Add this to get form methods
   } = useAddEmployee();
 
   // Build steps array based on showNextStep
@@ -26,7 +27,7 @@ const AddEmployee = () => {
     <MeetingStatus />,
     <MeetingType />,
     <Joiners />,
-    <UploadDoc />, // <-- Add new step here
+    <UploadDoc />,
   ];
 
   const {
@@ -44,12 +45,8 @@ const AddEmployee = () => {
     "Meeting Status",
     "Meeting Type",
     "Joiners",
-    "Upload Document", // <-- Add step name
+    "Upload Document",
   ];
-
-  const methods = useForm({
-    mode: "onChange",
-  });
 
   return (
     <FormProvider {...methods}>

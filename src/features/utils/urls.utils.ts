@@ -117,6 +117,8 @@ const Urls = {
   getProductList: () => `${baseUrl}/company/product/get`,
   productDeleteById: (id: string) => `${baseUrl}/company/product/delete/${id}`,
   gelAllProduct: () => `${baseUrl}/company/product/get-all`,
+
+  uploadDoc: () => `${baseUrl}/file/upload-docs`,
 };
 
 export default Urls;
