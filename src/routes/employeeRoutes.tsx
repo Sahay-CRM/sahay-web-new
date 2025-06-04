@@ -53,6 +53,11 @@ const AddGraph = lazy(() => import("../pages/Graph/graph"));
 const Brand = lazy(() => import("../pages/Brand"));
 const Product = lazy(() => import("../pages/Product"));
 
+const KPIDashboard = lazy(() => import("../pages/kpiDashboard/KpiDashboard"));
+const KPIVisualize = lazy(
+  () => import("../pages/kpiDashboard/KpiVisualizePage"),
+);
+
 export default function EmployeeRoutes() {
   return (
     <Routes>
@@ -83,11 +88,17 @@ export default function EmployeeRoutes() {
         <Route path="projects/add" element={<AddCompanyProjectList />} />
         <Route path="projects/edit/:id" element={<AddCompanyProjectList />} />
         <Route path="projects/view/:id" Component={CompanyProjectView} />
+
         <Route path="kpi" Component={DatapointList} />
         <Route path="kpi/add" element={<AddCompanyDatapoint />} />
         <Route path="kpi/edit/:id" element={<AddCompanyDatapoint />} />
 
         <Route path="kpi/graph" element={<AddGraph />} />
+
+        <Route path="datapoint" Component={DatapointList} />
+        <Route path="kpi-dashboard" Component={KPIDashboard} />
+        <Route path="kpi-visualize" Component={KPIVisualize} />
+
         <Route path="healthscore-achieve" Component={Healthscore} />
 
         <Route path="business">

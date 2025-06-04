@@ -745,7 +745,6 @@ interface MeetingDataById {
   meetingStatus: MeetingStatus;
   joiners: MeetingJoiner[];
 }
-
 interface SubParaByCorePara {
   subParameterId: string;
   subParameterName: string;
@@ -826,4 +825,24 @@ interface ProductFormModalProps {
 
 interface HandleDateRangeChange {
   (range: DateRange | undefined): void;
+}
+interface DataPoint {
+  dataPointId: string;
+  dataPointName: string;
+  dataPointLabel: string;
+}
+
+interface FrequencyData {
+  srNo: number;
+  frequencyType: string;
+  dataPoint: DataPoint[];
+}
+
+type FrequencyDataArray = FrequencyData[];
+
+interface KpiData {
+  dataPointEmpId: string;
+  startDate: string;
+  endDate: string;
+  selectFrequency: string;
 }

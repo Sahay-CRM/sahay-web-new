@@ -57,9 +57,9 @@ export const companyNavigationData = [
   },
   {
     id: 8,
-    icon: "bx bx-user",
-    label: "Datapoint Table",
-    link: "/",
+    icon: "bx bx-list-ul",
+    label: "KPI Dashboard",
+    link: "/dashboard/kpi-dashboard",
     permission: "View",
     moduleKey: "DATAPOINT_TABLE",
   },
