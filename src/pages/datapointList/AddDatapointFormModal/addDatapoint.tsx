@@ -14,8 +14,8 @@ const AddDatapoint = () => {
     onSubmit,
     Kpi,
     Frequency,
-    ValidationType,
     CoreParameter,
+    Product,
     AssignUser,
     GoalValue,
     trigger,
@@ -26,8 +26,8 @@ const AddDatapoint = () => {
   const steps = [
     <Kpi />,
     <Frequency />,
-    <ValidationType />,
     <CoreParameter />,
+    <Product />,
     <AssignUser />,
     <GoalValue />,
   ];
@@ -35,21 +35,21 @@ const AddDatapoint = () => {
   const visibleSteps = skipToStep > 0 ? steps.slice(skipToStep) : steps;
 
   const visibleStepNames =
-    skipToStep === 4
+    skipToStep === 5
       ? ["Goal Value"]
       : skipToStep === 1
         ? [
             "Frequency",
-            "Validation Type",
             "Core Parameter",
+            "Product",
             "Assign User",
             "Goal Value",
           ]
         : [
             "Kpi",
             "Frequency",
-            "Validation Type",
             "Core Parameter",
+            "Product",
             "Assign User",
             "Goal Value",
           ];

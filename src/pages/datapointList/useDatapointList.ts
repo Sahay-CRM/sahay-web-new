@@ -51,12 +51,22 @@ export default function useAdminUser() {
   };
   const handleAdd = () => {
     setModalData({
+      companykpimasterId: "",
+      dataPointId: "",
       dataPointName: "",
-      KPIMasterId: "",
       dataPointLabel: "",
-      validationType: "",
-      frequencyType: "",
+      KPIMasterId: "",
+      KPIMaster: "",
+      coreParameter: "",
+      unit: "",
+      validationType: "", // Add other types if needed
+      frequencyType: "", // Add other types if needed
+      selectedType: "", // Add other types if needed
+      dataPointEmployeeJunction: [],
+      DataPointProductJunction: [],
+      productIds: [],
       assignUser: [],
+      hasData: false,
     });
     setIsUserModalOpen(true);
   };
@@ -68,12 +78,22 @@ export default function useAdminUser() {
 
   const closeDeleteModal = (): void => {
     setModalData({
+      companykpimasterId: "",
+      dataPointId: "",
       dataPointName: "",
-      KPIMasterId: "",
       dataPointLabel: "",
-      validationType: "",
-      frequencyType: "",
+      KPIMasterId: "",
+      KPIMaster: "",
+      coreParameter: "",
+      unit: "",
+      validationType: "", // Add other types if needed
+      frequencyType: "", // Add other types if needed
+      selectedType: "", // Add other types if needed
+      dataPointEmployeeJunction: [],
+      DataPointProductJunction: [],
+      productIds: [],
       assignUser: [],
+      hasData: false,
     }); // Clear modal data
     setIsUserModalOpen(false);
     setIsDeleteModalOpen(false);

@@ -126,6 +126,8 @@ const Urls = {
   kpiDataGet: () => `${baseUrl}/company/kpi-data/get`,
   addUpdateKpi: () => `${baseUrl}/company/kpi-data/update`,
   getKpiVisualize: () => `${baseUrl}/company/kpi-data/get/visual`,
+
+  getHealthScoreList: () => `${baseUrl}/company/health/dashboard/get`,
 };
 
 export default Urls;
