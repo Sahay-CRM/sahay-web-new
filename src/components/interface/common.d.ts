@@ -107,10 +107,10 @@ interface CoreParameter {
   updatedDatetime: string;
 }
 // kk
-interface Employee {
-  employeeId: string;
-  employeeName: string;
-}
+// interface Employee {
+//   employeeId: string;
+//   employeeName: string;
+// }
 
 interface SubParameter {
   subParameterId: string;

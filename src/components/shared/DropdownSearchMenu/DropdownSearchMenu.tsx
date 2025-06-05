@@ -7,7 +7,7 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Columns3 } from "lucide-react";
+import { Columns3, PlusCircle } from "lucide-react";
 
 interface DropdownSearchMenuProps {
   columns?: ColumnToggleOption[];
@@ -18,6 +18,7 @@ interface DropdownSearchMenuProps {
   onChange?: (selected: string[]) => void;
   multiSelect?: boolean;
   showCount?: boolean;
+  columnIcon?: boolean;
 }
 interface ColumnToggleOption {
   label: string;
@@ -33,6 +34,7 @@ const DropdownSearchMenu = ({
   selected = [],
   onChange,
   showCount,
+  columnIcon,
 }: DropdownSearchMenuProps) => {
   // Handler for filter option selection
   const handleOptionToggle = (value: string) => {
@@ -49,8 +51,11 @@ const DropdownSearchMenu = ({
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="px-4">
           {label}
-          {/* <PlusCircle className="h-4 w-4 ml-2" /> */}
-          <Columns3 className="h-4 w-4" />
+          {columnIcon ? (
+            <Columns3 className="h-4 w-4 ml-2" />
+          ) : (
+            <PlusCircle className="h-4 w-4 ml-2" />
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">

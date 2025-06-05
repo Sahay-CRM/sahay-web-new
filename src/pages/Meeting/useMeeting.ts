@@ -2,8 +2,7 @@ import { useDeleteCompanyMeeting } from "@/features/api/companyMeeting";
 import useGetCompanyMeeting from "@/features/api/companyMeeting/useGetCompanyMeeting";
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { useCallback, useMemo, useState } from "react";
-import { DateRange } from "react-day-picker";
+import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
 
 export default function useAdminUser() {
@@ -14,16 +13,10 @@ export default function useAdminUser() {
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
   const [isChildData, setIsChildData] = useState<string | undefined>();
-  const [selectedDateRange, setSelectedDateRange] = useState<
-    DateRange | undefined
-  >({
-    from: new Date(),
-    to: new Date(), // Set to current date as well for exact date matching
-  });
 
-  const [filters, setFilters] = useState<{ taskStatusName: string[] }>({
-    taskStatusName: [],
-  });
+  const [isRowModal, setIsRowModal] = useState<boolean>(false);
+
+  const [filters, setFilters] = useState<{ selected?: string[] }>({});
 
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
@@ -33,14 +26,14 @@ export default function useAdminUser() {
   });
   const permission = useSelector(getUserPermission).MEETING_LIST;
   const { data: meetingData } = useGetCompanyMeeting({
-    filter: paginationFilter,
+    filter: { ...paginationFilter, statusArray: filters.selected },
   });
 
   const { data: meetingStatus } = useDdMeetingStatus();
 
   const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = Number(event.target.value);
-    setCurrentStatus(newStatus); // Update currentStatus state
+    setCurrentStatus(newStatus);
 
     // Update pagination filter to include the selected status
     setPaginationFilter((prevFilter) => ({
@@ -111,49 +104,20 @@ export default function useAdminUser() {
     setIsImport(false);
   }, []);
 
-  const filteredTaskData = useMemo(() => {
-    let filtered = meetingData?.data;
-
-    // Apply date range filter - default filters by current date
-    if (selectedDateRange?.from) {
-      filtered = filtered?.filter((task) => {
-        if (!task.meetingDateTime) return false;
-
-        const meetingDate = new Date(task.meetingDateTime);
-        const startDate = new Date(selectedDateRange.from!);
-        const endDate = selectedDateRange.to
-          ? new Date(selectedDateRange.to)
-          : new Date(selectedDateRange.from!);
-
-        // Set time to start of day for accurate date comparison
-        startDate.setHours(0, 0, 0, 0);
-        endDate.setHours(23, 59, 59, 999);
-        meetingDate.setHours(0, 0, 0, 0);
-
-        // Check if meeting date falls within the selected range
-        return meetingDate >= startDate && meetingDate <= endDate;
-      });
-    }
-
-    return filtered;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDateRange, meetingData?.data, filters.taskStatusName]);
-
-  const handleDateRangeChange: HandleDateRangeChange = (range) => {
-    setSelectedDateRange(range);
-    console.log("Selected Date Range:", range);
-  };
-
   const statusOptions = meetingStatus?.map((item) => ({
     label: item.meetingStatus,
     value: item.meetingStatusId,
   }));
 
-  const handleFilterChange = (col: string, selected: string[]) => {
-    setFilters((prev) => ({
-      ...prev,
-      [col]: selected,
-    }));
+  const handleFilterChange = (selected: string[]) => {
+    setFilters({
+      selected,
+    });
+  };
+
+  const handleRowsModalOpen = (data: MeetingData) => {
+    setIsRowModal(true);
+    console.log("Selected row data:", data);
   };
 
   return {
@@ -178,11 +142,10 @@ export default function useAdminUser() {
     setIsImportExportModalOpen,
     isChildData,
     permission,
-    handleDateRangeChange,
-    filteredTaskData,
-    selectedDateRange,
     statusOptions,
     filters,
     handleFilterChange,
+    handleRowsModalOpen,
+    isRowModal,
   };
 }

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Table,
   TableHeader,
@@ -22,7 +22,6 @@ import {
   ChevronUp,
   ChevronDown,
   KeyRound,
-  RefreshCw,
   EyeIcon,
 } from "lucide-react";
 import Pagination from "../Pagination/Pagination";
@@ -43,6 +42,7 @@ interface TableProps<T extends Record<string, unknown>> {
   primaryKey: keyof T;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
+  onRowClick?: (item: T) => void;
   canDelete?: (item: T) => boolean;
   paginationDetails?: PaginationFilter;
   setPaginationFilter?: (filter: PaginationFilter) => void;
@@ -65,7 +65,7 @@ interface TableProps<T extends Record<string, unknown>> {
   selectedValue?: T[] | T;
   onCheckbox?: (selectedItems: T[]) => void;
   handleChange?: (selected: T[] | T) => void;
-  localStorageId?: string; // Unique identifier for localStorage
+  localStorageId?: string;
   moduleKey?: string;
 }
 
@@ -131,6 +131,7 @@ const TableData = <T extends Record<string, unknown>>({
   primaryKey,
   onEdit,
   onDelete,
+  onRowClick,
   canDelete,
   customActions,
   paginationDetails,
@@ -184,18 +185,6 @@ const TableData = <T extends Record<string, unknown>>({
 
   const [columnWidths, setColumnWidths] =
     useState<Record<string, number>>(getInitialWidths());
-
-  // Add a render key to force re-render on reset
-  const [tableRenderKey, setTableRenderKey] = useState(0);
-
-  const resetColumnWidths = useCallback(() => {
-    setColumnWidths(DEFAULT_WIDTHS);
-
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(`tableWidths_${localStorageId}`);
-    }
-    setTableRenderKey((k) => k + 1);
-  }, [DEFAULT_WIDTHS, localStorageId]);
 
   const getCurrentWidths = () => {
     if (Object.keys(columnWidths).length === 0) {
@@ -270,19 +259,7 @@ const TableData = <T extends Record<string, unknown>>({
 
   return (
     <Card className="w-full p-2 mb-5 overflow-hidden">
-      <div className="flex justify-end mb-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={resetColumnWidths}
-          className="flex items-center gap-2 cursor-pointer"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Reset Column Widths
-        </Button>
-      </div>
       <div
-        key={tableRenderKey}
         className="overflow-x-auto max-h-[calc(100svh-183px)] tb:max-h-[calc(100svh-260px)]"
         ref={tableRef}
         style={{ overflowX: "auto" }}
@@ -350,11 +327,18 @@ const TableData = <T extends Record<string, unknown>>({
                 </TableRow>
               ) : tableData.length ? (
                 tableData.map((item, index) => (
-                  <TableRow key={item[primaryKey] as React.Key}>
+                  <TableRow
+                    key={item[primaryKey] as React.Key}
+                    className={
+                      onRowClick ? "cursor-pointer hover:bg-gray-50" : ""
+                    }
+                    onClick={() => onRowClick?.(item)}
+                  >
                     {showCheckboxes && (
                       <TableCell
                         style={{ width: `${FIXED_WIDTHS.checkbox}px` }}
                         className="text-center h-8 p-0 whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <FormCheckbox
                           id={`${String(item[primaryKey])}-checkbox`}
@@ -386,6 +370,7 @@ const TableData = <T extends Record<string, unknown>>({
                       <TableCell
                         style={{ width: `${FIXED_WIDTHS.index}px` }}
                         className="text-center p-0"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <div className="flex flex-col items-center gap-0">
                           <Button
@@ -438,6 +423,7 @@ const TableData = <T extends Record<string, unknown>>({
                     <TableCell
                       style={{ width: `${FIXED_WIDTHS.action}px` }}
                       className="text-right whitespace-nowrap"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <DropdownMenu>
                         {isActionButton && isActionButton(item) && (

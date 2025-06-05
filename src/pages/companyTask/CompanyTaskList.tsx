@@ -118,6 +118,7 @@ export default function CompanyTaskList() {
               <DropdownSearchMenu
                 columns={columnToggleOptions}
                 onToggleColumn={onToggleColumn}
+                columnIcon={true}
               />
             )}
           </div>
