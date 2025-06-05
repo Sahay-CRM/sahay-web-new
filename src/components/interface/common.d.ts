@@ -651,7 +651,7 @@ interface Task {
   projectId: string;
   projectName: string | null;
   assignUsers: AssignedUser[];
-  meetingId: string[];
+  meetingId: string;
   meetings: Meeting[];
   comments: TaskComment[];
   createdBy: CreatedBy;

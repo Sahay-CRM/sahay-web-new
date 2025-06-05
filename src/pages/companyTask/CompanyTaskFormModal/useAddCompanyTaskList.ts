@@ -42,7 +42,7 @@ export const useAddCompanyEmployee = () => {
       taskDescription: "",
       taskStartDate: null,
       taskDeadline: null,
-      repetition: "",
+      repetition: "none", // Default to "No Repetition"
       taskStatus: undefined,
       taskType: undefined,
       assignUser: [], // always an array
@@ -58,6 +58,7 @@ export const useAddCompanyEmployee = () => {
       reset({
         taskId: taskDataById.data.taskId || "", // <-- add this
         project: taskDataById.data?.projectId || "",
+        meeting: taskDataById.data?.meetingId || "",
         taskName: taskDataById.data.taskName || "",
         taskDescription: taskDataById.data.taskDescription || "",
         taskStartDate: taskDataById.data.taskStartDate
@@ -187,29 +188,52 @@ export const useAddCompanyEmployee = () => {
         "Comment",
       ];
 
-  // Only validate relevant fields for each step
-  // Step 3 (Schedule & Repetition) should not be required, so its array is empty
-  const fieldsToValidate: Record<number, (keyof FormValues)[]> = taskId
+  // Define required and optional fields for each step
+  const stepFieldConfig: Record<
+    number,
+    { required: (keyof FormValues)[]; optional: (keyof FormValues)[] }
+  > = taskId
     ? {
-        1: ["project", "taskName", "taskDescription"],
-        2: [], // Step 3: Schedule & Repetition is not required
-        3: ["taskStatus"],
-        4: ["taskType"],
-        5: ["meeting"],
-        6: ["assignUser"],
+        1: { required: ["project"], optional: [] },
+        2: { required: ["taskName", "taskDescription"], optional: [] },
+        3: {
+          required: ["taskDeadline"],
+          optional: ["taskStartDate", "repetition"],
+        }, // Task Deadline is required, others optional
+        4: { required: ["taskStatus"], optional: [] },
+        5: { required: ["taskType"], optional: [] },
+        6: { required: ["meeting"], optional: [] }, // Meeting is required
+        7: { required: ["assignUser"], optional: [] },
       }
     : {
-        1: ["project", "taskName", "taskDescription"],
-        2: [], // Step 3: Schedule & Repetition is not required
-        3: ["taskStatus"],
-        4: ["taskType"],
-        5: ["meeting"],
-        6: ["assignUser"],
-        7: ["comment"],
+        1: { required: ["project"], optional: [] },
+        2: { required: ["taskName", "taskDescription"], optional: [] },
+        3: {
+          required: ["taskDeadline"],
+          optional: ["taskStartDate", "repetition"],
+        }, // Task Deadline is required, others optional
+        4: { required: ["taskStatus"], optional: [] },
+        5: { required: ["taskType"], optional: [] },
+        6: { required: ["meeting"], optional: [] }, // Meeting is required
+        7: { required: ["assignUser"], optional: [] },
+        8: { required: [], optional: ["comment"] }, // Comment is optional
       };
 
   const validateStep = async (): Promise<boolean> => {
-    return methods.trigger(fieldsToValidate[step]);
+    const currentStepConfig = stepFieldConfig[step];
+    if (!currentStepConfig) return true;
+
+    // Clear previous errors for optional fields
+    currentStepConfig.optional.forEach((field) => {
+      methods.clearErrors(field);
+    });
+
+    // Only validate required fields for the current step
+    if (currentStepConfig.required.length === 0) {
+      return true; // No required fields, step is valid
+    }
+
+    return methods.trigger(currentStepConfig.required);
   };
 
   const nextStep = async () => {
@@ -240,6 +264,7 @@ export const useAddCompanyEmployee = () => {
           comment: data.comment,
           employeeIds: assigneeIds,
           projectId: data.project,
+          meetingId: data.meeting,
         }
       : {
           taskName: data.taskName,
@@ -253,6 +278,7 @@ export const useAddCompanyEmployee = () => {
           comment: data.comment,
           employeeIds: assigneeIds,
           projectId: data.project,
+          meetingId: data.meeting,
         };
 
     addUpdateTask(payload, {
