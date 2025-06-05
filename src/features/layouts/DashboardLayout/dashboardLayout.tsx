@@ -1,11 +1,16 @@
-import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
-// import { useBreadcrumbs } from "@/components/shared/context/BreadcrumbContext";
-import VerticalNavBar from "@/components/shared/VerticalNavBar/VerticalNavBar";
-import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
-import { logout, setUserPermission } from "@/features/reducers/auth.reducer";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useNavigate } from "react-router-dom";
+import { LogOut, User2Icon } from "lucide-react";
+
+import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
+import VerticalNavBar from "@/components/shared/VerticalNavBar/VerticalNavBar";
+import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
+import {
+  logout,
+  setAuth,
+  setUserPermission,
+} from "@/features/reducers/auth.reducer";
 import useGetUserPermission from "./useGetUserPermission";
 import { companyNavigationData } from "@/features/utils/navigation.data";
 import { getUserDetail } from "@/features/selectors/auth.selector";
@@ -21,9 +26,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserIcon } from "@/components/shared/Icons";
-import { LogOut } from "lucide-react";
+
 import { baseUrl } from "@/features/utils/urls.utils";
+import CompanyModal from "@/pages/auth/login/CompanyModal";
+import { useGetCompanyList } from "@/features/api/SelectCompany";
+import { verifyCompanyOtpMutation } from "@/features/api/login";
+import { useAuth } from "@/features/auth/useAuth";
+import { queryClient } from "@/queryClient";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
@@ -32,7 +41,13 @@ const DashboardLayout = () => {
     e?.preventDefault();
     setOpen((prev) => !prev);
   }, []);
+  const [isCompanyModalOpen, setCompanyModalOpen] = useState(false);
+  const { setToken } = useAuth();
+
   const { data: permission } = useGetUserPermission();
+  const { mutate: companyVerifyOtp } = verifyCompanyOtpMutation();
+
+  const { data: companies } = useGetCompanyList();
 
   const breadcrumbs = [
     { label: "Admin", href: "/" },
@@ -52,6 +67,33 @@ const DashboardLayout = () => {
 
   const handleLogout = () => {
     dispatch(logout());
+  };
+
+  const handleLogin = async (data: Company) => {
+    const verifyCompanyData = {
+      selectedCompanyId: data.companyId,
+      mobile: user?.mobile ?? "",
+    };
+
+    companyVerifyOtp(verifyCompanyData, {
+      onSuccess: (response) => {
+        if (response?.status) {
+          setToken(response?.data?.token, response?.data);
+          dispatch(
+            setAuth({
+              token: response.data.token,
+              isLoading: false,
+              isAuthenticated: true,
+              user: response.data,
+            }),
+          );
+          queryClient.resetQueries({
+            queryKey: ["get-company-list"],
+          });
+          setCompanyModalOpen(false);
+        }
+      },
+    });
   };
 
   <Breadcrumbs items={breadcrumbs} />;
@@ -90,7 +132,12 @@ const DashboardLayout = () => {
                     className="w-full rounded-full object-contain bg-black"
                   />
                 </div>
-                <span className="ml-2 mr-1">{user?.employeeName}</span>
+                <div className="flex flex-col items-start">
+                  <span className="ml-2 mr-1 font-medium">
+                    {user?.employeeName}
+                  </span>
+                  <span className="ml-2 mr-1 text-sm">{user?.role}</span>
+                </div>
               </div>
             </DropdownMenuTrigger>
 
@@ -124,11 +171,21 @@ const DashboardLayout = () => {
                 <DropdownMenuItem
                   onClick={() => navigate("/administrator-panel/profile")}
                 >
-                  <UserIcon />
+                  <User2Icon />
                   User Profile
                 </DropdownMenuItem>
               </DropdownMenuGroup>
-              <DropdownMenuSeparator />
+              {(companies?.length ?? 0) > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => setCompanyModalOpen(true)}>
+                      <User2Icon />
+                      Switch Company
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut />
@@ -136,6 +193,16 @@ const DashboardLayout = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          {isCompanyModalOpen && (companies?.length ?? 0) > 0 && (
+            <CompanyModal
+              companies={companies ?? []}
+              isModalOpen={isCompanyModalOpen}
+              onSelect={(company) => {
+                handleLogin(company);
+              }}
+              modalClose={() => setCompanyModalOpen(false)}
+            />
+          )}
         </div>
         <main className="flex-1 overflow-auto p-6 bg-white mr-4">
           <Outlet />

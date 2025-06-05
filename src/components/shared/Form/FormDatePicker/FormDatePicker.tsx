@@ -70,7 +70,7 @@ export const FormDatePicker: React.FC<FormDatePickerProps> = ({
         return (
           <DatePicker
             selected={tempDate}
-            onChange={(date: Date) => setTempDate(date)}
+            onChange={(date: Date | null) => setTempDate(date ?? undefined)}
             inline
           />
         );

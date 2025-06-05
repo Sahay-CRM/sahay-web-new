@@ -6,7 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 export default function useCompanyVerifyOtp() {
   const verifyCompanyOtpMutation = useMutation({
     mutationKey: ["company-verify-otp"],
-    mutationFn: async (data: VerifyOtp) => {
+    mutationFn: async (data: SwitchCompanyType) => {
       const { data: resData } = await Api.post<VerifyOtpResponse>({
         url: Urls.loginCompany(),
         data: {
@@ -15,10 +15,6 @@ export default function useCompanyVerifyOtp() {
       });
       return resData;
     },
-    // onError: (error) => {
-    //   const axiosError = error as AxiosError<{ message?: string }>;
-    //   console.log(axiosError);
-    // },
   });
   return verifyCompanyOtpMutation;
 }

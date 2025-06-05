@@ -8,7 +8,13 @@ import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import TableWithDropdown from "@/components/shared/DataTable/DropdownTable/DropdownTable";
 import { RefreshCw } from "lucide-react";
-// import DesignationAddFormModal from "./DesignationAddFormModal";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 export default function CompanyProject() {
   const {
     projectlistdata,
@@ -102,21 +108,42 @@ export default function CompanyProject() {
             />
           </div>
           {canToggleColumns && (
-            <DropdownSearchMenu
-              columns={columnToggleOptions}
-              onToggleColumn={onToggleColumn}
-              columnIcon={true}
-            />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <DropdownSearchMenu
+                      columns={columnToggleOptions}
+                      onToggleColumn={onToggleColumn}
+                      columnIcon={true}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs text-white">Toggle Visible Columns</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={resetColumnWidths}
-            className="flex items-center gap-2 cursor-pointer"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Reset
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={resetColumnWidths}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs text-white">Reset Columns</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
