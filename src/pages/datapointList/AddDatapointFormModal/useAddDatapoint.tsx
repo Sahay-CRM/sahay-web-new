@@ -43,9 +43,9 @@ export default function useAddEmployee() {
       const data = datapointApiData;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resetObj: any = {
-        KPIName: data?.KPIMaster?.KPILabel || data?.dataPointName,
+        // KPIName: data?.KPIMaster?.KPILabel || data?.dataPointName,
         KPIMasterId: data?.KPIMasterId,
-        dataPointLabel: data?.KPIMaster?.KPIName || data?.dataPointLabel,
+        // dataPointLabel: data?.KPIMaster?.KPIName || data?.dataPointLabel,
         coreParameterId: data?.coreParameter,
         // frequencyId and validationTypeId now expect string values
         frequencyId: data?.frequencyType || "",
@@ -193,7 +193,7 @@ export default function useAddEmployee() {
 
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
-      { key: "KPINames", label: "Kpi Name", visible: true },
+      { key: "KPINames", label: "KPI Name", visible: true },
     ]);
 
     // Filter visible columns
@@ -438,7 +438,7 @@ export default function useAddEmployee() {
     });
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
-      { key: "productName", label: "product Name", visible: true },
+      { key: "productName", label: "Product Name", visible: true },
     ]);
 
     // Filter visible columns
@@ -514,7 +514,7 @@ export default function useAddEmployee() {
     });
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
-      { key: "employeeName", label: "Assign Use", visible: true },
+      { key: "employeeName", label: "Assign User", visible: true },
     ]);
 
     // Filter visible columns

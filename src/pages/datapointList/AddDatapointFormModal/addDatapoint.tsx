@@ -6,7 +6,6 @@ import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 
 const AddDatapoint = () => {
-  // You can also compute isUpdateMode and isUpdateModeForFalse here if needed
   const {
     onFinish,
     isModalOpen,
@@ -20,7 +19,7 @@ const AddDatapoint = () => {
     GoalValue,
     trigger,
     KpiPreview,
-    skipToStep, // ← this already handles logic inside useAddDatapoint
+    skipToStep,
   } = useAddDatapoint();
 
   const steps = [

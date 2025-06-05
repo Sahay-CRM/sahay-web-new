@@ -7,6 +7,8 @@ import TableData from "@/components/shared/DataTable/DataTable";
 import BrandFormModal from "./BrandFormModal";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import { FormProvider, useForm } from "react-hook-form";
+import SearchInput from "@/components/shared/SearchInput";
+import { RefreshCw } from "lucide-react";
 
 export default function Brand() {
   const {
@@ -23,6 +25,7 @@ export default function Brand() {
     conformDelete,
     permission,
     isChildData,
+    paginationFilter,
   } = useBrand();
 
   // Column visibility state
@@ -30,6 +33,8 @@ export default function Brand() {
     { key: "srNo", label: "Sr No", visible: true },
     { key: "brandName", label: "Brand Name", visible: true },
   ]);
+
+  const [tableRenderKey, setTableRenderKey] = useState(0);
 
   // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
@@ -52,6 +57,12 @@ export default function Brand() {
   const canToggleColumns = columnToggleOptions.length > 3;
 
   const methods = useForm();
+  const resetColumnWidths = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("tableWidths_brandTableDataWidth");
+    }
+    setTableRenderKey((k) => k + 1);
+  };
 
   if (permission && permission.View === false) {
     return <PageNotAccess />;
@@ -70,17 +81,41 @@ export default function Brand() {
                 Add Brand
               </Button>
             )}
+          </div>
+        </div>
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
             {canToggleColumns && (
               <DropdownSearchMenu
                 columns={columnToggleOptions}
                 onToggleColumn={onToggleColumn}
+                columnIcon={true}
               />
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetColumnWidths}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reset
+            </Button>
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
+            key={tableRenderKey}
             tableData={brand?.data.map((item, index) => ({
               ...item,
               srNo: (brand.currentPage - 1) * brand.pageSize + index + 1,

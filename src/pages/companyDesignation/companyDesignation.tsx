@@ -8,6 +8,8 @@ import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownS
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import DesignationAddFormModal from "./designationFormModal/designationAddFormModal";
+import { RefreshCw } from "lucide-react";
+import SearchInput from "@/components/shared/SearchInput";
 
 export default function CompanyDesignation() {
   const {
@@ -20,22 +22,12 @@ export default function CompanyDesignation() {
     modalData,
     conformDelete,
     isDeleteModalOpen,
-    // paginationFilter,
+    paginationFilter,
     addDesignationModal,
     isChildData,
     permission,
+    isLoading,
   } = useCompanyDesignation();
-
-  // const { setBreadcrumbs } = useBreadcrumbs();
-
-  // useEffect(() => {
-  //   setBreadcrumbs([
-  //     { label: "Admin Tools", href: "/admin-tools" },
-  //     { label: "User" },
-  //   ]);
-  // }, [setBreadcrumbs]);
-
-  // Column visibility state
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -47,8 +39,8 @@ export default function CompanyDesignation() {
     },
     { key: "companyName", label: "Company Name", visible: true },
   ]);
+  const [tableRenderKey, setTableRenderKey] = useState(0);
 
-  // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
       if (col.visible) acc[col.key] = col.label;
@@ -57,7 +49,6 @@ export default function CompanyDesignation() {
     {} as Record<string, string>,
   );
 
-  // Toggle column visibility
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
@@ -69,6 +60,13 @@ export default function CompanyDesignation() {
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
 
+  const resetColumnWidths = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("tableWidths_designationdata");
+    }
+    setTableRenderKey((k) => k + 1);
+  };
+
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
@@ -77,12 +75,6 @@ export default function CompanyDesignation() {
             Designation List
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
-            {/* <SearchInput
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-              className="w-96"
-            /> */}
             {(permission.Add || permission.Edit) && (
               <Link to="">
                 <Button className="py-2 w-fit" onClick={handleAdd}>
@@ -90,17 +82,42 @@ export default function CompanyDesignation() {
                 </Button>
               </Link>
             )}
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
             {canToggleColumns && (
               <DropdownSearchMenu
                 columns={columnToggleOptions}
                 onToggleColumn={onToggleColumn}
+                columnIcon={true}
               />
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetColumnWidths}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reset
+            </Button>
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
+            key={tableRenderKey}
             tableData={designationList?.data.map(
               (item: DesignationDataProps, index: number) => ({
                 ...item,
@@ -117,7 +134,7 @@ export default function CompanyDesignation() {
             isActionButton={() => true}
             paginationDetails={designationList}
             setPaginationFilter={setPaginationFilter}
-            //   isLoading={isLoading}
+            isLoading={isLoading}
             permissionKey="users"
             localStorageId="designationdata"
             moduleKey="DESIGNATION"
@@ -131,7 +148,6 @@ export default function CompanyDesignation() {
           />
         )}
 
-        {/* Modal Component */}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
             title={"Delete Designation Name"}

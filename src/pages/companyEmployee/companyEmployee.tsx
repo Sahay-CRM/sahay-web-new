@@ -7,11 +7,13 @@ import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownS
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import ViewEmployeeModal from "./ViewEmployeeModal";
 
 export default function CompanyDesignation() {
   const {
     employeedata,
-    // isLoading,
+    isLoading,
     closeDeleteModal,
     setPaginationFilter,
     // currentStatus,
@@ -22,6 +24,10 @@ export default function CompanyDesignation() {
     paginationFilter,
     isChildData,
     permission,
+    isViewModalOpen,
+    setIsViewModalOpen,
+    handleRowsModalOpen,
+    viewModalData,
   } = useCompanyEmployee();
 
   //   const { setBreadcrumbs } = useBreadcrumbs();
@@ -46,7 +52,7 @@ export default function CompanyDesignation() {
     { key: "employeeMobile", label: "Employee Mobile", visible: true },
     { key: "employeeType", label: "Employee Type", visible: true },
   ]);
-
+  const [tableRenderKey, setTableRenderKey] = useState(0);
   // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
@@ -68,6 +74,13 @@ export default function CompanyDesignation() {
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
   const navigate = useNavigate();
+
+  const resetColumnWidths = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("tableWidths_EmployeeList");
+    }
+    setTableRenderKey((k) => k + 1);
+  };
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
@@ -76,28 +89,46 @@ export default function CompanyDesignation() {
             Employee List
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
-            <SearchInput
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-              className="w-96"
-            />
             {permission.Add && (
               <Link to="/dashboard/employees/add">
                 <Button className="py-2 w-fit">Add Employee</Button>
               </Link>
             )}
+          </div>
+        </div>
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
             {canToggleColumns && (
               <DropdownSearchMenu
                 columns={columnToggleOptions}
                 onToggleColumn={onToggleColumn}
+                columnIcon={true}
               />
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetColumnWidths}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reset
+            </Button>
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
+            key={tableRenderKey}
             tableData={employeedata?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,
@@ -114,9 +145,13 @@ export default function CompanyDesignation() {
                   }
                 : undefined
             }
+            onRowClick={(row) => {
+              handleRowsModalOpen(row as unknown as EmployeeData);
+            }}
             onDelete={(row) => onDelete(row as unknown as EmployeeData)}
             canDelete={(row) => !row.isSuperAdmin}
             paginationDetails={employeedata}
+            isLoading={isLoading}
             setPaginationFilter={setPaginationFilter}
             permissionKey="employeeId"
             localStorageId="EmployeeList"
@@ -136,6 +171,12 @@ export default function CompanyDesignation() {
             isChildData={isChildData}
           />
         )}
+        {/* View Meeting Modal */}
+        <ViewEmployeeModal
+          isModalOpen={isViewModalOpen}
+          modalData={viewModalData}
+          modalClose={() => setIsViewModalOpen(false)}
+        />
       </div>
     </FormProvider>
   );

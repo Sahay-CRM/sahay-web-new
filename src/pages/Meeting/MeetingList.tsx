@@ -8,10 +8,12 @@ import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import ViewMeetingModal from "./ViewMeetingModal";
 
 export default function MeetingList() {
   const {
     meetingData,
+    isLoading,
     closeDeleteModal,
     setPaginationFilter,
     onDelete,
@@ -25,10 +27,10 @@ export default function MeetingList() {
     filters,
     handleFilterChange,
     handleRowsModalOpen,
-    // isRowModal,
+    isViewModalOpen,
+    setIsViewModalOpen,
+    viewModalData,
   } = useMeeting();
-
-  // console.log(isRowModal);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -162,7 +164,7 @@ export default function MeetingList() {
             }}
             paginationDetails={meetingData}
             setPaginationFilter={setPaginationFilter}
-            //   isLoading={isLoading}
+            isLoading={isLoading}
             permissionKey="users"
             localStorageId="MeetingList"
             moduleKey="MEETING_LIST"
@@ -179,6 +181,12 @@ export default function MeetingList() {
             isChildData={isChildData}
           />
         )}
+        {/* View Meeting Modal */}
+        <ViewMeetingModal
+          isModalOpen={isViewModalOpen}
+          modalData={viewModalData}
+          modalClose={() => setIsViewModalOpen(false)}
+        />
       </div>
     </FormProvider>
   );

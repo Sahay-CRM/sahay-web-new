@@ -19,9 +19,10 @@ export default function useCompanyTaskList() {
   const [isImport, setIsImport] = useState(false);
   const permission = useSelector(getUserPermission).TASK;
   const [isChildData, setIsChildData] = useState<string | undefined>();
-
-  const [isRowModal, setIsRowModal] = useState<boolean>(false);
-
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewModalData, setViewModalData] = useState<TaskGetPaging>(
+    {} as TaskGetPaging,
+  );
   const [taskDateRange, setTaskDateRange] = useState<{
     taskStartDate: Date | undefined;
     taskDeadline: Date | undefined;
@@ -47,7 +48,6 @@ export default function useCompanyTaskList() {
     currentPage: 1,
     pageSize: 10,
     search: "",
-    status: currentStatus,
   });
 
   const [filters, setFilters] = useState<{ taskStatusName: string[] }>({
@@ -66,7 +66,11 @@ export default function useCompanyTaskList() {
     return `${year}-${month}-${day}`;
   };
 
-  const { data: companyTaskData, refetch } = useGetCompanyTask({
+  const {
+    data: companyTaskData,
+    refetch,
+    isLoading,
+  } = useGetCompanyTask({
     filter: {
       ...paginationFilter,
       statusArray: filters.taskStatusName,
@@ -251,8 +255,9 @@ export default function useCompanyTaskList() {
   };
 
   const handleRowsModalOpen = (data: TaskGetPaging) => {
-    setIsRowModal(true);
-    console.log("Selected row data:", data);
+    console.log(data);
+    setViewModalData(data);
+    setIsViewModalOpen(true);
   };
 
   return {
@@ -289,6 +294,9 @@ export default function useCompanyTaskList() {
     handleDateRangeApply,
     handleOverdueToggle,
     handleRowsModalOpen,
-    isRowModal,
+    isViewModalOpen,
+    setIsViewModalOpen,
+    viewModalData,
+    isLoading,
   };
 }

@@ -162,41 +162,16 @@ interface EventData {
 
 //kk
 interface MeetingData {
-  meetingId?: string;
-  meetingName?: string;
-  meetingDescription?: string;
-  meetingDateTime?: string; // ISO string format
-  companyId?: string;
-  meetingTypeId?: string;
-  meetingStatusId?: string;
-
-  meetingType?: {
-    meetingTypeId: string;
-    meetingTypeName: string;
-  };
-
-  companyEmployee?: [
-    {
-      employeeId: string;
-      employeeName: string;
-      employeeMobile: string;
-    }[],
-  ];
-
-  company?: {
-    companyId: string;
-    companyAdminEmail: string;
-    companyAdminMobile: string;
-  };
-
+  joinerNames?: string;
+  meetingTypeName?: string;
   meetingStatus?: MeetingStatusDataProps;
-
-  joiners?: {
-    companyEmployee: {
-      employeeId: string;
-      employeeName: string;
-      employeeMobile: string;
-    };
+  meetingId?: string;
+  meetingName: string;
+  meetingDescription: string;
+  meetingDateTime: string; // ISO string
+  joiners: {
+    employeeId: string;
+    employeeName: string;
   }[];
 }
 ///kk
@@ -435,13 +410,6 @@ interface EventData {
   end: Date;
 }
 
-// interface TaskData {
-//   taskId: string;
-//   taskName: string;
-//   taskDescription: string;
-//   taskDeadline: string;
-// }
-
 interface BaseResponse<T> {
   success: boolean;
   status: number;
@@ -578,6 +546,7 @@ interface AddUpdateTask {
 interface TaskGetPaging {
   employeeId: string;
   taskId: string;
+  assigneeNames?: string;
   taskName: string;
   taskStatusId: string;
   taskDescription: string;
@@ -768,6 +737,7 @@ interface KPIMaster {
 
 interface DataPointEmployee {
   employeeId: string;
+  dataPointEmpId?: string;
   employeeName: string;
   value1: string;
   value2?: string;
@@ -779,12 +749,14 @@ interface KPIFormData {
   dataPointName: string;
   dataPointLabel: string;
   KPIMasterId: string;
+  KPILabel?: string;
+  KPIName?: string;
   KPIMaster: KPIMaster | string;
   coreParameter: string;
   unit: string;
-  validationType: "EQUAL_TO" | "GREATER_THAN" | "LESS_THAN" | string; // Add other types if needed
-  frequencyType: "YEARLY" | "MONTHLY" | "WEEKLY" | string; // Add other types if needed
-  selectedType: "COMPANY" | "DEPARTMENT" | "USER" | string; // Add other types if needed
+  validationType: string;
+  frequencyType: string;
+  selectedType: string;
   dataPointEmployeeJunction: DataPointEmployee[];
   DataPointProductJunction: ProductData[];
   productIds: ProductData[];
@@ -851,4 +823,25 @@ interface KpiData {
   startDate: string;
   endDate: string;
   selectFrequency: string;
+}
+
+interface CompanyResult {
+  totalWeightage: number;
+  totalScore: number;
+  healthPercentage: number;
+}
+
+interface IndividualResult {
+  coreParameterId: string;
+  totalWeightageCP: number;
+  totalScoreCP: number;
+  healthPercentage: number;
+}
+
+interface HealthScoreResponse {
+  success: boolean;
+  status: number;
+  message: string;
+  companyResult: CompanyResult;
+  individualResult: IndividualResult[];
 }

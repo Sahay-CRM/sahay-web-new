@@ -24,7 +24,7 @@ export default function useAdminUser() {
     search: "",
   });
 
-  const { data: designationList } = getDesignationList({
+  const { data: designationList, isLoading } = getDesignationList({
     filter: paginationFilter,
   });
 
@@ -42,7 +42,7 @@ export default function useAdminUser() {
   };
 
   const openModal = useCallback((data: DesignationData) => {
-    setModalData(data); // Set the data for the modal
+    setModalData(data);
     setaddDesignationModal(true);
   }, []);
 
@@ -55,7 +55,7 @@ export default function useAdminUser() {
       departmentId: "",
       departmentName: "",
       companyName: "",
-    }); // Clear modal data
+    });
     setaddDesignationModal(false);
     setIsDeleteModalOpen(false);
     setIsChildData("");
@@ -77,34 +77,24 @@ export default function useAdminUser() {
       });
     }
   };
-  // const openImportModal = useCallback(() => {
-  //   setIsImportExportModalOpen(true);
-  //   setIsImport(true);
-  // }, []);
-  // const openExportModal = useCallback(() => {
-  //   setIsImportExportModalOpen(true);
-  //   setIsImport(false);
-  // }, []);
 
   return {
-    // isLoading,
+    isLoading,
     designationList,
     closeDeleteModal,
-    setPaginationFilter, // Use the updated function
-    // onStatusChange,
-    // currentStatus, // Return currentStatus state
+    setPaginationFilter,
+
     openModal,
     onDelete,
     modalData,
     conformDelete,
     handleAdd,
-    // Removed 'control' as it is not declared or initialized
-    // paginationFilter,
+
     addDesignationModal,
-    // openImportModal,
-    // openExportModal,
+
+    paginationFilter,
     isImportExportModalOpen,
-    // isImport,
+
     isDeleteModalOpen,
     setIsImportExportModalOpen,
     isChildData,

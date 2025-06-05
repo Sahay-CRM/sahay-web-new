@@ -25,6 +25,7 @@ export default function CompanyProject() {
     permission,
     handleFilterChange,
     filters,
+    isLoading,
   } = useCompanyProject();
   const [tableRenderKey, setTableRenderKey] = useState(0);
 
@@ -145,6 +146,7 @@ export default function CompanyProject() {
               navigate(`/dashboard/projects/view/${row.projectId}`);
             }}
             showDropdown={true}
+            isLoading={isLoading}
             statusOptions={statusOptions}
             handleStatusChange={handleStatusChange}
             paginationDetails={projectlistdata}

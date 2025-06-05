@@ -10,45 +10,27 @@ export default function useAdminUser() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [modalData, setModalData] = useState<KPIFormData>({} as KPIFormData);
-  const [currentStatus, setCurrentStatus] = useState<number>(1); // Add state for currentStatus
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
   const permission = useSelector(getUserPermission).DATAPOINT_LIST;
 
   const { mutate: deleteDatapointById } = useDeleteDatapoint();
   const [isChildData, setIsChildData] = useState<string | undefined>();
-
+  const [viewModalData, setViewModalData] = useState<KPIFormData>(
+    {} as KPIFormData,
+  );
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   // Pagination Details and Filter
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 10,
     search: "",
-    status: currentStatus, // Use currentStatus state
   });
 
-  const { data: datpointData } = useGetCompanyDatapoint({
+  const { data: datpointData, isLoading } = useGetCompanyDatapoint({
     filter: paginationFilter,
   });
 
-  const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStatus = Number(event.target.value);
-    setCurrentStatus(newStatus); // Update currentStatus state
-
-    // Update pagination filter to include the selected status
-    setPaginationFilter((prevFilter) => ({
-      ...prevFilter,
-      status: newStatus,
-      currentPage: 1, // Reset to the first page
-    }));
-  };
-
-  // Ensure currentStatus is passed when updating the pagination filter
-  const setPaginationFilterWithStatus = (filter: PaginationFilter) => {
-    setPaginationFilter({
-      ...filter,
-      status: currentStatus, // Always include the currentStatus
-    });
-  };
   const handleAdd = () => {
     setModalData({
       companykpimasterId: "",
@@ -126,19 +108,20 @@ export default function useAdminUser() {
     setIsImport(false);
   }, []);
 
+  const handleRowsModalOpen = (data: KPIFormData) => {
+    setViewModalData(data);
+    setIsViewModalOpen(true);
+  };
   return {
-    // isLoading,
+    isLoading,
     datpointData,
     closeDeleteModal,
-    setPaginationFilter: setPaginationFilterWithStatus, // Use the updated function
-    onStatusChange,
-    currentStatus, // Return currentStatus state
+    setPaginationFilter,
     openModal,
     onDelete,
     modalData,
     conformDelete,
     handleAdd,
-    // Removed 'control' as it is not declared or initialized
     paginationFilter,
     isUserModalOpen,
     openImportModal,
@@ -149,5 +132,9 @@ export default function useAdminUser() {
     setIsImportExportModalOpen,
     isChildData,
     permission,
+    handleRowsModalOpen,
+    isViewModalOpen,
+    setIsViewModalOpen,
+    viewModalData,
   };
 }

@@ -14,7 +14,11 @@ export default function useAdminUser() {
   const [isImport, setIsImport] = useState(false);
   const [isChildData, setIsChildData] = useState<string | undefined>();
 
-  const [isRowModal, setIsRowModal] = useState<boolean>(false);
+  // Add state for view modal
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewModalData, setViewModalData] = useState<MeetingData>(
+    {} as MeetingData,
+  );
 
   const [filters, setFilters] = useState<{ selected?: string[] }>({});
 
@@ -22,14 +26,13 @@ export default function useAdminUser() {
     currentPage: 1,
     pageSize: 10,
     search: "",
-    status: currentStatus, // Use currentStatus state
   });
   const permission = useSelector(getUserPermission).MEETING_LIST;
   const { data: meetingData } = useGetCompanyMeeting({
     filter: { ...paginationFilter, statusArray: filters.selected },
   });
 
-  const { data: meetingStatus } = useDdMeetingStatus();
+  const { data: meetingStatus, isLoading } = useDdMeetingStatus();
 
   const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = Number(event.target.value);
@@ -116,12 +119,13 @@ export default function useAdminUser() {
   };
 
   const handleRowsModalOpen = (data: MeetingData) => {
-    setIsRowModal(true);
-    console.log("Selected row data:", data);
+    setViewModalData(data);
+    setIsViewModalOpen(true);
+    // setIsRowModal(true); // REMOVE this line if your view modal does not depend on isRowModal
   };
 
   return {
-    // isLoading,
+    isLoading,
     meetingData,
     closeDeleteModal,
     setPaginationFilter: setPaginationFilterWithStatus,
@@ -146,6 +150,8 @@ export default function useAdminUser() {
     filters,
     handleFilterChange,
     handleRowsModalOpen,
-    isRowModal,
+    isViewModalOpen,
+    setIsViewModalOpen,
+    viewModalData,
   };
 }
