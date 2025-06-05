@@ -324,7 +324,7 @@ interface CompanyProjectDataProps {
   ProjectTasks?: Task[];
   createdBy?: CreatedBy;
   projectStatusId: string;
-  projectStatus?: ProjectStatus;
+  projectStatus?: ProjectStatusRes;
   otherProjectEmployees?: string[];
 }
 
@@ -653,7 +653,7 @@ interface Task {
   projectId: string;
   projectName: string | null;
   assignUsers: AssignedUser[];
-  meetingId: string[];
+  meetingId: string;
   meetings: Meeting[];
   comments: TaskComment[];
   createdBy: CreatedBy;

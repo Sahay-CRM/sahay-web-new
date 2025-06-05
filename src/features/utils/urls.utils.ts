@@ -128,6 +128,8 @@ const Urls = {
   getKpiVisualize: () => `${baseUrl}/company/kpi-data/get/visual`,
 
   getHealthScoreList: () => `${baseUrl}/company/health/dashboard/get`,
+
+  selectCompanyList: () => `${baseUrl}/auth/switch-company`,
 };
 
 export default Urls;

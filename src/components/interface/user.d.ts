@@ -22,6 +22,8 @@ interface User {
   employeeEmail?: string;
   userLastName?: string;
   userFirstName?: string;
+  isSahayEmployee?: boolean;
+  mobile?: string;
 }
 
 interface UserDetails {

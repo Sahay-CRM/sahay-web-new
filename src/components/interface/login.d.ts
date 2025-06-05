@@ -17,6 +17,12 @@ interface VerifyOtp {
   otp?: string;
 }
 
+interface SwitchCompanyType {
+  selectedCompanyId: string;
+  mobile: string;
+  userType?: string;
+}
+
 interface VerifyOtpResponse {
   status: boolean;
   message?: string;
@@ -49,4 +55,8 @@ interface Company {
   mobile?: string;
   userType?: string;
   isReload?: boolean;
+  employeeId?: string;
+  employeeName?: string;
+  employeeEmail?: string;
+  isSahayEmployee?: boolean;
 }

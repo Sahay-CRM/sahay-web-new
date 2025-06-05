@@ -77,7 +77,7 @@ const CompanyModal: React.FC<CompanyModalProps> = ({
                       htmlFor={`company-${c.companyId}`}
                       className="ml-2 cursor-pointer"
                     >
-                      {c.companyName}
+                      {c.companyName} - ({c.userType})
                     </label>
                   </div>
                 ))}
