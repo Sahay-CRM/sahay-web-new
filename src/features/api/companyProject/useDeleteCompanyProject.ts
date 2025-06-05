@@ -9,17 +9,18 @@ type DatePaging = BaseResponse<CompanyProjectDataProps>;
 export default function useDeleteCompanyProject() {
   const deleteCompanyProjectMutation = useMutation({
     mutationKey: ["delete-company-project"],
-    mutationFn: async (data: CompanyProjectDataProps) => {
-      if (!data?.projectId) {
+    mutationFn: async (projectId: string) => {
+      if (!projectId) {
         throw new Error("Something Went Wrong");
       }
       const { data: resData } = await Api.delete<DatePaging>({
-        url: Urls.deleteCompanyProject(data.projectId),
+        url: Urls.deleteCompanyProject(projectId),
       });
       return resData;
     },
     onSuccess: (response) => {
       toast.success(response?.message);
+      queryClient.resetQueries({ queryKey: ["get-project-by-id"] });
       queryClient.resetQueries({ queryKey: ["get-project-list"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {

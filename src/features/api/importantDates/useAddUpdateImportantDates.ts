@@ -12,17 +12,11 @@ export default function useAddUpdateImportantDates() {
     mutationKey: ["add-or-update-important-dates"],
     mutationFn: async (data: ImportantDateData) => {
       const isUpdate = Boolean(data.importantDateId);
-      const payload = {
-        importantDateName: "",
-        importantDate: "",
-        importantDateRemarks: "",
-      };
-
       const config = {
         url: isUpdate
           ? Urls.updateImportantDates(data.importantDateId!)
           : Urls.addImportantDates(),
-        data: payload,
+        data: data,
       };
 
       const { data: resData } = isUpdate

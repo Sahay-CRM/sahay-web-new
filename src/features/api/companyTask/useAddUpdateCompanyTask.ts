@@ -10,23 +10,14 @@ type DatePaging = BaseResponse<CompanyProjectDataProps>;
 export default function useAddUpdateCompanyTask() {
   const addUpdateCompanyTaskMutation = useMutation({
     mutationKey: ["add-or-update-task-list"],
-    mutationFn: async (data: CompanyProjectDataProps) => {
-      const isUpdate = Boolean(data.projectId);
-      const payload = {
-        meetingName: data?.meetingName,
-        meetingDescription: data?.meetingDescription,
-        meetingDateTime: data?.meetingDateTime,
-        joiners: data?.joiners,
-      };
-
+    mutationFn: async (data: AddUpdateTask) => {
       const config = {
-        url: isUpdate
-          ? Urls.updateCompanyProject(data.projectId!)
-          : Urls.addCompanyProject(),
-        data: payload,
+        url: data.taskId
+          ? Urls.updateCompanyTask(data.taskId!)
+          : Urls.addCompanyTask(),
+        data: data,
       };
-
-      const { data: resData } = isUpdate
+      const { data: resData } = data.taskId
         ? await Api.put<DatePaging>(config)
         : await Api.post<DatePaging>(config);
 
@@ -35,6 +26,7 @@ export default function useAddUpdateCompanyTask() {
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["get-task-list"] });
+      queryClient.resetQueries({ queryKey: ["get-task-by-id"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

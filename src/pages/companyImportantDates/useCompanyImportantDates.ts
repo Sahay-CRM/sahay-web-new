@@ -1,101 +1,79 @@
+import { useDdCompanyMeeting } from "@/features/api/companyMeeting";
+import { useAllCompanyTask } from "@/features/api/companyTask";
 import { useGetImportantDates } from "@/features/api/importantDates";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useState } from "react";
+import { useSelector } from "react-redux";
 
 export default function useCalendar() {
-  // const { data: taskData } = useCompanyTask();
   const [modalData, setModalData] = useState<ImportantDatesDataProps>(
     {} as ImportantDatesDataProps,
   );
+  const permission = useSelector(getUserPermission).IMPORTANT_DATE;
   const [addImportantDate, setAddImportantDateModal] = useState(false);
-  const taskData = [
-    {
-      taskId: "b513908d-4eac-48a5-9355-08900b358722",
-      taskName: "hggj",
-      taskDescription: "hgjhgj",
-      taskDeadline: "2025-05-21T11:28:00.000Z",
-    },
-    {
-      taskId: "a87c28b3-e3d5-4f3c-b87e-6163b68bb2ed",
-      taskName: "hnfjhgj",
-      taskDescription: "hjhgj",
-      taskDeadline: "2025-05-20T05:57:00.000Z",
-    },
-  ];
 
-  const meetingData: MeetingsData[] = [
-    {
-      meetingId: "m1",
-      topic: "Team Sync",
-      agenda: "Weekly updates and blockers",
-      meetingDate: "2025-05-22T10:00:00.000Z",
-    },
-    {
-      meetingId: "m2",
-      topic: "Client Call",
-      agenda: "Project discussion",
-      meetingDate: "2025-05-23T14:00:00.000Z",
-    },
-  ];
-
-  const importantDatesData: ImportantDateData[] = [
-    {
-      importantDateId: "d1",
-      importantDateName: "Product Launch",
-      importantDateRemarks: "Go-live for v2.0",
-      importantDate: "2025-05-20T00:00:00.000Z",
-    },
-    {
-      importantDateId: "d2",
-      importantDateName: "Company Anniversary",
-      importantDateRemarks: "5 years celebration",
-      importantDate: "2025-05-30T00:00:00.000Z",
-    },
-  ];
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: importantDatesList } = useGetImportantDates();
+  const { data: companyTask } = useAllCompanyTask();
+  const { data: meetingData } = useDdCompanyMeeting();
 
-  const transformTaskDataToEvents = (data: TaskData[]): EventData[] =>
+  const transformTaskDataToEvents = (data: TaskGetPaging[]): EventData[] =>
     data.map((item) => {
-      const deadline = item.taskDeadline ? new Date(item.taskDeadline) : null;
+      // Always use new Date(isoString) so JS converts to local time zone
+      const hasStart = !!item.taskStartDate;
+      const start = hasStart
+        ? new Date(item.taskStartDate!)
+        : item.taskDeadline
+          ? new Date(item.taskDeadline)
+          : new Date();
+      const end = item.taskDeadline ? new Date(item.taskDeadline) : start;
 
       return {
         title: item.taskName || "Task Name",
         description: item.taskDescription || "No description provided",
         start:
-          deadline instanceof Date && !isNaN(deadline.getTime())
-            ? deadline
-            : new Date(),
-        end:
-          deadline instanceof Date && !isNaN(deadline.getTime())
-            ? deadline
-            : new Date(),
-        eventId: item.taskId,
+          start instanceof Date && !isNaN(start.getTime()) ? start : new Date(),
+        end: !hasStart
+          ? end instanceof Date && !isNaN(end.getTime())
+            ? end
+            : new Date()
+          : end instanceof Date && !isNaN(end.getTime())
+            ? end
+            : start,
+        eventId: item.taskId || "", // ensure string
+        bgColor: item.color || "#2e3195",
+        textColor: "#ffffff",
+        eventType: "task",
       };
     });
 
-  const transformMeetingDataToEvents = (data: MeetingsData[]): EventData[] =>
+  const transformMeetingDataToEvents = (data: Meeting[]): EventData[] =>
     data.map((item) => {
-      const deadline = item.meetingDate ? new Date(item.meetingDate) : null;
+      // Use meetingDateTime for both start and end, matching local time
+      const dateTime = item.meetingDateTime;
+      const eventDate = dateTime ? new Date(dateTime) : new Date();
 
       return {
-        title: item.agenda || "Meeting Name",
-        description: item.topic || "No Topic",
+        title: (item.meetingName || "Meeting Name") + " (meeting)",
+        description: item.meetingDescription || "No Topic",
         start:
-          deadline instanceof Date && !isNaN(deadline.getTime())
-            ? deadline
+          eventDate instanceof Date && !isNaN(eventDate.getTime())
+            ? eventDate
             : new Date(),
         end:
-          deadline instanceof Date && !isNaN(deadline.getTime())
-            ? deadline
+          eventDate instanceof Date && !isNaN(eventDate.getTime())
+            ? eventDate
             : new Date(),
-        eventId: item.meetingId,
+        eventId: item.meetingId || "", // ensure string
+        bgColor: item.color || "#2e3195",
+        textColor: "#ffffff",
+        eventType: "meeting",
       };
     });
 
   const transformImportantDateDataToEvents = (data: ImportantDateData[]) =>
     data.map((item) => {
-      const deadline = item.date ? new Date(item.date) : null;
+      // Use 'importantDate' field from API, not 'date'
+      const deadline = item.importantDate ? new Date(item.importantDate) : null;
       return {
         title: item.importantDateName || "Important Date",
         description: item.importantDateRemarks || "No Notes",
@@ -107,14 +85,30 @@ export default function useCalendar() {
           deadline instanceof Date && !isNaN(deadline.getTime())
             ? deadline
             : new Date(),
-        eventId: item.importantDateId,
+        eventId: item.importantDateId || "", // ensure string
+        bgColor: "#2f328b",
+        textColor: "#ffffff",
+        eventType: "importantDate",
       };
     });
 
-  const taskEvents = taskData ? transformTaskDataToEvents(taskData) : [];
-  const meetingEvents = transformMeetingDataToEvents(meetingData);
+  const taskEvents =
+    companyTask && companyTask.data
+      ? transformTaskDataToEvents(
+          Array.isArray(companyTask.data)
+            ? companyTask.data
+            : [companyTask.data],
+        )
+      : [];
+
+  const meetingEvents =
+    meetingData && Array.isArray(meetingData)
+      ? transformMeetingDataToEvents(meetingData)
+      : [];
   const importantDateEvents =
-    transformImportantDateDataToEvents(importantDatesData);
+    importantDatesList && importantDatesList.data
+      ? transformImportantDateDataToEvents(importantDatesList.data)
+      : [];
 
   const handleAddModal = () => {
     setModalData({
@@ -139,5 +133,6 @@ export default function useCalendar() {
     setAddImportantDateModal,
     setModalData,
     modalData,
+    permission,
   };
 }

@@ -1,395 +1,3 @@
-// import { useState } from "react";
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from "@/components/ui/table";
-// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// import { ChevronLeft, ChevronRight } from "lucide-react";
-// import clsx from "clsx";
-// import { kpiMockData } from "./mockData";
-
-// type LabelInfo = { label: string; year: number };
-
-// const generateLabels = (period: string): LabelInfo[] => {
-//   const labels: LabelInfo[] = [];
-//   const now = new Date(2025, 4);
-
-//   if (period === "Monthly") {
-//     for (let i = 0; i < 15; i++) {
-//       const date = new Date(now);
-//       date.setMonth(now.getMonth() + 2 - i);
-//       labels.push({
-//         label: date.toLocaleString("default", {
-//           month: "short",
-//         }),
-//         year: date.getFullYear(),
-//       });
-//     }
-//   } else if (period === "Quarterly") {
-//     for (let i = 0; i < 15; i++) {
-//       const date = new Date(now);
-//       date.setMonth(now.getMonth() + 6 - i * 3);
-//       const quarter = Math.floor(date.getMonth() / 3) + 1;
-//       labels.push({
-//         label: `Q${quarter}`,
-//         year: date.getFullYear(),
-//       });
-//     }
-//   }
-
-//   return labels;
-// };
-
-// export default function KPITable({ period }: { period: string }) {
-//   const [isCollapsed, setIsCollapsed] = useState(false);
-//   const filteredData = kpiMockData.filter((item) => item.period == period);
-//   const headerLabels = generateLabels(period);
-
-//   return (
-//     <div className="overflow-x-auto border rounded-lg">
-//       <Table className="min-w-full text-sm text-left">
-//         <TableHeader className="text-gray-700">
-//           <TableRow className="border-b">
-//             <TableHead
-//               className={clsx(
-//                 "transition-all duration-300 sticky",
-//                 isCollapsed ? "w-[40px]" : "w-[60px] px-3 py-2"
-//               )}
-//             ></TableHead>
-//             <TableHead
-//               className={clsx("sticky", isCollapsed ? "w-[80px]" : "px-3 py-2")}
-//             >
-//               KPI
-//             </TableHead>
-//             <TableHead
-//               className={clsx(
-//                 "sticky",
-//                 isCollapsed ? "w-0 p-0 opacity-0" : "px-3 py-2 w-[80px]"
-//               )}
-//             >
-//               Goal
-//             </TableHead>
-//             <TableHead
-//               className={clsx(
-//                 isCollapsed ? "w-0 p-0 opacity-0" : "px-3 py-2 w-[80px]"
-//               )}
-//             >
-//               Sum
-//             </TableHead>
-//             <TableHead
-//               className={clsx(
-//                 "sticky",
-//                 isCollapsed ? "w-0 p-0 opacity-0" : "px-3 py-2 w-[80px]"
-//               )}
-//             >
-//               Avg
-//             </TableHead>
-//             <TableHead className="w-[40px] px-1 py-2">
-//               <button
-//                 onClick={() => setIsCollapsed((prev) => !prev)}
-//                 className="hover:bg-gray-200 rounded-full p-1 bg-white text-black"
-//               >
-//                 {isCollapsed ? (
-//                   <ChevronLeft size={16} />
-//                 ) : (
-//                   <ChevronRight size={16} />
-//                 )}
-//               </button>
-//             </TableHead>
-
-//             {headerLabels.map((label, i) => {
-//               const now = new Date();
-//               const isCurrent = (() => {
-//                 if (period === "Monthly") {
-//                   const currentMonth = now.toLocaleString("default", {
-//                     month: "short",
-//                   });
-//                   const currentYear = now.getFullYear();
-//                   if (
-//                     currentMonth == label?.label &&
-//                     currentYear == label?.year
-//                   ) {
-//                     return true;
-//                   }
-//                 } else if (period === "Quarterly") {
-//                   const currentQuarter = Math.floor(now.getMonth() / 3) + 1;
-//                   const currentYear = now.getFullYear();
-//                   const currentLabel = `Q${currentQuarter}`;
-//                   if (
-//                     currentLabel == label?.label &&
-//                     currentYear == label?.year
-//                   ) {
-//                     return true;
-//                   }
-//                 }
-//                 return false;
-//               })();
-
-//               return (
-//                 <TableHead
-//                   key={i}
-//                   className={clsx(
-//                     "px-3 py-2 w-[100px] text-center whitespace-nowrap",
-//                     isCurrent
-//                       ? "bg-gray-100 text-primary font-semibold"
-//                       : "bg-white text-primary"
-//                   )}
-//                 >
-//                   <div className="flex flex-col items-center leading-tight">
-//                     <span>{label.label}</span>
-//                     <span className="text-xs text-muted-foreground">
-//                       {label.year}
-//                     </span>
-//                   </div>
-//                 </TableHead>
-//               );
-//             })}
-//           </TableRow>
-//         </TableHeader>
-
-//         <TableBody>
-//           {filteredData.map((item) => (
-//             <TableRow
-//               key={item.id}
-//               className="border-b bg-gray-200 hover:bg-gray-50"
-//             >
-//               <TableCell
-//                 className={clsx(
-//                   "sticky",
-//                   isCollapsed ? "w-[40px]" : "px-3 py-2 w-[60px]"
-//                 )}
-//               >
-//                 <Avatar className="h-8 w-8">
-//                   <AvatarImage src={item.profileUrl} alt="User" />
-//                   <AvatarFallback>UE</AvatarFallback>
-//                 </Avatar>
-//               </TableCell>
-//               <TableCell
-//                 className={clsx(
-//                   "sticky",
-//                   isCollapsed ? "w-[80px]" : "px-3 py-2"
-//                 )}
-//               >
-//                 {item.kpi}
-//               </TableCell>
-//               <TableCell
-//                 className={clsx(
-//                   "sticky",
-//                   isCollapsed ? "w-0 p-0 opacity-0" : "px-3 py-2 w-[80px]"
-//                 )}
-//               >
-//                 {item.goal}
-//               </TableCell>
-//               <TableCell
-//                 className={clsx(
-//                   "sticky",
-//                   isCollapsed ? "w-0 p-0 opacity-0" : "px-3 py-2 w-[80px]"
-//                 )}
-//               >
-//                 {item.sum}
-//               </TableCell>
-//               <TableCell
-//                 className={clsx(
-//                   "sticky",
-//                   isCollapsed ? "w-0 p-0 opacity-0" : "px-3 py-2 w-[80px]"
-//                 )}
-//               >
-//                 {item.avg}
-//               </TableCell>
-//               <TableCell className="w-[40px]" />
-//               {headerLabels.map((_, i) => (
-//                 <TableCell
-//                   key={i}
-//                   className={`px-3 py-2 bg-white ${i == 2 && "bg-gray-100"}`}
-//                 >
-//                   <input
-//                     type="text"
-//                     className={`border border-gray-300 rounded-sm text-sm ${i === 2 ? "bg-white" : "bg-white"}`}
-//                     style={{ width: "80px", height: "40px" }}
-//                     placeholder=""
-//                   />
-//                 </TableCell>
-//               ))}
-//             </TableRow>
-//           ))}
-//         </TableBody>
-//       </Table>
-//     </div>
-//   );
-// }
-
-// import { useState } from "react";
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from "@/components/ui/table";
-// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// import { ChevronLeft, ChevronRight } from "lucide-react";
-// import clsx from "clsx";
-// import { kpiMockData } from "./mockData";
-
-// type LabelInfo = { label: string; year: number };
-
-// const generateLabels = (period: string): LabelInfo[] => {
-//   const labels: LabelInfo[] = [];
-//   const now = new Date(2025, 4); // May 2025
-
-//   if (period === "Monthly") {
-//     for (let i = 0; i < 15; i++) {
-//       const date = new Date(now);
-//       date.setMonth(now.getMonth() + 2 - i);
-//       labels.push({
-//         label: date.toLocaleString("default", { month: "short" }),
-//         year: date.getFullYear(),
-//       });
-//     }
-//   } else if (period === "Quarterly") {
-//     for (let i = 0; i < 15; i++) {
-//       const date = new Date(now);
-//       date.setMonth(now.getMonth() + 6 - i * 3);
-//       const quarter = Math.floor(date.getMonth() / 3) + 1;
-//       labels.push({
-//         label: `Q${quarter}`,
-//         year: date.getFullYear(),
-//       });
-//     }
-//   }
-
-//   return labels;
-// };
-
-// export default function KPITable({ period }: { period: string }) {
-//   const [isCollapsed, setIsCollapsed] = useState(false);
-//   const filteredData = kpiMockData.filter((item) => item.period === period);
-//   const headerLabels = generateLabels(period);
-
-//   return (
-//     <div className="overflow-x-auto border rounded-lg max-w-full">
-//       <Table className="min-w-[1400px] text-sm text-left">
-//         <TableHeader className="text-gray-700">
-//           <TableRow className="border-b bg-white">
-//             <TableHead className="sticky left-0 z-10 bg-white w-[60px] px-3 py-2" />
-//             <TableHead className="sticky left-[60px] z-10 bg-white px-3 py-2 w-[140px]">
-//               KPI
-//             </TableHead>
-//             <TableHead className="sticky left-[200px] z-10 bg-white px-3 py-2 w-[80px]">
-//               Goal
-//             </TableHead>
-//             <TableHead className="sticky left-[280px] z-10 bg-white px-3 py-2 w-[80px]">
-//               Sum
-//             </TableHead>
-//             <TableHead className="sticky left-[360px] z-10 bg-white px-3 py-2 w-[80px]">
-//               Avg
-//             </TableHead>
-//             <TableHead className="sticky left-[440px] z-10 bg-white w-[40px] px-1 py-2">
-//               <button
-//                 onClick={() => setIsCollapsed((prev) => !prev)}
-//                 className="hover:bg-gray-200 rounded-full p-1 bg-white text-black"
-//               >
-//                 {isCollapsed ? (
-//                   <ChevronLeft size={16} />
-//                 ) : (
-//                   <ChevronRight size={16} />
-//                 )}
-//               </button>
-//             </TableHead>
-
-//             {headerLabels.map((label, i) => {
-//               const now = new Date();
-//               const isCurrent = (() => {
-//                 if (period === "Monthly") {
-//                   const currentMonth = now.toLocaleString("default", {
-//                     month: "short",
-//                   });
-//                   const currentYear = now.getFullYear();
-//                   return (
-//                     currentMonth === label.label && currentYear === label.year
-//                   );
-//                 } else if (period === "Quarterly") {
-//                   const currentQuarter = Math.floor(now.getMonth() / 3) + 1;
-//                   const currentYear = now.getFullYear();
-//                   const currentLabel = `Q${currentQuarter}`;
-//                   return (
-//                     currentLabel === label.label && currentYear === label.year
-//                   );
-//                 }
-//                 return false;
-//               })();
-
-//               return (
-//                 <TableHead
-//                   key={i}
-//                   className={clsx(
-//                     "px-3 py-2 w-[100px] text-center whitespace-nowrap",
-//                     isCurrent
-//                       ? "bg-gray-100 text-primary font-semibold"
-//                       : "bg-white text-primary"
-//                   )}
-//                 >
-//                   <div className="flex flex-col items-center leading-tight">
-//                     <span>{label.label}</span>
-//                     <span className="text-xs text-muted-foreground">
-//                       {label.year}
-//                     </span>
-//                   </div>
-//                 </TableHead>
-//               );
-//             })}
-//           </TableRow>
-//         </TableHeader>
-
-//         <TableBody>
-//           {filteredData.map((item) => (
-//             <TableRow key={item.id} className="border-b bg-gray-100">
-//               <TableCell className="sticky left-0 z-10 bg-gray-100 w-[60px] px-3 py-2">
-//                 <Avatar className="h-8 w-8">
-//                   <AvatarImage src={item.profileUrl} alt="User" />
-//                   <AvatarFallback>UE</AvatarFallback>
-//                 </Avatar>
-//               </TableCell>
-//               <TableCell className="sticky left-[60px] z-10 bg-gray-100 px-3 py-2 w-[140px]">
-//                 {item.kpi}
-//               </TableCell>
-//               <TableCell className="sticky left-[200px] z-10 bg-gray-100 px-3 py-2 w-[80px]">
-//                 {item.goal}
-//               </TableCell>
-//               <TableCell className="sticky left-[280px] z-10 bg-gray-100 px-3 py-2 w-[80px]">
-//                 {item.sum}
-//               </TableCell>
-//               <TableCell className="sticky left-[360px] z-10 bg-gray-100 px-3 py-2 w-[80px]">
-//                 {item.avg}
-//               </TableCell>
-//               <TableCell className="sticky left-[440px] z-10 bg-gray-100 w-[40px]" />
-
-//               {headerLabels.map((_, i) => (
-//                 <TableCell key={i} className="px-3 py-2 bg-white">
-//                   <input
-//                     type="text"
-//                     className="border border-gray-300 rounded-sm text-sm bg-white"
-//                     style={{ width: "80px", height: "40px" }}
-//                     placeholder=""
-//                   />
-//                 </TableCell>
-//               ))}
-//             </TableRow>
-//           ))}
-//         </TableBody>
-//       </Table>
-//     </div>
-//   );
-// }
-
-// ===================================================================================Separate Divs
-
-import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -398,544 +6,514 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import clsx from "clsx";
-import { kpiMockData } from "./mockData";
+import useKpiDashboard from "./useKpiDashboard";
+import {
+  formatCompactNumber,
+  formatTempValuesToPayload,
+  getColorFromName,
+  getKpiHeadersFromData,
+  isValidInput,
+} from "@/features/utils/formatting.utils";
+import { useEffect, useState, useMemo } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import FormSelect from "@/components/shared/Form/FormSelect";
+import { FormProvider, useForm } from "react-hook-form";
+import Loader from "@/components/shared/Loader/Loader";
+import { FormDatePicker } from "@/components/shared/Form/FormDatePicker/FormDatePicker";
+import { Button } from "@/components/ui/button";
+import { RefreshCcw, Search } from "lucide-react";
+import TabsSection from "./TabSection";
+import { addUpdateKpi } from "@/features/api/kpiDashboard";
+import WarningDialog from "./WarningModal";
+import SearchKpiModal from "./VisualizeModal";
 
-type LabelInfo = { label: string; year: number };
-// const generateLabels = (period: string): LabelInfo[] => {
-//   const labels: LabelInfo[] = [];
-//   const now = new Date(2025, 4); // May 2025
+// --- Types for API data ---
+type Assignee = {
+  dataPointEmpId: string;
+  employeeName: string;
+  value1: string | number | null;
+  value2?: string | number | null;
+};
+type Kpi = {
+  kpiId: string;
+  kpiName: string;
+  kpiLabel: string;
+  validationType: string;
+  assignees: Assignee[];
+};
+type FrequencyData = {
+  srNo: number;
+  frequencyType: string;
+  count: number;
+  kpis: Kpi[];
+};
+type KpiDataCell = {
+  dataPointEmpId: string;
+  validationType: string;
+  startDate: string;
+  endDate: string;
+  data: string | number | null;
+  value2?: string | number | null; // Added value2 property
+};
 
-//   if (period === "Monthly") {
-//     for (let i = 0; i < 15; i++) {
-//       const date = new Date(now);
-//       date.setMonth(now.getMonth() + 2 - i);
-//       labels.push({
-//         label: date.toLocaleString("default", { month: "short" }),
-//         year: date.getFullYear(),
-//       });
-//     }
-//   } else if (period === "Quarterly") {
-//     for (let i = 0; i < 15; i++) {
-//       const date = new Date(now);
-//       date.setMonth(now.getMonth() + 6 - i * 3);
-//       const quarter = Math.floor(date.getMonth() / 3) + 1;
-//       labels.push({
-//         label: `Q${quarter}`,
-//         year: date.getFullYear(),
-//       });
-//     }
-//   } else if (period === "Half-Yearly") {
-//     for (let i = 0; i < 10; i++) {
-//       const date = new Date(now);
-//       date.setMonth(now.getMonth() + 12 - i * 6); // step back by 6 months
-//       const month = date.getMonth();
-//       let label = "";
-//       let year = 0;
+function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
+  return (
+    Array.isArray(data) &&
+    data.length > 0 &&
+    Array.isArray(data[0]) &&
+    (data[0].length === 0 ||
+      (typeof data[0][0] === "object" &&
+        data[0][0] !== null &&
+        "dataPointEmpId" in data[0][0]))
+  );
+}
 
-//       if (month >= 3 && month <= 8) {
-//         // April to September => H1
-//         label = "H1";
-//         year = date.getFullYear();
-//       } else {
-//         // October to March => H2
-//         label = "H2";
-//         year = month <= 2 ? date.getFullYear() - 1 : date.getFullYear();
-//       }
+export default function KPITable() {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState("DAILY");
+  const [showWarning, setShowWarning] = useState(false);
+  const [pendingPeriod, setPendingPeriod] = useState<string | null>(null);
+  const { kpiStructure, kpiData } = useKpiDashboard({
+    selectedPeriod,
+    selectedDate,
+  });
+  const isLoading = !kpiStructure || !kpiData;
 
-//       labels.push({ label, year });
-//     }
-//   } else if (period === "Yearly") {
-//     for (let i = 0; i < 10; i++) {
-//       const year = now.getFullYear() - i + 1; // financial year ending
-//       labels.push({
-//         label: `${year - 1}-${year.toString().slice(-2)}`, // e.g., 2023–24
-//         year: year - 1,
-//       });
-//     }
-//   }
+  // Memoize filteredData
+  const filteredData = useMemo(() => {
+    return (
+      (kpiStructure?.data as FrequencyData[] | undefined)?.filter(
+        (item) => item.frequencyType == selectedPeriod,
+      ) ?? []
+    );
+  }, [kpiStructure, selectedPeriod]);
 
-//   return labels;
-// };
+  // Use type guard for headers
+  const headers = getKpiHeadersFromData(
+    isKpiDataCellArrayArray(kpiData?.data) ? kpiData.data : [],
+    selectedPeriod,
+  );
 
-const generateLabels = (period: string): LabelInfo[] => {
-  const labels: LabelInfo[] = [];
-  const now = new Date(2025, 4); // May 2025
-
-  if (period === "Monthly") {
-    for (let i = 0; i < 15; i++) {
-      const date = new Date(now);
-      date.setMonth(now.getMonth() + 2 - i);
-      labels.push({
-        label: date.toLocaleString("default", { month: "short" }),
-        year: date.getFullYear(),
+  // Flatten KPI structure to rows: each row = { kpi, assignee }
+  const kpiRows = useMemo(() => {
+    if (!filteredData.length || !filteredData[0].kpis) return [];
+    const rows: { kpi: Kpi; assignee: Assignee }[] = [];
+    filteredData[0].kpis.forEach((kpi) => {
+      kpi.assignees?.forEach((assignee) => {
+        rows.push({
+          kpi,
+          assignee,
+        });
       });
-    }
-  } else if (period === "Quarterly") {
-    for (let i = 0; i < 15; i++) {
-      const date = new Date(now);
-      date.setMonth(now.getMonth() + 6 - i * 3);
-      const quarter = Math.floor(date.getMonth() / 3) + 1;
-      labels.push({
-        label: `Q${quarter}`,
-        year: date.getFullYear(),
-      });
-    }
-  } else if (period === "Half-Yearly") {
-    for (let i = 0; i < 10; i++) {
-      const date = new Date(now);
-      date.setMonth(now.getMonth() + 12 - i * 6);
-      const month = date.getMonth();
-      let label = "";
-      let year = 0;
-
-      if (month >= 3 && month <= 8) {
-        label = "H1";
-        year = date.getFullYear();
-      } else {
-        label = "H2";
-        year = month <= 2 ? date.getFullYear() - 1 : date.getFullYear();
-      }
-
-      labels.push({ label, year });
-    }
-  } else if (period === "Yearly") {
-    for (let i = 0; i < 10; i++) {
-      const year = now.getFullYear() - i + 1;
-      labels.push({
-        label: `${year - 1}-${year.toString().slice(-2)}`,
-        year: year - 1,
-      });
-    }
-  } else if (period === "Daily") {
-    for (let i = 0; i < 30; i++) {
-      const date = new Date(now);
-      date.setDate(now.getDate() - i);
-      labels.push({
-        label: date.toLocaleDateString("default", {
-          day: "2-digit",
-          month: "short",
-        }),
-        year: date.getFullYear(),
-      });
-    }
-  } else if (period === "Weekly") {
-    // const weeks: LabelInfo[] = [];
-    const startFrom = new Date(now);
-    startFrom.setMonth(3); // April
-    startFrom.setDate(1); // April 1
-    startFrom.setHours(0, 0, 0, 0);
-
-    // Find the first Saturday on or after April 1
-    const firstWeekEnd = new Date(startFrom);
-    const day = firstWeekEnd.getDay();
-    const daysToSaturday = (6 - day + 7) % 7;
-    firstWeekEnd.setDate(firstWeekEnd.getDate() + daysToSaturday);
-
-    const weekRanges: { start: Date; end: Date }[] = [];
-
-    // First week: Apr 1 – first Saturday
-    weekRanges.push({
-      start: new Date(startFrom),
-      end: new Date(firstWeekEnd),
     });
+    return rows;
+  }, [filteredData]);
 
-    // Continue adding weeks till current date (backwards)
-    let currentEnd = new Date(firstWeekEnd);
+  // Prepare input values for each cell
+  const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
+  const [tempValues, setTempValues] = useState<{ [key: string]: string }>({});
+  const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
+    {},
+  );
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [selectedKpiSearchData, setSelectedKpiSearchData] = useState<{
+    dataPointEmpId: string;
+    selectFrequency: string;
+  } | null>(null);
+  const { mutate: addUpdateKpiData } = addUpdateKpi();
 
-    while (currentEnd < now) {
-      const start = new Date(currentEnd);
-      start.setDate(start.getDate() + 1);
+  useEffect(() => {
+    if (isKpiDataCellArrayArray(kpiData?.data)) {
+      const initialValues: { [key: string]: string } = {};
+      kpiData.data.forEach((row: KpiDataCell[], rowIndex: number) => {
+        row.forEach((cell: KpiDataCell, colIndex: number) => {
+          initialValues[`${rowIndex}-${colIndex}`] =
+            cell?.data?.toString() ?? "";
+        });
+      });
+      setInputValues(initialValues);
+      setTempValues({});
+    }
+  }, [kpiData]);
 
-      const end = new Date(start);
-      end.setDate(start.getDate() + 6); // Sunday–Saturday week
+  const methods = useForm();
 
-      if (end > now) end.setTime(now.getTime());
+  function getFormattedValue(
+    validationType: string,
+    value1: string | number | null,
+    value2?: string | number | null,
+  ) {
+    const formatted1 = formatCompactNumber(value1);
+    const formatted2 = formatCompactNumber(value2);
 
-      weekRanges.push({ start, end });
-
-      currentEnd = new Date(end);
+    if (validationType === "BETWEEN") {
+      return `${formatted1} - ${formatted2}`;
     }
 
-    // Pick last 10 weeks (reverse to show recent first)
-    const lastWeeks = weekRanges.slice(-10).reverse();
-
-    for (const week of lastWeeks) {
-      const label = `${week.start.getDate().toString().padStart(2, "0")} ${week.start.toLocaleString("default", { month: "short" })} - ${week.end.getDate().toString().padStart(2, "0")} ${week.end.toLocaleString("default", { month: "short" })}`;
-      labels.push({
-        label,
-        year: week.start.getFullYear(),
-      });
+    switch (validationType) {
+      case "EQUAL_TO":
+        return `= ${formatted1}`;
+      case "GREATER_THAN":
+        return `> ${formatted1}`;
+      case "LESS_THAN":
+        return `< ${formatted1}`;
+      case "GREATER_THAN_OR_EQUAL_TO":
+        return `≥ ${formatted1}`;
+      case "LESS_THAN_OR_EQUAL_TO":
+        return `≤ ${formatted1}`;
+      case "YES_NO":
+        return value1 === "1" ? "✓(Yes)" : "✗(No)";
+      default:
+        return formatted1;
     }
   }
 
-  return labels;
-};
+  const handleSubmit = () => {
+    addUpdateKpiData(formatTempValuesToPayload(tempValues));
+  };
 
-export default function KPITable({ period }: { period: string }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const filteredData = kpiMockData.filter((item) => item.period == period);
-  const headerLabels = generateLabels(period);
-
+  const handlePeriodChange = (newPeriod: string) => {
+    if (Object.keys(tempValues).length > 0) {
+      setPendingPeriod(newPeriod);
+      setShowWarning(true);
+    } else {
+      setSelectedPeriod(newPeriod);
+    }
+  };
+  if (isLoading) {
+    return <Loader />;
+  }
   return (
-    <div className="relative w-full">
-      <div className="flex w-full">
-        <div className="bg-white sticky left-0 z-10 border-r">
-          <Table className="min-w-fit text-sm text-left rounded-none">
+    <FormProvider {...methods}>
+      <div className="flex justify-between">
+        <div className="flex justify-between items-center">
+          <TabsSection
+            selectedPeriod={selectedPeriod}
+            onSelectPeriod={handlePeriodChange}
+          />
+        </div>
+        <div className="flex gap-4 items-center justify-end">
+          <Button onClick={handleSubmit}>Submit</Button>{" "}
+          <FormDatePicker
+            value={selectedDate}
+            onSubmit={(date) => {
+              setSelectedDate(date ?? null);
+            }}
+            className="w-[200px]"
+            placeholder="Choose a date"
+            periodType={
+              selectedPeriod as
+                | "DAILY"
+                | "WEEKLY"
+                | "MONTHLY"
+                | "QUARTERLY"
+                | "HALFYEARLY"
+                | "YEARLY"
+            }
+          />
+          {selectedDate && (
+            <Button onClick={() => setSelectedDate(null)}>
+              <RefreshCcw />
+              Reset Date
+            </Button>
+          )}
+        </div>
+      </div>
+      <div className="relative w-full">
+        <div className="overflow-x-auto w-full scroll-thin">
+          <Table className="min-w-max text-sm text-center">
             <TableHeader>
               <TableRow className="h-[50px]">
                 <TableHead
                   className={clsx(
-                    "bg-primary",
-                    isCollapsed ? "w-[40px]" : "w-[60px] px-3 py-2",
+                    "bg-primary w-[60px] px-3 py-2 sticky left-0 z-20",
                   )}
-                ></TableHead>
+                />
                 <TableHead
-                  className={clsx(isCollapsed ? "w-[80px]" : "px-3 py-2")}
+                  className={clsx(
+                    "px-3 py-2 bg-primary sticky left-[60px] z-20 text-white w-[140px] text-center",
+                  )}
                 >
                   KPI
                 </TableHead>
-                {!isCollapsed && (
-                  <>
-                    <TableHead className="px-3 py-2 w-[80px]">Goal</TableHead>
-                    <TableHead className="px-3 py-2 w-[80px]">Sum</TableHead>
-                    <TableHead className="px-3 py-2 w-[80px]">Avg</TableHead>
-                  </>
-                )}
-                <TableHead className="w-[40px] px-1 py-2">
-                  <button
-                    onClick={() => setIsCollapsed((prev) => !prev)}
-                    className="hover:bg-gray-200 rounded-full p-1 bg-white text-black"
-                  >
-                    {isCollapsed ? (
-                      <ChevronLeft size={16} />
-                    ) : (
-                      <ChevronRight size={16} />
-                    )}
-                  </button>
+                <TableHead className="px-3 py-2 w-[120px] bg-primary sticky left-[200px] z-20 text-white text-center">
+                  Goal
                 </TableHead>
+                <TableHead className="w-[60px] bg-primary sticky left-[320px] z-20" />
+                {headers.map((header, i) => (
+                  <TableHead
+                    key={i}
+                    className="px-3 py-2 w-[100px] whitespace-nowrap bg-white text-gray-600"
+                  >
+                    <div className="flex flex-col items-center leading-tight">
+                      <span>{header.label}</span>
+                      {header.year && (
+                        <span className="text-xs text-muted-foreground">
+                          {header.year}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
-
             <TableBody>
-              {filteredData.map((item) => (
-                <TableRow
-                  key={item.id}
-                  className="border-b bg-gray-100 hover:bg-gray-50 h-[57px]"
-                >
-                  <TableCell
-                    className={clsx(
-                      isCollapsed ? "w-[40px]" : "px-3 py-2 w-[60px]",
-                    )}
-                  >
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={item.profileUrl} alt="User" />
-                      <AvatarFallback>UE</AvatarFallback>
-                    </Avatar>
-                  </TableCell>
-                  <TableCell
-                    className={clsx(isCollapsed ? "w-[80px]" : "px-3 py-2")}
-                  >
-                    {item.kpi}
-                  </TableCell>
-                  {!isCollapsed && (
-                    <>
-                      <TableCell className="px-3 py-2 w-[80px]">
-                        {item.goal}
-                      </TableCell>
-                      <TableCell className="px-3 py-2 w-[80px]">
-                        {item.sum}
-                      </TableCell>
-                      <TableCell className="px-3 py-2 w-[80px]">
-                        {item.avg}
-                      </TableCell>
-                    </>
-                  )}
-                  <TableCell className="w-[40px]" />
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-
-        {/* Scrollable right columns */}
-        <div className="overflow-x-auto w-full scroll-thin">
-          <Table className="min-w-max text-sm text-center">
-            <TableHeader>
-              <TableRow>
-                {headerLabels.map((label, i) => {
-                  const now = new Date();
-                  const isCurrent = (() => {
-                    if (period === "Monthly") {
-                      const currentMonth = now.toLocaleString("default", {
-                        month: "short",
-                      });
-                      return (
-                        currentMonth === label.label &&
-                        now.getFullYear() === label.year
-                      );
-                    } else {
-                      const currentQuarter = Math.floor(now.getMonth() / 3) + 1;
-                      return (
-                        `Q${currentQuarter}` === label.label &&
-                        now.getFullYear() === label.year
-                      );
-                    }
-                  })();
-
-                  return (
-                    <TableHead
-                      key={i}
+              {kpiRows.map((row) => {
+                const { kpi, assignee } = row;
+                let dataRow: KpiDataCell[] | undefined = undefined;
+                if (isKpiDataCellArrayArray(kpiData?.data)) {
+                  dataRow = isKpiDataCellArrayArray(kpiData?.data)
+                    ? (kpiData.data as KpiDataCell[][]).find(
+                        (cells) =>
+                          Array.isArray(cells) &&
+                          cells.length > 0 &&
+                          cells[0].dataPointEmpId === assignee.dataPointEmpId,
+                      )
+                    : undefined;
+                }
+                return (
+                  <TableRow key={assignee.dataPointEmpId} className="border-b">
+                    <TableCell
                       className={clsx(
-                        "px-3 py-2 w-[100px] whitespace-nowrap",
-                        isCurrent
-                          ? "bg-gray-100 text-primary font-semibold"
-                          : "bg-white text-primary",
+                        "px-3 py-2 w-[60px] bg-gray-100 sticky left-0 z-10",
                       )}
                     >
-                      <div className="flex flex-col items-center leading-tight">
-                        <span>{label.label}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {label.year}
-                        </span>
-                      </div>
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {filteredData.map((item, idx) => (
-                <TableRow key={idx} className="bg-white border-b">
-                  {headerLabels.map((_, i) => (
+                      <Avatar
+                        className={`h-8 w-8 ${getColorFromName(assignee?.employeeName)}`}
+                      >
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <AvatarFallback
+                                className={`${getColorFromName(assignee?.employeeName)} font-bold`}
+                              >
+                                {(() => {
+                                  if (!assignee?.employeeName) return "";
+                                  const names =
+                                    assignee.employeeName.split(" ");
+                                  const firstInitial = names[0]?.[0] ?? "";
+                                  const lastInitial =
+                                    names.length > 1
+                                      ? names[names.length - 1][0]
+                                      : "";
+                                  return (
+                                    firstInitial + lastInitial
+                                  ).toUpperCase();
+                                })()}
+                              </AvatarFallback>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {assignee?.employeeName}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </Avatar>
+                    </TableCell>
                     <TableCell
-                      key={i}
-                      className={`px-3 py-2 ${i === 2 ? "bg-gray-100" : ""}`}
+                      className={clsx(
+                        "px-3 py-2 bg-gray-100 sticky left-[60px] z-10 w-[140px]",
+                      )}
                     >
-                      <input
-                        type="text"
-                        className={`border p-2 border-gray-300 rounded-sm text-sm w-[80px] h-[40px] ${i === 2 ? "bg-white" : ""}`}
-                        placeholder=""
+                      {/* {kpi?.kpiName} */}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-md font-semibold cursor-default">
+                              {kpi?.kpiName}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <span>{kpi?.kpiLabel}</span>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
+                    <TableCell className="px-3 py-2 w-[120px] bg-gray-100 sticky left-[200px] z-10">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="truncate max-w-[100px] inline-block cursor-default">
+                              {getFormattedValue(
+                                kpi.validationType,
+                                assignee?.value1,
+                                assignee?.value2,
+                              )}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <span>
+                              {kpi.validationType === "BETWEEN"
+                                ? `${assignee?.value1 ?? ""} - ${assignee?.value2 ?? ""}`
+                                : (assignee?.value1 ?? "")}
+                            </span>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
+                    <TableCell className="w-[60px] bg-gray-100 sticky left-[320px] z-10 text-center">
+                      <Search
+                        onClick={() => {
+                          setSelectedKpiSearchData({
+                            dataPointEmpId: assignee.dataPointEmpId,
+                            selectFrequency: selectedPeriod,
+                          });
+                          setSearchModalOpen(true);
+                        }}
+                        className="h-4 w-4 text-muted-foreground mx-auto"
                       />
                     </TableCell>
-                  ))}
-                </TableRow>
-              ))}
+                    {headers.map((_, colIdx) => {
+                      const cell = dataRow?.[colIdx];
+                      const key = `${assignee.dataPointEmpId}/${cell?.startDate}/${cell?.endDate}`;
+                      const validationType = cell.validationType;
+                      const value1 = cell?.value1;
+                      const value2 = cell?.value2;
+                      const inputVal =
+                        inputValues[key] ?? cell?.data?.toString() ?? "";
+                      if (validationType == "YES_NO") {
+                        const selectOptions = [
+                          { value: "1", label: "Yes" },
+                          { value: "0", label: "No" },
+                        ];
+                        const isValid = inputVal === String(value1);
+                        return (
+                          <TableCell key={colIdx} className="px-3 py-2">
+                            <div
+                              className={clsx(
+                                "rounded-sm text-sm w-[100px] h-[40px]",
+                                inputVal !== "" &&
+                                  (isValid
+                                    ? "bg-green-100 border border-green-500"
+                                    : "bg-red-100 border border-red-500"),
+                              )}
+                            >
+                              <FormSelect
+                                value={inputVal}
+                                onChange={(val) => {
+                                  setInputValues((prev) => ({
+                                    ...prev,
+                                    [key]: Array.isArray(val)
+                                      ? val.join(", ")
+                                      : val,
+                                  }));
+                                  setTempValues((prev) => ({
+                                    ...prev,
+                                    [key]: Array.isArray(val)
+                                      ? val.join(", ")
+                                      : val,
+                                  }));
+                                }}
+                                options={selectOptions}
+                                placeholder="Select"
+                              />
+                            </div>
+                          </TableCell>
+                        );
+                      }
+                      return (
+                        <TableCell key={colIdx} className="px-3 py-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <input
+                                  type="text"
+                                  value={
+                                    inputFocused[key]
+                                      ? inputVal
+                                      : formatCompactNumber(inputVal)
+                                  }
+                                  onFocus={() =>
+                                    setInputFocused((prev) => ({
+                                      ...prev,
+                                      [key]: true,
+                                    }))
+                                  }
+                                  onBlur={() =>
+                                    setInputFocused((prev) => ({
+                                      ...prev,
+                                      [key]: false,
+                                    }))
+                                  }
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    const isValidNumber =
+                                      /^(\d+(\.\d*)?|\.\d*)?$/.test(val) ||
+                                      val === "";
+                                    if (isValidNumber) {
+                                      setInputValues((prev) => ({
+                                        ...prev,
+                                        [key]: val,
+                                      }));
+                                    }
+                                    setTempValues((prev) => ({
+                                      ...prev,
+                                      [key]: e?.target.value,
+                                    }));
+                                  }}
+                                  className={clsx(
+                                    "border p-2 rounded-sm text-center text-sm w-[100px] h-[40px]",
+                                    inputVal !== "" &&
+                                      (isValidInput(
+                                        validationType,
+                                        inputVal,
+                                        value1,
+                                        value2,
+                                      )
+                                        ? "bg-green-100 border-green-500"
+                                        : "bg-red-100 border-red-500"),
+                                  )}
+                                  placeholder=""
+                                />
+                              </TooltipTrigger>
+                              {inputVal && (
+                                <TooltipContent side="top">
+                                  <span>{inputVal}</span>
+                                </TooltipContent>
+                              )}
+                            </Tooltip>
+                          </TooltipProvider>
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
       </div>
-    </div>
+      <WarningDialog
+        open={showWarning}
+        onSubmit={() => {
+          handleSubmit();
+          setTempValues({});
+          if (pendingPeriod) setSelectedPeriod(pendingPeriod);
+          setPendingPeriod(null);
+          setShowWarning(false);
+        }}
+        onDiscard={() => {
+          setTempValues({});
+          if (pendingPeriod) setSelectedPeriod(pendingPeriod);
+          setPendingPeriod(null);
+          setShowWarning(false);
+        }}
+        onClose={() => setShowWarning(false)}
+      />
+      {selectedKpiSearchData && (
+        <SearchKpiModal
+          open={searchModalOpen}
+          onClose={() => setSearchModalOpen(false)}
+          dataPointEmpId={selectedKpiSearchData.dataPointEmpId}
+          selectFrequency={selectedKpiSearchData.selectFrequency}
+        />
+      )}
+    </FormProvider>
   );
 }
-
-// ------------------------------------------------------------------MATCH VALUE OF CELL
-
-// import { useState } from "react";
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from "@/components/ui/table";
-// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// import { ChevronLeft, ChevronRight } from "lucide-react";
-// import clsx from "clsx";
-// import { parseISO, isWithinInterval, startOfMonth, endOfMonth } from "date-fns";
-// import { kpiMockData } from "./mockData";
-
-// type LabelInfo = { label: string; year: number; month: number };
-
-// const generateLabels = (period: string): LabelInfo[] => {
-//   const labels: LabelInfo[] = [];
-//   const now = new Date(2025, 4); // May 2025
-
-//   if (period === "Monthly") {
-//     for (let i = 0; i < 15; i++) {
-//       const date = new Date(now);
-//       date.setMonth(now.getMonth() + 2 - i);
-//       labels.push({
-//         label: date.toLocaleString("default", { month: "short" }),
-//         year: date.getFullYear(),
-//         month: date.getMonth(),
-//       });
-//     }
-//   }
-
-//   return labels;
-// };
-
-// export default function KPITable({ period }: { period: string }) {
-//   const [isCollapsed, setIsCollapsed] = useState(false);
-//   const filteredData = kpiMockData.filter((item) => item.period === period);
-//   const headerLabels = generateLabels(period);
-
-//   return (
-//     <div className="relative w-full">
-//       <div className="flex w-full">
-//         {/* Left side fixed section */}
-//         <div className="bg-white sticky left-0 z-10 border-r">
-//           <Table className="min-w-fit text-sm text-left rounded-none">
-//             <TableHeader>
-//               <TableRow className="h-[50px]">
-//                 <TableHead
-//                   className={clsx(
-//                     "bg-primary",
-//                     isCollapsed ? "w-[40px]" : "w-[60px] px-3 py-2"
-//                   )}
-//                 ></TableHead>
-//                 <TableHead
-//                   className={clsx(isCollapsed ? "w-[80px]" : "px-3 py-2")}
-//                 >
-//                   KPI
-//                 </TableHead>
-//                 {!isCollapsed && (
-//                   <>
-//                     <TableHead className="px-3 py-2 w-[80px]">Goal</TableHead>
-//                     <TableHead className="px-3 py-2 w-[80px]">Sum</TableHead>
-//                     <TableHead className="px-3 py-2 w-[80px]">Avg</TableHead>
-//                   </>
-//                 )}
-//                 <TableHead className="w-[40px] px-1 py-2">
-//                   <button
-//                     onClick={() => setIsCollapsed((prev) => !prev)}
-//                     className="hover:bg-gray-200 rounded-full p-1 bg-white text-black"
-//                   >
-//                     {isCollapsed ? (
-//                       <ChevronLeft size={16} />
-//                     ) : (
-//                       <ChevronRight size={16} />
-//                     )}
-//                   </button>
-//                 </TableHead>
-//               </TableRow>
-//             </TableHeader>
-
-//             <TableBody>
-//               {filteredData.map((item) => (
-//                 <TableRow
-//                   key={item.id}
-//                   className="border-b bg-gray-100 hover:bg-gray-50 h-[57px]"
-//                 >
-//                   <TableCell
-//                     className={clsx(
-//                       isCollapsed ? "w-[40px]" : "px-3 py-2 w-[60px]"
-//                     )}
-//                   >
-//                     <Avatar className="h-8 w-8">
-//                       <AvatarImage src={item.profileUrl} alt="User" />
-//                       <AvatarFallback>UE</AvatarFallback>
-//                     </Avatar>
-//                   </TableCell>
-//                   <TableCell
-//                     className={clsx(isCollapsed ? "w-[80px]" : "px-3 py-2")}
-//                   >
-//                     {item.kpi}
-//                   </TableCell>
-//                   {!isCollapsed && (
-//                     <>
-//                       <TableCell className="px-3 py-2 w-[80px]">
-//                         {item.goal}
-//                       </TableCell>
-//                       <TableCell className="px-3 py-2 w-[80px]">
-//                         {item.sum}
-//                       </TableCell>
-//                       <TableCell className="px-3 py-2 w-[80px]">
-//                         {item.avg}
-//                       </TableCell>
-//                     </>
-//                   )}
-//                   <TableCell className="w-[40px]" />
-//                 </TableRow>
-//               ))}
-//             </TableBody>
-//           </Table>
-//         </div>
-
-//         {/* Right scrollable section */}
-//         <div className="overflow-x-auto w-full scroll-thin">
-//           <Table className="min-w-max text-sm text-center">
-//             <TableHeader>
-//               <TableRow>
-//                 {headerLabels.map((label, i) => {
-//                   const now = new Date();
-//                   const isCurrent =
-//                     label.month === now.getMonth() &&
-//                     label.year === now.getFullYear();
-
-//                   return (
-//                     <TableHead
-//                       key={i}
-//                       className={clsx(
-//                         "px-3 py-2 w-[100px] whitespace-nowrap",
-//                         isCurrent
-//                           ? "bg-gray-100 text-primary font-semibold"
-//                           : "bg-white text-primary"
-//                       )}
-//                     >
-//                       <div className="flex flex-col items-center leading-tight">
-//                         <span>{label.label}</span>
-//                         <span className="text-xs text-muted-foreground">
-//                           {label.year}
-//                         </span>
-//                       </div>
-//                     </TableHead>
-//                   );
-//                 })}
-//               </TableRow>
-//             </TableHeader>
-
-//             <TableBody>
-//               {filteredData.map((item, idx) => (
-//                 <TableRow key={idx} className="bg-white border-b">
-//                   {headerLabels.map((label, i) => {
-//                     const matchedCell = item.cells?.find((cell) => {
-//                       if (!cell.startDate || !cell.endDate) return false;
-//                       const start = parseISO(cell.startDate);
-//                       const end = parseISO(cell.endDate);
-//                       console.log(
-//                         startOfMonth(new Date(label.year, label.month)),
-//                         "<===== "
-//                       );
-//                       return (
-//                         isWithinInterval(start, {
-//                           start: startOfMonth(
-//                             new Date(label.year, label.month)
-//                           ),
-//                           end: endOfMonth(new Date(label.year, label.month)),
-//                         }) ||
-//                         isWithinInterval(end, {
-//                           start: startOfMonth(
-//                             new Date(label.year, label.month)
-//                           ),
-//                           end: endOfMonth(new Date(label.year, label.month)),
-//                         })
-//                       );
-//                     });
-
-//                     return (
-//                       <TableCell key={i} className="px-3 py-2">
-//                         <input
-//                           type="text"
-//                           className="border p-2 border-gray-300 rounded-sm text-sm w-[80px] h-[40px]"
-//                           value={matchedCell?.amount ?? ""}
-//                           placeholder=""
-//                           readOnly
-//                         />
-//                       </TableCell>
-//                     );
-//                   })}
-//                 </TableRow>
-//               ))}
-//             </TableBody>
-//           </Table>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }

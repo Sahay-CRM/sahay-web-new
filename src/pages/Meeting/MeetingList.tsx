@@ -7,7 +7,7 @@ import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownS
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
+import { RefreshCw } from "lucide-react";
 
 export default function MeetingList() {
   const {
@@ -20,7 +20,15 @@ export default function MeetingList() {
     isDeleteModalOpen,
     paginationFilter,
     isChildData,
+    permission,
+    statusOptions,
+    filters,
+    handleFilterChange,
+    handleRowsModalOpen,
+    // isRowModal,
   } = useMeeting();
+
+  // console.log(isRowModal);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -33,6 +41,8 @@ export default function MeetingList() {
     { key: "meetingDateTime", label: "Meeting TIme", visible: true },
     { key: "joinerNames", label: "Joiners", visible: true },
   ]);
+
+  const [tableRenderKey, setTableRenderKey] = useState(0);
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
@@ -52,6 +62,14 @@ export default function MeetingList() {
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
   const navigate = useNavigate();
+
+  const resetColumnWidths = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("tableWidths_MeetingList");
+    }
+    setTableRenderKey((k) => k + 1);
+  };
+
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
@@ -60,57 +78,94 @@ export default function MeetingList() {
             Meeting List
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
+            {permission.Add && (
+              <Link to="/dashboard/meeting/add">
+                <Button className="py-2 w-fit">Add Meeting</Button>
+              </Link>
+            )}
+          </div>
+        </div>
+        <div className="flex gap-4 justify-end">
+          <div className="flex items-center gap-2">
             <SearchInput
               placeholder="Search..."
               searchValue={paginationFilter?.search || ""}
               setPaginationFilter={setPaginationFilter}
               className="w-96"
             />
-            <Link to="/dashboard/meeting/add">
-              <Button className="py-2 w-fit">Add Meeting</Button>
-            </Link>
+            <div>
+              <DropdownSearchMenu
+                label="Status"
+                options={statusOptions}
+                selected={filters?.selected}
+                onChange={(selected) => {
+                  handleFilterChange(selected);
+                }}
+                multiSelect
+              />
+            </div>
             {canToggleColumns && (
               <DropdownSearchMenu
                 columns={columnToggleOptions}
                 onToggleColumn={onToggleColumn}
+                columnIcon={true}
               />
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetColumnWidths}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reset
+            </Button>
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
+            key={tableRenderKey}
             tableData={meetingData?.data.map((item, index) => ({
               ...item,
-              srNo: index + 1,
-              joinerNames: item.joiners?.length
-                ? item.joiners
-                    .map((joiner) => joiner?.employeeName)
-                    .filter(Boolean)
-                    .join(", ")
-                : "-",
-              meetingDateTime: item.meetingDateTime
-                ? format(new Date(item.meetingDateTime), "dd-MM-yyyy")
-                : "-",
+              srNo:
+                (meetingData.currentPage - 1) * meetingData.pageSize +
+                index +
+                1,
+              meetingDateTime: new Date(item.meetingDateTime).toLocaleString(),
+              joinerNames:
+                item.joiners
+                  ?.map((emp) =>
+                    typeof emp === "object" &&
+                    emp !== null &&
+                    "employeeName" in emp
+                      ? (emp as { employeeName: string }).employeeName
+                      : String(emp),
+                  )
+                  .join(", ") || "",
             }))}
-            columns={visibleColumns} // Pass only visible columns to the Table
+            columns={visibleColumns}
             primaryKey="meetingId"
-            onEdit={(row) =>
-              navigate(`/dashboard/meeting/edit/${row.meetingId}`)
+            onEdit={
+              permission.Edit
+                ? (row) => {
+                    navigate(`/dashboard/meeting/edit/${row.meetingId}`);
+                  }
+                : undefined
             }
-            moduleKey="MEETING_LIST"
             isActionButton={() => true}
             onDelete={(row) => {
-              if (!row.isSuperAdmin) {
-                onDelete(row);
-              }
+              onDelete(row as unknown as MeetingData);
             }}
-            canDelete={(row) => !row.isSuperAdmin}
+            onRowClick={(row) => {
+              handleRowsModalOpen(row as unknown as MeetingData);
+            }}
             paginationDetails={meetingData}
             setPaginationFilter={setPaginationFilter}
             //   isLoading={isLoading}
             permissionKey="users"
             localStorageId="MeetingList"
+            moduleKey="MEETING_LIST"
           />
         </div>
         {isDeleteModalOpen && (

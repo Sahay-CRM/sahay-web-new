@@ -1,39 +1,32 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyProject from "./useCompanyProject";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import TableWithDropdown from "@/components/shared/DataTable/DropdownTable/DropdownTable";
+import { RefreshCw } from "lucide-react";
 // import DesignationAddFormModal from "./DesignationAddFormModal";
 export default function CompanyProject() {
   const {
     projectlistdata,
-    // isLoading,
     closeDeleteModal,
     setPaginationFilter,
-    // currentStatus,
     onDelete,
     modalData,
     conformDelete,
     isDeleteModalOpen,
     paginationFilter,
-    // isUserModalOpen,
     isChildData,
+    statusOptions,
+    handleStatusChange,
+    permission,
+    handleFilterChange,
+    filters,
   } = useCompanyProject();
-
-  //   const { setBreadcrumbs } = useBreadcrumbs();
-
-  //   useEffect(() => {
-  //     setBreadcrumbs([
-  //       { label: "Admin Tools", href: "/admin-tools" },
-  //       { label: "User" },
-  //     ]);
-  //   }, [setBreadcrumbs]);
-
-  // Column visibility state
+  const [tableRenderKey, setTableRenderKey] = useState(0);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -47,15 +40,6 @@ export default function CompanyProject() {
     { key: "status", label: "Status", visible: true },
   ]);
 
-  // Filter visible columns
-  const visibleColumns = columnToggleOptions.reduce(
-    (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
-
   // Toggle column visibility
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
@@ -64,6 +48,22 @@ export default function CompanyProject() {
       ),
     );
   };
+
+  const visibleColumns = columnToggleOptions.reduce(
+    (acc, col) => {
+      if (col.visible) acc[col.key] = col.label;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
+
+  const resetColumnWidths = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("tableWidths_CompanyTaskList");
+    }
+    setTableRenderKey((k) => k + 1);
+  };
+
   // Check if the number of columns is more than 3
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
@@ -75,48 +75,83 @@ export default function CompanyProject() {
           <h1 className="font-semibold capitalize text-xl text-black">
             Company Project List
           </h1>
-          <div className="flex items-center space-x-5 tb:space-x-7">
-            <SearchInput
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-              className="w-96"
-            />
-            <Link to="/dashboard/projects/add">
-              <Button className="py-2 w-fit">Add Company Project</Button>
-            </Link>
-            {canToggleColumns && (
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
+          <div>
+            {permission.Add && (
+              <Link to="/dashboard/projects/add">
+                <Button className="py-2 w-fit">Add Company Project</Button>
+              </Link>
             )}
           </div>
         </div>
+        <div className="flex items-center justify-end space-x-5 tb:space-x-7">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-96"
+          />
+          <div>
+            <DropdownSearchMenu
+              label="Status"
+              options={statusOptions}
+              selected={filters?.selected}
+              onChange={(selected) => {
+                handleFilterChange(selected);
+              }}
+              multiSelect
+            />
+          </div>
+          {canToggleColumns && (
+            <DropdownSearchMenu
+              columns={columnToggleOptions}
+              onToggleColumn={onToggleColumn}
+              columnIcon={true}
+            />
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetColumnWidths}
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Reset
+          </Button>
+        </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
-          <TableData
+          <TableWithDropdown
+            key={tableRenderKey}
             tableData={projectlistdata?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,
-              //   assigneeNames: item.assignees[0]?.employeeName,
+              status: item?.projectStatus?.projectStatusId ?? "",
             }))}
-            columns={visibleColumns} // Pass only visible columns to the Table
+            columns={visibleColumns}
             primaryKey="projectId"
-            onEdit={(row) =>
-              navigate(`/dashboard/projects/edit/${row.projectId}`)
+            onEdit={
+              permission.Edit
+                ? (row) => {
+                    navigate(`/dashboard/projects/edit/${row.projectId}`);
+                  }
+                : undefined
             }
             onDelete={(row) => {
-              if (!row.isSuperAdmin) {
-                onDelete(row);
-              }
+              onDelete(row as unknown as IProjectFormData);
             }}
-            canDelete={(row) => !row.isSuperAdmin}
+            isActionButton={() => true}
+            viewButton={true}
+            onViewButton={(row) => {
+              navigate(`/dashboard/projects/view/${row.projectId}`);
+            }}
+            showDropdown={true}
+            statusOptions={statusOptions}
+            handleStatusChange={handleStatusChange}
             paginationDetails={projectlistdata}
             setPaginationFilter={setPaginationFilter}
-            //   isLoading={isLoading}
             permissionKey="users"
             localStorageId="CompanyProjectList"
+            moduleKey="PROJECT_LIST"
           />
         </div>
 

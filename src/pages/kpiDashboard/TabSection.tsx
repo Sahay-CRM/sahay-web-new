@@ -1,26 +1,14 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { kpiMockData } from "./mockData";
-
-const periods = [
-  "Daily",
-  "Weekly",
-  "Monthly",
-  "Quarterly",
-  "Half-Yearly",
-  "Yearly",
-];
+import useKpiDashboard from "./useKpiDashboard";
 
 export default function TabsSection({
   selectedPeriod,
   onSelectPeriod,
 }: {
   selectedPeriod: string;
-  onSelectPeriod: (period: string) => void;
+  onSelectPeriod: (selectedPeriod: string) => void;
 }) {
-  const periodCounts = periods.map((period) => ({
-    label: period,
-    count: kpiMockData.filter((item) => item.period === period).length,
-  }));
+  const { kpiStructure } = useKpiDashboard({ selectedPeriod });
 
   return (
     <Tabs
@@ -28,14 +16,15 @@ export default function TabsSection({
       onValueChange={onSelectPeriod}
       className="w-full px-4"
     >
-      <TabsList className="bg-transparent p-0 flex space-x-6 border-b border-gray-200">
-        {periodCounts.map((tab) => (
+      <TabsList className="bg-transparent h-auto p-0 flex flex-wrap items-start justify-start space-x-6 border-b border-gray-200">
+        {kpiStructure?.data?.map((tab) => (
           <TabsTrigger
-            key={tab.label}
-            value={tab.label}
+            key={tab.frequencyType}
+            value={tab.frequencyType}
             className="rounded-none bg-white border-b-2 border-transparent p-2 text-sm font-medium text-muted-foreground hover:text-primary data-[state=active]:border-b-primary data-[state=active]:text-primary"
           >
-            {tab.label} <span className="ml-1 text-xs">({tab.count})</span>
+            {tab.frequencyType}{" "}
+            <span className="ml-1 text-xs">({tab?.count})</span>
           </TabsTrigger>
         ))}
       </TabsList>

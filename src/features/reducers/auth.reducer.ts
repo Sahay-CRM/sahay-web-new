@@ -7,6 +7,12 @@ const initialState: AuthState = {
   isLoading: false,
   isAuthenticated: false,
   userPermission: {},
+  kpiData: {
+    dataPointEmpId: "",
+    startDate: "",
+    endDate: "",
+    selectFrequency: "",
+  },
 };
 
 export const authSlice = createSlice({
@@ -22,10 +28,14 @@ export const authSlice = createSlice({
     setUserPermission: (state, action: PayloadAction<PermissionsResponse>) => {
       state.userPermission = action.payload;
     },
+    setKpiData: (state, action: PayloadAction<KpiData>) => {
+      state.kpiData = action.payload;
+    },
     logout: () => initialState,
   },
 });
 
 // Export actions and reducer
-export const { setAuth, setUserPermission, logout } = authSlice.actions;
+export const { setAuth, setUserPermission, logout, setKpiData } =
+  authSlice.actions;
 export default authSlice.reducer;

@@ -1,20 +1,37 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState, ChangeEvent } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Card } from "@/components/ui/card";
-import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import { getEmployee } from "@/features/api/companyEmployee";
 import {
   useAddUpdateCompanyMeeting,
+  useGetCompanyMeetingById,
   useGetCompanyMeetingStatus,
 } from "@/features/api/companyMeeting";
 import { getMeetingType } from "@/features/api/meetingType";
+import { useNavigate, useParams } from "react-router-dom";
+import { format, parseISO } from "date-fns";
+import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
+import { imageUploadMutation } from "@/features/api/file";
+import { queryClient } from "@/queryClient";
 
 export default function useAddEmployee() {
+  const { id: companyMeetingId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
+  const [removedFileIds, setRemovedFileIds] = useState<string[]>([]);
 
   const { mutate: addMeeting } = useAddUpdateCompanyMeeting();
+  const navigate = useNavigate();
+  const { data: meetingApiData } = useGetCompanyMeetingById(
+    companyMeetingId || "",
+  );
+
+  const { mutate: imageUpload } = imageUploadMutation();
+
+  const methods = useForm({
+    mode: "onChange",
+  });
 
   const {
     register,
@@ -24,10 +41,49 @@ export default function useAddEmployee() {
     trigger,
     reset,
     getValues,
-  } = useForm({
-    mode: "onChange",
-    // values: employeeApiData, // If you have employee data to prefill
-  });
+    setValue, // <-- add setValue
+  } = methods;
+  // console.log(getValues());
+
+  useEffect(() => {
+    if (meetingApiData?.data) {
+      const data = meetingApiData.data;
+      reset({
+        meetingName: data.meetingName || "",
+        meetingDescription: data.meetingDescription || "",
+        meetingDateTime: data.meetingDateTime
+          ? format(parseISO(data.meetingDateTime), "yyyy-MM-dd")
+          : "",
+        meetingStatusId: data.meetingStatus || undefined,
+        meetingTypeId: data.meetingType || undefined,
+        employeeId:
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          data.joiners?.map((ele: any) => ({
+            employeeId: ele.employeeId,
+          })),
+      });
+
+      // Define a type for meeting files
+      type MeetingFile = { fileId: string; fileName: string };
+
+      // Set uploadedFiles to existing files if present
+      if (Array.isArray(data.files)) {
+        setUploadedFiles(
+          data.files.map((f: MeetingFile) => ({
+            fileId: f.fileId,
+            fileName: f.fileName,
+          })),
+        );
+        setValue(
+          "meetingDocuments",
+          data.files.map((f: MeetingFile) => ({
+            fileId: f.fileId,
+            fileName: f.fileName,
+          })),
+        );
+      }
+    }
+  }, [meetingApiData, reset, setValue]);
 
   const handleClose = () => setModalOpen(false);
 
@@ -45,16 +101,78 @@ export default function useAddEmployee() {
       meetingDateTime: data?.meetingDateTime,
       meetingTypeId: data?.meetingTypeId?.meetingTypeId,
       meetingStatusId: data?.meetingStatusId?.meetingStatusId,
-      joiners: data?.joiners,
+      joiners: data?.employeeId?.map((ele: EmployeeData) => ele?.employeeId),
+      companyMeetingId: companyMeetingId || "",
     };
-    // console.log(payload.meetingStatusId);
-    // console.log(payload);
+
     addMeeting(payload, {
-      onSuccess: () => {
+      onSuccess: (response) => {
+        const meetingId = Array.isArray(response?.data)
+          ? response?.data[0]?.companyMeetingId || companyMeetingId
+          : (response?.data as { companyMeetingId?: string })
+              ?.companyMeetingId || companyMeetingId;
+
+        // Handle file uploads and removals after meeting update success
+        if (typeof meetingId === "string" && meetingId) {
+          handleFileOperations(meetingId);
+        }
+
         handleModalClose();
+        navigate("/dashboard/meeting");
       },
     });
   });
+
+  // Function to handle file uploads and removals
+  const handleFileOperations = async (meetingId: string) => {
+    // Helper to upload a single file (File or base64 string)
+    const uploadMeetingFile = (
+      file: File | string,
+      fileType: string = "2040",
+    ) => {
+      const formData = new FormData();
+      formData.append("refId", meetingId);
+      formData.append("imageType", "MEETING");
+      formData.append("isMaster", "0");
+      formData.append("fileType", fileType);
+      // Only append if file is File or string (base64)
+      if (file instanceof File || typeof file === "string") {
+        formData.append("files", file);
+        imageUpload(formData, {
+          onSuccess: () => {
+            queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
+            queryClient.resetQueries({ queryKey: ["get-meeting-dropdown"] });
+            queryClient.resetQueries({ queryKey: ["get-meeting-list-by-id"] });
+          },
+        });
+      }
+    };
+
+    // Upload new files (File or base64 string)
+    const newFiles = uploadedFiles.filter(
+      (file: File | string | { fileId: string; fileName: string }) =>
+        file instanceof File ||
+        (typeof file === "string" && file.startsWith("data:")),
+    ) as (File | string)[];
+    newFiles.forEach((file) => {
+      // Only pass File or string, skip objects with fileId/fileName
+      if (file instanceof File || typeof file === "string") {
+        uploadMeetingFile(file);
+      }
+    });
+
+    // Handle removed file IDs (send in a separate request, no file field)
+    if (removedFileIds.length > 0) {
+      // console.log("Uploading removed file IDs:", removedFileIds);
+      const formData = new FormData();
+      formData.append("refId", meetingId);
+      formData.append("imageType", "MEETING");
+      formData.append("isMaster", "0");
+      // Change here: use comma-separated string instead of JSON array
+      formData.append("removedFiles", removedFileIds.join(","));
+      imageUpload(formData);
+    }
+  };
 
   const handleModalClose = () => {
     reset();
@@ -69,6 +187,7 @@ export default function useAddEmployee() {
             label="Meeting Name"
             {...register("meetingName", { required: "Name is required" })}
             error={errors.meetingName}
+            isMandatory
           />
 
           <FormInputField
@@ -77,16 +196,18 @@ export default function useAddEmployee() {
               required: "Description is required",
             })}
             error={errors.meetingDescription}
+            isMandatory
           />
 
           <FormInputField
             id=""
-            type="datetime-local"
+            type="date"
             label="Meeting Date & Time"
             {...register("meetingDateTime", {
               required: "Date & Time is required",
             })}
             error={errors.meetingDateTime}
+            isMandatory
           />
         </Card>
       </div>
@@ -145,24 +266,33 @@ export default function useAddEmployee() {
         <Controller
           name="meetingStatusId"
           control={control}
-          rules={{ required: "Please select a Task Priority" }}
+          rules={{ required: "Please select a meeting status" }}
           render={({ field }) => (
-            <TableData
-              {...field}
-              tableData={meeetingStatusData?.data.map((item, index) => ({
-                ...item,
-                srNo: index + 1,
-              }))}
-              isActionButton={false}
-              columns={visibleColumns}
-              primaryKey="meetingStatusId"
-              paginationDetails={meeetingStatusData}
-              setPaginationFilter={setPaginationFilter}
-              multiSelect={false}
-              selectedValue={field.value}
-              handleChange={field.onChange}
-              // permissionKey="--"
-            />
+            <>
+              <div className="mb-4">
+                {errors?.meetingStatusId && (
+                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                    {String(errors?.meetingStatusId?.message || "")}
+                  </span>
+                )}
+              </div>
+              <TableData
+                {...field}
+                tableData={meeetingStatusData?.data.map((item, index) => ({
+                  ...item,
+                  srNo: index + 1,
+                }))}
+                isActionButton={() => false}
+                columns={visibleColumns}
+                primaryKey="meetingStatusId"
+                paginationDetails={meeetingStatusData}
+                setPaginationFilter={setPaginationFilter}
+                multiSelect={false}
+                selectedValue={field.value}
+                handleChange={field.onChange}
+                // permissionKey="--"
+              />
+            </>
           )}
         />
       </div>
@@ -181,7 +311,7 @@ export default function useAddEmployee() {
     });
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
-      { key: "meetingTypeName", label: "Designation Name", visible: true },
+      { key: "meetingTypeName", label: "Meeting Type Name", visible: true },
     ]);
 
     // Filter visible columns
@@ -220,24 +350,33 @@ export default function useAddEmployee() {
         <Controller
           name="meetingTypeId"
           control={control}
-          rules={{ required: "Please select a Task Priority" }}
+          rules={{ required: "Please select a meeting type" }}
           render={({ field }) => (
-            <TableData
-              {...field}
-              tableData={meetingTypeData?.data.map((item, index) => ({
-                ...item,
-                srNo: index + 1,
-              }))}
-              isActionButton={false}
-              columns={visibleColumns}
-              primaryKey="meetingTypeId"
-              paginationDetails={meetingTypeData}
-              setPaginationFilter={setPaginationFilter}
-              multiSelect={false}
-              selectedValue={field.value}
-              handleChange={field.onChange}
-              // permissionKey="--"
-            />
+            <>
+              <div className="mb-4">
+                {errors?.meetingTypeId && (
+                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                    {String(errors?.meetingTypeId?.message || "")}
+                  </span>
+                )}
+              </div>
+              <TableData
+                {...field}
+                tableData={meetingTypeData?.data.map((item, index) => ({
+                  ...item,
+                  srNo: index + 1,
+                }))}
+                isActionButton={() => false}
+                columns={visibleColumns}
+                primaryKey="meetingTypeId"
+                paginationDetails={meetingTypeData}
+                setPaginationFilter={setPaginationFilter}
+                multiSelect={false}
+                selectedValue={field.value}
+                handleChange={field.onChange}
+                // permissionKey="--"
+              />
+            </>
           )}
         />
       </div>
@@ -297,29 +436,137 @@ export default function useAddEmployee() {
         <Controller
           name="employeeId"
           control={control}
-          rules={{ required: "Please select a Task Priority" }}
           render={({ field }) => (
-            <TableData
-              {...field}
-              tableData={employeedata?.data.map((item, index) => ({
-                ...item,
-                srNo: index + 1,
-              }))}
-              columns={visibleColumns}
-              primaryKey="employeeId"
-              paginationDetails={employeedata}
-              setPaginationFilter={setPaginationFilter}
-              multiSelect={true}
-              selectedValue={field.value}
-              handleChange={field.onChange}
-
-              // permissionKey="--"
-            />
+            <>
+              <TableData
+                {...field}
+                tableData={employeedata?.data.map((item, index) => ({
+                  ...item,
+                  srNo: index + 1,
+                }))}
+                columns={visibleColumns}
+                primaryKey="employeeId"
+                paginationDetails={employeedata}
+                setPaginationFilter={setPaginationFilter}
+                multiSelect={true}
+                selectedValue={field.value}
+                handleChange={field.onChange}
+              />
+            </>
           )}
         />
       </div>
     );
   };
+
+  // State to store uploaded files for preview
+  const [uploadedFiles, setUploadedFiles] = useState<
+    (File | string | { fileId: string; fileName: string })[]
+  >([]);
+
+  // State to track removed file IDs
+
+  // File input ref
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // File upload handler for multiple files
+  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    setUploadedFiles((prev) => [...prev, ...files]);
+
+    // Store files in react-hook-form
+    setValue("meetingDocuments", [...uploadedFiles, ...files]);
+  };
+
+  // Remove a specific file from the list
+  const handleRemoveFile = (index: number) => {
+    const fileToRemove = uploadedFiles[index];
+    let updatedRemovedIds = [...removedFileIds];
+
+    // Type guard: check if fileToRemove is an object with fileId (not File, not string)
+    if (
+      typeof fileToRemove === "object" &&
+      !(fileToRemove instanceof File) &&
+      "fileId" in fileToRemove
+    ) {
+      updatedRemovedIds = [...removedFileIds, fileToRemove.fileId];
+      setRemovedFileIds(updatedRemovedIds);
+    }
+
+    const newFiles = uploadedFiles.filter((_, idx) => idx !== index);
+    setUploadedFiles(newFiles);
+    setValue("meetingDocuments", newFiles);
+
+    // Log removed IDs after each removal (only if there are removed file IDs)
+    // if (updatedRemovedIds.length > 0) {
+    //   console.log("Removed fileIds:", JSON.stringify(updatedRemovedIds));
+    // }
+  };
+
+  // UploadDoc step component with file list and remove option, no preview
+  const UploadDoc = () => (
+    <div className="flex flex-col gap-4">
+      <label className="font-semibold mb-2">
+        Upload Documents (Image, Doc, Video, etc.)
+      </label>
+      <button
+        type="button"
+        className="w-fit px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          fileInputRef.current?.click();
+        }}
+      >
+        Choose Files
+      </button>
+      <input
+        type="file"
+        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.avi,.mov,.mkv"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        className="hidden"
+        multiple
+        style={{ display: "none" }}
+      />
+      {uploadedFiles.length > 0 && (
+        <div className="mt-3 flex flex-col gap-2">
+          <p className="text-sm text-gray-600 mb-2">
+            {uploadedFiles.length} file(s) selected
+          </p>
+          {uploadedFiles.map((file, idx) => (
+            <div
+              key={idx}
+              className="flex items-center justify-between p-2 bg-gray-50 rounded"
+            >
+              <span className="font-medium truncate">
+                {typeof file === "string"
+                  ? file.substring(0, 20) + (file.length > 20 ? "..." : "")
+                  : "fileName" in file
+                    ? file.fileName
+                    : (file as File).name}
+              </span>
+              <button
+                type="button"
+                className="ml-2 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleRemoveFile(idx);
+                }}
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {uploadedFiles.length === 0 && (
+        <p className="text-sm text-gray-500 italic">No files selected</p>
+      )}
+    </div>
+  );
 
   return {
     isModalOpen,
@@ -331,7 +578,8 @@ export default function useAddEmployee() {
     MeetingType,
     Joiners,
     meetingPreview: getValues(),
-    // employeeId,
     trigger,
+    UploadDoc,
+    methods, // Export methods for FormProvider
   };
 }

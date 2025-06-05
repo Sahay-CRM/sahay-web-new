@@ -80,6 +80,7 @@ interface EmployeeData {
   designationName?: string | null;
   companyEmployeeId?: string | null;
 }
+
 // kk
 interface CompanyTaskData {
   taskId: string;
@@ -94,11 +95,6 @@ interface CompanyTaskData {
   createdByEmployee: Employee;
   assignees: Employee[];
 }
-// kk
-interface Employee {
-  employeeId: string;
-  employeeName: string;
-}
 //kk
 interface CoreParameter {
   coreParameterId: string;
@@ -110,12 +106,22 @@ interface CoreParameter {
   createdDatetime: string;
   updatedDatetime: string;
 }
+// kk
+// interface Employee {
+//   employeeId: string;
+//   employeeName: string;
+// }
 
 interface SubParameter {
   subParameterId: string;
   subParameterName: string;
   coreParameterId: string;
   coreParameter: CoreParameter;
+}
+
+interface CompanyLevelRes {
+  levelId: string;
+  levelName: string;
 }
 
 interface MeetingsData {
@@ -149,39 +155,43 @@ interface EventData {
   importantDateName?: string;
   importantDate?: string;
   importantDateId?: string;
+  bgColor?: string;
+  textColor?: string;
+  eventType?: string;
 }
 
 //kk
 interface MeetingData {
-  meetingId: string;
-  meetingName: string;
-  meetingDescription: string;
-  meetingDateTime: string; // ISO string format
-  companyId: string;
-  createdBy: string;
-  meetingTypeId: string;
-  meetingStatusId: string;
+  meetingId?: string;
+  meetingName?: string;
+  meetingDescription?: string;
+  meetingDateTime?: string; // ISO string format
+  companyId?: string;
+  meetingTypeId?: string;
+  meetingStatusId?: string;
 
-  meetingType: {
+  meetingType?: {
     meetingTypeId: string;
     meetingTypeName: string;
   };
 
-  companyEmployee: {
-    employeeId: string;
-    employeeName: string;
-    employeeMobile: string;
-  };
+  companyEmployee?: [
+    {
+      employeeId: string;
+      employeeName: string;
+      employeeMobile: string;
+    }[],
+  ];
 
-  company: {
+  company?: {
     companyId: string;
     companyAdminEmail: string;
     companyAdminMobile: string;
   };
 
-  meetingStatus: MeetingStatusDataProps;
+  meetingStatus?: MeetingStatusDataProps;
 
-  joiners: {
+  joiners?: {
     companyEmployee: {
       employeeId: string;
       employeeName: string;
@@ -272,6 +282,9 @@ interface ImportantDatesDataProps {
   importantDateName: string;
   importantDate: string;
   importantDateId?: string;
+  bgColor?: string;
+  textColor?: string;
+  eventType?: string;
 }
 
 interface CompanyMeetingDataProps {
@@ -281,7 +294,33 @@ interface CompanyMeetingDataProps {
   meetingDateTime: string;
   meetingTypeId: string;
   meetingStatusId: string;
+  companyMeetingId?: string;
   joiners?: string[];
+  meetingStatus?: CompanyMeetingStatusDataProps;
+  meetingType?: CompanyMeetingTypeDataProps;
+  files?: [
+    {
+      fileId: string;
+      fileName: string;
+    },
+  ];
+}
+
+interface CompanyDatapointDataProps {
+  KPIName: string;
+  KPIMasterId: string;
+  KPILabel: string;
+  industryId: string;
+  industryName: string;
+  isIndustrySpecific: true;
+}
+interface DatapointListData {
+  KPIName: string;
+  KPIMasterId: string;
+  KPILabel: string;
+  industryId: string;
+  industryName: string;
+  isIndustrySpecific: true;
 }
 
 interface CompanyMeetingStatusDataProps {
@@ -297,19 +336,47 @@ interface CompanyMeetingTypeDataProps {
 }
 
 interface CompanyProjectDataProps {
-  srNo: number;
-  projectId: string;
-  projectName: string;
-  projectDescription: string;
-  projectActualEndDate: string;
-  projectDeadline: string;
-  employeeId: string;
-  ProjectSubParameterJunction: ProjectSubParameterJunctionItem[];
+  projectId?: string;
+  projectName?: string;
+  projectDescription?: string;
+  projectActualEndDate?: string | null;
+  projectDeadline?: string;
+  employeeId?: string;
+  ProjectParameters?: ProjectParameters;
+  ProjectEmployees?: Employee[];
+  ProjectTasks?: Task[];
+  createdBy?: CreatedBy;
+  projectStatusId: string;
+  projectStatus?: ProjectStatus;
+  otherProjectEmployees?: string[];
+}
+
+interface ProjectParameters {
+  coreParameter: CoreParameter;
+  subParameters: SubParameter[];
+}
+
+interface CoreParameter {
+  coreParameterId: string;
+  coreParameterName: string;
+}
+
+interface SubParameter {
+  projectSubParameterId: string;
+  subParameterId: string;
+  subParameterName: string;
 }
 
 interface ProjectSubParameterJunctionItem {
   projectSubParameterId: string;
   subPara: SubParameter;
+}
+interface ProjectStatusRes {
+  projectStatusId: string;
+  projectStatus: string;
+  projectStatusOrder: number;
+  winLostProject: null;
+  color?: string;
 }
 
 interface SubParameter {
@@ -321,13 +388,9 @@ interface SubParameter {
 
 interface CoreParameter {
   coreParameterId: string;
-  departmentId: string;
   coreParameterName: string;
-  createdBy: string;
-  updatedBy: string;
-  isDelete: boolean;
-  createdDatetime: string;
-  updatedDatetime: string;
+  departmentId: string;
+  departmentName: string;
 }
 
 interface DesignationDataProps {
@@ -372,19 +435,12 @@ interface EventData {
   end: Date;
 }
 
-interface TaskData {
-  taskId: string;
-  taskName: string;
-  taskDescription: string;
-  taskDeadline: string;
-}
-
-interface MeetingData {
-  meetingId: string;
-  topic: string;
-  agenda: string;
-  meetingDate: string;
-}
+// interface TaskData {
+//   taskId: string;
+//   taskName: string;
+//   taskDescription: string;
+//   taskDeadline: string;
+// }
 
 interface BaseResponse<T> {
   success: boolean;
@@ -467,4 +523,332 @@ interface EmployeeDataModal {
   employeeId?: {
     employeeName: string;
   };
+}
+
+interface LevelDataProps {
+  levelId?: string;
+  levelName: string;
+  isDefault?: boolean;
+  sequence?: number;
+}
+
+interface CompanyLevelJunction {
+  companyLevelJunctionId: string;
+  coreParameterId: string;
+  currentLevelId: string;
+}
+
+interface HealthScore {
+  subParameterId: string;
+  score: number;
+}
+
+interface HealthScoreData {
+  score: number;
+  subParameterId: string;
+  subParameterName: string;
+}
+interface TaskStatusAllRes {
+  taskStatusId: string;
+  taskStatus: string;
+  taskStatusOrder: number;
+  winLostTask: string | null;
+  color?: string;
+}
+
+interface TaskTypeData {
+  taskTypeId?: string;
+  taskTypeName: string;
+}
+
+interface AddUpdateTask {
+  taskId?: string;
+  taskName?: string;
+  taskDescription?: string;
+  taskStartDate?: Date | null;
+  taskDeadline?: Date | null;
+  repetition?: string;
+  taskStatusId?: string;
+  taskTypeId?: string;
+  comment?: string;
+  assigneeIds?: string[];
+  projectId?: string;
+}
+
+interface TaskGetPaging {
+  employeeId: string;
+  taskId: string;
+  taskName: string;
+  taskStatusId: string;
+  taskDescription: string;
+  taskStatus: string;
+  createdBy?: Employee;
+  updatedBy?: string;
+  isDelete?: boolean;
+  createdDatetime?: string;
+  updatedDatetime?: string;
+  taskTypeId: string;
+  taskTypeName?: string;
+  taskActualEndDate?: string | null;
+  companyId?: string;
+  taskDeadline?: string;
+  TaskCommentMaster?: TaskComment[];
+  TaskEmployeeJunction?: TaskEmployee[];
+  TaskMeetingJunction?: TaskMeeting[];
+  companyAdminName?: string;
+  companyAdminEmail?: string;
+  employees?: Employee;
+  projectDetails?: TaskProject;
+  taskDeadline?: string;
+  taskStartDate?: string;
+  color?: string;
+}
+
+interface TaskProject {
+  projectId: string;
+  CompanyProjectMaster: {
+    projectId: string;
+    projectName: string;
+  };
+}
+
+interface Employee {
+  employeeId: string;
+  employeeName: string;
+  employeeEmail: string;
+  employeeMobile: string;
+  companyId: string;
+  employeeType: string;
+  departmentId: string | null;
+  department: string | null;
+  designationId: string | null;
+  designation: string | null;
+  reportingManagerId: string | null;
+  company: {
+    companyAdminName: string;
+    companyId: string;
+  };
+  reportingManager: string;
+}
+
+interface TaskComment {
+  comment: string;
+  commentDate: string;
+  employeeId: string;
+  Employee: {
+    employeeName: string;
+    employeeId: string;
+  };
+}
+
+interface TaskEmployee {
+  employeeId: string;
+  Employee: {
+    employeeId: string;
+    employeeName: string;
+  };
+}
+
+interface TaskMeeting {
+  meetingId: string;
+  meetings: {
+    meetingId: string;
+    companyId: string;
+    employeeId: string;
+    meetingTypeId: string;
+    meetingStatusId: string;
+    meetingName: string;
+    meetingDescription: string;
+    meetingDateTime: string;
+    createdBy: string;
+    updatedBy: string;
+    isDelete: boolean;
+    createdDatetime: string;
+    updatedDatetime: string;
+  };
+}
+
+interface Task {
+  taskId: string;
+  taskName: string;
+  taskDescription: string;
+  taskStatusId: string;
+  taskStatusName: string;
+  taskTypeId: string;
+  taskTypeName: string;
+  taskActualEndDate: string | null;
+  taskStartDate: string;
+  taskDeadline: string;
+  projectId: string;
+  projectName: string | null;
+  assignUsers: AssignedUser[];
+  meetingId: string[];
+  meetings: Meeting[];
+  comments: TaskComment[];
+  createdBy: CreatedBy;
+}
+interface MeetingJoiner {
+  employeeId: string;
+  employeeName: string;
+}
+
+interface Meeting {
+  meetingId: string;
+  companyId: string;
+  employeeId: string;
+  meetingTypeId: string;
+  meetingStatusId: string;
+  meetingName: string;
+  meetingDescription: string;
+  meetingDateTime: string;
+  meetingDocuments: unknown; // Replace with correct type if known
+  createdBy: string;
+  updatedBy: string;
+  isDelete: boolean;
+  createdDatetime: string;
+  updatedDatetime: string;
+  color?: string;
+}
+
+interface TaskComment {
+  commentId: string;
+  comment: string;
+  commentDate: string;
+  employeeId: string;
+  employeeName: string;
+}
+
+interface CreatedBy {
+  employeeId: string;
+  employeeName: string;
+}
+interface MeetingType {
+  meetingTypeId: string;
+  meetingTypeName: string;
+}
+
+interface MeetingStatus {
+  meetingStatusId: string;
+  meetingStatus: string;
+}
+
+interface MeetingDataById {
+  meetingId: string;
+  meetingName: string;
+  meetingDescription: string;
+  meetingDateTime: string;
+  companyId: string;
+  employeeId: string;
+  meetingTypeId: string;
+  meetingType: MeetingType;
+  meetingStatusId: string;
+  meetingStatus: MeetingStatus;
+  joiners: MeetingJoiner[];
+}
+interface SubParaByCorePara {
+  subParameterId: string;
+  subParameterName: string;
+  isDisabled?: boolean;
+  companyHealthWeightage: number;
+}
+
+interface CoreParameterData {
+  coreParameterId: string;
+  subParameterIds: SubParameterByWeightage[];
+  removedSubParameterIds: string;
+}
+interface SubParameterByWeightage {
+  subParameterId: string;
+  companyHealthScore: number;
+}
+interface KPIMaster {
+  KPIName: string;
+  KPILabel: string;
+}
+
+interface DataPointEmployee {
+  employeeId: string;
+  employeeName: string;
+  value1: string;
+  value2?: string;
+}
+
+interface KPIFormData {
+  companykpimasterId?: string;
+  dataPointId: string;
+  dataPointName: string;
+  dataPointLabel: string;
+  KPIMasterId: string;
+  KPIMaster: KPIMaster | string;
+  coreParameter: string;
+  unit: string;
+  validationType: "EQUAL_TO" | "GREATER_THAN" | "LESS_THAN" | string; // Add other types if needed
+  frequencyType: "YEARLY" | "MONTHLY" | "WEEKLY" | string; // Add other types if needed
+  selectedType: "COMPANY" | "DEPARTMENT" | "USER" | string; // Add other types if needed
+  dataPointEmployeeJunction: DataPointEmployee[];
+  DataPointProductJunction: ProductData[];
+  productIds: ProductData[];
+  assignUser: DataPointEmployee[];
+  hasData: boolean;
+}
+
+interface BrandFormModalProps {
+  isModalOpen: boolean;
+  modalClose: () => void;
+  modalData?: BrandData;
+}
+
+interface BrandData {
+  brandId?: string;
+  brandName: string;
+  brandDescription?: string;
+  brandLogo?: string;
+}
+
+interface CommonResponse<T> {
+  message: string;
+  currentPage: number;
+  totalCount: number;
+  hasMore: boolean;
+  pageSize: number;
+  totalPage: number;
+  data: T;
+}
+
+interface ProductData {
+  brandId?: string;
+  productId?: string;
+  productName: string;
+  productDescription?: string;
+  productImage?: string;
+}
+
+interface ProductFormModalProps {
+  isModalOpen: boolean;
+  modalClose: () => void;
+  modalData?: ProductData;
+}
+
+interface HandleDateRangeChange {
+  (range: DateRange | undefined): void;
+}
+interface DataPoint {
+  dataPointId: string;
+  dataPointName: string;
+  dataPointLabel: string;
+}
+
+interface FrequencyData {
+  srNo: number;
+  frequencyType: string;
+  dataPoint: DataPoint[];
+}
+
+type FrequencyDataArray = FrequencyData[];
+
+interface KpiData {
+  dataPointEmpId: string;
+  startDate: string;
+  endDate: string;
+  selectFrequency: string;
 }

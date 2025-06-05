@@ -1,5 +1,9 @@
+import { useDeleteCompanyMeeting } from "@/features/api/companyMeeting";
 import useGetCompanyMeeting from "@/features/api/companyMeeting/useGetCompanyMeeting";
+import { useDdMeetingStatus } from "@/features/api/meetingStatus";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useCallback, useState } from "react";
+import { useSelector } from "react-redux";
 
 export default function useAdminUser() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -9,20 +13,27 @@ export default function useAdminUser() {
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
   const [isChildData, setIsChildData] = useState<string | undefined>();
+
+  const [isRowModal, setIsRowModal] = useState<boolean>(false);
+
+  const [filters, setFilters] = useState<{ selected?: string[] }>({});
+
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 10,
     search: "",
     status: currentStatus, // Use currentStatus state
   });
-
+  const permission = useSelector(getUserPermission).MEETING_LIST;
   const { data: meetingData } = useGetCompanyMeeting({
-    filter: paginationFilter,
+    filter: { ...paginationFilter, statusArray: filters.selected },
   });
+
+  const { data: meetingStatus } = useDdMeetingStatus();
 
   const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = Number(event.target.value);
-    setCurrentStatus(newStatus); // Update currentStatus state
+    setCurrentStatus(newStatus);
 
     // Update pagination filter to include the selected status
     setPaginationFilter((prevFilter) => ({
@@ -31,6 +42,7 @@ export default function useAdminUser() {
       currentPage: 1,
     }));
   };
+  const { mutate: deleteMeetingById } = useDeleteCompanyMeeting();
 
   // Ensure currentStatus is passed when updating the pagination filter
   const setPaginationFilterWithStatus = (filter: PaginationFilter) => {
@@ -73,7 +85,15 @@ export default function useAdminUser() {
     setIsChildData("");
   }, []);
 
-  const conformDelete = async () => {};
+  const conformDelete = async () => {
+    if (modalData && modalData.meetingId) {
+      deleteMeetingById(modalData.meetingId, {
+        onSuccess: () => {
+          closeDeleteModal();
+        },
+      });
+    }
+  };
 
   const openImportModal = useCallback(() => {
     setIsImportExportModalOpen(true);
@@ -83,6 +103,22 @@ export default function useAdminUser() {
     setIsImportExportModalOpen(true);
     setIsImport(false);
   }, []);
+
+  const statusOptions = meetingStatus?.map((item) => ({
+    label: item.meetingStatus,
+    value: item.meetingStatusId,
+  }));
+
+  const handleFilterChange = (selected: string[]) => {
+    setFilters({
+      selected,
+    });
+  };
+
+  const handleRowsModalOpen = (data: MeetingData) => {
+    setIsRowModal(true);
+    console.log("Selected row data:", data);
+  };
 
   return {
     // isLoading,
@@ -105,5 +141,11 @@ export default function useAdminUser() {
     isDeleteModalOpen,
     setIsImportExportModalOpen,
     isChildData,
+    permission,
+    statusOptions,
+    filters,
+    handleFilterChange,
+    handleRowsModalOpen,
+    isRowModal,
   };
 }

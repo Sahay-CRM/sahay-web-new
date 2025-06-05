@@ -69,6 +69,7 @@ export default function AddAdminUser() {
                   id={`select`}
                   options={userTypeOptions}
                   placeholder="Selete User Type"
+                  onChange={() => {}}
                 />
               )}
             </Card>

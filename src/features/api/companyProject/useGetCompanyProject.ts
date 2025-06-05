@@ -3,7 +3,7 @@ import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 type DatePaging = BaseResponse<CompanyProjectDataProps>;
 
-export default function useGetCompanyProject(filter: PaginationFilter) {
+export default function useGetCompanyProject({ filter }: FilterDataProps) {
   const query = useQuery({
     queryKey: ["get-project-list", filter],
     queryFn: async () => {

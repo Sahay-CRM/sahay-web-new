@@ -11,6 +11,7 @@ interface Option {
   id?: string | number;
   value?: string | number;
   label?: string | number;
+  color?: string; // Add color property
 }
 
 interface FormSelectProps {
@@ -53,11 +54,9 @@ export default function FormSelect({
     }
   };
 
-  // Display string for selected values
   const displayValue = () => {
     if (isMulti) {
       if (Array.isArray(value) && value.length > 0) {
-        // Show labels of selected values joined by commas
         const selectedLabels = options
           .filter((opt) => value.includes(String(opt.value)))
           .map((opt) => opt.label)
@@ -66,13 +65,20 @@ export default function FormSelect({
       }
       return placeholder;
     } else {
-      // Single select
       const selectedOption = options.find(
         (opt) => String(opt.value) === String(value),
       );
       return selectedOption?.label ?? placeholder;
     }
   };
+
+  let selectedColor: string | undefined = undefined;
+  if (!isMulti && value) {
+    const selectedOption = options.find(
+      (opt) => String(opt.value) === String(value),
+    );
+    selectedColor = selectedOption?.color;
+  }
 
   return (
     <div className={className}>
@@ -95,8 +101,22 @@ export default function FormSelect({
         disabled={disabled}
       >
         <FormControl>
-          <SelectTrigger className="w-full mb-1" id={id}>
-            <SelectValue placeholder={placeholder}>
+          <SelectTrigger
+            className={`w-full mb-1 custom-select-trigger ${selectedColor ? "text-white" : "text-black"}`}
+            id={id}
+            style={
+              selectedColor
+                ? {
+                    backgroundColor: selectedColor,
+                    color: selectedColor ? "#fff" : "#000",
+                  }
+                : undefined
+            }
+          >
+            <SelectValue
+              placeholder={placeholder}
+              className="text-white opacity-0"
+            >
               {/* For multi-select, override default display with custom */}
               {isMulti ? displayValue() : undefined}
             </SelectValue>
@@ -119,7 +139,7 @@ export default function FormSelect({
                       type="checkbox"
                       checked={checked}
                       readOnly
-                      className="mr-2"
+                      className="mr-2 text-sm"
                     />
                   )}
                   {opt.label}

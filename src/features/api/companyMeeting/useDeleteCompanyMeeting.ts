@@ -9,12 +9,12 @@ type DatePaging = BaseResponse<CompanyMeetingDataProps>;
 export default function useDeleteCompanyMeeting() {
   const deleteCompanyMeetingMutation = useMutation({
     mutationKey: ["delete-important-dates"],
-    mutationFn: async (data: CompanyMeetingDataProps) => {
-      if (!data?.meetingId) {
+    mutationFn: async (data: string) => {
+      if (!data) {
         throw new Error("Something Went Wrong");
       }
       const { data: resData } = await Api.delete<DatePaging>({
-        url: Urls.deleteCompanyMeeting(data.meetingId),
+        url: Urls.deleteCompanyMeeting(data),
       });
       return resData;
     },

@@ -1,4 +1,3 @@
-import { useParams } from "react-router-dom";
 import { Controller, FormProvider } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import { useAddCompanyEmployee } from "./useAddCompanyTaskList";
+import TableData from "@/components/shared/DataTable/DataTable";
 
 interface AddAdminMeetingProps {
   isEditMode?: boolean;
@@ -16,8 +16,6 @@ interface AddAdminMeetingProps {
 export default function AddMeeting({
   isEditMode = false,
 }: AddAdminMeetingProps) {
-  const { id } = useParams();
-
   const {
     step,
     nextStep,
@@ -25,9 +23,15 @@ export default function AddMeeting({
     onSubmit,
     steps,
     methods,
-    employees,
-    statusOptions,
-    taskTypeOptions,
+    projectListOption,
+    repetitionOptions,
+    taskStatus,
+    taskType,
+    employeedata,
+    setPaginationFilterTaskStatus,
+    setPaginationFilterTaskType,
+    setPaginationFilterEmployee,
+    taskId,
   } = useAddCompanyEmployee();
 
   const {
@@ -44,14 +48,18 @@ export default function AddMeeting({
           {isEditMode ? "Update Add Company Task" : "Add Add Company Task"}
         </h2>
 
-        <StepProgress currentStep={step} totalSteps={2} stepNames={steps} />
+        <StepProgress
+          currentStep={step}
+          totalSteps={steps.length}
+          stepNames={steps}
+        />
 
         <div className="flex items-end justify-end gap-2 mt-2 mb-4">
           {step > 1 && <Button onClick={prevStep}>Back</Button>}
-          {step < 2 ? (
+          {step < steps.length ? (
             <Button onClick={nextStep}>Next</Button>
           ) : (
-            <Button onClick={handleSubmit((data) => onSubmit(data, id))}>
+            <Button onClick={handleSubmit(onSubmit)}>
               {isEditMode ? "Update" : "Submit"}
             </Button>
           )}
@@ -61,18 +69,27 @@ export default function AddMeeting({
         {step === 1 && (
           <div className="grid grid-cols-2 gap-4">
             <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
-              <FormInputField
-                label="Project"
-                {...register("project", { required: "Project is required" })}
-                error={errors.project}
+              <Controller
+                control={control}
+                name="project"
+                rules={{ required: "Project is required" }}
+                render={({ field }) => (
+                  <FormSelect
+                    label="Project"
+                    options={projectListOption}
+                    placeholder="Select Project"
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={errors.project}
+                    isMandatory={true}
+                  />
+                )}
               />
-
               <FormInputField
                 label="Task Name"
                 {...register("taskName", { required: "Task Name is required" })}
                 error={errors.taskName}
               />
-
               <FormInputField
                 label="Task Description"
                 {...register("taskDescription", {
@@ -80,95 +97,168 @@ export default function AddMeeting({
                 })}
                 error={errors.taskDescription}
               />
-
-              <Controller
-                control={control}
-                name="taskStartDate"
-                render={({ field }) => (
-                  <FormDateTimePicker
-                    label="Task Start Date"
-                    value={field.value}
-                    onChange={field.onChange}
-                    error={errors.taskStartDate}
-                  />
-                )}
-              />
-
-              <Controller
-                control={control}
-                name="taskDeadline"
-                rules={{ required: "Task Deadline is required" }}
-                render={({ field }) => (
-                  <FormDateTimePicker
-                    label="Task Deadline"
-                    value={field.value}
-                    onChange={field.onChange}
-                    error={errors.taskDeadline}
-                  />
-                )}
-              />
             </Card>
           </div>
         )}
 
-        {/* Step 2 - Details & Assignment */}
+        {/* Step 2 - Schedule & Repetition */}
         {step === 2 && (
           <Card className="px-4 py-4 grid grid-cols-2 gap-4">
             <Controller
               control={control}
-              name="taskStatusId"
-              rules={{ required: "Status is required" }}
+              name="taskStartDate"
               render={({ field }) => (
-                <FormSelect
-                  label="Status"
+                <FormDateTimePicker
+                  label="Task Start Date"
                   value={field.value}
                   onChange={field.onChange}
-                  options={statusOptions}
-                  error={errors.taskStatusId}
+                  error={errors.taskStartDate}
                 />
               )}
             />
-
             <Controller
               control={control}
-              name="taskTypeId"
-              rules={{ required: "Task Type is required" }}
+              name="taskDeadline"
               render={({ field }) => (
-                <FormSelect
-                  label="Task Type"
+                <FormDateTimePicker
+                  label="Task Deadline"
                   value={field.value}
                   onChange={field.onChange}
-                  options={taskTypeOptions}
-                  error={errors.taskTypeId}
+                  error={errors.taskDeadline}
                 />
               )}
             />
-
-            <FormInputField
-              label="Meeting"
-              {...register("meeting")}
-              error={errors.meeting}
-            />
-
             <Controller
               control={control}
-              name="assignees"
-              rules={{ required: "Assigned User is required" }}
+              name="repetition"
               render={({ field }) => (
                 <FormSelect
-                  label="Assigned User"
+                  label="Repetition"
+                  options={repetitionOptions}
+                  placeholder="Select Repetition"
                   value={field.value}
                   onChange={field.onChange}
-                  options={employees}
-                  error={errors.assignees}
-                  isMulti
+                  error={errors.repetition}
                 />
               )}
             />
+          </Card>
+        )}
 
+        {/* Step 3 - Task Status */}
+        {step === 3 && (
+          <Card className="px-4 py-4">
+            <Controller
+              name="taskStatus"
+              control={control}
+              rules={{ required: "Please select a Task Status" }}
+              render={({ field }) => (
+                <TableData
+                  {...field}
+                  tableData={taskStatus?.data?.map((item, index) => ({
+                    ...item,
+                    srNo: index + 1,
+                  }))}
+                  isActionButton={() => false}
+                  columns={{
+                    taskStatus: "Task Status",
+                  }}
+                  primaryKey="taskStatusId"
+                  multiSelect={false}
+                  selectedValue={field.value}
+                  handleChange={field.onChange}
+                  paginationDetails={taskStatus as PaginationFilter}
+                  setPaginationFilter={setPaginationFilterTaskStatus}
+                />
+              )}
+            />
+          </Card>
+        )}
+
+        {/* Step 4 - Task Type */}
+        {step === 4 && (
+          <Card className="px-4 py-4">
+            <Controller
+              name="taskType"
+              control={control}
+              rules={{ required: "Please select a Task Type" }}
+              render={({ field }) => (
+                <TableData
+                  {...field}
+                  tableData={taskType?.data?.map((item, index) => ({
+                    ...item,
+                    srNo: index + 1,
+                  }))}
+                  isActionButton={() => false}
+                  columns={{
+                    taskTypeName: "Task Type",
+                  }}
+                  primaryKey="taskTypeId"
+                  multiSelect={false}
+                  selectedValue={field.value}
+                  handleChange={field.onChange}
+                  paginationDetails={taskType as PaginationFilter}
+                  setPaginationFilter={setPaginationFilterTaskType}
+                />
+              )}
+            />
+          </Card>
+        )}
+
+        {/* Step 5 - Assign User */}
+        {step === 5 && (
+          <Card className="px-4 py-4">
+            <Controller
+              name="assignUser"
+              control={control}
+              rules={{ required: "Please select a User" }}
+              render={({ field }) => {
+                // Map selected IDs to employee objects for default selection
+                const selectedEmployees =
+                  Array.isArray(field.value) &&
+                  Array.isArray(employeedata?.data)
+                    ? employeedata.data.filter((emp) =>
+                        field.value.includes(emp.employeeId),
+                      )
+                    : [];
+                return (
+                  <TableData
+                    {...field}
+                    tableData={employeedata?.data?.map((item, index) => ({
+                      ...item,
+                      srNo: index + 1,
+                    }))}
+                    isActionButton={() => false}
+                    columns={{
+                      employeeName: "User Name",
+                    }}
+                    primaryKey="employeeId"
+                    multiSelect={true}
+                    selectedValue={
+                      selectedEmployees as unknown as Record<string, unknown>[]
+                    }
+                    handleChange={(selected) => {
+                      // Convert selected employee objects to array of IDs for form state
+                      const ids = Array.isArray(selected)
+                        ? selected.map((emp) => emp.employeeId)
+                        : [];
+                      field.onChange(ids);
+                    }}
+                    paginationDetails={employeedata as PaginationFilter}
+                    setPaginationFilter={setPaginationFilterEmployee}
+                  />
+                );
+              }}
+            />
+          </Card>
+        )}
+
+        {/* Step 6 - Comment (only if not editing) */}
+        {!taskId && step === 6 && (
+          <Card className="px-4 py-4">
             <FormInputField
               label="Comment"
-              {...register("comment")}
+              {...register("comment", { required: "Comment is required" })}
               error={errors.comment}
             />
           </Card>
