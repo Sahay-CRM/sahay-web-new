@@ -260,6 +260,7 @@ interface ImportantDatesDataProps {
   importantDate: string;
   importantDateId?: string;
   bgColor?: string;
+  color?: string;
   textColor?: string;
   eventType?: string;
 }
@@ -766,6 +767,33 @@ interface KPIFormData {
   hasData: boolean;
 }
 
+interface KPIFormDataProp {
+  companykpimasterId?: string;
+  dataPointId: string;
+  dataPointName: string;
+  dataPointLabel: string;
+  KPIMasterId?: {
+    KPILabel?: string;
+    KPIMasterId?: string;
+    KPIName?: string;
+  };
+  coreParameterId: {
+    coreParameterId?: string;
+  };
+  KPILabel?: string;
+  KPIName?: string;
+  KPIMaster: KPIMaster | string;
+  coreParameter: string;
+  unit: string;
+  validationType: string;
+  frequencyType: string;
+  selectedType: string;
+  dataPointEmployeeJunction: DataPointEmployee[];
+  DataPointProductJunction: ProductData[];
+  productIds: ProductData[];
+  assignUser: DataPointEmployee[];
+  hasData: boolean;
+}
 interface BrandFormModalProps {
   isModalOpen: boolean;
   modalClose: () => void;

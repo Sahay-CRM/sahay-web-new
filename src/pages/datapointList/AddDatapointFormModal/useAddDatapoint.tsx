@@ -129,6 +129,7 @@ export default function useAddEmployee() {
       const obj: DataPointEmployee = {
         employeeId: emp.employeeId,
         employeeName: emp.employeeName,
+        value1: "", // Provide a default value, will be overwritten below
       };
       if (
         String(validationTypeValue) === "6" ||
