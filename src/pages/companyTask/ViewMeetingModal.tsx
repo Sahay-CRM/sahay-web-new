@@ -22,6 +22,11 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
       navigate(`/dashboard/tasks/edit/${modalData.taskId}`);
     }
   };
+  const handleView = () => {
+    if (modalData?.taskId) {
+      navigate(`/dashboard/tasks/view/${modalData.taskId}`);
+    }
+  };
 
   return (
     <ModalData
@@ -43,6 +48,12 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
               },
             ]
           : []),
+
+        {
+          btnText: "View",
+          buttonCss: "py-1.5 px-5",
+          btnClick: handleView,
+        },
       ]}
     >
       <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-700">

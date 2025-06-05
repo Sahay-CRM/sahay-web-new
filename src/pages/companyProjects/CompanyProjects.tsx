@@ -8,6 +8,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import TableWithDropdown from "@/components/shared/DataTable/DropdownTable/DropdownTable";
 import { RefreshCw } from "lucide-react";
+import ViewMeetingModal from "./ViewProjectModal";
 // import DesignationAddFormModal from "./DesignationAddFormModal";
 export default function CompanyProject() {
   const {
@@ -25,6 +26,10 @@ export default function CompanyProject() {
     permission,
     handleFilterChange,
     filters,
+    handleRowsModalOpen,
+    isViewModalOpen,
+    setIsViewModalOpen,
+    viewModalData,
     isLoading,
   } = useCompanyProject();
   const [tableRenderKey, setTableRenderKey] = useState(0);
@@ -127,6 +132,9 @@ export default function CompanyProject() {
               ...item,
               srNo: index + 1,
               status: item?.projectStatus?.projectStatusId ?? "",
+              projectDeadline: item.projectDeadline
+                ? new Date(item.projectDeadline).toISOString().split("T")[0]
+                : "",
             }))}
             columns={visibleColumns}
             primaryKey="projectId"
@@ -144,6 +152,9 @@ export default function CompanyProject() {
             viewButton={true}
             onViewButton={(row) => {
               navigate(`/dashboard/projects/view/${row.projectId}`);
+            }}
+            onRowClick={(row) => {
+              handleRowsModalOpen(row as unknown as IProjectFormData);
             }}
             showDropdown={true}
             isLoading={isLoading}
@@ -169,6 +180,11 @@ export default function CompanyProject() {
             isChildData={isChildData}
           />
         )}
+        <ViewMeetingModal
+          isModalOpen={isViewModalOpen}
+          modalData={viewModalData}
+          modalClose={() => setIsViewModalOpen(false)}
+        />
       </div>
     </FormProvider>
   );

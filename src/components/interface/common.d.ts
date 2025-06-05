@@ -183,7 +183,9 @@ interface IProjectFormData {
   projectStatusId: string;
 
   employeeIds: string[];
-
+  projectStatus?: {
+    projectStatus: string;
+  };
   subParameterIds: string[];
 
   createdBy?: {
