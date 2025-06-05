@@ -22,6 +22,7 @@ export default function useAdminUser() {
   const [isImport, setIsImport] = useState(false);
 
   const [isChildData, setIsChildData] = useState<string | undefined>();
+  const [filters, setFilters] = useState<{ selected?: string[] }>({});
 
   // Pagination Details and Filter
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
@@ -32,7 +33,7 @@ export default function useAdminUser() {
   });
 
   const { data: projectlistdata } = useGetCompanyProject({
-    filter: paginationFilter,
+    filter: { ...paginationFilter, statusArray: filters.selected },
   });
   const { mutate: deleteProjectById } = useDeleteCompanyProject();
   const { data: projectStatusList } = useGetAllProjectStatus();
@@ -118,6 +119,12 @@ export default function useAdminUser() {
     });
   };
 
+  const handleFilterChange = (selected: string[]) => {
+    setFilters({
+      selected,
+    });
+  };
+
   return {
     projectlistdata,
     closeDeleteModal,
@@ -141,5 +148,7 @@ export default function useAdminUser() {
     statusOptions,
     handleStatusChange,
     permission,
+    handleFilterChange,
+    filters,
   };
 }

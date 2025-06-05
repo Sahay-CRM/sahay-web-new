@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import TableWithDropdown from "@/components/shared/DataTable/DropdownTable/DropdownTable";
 import DateRangePicker from "@/components/shared/DateRange";
 import { useState } from "react";
+import { RefreshCw } from "lucide-react";
 
 export default function CompanyTaskList() {
   const {
@@ -29,7 +30,11 @@ export default function CompanyTaskList() {
     handleDateRangeApply,
     showOverdue,
     handleOverdueToggle,
+    handleRowsModalOpen,
+    // isRowModal,
   } = useCompanyTaskList();
+
+  const [tableRenderKey, setTableRenderKey] = useState(0);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -65,6 +70,14 @@ export default function CompanyTaskList() {
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
   const navigate = useNavigate();
+
+  const resetColumnWidths = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("tableWidths_CompanyTaskList");
+    }
+    setTableRenderKey((k) => k + 1);
+  };
+
   return (
     <FormProvider {...methods}>
       <div className="w-full  overflow-x-auto">
@@ -121,11 +134,21 @@ export default function CompanyTaskList() {
                 columnIcon={true}
               />
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetColumnWidths}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reset
+            </Button>
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableWithDropdown
+            key={tableRenderKey}
             tableData={companyTaskData?.data.map(
               (item: TaskGetPaging, index: number) => ({
                 ...item,
@@ -170,6 +193,9 @@ export default function CompanyTaskList() {
               navigate(`/dashboard/tasks/view/${row.taskId}`);
             }}
             moduleKey="TASK"
+            onRowClick={(row) => {
+              handleRowsModalOpen(row);
+            }}
           />
         </div>
 

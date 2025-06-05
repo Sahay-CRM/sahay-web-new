@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Table,
   TableHeader,
@@ -22,7 +22,6 @@ import {
   ChevronUp,
   ChevronDown,
   KeyRound,
-  RefreshCw,
   EyeIcon,
 } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -69,6 +68,7 @@ interface TableProps<T extends Record<string, unknown>> {
   handleChange?: (selected: T[] | T) => void;
   localStorageId?: string; // Unique identifier for localStorage
   moduleKey?: string;
+  onRowClick?: (item: T) => void;
 }
 
 interface ResizableTableHeadProps {
@@ -154,6 +154,7 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
   localStorageId = "defaultLocalStorageId",
   moduleKey = "",
   showDropdown = false,
+  onRowClick,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   const showCheckboxes = multiSelect || (!!selectedValue && !!handleChange);
@@ -189,18 +190,6 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
 
   const [columnWidths, setColumnWidths] =
     useState<Record<string, number>>(getInitialWidths());
-
-  // Add a render key to force re-render on reset
-  const [tableRenderKey, setTableRenderKey] = useState(0);
-
-  const resetColumnWidths = useCallback(() => {
-    setColumnWidths(DEFAULT_WIDTHS);
-
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(`tableWidths_${localStorageId}`);
-    }
-    setTableRenderKey((k) => k + 1);
-  }, [DEFAULT_WIDTHS, localStorageId]);
 
   const getCurrentWidths = () => {
     if (Object.keys(columnWidths).length === 0) {
@@ -257,19 +246,7 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
   };
   return (
     <Card className="w-full p-2 mb-5 overflow-hidden">
-      <div className="flex justify-end mb-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={resetColumnWidths}
-          className="flex items-center gap-2 cursor-pointer"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Reset Column
-        </Button>
-      </div>
       <div
-        key={tableRenderKey}
         className="overflow-x-auto max-h-[calc(100svh-183px)] tb:max-h-[calc(100svh-260px)]"
         ref={tableRef}
         style={{ overflowX: "auto" }}
@@ -335,7 +312,13 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
                 </TableRow>
               ) : tableData.length ? (
                 tableData.map((item, index) => (
-                  <TableRow key={item[primaryKey] as React.Key}>
+                  <TableRow
+                    key={item[primaryKey] as React.Key}
+                    className={
+                      onRowClick ? "cursor-pointer hover:bg-gray-50" : ""
+                    }
+                    onClick={() => onRowClick?.(item)}
+                  >
                     {showCheckboxes && (
                       <TableCell
                         style={{ width: `${FIXED_WIDTHS.checkbox}px` }}

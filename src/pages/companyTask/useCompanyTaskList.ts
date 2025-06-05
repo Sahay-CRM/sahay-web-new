@@ -20,6 +20,8 @@ export default function useCompanyTaskList() {
   const permission = useSelector(getUserPermission).TASK;
   const [isChildData, setIsChildData] = useState<string | undefined>();
 
+  const [isRowModal, setIsRowModal] = useState<boolean>(false);
+
   const [taskDateRange, setTaskDateRange] = useState<{
     taskStartDate: Date | undefined;
     taskDeadline: Date | undefined;
@@ -248,6 +250,11 @@ export default function useCompanyTaskList() {
     setShowOverdue(newOverdueState);
   };
 
+  const handleRowsModalOpen = (data: TaskGetPaging) => {
+    setIsRowModal(true);
+    console.log("Selected row data:", data);
+  };
+
   return {
     companyTaskData,
     closeDeleteModal,
@@ -281,5 +288,7 @@ export default function useCompanyTaskList() {
     appliedDateRange,
     handleDateRangeApply,
     handleOverdueToggle,
+    handleRowsModalOpen,
+    isRowModal,
   };
 }

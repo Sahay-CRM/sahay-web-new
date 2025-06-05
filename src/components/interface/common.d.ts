@@ -337,10 +337,10 @@ interface CompanyMeetingTypeDataProps {
 
 interface CompanyProjectDataProps {
   projectId?: string;
-  projectName: string;
-  projectDescription: string;
+  projectName?: string;
+  projectDescription?: string;
   projectActualEndDate?: string | null;
-  projectDeadline: string;
+  projectDeadline?: string;
   employeeId?: string;
   ProjectParameters?: ProjectParameters;
   ProjectEmployees?: Employee[];
