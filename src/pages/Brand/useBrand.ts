@@ -98,5 +98,6 @@ export default function useBrand() {
     conformDelete,
     permission,
     isChildData,
+    paginationFilter,
   };
 }

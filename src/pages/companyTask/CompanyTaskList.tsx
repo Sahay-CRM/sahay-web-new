@@ -9,12 +9,15 @@ import TableWithDropdown from "@/components/shared/DataTable/DropdownTable/Dropd
 import DateRangePicker from "@/components/shared/DateRange";
 import { useState } from "react";
 import { RefreshCw } from "lucide-react";
+
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+import ViewMeetingModal from "./ViewMeetingModal";
 
 export default function CompanyTaskList() {
   const {
@@ -37,7 +40,10 @@ export default function CompanyTaskList() {
     showOverdue,
     handleOverdueToggle,
     handleRowsModalOpen,
-    // isRowModal,
+    isLoading,
+    isViewModalOpen,
+    setIsViewModalOpen,
+    viewModalData,
   } = useCompanyTaskList();
 
   const [tableRenderKey, setTableRenderKey] = useState(0);
@@ -210,7 +216,7 @@ export default function CompanyTaskList() {
             // canDelete={(row) => !row.isSuperAdmin}
             paginationDetails={companyTaskData}
             setPaginationFilter={setPaginationFilter}
-            //   isLoading={isLoading}
+            isLoading={isLoading}
             permissionKey="users"
             localStorageId="CompanyTaskList"
             statusOptions={statusOptions}
@@ -238,6 +244,11 @@ export default function CompanyTaskList() {
             isChildData={isChildData}
           />
         )}
+        <ViewMeetingModal
+          isModalOpen={isViewModalOpen}
+          modalData={viewModalData}
+          modalClose={() => setIsViewModalOpen(false)}
+        />
       </div>
     </FormProvider>
   );

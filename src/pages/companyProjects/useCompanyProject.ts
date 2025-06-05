@@ -29,12 +29,12 @@ export default function useAdminUser() {
     currentPage: 1,
     pageSize: 10,
     search: "",
-    status: currentStatus, // Use currentStatus state
   });
 
-  const { data: projectlistdata } = useGetCompanyProject({
+  const { data: projectlistdata, isLoading } = useGetCompanyProject({
     filter: { ...paginationFilter, statusArray: filters.selected },
   });
+
   const { mutate: deleteProjectById } = useDeleteCompanyProject();
   const { data: projectStatusList } = useGetAllProjectStatus();
 
@@ -152,5 +152,6 @@ export default function useAdminUser() {
     permission,
     handleFilterChange,
     filters,
+    isLoading,
   };
 }

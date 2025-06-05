@@ -148,8 +148,8 @@ export default function Graph() {
 
                 {/* ✅ Percentage label above needle tip */}
                 <text
-                  x={needleCoord.x}
-                  y={needleCoord.y - 15}
+                  x={needleCoord.x - 22}
+                  y={needleCoord.y - 12}
                   //   textAnchor="middle"
                   //   dominantBaseline="middle"
                   fontSize="19"

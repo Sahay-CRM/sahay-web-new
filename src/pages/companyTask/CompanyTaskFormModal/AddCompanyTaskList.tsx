@@ -23,7 +23,8 @@ export default function AddMeeting({
     onSubmit,
     steps,
     methods,
-    projectListOption,
+    // projectListOption,
+    projectListdata,
     repetitionOptions,
     taskStatus,
     taskType,
@@ -31,6 +32,9 @@ export default function AddMeeting({
     setPaginationFilterTaskStatus,
     setPaginationFilterTaskType,
     setPaginationFilterEmployee,
+    setPaginationFilterProject,
+    setPaginationFilterMeeting,
+    meetingData,
     taskId,
   } = useAddCompanyEmployee();
 
@@ -66,25 +70,47 @@ export default function AddMeeting({
         </div>
 
         {/* Step 1 - Basic Info */}
+
         {step === 1 && (
+          <Card className="px-4 py-4">
+            <Controller
+              name="CompanyProject"
+              control={control}
+              rules={{ required: "Please select a Company Project" }}
+              render={({ field }) => (
+                <>
+                  <div className="mb-4">
+                    {errors?.project && (
+                      <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                        {String(errors?.project?.message || "")}
+                      </span>
+                    )}
+                  </div>
+                  <TableData
+                    {...field}
+                    tableData={projectListdata?.data?.map((item, index) => ({
+                      ...item,
+                      srNo: index + 1,
+                    }))}
+                    isActionButton={() => false}
+                    columns={{
+                      projectName: "ProjectName",
+                    }}
+                    primaryKey="projectId"
+                    multiSelect={false}
+                    selectedValue={field.value}
+                    handleChange={field.onChange}
+                    paginationDetails={projectListdata as PaginationFilter}
+                    setPaginationFilter={setPaginationFilterProject}
+                  />
+                </>
+              )}
+            />
+          </Card>
+        )}
+        {step === 2 && (
           <div className="grid grid-cols-2 gap-4">
             <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
-              <Controller
-                control={control}
-                name="project"
-                rules={{ required: "Project is required" }}
-                render={({ field }) => (
-                  <FormSelect
-                    label="Project"
-                    options={projectListOption}
-                    placeholder="Select Project"
-                    value={field.value}
-                    onChange={field.onChange}
-                    error={errors.project}
-                    isMandatory={true}
-                  />
-                )}
-              />
               <FormInputField
                 label="Task Name"
                 {...register("taskName", { required: "Task Name is required" })}
@@ -102,7 +128,7 @@ export default function AddMeeting({
         )}
 
         {/* Step 2 - Schedule & Repetition */}
-        {step === 2 && (
+        {step === 3 && (
           <Card className="px-4 py-4 grid grid-cols-2 gap-4">
             <Controller
               control={control}
@@ -146,7 +172,7 @@ export default function AddMeeting({
         )}
 
         {/* Step 3 - Task Status */}
-        {step === 3 && (
+        {step === 4 && (
           <Card className="px-4 py-4">
             <Controller
               name="taskStatus"
@@ -176,7 +202,7 @@ export default function AddMeeting({
         )}
 
         {/* Step 4 - Task Type */}
-        {step === 4 && (
+        {step === 5 && (
           <Card className="px-4 py-4">
             <Controller
               name="taskType"
@@ -204,9 +230,37 @@ export default function AddMeeting({
             />
           </Card>
         )}
+        {step === 6 && (
+          <Card className="px-4 py-4">
+            <Controller
+              name="meeting"
+              control={control}
+              rules={{ required: "Please select a meeting" }}
+              render={({ field }) => (
+                <TableData
+                  {...field}
+                  tableData={meetingData?.data?.map((item, index) => ({
+                    ...item,
+                    srNo: index + 1,
+                  }))}
+                  isActionButton={() => false}
+                  columns={{
+                    meetingName: "Meeting Name",
+                  }}
+                  primaryKey="meetingId"
+                  multiSelect={false}
+                  selectedValue={field.value}
+                  handleChange={field.onChange}
+                  paginationDetails={meetingData as PaginationFilter}
+                  setPaginationFilter={setPaginationFilterMeeting}
+                />
+              )}
+            />
+          </Card>
+        )}
 
         {/* Step 5 - Assign User */}
-        {step === 5 && (
+        {step === 7 && (
           <Card className="px-4 py-4">
             <Controller
               name="assignUser"
@@ -254,7 +308,7 @@ export default function AddMeeting({
         )}
 
         {/* Step 6 - Comment (only if not editing) */}
-        {!taskId && step === 6 && (
+        {!taskId && step === 8 && (
           <Card className="px-4 py-4">
             <FormInputField
               label="Comment"

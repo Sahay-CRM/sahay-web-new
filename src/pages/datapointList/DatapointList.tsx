@@ -7,36 +7,26 @@ import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownS
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-// import DesignationAddFormModal from "./DesignationAddFormModal";
+import { RefreshCw } from "lucide-react";
+import ViewKPIDetailModal from "./ViewKPIDetailModal";
 export default function CompanyTaskList() {
   const {
     datpointData,
-    // isLoading,
+    isLoading,
     closeDeleteModal,
     setPaginationFilter,
-    // currentStatus,
-    // handleAdd,
-    // openModal,
     permission,
     onDelete,
     modalData,
     conformDelete,
     isDeleteModalOpen,
     paginationFilter,
-    // isUserModalOpen,
     isChildData,
+    handleRowsModalOpen,
+    isViewModalOpen,
+    setIsViewModalOpen,
+    viewModalData,
   } = useCompanyTaskList();
-
-  //   const { setBreadcrumbs } = useBreadcrumbs();
-
-  //   useEffect(() => {
-  //     setBreadcrumbs([
-  //       { label: "Admin Tools", href: "/admin-tools" },
-  //       { label: "User" },
-  //     ]);
-  //   }, [setBreadcrumbs]);
-
-  // Column visibility state
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -50,12 +40,8 @@ export default function CompanyTaskList() {
     { key: "validationType", label: "Validation Type", visible: true },
     { key: "frequencyType", label: "Frequency", visible: true },
   ]);
-  // function formatString(str: string): string {
-  //   return str
-  //     .replace(/_/g, " ") // Replace underscores with spaces
-  //     .toLowerCase() // Convert to lowercase
-  //     .replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalize first letter of each word
-  // }
+
+  const [tableRenderKey, setTableRenderKey] = useState(0);
 
   // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
@@ -78,6 +64,13 @@ export default function CompanyTaskList() {
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
   const navigate = useNavigate();
+
+  const resetColumnWidths = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("tableWidths_KpiList");
+    }
+    setTableRenderKey((k) => k + 1);
+  };
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
@@ -86,40 +79,55 @@ export default function CompanyTaskList() {
             KPI List
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
-            <SearchInput
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-              className="w-96"
-            />
-
             {permission.Add && (
               <Link to="/dashboard/kpi/add">
-                <Button className="py-2 w-fit">Add Kpi</Button>
+                <Button className="py-2 w-fit">Add KPI</Button>
               </Link>
             )}
             <Link to="/dashboard/kpi/graph">
               <Button className="py-2 w-fit">Graph</Button>
             </Link>
+          </div>
+        </div>
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
             {canToggleColumns && (
               <DropdownSearchMenu
                 columns={columnToggleOptions}
                 onToggleColumn={onToggleColumn}
+                columnIcon={true}
               />
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetColumnWidths}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reset
+            </Button>
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
+            key={tableRenderKey}
             tableData={datpointData?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,
               KPINameWithLabel: `${item.KPIName} - ${item.KPILabel}`,
-              // validationTypeName: formatString(item.validationType),
-              //   assigneeNames: item.assignees[0]?.employeeName,
             }))}
-            columns={visibleColumns} // Pass only visible columns to the Table
+            columns={visibleColumns}
             primaryKey="dataPointId"
             onDelete={(row) => {
               onDelete(row);
@@ -131,10 +139,13 @@ export default function CompanyTaskList() {
                   }
                 : undefined
             }
+            onRowClick={(row) => {
+              handleRowsModalOpen(row as unknown as KPIFormData);
+            }}
+            isLoading={isLoading}
             isActionButton={() => true}
             paginationDetails={datpointData}
             setPaginationFilter={setPaginationFilter}
-            //   isLoading={isLoading}
             permissionKey="users"
             localStorageId="KpiList"
             moduleKey="DATAPOINT_LIST"
@@ -153,6 +164,11 @@ export default function CompanyTaskList() {
             isChildData={isChildData}
           />
         )}
+        <ViewKPIDetailModal
+          isModalOpen={isViewModalOpen}
+          modalData={viewModalData}
+          modalClose={() => setIsViewModalOpen(false)}
+        />
       </div>
     </FormProvider>
   );

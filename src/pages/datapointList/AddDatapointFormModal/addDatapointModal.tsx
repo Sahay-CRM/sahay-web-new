@@ -2,50 +2,15 @@ import ModalData from "@/components/shared/Modal/ModalData";
 
 interface KPIFormDataProp {
   KPIName?: string;
-
-  KPIMasterId?: {
-    srNo?: number;
-    KPIName?: string;
-    KPIMasterId?: string;
-    KPILabel?: string;
-    industryName?: string | null;
-    KPINames?: string;
-  };
-
+  KPIMasterId?: DatapointListData;
   frequencyId?: string | { frequencyName: string };
   validationTypeId?:
     | string
     | { validationTypeId: string; validationTypeName: string };
   unit?: string;
-
-  coreParameterId?: {
-    srNo?: number;
-    coreParameterId: string;
-    coreParameterName: string;
-    departmentId: string;
-    departmentName: string;
-  };
-
-  productId?: {
-    srNo: number;
-    productId: string;
-    productName: string;
-    productDescription?: string;
-    brandId?: string;
-    brandName?: string;
-  }[];
-
-  employeeId?: {
-    srNo?: number;
-    employeeId: string;
-    employeeName: string;
-    employeeEmail?: string;
-    employeeMobile?: string;
-    employeeType?: string;
-    departmentName?: string | null;
-    designationName?: string | null;
-  }[];
-
+  coreParameterId?: CoreParameter;
+  productId?: ProductData;
+  employeeId?: EmployeeData;
   [key: `goalValue1_${string}`]: string | number | undefined;
   [key: `goalValue2_${string}`]: string | number | undefined;
 }

@@ -1,7 +1,7 @@
 // hooks/useAddCompanyTaskList.ts
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
-import { useGetCompanyProjectAll } from "@/features/api/companyProject";
+import { useGetCompanyProject } from "@/features/api/companyProject";
 import {
   useGetAllTaskStatus,
   useAllTaskType,
@@ -10,6 +10,7 @@ import {
 } from "@/features/api/companyTask";
 import { getEmployee } from "@/features/api/companyEmployee";
 import { useNavigate, useParams } from "react-router-dom";
+import { useGetCompanyMeeting } from "@/features/api/companyMeeting";
 
 interface FormValues {
   taskId?: string; // <-- make it optional
@@ -21,6 +22,7 @@ interface FormValues {
   repetition: string;
   taskStatus?: TaskStatusAllRes;
   taskType?: TaskTypeData;
+  meeting?: string; // <-- add this line for meeting field
   assignUser: string[]; // always an array of employeeIds
   comment?: string;
 }
@@ -106,8 +108,20 @@ export const useAddCompanyEmployee = () => {
       pageSize: 10,
       search: "",
     });
+  const [paginationFilterProject, setPaginationFilterProject] =
+    useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 10,
+      search: "",
+    });
+  const [paginationFilterMeeting, setPaginationFilterMeeting] =
+    useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 10,
+      search: "",
+    });
 
-  const { data: projectList } = useGetCompanyProjectAll();
+  //const { data: projectList } = useGetCompanyProjectAll();
   const { data: taskStatus } = useGetAllTaskStatus({
     filter: paginationFilterTaskStatus,
   });
@@ -117,24 +131,30 @@ export const useAddCompanyEmployee = () => {
   const { data: employeedata } = getEmployee({
     filter: paginationFilterEmployee,
   });
+  const { data: projectListdata } = useGetCompanyProject({
+    filter: paginationFilterProject,
+  });
+  const { data: meetingData } = useGetCompanyMeeting({
+    filter: paginationFilterMeeting,
+  });
 
   const taskType = {
     data: Array.isArray(taskTypeData?.data) ? taskTypeData.data : [],
   };
 
-  const projectListOption = [
-    {
-      label: "Please select Project",
-      value: "",
-      disabled: true,
-    },
-    ...(Array.isArray(projectList?.data)
-      ? projectList.data.map((item) => ({
-          label: item.projectName,
-          value: item.projectId,
-        }))
-      : []),
-  ];
+  // const projectListOption = [
+  //   {
+  //     label: "Please select Project",
+  //     value: "",
+  //     disabled: true,
+  //   },
+  //   ...(Array.isArray(projectList?.data)
+  //     ? projectList.data.map((item) => ({
+  //         label: item.projectName,
+  //         value: item.projectId,
+  //       }))
+  //     : []),
+  // ];
 
   // Repetition options
   const repetitionOptions = [
@@ -148,37 +168,44 @@ export const useAddCompanyEmployee = () => {
   // Dynamically set steps based on taskId
   const steps = taskId
     ? [
+        "Project",
         "Basic Info",
         "Schedule & Repetition",
         "Task Status",
         "Task Type",
+        "Meeting",
         "Assign User",
       ]
     : [
+        "Project",
         "Basic Info",
         "Schedule & Repetition",
         "Task Status",
         "Task Type",
+        "Meeting",
         "Assign User",
         "Comment",
       ];
 
   // Only validate relevant fields for each step
+  // Step 3 (Schedule & Repetition) should not be required, so its array is empty
   const fieldsToValidate: Record<number, (keyof FormValues)[]> = taskId
     ? {
         1: ["project", "taskName", "taskDescription"],
-        2: ["taskStartDate", "taskDeadline", "repetition"],
+        2: [], // Step 3: Schedule & Repetition is not required
         3: ["taskStatus"],
         4: ["taskType"],
-        5: ["assignUser"],
+        5: ["meeting"],
+        6: ["assignUser"],
       }
     : {
         1: ["project", "taskName", "taskDescription"],
-        2: ["taskStartDate", "taskDeadline", "repetition"],
+        2: [], // Step 3: Schedule & Repetition is not required
         3: ["taskStatus"],
         4: ["taskType"],
-        5: ["assignUser"],
-        6: ["comment"],
+        5: ["meeting"],
+        6: ["assignUser"],
+        7: ["comment"],
       };
 
   const validateStep = async (): Promise<boolean> => {
@@ -243,14 +270,18 @@ export const useAddCompanyEmployee = () => {
     prevStep,
     onSubmit,
     methods,
-    projectListOption,
+    // projectListOption,
     repetitionOptions,
     taskStatus,
     taskType,
     employeedata,
+    projectListdata,
     setPaginationFilterTaskStatus,
     setPaginationFilterTaskType,
     setPaginationFilterEmployee,
+    setPaginationFilterProject,
+    setPaginationFilterMeeting,
+    meetingData,
     taskId, // expose taskId for component
   };
 };

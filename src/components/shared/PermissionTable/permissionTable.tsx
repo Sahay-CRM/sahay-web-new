@@ -15,6 +15,7 @@ import {
 } from "@/features/api/permission";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import React from "react";
+import { SpinnerIcon } from "../Icons";
 
 interface PermissionTableProps {
   data?: string;
@@ -51,10 +52,13 @@ export default function PermissionTable({
   data,
   onChange,
 }: PermissionTableProps) {
-  const { data: moduleData } = useGetAllModule();
-  const { data: permissionData } = useGetAllPermission();
-  const { data: userPerm } = useGetUserPerById(data || "");
-
+  const { data: moduleData, isLoading: moduleLoading } = useGetAllModule();
+  const { data: permissionData, isLoading: permissionLoading } =
+    useGetAllPermission();
+  const { data: userPerm, isLoading: userDataLoading } = useGetUserPerById(
+    data || "",
+  );
+  const isLoading = moduleLoading || userDataLoading || permissionLoading;
   const [permissions, setPermissions] = useState<PermissionState>({});
   const [isInitialized, setIsInitialized] = useState(false);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(
@@ -274,11 +278,19 @@ export default function PermissionTable({
     );
   };
 
-  if (!moduleData?.data || !permissionData?.data || !isInitialized) {
-    return <div>Loading...</div>;
+  if (
+    (isLoading && !moduleData?.data) ||
+    !permissionData?.data ||
+    !isInitialized
+  ) {
+    return (
+      <div>
+        <SpinnerIcon />
+      </div>
+    );
   }
 
-  const organizedModules = organizeModules(moduleData.data);
+  const organizedModules = organizeModules(moduleData?.data ?? []);
 
   return (
     <div className="rounded-md border">
