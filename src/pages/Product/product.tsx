@@ -9,6 +9,7 @@ import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownS
 import { FormProvider, useForm } from "react-hook-form";
 import SearchInput from "@/components/shared/SearchInput";
 import { RefreshCw } from "lucide-react";
+import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 
 export default function Product() {
   const {
@@ -124,14 +125,14 @@ export default function Product() {
             primaryKey="productId"
             onEdit={openModal}
             onDelete={onDelete}
-            paginationDetails={product}
+            paginationDetails={mapPaginationDetails(product)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
             moduleKey="PRODUCT"
             showIndexColumn={false}
             isActionButton={() => true}
             permissionKey="users"
-            localStorageId="productTableDataWidth"
+            sortableColumns={["productName", "brandName"]}
           />
         </div>
 

@@ -69,7 +69,7 @@ const DrawerAccordion: FC<DrawerAccordionProps> = ({
           <div className="w-6 flex items-center justify-center mr-3">
             <i className={`bx ${item?.icon} text-xl`} />
           </div>
-          <span className="whitespace-nowrap overflow-hidden text-ellipsis hover:underline hover:text-[14.5px]">
+          <span className="whitespace-nowrap overflow-hidden text-ellipsis hover:underline">
             {item?.label}
           </span>
         </div>

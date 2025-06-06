@@ -6,7 +6,6 @@ import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddComp
 import AddCompanyMeeting from "@/pages/Meeting/AddMeetingFormModal/addMeeting";
 
 const Theme = lazy(() => import("../pages/theme/Theme"));
-const Calendar = lazy(() => import("../pages/Calendar"));
 const companydesignation = lazy(
   () => import("../pages/companyDesignation/companyDesignation"),
 );
@@ -63,16 +62,12 @@ export default function EmployeeRoutes() {
       <Route index element={<Navigate to="/dashboard" replace />} />
       <Route path="/dashboard" element={<DashboardLayout />}>
         {/* <Route index Component={Dashboard} /> */}
-        <Route path="calendar" Component={Calendar} />
         <Route path="settings" Component={Theme} />
         <Route path="company-designation" Component={companydesignation} />
         <Route path="company-employee" Component={companyemployee} />
         <Route path="employees/add" element={<AddCompanyEmployee />} />
         <Route path="employees/edit/:id" element={<AddCompanyEmployee />} />
-        <Route
-          path="company-important-dates"
-          Component={CompanyImportantDates}
-        />
+        <Route path="calendar" Component={CompanyImportantDates} />
         <Route path="meeting" Component={CompanyMeeting} />
         <Route path="meeting/add" element={<AddCompanyMeeting />} />
         <Route path="meeting/edit/:id" element={<AddCompanyMeeting />} />

@@ -10,19 +10,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import {
-  MoreVertical,
-  Pencil,
   Trash,
   ChevronUp,
   ChevronDown,
   KeyRound,
   EyeIcon,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+  Pencil,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
@@ -30,6 +26,11 @@ import FormCheckbox from "../../Form/FormCheckbox/FormCheckbox";
 import Pagination from "../../Pagination/Pagination";
 import FormSelect from "../../Form/FormSelect";
 import { SpinnerIcon } from "../../Icons";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface DetailsPermission {
   view: boolean;
@@ -70,6 +71,7 @@ interface TableProps<T extends Record<string, unknown>> {
   localStorageId?: string; // Unique identifier for localStorage
   moduleKey?: string;
   onRowClick?: (item: T) => void;
+  sortableColumns?: string[];
 }
 
 interface ResizableTableHeadProps {
@@ -156,6 +158,7 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
   moduleKey = "",
   showDropdown = false,
   onRowClick,
+  sortableColumns = [],
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   const showCheckboxes = multiSelect || (!!selectedValue && !!handleChange);
@@ -245,6 +248,39 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
       if (isChecked) handleChange?.(item);
     }
   };
+
+  // Sorting logic
+  const handleSort = (columnKey: string) => {
+    if (!sortableColumns.includes(columnKey) || !setPaginationFilter) return;
+    const currentSortBy = paginationDetails?.sortBy;
+    const currentSortOrder = paginationDetails?.sortOrder || "asc";
+    let newSortOrder: "asc" | "desc" = "asc";
+    if (currentSortBy === columnKey) {
+      newSortOrder = currentSortOrder === "asc" ? "desc" : "asc";
+    } else {
+      newSortOrder = "asc";
+    }
+    setPaginationFilter({
+      ...paginationDetails,
+      sortBy: columnKey,
+      sortOrder: newSortOrder,
+      currentPage: 1,
+    });
+  };
+  const getSortIcon = (columnKey: string) => {
+    if (!sortableColumns.includes(columnKey)) return null;
+    const currentSortBy = paginationDetails?.sortBy;
+    const currentSortOrder = paginationDetails?.sortOrder;
+    if (currentSortBy === columnKey) {
+      return currentSortOrder === "asc" ? (
+        <ArrowUp className="w-4 h-4 ml-1" />
+      ) : (
+        <ArrowDown className="w-4 h-4 ml-1" />
+      );
+    }
+    return <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />;
+  };
+
   return (
     <Card className="w-full p-2 mb-5 overflow-hidden">
       <div
@@ -284,7 +320,17 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
                         : undefined
                     }
                   >
-                    {columns[clm]}
+                    <div
+                      className={`flex items-center ${
+                        sortableColumns.includes(clm)
+                          ? "cursor-pointer select-none"
+                          : ""
+                      }`}
+                      onClick={() => handleSort(clm)}
+                    >
+                      {columns[clm]}
+                      {getSortIcon(clm)}
+                    </div>
                   </ResizableTableHead>
                 ))}
 
@@ -438,64 +484,74 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
 
                     <TableCell
                       style={{ width: `${FIXED_WIDTHS.action}px` }}
-                      className="text-right break-words overflow-wrap-anywhere"
+                      className="text-left sticky right-0 pr-6 bg-white"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <DropdownMenu>
-                        {isActionButton && isActionButton(item) && (
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                        )}
-                        <DropdownMenuContent align="end" className="w-36">
-                          {customActions?.(item)}
-
-                          {isActionButton && permission?.Edit && (
-                            <DropdownMenuItem onClick={() => onEdit?.(item)}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                          )}
-
-                          {isActionButton &&
-                            permission?.Delete &&
-                            (!canDelete || canDelete(item)) && (
-                              <DropdownMenuItem
-                                onClick={() => onDelete?.(item)}
-                                className="text-red-600"
+                      <div className="flex gap-1 items-center justify-start">
+                        {isActionButton?.(item) && permission?.Edit && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => onEdit?.(item)}
                               >
-                                <Trash className="mr-2 h-4 w-4 text-red-600" />
-                                Delete
-                              </DropdownMenuItem>
-                            )}
-
-                          {additionalButton && permission?.Edit && (
-                            <DropdownMenuItem
-                              onClick={() => onAdditionButton(item)}
-                            >
-                              <span className="flex items-center">
-                                <KeyRound className="mr-2 h-4 w-4" />
-                                Permission
-                              </span>
-                            </DropdownMenuItem>
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit</TooltipContent>
+                          </Tooltip>
+                        )}
+                        {isActionButton?.(item) &&
+                          permission?.Delete &&
+                          (!canDelete || canDelete(item)) && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-red-600"
+                                  onClick={() => onDelete?.(item)}
+                                >
+                                  <Trash className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Delete</TooltipContent>
+                            </Tooltip>
                           )}
-                          {viewButton && (
-                            <DropdownMenuItem
-                              onClick={() => onViewButton(item)}
-                            >
-                              <span className="flex items-center">
-                                <EyeIcon className="mr-2 h-4 w-4" />
-                                View
-                              </span>
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        {customActions?.(item)}
+                        {additionalButton && permission?.Edit && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => onAdditionButton(item)}
+                              >
+                                <KeyRound className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Permission</TooltipContent>
+                          </Tooltip>
+                        )}
+                        {viewButton && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => onViewButton?.(item)}
+                              >
+                                <EyeIcon className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>View</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

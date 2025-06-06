@@ -9,6 +9,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import ViewKPIDetailModal from "./ViewKPIDetailModal";
+import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 export default function CompanyTaskList() {
   const {
     datpointData,
@@ -84,9 +85,6 @@ export default function CompanyTaskList() {
                 <Button className="py-2 w-fit">Add KPI</Button>
               </Link>
             )}
-            <Link to="/dashboard/kpi/graph">
-              <Button className="py-2 w-fit">Graph</Button>
-            </Link>
           </div>
         </div>
         <div className="flex justify-between items-center mb-4">
@@ -144,11 +142,17 @@ export default function CompanyTaskList() {
             }}
             isLoading={isLoading}
             isActionButton={() => true}
-            paginationDetails={datpointData}
+            paginationDetails={mapPaginationDetails(datpointData)}
             setPaginationFilter={setPaginationFilter}
             permissionKey="users"
             localStorageId="KpiList"
             moduleKey="DATAPOINT_LIST"
+            sortableColumns={[
+              "KPIName",
+              "KPILabel",
+              "validationType",
+              "frequencyType",
+            ]}
           />
         </div>
 

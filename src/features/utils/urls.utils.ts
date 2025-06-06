@@ -130,6 +130,8 @@ const Urls = {
   getHealthScoreList: () => `${baseUrl}/company/health/dashboard/get`,
 
   selectCompanyList: () => `${baseUrl}/auth/switch-company`,
+
+  uploadImage: () => `${baseUrl}/file/upload`,
 };
 
 export default Urls;

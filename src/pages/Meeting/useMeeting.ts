@@ -9,7 +9,6 @@ export default function useAdminUser() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [modalData, setModalData] = useState<MeetingData>({} as MeetingData);
-  const [currentStatus, setCurrentStatus] = useState<number>(1); // Add state for currentStatus
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
   const [isChildData, setIsChildData] = useState<string | undefined>();
@@ -33,27 +32,8 @@ export default function useAdminUser() {
   });
 
   const { data: meetingStatus, isLoading } = useDdMeetingStatus();
-
-  const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStatus = Number(event.target.value);
-    setCurrentStatus(newStatus);
-
-    // Update pagination filter to include the selected status
-    setPaginationFilter((prevFilter) => ({
-      ...prevFilter,
-      status: newStatus,
-      currentPage: 1,
-    }));
-  };
   const { mutate: deleteMeetingById } = useDeleteCompanyMeeting();
 
-  // Ensure currentStatus is passed when updating the pagination filter
-  const setPaginationFilterWithStatus = (filter: PaginationFilter) => {
-    setPaginationFilter({
-      ...filter,
-      status: currentStatus, // Always include the currentStatus
-    });
-  };
   const handleAdd = () => {
     setModalData({
       meetingName: "",
@@ -121,16 +101,13 @@ export default function useAdminUser() {
   const handleRowsModalOpen = (data: MeetingData) => {
     setViewModalData(data);
     setIsViewModalOpen(true);
-    // setIsRowModal(true); // REMOVE this line if your view modal does not depend on isRowModal
   };
 
   return {
     isLoading,
     meetingData,
     closeDeleteModal,
-    setPaginationFilter: setPaginationFilterWithStatus,
-    onStatusChange,
-    currentStatus,
+    setPaginationFilter,
     openModal,
     onDelete,
     modalData,

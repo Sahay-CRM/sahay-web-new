@@ -136,7 +136,7 @@ export default function HealthWeightage() {
         </div>
 
         {/* Score Table or No Data */}
-        {isCoreSelected && level ? (
+        {isCoreSelected && level && healthScoreList ? (
           healthScoreList?.length == 0 ? (
             <div className="text-center text-muted-foreground mt-8">
               No data found

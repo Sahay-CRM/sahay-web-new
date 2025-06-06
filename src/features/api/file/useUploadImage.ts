@@ -1,5 +1,8 @@
+// hooks/useAddOrUpdateDepartment.ts
+
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
+import { queryClient } from "@/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
@@ -9,7 +12,7 @@ export default function useUpdateImage() {
     mutationKey: ["upload-image"],
     mutationFn: async (formData: FormData) => {
       const { data: resData } = await Api.post({
-        url: Urls.uploadDoc(),
+        url: Urls.uploadImage(), // Ensure this is the correct endpoint for image upload
         data: formData,
         headers: {
           "Content-Type": "multipart/form-data",
@@ -18,10 +21,11 @@ export default function useUpdateImage() {
       return resData;
     },
     onSuccess: () => {
-      toast.success("Files uploaded/removed successfully");
+      toast.success("Image uploaded successfully");
+      queryClient.resetQueries({ queryKey: ["get-consultant-list"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
-      toast.error(error.response?.data?.message || "File operation failed");
+      toast.error(error.response?.data?.message);
     },
   });
   return imageUploadMutation;

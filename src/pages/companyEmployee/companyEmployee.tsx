@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { FormProvider, useForm } from "react-hook-form";
+
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyEmployee from "./useCompanyEmployee";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
-import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
 import ViewEmployeeModal from "./ViewEmployeeModal";
+import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 
 export default function CompanyDesignation() {
   const {
@@ -52,7 +53,7 @@ export default function CompanyDesignation() {
     { key: "employeeMobile", label: "Employee Mobile", visible: true },
     { key: "employeeType", label: "Employee Type", visible: true },
   ]);
-  const [tableRenderKey, setTableRenderKey] = useState(0);
+
   // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
@@ -75,12 +76,6 @@ export default function CompanyDesignation() {
   const methods = useForm();
   const navigate = useNavigate();
 
-  const resetColumnWidths = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("tableWidths_EmployeeList");
-    }
-    setTableRenderKey((k) => k + 1);
-  };
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
@@ -114,21 +109,11 @@ export default function CompanyDesignation() {
                 columnIcon={true}
               />
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetColumnWidths}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Reset
-            </Button>
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            key={tableRenderKey}
             tableData={employeedata?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,
@@ -150,12 +135,12 @@ export default function CompanyDesignation() {
             }}
             onDelete={(row) => onDelete(row as unknown as EmployeeData)}
             canDelete={(row) => !row.isSuperAdmin}
-            paginationDetails={employeedata}
+            paginationDetails={mapPaginationDetails(employeedata)}
             isLoading={isLoading}
             setPaginationFilter={setPaginationFilter}
             permissionKey="employeeId"
-            localStorageId="EmployeeList"
             moduleKey="EMPLOYEE"
+            sortableColumns={["employeeName", "employeeEmail", "employeeType"]}
           />
         </div>
 
@@ -167,7 +152,7 @@ export default function CompanyDesignation() {
             modalData={`${modalData?.employeeName}`}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
-            onSubmit={() => conformDelete}
+            onSubmit={conformDelete}
             isChildData={isChildData}
           />
         )}

@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import useViewProject from "./useViewProject";
 import { Controller, FormProvider } from "react-hook-form";
 import FormSelect from "@/components/shared/Form/FormSelect";
+import { Link } from "react-router-dom";
 
 const ProjectView = () => {
   const {
@@ -14,6 +15,7 @@ const ProjectView = () => {
     statusOptions,
     handleStatusChange,
     methods,
+    taskPermission,
   } = useViewProject();
   const projectData = projectApiData?.data;
   if (!projectData) return null;
@@ -110,23 +112,6 @@ const ProjectView = () => {
               <div className="space-y-4">
                 <div>
                   <p className="text-md text-muted-foreground font-medium">
-                    Assignee:
-                  </p>
-                  <div className="flex gap-2 flex-wrap">
-                    {projectData.ProjectEmployees.map((emp) => (
-                      <Badge
-                        key={emp.employeeId}
-                        variant="secondary"
-                        className="mt-1 text-md font-semibold bg-primary text-white"
-                      >
-                        {emp.employeeName}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-md text-muted-foreground font-medium">
                     Created By:
                   </p>
                   <p className="text-md font-semibold mt-1">
@@ -154,6 +139,22 @@ const ProjectView = () => {
                 </div>
               </div>
             </div>
+            <div className="mt-4">
+              <p className="text-md text-muted-foreground font-medium">
+                Assignee:
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {projectData.ProjectEmployees?.map((emp) => (
+                  <Badge
+                    key={emp.employeeId}
+                    variant="secondary"
+                    className="mt-1 text-sm font-semibold bg-primary text-white"
+                  >
+                    {emp.employeeName}
+                  </Badge>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Right: Task List */}
@@ -161,7 +162,11 @@ const ProjectView = () => {
             <div className="bg-white p-6 rounded-xl shadow-sm flex flex-col h-full max-h-[80vh]">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Tasks</h2>
-                <Button size="sm">Add Task</Button>
+                {(taskPermission.Add || taskPermission.Edit) && (
+                  <Link to="/dashboard/tasks/add">
+                    <Button className="py-2 w-fit">Add Task</Button>
+                  </Link>
+                )}
               </div>
               <div className="space-y-4 pr-2 overflow-y-auto">
                 {tasks?.length > 0 ? (
@@ -170,6 +175,9 @@ const ProjectView = () => {
                       <div
                         key={task.taskId}
                         className="rounded-lg border bg-muted/30 p-4 text-md shadow-sm"
+                        onClick={() =>
+                          navigate(`/dashboard/tasks/view/${task.taskId}`)
+                        }
                       >
                         <div className="flex items-center gap-2 mt-1">
                           <span className="font-medium text-muted-foreground">

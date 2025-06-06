@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/tooltip";
 
 import ViewMeetingModal from "./ViewMeetingModal";
+import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 
 export default function MeetingList() {
   const {
@@ -95,14 +96,14 @@ export default function MeetingList() {
             )}
           </div>
         </div>
-        <div className="flex gap-4 justify-end">
+        <div className="flex gap-4 justify-between">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-96"
+          />
           <div className="flex items-center gap-2">
-            <SearchInput
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-              className="w-96"
-            />
             <div>
               <DropdownSearchMenu
                 label="Status"
@@ -191,12 +192,13 @@ export default function MeetingList() {
             onRowClick={(row) => {
               handleRowsModalOpen(row as unknown as MeetingData);
             }}
-            paginationDetails={meetingData}
+            paginationDetails={mapPaginationDetails(meetingData)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
             permissionKey="users"
             localStorageId="MeetingList"
             moduleKey="MEETING_LIST"
+            sortableColumns={["meetingName", "meetingDateTime"]}
           />
         </div>
         {isDeleteModalOpen && (

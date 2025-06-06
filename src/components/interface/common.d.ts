@@ -25,11 +25,12 @@ interface FilterDataProps {
 interface DesignationData {
   designationId: string;
   designationName: string;
-  parentId: null;
+  parentId: null | string;
   companyId: string;
   departmentId: string;
   departmentName: string;
   companyName: string;
+  isParentDesignation?: boolean;
 }
 // kk
 interface DesignationAddFormProps {
@@ -79,6 +80,9 @@ interface EmployeeData {
   departmentName?: string | null;
   designationName?: string | null;
   companyEmployeeId?: string | null;
+  department?: DepartmentData | null;
+  designation?: Designation | null;
+  employee?: EmployeeDataModal;
 }
 
 // kk
@@ -136,6 +140,7 @@ interface ImportantDateData {
   importantDateName: string;
   importantDate: string;
   importantDateId?: string;
+  color?: string;
 }
 
 interface TaskData {
@@ -255,10 +260,11 @@ interface ErrorType {
 }
 
 interface ImportantDatesDataProps {
-  importantDateRemarks: string;
-  importantDateName: string;
-  importantDate: string;
   importantDateId?: string;
+  importantDateName: string;
+  importantDateRemarks: string;
+  importantDate: string;
+  importantDateType?: string;
   bgColor?: string;
   color?: string;
   textColor?: string;
@@ -480,6 +486,7 @@ interface EmployeeDetailsById {
 }
 
 interface Designation {
+  designationId: string;
   designationName: string;
 }
 

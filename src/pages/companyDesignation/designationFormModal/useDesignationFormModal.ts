@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { getALLDepartmentList } from "@/features/api/department";
 import {
   addUpdateDesignation,
-  getDesignaationDropdown,
+  getDesignationDropdown,
 } from "@/features/api/designation";
 
 interface UseDesignationFormModalProps {
@@ -15,10 +15,9 @@ export default function useDesignationFormModal({
   modalClose,
   modalData,
 }: UseDesignationFormModalProps) {
-  const { mutate: addDesignation } = addUpdateDesignation();
   const {
-    handleSubmit,
     register,
+    handleSubmit,
     formState: { errors },
     reset,
     watch,
@@ -27,29 +26,16 @@ export default function useDesignationFormModal({
     values: modalData,
   });
 
-  const { data: departmentData } = getALLDepartmentList();
-  const DepartmentOptions = (departmentData?.data ?? []).map((item) => ({
-    label: item.departmentName,
-    value: item.departmentId,
-  }));
-  const { data: designationData } = getDesignaationDropdown();
-  const designationOptions = (designationData?.data ?? []).map((item) => ({
-    label: item.designationName,
-    value: item.designationId,
-  }));
+  const departmentId = watch("departmentId");
 
-  const onSubmit = handleSubmit(async (data) => {
-    addDesignation(data, {
-      onSuccess: () => {
-        handleModalClose();
-      },
-    });
+  const { DepartmentOptions } = useDesignationFormModalOptions();
+  const { designationOptions } = useDesignationDropdownOptions(departmentId);
+  const submitDesignation = useDesignationFormSubmit(modalClose);
+
+  const onSubmit = handleSubmit((data) => {
+    console.log(data);
+    submitDesignation(data);
   });
-
-  const handleModalClose = () => {
-    reset();
-    modalClose();
-  };
 
   useEffect(() => {
     reset(modalData);
@@ -59,10 +45,62 @@ export default function useDesignationFormModal({
     register,
     errors,
     onSubmit,
-    watch,
-    handleModalClose,
     DepartmentOptions,
     designationOptions,
     control,
+  };
+}
+
+// Export as default and named for compatibility
+export function useDesignationFormModalOptions() {
+  const { data: departmentData } = getALLDepartmentList();
+  const DepartmentOptions = [
+    { label: "Select Department", value: "", disabled: true },
+    ...(
+      (departmentData?.data ?? []) as Array<{
+        departmentName: string;
+        departmentId: string;
+      }>
+    ).map((item) => ({
+      label: item.departmentName,
+      value: item.departmentId,
+    })),
+  ];
+  return { DepartmentOptions };
+}
+
+export function useDesignationDropdownOptions(departmentId?: string) {
+  const { data: designationData } = getDesignationDropdown({
+    filter: {
+      departmentId: departmentId || "",
+    },
+  });
+  const designationOptions = [
+    { label: "Select Parent Designation", value: "", disabled: true },
+    ...(
+      (designationData?.data ?? []) as Array<{
+        designationName: string;
+        designationId: string;
+      }>
+    ).map((item) => ({
+      label: item.designationName,
+      value: item.designationId,
+    })),
+  ];
+  return { designationOptions };
+}
+
+export function useDesignationFormSubmit(modalClose: () => void) {
+  const { mutate: addDesignation } = addUpdateDesignation();
+  return (data: DesignationData & { isParentDesignation?: boolean }) => {
+    const submitData = {
+      ...data,
+      parentId: data.isParentDesignation ? data.parentId : null,
+    };
+    addDesignation(submitData, {
+      onSuccess: () => {
+        modalClose();
+      },
+    });
   };
 }

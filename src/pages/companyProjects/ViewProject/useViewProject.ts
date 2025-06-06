@@ -5,11 +5,14 @@ import {
 } from "@/features/api/companyProject";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 export default function useViewProject() {
   const methods = useForm();
   const navigate = useNavigate();
   const { id: companyProjectId } = useParams();
+  const permission = useSelector(getUserPermission);
   const { data: projectApiData } = useGetCompanyProjectById(
     companyProjectId || "",
   );
@@ -20,12 +23,10 @@ export default function useViewProject() {
   }));
   const { mutate: addProject } = useAddUpdateCompanyProject();
 
-  const handleStatusChange = (ele, projectId) => {
+  const handleStatusChange = (ele) => {
     const payload = {
-      projectStatusId: {
-        projectStatusId: ele,
-      },
-      projectId: projectId,
+      projectStatusId: ele,
+      projectId: companyProjectId,
     };
     addProject(payload);
   };
@@ -44,5 +45,6 @@ export default function useViewProject() {
     statusOptions,
     methods,
     handleStatusChange,
+    taskPermission: permission.TASK,
   };
 }

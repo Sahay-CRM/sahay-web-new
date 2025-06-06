@@ -18,8 +18,8 @@ export const companyNavigationData = [
   {
     id: 3,
     icon: "bx bxs-calendar-event",
-    label: "Important Dates",
-    link: "/dashboard/company-important-dates",
+    label: "Calendar",
+    link: "/dashboard/calendar",
     permission: "View",
     moduleKey: "IMPORTANT_DATE",
   },
@@ -125,12 +125,12 @@ export const companyNavigationData = [
     permission: "View",
     moduleKey: "PRODUCT",
   },
-  {
-    id: 15,
-    icon: "bx bx-cog",
-    label: "Settings",
-    link: "/dashboard/calendar",
-    permission: "View",
-    moduleKey: "ROLES_PERMISSION",
-  },
+  // {
+  //   id: 15,
+  //   icon: "bx bx-cog",
+  //   label: "Settings",
+  //   link: "/dashboard/calendar",
+  //   permission: "View",
+  //   moduleKey: "ROLES_PERMISSION",
+  // },
 ];

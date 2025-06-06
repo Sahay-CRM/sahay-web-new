@@ -24,7 +24,7 @@ const ModalData: React.FC<ModalProps> = ({
       <DialogContent
         aria-describedby={undefined}
         className={twMerge(
-          "bg-white p-0 rounded-2xl min-w-[30%] max-w-[70%] overflow-hidden",
+          "bg-white p-0 rounded-2xl min-w-[30%] max-w-[70%] max-h-[80vh] min-h-[300px] overflow-hidden flex flex-col",
           containerClass,
         )}
       >
@@ -39,7 +39,7 @@ const ModalData: React.FC<ModalProps> = ({
           )} */}
         </DialogHeader>
 
-        <div className="px-6 py-4">{children}</div>
+        <div className="px-6 py-4 flex-1 overflow-y-auto">{children}</div>
 
         {buttons && buttons.length > 0 && (
           <DialogFooter className="flex justify-end gap-2 border-t p-4">

@@ -165,5 +165,6 @@ export default function useAdminUser() {
     isViewModalOpen,
     setIsViewModalOpen,
     viewModalData,
+    projectStatusList,
   };
 }

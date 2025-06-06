@@ -6,8 +6,6 @@ import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownS
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import TableWithDropdown from "@/components/shared/DataTable/DropdownTable/DropdownTable";
-import { RefreshCw } from "lucide-react";
 
 import ViewMeetingModal from "./ViewProjectModal";
 
@@ -17,6 +15,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import TableData from "@/components/shared/DataTable/DataTable";
 
 export default function CompanyProject() {
   const {
@@ -39,8 +39,8 @@ export default function CompanyProject() {
     setIsViewModalOpen,
     viewModalData,
     isLoading,
+    projectStatusList,
   } = useCompanyProject();
-  const [tableRenderKey, setTableRenderKey] = useState(0);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -51,7 +51,7 @@ export default function CompanyProject() {
       visible: true,
     },
     { key: "projectDescription", label: "Project Description", visible: true },
-    { key: "status", label: "Status", visible: true },
+    { key: "projectStatus", label: "Status", visible: true },
   ]);
 
   // Toggle column visibility
@@ -70,13 +70,6 @@ export default function CompanyProject() {
     },
     {} as Record<string, string>,
   );
-
-  const resetColumnWidths = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("tableWidths_CompanyTaskList");
-    }
-    setTableRenderKey((k) => k + 1);
-  };
 
   // Check if the number of columns is more than 3
   const canToggleColumns = columnToggleOptions.length > 3;
@@ -97,14 +90,14 @@ export default function CompanyProject() {
             )}
           </div>
         </div>
-        <div className="flex items-center justify-end space-x-5 tb:space-x-7">
+        <div className="flex items-center justify-between space-x-5 tb:space-x-7">
           <SearchInput
             placeholder="Search..."
             searchValue={paginationFilter?.search || ""}
             setPaginationFilter={setPaginationFilter}
             className="w-96"
           />
-          <div>
+          <div className="flex items-center space-x-3">
             <DropdownSearchMenu
               label="Status"
               options={statusOptions}
@@ -114,56 +107,38 @@ export default function CompanyProject() {
               }}
               multiSelect
             />
+            {canToggleColumns && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DropdownSearchMenu
+                        columns={columnToggleOptions}
+                        onToggleColumn={onToggleColumn}
+                        columnIcon={true}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs text-white">Toggle Visible Columns</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
-          {canToggleColumns && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div>
-                    <DropdownSearchMenu
-                      columns={columnToggleOptions}
-                      onToggleColumn={onToggleColumn}
-                      columnIcon={true}
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs text-white">Toggle Visible Columns</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={resetColumnWidths}
-                    className="flex items-center gap-2 cursor-pointer"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs text-white">Reset Columns</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
-          <TableWithDropdown
-            key={tableRenderKey}
+          <TableData
             tableData={projectlistdata?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,
-              status: item?.projectStatus?.projectStatusId ?? "",
               projectDeadline: item.projectDeadline
                 ? new Date(item.projectDeadline).toISOString().split("T")[0]
                 : "",
+              // Keep projectStatus as the original object for type compatibility
+              projectStatus: item?.projectStatus,
+              status: item?.projectStatus?.projectStatusId ?? "",
             }))}
             columns={visibleColumns}
             primaryKey="projectId"
@@ -177,23 +152,31 @@ export default function CompanyProject() {
             onDelete={(row) => {
               onDelete(row as unknown as IProjectFormData);
             }}
-            isActionButton={() => true}
-            viewButton={true}
             onViewButton={(row) => {
               navigate(`/dashboard/projects/view/${row.projectId}`);
+            }}
+            paginationDetails={mapPaginationDetails(projectlistdata)}
+            setPaginationFilter={setPaginationFilter}
+            isLoading={isLoading}
+            moduleKey="PROJECT_LIST"
+            showIndexColumn={false}
+            isActionButton={() => true}
+            viewButton={true}
+            permissionKey="users"
+            dropdownColumns={{
+              projectStatus: {
+                options: (projectStatusList?.data ?? []).map((opt) => ({
+                  label: opt.projectStatus,
+                  value: opt.projectStatusId,
+                  color: opt.color || "#2e3195",
+                })),
+                onChange: (row, value) => handleStatusChange(value, row),
+              },
             }}
             onRowClick={(row) => {
               handleRowsModalOpen(row as unknown as IProjectFormData);
             }}
-            showDropdown={true}
-            isLoading={isLoading}
-            statusOptions={statusOptions}
-            handleStatusChange={handleStatusChange}
-            paginationDetails={projectlistdata}
-            setPaginationFilter={setPaginationFilter}
-            permissionKey="users"
-            localStorageId="CompanyProjectList"
-            moduleKey="PROJECT_LIST"
+            sortableColumns={["projectName", "projectDeadline"]}
           />
         </div>
 

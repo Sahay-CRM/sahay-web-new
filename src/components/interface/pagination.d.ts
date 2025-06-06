@@ -1,11 +1,12 @@
 interface PaginationFilter {
-  status?: number;
   currentPage?: number;
-  message?: string;
-  totalCount?: number;
-  hasMore?: boolean;
   pageSize?: number;
+  totalCount?: number;
   totalPage?: number;
-  search?: string;
+  hasMore?: boolean;
+  status?: number;
   sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  message?: string;
+  search?: string;
 }

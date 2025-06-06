@@ -14,7 +14,6 @@ export default function useCompanyTaskList() {
   const [modalData, setModalData] = useState<TaskGetPaging>(
     {} as TaskGetPaging,
   );
-  const [currentStatus, setCurrentStatus] = useState<number>(1); // Add state for currentStatus
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
   const permission = useSelector(getUserPermission).TASK;
@@ -99,24 +98,6 @@ export default function useCompanyTaskList() {
     color: item.color || "#2e3195",
   }));
 
-  const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStatus = Number(event.target.value);
-    setCurrentStatus(newStatus);
-
-    setPaginationFilter((prevFilter) => ({
-      ...prevFilter,
-      status: newStatus,
-      currentPage: 1,
-    }));
-  };
-
-  // Ensure currentStatus is passed when updating the pagination filter
-  const setPaginationFilterWithStatus = (filter: PaginationFilter) => {
-    setPaginationFilter({
-      ...filter,
-      status: currentStatus,
-    });
-  };
   const handleAdd = () => {
     setModalData({
       taskId: "",
@@ -255,7 +236,6 @@ export default function useCompanyTaskList() {
   };
 
   const handleRowsModalOpen = (data: TaskGetPaging) => {
-    console.log(data);
     setViewModalData(data);
     setIsViewModalOpen(true);
   };
@@ -263,9 +243,7 @@ export default function useCompanyTaskList() {
   return {
     companyTaskData,
     closeDeleteModal,
-    setPaginationFilter: setPaginationFilterWithStatus,
-    onStatusChange,
-    currentStatus,
+    setPaginationFilter,
     openModal,
     onDelete,
     modalData,
@@ -298,5 +276,6 @@ export default function useCompanyTaskList() {
     setIsViewModalOpen,
     viewModalData,
     isLoading,
+    taskStatus,
   };
 }

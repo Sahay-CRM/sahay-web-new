@@ -93,7 +93,7 @@ export default function HealthScoreList() {
         </div>
 
         {/* Score Table or No Data */}
-        {isCoreSelected && levelId ? (
+        {isCoreSelected && levelId && healthScoreList ? (
           healthScoreList?.length == 0 ? (
             <div className="text-center text-muted-foreground mt-8">
               No data found

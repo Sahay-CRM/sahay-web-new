@@ -11,6 +11,7 @@ import { Calendar as BigCalendar } from "react-big-calendar";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { FormProvider, useForm } from "react-hook-form";
 import CalenderFormModal from "./calenderFormModal/CalenderFormModal";
+import { useNavigate } from "react-router-dom";
 
 const locales = {
   "en-US": enUS,
@@ -42,6 +43,8 @@ function Calendar() {
   const [selectedOption, setSelectedOption] = useState<
     "all" | "task" | "meeting" | "importantDate"
   >("all");
+
+  const navigate = useNavigate();
 
   // Change handler to accept string value
   const handleOptionChange = (value: string | string[]) => {
@@ -119,6 +122,10 @@ function Calendar() {
                 textColor: event.textColor,
                 eventType: event.eventType,
               });
+            } else if (event.eventType === "task") {
+              navigate(`/dashboard/tasks/edit/${event.eventId}`);
+            } else if (event.eventType === "meeting") {
+              navigate(`/dashboard/meeting/edit/${event.eventId}`);
             }
           }}
           eventPropGetter={(event) => ({

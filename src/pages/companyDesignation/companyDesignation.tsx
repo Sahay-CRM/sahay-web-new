@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { FormProvider, useForm } from "react-hook-form";
+
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyDesignation from "./useCompanyDesignation";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-// import SearchInput from "@/components/shared/SearchInput";
-import { FormProvider, useForm } from "react-hook-form";
+
 import { Button } from "@/components/ui/button";
 import DesignationAddFormModal from "./designationFormModal/designationAddFormModal";
-import { RefreshCw } from "lucide-react";
 import SearchInput from "@/components/shared/SearchInput";
+import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 
 export default function CompanyDesignation() {
   const {
@@ -39,7 +40,6 @@ export default function CompanyDesignation() {
     },
     { key: "parentName", label: "Parent Designation", visible: true },
   ]);
-  const [tableRenderKey, setTableRenderKey] = useState(0);
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
@@ -59,13 +59,6 @@ export default function CompanyDesignation() {
   // Check if the number of columns is more than 3
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
-
-  const resetColumnWidths = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("tableWidths_designationdata");
-    }
-    setTableRenderKey((k) => k + 1);
-  };
 
   return (
     <FormProvider {...methods}>
@@ -103,21 +96,11 @@ export default function CompanyDesignation() {
                 columnIcon={true}
               />
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetColumnWidths}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Reset
-            </Button>
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            key={tableRenderKey}
             tableData={designationList?.data.map(
               (item: DesignationDataProps, index: number) => ({
                 ...item,
@@ -131,13 +114,19 @@ export default function CompanyDesignation() {
             primaryKey="designationId"
             onEdit={(row) => openModal(row as unknown as DesignationData)}
             onDelete={(row) => onDelete(row as unknown as DesignationData)}
-            isActionButton={() => true}
-            paginationDetails={designationList}
+            isActionButton={() =>
+              columnToggleOptions.some((col) => col.visible)
+            }
+            paginationDetails={mapPaginationDetails(designationList)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
             permissionKey="users"
-            localStorageId="designationdata"
             moduleKey="DESIGNATION"
+            sortableColumns={[
+              "designationName",
+              "departmentName",
+              "parentName",
+            ]}
           />
         </div>
         {addDesignationModal && (

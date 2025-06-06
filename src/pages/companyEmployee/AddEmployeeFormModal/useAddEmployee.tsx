@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
+
 import { Card } from "@/components/ui/card";
-import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import useAddOrUpdateEmployee from "@/features/api/companyEmployee/useAddEmployee";
 import { getDepartmentList } from "@/features/api/department";
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-import { getDesignaationDropdown } from "@/features/api/designation";
 import { getEmployee } from "@/features/api/companyEmployee";
 import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
+import useGetDesignation from "@/features/api/designation/useGetDesignation";
+import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 
 export default function useAddEmployee() {
   const { id: companyEmployeeId } = useParams();
@@ -42,9 +43,17 @@ export default function useAddEmployee() {
         employeeEmail: data.employeeEmail || "",
         employeeMobile: data.employeeMobile || "",
         employeeType: data.employeeType || "",
-        departmentId: data.department || undefined,
-        designationId: data.designation || undefined,
-        employeeId: data.reportingManager || undefined,
+        department: data.department
+          ? data.department
+          : data.departmentId
+            ? { departmentId: data.departmentId }
+            : null,
+        designation: data.designation
+          ? data.designation
+          : data.designationId
+            ? { designationId: data.designationId }
+            : null,
+        employee: data.reportingManager || undefined,
       });
     }
   }, [employeeApiData, reset]);
@@ -52,6 +61,7 @@ export default function useAddEmployee() {
   // Watch employeeType field
 
   const employeeTypeValue = watch("employeeType");
+  const department = watch("department") as { departmentId?: string } | null;
   const showNextStep = employeeTypeValue !== "OWNER";
 
   const handleClose = () => setModalOpen(false);
@@ -69,13 +79,14 @@ export default function useAddEmployee() {
     if (!employeeMobile.startsWith("+91")) {
       employeeMobile = "+91" + employeeMobile;
     }
+    console.log(data);
 
     const payload = {
-      ...data,
-      employeeMobile,
       companyEmployeeId: companyEmployeeId,
-      departmentId: data.departmentId?.departmentId || data.departmentId,
-      designationId: data.designationId?.designationId || data.designationId,
+      departmentId: data.department?.departmentId || data.departmentId,
+      designationId: data.designation?.designationId || data.designationId,
+      reportingManagerId: data.employee?.employeeId ?? null,
+      ...data,
     };
     addEmployee(payload, {
       onSuccess: () => {
@@ -196,7 +207,7 @@ export default function useAddEmployee() {
         </div>
 
         <Controller
-          name="departmentId"
+          name="department"
           control={control}
           rules={{ required: "Please select a Department" }}
           render={({ field }) => (
@@ -232,19 +243,22 @@ export default function useAddEmployee() {
   };
 
   const EmployeeType = () => {
-    const { data: designationData } = getDesignaationDropdown();
+    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 10,
+      search: "",
+    });
 
-    // const employees = [
-    //   { value: "emp1", label: "John Doe" },
-    //   { value: "emp2", label: "Jane Smith" },
-    // ];
-
+    const { data: designationData } = useGetDesignation({
+      filter: {
+        ...paginationFilter,
+        departmentId: department?.departmentId || "",
+      },
+    });
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
       { key: "designationName", label: "Designation Name", visible: true },
     ]);
-
-    // Filter visible columns
     const visibleColumns = columnToggleOptions.reduce(
       (acc, col) => {
         if (col.visible) acc[col.key] = col.label;
@@ -252,8 +266,6 @@ export default function useAddEmployee() {
       },
       {} as Record<string, string>,
     );
-
-    // Toggle column visibility
     const onToggleColumn = (key: string) => {
       setColumnToggleOptions((prev) =>
         prev.map((col) =>
@@ -261,7 +273,6 @@ export default function useAddEmployee() {
         ),
       );
     };
-    // Check if the number of columns is more than 3
     const canToggleColumns = columnToggleOptions.length > 3;
 
     return (
@@ -278,7 +289,7 @@ export default function useAddEmployee() {
         </div>
 
         <Controller
-          name="designationId"
+          name="designation"
           control={control}
           rules={{ required: "Please select a Designation" }}
           render={({ field }) => (
@@ -299,8 +310,8 @@ export default function useAddEmployee() {
                 isActionButton={() => false}
                 columns={visibleColumns}
                 primaryKey="designationId"
-                // paginationDetails={designationData}
-                // setPaginationFilter={setPaginationFilter}
+                paginationDetails={designationData}
+                setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
                 selectedValue={field.value}
                 handleChange={field.onChange}
@@ -362,7 +373,7 @@ export default function useAddEmployee() {
         </div>
 
         <Controller
-          name="employeeId"
+          name="employee"
           control={control}
           rules={{ required: "Please select a report manager" }}
           render={({ field }) => (
@@ -380,7 +391,16 @@ export default function useAddEmployee() {
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
                 selectedValue={field.value}
-                handleChange={field.onChange}
+                handleChange={(val) => {
+                  // Only allow a single value or undefined
+                  if (!val || (Array.isArray(val) && val.length === 0)) {
+                    field.onChange(undefined);
+                  } else if (Array.isArray(val)) {
+                    field.onChange(val[0]);
+                  } else {
+                    field.onChange(val);
+                  }
+                }}
                 // permissionKey="--"
               />
             </>

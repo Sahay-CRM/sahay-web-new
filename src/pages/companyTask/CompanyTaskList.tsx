@@ -5,10 +5,9 @@ import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownS
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import TableWithDropdown from "@/components/shared/DataTable/DropdownTable/DropdownTable";
+
 import DateRangePicker from "@/components/shared/DateRange";
 import { useState } from "react";
-import { RefreshCw } from "lucide-react";
 
 import {
   Tooltip,
@@ -18,6 +17,8 @@ import {
 } from "@/components/ui/tooltip";
 
 import ViewMeetingModal from "./ViewMeetingModal";
+import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import TableData from "@/components/shared/DataTable/DataTable";
 
 export default function CompanyTaskList() {
   const {
@@ -44,9 +45,8 @@ export default function CompanyTaskList() {
     isViewModalOpen,
     setIsViewModalOpen,
     viewModalData,
+    taskStatus,
   } = useCompanyTaskList();
-
-  const [tableRenderKey, setTableRenderKey] = useState(0);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -58,7 +58,7 @@ export default function CompanyTaskList() {
     },
     { key: "taskDeadline", label: "Task Deadline", visible: true },
     { key: "assigneeNames", label: "Assignees", visible: true },
-    { key: "status", label: "Status", visible: true },
+    { key: "taskStatus", label: "Status", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -82,13 +82,6 @@ export default function CompanyTaskList() {
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
   const navigate = useNavigate();
-
-  const resetColumnWidths = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("tableWidths_CompanyTaskList");
-    }
-    setTableRenderKey((k) => k + 1);
-  };
 
   return (
     <FormProvider {...methods}>
@@ -157,31 +150,11 @@ export default function CompanyTaskList() {
                 </Tooltip>
               </TooltipProvider>
             )}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={resetColumnWidths}
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <RefreshCw className="h-5 w-4" />
-                    </Button>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs text-white">Reset Columns</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
-          <TableWithDropdown
-            key={tableRenderKey}
+          <TableData
             tableData={companyTaskData?.data.map(
               (item: TaskGetPaging, index: number) => ({
                 ...item,
@@ -211,10 +184,66 @@ export default function CompanyTaskList() {
             onDelete={(row) => {
               onDelete(row);
             }}
+            onViewButton={(row) => {
+              navigate(`/dashboard/tasks/view/${row.taskId}`);
+            }}
+            paginationDetails={mapPaginationDetails(companyTaskData)}
+            setPaginationFilter={setPaginationFilter}
+            isLoading={isLoading}
+            moduleKey="TASK"
+            showIndexColumn={false}
+            isActionButton={() => true}
+            viewButton={true}
+            permissionKey="users"
+            dropdownColumns={{
+              taskStatus: {
+                options: (taskStatus?.data ?? []).map((opt) => ({
+                  label: opt.taskStatus,
+                  value: opt.taskStatusId,
+                  color: opt.color || "#2e3195",
+                })),
+                onChange: (row, value) => handleStatusChange(value, row),
+              },
+            }}
+            onRowClick={(row) => {
+              handleRowsModalOpen(row);
+            }}
+            sortableColumns={["taskName", "taskDeadline"]}
+          />
+
+          {/* <TableWithDropdown
+            tableData={companyTaskData?.data.map(
+              (item: TaskGetPaging, index: number) => ({
+                ...item,
+                srNo: index + 1,
+                status: item.taskStatusId,
+                taskDeadline: item.taskDeadline
+                  ? new Date(item.taskDeadline).toISOString().split("T")[0]
+                  : "",
+                assigneeNames: item.TaskEmployeeJunction
+                  ? item.TaskEmployeeJunction.map(
+                      (j) => j.Employee?.employeeName
+                    )
+                      .filter(Boolean)
+                      .join(", ")
+                  : "",
+              })
+            )}
+            columns={visibleColumns}
+            primaryKey="taskId"
+            onEdit={
+              permission.Edit
+                ? (row) => {
+                    navigate(`/dashboard/tasks/edit/${row.taskId}`);
+                  }
+                : undefined
+            }
+            onDelete={(row) => {
+              onDelete(row);
+            }}
             viewButton={true}
             isActionButton={() => true}
-            // canDelete={(row) => !row.isSuperAdmin}
-            paginationDetails={companyTaskData}
+            paginationDetails={mapPaginationDetails(companyTaskData)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
             permissionKey="users"
@@ -229,7 +258,8 @@ export default function CompanyTaskList() {
             onRowClick={(row) => {
               handleRowsModalOpen(row);
             }}
-          />
+            sortableColumns={["taskName", "taskDeadline"]}
+          /> */}
         </div>
 
         {/* Modal Component */}

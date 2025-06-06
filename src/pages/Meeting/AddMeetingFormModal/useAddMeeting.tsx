@@ -13,7 +13,7 @@ import { getMeetingType } from "@/features/api/meetingType";
 import { useNavigate, useParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
-import { imageUploadMutation } from "@/features/api/file";
+import { docUploadMutation } from "@/features/api/file";
 import { queryClient } from "@/queryClient";
 
 export default function useAddEmployee() {
@@ -27,7 +27,7 @@ export default function useAddEmployee() {
     companyMeetingId || "",
   );
 
-  const { mutate: imageUpload } = imageUploadMutation();
+  const { mutate: imageUpload } = docUploadMutation();
 
   const methods = useForm({
     mode: "onChange",

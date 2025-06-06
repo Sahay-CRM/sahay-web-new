@@ -3,7 +3,6 @@ import { toast } from "sonner";
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { queryClient } from "@/queryClient";
-import { AxiosError } from "axios";
 
 type DesignationRes = BaseResponse<DesignationDetails>;
 
@@ -19,9 +18,6 @@ export default function useDeleteDesignation() {
     onSuccess: (response) => {
       toast.success(response?.message);
       queryClient.resetQueries({ queryKey: ["get-designation-list"] });
-    },
-    onError: (error: AxiosError<{ message?: string }>) => {
-      toast.error(error.response?.data?.message);
     },
   });
 

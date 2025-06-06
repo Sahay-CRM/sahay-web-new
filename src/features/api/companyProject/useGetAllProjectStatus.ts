@@ -6,7 +6,7 @@ export default function useGetAllProjectStatus() {
   const query = useQuery({
     queryKey: ["get-all-project-status-list"],
     queryFn: async () => {
-      const { data: resData } = await Api.post<{ data: ProjectStatusRes }>({
+      const { data: resData } = await Api.post<{ data: ProjectStatusRes[] }>({
         url: Urls.getAllDropdownProjectStatus(),
       });
 
