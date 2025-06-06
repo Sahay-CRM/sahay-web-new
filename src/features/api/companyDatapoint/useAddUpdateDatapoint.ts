@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-type DatePaging = BaseResponse<KPIFormData>;
+type DatePaging = BaseResponse<KPIFormDataProp>;
 
 export default function useAddUpdateDataPoint() {
   const addUpdateCompanyDatapointMutation = useMutation({

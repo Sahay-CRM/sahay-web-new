@@ -16,6 +16,10 @@ export default function useAdminUser() {
   const [modalData, setModalData] = useState<IProjectFormData>(
     {} as IProjectFormData,
   );
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewModalData, setViewModalData] = useState<IProjectFormData>(
+    {} as IProjectFormData,
+  );
   const permission = useSelector(getUserPermission).PROJECT_LIST;
   const [currentStatus, setCurrentStatus] = useState<number>(1); // Add state for currentStatus
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
@@ -126,7 +130,11 @@ export default function useAdminUser() {
       selected,
     });
   };
-
+  const handleRowsModalOpen = (data: IProjectFormData) => {
+    setViewModalData(data);
+    setIsViewModalOpen(true);
+    // setIsRowModal(true); // REMOVE this line if your view modal does not depend on isRowModal
+  };
   return {
     projectlistdata,
     closeDeleteModal,
@@ -153,5 +161,9 @@ export default function useAdminUser() {
     handleFilterChange,
     filters,
     isLoading,
+    handleRowsModalOpen,
+    isViewModalOpen,
+    setIsViewModalOpen,
+    viewModalData,
   };
 }
