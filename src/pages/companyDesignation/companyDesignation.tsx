@@ -37,7 +37,7 @@ export default function CompanyDesignation() {
       label: "Department Name",
       visible: true,
     },
-    { key: "companyName", label: "Company Name", visible: true },
+    { key: "parentName", label: "Parent Designation", visible: true },
   ]);
   const [tableRenderKey, setTableRenderKey] = useState(0);
 

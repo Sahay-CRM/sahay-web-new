@@ -1,17 +1,19 @@
 import { useState } from "react";
 import DrawerAccordion from "../DrawerAccordion";
 
-import { useAuth } from "@/features/auth/useAuth";
 import logoImg from "@/assets/logo_1.png";
 import { useSelector } from "react-redux";
-import { getUserPermission } from "@/features/selectors/auth.selector";
+import {
+  getUserDetail,
+  getUserPermission,
+} from "@/features/selectors/auth.selector";
 
 const FullNavBar = ({ data }: FullNavBarProps) => {
   const permissions = useSelector(getUserPermission);
 
   const [activeIndex, setActiveIndex] = useState<number>(-1);
-
-  const { user } = useAuth();
+  const user = useSelector(getUserDetail);
+  const companyUrl = `http://13.203.125.10:6050/share/logo/${user?.companyLogo}`;
 
   const handleAccordionToggle = (index: number) => {
     setActiveIndex((prevIndex) => (prevIndex === index ? -1 : index));
@@ -34,7 +36,7 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
       <div className="flex items-center px-4 py-4 shadow-sm mt-auto cursor-pointer mb-4">
         <div className="flex w-[70px] h-[50px]">
           <img
-            src={logoImg}
+            src={user?.companyLogo ? companyUrl : logoImg}
             alt="profile"
             className="w-full rounded-full object-contain bg-black"
           />

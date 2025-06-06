@@ -124,7 +124,7 @@ export default function Graph() {
             className="w-full h-auto items-center justify-center"
             style={{ height }}
           >
-            <>
+            <div style={{ width, height }}>
               <div className="ml-10 mb-0">
                 <RadialBarChart
                   width={width}
@@ -199,11 +199,7 @@ export default function Graph() {
                     <text
                       x={companyNeedle.x - 22}
                       y={companyNeedle.y - 12}
-                      // textAnchor="middle"
-                      // dominantBaseline="middle"
                       fontSize="19"
-                      // fontWeight="bold"
-                      // fill="#1f2937"
                     >
                       {animatedCompany}%
                     </text>
@@ -219,7 +215,7 @@ export default function Graph() {
                   {companyScore} / {companyWeight}
                 </span>
               </div>
-            </>
+            </div>
           </ChartContainer>
         </CardContent>
       </Card>
@@ -262,7 +258,7 @@ export default function Graph() {
                       className="w-full"
                       style={{ height }}
                     >
-                      <>
+                      <div style={{ width, height }}>
                         <RadialBarChart
                           width={width}
                           height={height}
@@ -353,7 +349,7 @@ export default function Graph() {
                             {indScore} / {indWeight}
                           </span>
                         </div>
-                      </>
+                      </div>
                     </ChartContainer>
                   </div>
                 );

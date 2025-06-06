@@ -9,11 +9,12 @@ import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
 import {
   logout,
   setAuth,
+  setUser,
   setUserPermission,
 } from "@/features/reducers/auth.reducer";
 import useGetUserPermission from "./useGetUserPermission";
 import { companyNavigationData } from "@/features/utils/navigation.data";
-import { getUserDetail } from "@/features/selectors/auth.selector";
+import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
 import logoImg from "@/assets/logo_1.png";
 
 import {
@@ -21,11 +22,9 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { baseUrl } from "@/features/utils/urls.utils";
 import CompanyModal from "@/pages/auth/login/CompanyModal";
@@ -33,6 +32,7 @@ import { useGetCompanyList } from "@/features/api/SelectCompany";
 import { verifyCompanyOtpMutation } from "@/features/api/login";
 import { useAuth } from "@/features/auth/useAuth";
 import { queryClient } from "@/queryClient";
+import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
@@ -43,9 +43,14 @@ const DashboardLayout = () => {
   }, []);
   const [isCompanyModalOpen, setCompanyModalOpen] = useState(false);
   const { setToken } = useAuth();
+  const user = useSelector(getUserDetail);
+  const userId = useSelector(getUserId);
+  const navigate = useNavigate();
 
   const { data: permission } = useGetUserPermission();
   const { mutate: companyVerifyOtp } = verifyCompanyOtpMutation();
+
+  const { data: userData } = useGetEmployeeById(userId);
 
   const { data: companies } = useGetCompanyList();
 
@@ -55,7 +60,6 @@ const DashboardLayout = () => {
   ];
   //  const { breadcrumbs } = useBreadcrumbs();
   const { bgColor } = useSidebarTheme();
-  const user = useSelector(getUserDetail);
   const profileImage = `${baseUrl}/share/profilePics/${user?.photo}`;
 
   useEffect(() => {
@@ -63,7 +67,14 @@ const DashboardLayout = () => {
       dispatch(setUserPermission(permission));
     }
   }, [dispatch, permission]);
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (userData && userData.data) {
+      const empData = userData.data;
+
+      dispatch(setUser(empData));
+    }
+  }, [dispatch, user, userData]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -78,18 +89,19 @@ const DashboardLayout = () => {
     companyVerifyOtp(verifyCompanyData, {
       onSuccess: (response) => {
         if (response?.status) {
-          setToken(response?.data?.token, response?.data);
+          setToken(response?.data?.token ?? "", response?.data);
           dispatch(
             setAuth({
-              token: response.data.token,
+              token: response.data.token ?? null,
               isLoading: false,
               isAuthenticated: true,
-              user: response.data,
             }),
           );
           queryClient.resetQueries({
             queryKey: ["get-company-list"],
           });
+          navigate("/dashboard");
+          window.location.reload();
           setCompanyModalOpen(false);
         }
       },
@@ -127,7 +139,7 @@ const DashboardLayout = () => {
               <div className="flex items-center px-4 py-4-sm mt-auto cursor-pointer mb-1">
                 <div className="flex w-[50px] h-[50px]">
                   <img
-                    src={logoImg}
+                    src={user?.photo ? profileImage : logoImg}
                     alt="profile"
                     className="w-full rounded-full object-contain bg-black"
                   />
@@ -136,7 +148,12 @@ const DashboardLayout = () => {
                   <span className="ml-2 mr-1 font-medium">
                     {user?.employeeName}
                   </span>
-                  <span className="ml-2 mr-1 text-sm">{user?.role}</span>
+                  <span className="ml-2 mr-1 text-sm">
+                    {user?.role ||
+                      (user && "employeeType" in user
+                        ? (user as { employeeType?: string }).employeeType
+                        : undefined)}
+                  </span>
                 </div>
               </div>
             </DropdownMenuTrigger>
@@ -147,26 +164,6 @@ const DashboardLayout = () => {
               align="end"
               sideOffset={4}
             >
-              <DropdownMenuLabel className="p-0 font-normal">
-                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                  <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage
-                      src={profileImage}
-                      alt={user?.employeeName || user?.consultantName}
-                    />
-                    <AvatarFallback className="rounded-lg">UE</AvatarFallback>
-                  </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      {user?.adminUserName ||
-                        user?.employeeName ||
-                        user?.consultantName}
-                    </span>
-                    <span className="truncate text-xs">{user?.role}</span>
-                  </div>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem
                   onClick={() => navigate("/administrator-panel/profile")}

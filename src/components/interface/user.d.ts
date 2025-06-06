@@ -1,10 +1,7 @@
 interface User {
-  token: string;
-  key: string;
-  adminUserName?: string;
-  adminUserId?: string;
-  adminUserEmail?: string;
-  employeeId?: string;
+  token?: string;
+  key?: string;
+  employeeId: string;
   employeeName?: string;
   consultantId?: string;
   consultantName?: string;
@@ -18,12 +15,10 @@ interface User {
   pancard?: string;
   isSuperAdmin?: string;
   employeeMobile?: string;
-  adminUserMobile?: string;
   employeeEmail?: string;
-  userLastName?: string;
-  userFirstName?: string;
   isSahayEmployee?: boolean;
   mobile?: string;
+  companyLogo?: string;
 }
 
 interface UserDetails {

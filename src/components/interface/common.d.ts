@@ -473,6 +473,7 @@ interface EmployeeDetailsById {
   reportingManagerId: string | null;
   company: EmployeeCompany;
   reportingManager: string | null;
+  companyLogo?: string;
 }
 
 interface Designation {

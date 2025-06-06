@@ -48,12 +48,14 @@ const useLogin = () => {
       onSuccess: (response) => {
         if (response?.status) {
           setToken(response?.data?.token, response?.data);
+          console.log(response);
+
           dispatch(
             setAuth({
               token: response.data.token,
               isLoading: false,
               isAuthenticated: true,
-              user: response.data,
+              userId: response.data.employeeId,
             }),
           );
           reset();
@@ -93,7 +95,7 @@ const useLogin = () => {
                     token: token,
                     isLoading: false,
                     isAuthenticated: true,
-                    user: dataRes,
+                    userId: dataRes.employeeId,
                   }),
                 );
                 setToken(token, dataRes);

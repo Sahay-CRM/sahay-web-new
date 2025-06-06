@@ -64,9 +64,18 @@ export default function useAddEmployee() {
   }, [trigger]);
 
   const onSubmit = handleSubmit(async (data) => {
+    // Ensure employeeMobile starts with +91, but don't add if already present
+    let employeeMobile = data.employeeMobile || "";
+    if (!employeeMobile.startsWith("+91")) {
+      employeeMobile = "+91" + employeeMobile;
+    }
+
     const payload = {
       ...data,
+      employeeMobile,
       companyEmployeeId: companyEmployeeId,
+      departmentId: data.departmentId?.departmentId || data.departmentId,
+      designationId: data.designationId?.designationId || data.designationId,
     };
     addEmployee(payload, {
       onSuccess: () => {
