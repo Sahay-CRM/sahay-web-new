@@ -85,7 +85,9 @@ export default function CompanyTaskView() {
                         options={statusOptions}
                         error={fieldState.error}
                         onChange={(ele) => {
-                          handleStatusChange(ele);
+                          if (typeof ele === "string") {
+                            handleStatusChange(ele);
+                          }
                         }}
                       />
                     )}
@@ -122,7 +124,7 @@ export default function CompanyTaskView() {
                     Assignees:
                   </p>
                   <div className="flex gap-2 flex-wrap">
-                    {taskData.assignUsers?.map((emp: Employee) => (
+                    {taskData.assignUsers?.map((emp) => (
                       <Badge
                         key={emp.employeeId}
                         variant="secondary"

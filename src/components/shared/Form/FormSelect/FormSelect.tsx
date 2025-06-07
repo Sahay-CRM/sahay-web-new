@@ -6,6 +6,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { FormLabel, FormControl } from "@/components/ui/form";
+import { isColorDark } from "@/features/utils/color.utils";
 
 interface Option {
   id?: string | number;
@@ -73,11 +74,15 @@ export default function FormSelect({
   };
 
   let selectedColor: string | undefined = undefined;
+  let selectedTextColor: string | undefined = undefined;
   if (!isMulti && value) {
     const selectedOption = options.find(
       (opt) => String(opt.value) === String(value),
     );
     selectedColor = selectedOption?.color;
+    if (selectedColor) {
+      selectedTextColor = isColorDark(selectedColor) ? "#fff" : "#000";
+    }
   }
 
   return (
@@ -102,13 +107,13 @@ export default function FormSelect({
       >
         <FormControl>
           <SelectTrigger
-            className={`w-full mb-1 custom-select-trigger ${selectedColor ? "text-white" : "text-black"}`}
+            className={`w-full mb-1 py-5 custom-select-trigger ${selectedColor ? (selectedTextColor === "#fff" ? "text-white" : "text-black") : "text-black"}`}
             id={id}
             style={
               selectedColor
                 ? {
                     backgroundColor: selectedColor,
-                    color: selectedColor ? "#fff" : "#000",
+                    color: selectedTextColor,
                   }
                 : undefined
             }

@@ -76,7 +76,7 @@ const ProjectView = () => {
                         options={statusOptions}
                         error={fieldState.error}
                         onChange={(ele) => {
-                          handleStatusChange(ele, projectData?.projectId);
+                          handleStatusChange(ele);
                         }}
                       />
                     )}
@@ -88,7 +88,9 @@ const ProjectView = () => {
                   </p>
                   <div className="flex items-center gap-2 text-md font-semibold">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    {format(new Date(projectData.projectDeadline), "PPP p")}
+                    {projectData.projectDeadline
+                      ? format(new Date(projectData.projectDeadline), "PPP p")
+                      : "-"}
                   </div>
                 </div>
 
@@ -237,14 +239,6 @@ const ProjectView = () => {
                               </span>
                               <span>{task.taskStatus.taskStatus}</span>
                             </div>
-                            {task.taskStatus.createdBy && (
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-muted-foreground">
-                                  Created By:
-                                </span>
-                                <span>{task.taskStatus.createdBy}</span>
-                              </div>
-                            )}
                           </div>
                         </div>
                       </div>

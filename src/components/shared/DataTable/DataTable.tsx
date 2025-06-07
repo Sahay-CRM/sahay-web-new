@@ -30,6 +30,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
+import { isColorDark } from "@/features/utils/color.utils";
 
 interface DetailsPermission {
   view: boolean;
@@ -361,6 +362,21 @@ const TableData = <T extends Record<string, unknown>>({
                       {dropdownColumns[clm] ? (
                         <select
                           className="border rounded px-2 py-1 min-w-[100px]"
+                          style={{
+                            backgroundColor:
+                              dropdownColumns[clm].options.find(
+                                (option) => option.label === item[clm],
+                              )?.color || undefined,
+                            color: (() => {
+                              const bg = dropdownColumns[clm].options.find(
+                                (option) => option.label === item[clm],
+                              )?.color;
+                              if (bg) {
+                                return isColorDark(bg) ? "#fff" : "#000";
+                              }
+                              return undefined;
+                            })(),
+                          }}
                           value={
                             typeof item.status === "string" ? item.status : ""
                           }
@@ -369,9 +385,15 @@ const TableData = <T extends Record<string, unknown>>({
                           }
                           onClick={(e) => e.stopPropagation()} // Prevent row click when interacting with dropdown
                         >
-                          <option value="">Select</option>
+                          <option value="" style={{ backgroundColor: "white" }}>
+                            Select
+                          </option>
                           {dropdownColumns[clm].options.map((option) => (
-                            <option key={option.value} value={option.value}>
+                            <option
+                              key={option.value}
+                              value={option.value}
+                              style={{ backgroundColor: "white" }}
+                            >
                               {option.label}
                             </option>
                           ))}

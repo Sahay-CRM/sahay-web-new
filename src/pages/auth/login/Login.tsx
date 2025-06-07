@@ -1,6 +1,6 @@
 import React from "react";
 import useLogin from "./useLogin";
-import logoImg from "@/assets/logo_1.png";
+import logoImg from "@/assets/Sahay_Logo_only.png";
 import background from "@/assets/background.png";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { Button } from "@/components/ui/button";
@@ -68,7 +68,7 @@ const Login: React.FC = () => {
                 options={[{ value: "+91", label: "+91" }]}
                 selectedCodeValue={countryCode || "+91"}
                 onCountryCodeChange={setCountryCode}
-                className="text-lg"
+                className="text-lg py-5"
               />
 
               {statusSentOtp && (
@@ -114,7 +114,7 @@ const Login: React.FC = () => {
                 </div>
               )}
 
-              <Button type="submit" className="w-full text-base py-2.5 mt-2">
+              <Button type="submit" className="w-full text-base py-5 mt-2">
                 {statusSentOtp ? "Login" : "Send OTP"}
               </Button>
             </div>

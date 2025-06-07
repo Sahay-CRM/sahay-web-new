@@ -285,7 +285,7 @@ export default function useAddEmployee() {
                 isActionButton={() => false}
                 columns={visibleColumns}
                 primaryKey="meetingStatusId"
-                paginationDetails={meeetingStatusData}
+                paginationDetails={meeetingStatusData as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
                 selectedValue={field.value}
@@ -369,7 +369,7 @@ export default function useAddEmployee() {
                 isActionButton={() => false}
                 columns={visibleColumns}
                 primaryKey="meetingTypeId"
-                paginationDetails={meetingTypeData}
+                paginationDetails={meetingTypeData as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
                 selectedValue={field.value}
@@ -446,7 +446,7 @@ export default function useAddEmployee() {
                 }))}
                 columns={visibleColumns}
                 primaryKey="employeeId"
-                paginationDetails={employeedata}
+                paginationDetails={employeedata as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={true}
                 selectedValue={field.value}

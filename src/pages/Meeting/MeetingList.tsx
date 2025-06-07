@@ -7,7 +7,6 @@ import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownS
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
 
 import {
   Tooltip,
@@ -18,6 +17,7 @@ import {
 
 import ViewMeetingModal from "./ViewMeetingModal";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import { format } from "date-fns";
 
 export default function MeetingList() {
   const {
@@ -39,6 +39,7 @@ export default function MeetingList() {
     isViewModalOpen,
     setIsViewModalOpen,
     viewModalData,
+    handleStatusChange, // <-- add this
   } = useMeeting();
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -51,9 +52,8 @@ export default function MeetingList() {
     },
     { key: "meetingDateTime", label: "Meeting TIme", visible: true },
     { key: "joinerNames", label: "Joiners", visible: true },
+    { key: "meetingStatus", label: "Status", visible: true }, // <-- add this line
   ]);
-
-  const [tableRenderKey, setTableRenderKey] = useState(0);
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
@@ -73,13 +73,6 @@ export default function MeetingList() {
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
   const navigate = useNavigate();
-
-  const resetColumnWidths = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("tableWidths_MeetingList");
-    }
-    setTableRenderKey((k) => k + 1);
-  };
 
   return (
     <FormProvider {...methods}>
@@ -133,38 +126,23 @@ export default function MeetingList() {
                 </Tooltip>
               </TooltipProvider>
             )}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={resetColumnWidths}
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs text-white">Reset Columns</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            key={tableRenderKey}
+            key={meetingData?.currentPage}
             tableData={meetingData?.data.map((item, index) => ({
               ...item,
               srNo:
                 (meetingData.currentPage - 1) * meetingData.pageSize +
                 index +
                 1,
-              meetingDateTime: new Date(item.meetingDateTime).toLocaleString(),
+              status: item.meetingStatusId,
+              meetingDateTime: format(
+                new Date(item.meetingDateTime),
+                "dd/MM/yyyy hh:mm a",
+              ),
               joinerNames:
                 item.joiners
                   ?.map((emp) =>
@@ -199,6 +177,12 @@ export default function MeetingList() {
             localStorageId="MeetingList"
             moduleKey="MEETING_LIST"
             sortableColumns={["meetingName", "meetingDateTime"]}
+            dropdownColumns={{
+              meetingStatus: {
+                options: statusOptions ?? [],
+                onChange: (row, value) => handleStatusChange(value, row),
+              },
+            }}
           />
         </div>
         {isDeleteModalOpen && (

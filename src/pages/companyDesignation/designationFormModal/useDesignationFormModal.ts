@@ -33,7 +33,6 @@ export default function useDesignationFormModal({
   const submitDesignation = useDesignationFormSubmit(modalClose);
 
   const onSubmit = handleSubmit((data) => {
-    console.log(data);
     submitDesignation(data);
   });
 

@@ -7,7 +7,6 @@ import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownS
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
 import ViewKPIDetailModal from "./ViewKPIDetailModal";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 export default function CompanyTaskList() {
@@ -42,8 +41,6 @@ export default function CompanyTaskList() {
     { key: "frequencyType", label: "Frequency", visible: true },
   ]);
 
-  const [tableRenderKey, setTableRenderKey] = useState(0);
-
   // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
@@ -66,12 +63,6 @@ export default function CompanyTaskList() {
   const methods = useForm();
   const navigate = useNavigate();
 
-  const resetColumnWidths = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("tableWidths_KpiList");
-    }
-    setTableRenderKey((k) => k + 1);
-  };
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
@@ -105,21 +96,12 @@ export default function CompanyTaskList() {
                 columnIcon={true}
               />
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetColumnWidths}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Reset
-            </Button>
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            key={tableRenderKey}
+            key={datpointData?.currentPage}
             tableData={datpointData?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,

@@ -79,7 +79,6 @@ export default function useAddEmployee() {
     if (!employeeMobile.startsWith("+91")) {
       employeeMobile = "+91" + employeeMobile;
     }
-    console.log(data);
 
     const payload = {
       companyEmployeeId: companyEmployeeId,

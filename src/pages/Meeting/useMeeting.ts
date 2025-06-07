@@ -1,5 +1,6 @@
 import { useDeleteCompanyMeeting } from "@/features/api/companyMeeting";
 import useGetCompanyMeeting from "@/features/api/companyMeeting/useGetCompanyMeeting";
+import { useAddUpdateCompanyMeetingStatus } from "@/features/api/companyMeeting/useAddUpdateCompanyMeetingStatus";
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useCallback, useState } from "react";
@@ -33,6 +34,7 @@ export default function useAdminUser() {
 
   const { data: meetingStatus, isLoading } = useDdMeetingStatus();
   const { mutate: deleteMeetingById } = useDeleteCompanyMeeting();
+  const { mutate: updateMeetingStatus } = useAddUpdateCompanyMeetingStatus();
 
   const handleAdd = () => {
     setModalData({
@@ -90,6 +92,7 @@ export default function useAdminUser() {
   const statusOptions = meetingStatus?.map((item) => ({
     label: item.meetingStatus,
     value: item.meetingStatusId,
+    color: item.color || "#2e3195",
   }));
 
   const handleFilterChange = (selected: string[]) => {
@@ -101,6 +104,15 @@ export default function useAdminUser() {
   const handleRowsModalOpen = (data: MeetingData) => {
     setViewModalData(data);
     setIsViewModalOpen(true);
+  };
+
+  // Add handleStatusChange for dropdown
+  const handleStatusChange = (meetingStatusId: string, row: MeetingData) => {
+    if (!row?.meetingId) return;
+    updateMeetingStatus({
+      meetingId: row.meetingId,
+      meetingStatusId,
+    });
   };
 
   return {
@@ -130,5 +142,6 @@ export default function useAdminUser() {
     isViewModalOpen,
     setIsViewModalOpen,
     viewModalData,
+    handleStatusChange, // <-- add this to return
   };
 }

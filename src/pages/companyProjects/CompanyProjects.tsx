@@ -137,8 +137,7 @@ export default function CompanyProject() {
                 ? new Date(item.projectDeadline).toISOString().split("T")[0]
                 : "",
               // Keep projectStatus as the original object for type compatibility
-              projectStatus: item?.projectStatus,
-              status: item?.projectStatus?.projectStatusId ?? "",
+              status: item.projectStatusId,
             }))}
             columns={visibleColumns}
             primaryKey="projectId"

@@ -34,7 +34,6 @@ export default function useCalenderFormModal({
     reset,
     watch,
     setValue,
-    getValues,
     setError,
     clearErrors,
   } = useForm<ImportantDatesDataProps>({
@@ -46,9 +45,6 @@ export default function useCalenderFormModal({
       color: modalData?.color ? String(modalData.color) : "#aabbcc",
     },
   });
-  console.log(modalData);
-
-  console.log(getValues(), "getValuesgetValuesgetValuesgetValues");
 
   const { mutate: addImportantDate } = addUpdateImportantDateMutation();
   const onSubmit = handleSubmit(async (data) => {

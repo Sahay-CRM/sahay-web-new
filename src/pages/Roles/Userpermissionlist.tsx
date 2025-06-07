@@ -6,8 +6,6 @@ import { FormProvider, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import SearchInput from "@/components/shared/SearchInput";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
 
 export default function MeetingList() {
   const {
@@ -29,7 +27,6 @@ export default function MeetingList() {
     { key: "departmentName", label: "Department", visible: true },
     { key: "designationName", label: "Designation", visible: true },
   ]);
-  const [tableRenderKey, setTableRenderKey] = useState(0);
   // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
@@ -51,12 +48,6 @@ export default function MeetingList() {
 
   const methods = useForm();
   const navigate = useNavigate();
-  const resetColumnWidths = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("tableWidths_UserPermissionList");
-    }
-    setTableRenderKey((k) => k + 1);
-  };
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
@@ -82,28 +73,19 @@ export default function MeetingList() {
                 columnIcon={true}
               />
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetColumnWidths}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Reset
-            </Button>
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            key={tableRenderKey}
+            key={employeeData?.currentPage}
             tableData={employeeData?.data.map((item, index) => ({
               ...item,
               srNo: index + 1,
             }))}
             columns={visibleColumns}
             primaryKey="employeeId"
-            paginationDetails={employeeData}
+            paginationDetails={employeeData as PaginationFilter}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
             permissionKey="users"
@@ -115,8 +97,14 @@ export default function MeetingList() {
             onAdditionButton={(data) => {
               navigate(
                 `/dashboard/roles/user-permission/edit/${data.employeeId}`,
+                { state: { userName: data.employeeName } },
               );
             }}
+            sortableColumns={[
+              "employeeName",
+              "departmentName",
+              "designationName",
+            ]}
           />
         </div>
         {/* Modal Component */}

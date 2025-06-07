@@ -109,10 +109,12 @@ export default function CompanyTaskList() {
           </div>
           <div className="flex gap-4">
             <div className="z-10 relative flex items-center gap-2">
-              <DateRangePicker
-                onChange={handleDateRangeChange}
-                onApply={handleDateRangeApply}
-              />
+              {!showOverdue && (
+                <DateRangePicker
+                  onChange={handleDateRangeChange}
+                  onApply={handleDateRangeApply}
+                />
+              )}
             </div>
             <div>
               <DropdownSearchMenu

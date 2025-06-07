@@ -140,7 +140,7 @@ export default function CompanyDesignation() {
             setPaginationFilter={setPaginationFilter}
             permissionKey="employeeId"
             moduleKey="EMPLOYEE"
-            sortableColumns={["employeeName", "employeeEmail", "employeeType"]}
+            sortableColumns={["employeeName", "employeeType"]}
           />
         </div>
 

@@ -48,7 +48,6 @@ const useLogin = () => {
       onSuccess: (response) => {
         if (response?.status) {
           setToken(response?.data?.token, response?.data);
-          console.log(response);
 
           dispatch(
             setAuth({

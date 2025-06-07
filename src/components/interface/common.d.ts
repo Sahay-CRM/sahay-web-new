@@ -311,7 +311,10 @@ interface CompanyMeetingStatusDataProps {
   meetingStatusId: string;
   meetingStatus: string;
   meetingStatusOrder: number;
-  winLostMeeting: null;
+  winLostMeeting: number | null;
+  color?: string;
+  createdDatetime?: string;
+  updatedDatetime?: string;
 }
 
 interface CompanyMeetingTypeDataProps {
@@ -328,7 +331,7 @@ interface CompanyProjectDataProps {
   employeeId?: string;
   ProjectParameters?: ProjectParameters;
   ProjectEmployees?: Employee[];
-  ProjectTasks?: Task[];
+  ProjectTasks?: ProjectTask[];
   createdBy?: CreatedBy;
   projectStatusId: string;
   projectStatus?: ProjectStatusRes;
@@ -661,11 +664,26 @@ interface Task {
   taskDeadline: string;
   projectId: string;
   projectName: string | null;
-  assignUsers: AssignedUser[];
+  assignUsers: Employee[];
   meetingId: string;
   meetings: Meeting[];
   comments: TaskComment[];
   createdBy: CreatedBy;
+}
+
+interface ProjectTask {
+  taskName: string;
+  taskDescription: string;
+  taskStatus: TaskStatusAllRes;
+  taskStatusId: string;
+  taskId: string;
+  taskActualEndDate: string | null;
+  taskDeadline: string;
+  taskTypeId: string;
+  assignees: {
+    employeeId: string;
+    employeeName: string;
+  }[];
 }
 interface MeetingJoiner {
   employeeId: string;

@@ -20,6 +20,7 @@ export default function useViewProject() {
   const statusOptions = (projectStatusList?.data ?? []).map((item) => ({
     label: item.projectStatus,
     value: item.projectStatusId,
+    color: item.color || "#2e3195",
   }));
   const { mutate: addProject } = useAddUpdateCompanyProject();
 
