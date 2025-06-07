@@ -21,6 +21,8 @@ export default function useDeleteDatapoint() {
     onSuccess: (response) => {
       toast.success(response?.message);
       queryClient.resetQueries({ queryKey: ["get-datapoint-list"] });
+      queryClient.resetQueries({ queryKey: ["get-datapoint-list-non-select"] });
+      queryClient.resetQueries({ queryKey: ["get-kpi-by-id"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

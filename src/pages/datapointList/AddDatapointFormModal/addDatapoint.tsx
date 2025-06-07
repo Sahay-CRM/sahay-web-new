@@ -31,11 +31,16 @@ const AddDatapoint = () => {
     <GoalValue />,
   ];
 
-  const visibleSteps = skipToStep > 0 ? steps.slice(skipToStep) : steps;
+  const visibleSteps =
+    skipToStep === 5
+      ? [<Frequency />, <GoalValue />]
+      : skipToStep > 0
+        ? steps.slice(skipToStep)
+        : steps;
 
   const visibleStepNames =
     skipToStep === 5
-      ? ["Goal Value"]
+      ? ["Frequency", "Goal Value"]
       : skipToStep === 1
         ? [
             "Frequency",

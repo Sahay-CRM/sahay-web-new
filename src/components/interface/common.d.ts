@@ -792,9 +792,10 @@ interface KPIFormData {
   selectedType: string;
   dataPointEmployeeJunction: DataPointEmployee[];
   DataPointProductJunction: ProductData[];
-  productIds: ProductData[];
+  productIds: ProductData[] | string[];
   assignUser: DataPointEmployee[];
   hasData: boolean;
+  visualFrequencyTypes?: string;
 }
 
 interface KPIFormDataProp {

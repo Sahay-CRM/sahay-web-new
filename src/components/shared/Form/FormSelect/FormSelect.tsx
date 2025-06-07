@@ -45,11 +45,14 @@ export default function FormSelect({
   // Helper to toggle selection for multi-select
   const toggleValue = (val: string) => {
     if (!Array.isArray(value)) {
+      // Initialize as array if not already
       onChange([val]);
     } else {
       if (value.includes(val)) {
+        // Remove if already selected
         onChange(value.filter((v) => v !== val));
       } else {
+        // Add if not selected
         onChange([...value, val]);
       }
     }
@@ -95,7 +98,7 @@ export default function FormSelect({
       )}
 
       <Select
-        value={isMulti ? undefined : (value as string | undefined)}
+        value={isMulti ? "" : (value as string | undefined)} // Always empty for multi-select to prevent conflicts
         onValueChange={(val) => {
           if (isMulti) {
             toggleValue(val);
@@ -118,13 +121,11 @@ export default function FormSelect({
                 : undefined
             }
           >
-            <SelectValue
-              placeholder={placeholder}
-              className="text-white opacity-0"
-            >
-              {/* For multi-select, override default display with custom */}
-              {isMulti ? displayValue() : undefined}
-            </SelectValue>
+            {isMulti ? (
+              <div className="w-full text-left">{displayValue()}</div>
+            ) : (
+              <SelectValue placeholder={placeholder} />
+            )}
           </SelectTrigger>
         </FormControl>
 
@@ -137,14 +138,18 @@ export default function FormSelect({
                 ? Array.isArray(value) && value.includes(stringVal)
                 : false;
               return (
-                <SelectItem key={stringVal} value={stringVal}>
+                <SelectItem
+                  key={stringVal}
+                  value={stringVal}
+                  className={checked ? "bg-blue-50" : ""}
+                >
                   {/* Show checkbox in multi-select */}
                   {isMulti && (
                     <input
                       type="checkbox"
                       checked={checked}
-                      readOnly
-                      className="mr-2 text-sm"
+                      onChange={() => {}} // Prevent direct interaction
+                      className="mr-2 text-sm pointer-events-none"
                     />
                   )}
                   {opt.label}

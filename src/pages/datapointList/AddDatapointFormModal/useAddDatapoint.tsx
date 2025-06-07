@@ -4,7 +4,6 @@ import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import { getEmployee } from "@/features/api/companyEmployee";
 import { useNavigate, useParams } from "react-router-dom";
-import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { Label } from "@/components/ui/label";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import {
@@ -15,6 +14,7 @@ import {
 import useGetCoreParameter from "@/features/api/coreParameter/useGetCoreParameter";
 import { useGetProduct } from "@/features/api/Product";
 import { Card } from "@/components/ui/card";
+import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 export default function useAddEmployee() {
   const { id: companykpimasterId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
@@ -52,6 +52,13 @@ export default function useAddEmployee() {
         unit: data?.unit || "",
         validationTypeId: data?.validationType || "",
       };
+
+      // Handle visualFrequencyTypes - convert comma-separated string to array
+      if (data?.visualFrequencyTypes) {
+        resetObj.visualFrequencyTypes = data.visualFrequencyTypes.split(",");
+      } else {
+        resetObj.visualFrequencyTypes = []; // Initialize as empty array
+      }
 
       if (Array.isArray(data?.DataPointProductJunction)) {
         resetObj.productId = data.DataPointProductJunction.map(
@@ -125,6 +132,11 @@ export default function useAddEmployee() {
     const unit = data.unit;
     const validationTypeValue = data.validationTypeId;
 
+    // Format visualFrequencyTypes as comma-separated string
+    const visualFrequencyTypes = Array.isArray(data.visualFrequencyTypes)
+      ? data.visualFrequencyTypes.join(",")
+      : data.visualFrequencyTypes || "";
+
     const assignUser = selectedEmployees.map((emp: DataPointEmployee) => {
       const obj: DataPointEmployee = {
         employeeId: emp.employeeId,
@@ -156,14 +168,29 @@ export default function useAddEmployee() {
       }
       return obj;
     });
-    const payload = {
-      ...data,
+    const payload: KPIFormData = {
+      dataPointId: datapointApiData?.dataPointId || "", // or "" for new
       companykpimasterId: companykpimasterId || "",
-      assignUser,
-      productIds, // will be [] if not selected
-      frequencyType: frequencyValue,
+      dataPointName: data?.KPIMasterId?.KPILabel,
+      KPIMasterId: data?.KPIMasterId?.KPIMasterId,
+      KPIMaster: data?.KPIMasterId || null,
+      coreParameter: data?.coreParameterId || null,
+      dataPointLabel: data?.KPIMasterId?.KPIName,
+      productIds: productIds,
+      assignUser: assignUser,
       validationType: validationTypeValue,
+      frequencyType: frequencyValue,
       unit: unit,
+      selectedType: "", // Set appropriately if needed
+      dataPointEmployeeJunction: assignUser, // or [] if you want to send empty
+      DataPointProductJunction: Array.isArray(data.productId)
+        ? data.productId.map((p: ProductData) => ({
+            productId: p.productId,
+            productName: p.productName,
+          }))
+        : [],
+      hasData: datapointApiData?.hasData ?? false,
+      visualFrequencyTypes: visualFrequencyTypes, // Add the formatted visualFrequencyTypes
     };
     addDatapoint(payload, {
       onSuccess: () => {
@@ -253,12 +280,11 @@ export default function useAddEmployee() {
                 isActionButton={() => false}
                 columns={visibleColumns}
                 primaryKey="KPIMasterId"
-                paginationDetails={kpidata}
+                paginationDetails={kpidata as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
                 selectedValue={field.value}
                 handleChange={field.onChange}
-                // permissionKey="--"
               />
             </>
           )}
@@ -273,9 +299,27 @@ export default function useAddEmployee() {
       { value: "WEEKLY", label: "WEEKLY" },
       { value: "MONTHLY", label: "MONTHLY" },
       { value: "QUARTERLY", label: "QUARTERLY" },
-      { value: "YEARLY", label: "YEARLY" },
       { value: "HALFYEARLY", label: "HALFYEARLY" },
+      { value: "YEARLY", label: "YEARLY" },
     ];
+
+    // Get the selected frequency value
+    const selectedFrequency = useWatch({ name: "frequencyId", control });
+
+    // Filter visual frequency options based on selected frequency
+    const getFilteredVisualFrequencyOptions = () => {
+      if (!selectedFrequency) return frequenceOptions;
+
+      const frequencyIndex = frequenceOptions.findIndex(
+        (opt) => opt.value === selectedFrequency,
+      );
+
+      if (frequencyIndex === -1) return frequenceOptions;
+
+      // Return only options that come after the selected frequency
+      return frequenceOptions.slice(frequencyIndex + 1);
+    };
+
     const validationOptions = [
       { value: "EQUAL_TO", label: "EQUAL_TO" },
       { value: "GREATER_THAN_OR_EQUAL_TO", label: "GREATER_THAN_OR_EQUAL_TO" },
@@ -293,6 +337,9 @@ export default function useAddEmployee() {
       { value: "Pounds", label: "Pounds" },
       { value: "INR", label: "INR" },
     ];
+
+    const hasData = datapointApiData?.hasData;
+
     return (
       <div className="grid grid-cols-2 gap-4">
         <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
@@ -307,6 +354,8 @@ export default function useAddEmployee() {
                 onChange={field.onChange}
                 options={frequenceOptions}
                 error={errors.frequencyId}
+                disabled={hasData}
+                className={hasData ? "bg-gray-100 p-2 rounded-md" : ""}
               />
             )}
           />
@@ -321,9 +370,29 @@ export default function useAddEmployee() {
                 onChange={field.onChange}
                 options={validationOptions}
                 error={errors.validationTypeId}
+                disabled={hasData}
+                className={hasData ? "bg-gray-100  p-2 rounded-md" : ""}
               />
             )}
           />
+
+          <Controller
+            control={control}
+            name="visualFrequencyTypes"
+            render={({ field }) => (
+              <FormSelect
+                label="Visual Frequency Types"
+                value={field.value || []}
+                onChange={field.onChange}
+                options={getFilteredVisualFrequencyOptions()}
+                error={errors.visualFrequencyTypes}
+                isMulti={true}
+                placeholder="Select visual frequency types"
+                disabled={false}
+              />
+            )}
+          />
+
           <Controller
             control={control}
             name="unit"
@@ -335,6 +404,8 @@ export default function useAddEmployee() {
                 onChange={field.onChange}
                 options={unitTypeOptions}
                 error={errors.unit}
+                disabled={hasData}
+                className={hasData ? "bg-gray-100  p-2 rounded-md" : ""}
               />
             )}
           />
@@ -379,6 +450,8 @@ export default function useAddEmployee() {
     // Check if the number of columns is more than 3
     const canToggleColumns = columnToggleOptions.length > 3;
 
+    const hasData = datapointApiData?.hasData;
+
     return (
       <div>
         <div className=" mt-1 flex items-center justify-between">
@@ -413,11 +486,12 @@ export default function useAddEmployee() {
                 }))}
                 columns={visibleColumns}
                 primaryKey="coreParameterId"
-                paginationDetails={coreparameterData}
+                paginationDetails={coreparameterData as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
                 selectedValue={field.value}
-                handleChange={field.onChange}
+                handleChange={hasData ? () => {} : field.onChange}
+                onCheckbox={() => !hasData}
               />
             </>
           )}
@@ -462,6 +536,8 @@ export default function useAddEmployee() {
     // Check if the number of columns is more than 3
     const canToggleColumns = columnToggleOptions.length > 3;
 
+    const hasData = datapointApiData?.hasData;
+
     return (
       <div>
         <div className=" mt-1 flex items-center justify-between">
@@ -489,11 +565,11 @@ export default function useAddEmployee() {
                 }))}
                 columns={visibleColumns}
                 primaryKey="productId"
-                paginationDetails={ProductData}
+                paginationDetails={ProductData as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={true}
                 selectedValue={field.value}
-                handleChange={field.onChange}
+                handleChange={hasData ? () => {} : field.onChange}
               />
             </>
           )}
@@ -538,6 +614,8 @@ export default function useAddEmployee() {
     // Check if the number of columns is more than 3
     const canToggleColumns = columnToggleOptions.length > 3;
 
+    const hasData = datapointApiData?.hasData;
+
     return (
       <div>
         <div className=" mt-1 flex items-center justify-between">
@@ -572,11 +650,11 @@ export default function useAddEmployee() {
                 }))}
                 columns={visibleColumns}
                 primaryKey="employeeId"
-                paginationDetails={employeedata}
+                paginationDetails={employeedata as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={true}
                 selectedValue={field.value}
-                handleChange={field.onChange}
+                handleChange={hasData ? () => {} : field.onChange}
               />
             </>
           )}
@@ -612,6 +690,8 @@ export default function useAddEmployee() {
       return found?.employeeName || emp.employeeId || "";
     };
 
+    const hasData = datapointApiData?.hasData;
+
     return (
       <div className="flex flex-col gap-6">
         {selectedEmployees.map((emp: DataPointEmployee, index: number) => (
@@ -631,6 +711,8 @@ export default function useAddEmployee() {
                       required: "Please enter Goal Value 1",
                     })}
                     error={errors?.[`goalValue1_${emp.employeeId}`]}
+                    disabled={hasData}
+                    readOnly={hasData}
                   />
                   {showBoth && (
                     <FormInputField
@@ -640,6 +722,8 @@ export default function useAddEmployee() {
                         required: "Please enter Goal Value 2",
                       })}
                       error={errors?.[`goalValue2_${emp.employeeId}`]}
+                      disabled={hasData}
+                      readOnly={hasData}
                     />
                   )}
                 </>
@@ -656,6 +740,7 @@ export default function useAddEmployee() {
                       options={yesnoOptions}
                       error={fieldState.error}
                       isMandatory={true}
+                      disabled={hasData}
                     />
                   )}
                 />
