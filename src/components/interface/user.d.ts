@@ -1,8 +1,11 @@
-interface User {
+interface User extends Partial<EmployeeDetailsById> {
   token?: string;
   key?: string;
   employeeId: string;
   employeeName?: string;
+  employeeMobile?: string;
+  employeeEmail?: string;
+  employeeType?: string;
   consultantId?: string;
   consultantName?: string;
   consultantMobile?: string;
@@ -13,9 +16,7 @@ interface User {
   role?: string;
   photo?: string;
   pancard?: string;
-  isSuperAdmin?: string;
-  employeeMobile?: string;
-  employeeEmail?: string;
+  isSuperAdmin?: boolean | string;
   isSahayEmployee?: boolean;
   mobile?: string;
   companyLogo?: string;

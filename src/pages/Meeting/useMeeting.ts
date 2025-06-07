@@ -1,10 +1,23 @@
+import { useCallback, useState } from "react";
+import { useSelector } from "react-redux";
+import { DateRange } from "react-day-picker";
+
 import { useDeleteCompanyMeeting } from "@/features/api/companyMeeting";
 import useGetCompanyMeeting from "@/features/api/companyMeeting/useGetCompanyMeeting";
 import { useAddUpdateCompanyMeetingStatus } from "@/features/api/companyMeeting/useAddUpdateCompanyMeetingStatus";
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { useCallback, useState } from "react";
-import { useSelector } from "react-redux";
+
+const toLocalISOString = (date: Date | undefined) => {
+  if (!date) return undefined;
+
+  // Use local date methods to avoid timezone conversion
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
 
 export default function useAdminUser() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -13,6 +26,22 @@ export default function useAdminUser() {
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
   const [isChildData, setIsChildData] = useState<string | undefined>();
+  const [showOverdue, setShowOverdue] = useState(false);
+
+  const [taskDateRange, setTaskDateRange] = useState<{
+    taskStartDate: Date | undefined;
+    taskDeadline: Date | undefined;
+  }>({
+    taskStartDate: new Date(),
+    taskDeadline: new Date(),
+  });
+  const [appliedDateRange, setAppliedDateRange] = useState<{
+    taskStartDate: Date | undefined;
+    taskDeadline: Date | undefined;
+  }>({
+    taskStartDate: new Date(),
+    taskDeadline: new Date(),
+  });
 
   // Add state for view modal
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -29,7 +58,17 @@ export default function useAdminUser() {
   });
   const permission = useSelector(getUserPermission).MEETING_LIST;
   const { data: meetingData } = useGetCompanyMeeting({
-    filter: { ...paginationFilter, statusArray: filters.selected },
+    filter: {
+      ...paginationFilter,
+      statusArray: filters.selected,
+      ...(showOverdue
+        ? {}
+        : {
+            startDate: toLocalISOString(appliedDateRange.taskStartDate),
+            endDate: toLocalISOString(appliedDateRange.taskDeadline),
+          }),
+      overDue: showOverdue,
+    },
   });
 
   const { data: meetingStatus, isLoading } = useDdMeetingStatus();
@@ -42,6 +81,9 @@ export default function useAdminUser() {
       meetingDescription: "",
       meetingDateTime: "",
       joiners: [],
+      meetingId: "",
+      meetingStatusId: "",
+      meetingTypeId: "",
     });
     setIsUserModalOpen(true);
   };
@@ -57,6 +99,9 @@ export default function useAdminUser() {
       meetingDescription: "",
       meetingDateTime: "",
       joiners: [],
+      meetingId: "",
+      meetingStatusId: "",
+      meetingTypeId: "",
     }); // Clear modal data
     setIsUserModalOpen(false);
     setIsDeleteModalOpen(false);
@@ -107,12 +152,73 @@ export default function useAdminUser() {
   };
 
   // Add handleStatusChange for dropdown
-  const handleStatusChange = (meetingStatusId: string, row: MeetingData) => {
-    if (!row?.meetingId) return;
+  const handleStatusChange = (data: string, row: string) => {
+    if (!row) return;
     updateMeetingStatus({
-      meetingId: row.meetingId,
-      meetingStatusId,
+      meetingId: row,
+      meetingStatusId: data,
     });
+  };
+
+  const handleDateRangeChange: HandleDateRangeChange = (range) => {
+    // Update taskDateRange for preview
+    if (range?.from && !range?.to) {
+      const newTaskDateRange = {
+        taskStartDate: range.from,
+        taskDeadline: range.from,
+      };
+      setTaskDateRange(newTaskDateRange);
+    } else if (range?.from && range?.to) {
+      const newTaskDateRange = {
+        taskStartDate: range.from,
+        taskDeadline: range.to,
+      };
+      setTaskDateRange(newTaskDateRange);
+    } else {
+      const newTaskDateRange = {
+        taskStartDate: undefined,
+        taskDeadline: undefined,
+      };
+      setTaskDateRange(newTaskDateRange);
+    }
+  };
+
+  const handleDateRangeApply = (range: DateRange | undefined) => {
+    // This is called when Apply button is clicked
+    if (range?.from && !range?.to) {
+      const newTaskDateRange = {
+        taskStartDate: range.from,
+        taskDeadline: range.from,
+      };
+      setTaskDateRange(newTaskDateRange);
+      setAppliedDateRange(newTaskDateRange);
+    } else if (range?.from && range?.to) {
+      const newTaskDateRange = {
+        taskStartDate: range.from,
+        taskDeadline: range.to,
+      };
+      setTaskDateRange(newTaskDateRange);
+      setAppliedDateRange(newTaskDateRange);
+    } else {
+      const newTaskDateRange = {
+        taskStartDate: undefined,
+        taskDeadline: undefined,
+      };
+      setTaskDateRange(newTaskDateRange);
+      setAppliedDateRange(newTaskDateRange);
+    }
+
+    // Reset pagination to first page
+    setPaginationFilter((prev) => ({
+      ...prev,
+      currentPage: 1,
+    }));
+  };
+
+  const handleOverdueToggle = () => {
+    const newOverdueState = !showOverdue;
+
+    setShowOverdue(newOverdueState);
   };
 
   return {
@@ -142,6 +248,12 @@ export default function useAdminUser() {
     isViewModalOpen,
     setIsViewModalOpen,
     viewModalData,
-    handleStatusChange, // <-- add this to return
+    handleStatusChange,
+    taskDateRange,
+    setTaskDateRange,
+    handleDateRangeChange,
+    handleDateRangeApply,
+    showOverdue,
+    handleOverdueToggle,
   };
 }

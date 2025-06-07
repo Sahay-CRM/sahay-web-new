@@ -83,12 +83,12 @@ export default function SearchKpiModal({
           />
           <FormDatePicker
             value={startDate}
-            onSubmit={setStartDate}
+            onSubmit={(date) => setStartDate(date ?? null)}
             placeholder="Start Date"
           />
           <FormDatePicker
             value={endDate}
-            onSubmit={setEndDate}
+            onSubmit={(date) => setEndDate(date ?? null)}
             placeholder="End Date"
           />
           <Button onClick={handleSubmit}>View KPI</Button>

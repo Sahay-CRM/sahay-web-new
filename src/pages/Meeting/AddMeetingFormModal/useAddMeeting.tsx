@@ -15,6 +15,7 @@ import { format, parseISO } from "date-fns";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { docUploadMutation } from "@/features/api/file";
 import { queryClient } from "@/queryClient";
+import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 
 export default function useAddEmployee() {
   const { id: companyMeetingId } = useParams();
@@ -225,7 +226,7 @@ export default function useAddEmployee() {
       filter: paginationFilter,
     });
 
-    const [columnToggleOptions, setColumnToggleOptions] = useState([
+    const [columnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
       { key: "meetingStatus", label: "Meeting Status", visible: true },
     ]);
@@ -239,61 +240,44 @@ export default function useAddEmployee() {
       {} as Record<string, string>,
     );
 
-    // Toggle column visibility
-    const onToggleColumn = (key: string) => {
-      setColumnToggleOptions((prev) =>
-        prev.map((col) =>
-          col.key === key ? { ...col, visible: !col.visible } : col,
-        ),
-      );
-    };
-    // Check if the number of columns is more than 3
-    const canToggleColumns = columnToggleOptions.length > 3;
-
     return (
       <div>
-        <div className=" mt-1 flex items-center justify-between">
-          {canToggleColumns && (
-            <div className="ml-4 ">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
-            </div>
-          )}
-        </div>
-
         <Controller
           name="meetingStatusId"
           control={control}
           rules={{ required: "Please select a meeting status" }}
-          render={({ field }) => (
-            <>
-              <div className="mb-4">
-                {errors?.meetingStatusId && (
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors?.meetingStatusId?.message || "")}
-                  </span>
-                )}
-              </div>
+          render={({ field }) => {
+            // Find the selected object if only id is present
+            let selectedObj = field.value;
+            if (
+              selectedObj &&
+              typeof selectedObj === "string" &&
+              Array.isArray(meeetingStatusData?.data)
+            ) {
+              selectedObj = meeetingStatusData.data.find(
+                (item) => item.meetingStatusId === field.value,
+              );
+            }
+            return (
               <TableData
-                {...field}
-                tableData={meeetingStatusData?.data.map((item, index) => ({
-                  ...item,
-                  srNo: index + 1,
-                }))}
-                isActionButton={() => false}
+                tableData={
+                  meeetingStatusData?.data?.map((item, idx) => ({
+                    ...item,
+                    srNo: idx + 1,
+                  })) || []
+                }
                 columns={visibleColumns}
                 primaryKey="meetingStatusId"
-                paginationDetails={meeetingStatusData as PaginationFilter}
-                setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
+                onCheckbox={() => true}
                 selectedValue={field.value}
                 handleChange={field.onChange}
-                // permissionKey="--"
+                paginationDetails={mapPaginationDetails(meeetingStatusData)}
+                setPaginationFilter={setPaginationFilter}
+                isActionButton={() => false}
               />
-            </>
-          )}
+            );
+          }}
         />
       </div>
     );
@@ -309,7 +293,7 @@ export default function useAddEmployee() {
     const { data: meetingTypeData } = getMeetingType({
       filter: paginationFilter,
     });
-    const [columnToggleOptions, setColumnToggleOptions] = useState([
+    const [columnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
       { key: "meetingTypeName", label: "Meeting Type Name", visible: true },
     ]);
@@ -323,61 +307,43 @@ export default function useAddEmployee() {
       {} as Record<string, string>,
     );
 
-    // Toggle column visibility
-    const onToggleColumn = (key: string) => {
-      setColumnToggleOptions((prev) =>
-        prev.map((col) =>
-          col.key === key ? { ...col, visible: !col.visible } : col,
-        ),
-      );
-    };
-    // Check if the number of columns is more than 3
-    const canToggleColumns = columnToggleOptions.length > 3;
-
     return (
       <div>
-        <div className=" mt-1 flex items-center justify-between">
-          {canToggleColumns && (
-            <div className="ml-4 ">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
-            </div>
-          )}
-        </div>
-
         <Controller
           name="meetingTypeId"
           control={control}
           rules={{ required: "Please select a meeting type" }}
-          render={({ field }) => (
-            <>
-              <div className="mb-4">
-                {errors?.meetingTypeId && (
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors?.meetingTypeId?.message || "")}
-                  </span>
-                )}
-              </div>
+          render={({ field }) => {
+            // Find the selected object if only id is present
+            let selectedObj = field.value;
+            if (
+              selectedObj &&
+              typeof selectedObj === "string" &&
+              Array.isArray(meetingTypeData?.data)
+            ) {
+              selectedObj = meetingTypeData.data.find(
+                (item) => item.meetingTypeId === field.value,
+              );
+            }
+            return (
               <TableData
-                {...field}
-                tableData={meetingTypeData?.data.map((item, index) => ({
-                  ...item,
-                  srNo: index + 1,
-                }))}
-                isActionButton={() => false}
+                tableData={
+                  meetingTypeData?.data?.map((item, idx) => ({
+                    ...item,
+                    srNo: idx + 1,
+                  })) || []
+                }
                 columns={visibleColumns}
                 primaryKey="meetingTypeId"
-                paginationDetails={meetingTypeData as PaginationFilter}
-                setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
                 selectedValue={field.value}
                 handleChange={field.onChange}
-                // permissionKey="--"
+                paginationDetails={mapPaginationDetails(meetingTypeData)}
+                setPaginationFilter={setPaginationFilter}
+                onCheckbox={() => true}
               />
-            </>
-          )}
+            );
+          }}
         />
       </div>
     );

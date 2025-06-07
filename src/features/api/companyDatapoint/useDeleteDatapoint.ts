@@ -4,7 +4,7 @@ import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { queryClient } from "@/queryClient";
 import { AxiosError } from "axios";
-type DatePaging = BaseResponse<CompanyDatapointProps>;
+type DatePaging = BaseResponse<DataPoint>;
 
 export default function useDeleteDatapoint() {
   const deleteDatapointMutation = useMutation({

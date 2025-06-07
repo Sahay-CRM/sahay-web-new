@@ -10,6 +10,8 @@ type UpdateMeetingStatusPayload = {
   meetingStatusId: string;
 };
 
+type DatePaging = CommonResponse<CompanyMeetingDataProps>;
+
 export function useAddUpdateCompanyMeetingStatus() {
   return useMutation({
     mutationKey: ["update-meeting-status"],
@@ -20,7 +22,7 @@ export function useAddUpdateCompanyMeetingStatus() {
         url: Urls.updateCompanyMeeting(meetingId),
         data: payload,
       };
-      const { data: resData } = await Api.put(config);
+      const { data: resData } = await Api.put<DatePaging>(config);
       return resData;
     },
     onSuccess: (res) => {

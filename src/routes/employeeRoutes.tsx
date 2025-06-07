@@ -6,6 +6,8 @@ import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddComp
 import AddCompanyMeeting from "@/pages/Meeting/AddMeetingFormModal/addMeeting";
 
 const Theme = lazy(() => import("../pages/theme/Theme"));
+const Profile = lazy(() => import("../pages/profile/Profile"));
+
 const companydesignation = lazy(
   () => import("../pages/companyDesignation/companyDesignation"),
 );
@@ -61,7 +63,7 @@ export default function EmployeeRoutes() {
     <Routes>
       <Route index element={<Navigate to="/dashboard" replace />} />
       <Route path="/dashboard" element={<DashboardLayout />}>
-        {/* <Route index Component={Dashboard} /> */}
+        <Route path="profile" Component={Profile} />
         <Route path="settings" Component={Theme} />
         <Route path="company-designation" Component={companydesignation} />
         <Route path="company-employee" Component={companyemployee} />

@@ -18,6 +18,7 @@ import {
 import ViewMeetingModal from "./ViewMeetingModal";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import { format } from "date-fns";
+import DateRangePicker from "@/components/shared/DateRange";
 
 export default function MeetingList() {
   const {
@@ -39,7 +40,11 @@ export default function MeetingList() {
     isViewModalOpen,
     setIsViewModalOpen,
     viewModalData,
-    handleStatusChange, // <-- add this
+    handleStatusChange,
+    handleDateRangeChange,
+    handleDateRangeApply,
+    showOverdue,
+    handleOverdueToggle,
   } = useMeeting();
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -89,14 +94,25 @@ export default function MeetingList() {
             )}
           </div>
         </div>
-        <div className="flex gap-4 justify-between">
-          <SearchInput
-            placeholder="Search..."
-            searchValue={paginationFilter?.search || ""}
-            setPaginationFilter={setPaginationFilter}
-            className="w-96"
-          />
-          <div className="flex items-center gap-2">
+
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
+          <div className="flex gap-4">
+            <div className="z-10 relative flex items-center gap-2">
+              {!showOverdue && (
+                <DateRangePicker
+                  onChange={handleDateRangeChange}
+                  onApply={handleDateRangeApply}
+                />
+              )}
+            </div>
             <div>
               <DropdownSearchMenu
                 label="Status"
@@ -108,6 +124,13 @@ export default function MeetingList() {
                 multiSelect
               />
             </div>
+            <Button
+              variant={showOverdue ? "destructive" : "outline"}
+              onClick={handleOverdueToggle}
+              className="py-2 w-fit"
+            >
+              {showOverdue ? "Show All Meeting" : "Show Overdue"}
+            </Button>
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>
@@ -180,7 +203,10 @@ export default function MeetingList() {
             dropdownColumns={{
               meetingStatus: {
                 options: statusOptions ?? [],
-                onChange: (row, value) => handleStatusChange(value, row),
+                onChange: (row, value) =>
+                  row.meetingId
+                    ? handleStatusChange(value, row.meetingId)
+                    : undefined,
               },
             }}
           />

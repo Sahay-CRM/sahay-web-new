@@ -62,7 +62,7 @@ const DrawerAccordion: FC<DrawerAccordionProps> = ({
       className="w-full overflow-hidden py-1 px-4 text-gray-700"
     >
       <button
-        className="flex items-center justify-between w-full text-left focus:outline-none text-sm hover:text-primary font-medium py-2 rounded-lg"
+        className="flex items-center justify-between w-full py-1 text-left focus:outline-none text-sm hover:text-primary font-medium py-2 rounded-lg"
         onClick={onClick}
       >
         <div className="flex flex-1 items-center">
@@ -91,7 +91,7 @@ const DrawerAccordion: FC<DrawerAccordionProps> = ({
       </button>
 
       {isOpen && hasChildren && (
-        <div className="pr-4 py-2 text-sm ml-12 leading-5">
+        <div className="pr-4 py-2 text-sm ml-6 leading-5">
           <ul>
             {item.items?.map((child, index) => {
               // Only show child items that have permission
@@ -100,7 +100,7 @@ const DrawerAccordion: FC<DrawerAccordionProps> = ({
               return (
                 <li
                   key={`${item.label}-${index}`}
-                  className="hover:text-primary hover:underline hover:text-[14.5px] transition-colors cursor-pointer rounded-lg px-2 pb-2"
+                  className="hover:text-primary hover:underline transition-colors cursor-pointer rounded-lg px-2 pb-2"
                   onClick={() => {
                     postOnClick();
                     navigate(child.link);

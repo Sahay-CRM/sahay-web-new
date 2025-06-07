@@ -264,7 +264,7 @@ export default function useAddProject() {
                 isActionButton={() => false}
                 columns={visibleColumns}
                 primaryKey="projectStatusId"
-                paginationDetails={projectlistdata}
+                paginationDetails={projectlistdata as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
                 selectedValue={field.value}
@@ -348,7 +348,7 @@ export default function useAddProject() {
                 isActionButton={() => false}
                 columns={visibleColumns}
                 primaryKey="coreParameterId"
-                paginationDetails={mcoreparameter}
+                paginationDetails={mcoreparameter as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
                 selectedValue={field.value}
@@ -485,7 +485,7 @@ export default function useAddProject() {
                 isActionButton={() => false}
                 columns={visibleColumns}
                 primaryKey="subParameterId"
-                paginationDetails={subparameter}
+                paginationDetails={subparameter as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={true}
                 selectedValue={getSelectedSubParameterIds(field.value)}
@@ -603,7 +603,7 @@ export default function useAddProject() {
                 }))}
                 columns={visibleColumns}
                 primaryKey="employeeId"
-                paginationDetails={employeedata}
+                paginationDetails={employeedata as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={true}
                 selectedValue={getSelectedEmployeeIds(field.value)}

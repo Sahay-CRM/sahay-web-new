@@ -14,8 +14,8 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
   onSubmit,
 }) => {
   // Flatten companyEmployee if it's an array of arrays
-  const joinersArr = Array.isArray(modalData?.companyEmployee)
-    ? (modalData.companyEmployee.flat?.() ?? modalData.companyEmployee)
+  const joinersArr = Array.isArray(modalData?.joiners)
+    ? (modalData.joiners.flat?.() ?? modalData.joiners)
     : [];
 
   const joiners = joinersArr
@@ -67,13 +67,15 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
         {modalData?.meetingStatus && (
           <div>
             <span className="font-medium text-primary">Meeting Status: </span>
-            {modalData.meetingStatus?.meetingStatus}
+            {typeof modalData.meetingStatus === "object"
+              ? modalData.meetingStatus.meetingStatus
+              : modalData.meetingStatus}
           </div>
         )}
-        {modalData?.meetingType && (
+        {modalData?.meetingTypeName && (
           <div>
             <span className="font-medium text-primary">Meeting Type: </span>
-            {modalData.meetingType?.meetingTypeName}
+            {modalData.meetingTypeName}
           </div>
         )}
         {joiners && (

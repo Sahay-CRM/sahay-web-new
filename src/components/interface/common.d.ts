@@ -80,7 +80,7 @@ interface EmployeeData {
   departmentName?: string | null;
   designationName?: string | null;
   companyEmployeeId?: string | null;
-  department?: DepartmentData | null;
+  department?: DepartmentData;
   designation?: Designation | null;
   employee?: EmployeeDataModal;
 }
@@ -167,17 +167,18 @@ interface EventData {
 
 //kk
 interface MeetingData {
-  joinerNames?: string;
-  meetingTypeName?: string;
-  meetingStatus?: MeetingStatusDataProps;
   meetingId?: string;
   meetingName: string;
-  meetingDescription: string;
-  meetingDateTime: string; // ISO string
-  joiners: {
-    employeeId: string;
-    employeeName: string;
-  }[];
+  meetingDescription?: string;
+  meetingDateTime: string;
+  companyId?: string;
+  meetingTypeId: string;
+  meetingTypeName?: string;
+  meetingStatusId: string;
+  meetingStatus?: string | MeetingStatusDataProps;
+  color?: string;
+  joiners?: Employee[];
+  [key: string]: string | string[] | number | undefined;
 }
 ///kk
 interface IProjectFormData {
@@ -469,6 +470,7 @@ interface EmployeeDetails {
 interface EmployeeCompany {
   companyAdminName: string;
   companyId: string;
+  companyName: string;
 }
 
 interface EmployeeDetailsById {
@@ -484,8 +486,10 @@ interface EmployeeDetailsById {
   designation: string | null;
   reportingManagerId: string | null;
   company: EmployeeCompany;
-  reportingManager: string | null;
+  reportingManager: EmployeeDetails;
   companyLogo?: string;
+  photo?: string;
+  isSuperAdmin: boolean;
 }
 
 interface Designation {
@@ -781,7 +785,7 @@ interface KPIFormData {
   KPILabel?: string;
   KPIName?: string;
   KPIMaster: KPIMaster | string;
-  coreParameter: string;
+  coreParameter: CoreParameter;
   unit: string;
   validationType: string;
   frequencyType: string;
@@ -870,6 +874,7 @@ interface FrequencyData {
   srNo: number;
   frequencyType: string;
   dataPoint: DataPoint[];
+  count?: number;
 }
 
 type FrequencyDataArray = FrequencyData[];

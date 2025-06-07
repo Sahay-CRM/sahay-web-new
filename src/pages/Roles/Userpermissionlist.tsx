@@ -92,7 +92,7 @@ export default function MeetingList() {
             isActionButton={() => true}
             localStorageId="UserPermissionList"
             moduleKey="ROLES_PERMISSION"
-            additionalButton={true}
+            additionalButton={(item) => !item.isSuperAdmin}
             isEditDelete={false}
             onAdditionButton={(data) => {
               navigate(

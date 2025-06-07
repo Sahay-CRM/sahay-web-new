@@ -4,11 +4,13 @@ import useKpiDashboard from "./useKpiDashboard";
 export default function TabsSection({
   selectedPeriod,
   onSelectPeriod,
+  selectedDate = null,
 }: {
   selectedPeriod: string;
   onSelectPeriod: (selectedPeriod: string) => void;
+  selectedDate?: Date | null;
 }) {
-  const { kpiStructure } = useKpiDashboard({ selectedPeriod });
+  const { kpiStructure } = useKpiDashboard({ selectedPeriod, selectedDate });
 
   return (
     <Tabs

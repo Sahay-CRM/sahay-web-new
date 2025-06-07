@@ -11,9 +11,11 @@ import {
 const FullNavBar = ({ data }: FullNavBarProps) => {
   const permissions = useSelector(getUserPermission);
 
+  const BaseURL = import.meta.env.VITE_IMAGEURL;
+
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   const user = useSelector(getUserDetail);
-  const companyUrl = `http://13.203.125.10:6050/share/logo/${user?.companyLogo}`;
+  const companyUrl = `${BaseURL}/share/logo/${user?.companyLogo}`;
 
   const handleAccordionToggle = (index: number) => {
     setActiveIndex((prevIndex) => (prevIndex === index ? -1 : index));

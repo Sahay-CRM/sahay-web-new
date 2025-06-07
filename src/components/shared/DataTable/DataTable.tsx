@@ -58,7 +58,7 @@ interface TableProps<T extends Record<string, unknown>> {
   ) => void;
   isLoading?: boolean;
   isActionButton?: (item: T) => boolean;
-  additionalButton?: React.ReactNode;
+  additionalButton?: ((item: T) => boolean) | React.ReactNode;
   viewButton?: React.ReactNode;
   onAdditionButton?: (item: T) => void;
   isEditDelete?: boolean;
@@ -385,14 +385,22 @@ const TableData = <T extends Record<string, unknown>>({
                           }
                           onClick={(e) => e.stopPropagation()} // Prevent row click when interacting with dropdown
                         >
-                          <option value="" style={{ backgroundColor: "white" }}>
+                          <option
+                            value=""
+                            style={{ backgroundColor: "white", color: "#000" }}
+                            className="text-black"
+                          >
                             Select
                           </option>
                           {dropdownColumns[clm].options.map((option) => (
                             <option
                               key={option.value}
                               value={option.value}
-                              style={{ backgroundColor: "white" }}
+                              style={{
+                                backgroundColor: "white",
+                                color: "#000",
+                              }}
+                              className="text-black"
                             >
                               {option.label}
                             </option>
@@ -444,21 +452,39 @@ const TableData = <T extends Record<string, unknown>>({
                           </Tooltip>
                         )}
                       {customActions?.(item)}
-                      {additionalButton && permission?.Edit && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => onAdditionButton(item)}
-                            >
-                              <KeyRound className="w-4 h-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Permission</TooltipContent>
-                        </Tooltip>
-                      )}
+                      {typeof additionalButton === "function"
+                        ? additionalButton(item) &&
+                          permission?.Edit && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => onAdditionButton(item)}
+                                >
+                                  <KeyRound className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Permission</TooltipContent>
+                            </Tooltip>
+                          )
+                        : additionalButton &&
+                          permission?.Edit && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => onAdditionButton(item)}
+                                >
+                                  <KeyRound className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Permission</TooltipContent>
+                            </Tooltip>
+                          )}
                       {viewButton && (
                         <Tooltip>
                           <TooltipTrigger asChild>

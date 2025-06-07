@@ -81,11 +81,18 @@ export default function useAddEmployee() {
     }
 
     const payload = {
+      ...data,
       companyEmployeeId: companyEmployeeId,
       departmentId: data.department?.departmentId || data.departmentId,
       designationId: data.designation?.designationId || data.designationId,
-      reportingManagerId: data.employee?.employeeId ?? null,
-      ...data,
+      reportingManagerId:
+        typeof data.employee === "object" &&
+        data.employee !== null &&
+        "employeeId" in data.employee
+          ? String(data.employee.employeeId)
+          : typeof data.employee === "string"
+            ? data.employee
+            : null,
     };
     addEmployee(payload, {
       onSuccess: () => {
@@ -309,7 +316,7 @@ export default function useAddEmployee() {
                 isActionButton={() => false}
                 columns={visibleColumns}
                 primaryKey="designationId"
-                paginationDetails={designationData}
+                paginationDetails={designationData as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
                 selectedValue={field.value}
@@ -386,7 +393,7 @@ export default function useAddEmployee() {
                 isActionButton={() => false}
                 columns={visibleColumns}
                 primaryKey="employeeId"
-                paginationDetails={employeedata}
+                paginationDetails={employeedata as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
                 selectedValue={field.value}

@@ -1,132 +1,161 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import {
-  getUserPermission,
-  getUserDetail,
-} from "@/features/selectors/auth.selector";
-import logoImg from "@/assets/logo_mobile.png";
+import { useAuth } from "@/features/auth/useAuth";
+import logoImg from "@/assets/S_logo.png";
+import dummyProfile from "@/assets/userDummy.jpg";
 import { baseUrl } from "@/features/utils/urls.utils";
-import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+import { useSelector } from "react-redux";
 
 interface ChildItem {
   label: string;
   link: string;
-  moduleKey: string;
-  permission: string;
 }
-
-interface NavItem {
-  icon?: string;
-  label?: string;
-  link?: string;
+interface MenuItemProps {
+  icon: string;
+  label: string;
   items?: ChildItem[];
-  moduleKey?: string | string[];
-  permission?: string;
+  link?: string;
+  onToggleFullMenu?: () => void;
 }
 
-interface IconNavBarProps {
-  data: NavItem[];
-}
-
-const IconNavBar: React.FC<IconNavBarProps> = ({ data }) => {
+const MenuItem: React.FC<MenuItemProps> = ({
+  icon,
+  label,
+  items,
+  link,
+  onToggleFullMenu,
+}) => {
   const navigate = useNavigate();
-  const permissions = useSelector(getUserPermission);
-  const user = useSelector(getUserDetail);
-  const { bgColor } = useSidebarTheme();
+  const [isHovered, setIsHovered] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const iconRef = useRef<HTMLDivElement>(null);
 
-  const filteredMenuItems = data?.filter((item: NavItem) => {
+  const handleMouseEnter = () => {
+    if (iconRef.current) {
+      const rect = iconRef.current.getBoundingClientRect();
+      setTooltipPosition({
+        top: rect.top,
+        left: rect.right + 8,
+      });
+    }
+    setIsHovered(true);
+  };
+
+  const handleClick = () => {
+    const hasChildren = items && items.length > 0;
+
+    // Always toggle to full menu when clicking any icon
+    onToggleFullMenu?.();
+
+    // If no children, also navigate to the page
+    if (!hasChildren && link) {
+      navigate(link);
+    }
+  };
+
+  return (
+    <div
+      className="relative z-[9998]"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Icon Menu Item */}
+      <div
+        ref={iconRef}
+        className={`px-4 py-3 cursor-pointer transition-colors duration-200 text-gray-700 hover:text-primary text-center`}
+        onClick={handleClick}
+      >
+        <i className={`bx ${icon} text-2xl`} />
+      </div>
+
+      {isHovered && (
+        <div
+          className="fixed bg-white shadow-lg rounded-md px-3 py-2 z-[99999] whitespace-nowrap border"
+          style={{
+            top: `${tooltipPosition.top}px`,
+            left: `${tooltipPosition.left}px`,
+          }}
+        >
+          <div className="text-sm font-medium text-primary">{label}</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+interface IconHoverVerticalNavProps extends FullNavBarProps {
+  onToggleExpanded?: () => void;
+}
+
+const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
+  data,
+  onToggleExpanded,
+}) => {
+  const permissions = useSelector(getUserPermission);
+  const { user } = useAuth();
+
+  const filteredMenuItems = data?.filter((item) => {
     if (item.items) {
-      return item.items.some(
-        (child: ChildItem) => permissions?.[child.moduleKey]?.View,
-      );
+      return item.items.some((child) => permissions?.[child.moduleKey]?.View);
     }
     const moduleKeys = Array.isArray(item.moduleKey)
       ? item.moduleKey
       : [item.moduleKey];
-    const filteredModuleKeys = moduleKeys.filter(
-      (key): key is string => typeof key === "string" && !!key,
-    );
-    return filteredModuleKeys.some((key) => permissions?.[key]?.View);
+    return moduleKeys.some((key) => permissions?.[key]?.View);
   });
 
   return (
-    <div
-      style={{ backgroundColor: bgColor }}
-      className="h-screen text-primary w-16 z-35 flex flex-col"
-    >
+    <div className="h-screen text-primary w-16 z-[9998] flex flex-col relative">
       {/* Top Logo */}
-      <div className="flex justify-center items-center p-4 mb-4 bg-white">
-        <img
-          src={
-            user?.companyLogo
-              ? `http://13.203.125.10:6050/share/logo/${user.companyLogo}`
-              : logoImg
-          }
-          alt="logo"
-          className="w-8 rounded-full object-contain bg-black"
-        />
-      </div>
+      {user?.role === "SUPERADMIN" ? (
+        <div className="flex justify-center items-center p-4 mb-4 bg-white">
+          <img src={logoImg} alt="logo" className="w-8" />
+        </div>
+      ) : (
+        <div className="flex justify-center items-center p-4 mb-4">
+          <img src={logoImg} alt="logo" className="w-8" />
+        </div>
+      )}
+
       {/* Scrollable Icon Menu */}
-      <div className="flex-1 overflow-y-auto py-2 flex flex-col items-center gap-2">
-        {filteredMenuItems?.map((item: NavItem, index: number) => {
-          // If item has children, show the first permitted child's link
-          if (item.items) {
-            const permittedChild = item.items.find(
-              (child: ChildItem) => permissions?.[child.moduleKey]?.View,
-            );
-            if (!permittedChild) return null;
-            return (
-              <button
-                key={index}
-                className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-200"
-                title={item.label}
-                onClick={() => navigate(permittedChild.link)}
-              >
-                <i className={`bx ${item.icon} text-xl`} />
-              </button>
-            );
-          }
-          // For items without children
-          let moduleKeys = Array.isArray(item.moduleKey)
-            ? item.moduleKey
-            : [item.moduleKey];
-          moduleKeys = moduleKeys.filter(
-            (key): key is string => typeof key === "string" && !!key,
-          );
-          if (
-            !moduleKeys.length ||
-            !moduleKeys.some((key) => key && permissions?.[key]?.View)
-          )
-            return null;
+      <div className="flex-1 overflow-y-auto py-2">
+        {filteredMenuItems.map((item, index) => {
           return (
-            <button
+            <MenuItem
               key={index}
-              className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-200"
-              title={item.label}
-              onClick={() => item.link && navigate(item.link)}
-            >
-              <i className={`bx ${item.icon} text-xl`} />
-            </button>
+              icon={item.icon}
+              label={item.label}
+              items={item.items}
+              link={item.link}
+              onToggleFullMenu={onToggleExpanded}
+            />
           );
         })}
       </div>
+
       {/* Profile Avatar at Bottom */}
       <div className="flex justify-center items-center p-4 mt-auto">
-        <div className="w-8 h-8">
-          <img
-            src={
-              user?.photo
-                ? `${baseUrl}/share/profilePics/${user?.photo}`
-                : logoImg
-            }
-            alt="profile"
-            className="w-full h-full rounded-full object-cover bg-white"
-          />
-        </div>
+        {user?.role === "SUPERADMIN" ? (
+          <div className="w-8 h-8">
+            <img
+              src={`${baseUrl}/share/profilePics/${user?.photo}`}
+              alt="profile"
+              className="w-full h-full rounded-full object-cover bg-white"
+            />
+          </div>
+        ) : (
+          <div className="w-8 h-8">
+            <img
+              src={dummyProfile}
+              alt="profile"
+              className="w-full h-full rounded-full object-cover bg-white"
+            />
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default React.memo(IconNavBar);
+export default React.memo(IconHoverVerticalNav);
