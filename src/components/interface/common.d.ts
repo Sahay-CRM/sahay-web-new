@@ -64,7 +64,7 @@ interface Company {
 }
 // kk
 interface EmployeeData {
-  employeeId: string;
+  employeeId?: string;
   employeeName: string;
   employeeEmail: string;
   employeeMobile: string;
@@ -72,10 +72,10 @@ interface EmployeeData {
   employeeType: string;
   departmentId?: string | null | DepartmentData;
   designationId?: string | null | Designation;
-  isSuperAdmin: boolean;
+  isSuperAdmin?: boolean;
   sahayEmId?: string | null;
   reportingManagerId?: string | null;
-  company: Company;
+  company?: Company;
   reportingManager?: ReportingManager | null;
   departmentName?: string | null;
   designationName?: string | null;

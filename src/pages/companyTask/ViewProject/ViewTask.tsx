@@ -25,7 +25,7 @@ export default function CompanyTaskView() {
 
   if (!taskData) return null;
 
-  const onSubmitComment = (data: { comment: string }) => {
+  const onSubmitComment = (data: AddUpdateTask) => {
     if (!data.comment) return;
     addUpdateCompanyTask.mutate({
       taskId: taskData.taskId,

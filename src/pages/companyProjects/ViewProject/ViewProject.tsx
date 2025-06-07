@@ -76,7 +76,7 @@ const ProjectView = () => {
                         options={statusOptions}
                         error={fieldState.error}
                         onChange={(ele) => {
-                          handleStatusChange(ele);
+                          handleStatusChange(ele as string);
                         }}
                       />
                     )}

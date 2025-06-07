@@ -76,7 +76,7 @@ const AddEmployee = () => {
         {/* Modal Component */}
         {isModalOpen && (
           <AddEmployeeModal
-            modalData={employeePreview}
+            modalData={employeePreview as EmployeeData}
             isModalOpen={isModalOpen}
             modalClose={handleClose}
             onSubmit={onSubmit}

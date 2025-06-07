@@ -24,7 +24,7 @@ export default function useViewProject() {
   }));
   const { mutate: addProject } = useAddUpdateCompanyProject();
 
-  const handleStatusChange = (ele) => {
+  const handleStatusChange = (ele: string) => {
     const payload = {
       projectStatusId: ele,
       projectId: companyProjectId,

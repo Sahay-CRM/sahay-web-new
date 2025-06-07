@@ -30,10 +30,9 @@ export default function useAddEmployee() {
     reset,
     getValues,
     watch,
-  } = useForm<EmployeeData>({
+  } = useForm({
     mode: "onChange",
   });
-
   useEffect(() => {
     if (employeeApiData?.data) {
       const data = employeeApiData?.data;
@@ -43,17 +42,19 @@ export default function useAddEmployee() {
         employeeEmail: data.employeeEmail || "",
         employeeMobile: data.employeeMobile || "",
         employeeType: data.employeeType || "",
-        department: data.department
-          ? data.department
-          : data.departmentId
-            ? { departmentId: data.departmentId }
-            : null,
-        designation: data.designation
-          ? data.designation
-          : data.designationId
-            ? { designationId: data.designationId }
-            : null,
-        employee: data.reportingManager || undefined,
+        department:
+          typeof data.department === "object" && data.department !== null
+            ? data.department
+            : data.departmentId
+              ? { departmentId: data.departmentId }
+              : undefined,
+        designation:
+          typeof data.designation === "object" && data.designation !== null
+            ? data.designation
+            : data.designationId
+              ? { designationId: data.designationId }
+              : null,
+        employee: data.reportingManagerId,
       });
     }
   }, [employeeApiData, reset]);
@@ -80,20 +81,36 @@ export default function useAddEmployee() {
       employeeMobile = "+91" + employeeMobile;
     }
 
-    const payload = {
-      ...data,
-      companyEmployeeId: companyEmployeeId,
-      departmentId: data.department?.departmentId || data.departmentId,
-      designationId: data.designation?.designationId || data.designationId,
-      reportingManagerId:
-        typeof data.employee === "object" &&
-        data.employee !== null &&
-        "employeeId" in data.employee
-          ? String(data.employee.employeeId)
-          : typeof data.employee === "string"
-            ? data.employee
-            : null,
-    };
+    // You may need to get companyId from route params, context, or form data
+    // Here, we try to get it from department or a similar source; adjust as needed
+    const companyId =
+      data.department?.companyId ||
+      data.companyId ||
+      (employeeApiData?.data?.companyId ?? "");
+
+    const payload = companyEmployeeId
+      ? {
+          employeeId: companyEmployeeId,
+          companyId: companyId,
+          departmentId: data.department?.departmentId || data.departmentId,
+          designationId: data.designation?.designationId || data.designationId,
+          reportingManagerId: data?.employee?.employeeId,
+          employeeName: data.employeeName,
+          employeeEmail: data.employeeEmail,
+          employeeMobile: employeeMobile,
+          employeeType: data.employeeType,
+        }
+      : {
+          companyId: companyId,
+          departmentId: data.department?.departmentId || data.departmentId,
+          designationId: data.designation?.designationId || data.designationId,
+          reportingManagerId: data?.employee?.employeeId,
+          employeeName: data.employeeName,
+          employeeEmail: data.employeeEmail,
+          employeeMobile: employeeMobile,
+          employeeType: data.employeeType,
+        };
+
     addEmployee(payload, {
       onSuccess: () => {
         handleModalClose();
@@ -239,6 +256,7 @@ export default function useAddEmployee() {
                 multiSelect={false}
                 selectedValue={field.value}
                 handleChange={field.onChange}
+                onCheckbox={() => true}
                 // permissionKey="--"
               />
             </>
@@ -321,7 +339,7 @@ export default function useAddEmployee() {
                 multiSelect={false}
                 selectedValue={field.value}
                 handleChange={field.onChange}
-                // permissionKey="--"
+                onCheckbox={() => true}
               />
             </>
           )}
@@ -395,8 +413,8 @@ export default function useAddEmployee() {
                 primaryKey="employeeId"
                 paginationDetails={employeedata as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
-                multiSelect={false}
                 selectedValue={field.value}
+                onCheckbox={() => true}
                 handleChange={(val) => {
                   // Only allow a single value or undefined
                   if (!val || (Array.isArray(val) && val.length === 0)) {

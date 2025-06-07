@@ -73,7 +73,7 @@ const AddProject = () => {
         {/* Modal Component */}
         {isModalOpen && (
           <AddProjectModal
-            modalData={meetingPreview as MeetingData}
+            modalData={meetingPreview as CompanyProjectDataProps}
             isModalOpen={isModalOpen}
             modalClose={handleClose}
             onSubmit={onSubmit}

@@ -7,6 +7,7 @@ import {
   getUserDetail,
   getUserPermission,
 } from "@/features/selectors/auth.selector";
+import { Link } from "react-router-dom";
 
 const FullNavBar = ({ data }: FullNavBarProps) => {
   const permissions = useSelector(getUserPermission);
@@ -35,16 +36,18 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
 
   return (
     <div className="flex flex-col w-[260px] h-screen bg-white border-r">
-      <div className="flex items-center px-4 py-4 shadow-sm mt-auto cursor-pointer mb-4">
-        <div className="flex w-[70px] h-[50px]">
-          <img
-            src={user?.companyLogo ? companyUrl : logoImg}
-            alt="profile"
-            className="w-full rounded-full object-contain bg-black"
-          />
+      <Link to="/">
+        <div className="flex items-center px-4 py-4 shadow-sm mt-auto cursor-pointer mb-4">
+          <div className="flex w-[70px] h-[50px]">
+            <img
+              src={user?.companyLogo ? companyUrl : logoImg}
+              alt="profile"
+              className="w-full rounded-full object-contain bg-black"
+            />
+          </div>
+          <span className="ml-2 mr-1">{user?.companyName}</span>
         </div>
-        <span className="ml-2 mr-1">{user?.companyName}</span>
-      </div>
+      </Link>
 
       {/* Menu Items */}
       <nav className="flex-1 overflow-y-auto px-2 space-y-1 py-4 scrollbar-none">
