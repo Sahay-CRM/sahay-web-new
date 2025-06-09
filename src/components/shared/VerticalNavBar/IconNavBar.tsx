@@ -1,11 +1,14 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/features/auth/useAuth";
 import logoImg from "@/assets/S_logo.png";
-import dummyProfile from "@/assets/userDummy.jpg";
-import { baseUrl } from "@/features/utils/urls.utils";
-import { getUserPermission } from "@/features/selectors/auth.selector";
+import mainLogoImg from "@/assets/logo_1.png";
+import {
+  getUserPermission,
+  getUserDetail,
+} from "@/features/selectors/auth.selector";
 import { useSelector } from "react-redux";
+import LucideIcon from "@/components/shared/Icons/LucideIcon";
+import { type IconName } from "@/components/shared/Icons/iconMap";
 
 interface ChildItem {
   label: string;
@@ -41,14 +44,14 @@ const MenuItem: React.FC<MenuItemProps> = ({
     }
     setIsHovered(true);
   };
-
   const handleClick = () => {
     const hasChildren = items && items.length > 0;
 
-    // Always toggle to full menu when clicking any icon
+    // Always open the full menu for any icon click
     onToggleFullMenu?.();
 
-    // If no children, also navigate to the page
+    // If menu has NO children and has a direct link, navigate to that page
+    // If menu HAS children, only open full menu (no navigation)
     if (!hasChildren && link) {
       navigate(link);
     }
@@ -60,15 +63,14 @@ const MenuItem: React.FC<MenuItemProps> = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Icon Menu Item */}
+      {/* Icon Menu Item */}{" "}
       <div
         ref={iconRef}
         className={`px-4 py-3 cursor-pointer transition-colors duration-200 text-gray-700 hover:text-primary text-center`}
         onClick={handleClick}
       >
-        <i className={`bx ${icon} text-2xl`} />
+        <LucideIcon name={icon as IconName} size={24} />
       </div>
-
       {isHovered && (
         <div
           className="fixed bg-white shadow-lg rounded-md px-3 py-2 z-[99999] whitespace-nowrap border"
@@ -84,6 +86,59 @@ const MenuItem: React.FC<MenuItemProps> = ({
   );
 };
 
+// Company Logo Component with Tooltip
+const CompanyLogo: React.FC = () => {
+  const user = useSelector(getUserDetail);
+  const [isHovered, setIsHovered] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const logoRef = useRef<HTMLDivElement>(null);
+
+  const BaseURL = import.meta.env.VITE_IMAGEURL;
+  const companyUrl = `${BaseURL}/share/logo/${user?.companyLogo}`;
+
+  const handleMouseEnter = () => {
+    if (logoRef.current) {
+      const rect = logoRef.current.getBoundingClientRect();
+      setTooltipPosition({
+        top: rect.top,
+        left: rect.right + 8,
+      });
+    }
+    setIsHovered(true);
+  };
+
+  return (
+    <div
+      className="relative z-[9998]"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div ref={logoRef} className="flex justify-center items-center p-4 mb-4">
+        <div className="w-8 h-8">
+          <img
+            src={user?.companyLogo ? companyUrl : mainLogoImg}
+            alt="company logo"
+            className="w-full h-full rounded-full object-contain bg-black"
+          />
+        </div>
+      </div>
+      {isHovered && user?.companyName && (
+        <div
+          className="fixed bg-white shadow-lg rounded-md px-3 py-2 z-[99999] whitespace-nowrap border"
+          style={{
+            top: `${tooltipPosition.top}px`,
+            left: `${tooltipPosition.left}px`,
+          }}
+        >
+          <div className="text-sm font-medium text-primary">
+            {user.companyName}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 interface IconHoverVerticalNavProps extends FullNavBarProps {
   onToggleExpanded?: () => void;
 }
@@ -93,7 +148,6 @@ const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
   onToggleExpanded,
 }) => {
   const permissions = useSelector(getUserPermission);
-  const { user } = useAuth();
 
   const filteredMenuItems = data?.filter((item) => {
     if (item.items) {
@@ -107,16 +161,8 @@ const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
 
   return (
     <div className="h-screen text-primary w-16 z-[9998] flex flex-col relative">
-      {/* Top Logo */}
-      {user?.role === "SUPERADMIN" ? (
-        <div className="flex justify-center items-center p-4 mb-4 bg-white">
-          <img src={logoImg} alt="logo" className="w-8" />
-        </div>
-      ) : (
-        <div className="flex justify-center items-center p-4 mb-4">
-          <img src={logoImg} alt="logo" className="w-8" />
-        </div>
-      )}
+      {/* Top Company Logo with Tooltip */}
+      <CompanyLogo />
 
       {/* Scrollable Icon Menu */}
       <div className="flex-1 overflow-y-auto py-2">
@@ -134,25 +180,9 @@ const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
         })}
       </div>
 
-      {/* Profile Avatar at Bottom */}
+      {/* S Logo at Bottom */}
       <div className="flex justify-center items-center p-4 mt-auto">
-        {user?.role === "SUPERADMIN" ? (
-          <div className="w-8 h-8">
-            <img
-              src={`${baseUrl}/share/profilePics/${user?.photo}`}
-              alt="profile"
-              className="w-full h-full rounded-full object-cover bg-white"
-            />
-          </div>
-        ) : (
-          <div className="w-8 h-8">
-            <img
-              src={dummyProfile}
-              alt="profile"
-              className="w-full h-full rounded-full object-cover bg-white"
-            />
-          </div>
-        )}
+        <img src={logoImg} alt="logo" className="w-8" />
       </div>
     </div>
   );

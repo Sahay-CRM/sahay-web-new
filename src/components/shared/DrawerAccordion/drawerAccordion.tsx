@@ -3,6 +3,8 @@ import type { FC } from "react";
 import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import LucideIcon from "@/components/shared/Icons/LucideIcon";
+import { type IconName } from "@/components/shared/Icons/iconMap";
 
 interface ChildItem {
   label: string;
@@ -65,9 +67,10 @@ const DrawerAccordion: FC<DrawerAccordionProps> = ({
         className="flex items-center justify-between w-full py-1 text-left focus:outline-none text-sm hover:text-primary font-medium py-2 rounded-lg"
         onClick={onClick}
       >
+        {" "}
         <div className="flex flex-1 items-center">
           <div className="w-6 flex items-center justify-center mr-3">
-            <i className={`bx ${item?.icon} text-xl`} />
+            <LucideIcon name={item?.icon as IconName} className="text-xl" />
           </div>
           <span className="whitespace-nowrap overflow-hidden text-ellipsis hover:underline">
             {item?.label}

@@ -1,7 +1,7 @@
 export const companyNavigationData = [
   {
     id: 1,
-    icon: "bx bxs-user-account",
+    icon: "UserCheck",
     label: "Company Designation",
     link: "/dashboard/company-designation",
     permission: "View",
@@ -9,7 +9,7 @@ export const companyNavigationData = [
   },
   {
     id: 2,
-    icon: "bx bx-user",
+    icon: "Users",
     label: "Company Employee",
     link: "/dashboard/company-employee",
     permission: "View",
@@ -17,7 +17,7 @@ export const companyNavigationData = [
   },
   {
     id: 3,
-    icon: "bx bxs-calendar-event",
+    icon: "Calendar",
     label: "Calendar",
     link: "/dashboard/calendar",
     permission: "View",
@@ -25,7 +25,7 @@ export const companyNavigationData = [
   },
   {
     id: 4,
-    icon: "bx bxs-conversation",
+    icon: "Video",
     label: "Meeting List",
     link: "/dashboard/meeting",
     permission: "View",
@@ -33,7 +33,7 @@ export const companyNavigationData = [
   },
   {
     id: 5,
-    icon: "bx bx-list-ul",
+    icon: "CheckSquare",
     label: "Company Task List",
     link: "/dashboard/tasks",
     permission: "View",
@@ -41,7 +41,7 @@ export const companyNavigationData = [
   },
   {
     id: 6,
-    icon: "bx bxs-buildings",
+    icon: "FolderOpen",
     label: "Company Project List",
     link: "/dashboard/projects",
     permission: "View",
@@ -49,7 +49,7 @@ export const companyNavigationData = [
   },
   {
     id: 7,
-    icon: "bx bx-list-ul",
+    icon: "BarChart3",
     label: "KPI List",
     link: "/dashboard/kpi",
     permission: "View",
@@ -57,7 +57,7 @@ export const companyNavigationData = [
   },
   {
     id: 8,
-    icon: "bx bx-list-ul",
+    icon: "TrendingUp",
     label: "KPI Dashboard",
     link: "/dashboard/kpi-dashboard",
     permission: "View",
@@ -73,7 +73,7 @@ export const companyNavigationData = [
   // },
   {
     id: 9,
-    icon: "bx bx-user",
+    icon: "Heart",
     label: "Business Health",
     permission: "View",
     moduleKey: "BUSINESS_HEALTH",
@@ -103,7 +103,7 @@ export const companyNavigationData = [
   },
   {
     id: 10,
-    icon: "bx bxs-lock-alt",
+    icon: "Shield",
     label: "Role & Permission",
     link: "/dashboard/roles/user-permission",
     permission: "View",
@@ -111,7 +111,7 @@ export const companyNavigationData = [
   },
   {
     id: 11,
-    icon: "bx bxs-lock-alt",
+    icon: "Tag",
     label: "Brand",
     link: "/dashboard/brand",
     permission: "View",
@@ -119,7 +119,7 @@ export const companyNavigationData = [
   },
   {
     id: 12,
-    icon: "bx bxs-lock-alt",
+    icon: "Package",
     label: "Product",
     link: "/dashboard/product",
     permission: "View",

@@ -15,6 +15,12 @@ import useGetCoreParameter from "@/features/api/coreParameter/useGetCoreParamete
 import { useGetProduct } from "@/features/api/Product";
 import { Card } from "@/components/ui/card";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 export default function useAddEmployee() {
   const { id: companykpimasterId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
@@ -22,9 +28,8 @@ export default function useAddEmployee() {
   const { mutate: addDatapoint } = useAddUpdateDatapoint();
   const navigate = useNavigate();
 
-  const { data: datapointApiData } = useGetDatapointById(
-    companykpimasterId || "",
-  );
+  const { data: datapointApiData, isLoading: isDatapointLoading } =
+    useGetDatapointById(companykpimasterId || "");
 
   const {
     register,
@@ -34,20 +39,28 @@ export default function useAddEmployee() {
     trigger,
     reset,
     getValues,
+    setValue,
   } = useForm({
     mode: "onChange",
   });
+
+  // Watch for frequency changes to clear visualFrequencyTypes
+  const watchedFrequency = useWatch({ name: "frequencyId", control });
+
+  useEffect(() => {
+    // Clear visualFrequencyTypes when frequency changes (but not on initial load)
+    if (watchedFrequency && !datapointApiData) {
+      setValue("visualFrequencyTypes", []);
+    }
+  }, [watchedFrequency, setValue, datapointApiData]);
 
   useEffect(() => {
     if (datapointApiData) {
       const data = datapointApiData;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resetObj: any = {
-        // KPIName: data?.KPIMaster?.KPILabel || data?.dataPointName,
         KPIMasterId: data?.KPIMasterId,
-        // dataPointLabel: data?.KPIMaster?.KPIName || data?.dataPointLabel,
         coreParameterId: data?.coreParameter,
-        // frequencyId and validationTypeId now expect string values
         frequencyId: data?.frequencyType || "",
         unit: data?.unit || "",
         validationTypeId: data?.validationType || "",
@@ -182,7 +195,7 @@ export default function useAddEmployee() {
       frequencyType: frequencyValue,
       unit: unit,
       selectedType: "", // Set appropriately if needed
-      dataPointEmployeeJunction: assignUser, // or [] if you want to send empty
+      dataPointEmployeeJunction: assignUser,
       DataPointProductJunction: Array.isArray(data.productId)
         ? data.productId.map((p: ProductData) => ({
             productId: p.productId,
@@ -246,14 +259,24 @@ export default function useAddEmployee() {
 
     return (
       <div>
-        <div className=" mt-1 flex items-center justify-between">
+        <div className=" mt-1 flex items-center justify-end">
           {canToggleColumns && (
-            <div className="ml-4 ">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <DropdownSearchMenu
+                      columns={columnToggleOptions}
+                      onToggleColumn={onToggleColumn}
+                      columnIcon={true}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs text-white">Toggle Visible Columns</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
 
@@ -285,6 +308,7 @@ export default function useAddEmployee() {
                 multiSelect={false}
                 selectedValue={field.value}
                 handleChange={field.onChange}
+                onCheckbox={() => true}
               />
             </>
           )}
@@ -320,22 +344,28 @@ export default function useAddEmployee() {
       return frequenceOptions.slice(frequencyIndex + 1);
     };
 
+    // Check if visual frequency should be shown (not when YEARLY is selected)
+    const shouldShowVisualFrequency = selectedFrequency !== "YEARLY";
+
     const validationOptions = [
-      { value: "EQUAL_TO", label: "EQUAL_TO" },
-      { value: "GREATER_THAN_OR_EQUAL_TO", label: "GREATER_THAN_OR_EQUAL_TO" },
-      { value: "GREATER_THAN", label: "GREATER_THAN" },
-      { value: "LESS_THAN", label: "LESS_THAN" },
-      { value: "LESS_THAN_OR_EQUAL_TO", label: "LESS_THAN_OR_EQUAL_TO" },
-      { value: "BETWEEN", label: "BETWEEN" },
-      { value: "YES_NO", label: "YES_NO" },
+      { value: "EQUAL_TO", label: "= Equal to" },
+      {
+        value: "GREATER_THAN_OR_EQUAL_TO",
+        label: ">= Greater than or equal to",
+      },
+      { value: "GREATER_THAN", label: "> Greater than" },
+      { value: "LESS_THAN", label: "< Less than" },
+      { value: "LESS_THAN_OR_EQUAL_TO", label: "<= Less than or equal to" },
+      { value: "BETWEEN", label: "Between" },
+      { value: "YES_NO", label: "Yes/No" },
     ];
     const unitTypeOptions = [
       { value: "Number", label: "Number" },
-      { value: "Percentage", label: "Percentage" },
-      { value: "Dollar", label: "Dollar" },
-      { value: "Urros", label: "Urros" },
-      { value: "Pounds", label: "Pounds" },
-      { value: "INR", label: "INR" },
+      { value: "Percentage", label: "Percentage (%)" },
+      { value: "Dollar", label: "Dollar ($)" },
+      { value: "Euro", label: "Euro (€)" },
+      { value: "Pounds", label: "Pounds (£)" },
+      { value: "INR", label: "INR (₹)" },
     ];
 
     const hasData = datapointApiData?.hasData;
@@ -351,7 +381,11 @@ export default function useAddEmployee() {
               <FormSelect
                 label="Frequency"
                 value={field.value}
-                onChange={field.onChange}
+                onChange={(value) => {
+                  field.onChange(value);
+                  // Clear visualFrequencyTypes immediately when frequency changes
+                  setValue("visualFrequencyTypes", []);
+                }}
                 options={frequenceOptions}
                 error={errors.frequencyId}
                 disabled={hasData}
@@ -376,27 +410,30 @@ export default function useAddEmployee() {
             )}
           />
 
-          <Controller
-            control={control}
-            name="visualFrequencyTypes"
-            render={({ field }) => (
-              <FormSelect
-                label="Visual Frequency Types"
-                value={field.value || []}
-                onChange={field.onChange}
-                options={getFilteredVisualFrequencyOptions()}
-                error={errors.visualFrequencyTypes}
-                isMulti={true}
-                placeholder="Select visual frequency types"
-                disabled={false}
-              />
-            )}
-          />
+          {shouldShowVisualFrequency && (
+            <Controller
+              control={control}
+              name="visualFrequencyTypes"
+              render={({ field }) => (
+                <FormSelect
+                  label="Visual Frequency Types"
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  options={getFilteredVisualFrequencyOptions()}
+                  error={errors.visualFrequencyTypes}
+                  isMulti={true}
+                  placeholder="Select visual frequency types"
+                  disabled={false}
+                  key={selectedFrequency} // Force re-render when frequency changes
+                />
+              )}
+            />
+          )}
 
           <Controller
             control={control}
             name="unit"
-            rules={{ required: "Unit Type is required" }}
+            // Removed required validation to make it optional
             render={({ field }) => (
               <FormSelect
                 label="Unit Type"
@@ -404,8 +441,8 @@ export default function useAddEmployee() {
                 onChange={field.onChange}
                 options={unitTypeOptions}
                 error={errors.unit}
-                disabled={hasData}
-                className={hasData ? "bg-gray-100  p-2 rounded-md" : ""}
+                disabled={false} // Always enabled, not disabled in edit mode
+                placeholder="Select unit type"
               />
             )}
           />
@@ -427,7 +464,7 @@ export default function useAddEmployee() {
     });
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
-      { key: "coreParameterName", label: "CoreParameter Name", visible: true },
+      { key: "coreParameterName", label: "Core Parameter Name", visible: true },
     ]);
 
     // Filter visible columns
@@ -454,14 +491,24 @@ export default function useAddEmployee() {
 
     return (
       <div>
-        <div className=" mt-1 flex items-center justify-between">
+        <div className=" mt-1 flex items-center justify-end">
           {canToggleColumns && (
-            <div className="ml-4 ">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <DropdownSearchMenu
+                      columns={columnToggleOptions}
+                      onToggleColumn={onToggleColumn}
+                      columnIcon={true}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs text-white">Toggle Visible Columns</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
 
@@ -492,6 +539,7 @@ export default function useAddEmployee() {
                 selectedValue={field.value}
                 handleChange={hasData ? () => {} : field.onChange}
                 onCheckbox={() => !hasData}
+                isActionButton={() => false}
               />
             </>
           )}
@@ -540,14 +588,24 @@ export default function useAddEmployee() {
 
     return (
       <div>
-        <div className=" mt-1 flex items-center justify-between">
+        <div className=" mt-1 flex items-center justify-end">
           {canToggleColumns && (
-            <div className="ml-4 ">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <DropdownSearchMenu
+                      columns={columnToggleOptions}
+                      onToggleColumn={onToggleColumn}
+                      columnIcon={true}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs text-white">Toggle Visible Columns</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
 
@@ -570,6 +628,7 @@ export default function useAddEmployee() {
                 multiSelect={true}
                 selectedValue={field.value}
                 handleChange={hasData ? () => {} : field.onChange}
+                isActionButton={() => false}
               />
             </>
           )}
@@ -589,9 +648,12 @@ export default function useAddEmployee() {
     const { data: employeedata } = getEmployee({
       filter: paginationFilter,
     });
+
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
       { key: "employeeName", label: "Assign User", visible: true },
+      { key: "departmentName", label: "Department", visible: true },
+      { key: "employeeType", label: "Employee Type", visible: true },
     ]);
 
     // Filter visible columns
@@ -613,19 +675,28 @@ export default function useAddEmployee() {
     };
     // Check if the number of columns is more than 3
     const canToggleColumns = columnToggleOptions.length > 3;
-
     const hasData = datapointApiData?.hasData;
 
     return (
       <div>
-        <div className=" mt-1 flex items-center justify-between">
+        <div className="mt-1 flex items-center justify-end">
           {canToggleColumns && (
-            <div className="ml-4 ">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <DropdownSearchMenu
+                      columns={columnToggleOptions}
+                      onToggleColumn={onToggleColumn}
+                      columnIcon={true}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs text-white">Toggle Visible Columns</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
 
@@ -655,6 +726,7 @@ export default function useAddEmployee() {
                 multiSelect={true}
                 selectedValue={field.value}
                 handleChange={hasData ? () => {} : field.onChange}
+                isActionButton={() => false}
               />
             </>
           )}
@@ -766,5 +838,6 @@ export default function useAddEmployee() {
     KpiPreview: getValues(),
     trigger,
     skipToStep: isUpdateMode ? 5 : isUpdateModeforFalse ? 1 : 0,
+    isLoading: isDatapointLoading,
   };
 }

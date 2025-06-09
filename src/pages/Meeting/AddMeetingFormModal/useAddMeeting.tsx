@@ -16,6 +16,12 @@ import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { docUploadMutation } from "@/features/api/file";
 import { queryClient } from "@/queryClient";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function useAddEmployee() {
   const { id: companyMeetingId } = useParams();
@@ -388,17 +394,26 @@ export default function useAddEmployee() {
 
     return (
       <div>
+        {" "}
         <div className=" mt-1 flex items-center justify-between">
           {canToggleColumns && (
-            <div className="ml-4 ">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="ml-4 ">
+                    <DropdownSearchMenu
+                      columns={columnToggleOptions}
+                      onToggleColumn={onToggleColumn}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs text-white">Toggle Visible Columns</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
-
         <Controller
           name="employeeId"
           control={control}

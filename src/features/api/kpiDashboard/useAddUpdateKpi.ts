@@ -5,10 +5,17 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
+type KpiUpdateData = {
+  dataPointEmpId: string;
+  startDate: string;
+  endDate: string;
+  data: string;
+};
+
 export default function useAddUpdateKpi() {
   const addUpdateKpi = useMutation({
     mutationKey: ["add-or-update-kpi"],
-    mutationFn: async (data: DesignationData) => {
+    mutationFn: async (data: KpiUpdateData[]) => {
       const payload = {
         dataArray: data,
       };

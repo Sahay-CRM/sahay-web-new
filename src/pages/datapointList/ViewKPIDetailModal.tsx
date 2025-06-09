@@ -26,12 +26,12 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
   return (
     <ModalData
       isModalOpen={isModalOpen}
-      modalTitle="Kpi Details"
+      modalTitle="KPI Details"
       modalClose={modalClose}
       buttons={[
         {
           btnText: "Close",
-          buttonCss: "py-1.5 px-5",
+          buttonCss: "py-1.5 px-5 bg-gray-200 hover:bg-gray-300",
           btnClick: modalClose,
         },
         ...(permission.Edit

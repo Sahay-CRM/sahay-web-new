@@ -871,11 +871,28 @@ interface DataPoint {
   dataPointLabel: string;
 }
 
+interface Assignee {
+  dataPointEmpId: string;
+  employeeName: string;
+  value1: string | number | null;
+  value2?: string | number | null;
+}
+
+interface Kpi {
+  kpiId: string;
+  kpiName: string;
+  kpiLabel: string;
+  unit: string | null;
+  validationType: string;
+  assignees: Assignee[];
+  isVisualized: boolean;
+}
+
 interface FrequencyData {
   srNo: number;
   frequencyType: string;
-  dataPoint: DataPoint[];
-  count?: number;
+  kpis: Kpi[];
+  count: number;
 }
 
 type FrequencyDataArray = FrequencyData[];
@@ -906,4 +923,15 @@ interface HealthScoreResponse {
   message: string;
   companyResult: CompanyResult;
   individualResult: IndividualResult[];
+}
+
+interface KpiDataCell {
+  dataPointEmpId: string;
+  validationType: string;
+  startDate: string;
+  endDate: string;
+  data: string | number | null;
+  value1?: string | number | null;
+  value2?: string | number | null;
+  avg?: string | number | null;
 }

@@ -10,6 +10,12 @@ import { FormProvider, useForm } from "react-hook-form";
 import SearchInput from "@/components/shared/SearchInput";
 import { RefreshCw } from "lucide-react";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function Product() {
   const {
@@ -92,15 +98,25 @@ export default function Product() {
               setPaginationFilter={setPaginationFilter}
               className="w-80"
             />
-          </div>
-
+          </div>{" "}
           <div className="flex items-center gap-2">
             {canToggleColumns && (
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-                columnIcon={true}
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DropdownSearchMenu
+                        columns={columnToggleOptions}
+                        onToggleColumn={onToggleColumn}
+                        columnIcon={true}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs text-white">Toggle Visible Columns</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
             <Button
               variant="outline"

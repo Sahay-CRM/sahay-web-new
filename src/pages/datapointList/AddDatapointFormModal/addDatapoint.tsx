@@ -4,6 +4,7 @@ import useAddDatapoint from "./useAddDatapoint";
 import { FormProvider, useForm } from "react-hook-form";
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
+import Loader from "@/components/shared/Loader/Loader";
 
 const AddDatapoint = () => {
   const {
@@ -20,7 +21,10 @@ const AddDatapoint = () => {
     trigger,
     KpiPreview,
     skipToStep,
+    isLoading,
   } = useAddDatapoint();
+
+  const methods = useForm({ mode: "onChange" });
 
   const steps = [
     <Kpi />,
@@ -50,7 +54,7 @@ const AddDatapoint = () => {
             "Goal Value",
           ]
         : [
-            "Kpi",
+            "KPI",
             "Frequency",
             "Core Parameter",
             "Product",
@@ -68,7 +72,11 @@ const AddDatapoint = () => {
     isLastStep,
   } = useStepForm(visibleSteps, trigger);
 
-  const methods = useForm({ mode: "onChange" });
+  // Show loader while API data is being fetched
+  if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <FormProvider {...methods}>
       <div>

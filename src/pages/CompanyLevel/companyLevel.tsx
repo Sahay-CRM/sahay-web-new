@@ -31,10 +31,11 @@ export default function CompanyLevelAssign() {
           Company Level Assign
         </h1>
         <div className="flex justify-end">
+          {" "}
           {(permission.Add || permission.Edit) && (
             <button
               type="button"
-              className="mt-4 mb-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
+              className="mt-4 mb-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark disabled:bg-primary/50 disabled:cursor-not-allowed"
               onClick={handleSave}
               disabled={isSaving}
             >
@@ -55,7 +56,7 @@ export default function CompanyLevelAssign() {
                         key={option.value}
                         className={`flex items-center border-b last:border-0 py-1.5 px-1.5 pl-4 ${
                           selectedCoreParameters === option.value
-                            ? "bg-blue-600 text-white"
+                            ? "bg-primary text-white"
                             : ""
                         } cursor-pointer`}
                         onClick={() => {
@@ -89,7 +90,7 @@ export default function CompanyLevelAssign() {
                           selectedLevel === level.levelId
                         ) {
                           // If no selection, default is blue. If selected, selected is blue.
-                          liClass += " bg-blue-600 text-white";
+                          liClass += " bg-primary text-white";
                         } else if (
                           selectedLevel !== "" &&
                           defaultLevelId === level.levelId

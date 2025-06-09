@@ -123,6 +123,12 @@ const TableData = <T extends Record<string, unknown>>({
 
   const permission = useSelector(getUserPermission)?.[moduleKey];
 
+  // Determine if the Actions column should be shown
+  const showActionsColumn =
+    typeof isActionButton === "function"
+      ? tableData.some((item) => isActionButton(item))
+      : true;
+
   const handleCheckboxChange = (item: T, isChecked: boolean) => {
     const selectedItems = Array.isArray(selectedValue) ? selectedValue : [];
 
@@ -254,9 +260,11 @@ const TableData = <T extends Record<string, unknown>>({
                   </div>
                 </TableHead>
               ))}
-              <TableHead className="w-[100px] sticky right-0 text-left pr-6 bg-primary">
-                Actions
-              </TableHead>
+              {showActionsColumn && (
+                <TableHead className="w-[100px] sticky right-0 text-left pr-6 bg-primary">
+                  Actions
+                </TableHead>
+              )}
             </TableRow>
           </TableHeader>
 
@@ -411,97 +419,99 @@ const TableData = <T extends Record<string, unknown>>({
                       )}
                     </TableCell>
                   ))}
-                  <TableCell
-                    className="text-left sticky right-0 pr-6 bg-white"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex gap-1 items-center justify-start">
-                      {isEditDelete &&
-                        isActionButton?.(item) &&
-                        permission?.Edit && (
+                  {showActionsColumn && (
+                    <TableCell
+                      className="text-left sticky right-0 pr-6 bg-white"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex gap-1 items-center justify-start">
+                        {isEditDelete &&
+                          isActionButton?.(item) &&
+                          permission?.Edit && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => onEdit?.(item)}
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Edit</TooltipContent>
+                            </Tooltip>
+                          )}
+                        {isEditDelete &&
+                          isActionButton?.(item) &&
+                          permission?.Delete &&
+                          (!canDelete || canDelete(item)) && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-red-600"
+                                  onClick={() => onDelete?.(item)}
+                                >
+                                  <Trash className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Delete</TooltipContent>
+                            </Tooltip>
+                          )}
+                        {customActions?.(item)}
+                        {typeof additionalButton === "function"
+                          ? additionalButton(item) &&
+                            permission?.Edit && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    onClick={() => onAdditionButton(item)}
+                                  >
+                                    <KeyRound className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Permission</TooltipContent>
+                              </Tooltip>
+                            )
+                          : additionalButton &&
+                            permission?.Edit && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    onClick={() => onAdditionButton(item)}
+                                  >
+                                    <KeyRound className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Permission</TooltipContent>
+                              </Tooltip>
+                            )}
+                        {viewButton && (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="outline"
                                 size="sm"
                                 className="h-8 w-8 p-0"
-                                onClick={() => onEdit?.(item)}
+                                onClick={() => onViewButton(item)}
                               >
-                                <Pencil className="w-4 h-4" />
+                                <EyeIcon className="w-4 h-4" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Edit</TooltipContent>
+                            <TooltipContent>View</TooltipContent>
                           </Tooltip>
                         )}
-                      {isEditDelete &&
-                        isActionButton?.(item) &&
-                        permission?.Delete &&
-                        (!canDelete || canDelete(item)) && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-red-600"
-                                onClick={() => onDelete?.(item)}
-                              >
-                                <Trash className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Delete</TooltipContent>
-                          </Tooltip>
-                        )}
-                      {customActions?.(item)}
-                      {typeof additionalButton === "function"
-                        ? additionalButton(item) &&
-                          permission?.Edit && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
-                                  onClick={() => onAdditionButton(item)}
-                                >
-                                  <KeyRound className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Permission</TooltipContent>
-                            </Tooltip>
-                          )
-                        : additionalButton &&
-                          permission?.Edit && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
-                                  onClick={() => onAdditionButton(item)}
-                                >
-                                  <KeyRound className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Permission</TooltipContent>
-                            </Tooltip>
-                          )}
-                      {viewButton && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => onViewButton(item)}
-                            >
-                              <EyeIcon className="w-4 h-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>View</TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
-                  </TableCell>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             ) : (

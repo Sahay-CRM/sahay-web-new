@@ -16,6 +16,7 @@ import useGetUserPermission from "./useGetUserPermission";
 import { companyNavigationData } from "@/features/utils/navigation.data";
 import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
 import logoImg from "@/assets/logo_1.png";
+import LucideIcon from "@/components/shared/Icons/LucideIcon";
 
 import {
   DropdownMenu,
@@ -39,6 +40,10 @@ const DashboardLayout = () => {
   const dispatch = useDispatch();
   const toggleDrawer = useCallback((e: { preventDefault: () => void }) => {
     e?.preventDefault();
+    setOpen((prev) => !prev);
+  }, []);
+
+  const handleToggleDrawer = useCallback(() => {
     setOpen((prev) => !prev);
   }, []);
   const [isCompanyModalOpen, setCompanyModalOpen] = useState(false);
@@ -116,7 +121,11 @@ const DashboardLayout = () => {
           open ? "w-[260px]" : "hidden sm:block sm:w-16"
         } bg-white rounded-tr-2xl transition-all duration-300`}
       >
-        <VerticalNavBar isExpanded={open} data={companyNavigationData} />
+        <VerticalNavBar
+          isExpanded={open}
+          data={companyNavigationData}
+          onToggleDrawer={handleToggleDrawer}
+        />
       </div>
       <div className="flex flex-col flex-1 overflow-hidden gap-y-4">
         <div
@@ -126,11 +135,12 @@ const DashboardLayout = () => {
           className="h-16 flex items-center justify-between px-6 rounded-2xl mt-2 mx-4 sm:ml-0"
         >
           <div className="text-xl font-semibold flex items-center gap-x-2">
+            {" "}
             <div
               onClick={toggleDrawer}
               className="w-6 flex items-center justify-center mr-3 cursor-pointer"
             >
-              <i className={`bx bx-menu text-2xl`} />
+              <LucideIcon name="Menu" size={24} />
             </div>
             {/* <Breadcrumbs items={breadcrumbs} /> */}
           </div>
