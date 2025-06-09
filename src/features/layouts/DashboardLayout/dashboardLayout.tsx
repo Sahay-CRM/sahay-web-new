@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { baseUrl } from "@/features/utils/urls.utils";
+import { ImageBaseURL } from "@/features/utils/urls.utils";
 import CompanyModal from "@/pages/auth/login/CompanyModal";
 import { useGetCompanyList } from "@/features/api/SelectCompany";
 import { verifyCompanyOtpMutation } from "@/features/api/login";
@@ -62,7 +62,7 @@ const DashboardLayout = () => {
 
   //  const { breadcrumbs } = useBreadcrumbs();
   const { bgColor } = useSidebarTheme();
-  const profileImage = `${baseUrl}/share/profilePics/${user?.photo}`;
+  const profileImage = `${ImageBaseURL}/share/profilePics/${user?.photo}`;
 
   useEffect(() => {
     if (permission) {
