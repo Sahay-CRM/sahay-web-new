@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
 
@@ -16,8 +16,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function CompanyDesignation() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Company Employee", href: "" }]);
+  }, [setBreadcrumbs]);
+
   const {
     employeedata,
     isLoading,

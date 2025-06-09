@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useProduct from "./useProduct";
 import { Button } from "@/components/ui/button";
 import ConformationDeleteModal from "./conformationDeleteModal";
@@ -16,8 +16,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function Product() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Product", href: "" }]);
+  }, [setBreadcrumbs]);
+
   const {
     product,
     isLoading,

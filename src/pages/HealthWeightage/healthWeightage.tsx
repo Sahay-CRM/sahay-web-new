@@ -4,6 +4,8 @@ import ScoreDataTable from "@/components/shared/DataTable/HealthScore/ScoreDataT
 import FormSelect from "@/components/shared/Form/FormSelect";
 import useHealthWeightage from "./useHealthWeightage";
 import useUpdateHealthWeightage from "@/features/api/Business/useUpdateHealthWeightage";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useEffect } from "react";
 
 export default function HealthWeightage() {
   const {
@@ -21,6 +23,12 @@ export default function HealthWeightage() {
     level,
     handleSwitchChange,
   } = useHealthWeightage();
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Health Weightage", href: "" }]);
+  }, [setBreadcrumbs]);
 
   const { mutate: updateHealthWeightage } = useUpdateHealthWeightage();
 

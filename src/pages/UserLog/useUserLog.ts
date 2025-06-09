@@ -18,7 +18,13 @@ export default function UseUserLog() {
   const { data: employee } = ddAllEmployee();
 
   const formatDate = (date: Date | undefined): string | undefined => {
-    return date ? date.toISOString().split("T")[0] : undefined;
+    if (!date) return undefined;
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
   };
 
   const { data: employeeLog } = useGetEmployeeLog({
@@ -30,9 +36,24 @@ export default function UseUserLog() {
     enable: !!selectedEmployee,
   });
 
-  const sortedEmployeeLog = employeeLog?.sort((a, b) => {
-    return new Date(b.updateTime).getTime() - new Date(a.updateTime).getTime();
-  });
+  const sortedEmployeeLog = employeeLog
+    ?.filter((log) => {
+      const logDate = new Date(log.updateTime).getTime();
+      const startDate = taskDateRange.taskStartDate
+        ? new Date(taskDateRange.taskStartDate).getTime()
+        : undefined;
+      const endDate = taskDateRange.taskDeadline
+        ? new Date(taskDateRange.taskDeadline).getTime()
+        : undefined;
+
+      return (
+        (!startDate || logDate >= startDate) && (!endDate || logDate <= endDate)
+      );
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.updateTime).getTime() - new Date(a.updateTime).getTime(),
+    );
 
   const employeeOptions =
     employee?.map((emp) => ({
@@ -64,7 +85,22 @@ export default function UseUserLog() {
   };
 
   const handleDateRangeApply = (range: DateRange | undefined) => {
-    console.log(range);
+    if (range?.from && range?.to) {
+      setTaskDateRange({
+        taskStartDate: range.from,
+        taskDeadline: range.to,
+      });
+    } else if (range?.from) {
+      setTaskDateRange({
+        taskStartDate: range.from,
+        taskDeadline: range.from,
+      });
+    } else {
+      setTaskDateRange({
+        taskStartDate: undefined,
+        taskDeadline: undefined,
+      });
+    }
   };
 
   const handleOptionChange = (value: string | string[]) => {

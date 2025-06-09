@@ -162,7 +162,6 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   const showCheckboxes = multiSelect || (!!selectedValue && !!handleChange);
-  // console.log(tableData);
 
   const tableRef = useRef<HTMLDivElement>(null);
   const permission = useSelector(getUserPermission)?.[moduleKey];
@@ -444,8 +443,6 @@ const TableWithDropdown = <T extends Record<string, unknown>>({
                               options={statusOptions}
                               value={item?.status as string}
                               onChange={(selectedStatus) => {
-                                // console.log(selectedStatus, item);
-
                                 handleStatusChange(
                                   selectedStatus as string,
                                   item,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
@@ -19,6 +19,7 @@ import ViewMeetingModal from "./ViewMeetingModal";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import { format } from "date-fns";
 import DateRangePicker from "@/components/shared/DateRange";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function MeetingList() {
   const {
@@ -46,6 +47,12 @@ export default function MeetingList() {
     showOverdue,
     handleOverdueToggle,
   } = useMeeting();
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Company Meeting", href: "" }]);
+  }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },

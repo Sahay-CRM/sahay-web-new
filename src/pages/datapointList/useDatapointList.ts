@@ -39,11 +39,11 @@ export default function useAdminUser() {
       dataPointLabel: "",
       KPIMasterId: "",
       KPIMaster: "",
-      coreParameter: "",
+      coreParameter: undefined as unknown as CoreParameter,
       unit: "",
-      validationType: "", // Add other types if needed
-      frequencyType: "", // Add other types if needed
-      selectedType: "", // Add other types if needed
+      validationType: "",
+      frequencyType: "",
+      selectedType: "",
       dataPointEmployeeJunction: [],
       DataPointProductJunction: [],
       productIds: [],
@@ -66,11 +66,11 @@ export default function useAdminUser() {
       dataPointLabel: "",
       KPIMasterId: "",
       KPIMaster: "",
-      coreParameter: "",
+      coreParameter: undefined as unknown as CoreParameter,
       unit: "",
-      validationType: "", // Add other types if needed
-      frequencyType: "", // Add other types if needed
-      selectedType: "", // Add other types if needed
+      validationType: "",
+      frequencyType: "",
+      selectedType: "",
       dataPointEmployeeJunction: [],
       DataPointProductJunction: [],
       productIds: [],

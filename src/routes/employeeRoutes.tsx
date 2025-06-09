@@ -55,9 +55,9 @@ const Brand = lazy(() => import("../pages/Brand"));
 const Product = lazy(() => import("../pages/Product"));
 
 const KPIDashboard = lazy(() => import("../pages/kpiDashboard/KpiDashboard"));
-const KPIVisualize = lazy(
-  () => import("../pages/kpiDashboard/KpiVisualizePage"),
-);
+// const KPIVisualize = lazy(
+//   () => import("../pages/kpiDashboard/KpiVisualizePage"),
+// );
 
 const UserLog = lazy(() => import("../pages/UserLog"));
 
@@ -95,7 +95,7 @@ export default function EmployeeRoutes() {
 
         <Route path="datapoint" Component={DatapointList} />
         <Route path="kpi-dashboard" Component={KPIDashboard} />
-        <Route path="kpi-visualize" Component={KPIVisualize} />
+        {/* <Route path="kpi-visualize" Component={KPIVisualize} /> */}
 
         <Route path="healthscore-achieve" Component={Healthscore} />
 

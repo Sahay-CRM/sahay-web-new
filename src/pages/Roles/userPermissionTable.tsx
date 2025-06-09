@@ -1,10 +1,10 @@
 import { useLocation, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useGetUserPerById } from "@/features/api/permission";
-import { useBreadcrumbs } from "@/components/shared/context/BreadcrumbContext";
 import PermissionTable from "@/components/shared/PermissionTable";
 import { Button } from "@/components/ui/button";
 import useUpdateUserPermission from "@/features/api/permission/useUpdateUserPermission";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 interface Permission {
   moduleId: string;
@@ -31,10 +31,9 @@ export default function UserPermissionTable() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Admin", href: "/" },
       {
         label: "User Permissions",
-        href: "/dashboard/role/user-permission",
+        href: "/dashboard/roles/user-permission",
       },
       { label: "Edit Permissions" },
     ]);

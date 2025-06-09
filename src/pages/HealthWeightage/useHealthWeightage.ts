@@ -33,7 +33,6 @@ export default function useHealthWeightage() {
     },
     enable: !!coreParameterId && !!level,
   });
-  // console.log(healthScoreList);
 
   // const { data: healthScoreList } = useGetHealthScoreByCore(coreParameterId);
   const permission = useSelector(getUserPermission).HEALTH_WEIGHTAGE;

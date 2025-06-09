@@ -5,6 +5,8 @@ import { FormProvider, useForm } from "react-hook-form";
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import Loader from "@/components/shared/Loader/Loader";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useEffect } from "react";
 
 const AddDatapoint = () => {
   const {
@@ -22,7 +24,17 @@ const AddDatapoint = () => {
     KpiPreview,
     skipToStep,
     isLoading,
+    companykpimasterId,
   } = useAddDatapoint();
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "KPI List", href: "" },
+      { label: companykpimasterId ? "Update KPI" : "Add KPI", href: "" },
+    ]);
+  }, [companykpimasterId, setBreadcrumbs]);
 
   const methods = useForm({ mode: "onChange" });
 

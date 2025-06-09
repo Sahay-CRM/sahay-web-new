@@ -34,6 +34,7 @@ import { verifyCompanyOtpMutation } from "@/features/api/login";
 import { useAuth } from "@/features/auth/useAuth";
 import { queryClient } from "@/queryClient";
 import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
@@ -59,10 +60,6 @@ const DashboardLayout = () => {
 
   const { data: companies } = useGetCompanyList();
 
-  const breadcrumbs = [
-    { label: "Admin", href: "/" },
-    { label: "Countrysss", href: "/" },
-  ];
   //  const { breadcrumbs } = useBreadcrumbs();
   const { bgColor } = useSidebarTheme();
   const profileImage = `${baseUrl}/share/profilePics/${user?.photo}`;
@@ -113,7 +110,7 @@ const DashboardLayout = () => {
     });
   };
 
-  <Breadcrumbs items={breadcrumbs} />;
+  const { breadcrumbs } = useBreadcrumbs();
   return (
     <div className="flex h-screen bg-gray-200 gap-x-4">
       <div
@@ -142,7 +139,7 @@ const DashboardLayout = () => {
             >
               <LucideIcon name="Menu" size={24} />
             </div>
-            {/* <Breadcrumbs items={breadcrumbs} /> */}
+            <Breadcrumbs items={breadcrumbs} />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

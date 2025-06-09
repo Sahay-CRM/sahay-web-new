@@ -839,5 +839,6 @@ export default function useAddEmployee() {
     trigger,
     skipToStep: isUpdateMode ? 5 : isUpdateModeforFalse ? 1 : 0,
     isLoading: isDatapointLoading,
+    companykpimasterId,
   };
 }

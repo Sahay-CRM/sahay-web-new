@@ -125,6 +125,14 @@ export const companyNavigationData = [
     permission: "View",
     moduleKey: "PRODUCT",
   },
+  {
+    id: 13,
+    icon: "Logs",
+    label: "User Log",
+    link: "/dashboard/user-log",
+    permission: "View",
+    moduleKey: "PRODUCT",
+  },
   // {
   //   id: 15,
   //   icon: "bx bx-cog",

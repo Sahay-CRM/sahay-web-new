@@ -889,7 +889,7 @@ interface Kpi {
 }
 
 interface FrequencyData {
-  srNo: number;
+  srNo?: number;
   frequencyType: string;
   kpis: Kpi[];
   count: number;
@@ -915,6 +915,7 @@ interface IndividualResult {
   totalWeightageCP: number;
   totalScoreCP: number;
   healthPercentage: number;
+  coreParameterName: string;
 }
 
 interface HealthScoreResponse {

@@ -48,9 +48,8 @@ export default function useAddEmployee() {
     trigger,
     reset,
     getValues,
-    setValue, // <-- add setValue
+    setValue,
   } = methods;
-  // console.log(getValues());
 
   useEffect(() => {
     if (meetingApiData?.data) {
@@ -170,7 +169,6 @@ export default function useAddEmployee() {
 
     // Handle removed file IDs (send in a separate request, no file field)
     if (removedFileIds.length > 0) {
-      // console.log("Uploading removed file IDs:", removedFileIds);
       const formData = new FormData();
       formData.append("refId", meetingId);
       formData.append("imageType", "MEETING");
@@ -478,11 +476,6 @@ export default function useAddEmployee() {
     const newFiles = uploadedFiles.filter((_, idx) => idx !== index);
     setUploadedFiles(newFiles);
     setValue("meetingDocuments", newFiles);
-
-    // Log removed IDs after each removal (only if there are removed file IDs)
-    // if (updatedRemovedIds.length > 0) {
-    //   console.log("Removed fileIds:", JSON.stringify(updatedRemovedIds));
-    // }
   };
 
   // UploadDoc step component with file list and remove option, no preview
@@ -562,5 +555,6 @@ export default function useAddEmployee() {
     trigger,
     UploadDoc,
     methods, // Export methods for FormProvider
+    companyMeetingId,
   };
 }

@@ -7,7 +7,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 
 import DateRangePicker from "@/components/shared/DateRange";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Tooltip,
@@ -19,6 +19,7 @@ import {
 import ViewMeetingModal from "./ViewMeetingModal";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import TableData from "@/components/shared/DataTable/DataTable";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function CompanyTaskList() {
   const {
@@ -47,6 +48,12 @@ export default function CompanyTaskList() {
     viewModalData,
     taskStatus,
   } = useCompanyTaskList();
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Company Task", href: "" }]);
+  }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },

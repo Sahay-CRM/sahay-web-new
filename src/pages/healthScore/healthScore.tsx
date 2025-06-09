@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import useHealthScore from "./useHealthScore";
 import ScoreDataTable from "@/components/shared/DataTable/HealthScore/ScoreDataTable";
 import FormSelect from "@/components/shared/Form/FormSelect";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useEffect } from "react";
 
 export default function HealthScoreList() {
   const {
@@ -21,6 +23,12 @@ export default function HealthScoreList() {
   } = useHealthScore();
 
   const { control } = formMethods;
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Health Score", href: "" }]);
+  }, [setBreadcrumbs]);
 
   const isCoreSelected = !!coreParameterId;
 

@@ -21,7 +21,6 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
   const joiners = joinersArr
     ?.filter((joiner) => !Array.isArray(joiner))
     .map((joiner) => joiner?.employeeName);
-  // console.log(modalData, "<=====");
 
   return (
     <ModalData

@@ -1,5 +1,7 @@
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import useCompanyLevel from "./useCompanyLevel";
 import { FormProvider, useForm } from "react-hook-form";
+import { useEffect } from "react";
 
 export default function CompanyLevelAssign() {
   const methods = useForm();
@@ -17,6 +19,12 @@ export default function CompanyLevelAssign() {
     permission,
     companyLevelAssign, // <-- add this
   } = useCompanyLevel();
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Company Level", href: "" }]);
+  }, [setBreadcrumbs]);
 
   // Find the default levelId for the selected core parameter
   const defaultLevelId = companyLevelAssign?.data?.find(

@@ -3,8 +3,16 @@ import { Card } from "@/components/ui/card";
 import UseUserLog from "./useUserLog";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { FormProvider, useForm } from "react-hook-form";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useEffect } from "react";
 
 export default function useDeleteUserLog() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "User Log", href: "" }]);
+  }, [setBreadcrumbs]);
+
   const methods = useForm();
   const {
     handleDateRangeChange,
