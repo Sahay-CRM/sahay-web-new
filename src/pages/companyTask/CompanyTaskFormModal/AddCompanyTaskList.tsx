@@ -8,6 +8,8 @@ import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import { useAddCompanyEmployee } from "./useAddCompanyTaskList";
 import TableData from "@/components/shared/DataTable/DataTable";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useEffect } from "react";
 
 interface AddAdminMeetingProps {
   isEditMode?: boolean;
@@ -37,6 +39,18 @@ export default function AddMeeting({
     meetingData,
     taskId,
   } = useAddCompanyEmployee();
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "Company Employee", href: "/dashboard/company-employee" },
+      {
+        label: taskId ? "Update Task" : "Add Task",
+        href: "",
+      },
+    ]);
+  }, [setBreadcrumbs, taskId]);
 
   const {
     register,

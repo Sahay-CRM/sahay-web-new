@@ -4,6 +4,8 @@ import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import useAddProject from "./useAddProject";
 import AddProjectModal from "./addProjectModal";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useEffect } from "react";
 
 const AddProject = () => {
   const {
@@ -18,8 +20,23 @@ const AddProject = () => {
     Employees,
     trigger,
     meetingPreview,
+    companyProjectId,
     methods, // Get form methods from the hook
   } = useAddProject();
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "Company Employee", href: "/dashboard/company-employee" },
+      {
+        label: companyProjectId
+          ? "Update Company Project"
+          : "Add Company Project",
+        href: "",
+      },
+    ]);
+  }, [setBreadcrumbs, companyProjectId]);
 
   // Build steps array based on showNextStep
   const steps = [

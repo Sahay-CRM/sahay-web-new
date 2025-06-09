@@ -27,9 +27,13 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
             <div key={index} className="flex  items-center text-primary gap-2">
               <BreadcrumbItem>
                 {isLast || !item.href ? (
-                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                  <BreadcrumbPage className="text-[15px]">
+                    {item.label}
+                  </BreadcrumbPage>
                 ) : (
-                  <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
+                  <BreadcrumbLink href={item.href} className="text-[15px]">
+                    {item.label}
+                  </BreadcrumbLink>
                 )}
               </BreadcrumbItem>
               {!isLast && <BreadcrumbSeparator />}

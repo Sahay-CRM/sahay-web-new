@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyProject from "./useCompanyProject";
@@ -17,8 +17,15 @@ import {
 } from "@/components/ui/tooltip";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import TableData from "@/components/shared/DataTable/DataTable";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function CompanyProject() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Company Project", href: "" }]);
+  }, [setBreadcrumbs]);
+
   const {
     projectlistdata,
     closeDeleteModal,

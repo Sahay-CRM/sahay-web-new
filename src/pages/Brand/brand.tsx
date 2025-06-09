@@ -8,8 +8,16 @@ import SearchInput from "@/components/shared/SearchInput";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 
 import useBrand from "./useBrand";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useEffect } from "react";
 
 export default function Brand() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Brand", href: "" }]);
+  }, [setBreadcrumbs]);
+
   const {
     brand,
     isLoading,
@@ -28,8 +36,6 @@ export default function Brand() {
   } = useBrand();
 
   const methods = useForm();
-
-  // const paginationDetails = mapPaginationDetails(brand);
 
   if (permission && permission.View === false) {
     return <PageNotAccess />;

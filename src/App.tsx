@@ -3,8 +3,8 @@ import AppRoutes from "./routes";
 import { queryClient } from "./queryClient";
 import AuthProvider from "./features/auth/AuthProvider";
 import { SidebarThemeProvider } from "./features/auth/SidebarThemeProvider";
-import { BreadcrumbProvider } from "./components/shared/context/BreadcrumbContext";
 import { Toaster } from "sonner";
+import { BreadcrumbProvider } from "./features/context/BreadcrumbContext";
 
 function App() {
   return (

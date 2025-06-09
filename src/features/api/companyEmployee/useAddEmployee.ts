@@ -26,6 +26,7 @@ export default function useAddOrUpdateEmployee() {
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["get-employee-list"] });
+      queryClient.resetQueries({ queryKey: ["dd-employee-Data"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

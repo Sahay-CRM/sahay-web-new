@@ -6,11 +6,21 @@ import { format } from "date-fns";
 import useViewTask from "./useViewTask";
 import { Controller, FormProvider } from "react-hook-form";
 import FormSelect from "@/components/shared/Form/FormSelect";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function CompanyTaskView() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "Company Task", href: "/dashboard/tasks" },
+      { label: "View Task", href: "" },
+    ]);
+  }, [setBreadcrumbs]);
+
   const [showCommentInput, setShowCommentInput] = useState(false);
   const { taskApiData, navigate, statusOptions, handleStatusChange, methods } =
     useViewTask();

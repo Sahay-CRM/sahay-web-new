@@ -4,7 +4,7 @@ import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { queryClient } from "@/queryClient";
 import { AxiosError } from "axios";
-type DatePaging = BaseResponse<CompanyMeetingDataProps>;
+type DatePaging = CommonResponse<EmployeeData>;
 
 export default function useDeleteEmployee() {
   const deleteEmployeeMutation = useMutation({
@@ -21,6 +21,7 @@ export default function useDeleteEmployee() {
     onSuccess: (response) => {
       toast.success(response?.message);
       queryClient.resetQueries({ queryKey: ["get-employee-list"] });
+      queryClient.resetQueries({ queryKey: ["dd-employee-Data"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

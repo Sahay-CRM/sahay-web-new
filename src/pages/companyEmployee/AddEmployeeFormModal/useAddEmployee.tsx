@@ -266,7 +266,7 @@ export default function useAddEmployee() {
     );
   };
 
-  const EmployeeType = () => {
+  const Designation = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
       pageSize: 10,
@@ -441,7 +441,7 @@ export default function useAddEmployee() {
     onSubmit,
     EmployeeStatus,
     DepartmentSelect,
-    EmployeeType,
+    Designation,
     ReportingManage,
     employeePreview: getValues(),
     companyEmployeeId,

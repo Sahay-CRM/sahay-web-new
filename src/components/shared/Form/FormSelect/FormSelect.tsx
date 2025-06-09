@@ -6,13 +6,15 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { FormLabel, FormControl } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { isColorDark } from "@/features/utils/color.utils";
+import { useState } from "react";
 
 interface Option {
   id?: string | number;
   value?: string | number;
   label?: string | number;
-  color?: string; // Add color property
+  color?: string;
 }
 
 interface FormSelectProps {
@@ -27,12 +29,13 @@ interface FormSelectProps {
   className?: string;
   isMulti?: boolean;
   isMandatory?: boolean;
+  isSearchable?: boolean; // Add isSearchable prop
 }
 
 export default function FormSelect({
   id,
   label,
-  value,
+  value = "", // Default value to prevent uncontrolled behavior
   onChange,
   options,
   disabled = false,
@@ -41,7 +44,16 @@ export default function FormSelect({
   placeholder = "Select an option",
   isMulti = false,
   isMandatory = false,
+  isSearchable = false, // Default to false
 }: FormSelectProps) {
+  const [searchTerm, setSearchTerm] = useState(""); // State for search term
+
+  const filteredOptions = isSearchable
+    ? options.filter((opt) =>
+        String(opt.label).toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+    : options;
+
   // Helper to toggle selection for multi-select
   const toggleValue = (val: string) => {
     if (!Array.isArray(value)) {
@@ -98,7 +110,7 @@ export default function FormSelect({
       )}
 
       <Select
-        value={isMulti ? "" : (value as string | undefined)} // Always empty for multi-select to prevent conflicts
+        value={isMulti ? "" : (value as string | undefined)} // Ensure value is always a string or undefined
         onValueChange={(val) => {
           if (isMulti) {
             toggleValue(val);
@@ -110,7 +122,13 @@ export default function FormSelect({
       >
         <FormControl>
           <SelectTrigger
-            className={`w-full mb-1 py-5 custom-select-trigger ${selectedColor ? (selectedTextColor === "#fff" ? "text-white" : "text-black") : "text-black"}`}
+            className={`w-full mb-1 py-5 custom-select-trigger ${
+              selectedColor
+                ? selectedTextColor === "#fff"
+                  ? "text-white"
+                  : "text-black"
+                : "text-black"
+            }`}
             id={id}
             style={
               selectedColor
@@ -130,7 +148,17 @@ export default function FormSelect({
         </FormControl>
 
         <SelectContent className="w-full max-h-60 overflow-auto">
-          {options
+          {isSearchable && (
+            <div className="p-2">
+              <Input
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)} // Keep dropdown open while typing
+                className="mb-2"
+              />
+            </div>
+          )}
+          {filteredOptions
             .filter((opt) => opt.value !== undefined && opt.value !== "")
             .map((opt) => {
               const stringVal = String(opt.value);

@@ -935,3 +935,9 @@ interface KpiDataCell {
   value2?: string | number | null;
   avg?: string | number | null;
 }
+
+interface UserLogDetails {
+  id: string;
+  updateDetail: string;
+  updateTime: string | Date;
+}

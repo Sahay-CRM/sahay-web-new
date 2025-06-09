@@ -5,13 +5,14 @@ import useCalendar from "./useCompanyImportantDates";
 import { enUS } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Button } from "@/components/ui/button";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { dateFnsLocalizer } from "react-big-calendar";
 import { Calendar as BigCalendar } from "react-big-calendar";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { FormProvider, useForm } from "react-hook-form";
 import CalenderFormModal from "./calenderFormModal/CalenderFormModal";
 import { useNavigate } from "react-router-dom";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 const locales = {
   "en-US": enUS,
@@ -39,6 +40,12 @@ function Calendar() {
     modalData,
     permission,
   } = useCalendar();
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Calendar", href: "" }]);
+  }, [setBreadcrumbs]);
 
   const [selectedOption, setSelectedOption] = useState<
     "all" | "task" | "meeting" | "importantDate"

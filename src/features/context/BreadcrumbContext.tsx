@@ -1,34 +1,34 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
-export type BreadcrumbItem = {
+type BreadcrumbItemType = {
   label: string;
   href?: string;
 };
 
-type BreadcrumbContextType = {
-  breadcrumbs: BreadcrumbItem[];
-  setBreadcrumbs: (items: BreadcrumbItem[]) => void;
-};
+interface BreadcrumbContextType {
+  breadcrumbs: BreadcrumbItemType[];
+  setBreadcrumbs: (breadcrumbs: BreadcrumbItemType[]) => void;
+}
 
 const BreadcrumbContext = createContext<BreadcrumbContextType | undefined>(
   undefined,
 );
 
-export const BreadcrumbProvider = ({ children }: { children: ReactNode }) => {
-  const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([]);
+export function BreadcrumbProvider({ children }: { children: ReactNode }) {
+  const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItemType[]>([]);
 
   return (
     <BreadcrumbContext.Provider value={{ breadcrumbs, setBreadcrumbs }}>
       {children}
     </BreadcrumbContext.Provider>
   );
-};
+}
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useBreadcrumbs = () => {
+export function useBreadcrumbs() {
   const context = useContext(BreadcrumbContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useBreadcrumbs must be used within a BreadcrumbProvider");
   }
   return context;
-};
+}

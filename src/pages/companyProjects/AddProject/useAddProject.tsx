@@ -633,6 +633,7 @@ export default function useAddProject() {
     meetingPreview: getValues(),
     trigger,
     setValue,
-    methods, // Return form methods for FormProvider
+    methods,
+    companyProjectId,
   };
 }

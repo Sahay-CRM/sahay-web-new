@@ -48,7 +48,8 @@ const AddCompanyProjectList = lazy(
 const AddCompanyDatapoint = lazy(
   () => import("../pages/datapointList/AddDatapointFormModal"),
 );
-const AddGraph = lazy(() => import("../pages/Graph/graph"));
+const AddGraph = lazy(() => import("../pages/homePage"));
+// const AddGraph = lazy(() => import("../pages/Graph/graph"));
 
 const Brand = lazy(() => import("../pages/Brand"));
 const Product = lazy(() => import("../pages/Product"));
@@ -58,11 +59,14 @@ const KPIVisualize = lazy(
   () => import("../pages/kpiDashboard/KpiVisualizePage"),
 );
 
+const UserLog = lazy(() => import("../pages/UserLog"));
+
 export default function EmployeeRoutes() {
   return (
     <Routes>
       <Route index element={<Navigate to="/dashboard" replace />} />
       <Route path="/dashboard" element={<DashboardLayout />}>
+        <Route index element={<AddGraph />} />
         <Route path="profile" Component={Profile} />
         <Route path="settings" Component={Theme} />
         <Route path="company-designation" Component={companydesignation} />
@@ -89,8 +93,6 @@ export default function EmployeeRoutes() {
         <Route path="kpi/add" element={<AddCompanyDatapoint />} />
         <Route path="kpi/edit/:id" element={<AddCompanyDatapoint />} />
 
-        <Route index element={<AddGraph />} />
-
         <Route path="datapoint" Component={DatapointList} />
         <Route path="kpi-dashboard" Component={KPIDashboard} />
         <Route path="kpi-visualize" Component={KPIVisualize} />
@@ -109,6 +111,7 @@ export default function EmployeeRoutes() {
         </Route>
         <Route path="brand" Component={Brand} />
         <Route path="product" Component={Product} />
+        <Route path="user-log" Component={UserLog} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

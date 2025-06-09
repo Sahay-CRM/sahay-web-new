@@ -8,3 +8,5 @@ npm install --legacy-peer-deps
 <!-- step:2 -->
 
 npm install react-colorful --legacy-peer-deps
+
+<!-- any package install use --legacy-peer-deps -->

@@ -8,15 +8,14 @@ import {
   getUserPermission,
 } from "@/features/selectors/auth.selector";
 import { Link } from "react-router-dom";
+import { ImageBaseURL } from "@/features/utils/urls.utils";
 
 const FullNavBar = ({ data }: FullNavBarProps) => {
   const permissions = useSelector(getUserPermission);
 
-  const BaseURL = import.meta.env.VITE_IMAGEURL;
-
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   const user = useSelector(getUserDetail);
-  const companyUrl = `${BaseURL}/share/logo/${user?.companyLogo}`;
+  const companyUrl = `${ImageBaseURL}/share/logo/${user?.companyLogo}`;
 
   const handleAccordionToggle = (index: number) => {
     setActiveIndex((prevIndex) => (prevIndex === index ? -1 : index));

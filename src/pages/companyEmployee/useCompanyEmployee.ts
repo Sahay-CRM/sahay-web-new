@@ -1,5 +1,6 @@
 import { deleteEmployee, getEmployee } from "@/features/api/companyEmployee";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { AxiosError } from "axios";
 import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
 
@@ -101,6 +102,9 @@ export default function useAdminUser() {
       deleteEmployeeById(modalData.employeeId, {
         onSuccess: () => {
           closeDeleteModal();
+        },
+        onError: (error: AxiosError<{ message?: string }>) => {
+          setIsChildData(error.response?.data?.message);
         },
       });
     }

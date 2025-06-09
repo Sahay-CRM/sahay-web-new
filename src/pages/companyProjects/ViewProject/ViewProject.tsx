@@ -7,8 +7,19 @@ import useViewProject from "./useViewProject";
 import { Controller, FormProvider } from "react-hook-form";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { Link } from "react-router-dom";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useEffect } from "react";
 
 const ProjectView = () => {
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "Company Project", href: "/dashboard/projects" },
+      { label: "View Company Project", href: "" },
+    ]);
+  }, [setBreadcrumbs]);
+
   const {
     projectApiData,
     navigate,
