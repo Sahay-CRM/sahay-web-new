@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
@@ -7,11 +7,24 @@ import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownS
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+import ViewMeetingModal from "./ViewMeetingModal";
+import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import { format } from "date-fns";
+import DateRangePicker from "@/components/shared/DateRange";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function MeetingList() {
   const {
     meetingData,
+    isLoading,
     closeDeleteModal,
     setPaginationFilter,
     onDelete,
@@ -25,10 +38,21 @@ export default function MeetingList() {
     filters,
     handleFilterChange,
     handleRowsModalOpen,
-    // isRowModal,
+    isViewModalOpen,
+    setIsViewModalOpen,
+    viewModalData,
+    handleStatusChange,
+    handleDateRangeChange,
+    handleDateRangeApply,
+    showOverdue,
+    handleOverdueToggle,
   } = useMeeting();
 
-  // console.log(isRowModal);
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Company Meeting", href: "" }]);
+  }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -40,9 +64,8 @@ export default function MeetingList() {
     },
     { key: "meetingDateTime", label: "Meeting TIme", visible: true },
     { key: "joinerNames", label: "Joiners", visible: true },
+    { key: "meetingStatus", label: "Status", visible: true }, // <-- add this line
   ]);
-
-  const [tableRenderKey, setTableRenderKey] = useState(0);
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
@@ -63,13 +86,6 @@ export default function MeetingList() {
   const methods = useForm();
   const navigate = useNavigate();
 
-  const resetColumnWidths = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("tableWidths_MeetingList");
-    }
-    setTableRenderKey((k) => k + 1);
-  };
-
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
@@ -85,14 +101,25 @@ export default function MeetingList() {
             )}
           </div>
         </div>
-        <div className="flex gap-4 justify-end">
-          <div className="flex items-center gap-2">
+
+        <div className="flex justify-between items-center mb-4">
+          <div>
             <SearchInput
               placeholder="Search..."
               searchValue={paginationFilter?.search || ""}
               setPaginationFilter={setPaginationFilter}
-              className="w-96"
+              className="w-80"
             />
+          </div>
+          <div className="flex gap-4">
+            <div className="z-10 relative flex items-center gap-2">
+              {!showOverdue && (
+                <DateRangePicker
+                  onChange={handleDateRangeChange}
+                  onApply={handleDateRangeApply}
+                />
+              )}
+            </div>
             <div>
               <DropdownSearchMenu
                 label="Status"
@@ -104,35 +131,48 @@ export default function MeetingList() {
                 multiSelect
               />
             </div>
-            {canToggleColumns && (
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-                columnIcon={true}
-              />
-            )}
             <Button
-              variant="outline"
-              size="sm"
-              onClick={resetColumnWidths}
-              className="flex items-center gap-2 cursor-pointer"
+              variant={showOverdue ? "destructive" : "outline"}
+              onClick={handleOverdueToggle}
+              className="py-2 w-fit"
             >
-              <RefreshCw className="h-4 w-4" />
-              Reset
+              {showOverdue ? "Show All Meeting" : "Show Overdue"}
             </Button>
+            {canToggleColumns && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DropdownSearchMenu
+                        columns={columnToggleOptions}
+                        onToggleColumn={onToggleColumn}
+                        columnIcon={true}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs text-white">Toggle Visible Columns</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            key={tableRenderKey}
+            key={meetingData?.currentPage}
             tableData={meetingData?.data.map((item, index) => ({
               ...item,
               srNo:
                 (meetingData.currentPage - 1) * meetingData.pageSize +
                 index +
                 1,
-              meetingDateTime: new Date(item.meetingDateTime).toLocaleString(),
+              status: item.meetingStatusId,
+              meetingDateTime: format(
+                new Date(item.meetingDateTime),
+                "dd/MM/yyyy hh:mm a",
+              ),
               joinerNames:
                 item.joiners
                   ?.map((emp) =>
@@ -160,12 +200,22 @@ export default function MeetingList() {
             onRowClick={(row) => {
               handleRowsModalOpen(row as unknown as MeetingData);
             }}
-            paginationDetails={meetingData}
+            paginationDetails={mapPaginationDetails(meetingData)}
             setPaginationFilter={setPaginationFilter}
-            //   isLoading={isLoading}
+            isLoading={isLoading}
             permissionKey="users"
             localStorageId="MeetingList"
             moduleKey="MEETING_LIST"
+            sortableColumns={["meetingName", "meetingDateTime"]}
+            dropdownColumns={{
+              meetingStatus: {
+                options: statusOptions ?? [],
+                onChange: (row, value) =>
+                  row.meetingId
+                    ? handleStatusChange(value, row.meetingId)
+                    : undefined,
+              },
+            }}
           />
         </div>
         {isDeleteModalOpen && (
@@ -179,6 +229,12 @@ export default function MeetingList() {
             isChildData={isChildData}
           />
         )}
+        {/* View Meeting Modal */}
+        <ViewMeetingModal
+          isModalOpen={isViewModalOpen}
+          modalData={viewModalData}
+          modalClose={() => setIsViewModalOpen(false)}
+        />
       </div>
     </FormProvider>
   );

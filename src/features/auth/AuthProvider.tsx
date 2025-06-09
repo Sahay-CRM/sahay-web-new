@@ -21,8 +21,6 @@ export default function AuthProvider({ children }: AuthProviderProps) {
       try {
         const storedToken = localStorage.getItem("s-authToken");
         const storedUser = localStorage.getItem("USER_DATA");
-        // console.log(storedToken, "<==storedToken");
-        // console.log(storedUser, "<==storedUser");
 
         if (storedToken) {
           setAuthState({

@@ -16,6 +16,10 @@ export default function useAdminUser() {
   const [modalData, setModalData] = useState<IProjectFormData>(
     {} as IProjectFormData,
   );
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewModalData, setViewModalData] = useState<IProjectFormData>(
+    {} as IProjectFormData,
+  );
   const permission = useSelector(getUserPermission).PROJECT_LIST;
   const [currentStatus, setCurrentStatus] = useState<number>(1); // Add state for currentStatus
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
@@ -29,14 +33,15 @@ export default function useAdminUser() {
     currentPage: 1,
     pageSize: 10,
     search: "",
-    status: currentStatus, // Use currentStatus state
   });
 
-  const { data: projectlistdata } = useGetCompanyProject({
+  const { data: projectlistdata, isLoading } = useGetCompanyProject({
     filter: { ...paginationFilter, statusArray: filters.selected },
   });
+
   const { mutate: deleteProjectById } = useDeleteCompanyProject();
   const { data: projectStatusList } = useGetAllProjectStatus();
+
   const statusOptions = Array.isArray(projectStatusList?.data)
     ? projectStatusList.data.map((item: ProjectStatusRes) => ({
         label: item.projectStatus,
@@ -44,6 +49,7 @@ export default function useAdminUser() {
         color: item.color || "#2e3195",
       }))
     : [];
+
   const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = Number(event.target.value);
     setCurrentStatus(newStatus); // Update currentStatus state
@@ -124,7 +130,11 @@ export default function useAdminUser() {
       selected,
     });
   };
-
+  const handleRowsModalOpen = (data: IProjectFormData) => {
+    setViewModalData(data);
+    setIsViewModalOpen(true);
+    // setIsRowModal(true); // REMOVE this line if your view modal does not depend on isRowModal
+  };
   return {
     projectlistdata,
     closeDeleteModal,
@@ -150,5 +160,11 @@ export default function useAdminUser() {
     permission,
     handleFilterChange,
     filters,
+    isLoading,
+    handleRowsModalOpen,
+    isViewModalOpen,
+    setIsViewModalOpen,
+    viewModalData,
+    projectStatusList,
   };
 }

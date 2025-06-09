@@ -32,20 +32,19 @@ export default function useCalenderFormModal({
     register,
     formState: { errors },
     reset,
-    getValues,
     watch,
     setValue,
     setError,
     clearErrors,
-  } = useForm({
-    values: {
+  } = useForm<ImportantDatesDataProps>({
+    defaultValues: {
       ...modalData,
       importantDate: modalData?.importantDate
         ? isoToDisplayDate(modalData.importantDate)
         : "",
+      color: modalData?.color ? String(modalData.color) : "#aabbcc",
     },
   });
-  console.log(getValues());
 
   const { mutate: addImportantDate } = addUpdateImportantDateMutation();
   const onSubmit = handleSubmit(async (data) => {
@@ -66,8 +65,6 @@ export default function useCalenderFormModal({
       importantDate: displayDateToIso(data.importantDate),
     };
 
-    console.log(submitData, "<===");
-
     addImportantDate(submitData, {
       onSuccess: () => {
         handleModalClose();
@@ -86,8 +83,9 @@ export default function useCalenderFormModal({
       importantDate: modalData?.importantDate
         ? isoToDisplayDate(modalData.importantDate)
         : "",
+      color: modalData?.color ? String(modalData.color) : "#aabbcc",
     };
-    reset(formattedData); // Sync form data with modalData when it changes
+    reset(formattedData);
   }, [modalData, reset]);
 
   return {

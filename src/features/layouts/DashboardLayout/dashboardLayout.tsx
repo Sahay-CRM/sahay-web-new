@@ -1,29 +1,40 @@
-import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
-// import { useBreadcrumbs } from "@/components/shared/context/BreadcrumbContext";
-import VerticalNavBar from "@/components/shared/VerticalNavBar/VerticalNavBar";
-import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
-import { logout, setUserPermission } from "@/features/reducers/auth.reducer";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useNavigate } from "react-router-dom";
+import { LogOut, User2Icon } from "lucide-react";
+
+import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
+import VerticalNavBar from "@/components/shared/VerticalNavBar/VerticalNavBar";
+import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
+import {
+  logout,
+  setAuth,
+  setUser,
+  setUserPermission,
+} from "@/features/reducers/auth.reducer";
 import useGetUserPermission from "./useGetUserPermission";
 import { companyNavigationData } from "@/features/utils/navigation.data";
-import { getUserDetail } from "@/features/selectors/auth.selector";
+import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
 import logoImg from "@/assets/logo_1.png";
+import LucideIcon from "@/components/shared/Icons/LucideIcon";
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserIcon } from "@/components/shared/Icons";
-import { LogOut } from "lucide-react";
+
 import { baseUrl } from "@/features/utils/urls.utils";
+import CompanyModal from "@/pages/auth/login/CompanyModal";
+import { useGetCompanyList } from "@/features/api/SelectCompany";
+import { verifyCompanyOtpMutation } from "@/features/api/login";
+import { useAuth } from "@/features/auth/useAuth";
+import { queryClient } from "@/queryClient";
+import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
@@ -32,15 +43,25 @@ const DashboardLayout = () => {
     e?.preventDefault();
     setOpen((prev) => !prev);
   }, []);
-  const { data: permission } = useGetUserPermission();
 
-  const breadcrumbs = [
-    { label: "Admin", href: "/" },
-    { label: "Countrysss", href: "/" },
-  ];
+  const handleToggleDrawer = useCallback(() => {
+    setOpen((prev) => !prev);
+  }, []);
+  const [isCompanyModalOpen, setCompanyModalOpen] = useState(false);
+  const { setToken } = useAuth();
+  const user = useSelector(getUserDetail);
+  const userId = useSelector(getUserId);
+  const navigate = useNavigate();
+
+  const { data: permission } = useGetUserPermission();
+  const { mutate: companyVerifyOtp } = verifyCompanyOtpMutation();
+
+  const { data: userData } = useGetEmployeeById(userId);
+
+  const { data: companies } = useGetCompanyList();
+
   //  const { breadcrumbs } = useBreadcrumbs();
   const { bgColor } = useSidebarTheme();
-  const user = useSelector(getUserDetail);
   const profileImage = `${baseUrl}/share/profilePics/${user?.photo}`;
 
   useEffect(() => {
@@ -48,13 +69,48 @@ const DashboardLayout = () => {
       dispatch(setUserPermission(permission));
     }
   }, [dispatch, permission]);
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (userData && userData.data) {
+      const empData = userData.data;
+
+      dispatch(setUser(empData));
+    }
+  }, [dispatch, user, userData]);
 
   const handleLogout = () => {
     dispatch(logout());
   };
 
-  <Breadcrumbs items={breadcrumbs} />;
+  const handleLogin = async (data: Company) => {
+    const verifyCompanyData = {
+      selectedCompanyId: data.companyId,
+      mobile: user?.mobile ?? "",
+    };
+
+    companyVerifyOtp(verifyCompanyData, {
+      onSuccess: (response) => {
+        if (response?.status) {
+          setToken(response?.data?.token ?? "", response?.data);
+          dispatch(
+            setAuth({
+              token: response.data.token ?? null,
+              isLoading: false,
+              isAuthenticated: true,
+            }),
+          );
+          queryClient.resetQueries({
+            queryKey: ["get-company-list"],
+          });
+          navigate("/dashboard");
+          window.location.reload();
+          setCompanyModalOpen(false);
+        }
+      },
+    });
+  };
+
+  const { breadcrumbs } = useBreadcrumbs();
   return (
     <div className="flex h-screen bg-gray-200 gap-x-4">
       <div
@@ -62,7 +118,11 @@ const DashboardLayout = () => {
           open ? "w-[260px]" : "hidden sm:block sm:w-16"
         } bg-white rounded-tr-2xl transition-all duration-300`}
       >
-        <VerticalNavBar isExpanded={open} data={companyNavigationData} />
+        <VerticalNavBar
+          isExpanded={open}
+          data={companyNavigationData}
+          onToggleDrawer={handleToggleDrawer}
+        />
       </div>
       <div className="flex flex-col flex-1 overflow-hidden gap-y-4">
         <div
@@ -72,25 +132,36 @@ const DashboardLayout = () => {
           className="h-16 flex items-center justify-between px-6 rounded-2xl mt-2 mx-4 sm:ml-0"
         >
           <div className="text-xl font-semibold flex items-center gap-x-2">
+            {" "}
             <div
               onClick={toggleDrawer}
               className="w-6 flex items-center justify-center mr-3 cursor-pointer"
             >
-              <i className={`bx bx-menu text-2xl`} />
+              <LucideIcon name="Menu" size={24} />
             </div>
-            {/* <Breadcrumbs items={breadcrumbs} /> */}
+            <Breadcrumbs items={breadcrumbs} />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div className="flex items-center px-4 py-4-sm mt-auto cursor-pointer mb-1">
                 <div className="flex w-[50px] h-[50px]">
                   <img
-                    src={logoImg}
+                    src={user?.photo ? profileImage : logoImg}
                     alt="profile"
                     className="w-full rounded-full object-contain bg-black"
                   />
                 </div>
-                <span className="ml-2 mr-1">{user?.employeeName}</span>
+                <div className="flex flex-col items-start">
+                  <span className="ml-2 mr-1 font-medium">
+                    {user?.employeeName}
+                  </span>
+                  <span className="ml-2 mr-1 text-sm">
+                    {user?.role ||
+                      (user && "employeeType" in user
+                        ? (user as { employeeType?: string }).employeeType
+                        : undefined)}
+                  </span>
+                </div>
               </div>
             </DropdownMenuTrigger>
 
@@ -100,35 +171,25 @@ const DashboardLayout = () => {
               align="end"
               sideOffset={4}
             >
-              <DropdownMenuLabel className="p-0 font-normal">
-                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                  <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage
-                      src={profileImage}
-                      alt={user?.employeeName || user?.consultantName}
-                    />
-                    <AvatarFallback className="rounded-lg">UE</AvatarFallback>
-                  </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      {user?.adminUserName ||
-                        user?.employeeName ||
-                        user?.consultantName}
-                    </span>
-                    <span className="truncate text-xs">{user?.role}</span>
-                  </div>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem
                   onClick={() => navigate("/administrator-panel/profile")}
                 >
-                  <UserIcon />
+                  <User2Icon />
                   User Profile
                 </DropdownMenuItem>
               </DropdownMenuGroup>
-              <DropdownMenuSeparator />
+              {(companies?.length ?? 0) > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => setCompanyModalOpen(true)}>
+                      <User2Icon />
+                      Switch Company
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut />
@@ -136,6 +197,16 @@ const DashboardLayout = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          {isCompanyModalOpen && (companies?.length ?? 0) > 0 && (
+            <CompanyModal
+              companies={companies ?? []}
+              isModalOpen={isCompanyModalOpen}
+              onSelect={(company) => {
+                handleLogin(company);
+              }}
+              modalClose={() => setCompanyModalOpen(false)}
+            />
+          )}
         </div>
         <main className="flex-1 overflow-auto p-6 bg-white mr-4">
           <Outlet />

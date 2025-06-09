@@ -10,20 +10,12 @@ export default function useAddOrUpdateEmployee() {
     mutationKey: ["add-or-update-employee"],
     mutationFn: async (data: EmployeeData) => {
       const isUpdate = Boolean(data.companyEmployeeId);
-      const payload = {
-        departmentId: data.departmentId,
-        designationId: data.designationId,
-        employeeEmail: data.employeeEmail,
-        employeeMobile: data.employeeMobile,
-        employeeName: data.employeeName,
-        employeeType: data.employeeType,
-        reportingManagerId: data.employeeId,
-      };
+
       const config = {
         url: isUpdate
           ? Urls.updateEmployee(data.companyEmployeeId!)
           : Urls.addEmployee(),
-        data: payload,
+        data: data,
       };
       const { data: resData } = isUpdate
         ? await Api.put<EmployeeResponse>(config)
@@ -34,6 +26,7 @@ export default function useAddOrUpdateEmployee() {
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["get-employee-list"] });
+      queryClient.resetQueries({ queryKey: ["dd-employee-Data"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

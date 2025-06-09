@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useProduct from "./useProduct";
 import { Button } from "@/components/ui/button";
 import ConformationDeleteModal from "./conformationDeleteModal";
@@ -7,8 +7,24 @@ import TableData from "@/components/shared/DataTable/DataTable";
 import ProductFormModal from "./ProductFormModal";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import { FormProvider, useForm } from "react-hook-form";
+import SearchInput from "@/components/shared/SearchInput";
+import { RefreshCw } from "lucide-react";
+import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function Product() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Product", href: "" }]);
+  }, [setBreadcrumbs]);
+
   const {
     product,
     isLoading,
@@ -23,6 +39,7 @@ export default function Product() {
     conformDelete,
     permission,
     isChildData,
+    paginationFilter,
   } = useProduct();
 
   // Column visibility state
@@ -31,7 +48,7 @@ export default function Product() {
     { key: "productName", label: "Product Name", visible: true },
     { key: "brandName", label: "Brand Name", visible: true },
   ]);
-
+  const [tableRenderKey, setTableRenderKey] = useState(0);
   // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
@@ -48,6 +65,13 @@ export default function Product() {
         col.key === key ? { ...col, visible: !col.visible } : col,
       ),
     );
+  };
+
+  const resetColumnWidths = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("tableWidths_productTableDataWidth");
+    }
+    setTableRenderKey((k) => k + 1);
   };
   // Check if the number of columns is more than 3
   const canToggleColumns = columnToggleOptions.length > 3;
@@ -71,17 +95,51 @@ export default function Product() {
                 Add Product
               </Button>
             )}
+          </div>
+        </div>
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>{" "}
+          <div className="flex items-center gap-2">
             {canToggleColumns && (
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DropdownSearchMenu
+                        columns={columnToggleOptions}
+                        onToggleColumn={onToggleColumn}
+                        columnIcon={true}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs text-white">Toggle Visible Columns</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetColumnWidths}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reset
+            </Button>
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
+            key={tableRenderKey}
             tableData={product?.data.map((item, index) => ({
               ...item,
               srNo: (product.currentPage - 1) * product.pageSize + index + 1,
@@ -90,14 +148,14 @@ export default function Product() {
             primaryKey="productId"
             onEdit={openModal}
             onDelete={onDelete}
-            paginationDetails={product}
+            paginationDetails={mapPaginationDetails(product)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
             moduleKey="PRODUCT"
             showIndexColumn={false}
             isActionButton={() => true}
             permissionKey="users"
-            localStorageId="productTableDataWidth"
+            sortableColumns={["productName", "brandName"]}
           />
         </div>
 

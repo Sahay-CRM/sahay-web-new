@@ -1,7 +1,7 @@
 import ModalData from "@/components/shared/Modal/ModalData";
 
 interface MeetingModalProps {
-  modalData: MeetingData;
+  modalData: CompanyProjectDataProps;
   isModalOpen: boolean;
   modalClose: () => void;
   onSubmit: () => void;
@@ -14,13 +14,12 @@ const AddProjectModal: React.FC<MeetingModalProps> = ({
   onSubmit,
 }) => {
   const employees =
-    modalData?.employeeId
-      ?.map((emp) => emp?.employeeName)
+    modalData?.ProjectEmployees?.map((emp) => emp?.employeeName)
       .filter(Boolean)
       .join(", ") || "";
 
   const subParameters =
-    modalData?.subParameterId
+    modalData?.ProjectParameters?.subParameters
       ?.map((sub) => sub?.subParameterName)
       .filter(Boolean)
       .join(", ") || "";
@@ -64,7 +63,7 @@ const AddProjectModal: React.FC<MeetingModalProps> = ({
             {modalData.projectDeadline}
           </div>
         )}
-        {modalData?.projectStatusId?.projectName && (
+        {/* {modalData?.projectStatusId?.projectName && (
           <div>
             <span className="font-medium text-primary">Project Status: </span>
             {modalData.projectStatusId.projectName}
@@ -75,7 +74,7 @@ const AddProjectModal: React.FC<MeetingModalProps> = ({
             <span className="font-medium text-primary">Core Parameter: </span>
             {modalData.coreParameterId.coreParameterName}
           </div>
-        )}
+        )} */}
         {subParameters && (
           <div>
             <span className="font-medium text-primary">Sub Parameter: </span>

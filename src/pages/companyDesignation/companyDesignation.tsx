@@ -1,13 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { FormProvider, useForm } from "react-hook-form";
+
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyDesignation from "./useCompanyDesignation";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-// import SearchInput from "@/components/shared/SearchInput";
-import { FormProvider, useForm } from "react-hook-form";
+
 import { Button } from "@/components/ui/button";
 import DesignationAddFormModal from "./designationFormModal/designationAddFormModal";
+import SearchInput from "@/components/shared/SearchInput";
+import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function CompanyDesignation() {
   const {
@@ -20,22 +30,17 @@ export default function CompanyDesignation() {
     modalData,
     conformDelete,
     isDeleteModalOpen,
-    // paginationFilter,
+    paginationFilter,
     addDesignationModal,
     isChildData,
     permission,
+    isLoading,
   } = useCompanyDesignation();
+  const { setBreadcrumbs } = useBreadcrumbs();
 
-  // const { setBreadcrumbs } = useBreadcrumbs();
-
-  // useEffect(() => {
-  //   setBreadcrumbs([
-  //     { label: "Admin Tools", href: "/admin-tools" },
-  //     { label: "User" },
-  //   ]);
-  // }, [setBreadcrumbs]);
-
-  // Column visibility state
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Company Designation", href: "" }]);
+  }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -45,10 +50,9 @@ export default function CompanyDesignation() {
       label: "Department Name",
       visible: true,
     },
-    { key: "companyName", label: "Company Name", visible: true },
+    { key: "parentName", label: "Parent Designation", visible: true },
   ]);
 
-  // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
       if (col.visible) acc[col.key] = col.label;
@@ -57,7 +61,6 @@ export default function CompanyDesignation() {
     {} as Record<string, string>,
   );
 
-  // Toggle column visibility
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
@@ -77,12 +80,6 @@ export default function CompanyDesignation() {
             Designation List
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
-            {/* <SearchInput
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-              className="w-96"
-            /> */}
             {(permission.Add || permission.Edit) && (
               <Link to="">
                 <Button className="py-2 w-fit" onClick={handleAdd}>
@@ -90,11 +87,36 @@ export default function CompanyDesignation() {
                 </Button>
               </Link>
             )}
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>{" "}
+          <div className="flex items-center gap-2">
             {canToggleColumns && (
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DropdownSearchMenu
+                        columns={columnToggleOptions}
+                        onToggleColumn={onToggleColumn}
+                        columnIcon={true}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs text-white">Toggle Visible Columns</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         </div>
@@ -114,13 +136,19 @@ export default function CompanyDesignation() {
             primaryKey="designationId"
             onEdit={(row) => openModal(row as unknown as DesignationData)}
             onDelete={(row) => onDelete(row as unknown as DesignationData)}
-            isActionButton={() => true}
-            paginationDetails={designationList}
+            isActionButton={() =>
+              columnToggleOptions.some((col) => col.visible)
+            }
+            paginationDetails={mapPaginationDetails(designationList)}
             setPaginationFilter={setPaginationFilter}
-            //   isLoading={isLoading}
+            isLoading={isLoading}
             permissionKey="users"
-            localStorageId="designationdata"
             moduleKey="DESIGNATION"
+            sortableColumns={[
+              "designationName",
+              "departmentName",
+              "parentName",
+            ]}
           />
         </div>
         {addDesignationModal && (
@@ -131,7 +159,6 @@ export default function CompanyDesignation() {
           />
         )}
 
-        {/* Modal Component */}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
             title={"Delete Designation Name"}

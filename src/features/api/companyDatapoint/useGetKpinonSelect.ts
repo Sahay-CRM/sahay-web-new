@@ -5,7 +5,7 @@ type DatePaging = BaseResponse<CompanyDatapointDataProps>;
 
 export default function useGetKpiNonSel({ filter }: FilterDataProps) {
   const query = useQuery({
-    queryKey: ["get-datapoint-list", filter],
+    queryKey: ["get-datapoint-list-non-select", filter],
     queryFn: async () => {
       const { data: resData } = await Api.post<DatePaging>({
         url: Urls.getKpinonselectList(),

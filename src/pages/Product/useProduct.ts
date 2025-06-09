@@ -98,5 +98,6 @@ export default function useProduct() {
     conformDelete,
     permission,
     isChildData,
+    paginationFilter,
   };
 }

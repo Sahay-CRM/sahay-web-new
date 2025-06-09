@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/features/auth/useAuth";
-import { hasPermission } from "@/features/utils/app.utils";
-import logoImg from "@/assets/logo_mobile.png";
-import { baseUrl } from "@/features/utils/urls.utils";
-import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
-import { getUserPermission } from "@/features/selectors/auth.selector";
+import logoImg from "@/assets/S_logo.png";
+import mainLogoImg from "@/assets/logo_1.png";
+import {
+  getUserPermission,
+  getUserDetail,
+} from "@/features/selectors/auth.selector";
 import { useSelector } from "react-redux";
+import LucideIcon from "@/components/shared/Icons/LucideIcon";
+import { type IconName } from "@/components/shared/Icons/iconMap";
 
 interface ChildItem {
   label: string;
@@ -16,46 +18,120 @@ interface MenuItemProps {
   icon: string;
   label: string;
   items?: ChildItem[];
+  link?: string;
+  onToggleFullMenu?: () => void;
 }
 
-const MenuItem: React.FC<MenuItemProps> = ({ icon, label, items }) => {
+const MenuItem: React.FC<MenuItemProps> = ({
+  icon,
+  label,
+  items,
+  link,
+  onToggleFullMenu,
+}) => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
-  const hasChildren = items && items.length > 0;
-  const { bgColor } = useSidebarTheme();
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const iconRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseEnter = () => {
+    if (iconRef.current) {
+      const rect = iconRef.current.getBoundingClientRect();
+      setTooltipPosition({
+        top: rect.top,
+        left: rect.right + 8,
+      });
+    }
+    setIsHovered(true);
+  };
+  const handleClick = () => {
+    const hasChildren = items && items.length > 0;
+
+    // Always open the full menu for any icon click
+    onToggleFullMenu?.();
+
+    // If menu has NO children and has a direct link, navigate to that page
+    // If menu HAS children, only open full menu (no navigation)
+    if (!hasChildren && link) {
+      navigate(link);
+    }
+  };
 
   return (
     <div
-      className="z-35"
-      onMouseEnter={() => setIsHovered(true)}
+      className="relative z-[9998]"
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Icon Menu Item */}
+      {/* Icon Menu Item */}{" "}
       <div
-        style={{ backgroundColor: bgColor }}
+        ref={iconRef}
         className={`px-4 py-3 cursor-pointer transition-colors duration-200 text-gray-700 hover:text-primary text-center`}
+        onClick={handleClick}
       >
-        <i className={`bx ${icon} text-2xl`} />
+        <LucideIcon name={icon as IconName} size={24} />
       </div>
+      {isHovered && (
+        <div
+          className="fixed bg-white shadow-lg rounded-md px-3 py-2 z-[99999] whitespace-nowrap border"
+          style={{
+            top: `${tooltipPosition.top}px`,
+            left: `${tooltipPosition.left}px`,
+          }}
+        >
+          <div className="text-sm font-medium text-primary">{label}</div>
+        </div>
+      )}
+    </div>
+  );
+};
 
-      {isHovered && hasChildren && (
-        <div className="absolute bg-white shadow-lg rounded-r-md w-48 z-40">
-          <div className="font-medium py-3 px-4 h-[58px] text-sm text-primary flex items-center">
-            {label}
-          </div>
-          <div className="p-2">
-            {items!.map((item, index) => (
-              <div
-                key={index}
-                className="block py-2 px-2 rounded transition-colors duration-200 text-sm font-regular text-gray-600 hover:text-primary cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate(item.link);
-                }}
-              >
-                {item.label}
-              </div>
-            ))}
+// Company Logo Component with Tooltip
+const CompanyLogo: React.FC = () => {
+  const user = useSelector(getUserDetail);
+  const [isHovered, setIsHovered] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const logoRef = useRef<HTMLDivElement>(null);
+
+  const BaseURL = import.meta.env.VITE_IMAGEURL;
+  const companyUrl = `${BaseURL}/share/logo/${user?.companyLogo}`;
+
+  const handleMouseEnter = () => {
+    if (logoRef.current) {
+      const rect = logoRef.current.getBoundingClientRect();
+      setTooltipPosition({
+        top: rect.top,
+        left: rect.right + 8,
+      });
+    }
+    setIsHovered(true);
+  };
+
+  return (
+    <div
+      className="relative z-[9998]"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div ref={logoRef} className="flex justify-center items-center p-4 mb-4">
+        <div className="w-8 h-8">
+          <img
+            src={user?.companyLogo ? companyUrl : mainLogoImg}
+            alt="company logo"
+            className="w-full h-full rounded-full object-contain bg-black"
+          />
+        </div>
+      </div>
+      {isHovered && user?.companyName && (
+        <div
+          className="fixed bg-white shadow-lg rounded-md px-3 py-2 z-[99999] whitespace-nowrap border"
+          style={{
+            top: `${tooltipPosition.top}px`,
+            left: `${tooltipPosition.left}px`,
+          }}
+        >
+          <div className="text-sm font-medium text-primary">
+            {user.companyName}
           </div>
         </div>
       )}
@@ -63,72 +139,50 @@ const MenuItem: React.FC<MenuItemProps> = ({ icon, label, items }) => {
   );
 };
 
-const IconHoverVerticalNav: React.FC<FullNavBarProps> = ({ data }) => {
+interface IconHoverVerticalNavProps extends FullNavBarProps {
+  onToggleExpanded?: () => void;
+}
+
+const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
+  data,
+  onToggleExpanded,
+}) => {
   const permissions = useSelector(getUserPermission);
-  const { user } = useAuth();
-  const { bgColor } = useSidebarTheme();
+
+  const filteredMenuItems = data?.filter((item) => {
+    if (item.items) {
+      return item.items.some((child) => permissions?.[child.moduleKey]?.View);
+    }
+    const moduleKeys = Array.isArray(item.moduleKey)
+      ? item.moduleKey
+      : [item.moduleKey];
+    return moduleKeys.some((key) => permissions?.[key]?.View);
+  });
 
   return (
-    <div
-      style={{ backgroundColor: bgColor }}
-      className="h-screen text-primary w-16 z-35 flex flex-col"
-    >
-      {/* Top Logo */}
-      {user?.role === "SUPERADMIN" ? (
-        <div className="flex justify-center items-center p-4 mb-4 bg-white">
-          <img src={logoImg} alt="logo" className="w-8" />
-        </div>
-      ) : (
-        <div className="flex justify-center items-center p-4 mb-4">
-          <img
-            src={`${baseUrl}/share/profilePics/${user?.photo}`}
-            alt="logo"
-            className="w-8"
-          />
-        </div>
-      )}
+    <div className="h-screen text-primary w-16 z-[9998] flex flex-col relative">
+      {/* Top Company Logo with Tooltip */}
+      <CompanyLogo />
 
       {/* Scrollable Icon Menu */}
       <div className="flex-1 overflow-y-auto py-2">
-        {data.map((item, index) => {
-          const hasRoutePermission = hasPermission(
-            permissions?.data ?? [],
-            item.moduleKey,
-            item.permission,
-          );
-
-          if (!hasRoutePermission) return null;
-
+        {filteredMenuItems.map((item, index) => {
           return (
             <MenuItem
               key={index}
               icon={item.icon}
               label={item.label}
               items={item.items}
+              link={item.link}
+              onToggleFullMenu={onToggleExpanded}
             />
           );
         })}
       </div>
 
-      {/* Profile Avatar at Bottom */}
+      {/* S Logo at Bottom */}
       <div className="flex justify-center items-center p-4 mt-auto">
-        {user?.role === "SUPERADMIN" ? (
-          <div className="w-8 h-8">
-            <img
-              src={`${baseUrl}/share/profilePics/${user?.photo}`}
-              alt="profile"
-              className="w-full h-full rounded-full object-cover bg-white"
-            />
-          </div>
-        ) : (
-          <div className="w-8 h-8">
-            <img
-              src={logoImg}
-              alt="profile"
-              className="w-full h-full rounded-full object-cover bg-white"
-            />
-          </div>
-        )}
+        <img src={logoImg} alt="logo" className="w-8" />
       </div>
     </div>
   );

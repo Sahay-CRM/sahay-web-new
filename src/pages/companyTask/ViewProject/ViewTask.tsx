@@ -6,11 +6,21 @@ import { format } from "date-fns";
 import useViewTask from "./useViewTask";
 import { Controller, FormProvider } from "react-hook-form";
 import FormSelect from "@/components/shared/Form/FormSelect";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function CompanyTaskView() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "Company Task", href: "/dashboard/tasks" },
+      { label: "View Task", href: "" },
+    ]);
+  }, [setBreadcrumbs]);
+
   const [showCommentInput, setShowCommentInput] = useState(false);
   const { taskApiData, navigate, statusOptions, handleStatusChange, methods } =
     useViewTask();
@@ -25,7 +35,7 @@ export default function CompanyTaskView() {
 
   if (!taskData) return null;
 
-  const onSubmitComment = (data: { comment: string }) => {
+  const onSubmitComment = (data: AddUpdateTask) => {
     if (!data.comment) return;
     addUpdateCompanyTask.mutate({
       taskId: taskData.taskId,
@@ -85,7 +95,9 @@ export default function CompanyTaskView() {
                         options={statusOptions}
                         error={fieldState.error}
                         onChange={(ele) => {
-                          handleStatusChange(ele);
+                          if (typeof ele === "string") {
+                            handleStatusChange(ele);
+                          }
                         }}
                       />
                     )}
@@ -122,7 +134,7 @@ export default function CompanyTaskView() {
                     Assignees:
                   </p>
                   <div className="flex gap-2 flex-wrap">
-                    {taskData.assignUsers?.map((emp: Employee) => (
+                    {taskData.assignUsers?.map((emp) => (
                       <Badge
                         key={emp.employeeId}
                         variant="secondary"

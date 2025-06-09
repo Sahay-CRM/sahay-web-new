@@ -1,7 +1,7 @@
 // hooks/useAddCompanyTaskList.ts
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
-import { useGetCompanyProjectAll } from "@/features/api/companyProject";
+import { useGetCompanyProject } from "@/features/api/companyProject";
 import {
   useGetAllTaskStatus,
   useAllTaskType,
@@ -10,6 +10,7 @@ import {
 } from "@/features/api/companyTask";
 import { getEmployee } from "@/features/api/companyEmployee";
 import { useNavigate, useParams } from "react-router-dom";
+import { useGetCompanyMeeting } from "@/features/api/companyMeeting";
 
 interface FormValues {
   taskId?: string; // <-- make it optional
@@ -21,6 +22,7 @@ interface FormValues {
   repetition: string;
   taskStatus?: TaskStatusAllRes;
   taskType?: TaskTypeData;
+  meeting?: string; // <-- add this line for meeting field
   assignUser: string[]; // always an array of employeeIds
   comment?: string;
 }
@@ -40,7 +42,7 @@ export const useAddCompanyEmployee = () => {
       taskDescription: "",
       taskStartDate: null,
       taskDeadline: null,
-      repetition: "",
+      repetition: "none", // Default to "No Repetition"
       taskStatus: undefined,
       taskType: undefined,
       assignUser: [], // always an array
@@ -56,6 +58,7 @@ export const useAddCompanyEmployee = () => {
       reset({
         taskId: taskDataById.data.taskId || "", // <-- add this
         project: taskDataById.data?.projectId || "",
+        meeting: taskDataById.data?.meetingId || "",
         taskName: taskDataById.data.taskName || "",
         taskDescription: taskDataById.data.taskDescription || "",
         taskStartDate: taskDataById.data.taskStartDate
@@ -106,8 +109,20 @@ export const useAddCompanyEmployee = () => {
       pageSize: 10,
       search: "",
     });
+  const [paginationFilterProject, setPaginationFilterProject] =
+    useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 10,
+      search: "",
+    });
+  const [paginationFilterMeeting, setPaginationFilterMeeting] =
+    useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 10,
+      search: "",
+    });
 
-  const { data: projectList } = useGetCompanyProjectAll();
+  //const { data: projectList } = useGetCompanyProjectAll();
   const { data: taskStatus } = useGetAllTaskStatus({
     filter: paginationFilterTaskStatus,
   });
@@ -117,24 +132,30 @@ export const useAddCompanyEmployee = () => {
   const { data: employeedata } = getEmployee({
     filter: paginationFilterEmployee,
   });
+  const { data: projectListdata } = useGetCompanyProject({
+    filter: paginationFilterProject,
+  });
+  const { data: meetingData } = useGetCompanyMeeting({
+    filter: paginationFilterMeeting,
+  });
 
   const taskType = {
     data: Array.isArray(taskTypeData?.data) ? taskTypeData.data : [],
   };
 
-  const projectListOption = [
-    {
-      label: "Please select Project",
-      value: "",
-      disabled: true,
-    },
-    ...(Array.isArray(projectList?.data)
-      ? projectList.data.map((item) => ({
-          label: item.projectName,
-          value: item.projectId,
-        }))
-      : []),
-  ];
+  // const projectListOption = [
+  //   {
+  //     label: "Please select Project",
+  //     value: "",
+  //     disabled: true,
+  //   },
+  //   ...(Array.isArray(projectList?.data)
+  //     ? projectList.data.map((item) => ({
+  //         label: item.projectName,
+  //         value: item.projectId,
+  //       }))
+  //     : []),
+  // ];
 
   // Repetition options
   const repetitionOptions = [
@@ -148,41 +169,71 @@ export const useAddCompanyEmployee = () => {
   // Dynamically set steps based on taskId
   const steps = taskId
     ? [
+        "Project",
         "Basic Info",
         "Schedule & Repetition",
         "Task Status",
         "Task Type",
+        "Meeting",
         "Assign User",
       ]
     : [
+        "Project",
         "Basic Info",
         "Schedule & Repetition",
         "Task Status",
         "Task Type",
+        "Meeting",
         "Assign User",
         "Comment",
       ];
 
-  // Only validate relevant fields for each step
-  const fieldsToValidate: Record<number, (keyof FormValues)[]> = taskId
+  // Define required and optional fields for each step
+  const stepFieldConfig: Record<
+    number,
+    { required: (keyof FormValues)[]; optional: (keyof FormValues)[] }
+  > = taskId
     ? {
-        1: ["project", "taskName", "taskDescription"],
-        2: ["taskStartDate", "taskDeadline", "repetition"],
-        3: ["taskStatus"],
-        4: ["taskType"],
-        5: ["assignUser"],
+        1: { required: ["project"], optional: [] },
+        2: { required: ["taskName", "taskDescription"], optional: [] },
+        3: {
+          required: ["taskDeadline"],
+          optional: ["taskStartDate", "repetition"],
+        }, // Task Deadline is required, others optional
+        4: { required: ["taskStatus"], optional: [] },
+        5: { required: ["taskType"], optional: [] },
+        6: { required: ["meeting"], optional: [] }, // Meeting is required
+        7: { required: ["assignUser"], optional: [] },
       }
     : {
-        1: ["project", "taskName", "taskDescription"],
-        2: ["taskStartDate", "taskDeadline", "repetition"],
-        3: ["taskStatus"],
-        4: ["taskType"],
-        5: ["assignUser"],
-        6: ["comment"],
+        1: { required: ["project"], optional: [] },
+        2: { required: ["taskName", "taskDescription"], optional: [] },
+        3: {
+          required: ["taskDeadline"],
+          optional: ["taskStartDate", "repetition"],
+        }, // Task Deadline is required, others optional
+        4: { required: ["taskStatus"], optional: [] },
+        5: { required: ["taskType"], optional: [] },
+        6: { required: ["meeting"], optional: [] }, // Meeting is required
+        7: { required: ["assignUser"], optional: [] },
+        8: { required: [], optional: ["comment"] }, // Comment is optional
       };
 
   const validateStep = async (): Promise<boolean> => {
-    return methods.trigger(fieldsToValidate[step]);
+    const currentStepConfig = stepFieldConfig[step];
+    if (!currentStepConfig) return true;
+
+    // Clear previous errors for optional fields
+    currentStepConfig.optional.forEach((field) => {
+      methods.clearErrors(field);
+    });
+
+    // Only validate required fields for the current step
+    if (currentStepConfig.required.length === 0) {
+      return true; // No required fields, step is valid
+    }
+
+    return methods.trigger(currentStepConfig.required);
   };
 
   const nextStep = async () => {
@@ -213,6 +264,7 @@ export const useAddCompanyEmployee = () => {
           comment: data.comment,
           employeeIds: assigneeIds,
           projectId: data.project,
+          meetingId: data.meeting,
         }
       : {
           taskName: data.taskName,
@@ -226,6 +278,7 @@ export const useAddCompanyEmployee = () => {
           comment: data.comment,
           employeeIds: assigneeIds,
           projectId: data.project,
+          meetingId: data.meeting,
         };
 
     addUpdateTask(payload, {
@@ -243,14 +296,18 @@ export const useAddCompanyEmployee = () => {
     prevStep,
     onSubmit,
     methods,
-    projectListOption,
+    // projectListOption,
     repetitionOptions,
     taskStatus,
     taskType,
     employeedata,
+    projectListdata,
     setPaginationFilterTaskStatus,
     setPaginationFilterTaskType,
     setPaginationFilterEmployee,
+    setPaginationFilterProject,
+    setPaginationFilterMeeting,
+    meetingData,
     taskId, // expose taskId for component
   };
 };

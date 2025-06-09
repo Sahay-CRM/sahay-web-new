@@ -20,6 +20,7 @@ interface NavItem {
 interface VerticalNavBarProps {
   isExpanded: boolean;
   data: NavItem[];
+  onToggleDrawer?: () => void;
 }
 
 interface FullNavBarProps {

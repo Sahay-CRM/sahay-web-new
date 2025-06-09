@@ -25,11 +25,12 @@ interface FilterDataProps {
 interface DesignationData {
   designationId: string;
   designationName: string;
-  parentId: null;
+  parentId: null | string;
   companyId: string;
   departmentId: string;
   departmentName: string;
   companyName: string;
+  isParentDesignation?: boolean;
 }
 // kk
 interface DesignationAddFormProps {
@@ -63,7 +64,7 @@ interface Company {
 }
 // kk
 interface EmployeeData {
-  employeeId: string;
+  employeeId?: string;
   employeeName: string;
   employeeEmail: string;
   employeeMobile: string;
@@ -71,14 +72,17 @@ interface EmployeeData {
   employeeType: string;
   departmentId?: string | null | DepartmentData;
   designationId?: string | null | Designation;
-  isSuperAdmin: boolean;
+  isSuperAdmin?: boolean;
   sahayEmId?: string | null;
   reportingManagerId?: string | null;
-  company: Company;
+  company?: Company;
   reportingManager?: ReportingManager | null;
   departmentName?: string | null;
   designationName?: string | null;
   companyEmployeeId?: string | null;
+  department?: DepartmentData;
+  designation?: Designation | null;
+  employee?: EmployeeDataModal;
 }
 
 // kk
@@ -136,6 +140,7 @@ interface ImportantDateData {
   importantDateName: string;
   importantDate: string;
   importantDateId?: string;
+  color?: string;
 }
 
 interface TaskData {
@@ -163,41 +168,17 @@ interface EventData {
 //kk
 interface MeetingData {
   meetingId?: string;
-  meetingName?: string;
+  meetingName: string;
   meetingDescription?: string;
-  meetingDateTime?: string; // ISO string format
+  meetingDateTime: string;
   companyId?: string;
-  meetingTypeId?: string;
-  meetingStatusId?: string;
-
-  meetingType?: {
-    meetingTypeId: string;
-    meetingTypeName: string;
-  };
-
-  companyEmployee?: [
-    {
-      employeeId: string;
-      employeeName: string;
-      employeeMobile: string;
-    }[],
-  ];
-
-  company?: {
-    companyId: string;
-    companyAdminEmail: string;
-    companyAdminMobile: string;
-  };
-
-  meetingStatus?: MeetingStatusDataProps;
-
-  joiners?: {
-    companyEmployee: {
-      employeeId: string;
-      employeeName: string;
-      employeeMobile: string;
-    };
-  }[];
+  meetingTypeId: string;
+  meetingTypeName?: string;
+  meetingStatusId: string;
+  meetingStatus?: string | MeetingStatusDataProps;
+  color?: string;
+  joiners?: Employee[];
+  [key: string]: string | string[] | number | undefined;
 }
 ///kk
 interface IProjectFormData {
@@ -208,7 +189,9 @@ interface IProjectFormData {
   projectStatusId: string;
 
   employeeIds: string[];
-
+  projectStatus?: {
+    projectStatus: string;
+  };
   subParameterIds: string[];
 
   createdBy?: {
@@ -278,11 +261,13 @@ interface ErrorType {
 }
 
 interface ImportantDatesDataProps {
-  importantDateRemarks: string;
-  importantDateName: string;
-  importantDate: string;
   importantDateId?: string;
+  importantDateName: string;
+  importantDateRemarks: string;
+  importantDate: string;
+  importantDateType?: string;
   bgColor?: string;
+  color?: string;
   textColor?: string;
   eventType?: string;
 }
@@ -327,7 +312,10 @@ interface CompanyMeetingStatusDataProps {
   meetingStatusId: string;
   meetingStatus: string;
   meetingStatusOrder: number;
-  winLostMeeting: null;
+  winLostMeeting: number | null;
+  color?: string;
+  createdDatetime?: string;
+  updatedDatetime?: string;
 }
 
 interface CompanyMeetingTypeDataProps {
@@ -344,10 +332,10 @@ interface CompanyProjectDataProps {
   employeeId?: string;
   ProjectParameters?: ProjectParameters;
   ProjectEmployees?: Employee[];
-  ProjectTasks?: Task[];
+  ProjectTasks?: ProjectTask[];
   createdBy?: CreatedBy;
   projectStatusId: string;
-  projectStatus?: ProjectStatus;
+  projectStatus?: ProjectStatusRes;
   otherProjectEmployees?: string[];
 }
 
@@ -435,13 +423,6 @@ interface EventData {
   end: Date;
 }
 
-// interface TaskData {
-//   taskId: string;
-//   taskName: string;
-//   taskDescription: string;
-//   taskDeadline: string;
-// }
-
 interface BaseResponse<T> {
   success: boolean;
   status: number;
@@ -489,6 +470,7 @@ interface EmployeeDetails {
 interface EmployeeCompany {
   companyAdminName: string;
   companyId: string;
+  companyName: string;
 }
 
 interface EmployeeDetailsById {
@@ -504,10 +486,14 @@ interface EmployeeDetailsById {
   designation: string | null;
   reportingManagerId: string | null;
   company: EmployeeCompany;
-  reportingManager: string | null;
+  reportingManager: EmployeeDetails;
+  companyLogo?: string;
+  photo?: string;
+  isSuperAdmin: boolean;
 }
 
 interface Designation {
+  designationId: string;
   designationName: string;
 }
 
@@ -578,6 +564,7 @@ interface AddUpdateTask {
 interface TaskGetPaging {
   employeeId: string;
   taskId: string;
+  assigneeNames?: string;
   taskName: string;
   taskStatusId: string;
   taskDescription: string;
@@ -681,11 +668,26 @@ interface Task {
   taskDeadline: string;
   projectId: string;
   projectName: string | null;
-  assignUsers: AssignedUser[];
-  meetingId: string[];
+  assignUsers: Employee[];
+  meetingId: string;
   meetings: Meeting[];
   comments: TaskComment[];
   createdBy: CreatedBy;
+}
+
+interface ProjectTask {
+  taskName: string;
+  taskDescription: string;
+  taskStatus: TaskStatusAllRes;
+  taskStatusId: string;
+  taskId: string;
+  taskActualEndDate: string | null;
+  taskDeadline: string;
+  taskTypeId: string;
+  assignees: {
+    employeeId: string;
+    employeeName: string;
+  }[];
 }
 interface MeetingJoiner {
   employeeId: string;
@@ -768,6 +770,7 @@ interface KPIMaster {
 
 interface DataPointEmployee {
   employeeId: string;
+  dataPointEmpId?: string;
   employeeName: string;
   value1: string;
   value2?: string;
@@ -779,19 +782,49 @@ interface KPIFormData {
   dataPointName: string;
   dataPointLabel: string;
   KPIMasterId: string;
+  KPILabel?: string;
+  KPIName?: string;
+  KPIMaster: KPIMaster | string;
+  coreParameter: CoreParameter;
+  unit: string;
+  validationType: string;
+  frequencyType: string;
+  selectedType: string;
+  dataPointEmployeeJunction: DataPointEmployee[];
+  DataPointProductJunction: ProductData[];
+  productIds: ProductData[] | string[];
+  assignUser: DataPointEmployee[];
+  hasData: boolean;
+  visualFrequencyTypes?: string;
+}
+
+interface KPIFormDataProp {
+  companykpimasterId?: string;
+  dataPointId: string;
+  dataPointName: string;
+  dataPointLabel: string;
+  KPIMasterId?: {
+    KPILabel?: string;
+    KPIMasterId?: string;
+    KPIName?: string;
+  };
+  coreParameterId: {
+    coreParameterId?: string;
+  };
+  KPILabel?: string;
+  KPIName?: string;
   KPIMaster: KPIMaster | string;
   coreParameter: string;
   unit: string;
-  validationType: "EQUAL_TO" | "GREATER_THAN" | "LESS_THAN" | string; // Add other types if needed
-  frequencyType: "YEARLY" | "MONTHLY" | "WEEKLY" | string; // Add other types if needed
-  selectedType: "COMPANY" | "DEPARTMENT" | "USER" | string; // Add other types if needed
+  validationType: string;
+  frequencyType: string;
+  selectedType: string;
   dataPointEmployeeJunction: DataPointEmployee[];
   DataPointProductJunction: ProductData[];
   productIds: ProductData[];
   assignUser: DataPointEmployee[];
   hasData: boolean;
 }
-
 interface BrandFormModalProps {
   isModalOpen: boolean;
   modalClose: () => void;
@@ -838,10 +871,28 @@ interface DataPoint {
   dataPointLabel: string;
 }
 
+interface Assignee {
+  dataPointEmpId: string;
+  employeeName: string;
+  value1: string | number | null;
+  value2?: string | number | null;
+}
+
+interface Kpi {
+  kpiId: string;
+  kpiName: string;
+  kpiLabel: string;
+  unit: string | null;
+  validationType: string;
+  assignees: Assignee[];
+  isVisualized: boolean;
+}
+
 interface FrequencyData {
-  srNo: number;
+  srNo?: number;
   frequencyType: string;
-  dataPoint: DataPoint[];
+  kpis: Kpi[];
+  count: number;
 }
 
 type FrequencyDataArray = FrequencyData[];
@@ -851,4 +902,43 @@ interface KpiData {
   startDate: string;
   endDate: string;
   selectFrequency: string;
+}
+
+interface CompanyResult {
+  totalWeightage: number;
+  totalScore: number;
+  healthPercentage: number;
+}
+
+interface IndividualResult {
+  coreParameterId: string;
+  totalWeightageCP: number;
+  totalScoreCP: number;
+  healthPercentage: number;
+  coreParameterName: string;
+}
+
+interface HealthScoreResponse {
+  success: boolean;
+  status: number;
+  message: string;
+  companyResult: CompanyResult;
+  individualResult: IndividualResult[];
+}
+
+interface KpiDataCell {
+  dataPointEmpId: string;
+  validationType: string;
+  startDate: string;
+  endDate: string;
+  data: string | number | null;
+  value1?: string | number | null;
+  value2?: string | number | null;
+  avg?: string | number | null;
+}
+
+interface UserLogDetails {
+  id: string;
+  updateDetail: string;
+  updateTime: string | Date;
 }

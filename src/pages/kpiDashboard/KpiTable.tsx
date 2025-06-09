@@ -28,40 +28,10 @@ import { FormProvider, useForm } from "react-hook-form";
 import Loader from "@/components/shared/Loader/Loader";
 import { FormDatePicker } from "@/components/shared/Form/FormDatePicker/FormDatePicker";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, Search } from "lucide-react";
+import { RefreshCcw } from "lucide-react";
 import TabsSection from "./TabSection";
 import { addUpdateKpi } from "@/features/api/kpiDashboard";
 import WarningDialog from "./WarningModal";
-import SearchKpiModal from "./VisualizeModal";
-
-// --- Types for API data ---
-type Assignee = {
-  dataPointEmpId: string;
-  employeeName: string;
-  value1: string | number | null;
-  value2?: string | number | null;
-};
-type Kpi = {
-  kpiId: string;
-  kpiName: string;
-  kpiLabel: string;
-  validationType: string;
-  assignees: Assignee[];
-};
-type FrequencyData = {
-  srNo: number;
-  frequencyType: string;
-  count: number;
-  kpis: Kpi[];
-};
-type KpiDataCell = {
-  dataPointEmpId: string;
-  validationType: string;
-  startDate: string;
-  endDate: string;
-  data: string | number | null;
-  value2?: string | number | null; // Added value2 property
-};
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -86,10 +56,14 @@ export default function KPITable() {
   });
   const isLoading = !kpiStructure || !kpiData;
 
+  // Check if there are no KPIs available using totalCount
+  const hasNoKpis = useMemo(() => {
+    return !kpiStructure?.totalCount || kpiStructure.totalCount === 0;
+  }, [kpiStructure]);
   // Memoize filteredData
   const filteredData = useMemo(() => {
     return (
-      (kpiStructure?.data as FrequencyData[] | undefined)?.filter(
+      kpiStructure?.data?.filter(
         (item) => item.frequencyType == selectedPeriod,
       ) ?? []
     );
@@ -99,9 +73,7 @@ export default function KPITable() {
   const headers = getKpiHeadersFromData(
     isKpiDataCellArrayArray(kpiData?.data) ? kpiData.data : [],
     selectedPeriod,
-  );
-
-  // Flatten KPI structure to rows: each row = { kpi, assignee }
+  ); // Flatten KPI structure to rows: each row = { kpi, assignee }
   const kpiRows = useMemo(() => {
     if (!filteredData.length || !filteredData[0].kpis) return [];
     const rows: { kpi: Kpi; assignee: Assignee }[] = [];
@@ -116,17 +88,22 @@ export default function KPITable() {
     return rows;
   }, [filteredData]);
 
+  // Separate rows by visualization status
+  const visualizedRows = useMemo(() => {
+    return kpiRows.filter((row) => row.kpi.isVisualized);
+  }, [kpiRows]);
+
+  const nonVisualizedRows = useMemo(() => {
+    return kpiRows.filter((row) => !row.kpi.isVisualized);
+  }, [kpiRows]);
+
   // Prepare input values for each cell
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
   const [tempValues, setTempValues] = useState<{ [key: string]: string }>({});
   const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
     {},
   );
-  const [searchModalOpen, setSearchModalOpen] = useState(false);
-  const [selectedKpiSearchData, setSelectedKpiSearchData] = useState<{
-    dataPointEmpId: string;
-    selectFrequency: string;
-  } | null>(null);
+
   const { mutate: addUpdateKpiData } = addUpdateKpi();
 
   useEffect(() => {
@@ -144,6 +121,237 @@ export default function KPITable() {
   }, [kpiData]);
 
   const methods = useForm();
+
+  // Helper function to render table rows
+  const renderKpiRows = (rows: { kpi: Kpi; assignee: Assignee }[]) => {
+    return rows.map((row) => {
+      const { kpi, assignee } = row;
+      let dataRow: KpiDataCell[] | undefined = undefined;
+      if (isKpiDataCellArrayArray(kpiData?.data)) {
+        dataRow = isKpiDataCellArrayArray(kpiData?.data)
+          ? (kpiData.data as KpiDataCell[][]).find(
+              (cells) =>
+                Array.isArray(cells) &&
+                cells.length > 0 &&
+                cells[0].dataPointEmpId === assignee.dataPointEmpId,
+            )
+          : undefined;
+      }
+      return (
+        <TableRow key={assignee.dataPointEmpId} className="border-b">
+          <TableCell
+            className={clsx(
+              "px-3 py-2 w-[60px] bg-gray-100 sticky left-0 z-10",
+            )}
+          >
+            <Avatar
+              className={`h-8 w-8 ${getColorFromName(assignee?.employeeName)}`}
+            >
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AvatarFallback
+                      className={`${getColorFromName(assignee?.employeeName)} font-bold`}
+                    >
+                      {(() => {
+                        if (!assignee?.employeeName) return "";
+                        const names = assignee.employeeName.split(" ");
+                        const firstInitial = names[0]?.[0] ?? "";
+                        const lastInitial =
+                          names.length > 1 ? names[names.length - 1][0] : "";
+                        return (firstInitial + lastInitial).toUpperCase();
+                      })()}
+                    </AvatarFallback>
+                  </TooltipTrigger>
+                  <TooltipContent>{assignee?.employeeName}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </Avatar>
+          </TableCell>
+          <TableCell
+            className={clsx(
+              "px-3 py-2 bg-gray-100 sticky left-[60px] z-10 w-[140px]",
+            )}
+          >
+            {" "}
+            <div className="flex items-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-md font-semibold cursor-default">
+                      {kpi?.kpiName}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span>{kpi?.kpiLabel}</span>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </TableCell>
+          <TableCell className="px-3 py-2 w-[120px] bg-gray-100 sticky left-[200px] z-10">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="truncate max-w-[100px] inline-block cursor-default">
+                    {getFormattedValue(
+                      kpi.validationType,
+                      assignee?.value1,
+                      assignee?.value2,
+                    )}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span>
+                    {kpi.validationType === "BETWEEN"
+                      ? `${assignee?.value1 ?? ""} - ${assignee?.value2 ?? ""}`
+                      : (assignee?.value1 ?? "")}
+                  </span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </TableCell>
+          <TableCell className="w-[60px] bg-gray-100 sticky left-[320px] z-10 text-center"></TableCell>
+          {headers.map((_, colIdx) => {
+            const cell = dataRow?.[colIdx];
+            const key = `${assignee.dataPointEmpId}/${cell?.startDate}/${cell?.endDate}`;
+            const validationType = cell?.validationType;
+            const value1 = cell?.value1;
+            const value2 = cell?.value2;
+            const inputVal = inputValues[key] ?? cell?.data?.toString() ?? "";
+            const isVisualized = kpi?.isVisualized;
+
+            if (validationType == "YES_NO") {
+              const selectOptions = [
+                { value: "1", label: "Yes" },
+                { value: "0", label: "No" },
+              ];
+              const isValid = inputVal === String(value1);
+              return (
+                <TableCell key={colIdx} className="px-3 py-2">
+                  <div
+                    className={clsx(
+                      "rounded-sm text-sm w-[100px] h-[40px]",
+                      inputVal !== "" &&
+                        (isValid
+                          ? "bg-green-100 border border-green-500"
+                          : "bg-red-100 border border-red-500"),
+                      isVisualized && "opacity-60",
+                    )}
+                  >
+                    {" "}
+                    <FormSelect
+                      value={inputVal}
+                      onChange={
+                        isVisualized
+                          ? () => {}
+                          : (val) => {
+                              setInputValues((prev) => ({
+                                ...prev,
+                                [key]: Array.isArray(val)
+                                  ? val.join(", ")
+                                  : val,
+                              }));
+                              setTempValues((prev) => ({
+                                ...prev,
+                                [key]: Array.isArray(val)
+                                  ? val.join(", ")
+                                  : val,
+                              }));
+                            }
+                      }
+                      options={selectOptions}
+                      placeholder="Select"
+                      disabled={isVisualized}
+                    />
+                  </div>
+                </TableCell>
+              );
+            }
+            return (
+              <TableCell key={colIdx} className="px-3 py-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <input
+                        type="text"
+                        value={
+                          inputFocused[key]
+                            ? inputVal
+                            : formatCompactNumber(inputVal)
+                        }
+                        onFocus={
+                          isVisualized
+                            ? undefined
+                            : () =>
+                                setInputFocused((prev) => ({
+                                  ...prev,
+                                  [key]: true,
+                                }))
+                        }
+                        onBlur={
+                          isVisualized
+                            ? undefined
+                            : () =>
+                                setInputFocused((prev) => ({
+                                  ...prev,
+                                  [key]: false,
+                                }))
+                        }
+                        onChange={
+                          isVisualized
+                            ? undefined
+                            : (e) => {
+                                const val = e.target.value;
+                                const isValidNumber =
+                                  /^(\d+(\.\d*)?|\.\d*)?$/.test(val) ||
+                                  val === "";
+                                if (isValidNumber) {
+                                  setInputValues((prev) => ({
+                                    ...prev,
+                                    [key]: val,
+                                  }));
+                                }
+                                setTempValues((prev) => ({
+                                  ...prev,
+                                  [key]: e?.target.value,
+                                }));
+                              }
+                        }
+                        className={clsx(
+                          "border p-2 rounded-sm text-center text-sm w-[100px] h-[40px]",
+                          inputVal !== "" &&
+                            validationType &&
+                            (isValidInput(
+                              validationType,
+                              inputVal,
+                              value1 ?? null,
+                              value2 ?? null,
+                            )
+                              ? "bg-green-100 border-green-500"
+                              : "bg-red-100 border-red-500"),
+                          isVisualized &&
+                            "opacity-60 cursor-not-allowed bg-gray-50",
+                        )}
+                        placeholder=""
+                        disabled={isVisualized}
+                        readOnly={isVisualized}
+                      />
+                    </TooltipTrigger>
+                    {inputVal && (
+                      <TooltipContent side="top">
+                        <span>{inputVal}</span>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
+              </TableCell>
+            );
+          })}
+        </TableRow>
+      );
+    });
+  };
 
   function getFormattedValue(
     validationType: string,
@@ -190,17 +398,38 @@ export default function KPITable() {
   if (isLoading) {
     return <Loader />;
   }
+
+  // Show empty state when no KPIs are available
+  if (hasNoKpis) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No KPIs Available
+          </h3>
+          <p className="text-gray-500">
+            Please add KPI first to view the dashboard.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <FormProvider {...methods}>
       <div className="flex justify-between">
+        {" "}
         <div className="flex justify-between items-center">
           <TabsSection
             selectedPeriod={selectedPeriod}
             onSelectPeriod={handlePeriodChange}
+            kpiStructure={kpiStructure}
           />
-        </div>
+        </div>{" "}
         <div className="flex gap-4 items-center justify-end">
-          <Button onClick={handleSubmit}>Submit</Button>{" "}
+          {Object.keys(tempValues).length > 0 && (
+            <Button onClick={handleSubmit}>Submit</Button>
+          )}
           <FormDatePicker
             value={selectedDate}
             onSubmit={(date) => {
@@ -265,226 +494,33 @@ export default function KPITable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {kpiRows.map((row) => {
-                const { kpi, assignee } = row;
-                let dataRow: KpiDataCell[] | undefined = undefined;
-                if (isKpiDataCellArrayArray(kpiData?.data)) {
-                  dataRow = isKpiDataCellArrayArray(kpiData?.data)
-                    ? (kpiData.data as KpiDataCell[][]).find(
-                        (cells) =>
-                          Array.isArray(cells) &&
-                          cells.length > 0 &&
-                          cells[0].dataPointEmpId === assignee.dataPointEmpId,
-                      )
-                    : undefined;
-                }
-                return (
-                  <TableRow key={assignee.dataPointEmpId} className="border-b">
+              {/* Visualized KPIs Section */}
+              {visualizedRows.length > 0 && (
+                <>
+                  <TableRow>
                     <TableCell
-                      className={clsx(
-                        "px-3 py-2 w-[60px] bg-gray-100 sticky left-0 z-10",
-                      )}
-                    >
-                      <Avatar
-                        className={`h-8 w-8 ${getColorFromName(assignee?.employeeName)}`}
-                      >
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <AvatarFallback
-                                className={`${getColorFromName(assignee?.employeeName)} font-bold`}
-                              >
-                                {(() => {
-                                  if (!assignee?.employeeName) return "";
-                                  const names =
-                                    assignee.employeeName.split(" ");
-                                  const firstInitial = names[0]?.[0] ?? "";
-                                  const lastInitial =
-                                    names.length > 1
-                                      ? names[names.length - 1][0]
-                                      : "";
-                                  return (
-                                    firstInitial + lastInitial
-                                  ).toUpperCase();
-                                })()}
-                              </AvatarFallback>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {assignee?.employeeName}
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </Avatar>
-                    </TableCell>
-                    <TableCell
-                      className={clsx(
-                        "px-3 py-2 bg-gray-100 sticky left-[60px] z-10 w-[140px]",
-                      )}
-                    >
-                      {/* {kpi?.kpiName} */}
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="text-md font-semibold cursor-default">
-                              {kpi?.kpiName}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <span>{kpi?.kpiLabel}</span>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableCell>
-                    <TableCell className="px-3 py-2 w-[120px] bg-gray-100 sticky left-[200px] z-10">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="truncate max-w-[100px] inline-block cursor-default">
-                              {getFormattedValue(
-                                kpi.validationType,
-                                assignee?.value1,
-                                assignee?.value2,
-                              )}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <span>
-                              {kpi.validationType === "BETWEEN"
-                                ? `${assignee?.value1 ?? ""} - ${assignee?.value2 ?? ""}`
-                                : (assignee?.value1 ?? "")}
-                            </span>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableCell>
-                    <TableCell className="w-[60px] bg-gray-100 sticky left-[320px] z-10 text-center">
-                      <Search
-                        onClick={() => {
-                          setSelectedKpiSearchData({
-                            dataPointEmpId: assignee.dataPointEmpId,
-                            selectFrequency: selectedPeriod,
-                          });
-                          setSearchModalOpen(true);
-                        }}
-                        className="h-4 w-4 text-muted-foreground mx-auto"
-                      />
-                    </TableCell>
-                    {headers.map((_, colIdx) => {
-                      const cell = dataRow?.[colIdx];
-                      const key = `${assignee.dataPointEmpId}/${cell?.startDate}/${cell?.endDate}`;
-                      const validationType = cell.validationType;
-                      const value1 = cell?.value1;
-                      const value2 = cell?.value2;
-                      const inputVal =
-                        inputValues[key] ?? cell?.data?.toString() ?? "";
-                      if (validationType == "YES_NO") {
-                        const selectOptions = [
-                          { value: "1", label: "Yes" },
-                          { value: "0", label: "No" },
-                        ];
-                        const isValid = inputVal === String(value1);
-                        return (
-                          <TableCell key={colIdx} className="px-3 py-2">
-                            <div
-                              className={clsx(
-                                "rounded-sm text-sm w-[100px] h-[40px]",
-                                inputVal !== "" &&
-                                  (isValid
-                                    ? "bg-green-100 border border-green-500"
-                                    : "bg-red-100 border border-red-500"),
-                              )}
-                            >
-                              <FormSelect
-                                value={inputVal}
-                                onChange={(val) => {
-                                  setInputValues((prev) => ({
-                                    ...prev,
-                                    [key]: Array.isArray(val)
-                                      ? val.join(", ")
-                                      : val,
-                                  }));
-                                  setTempValues((prev) => ({
-                                    ...prev,
-                                    [key]: Array.isArray(val)
-                                      ? val.join(", ")
-                                      : val,
-                                  }));
-                                }}
-                                options={selectOptions}
-                                placeholder="Select"
-                              />
-                            </div>
-                          </TableCell>
-                        );
-                      }
-                      return (
-                        <TableCell key={colIdx} className="px-3 py-2">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <input
-                                  type="text"
-                                  value={
-                                    inputFocused[key]
-                                      ? inputVal
-                                      : formatCompactNumber(inputVal)
-                                  }
-                                  onFocus={() =>
-                                    setInputFocused((prev) => ({
-                                      ...prev,
-                                      [key]: true,
-                                    }))
-                                  }
-                                  onBlur={() =>
-                                    setInputFocused((prev) => ({
-                                      ...prev,
-                                      [key]: false,
-                                    }))
-                                  }
-                                  onChange={(e) => {
-                                    const val = e.target.value;
-                                    const isValidNumber =
-                                      /^(\d+(\.\d*)?|\.\d*)?$/.test(val) ||
-                                      val === "";
-                                    if (isValidNumber) {
-                                      setInputValues((prev) => ({
-                                        ...prev,
-                                        [key]: val,
-                                      }));
-                                    }
-                                    setTempValues((prev) => ({
-                                      ...prev,
-                                      [key]: e?.target.value,
-                                    }));
-                                  }}
-                                  className={clsx(
-                                    "border p-2 rounded-sm text-center text-sm w-[100px] h-[40px]",
-                                    inputVal !== "" &&
-                                      (isValidInput(
-                                        validationType,
-                                        inputVal,
-                                        value1,
-                                        value2,
-                                      )
-                                        ? "bg-green-100 border-green-500"
-                                        : "bg-red-100 border-red-500"),
-                                  )}
-                                  placeholder=""
-                                />
-                              </TooltipTrigger>
-                              {inputVal && (
-                                <TooltipContent side="top">
-                                  <span>{inputVal}</span>
-                                </TooltipContent>
-                              )}
-                            </Tooltip>
-                          </TooltipProvider>
-                        </TableCell>
-                      );
-                    })}
+                      colSpan={4 + headers.length}
+                      className="bg-gray-100 border-b px-3 py-1"
+                    />
                   </TableRow>
-                );
-              })}
+                  {renderKpiRows(visualizedRows)}
+                </>
+              )}
+
+              {/* Non-Visualized KPIs Section */}
+              {nonVisualizedRows.length > 0 && (
+                <>
+                  {visualizedRows.length > 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4 + headers.length}
+                        className="bg-gray-100 border-b px-3 py-1"
+                      />
+                    </TableRow>
+                  )}
+                  {renderKpiRows(nonVisualizedRows)}
+                </>
+              )}
             </TableBody>
           </Table>
         </div>
@@ -506,14 +542,6 @@ export default function KPITable() {
         }}
         onClose={() => setShowWarning(false)}
       />
-      {selectedKpiSearchData && (
-        <SearchKpiModal
-          open={searchModalOpen}
-          onClose={() => setSearchModalOpen(false)}
-          dataPointEmpId={selectedKpiSearchData.dataPointEmpId}
-          selectFrequency={selectedKpiSearchData.selectFrequency}
-        />
-      )}
     </FormProvider>
   );
 }

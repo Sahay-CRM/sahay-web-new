@@ -4,9 +4,11 @@ import useAddDatapoint from "./useAddDatapoint";
 import { FormProvider, useForm } from "react-hook-form";
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
+import Loader from "@/components/shared/Loader/Loader";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useEffect } from "react";
 
 const AddDatapoint = () => {
-  // You can also compute isUpdateMode and isUpdateModeForFalse here if needed
   const {
     onFinish,
     isModalOpen,
@@ -20,8 +22,21 @@ const AddDatapoint = () => {
     GoalValue,
     trigger,
     KpiPreview,
-    skipToStep, // ← this already handles logic inside useAddDatapoint
+    skipToStep,
+    isLoading,
+    companykpimasterId,
   } = useAddDatapoint();
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "KPI List", href: "" },
+      { label: companykpimasterId ? "Update KPI" : "Add KPI", href: "" },
+    ]);
+  }, [companykpimasterId, setBreadcrumbs]);
+
+  const methods = useForm({ mode: "onChange" });
 
   const steps = [
     <Kpi />,
@@ -32,11 +47,16 @@ const AddDatapoint = () => {
     <GoalValue />,
   ];
 
-  const visibleSteps = skipToStep > 0 ? steps.slice(skipToStep) : steps;
+  const visibleSteps =
+    skipToStep === 5
+      ? [<Frequency />, <GoalValue />]
+      : skipToStep > 0
+        ? steps.slice(skipToStep)
+        : steps;
 
   const visibleStepNames =
     skipToStep === 5
-      ? ["Goal Value"]
+      ? ["Frequency", "Goal Value"]
       : skipToStep === 1
         ? [
             "Frequency",
@@ -46,7 +66,7 @@ const AddDatapoint = () => {
             "Goal Value",
           ]
         : [
-            "Kpi",
+            "KPI",
             "Frequency",
             "Core Parameter",
             "Product",
@@ -64,7 +84,11 @@ const AddDatapoint = () => {
     isLastStep,
   } = useStepForm(visibleSteps, trigger);
 
-  const methods = useForm({ mode: "onChange" });
+  // Show loader while API data is being fetched
+  if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <FormProvider {...methods}>
       <div>

@@ -4,6 +4,8 @@ import useAddEmployee from "./useAddMeeting";
 import { FormProvider } from "react-hook-form";
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useEffect } from "react";
 
 const AddEmployee = () => {
   const {
@@ -18,8 +20,18 @@ const AddEmployee = () => {
     UploadDoc,
     trigger,
     meetingPreview,
-    methods, // Add this to get form methods
+    methods,
+    companyMeetingId,
   } = useAddEmployee();
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "Company Meeting", href: "/dashboard/meeting" },
+      { label: companyMeetingId ? "Update Meeting" : "Add Meeting", href: "" },
+    ]);
+  }, [companyMeetingId, setBreadcrumbs]);
 
   // Build steps array based on showNextStep
   const steps = [

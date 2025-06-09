@@ -1,9 +1,11 @@
-import { FormProvider, useForm } from "react-hook-form";
+import { Controller, FormProvider, useForm } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ModalData from "@/components/shared/Modal/ModalData";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import useCalenderFormModal from "./useCalenderFormModal";
+import { useEffect, useRef, useState } from "react";
+import { HexColorPicker } from "react-colorful";
 
 interface ImportantModalProps {
   isModalOpen: boolean;
@@ -24,6 +26,37 @@ const CalenderFormModal: React.FC<ImportantModalProps> = ({
     });
 
   const selectedDate = watch("importantDate");
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  // New: Local state to stage color before saving
+  const [stagedColor, setStagedColor] = useState<string>(
+    modalData?.color || "#aabbcc",
+  );
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  // Sync stagedColor with form value when modal opens or color changes externally
+  useEffect(() => {
+    // If stagedColor is undefined or empty, use #aabbcc
+    setValue("color", stagedColor || "#aabbcc");
+    setStagedColor(stagedColor || "#aabbcc");
+  }, [setValue, stagedColor]);
+
+  // Close picker on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        pickerRef.current &&
+        !pickerRef.current.contains(event.target as Node)
+      ) {
+        setShowColorPicker(false);
+      }
+    }
+    if (showColorPicker) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showColorPicker]);
 
   return (
     <FormProvider {...methods}>
@@ -88,6 +121,107 @@ const CalenderFormModal: React.FC<ImportantModalProps> = ({
               containerClass="mt-4"
               className="text-lg"
             />
+            <div className="mt-4">
+              <label className="block mb-1 font-medium">
+                Color <span className="text-red-500">*</span>
+              </label>
+              <Controller
+                name="color"
+                control={methods.control}
+                rules={{ required: "Select a color" }}
+                render={({ field }) => (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className="flex items-center px-3 py-1 border rounded bg-white"
+                      onClick={() => {
+                        setShowColorPicker((v) => !v);
+                        setStagedColor(field.value || "#aabbcc"); // Reset staged color to current value or default
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "inline-block",
+                          width: 20,
+                          height: 20,
+                          background: field.value || "#aabbcc",
+                          border: "1px solid #ccc",
+                          borderRadius: 4,
+                          marginRight: 8,
+                        }}
+                      />
+                      <span className="text-sm">
+                        {field.value || "#aabbcc"}
+                      </span>
+                    </button>
+                    {showColorPicker && (
+                      <>
+                        {/* Backdrop */}
+                        <div
+                          className="fixed inset-0 z-40"
+                          style={{ background: "transparent" }}
+                          onClick={() => setShowColorPicker(false)}
+                        />
+                        {/* Popup */}
+                        <div
+                          ref={pickerRef}
+                          className="fixed z-50 bg-white p-3 rounded shadow"
+                          style={{
+                            top: "50%",
+                            left: "50%",
+                            transform: "translate(-50%, -50%)",
+                            minWidth: 200,
+                          }}
+                        >
+                          <HexColorPicker
+                            color={stagedColor || "#aabbcc"}
+                            onChange={setStagedColor}
+                          />
+                          <div className="mt-2 flex items-center justify-between">
+                            <span
+                              style={{
+                                display: "inline-block",
+                                width: 24,
+                                height: 24,
+                                background: stagedColor,
+                                border: "1px solid #ccc",
+                                borderRadius: 4,
+                                verticalAlign: "middle",
+                              }}
+                            />
+                            <span className="ml-2 text-sm">{stagedColor}</span>
+                            <div className="ml-4 flex gap-2">
+                              <button
+                                type="button"
+                                className="px-2 py-1 border rounded text-xs"
+                                onClick={() => setShowColorPicker(false)}
+                              >
+                                Close
+                              </button>
+                              <button
+                                type="button"
+                                className="px-2 py-1 border rounded text-xs bg-blue-500 text-white"
+                                onClick={() => {
+                                  field.onChange(stagedColor);
+                                  setShowColorPicker(false);
+                                }}
+                              >
+                                Save
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              />
+              {errors.color && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.color.message}
+                </p>
+              )}
+            </div>
           </div>
         </ModalData>
       </div>

@@ -5,10 +5,21 @@ import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownS
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import TableWithDropdown from "@/components/shared/DataTable/DropdownTable/DropdownTable";
+
 import DateRangePicker from "@/components/shared/DateRange";
-import { useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+import ViewMeetingModal from "./ViewMeetingModal";
+import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import TableData from "@/components/shared/DataTable/DataTable";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function CompanyTaskList() {
   const {
@@ -31,10 +42,18 @@ export default function CompanyTaskList() {
     showOverdue,
     handleOverdueToggle,
     handleRowsModalOpen,
-    // isRowModal,
+    isLoading,
+    isViewModalOpen,
+    setIsViewModalOpen,
+    viewModalData,
+    taskStatus,
   } = useCompanyTaskList();
 
-  const [tableRenderKey, setTableRenderKey] = useState(0);
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Company Task", href: "" }]);
+  }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -46,7 +65,7 @@ export default function CompanyTaskList() {
     },
     { key: "taskDeadline", label: "Task Deadline", visible: true },
     { key: "assigneeNames", label: "Assignees", visible: true },
-    { key: "status", label: "Status", visible: true },
+    { key: "taskStatus", label: "Status", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -70,13 +89,6 @@ export default function CompanyTaskList() {
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
   const navigate = useNavigate();
-
-  const resetColumnWidths = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("tableWidths_CompanyTaskList");
-    }
-    setTableRenderKey((k) => k + 1);
-  };
 
   return (
     <FormProvider {...methods}>
@@ -104,10 +116,12 @@ export default function CompanyTaskList() {
           </div>
           <div className="flex gap-4">
             <div className="z-10 relative flex items-center gap-2">
-              <DateRangePicker
-                onChange={handleDateRangeChange}
-                onApply={handleDateRangeApply}
-              />
+              {!showOverdue && (
+                <DateRangePicker
+                  onChange={handleDateRangeChange}
+                  onApply={handleDateRangeApply}
+                />
+              )}
             </div>
             <div>
               <DropdownSearchMenu
@@ -128,27 +142,28 @@ export default function CompanyTaskList() {
               {showOverdue ? "Show All Tasks" : "Show Overdue"}
             </Button>
             {canToggleColumns && (
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-                columnIcon={true}
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DropdownSearchMenu
+                        columns={columnToggleOptions}
+                        onToggleColumn={onToggleColumn}
+                        columnIcon={true}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs text-white">Toggle Visible Columns</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetColumnWidths}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Reset
-            </Button>
           </div>
         </div>
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
-          <TableWithDropdown
-            key={tableRenderKey}
+          <TableData
             tableData={companyTaskData?.data.map(
               (item: TaskGetPaging, index: number) => ({
                 ...item,
@@ -178,12 +193,68 @@ export default function CompanyTaskList() {
             onDelete={(row) => {
               onDelete(row);
             }}
+            onViewButton={(row) => {
+              navigate(`/dashboard/tasks/view/${row.taskId}`);
+            }}
+            paginationDetails={mapPaginationDetails(companyTaskData)}
+            setPaginationFilter={setPaginationFilter}
+            isLoading={isLoading}
+            moduleKey="TASK"
+            showIndexColumn={false}
+            isActionButton={() => true}
+            viewButton={true}
+            permissionKey="users"
+            dropdownColumns={{
+              taskStatus: {
+                options: (taskStatus?.data ?? []).map((opt) => ({
+                  label: opt.taskStatus,
+                  value: opt.taskStatusId,
+                  color: opt.color || "#2e3195",
+                })),
+                onChange: (row, value) => handleStatusChange(value, row),
+              },
+            }}
+            onRowClick={(row) => {
+              handleRowsModalOpen(row);
+            }}
+            sortableColumns={["taskName", "taskDeadline"]}
+          />
+
+          {/* <TableWithDropdown
+            tableData={companyTaskData?.data.map(
+              (item: TaskGetPaging, index: number) => ({
+                ...item,
+                srNo: index + 1,
+                status: item.taskStatusId,
+                taskDeadline: item.taskDeadline
+                  ? new Date(item.taskDeadline).toISOString().split("T")[0]
+                  : "",
+                assigneeNames: item.TaskEmployeeJunction
+                  ? item.TaskEmployeeJunction.map(
+                      (j) => j.Employee?.employeeName
+                    )
+                      .filter(Boolean)
+                      .join(", ")
+                  : "",
+              })
+            )}
+            columns={visibleColumns}
+            primaryKey="taskId"
+            onEdit={
+              permission.Edit
+                ? (row) => {
+                    navigate(`/dashboard/tasks/edit/${row.taskId}`);
+                  }
+                : undefined
+            }
+            onDelete={(row) => {
+              onDelete(row);
+            }}
             viewButton={true}
             isActionButton={() => true}
-            // canDelete={(row) => !row.isSuperAdmin}
-            paginationDetails={companyTaskData}
+            paginationDetails={mapPaginationDetails(companyTaskData)}
             setPaginationFilter={setPaginationFilter}
-            //   isLoading={isLoading}
+            isLoading={isLoading}
             permissionKey="users"
             localStorageId="CompanyTaskList"
             statusOptions={statusOptions}
@@ -196,7 +267,8 @@ export default function CompanyTaskList() {
             onRowClick={(row) => {
               handleRowsModalOpen(row);
             }}
-          />
+            sortableColumns={["taskName", "taskDeadline"]}
+          /> */}
         </div>
 
         {/* Modal Component */}
@@ -211,6 +283,11 @@ export default function CompanyTaskList() {
             isChildData={isChildData}
           />
         )}
+        <ViewMeetingModal
+          isModalOpen={isViewModalOpen}
+          modalData={viewModalData}
+          modalClose={() => setIsViewModalOpen(false)}
+        />
       </div>
     </FormProvider>
   );

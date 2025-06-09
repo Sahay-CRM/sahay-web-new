@@ -14,14 +14,14 @@ export default function useCompanyTaskList() {
   const [modalData, setModalData] = useState<TaskGetPaging>(
     {} as TaskGetPaging,
   );
-  const [currentStatus, setCurrentStatus] = useState<number>(1); // Add state for currentStatus
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
   const permission = useSelector(getUserPermission).TASK;
   const [isChildData, setIsChildData] = useState<string | undefined>();
-
-  const [isRowModal, setIsRowModal] = useState<boolean>(false);
-
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewModalData, setViewModalData] = useState<TaskGetPaging>(
+    {} as TaskGetPaging,
+  );
   const [taskDateRange, setTaskDateRange] = useState<{
     taskStartDate: Date | undefined;
     taskDeadline: Date | undefined;
@@ -47,7 +47,6 @@ export default function useCompanyTaskList() {
     currentPage: 1,
     pageSize: 10,
     search: "",
-    status: currentStatus,
   });
 
   const [filters, setFilters] = useState<{ taskStatusName: string[] }>({
@@ -66,7 +65,11 @@ export default function useCompanyTaskList() {
     return `${year}-${month}-${day}`;
   };
 
-  const { data: companyTaskData, refetch } = useGetCompanyTask({
+  const {
+    data: companyTaskData,
+    refetch,
+    isLoading,
+  } = useGetCompanyTask({
     filter: {
       ...paginationFilter,
       statusArray: filters.taskStatusName,
@@ -95,24 +98,6 @@ export default function useCompanyTaskList() {
     color: item.color || "#2e3195",
   }));
 
-  const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStatus = Number(event.target.value);
-    setCurrentStatus(newStatus);
-
-    setPaginationFilter((prevFilter) => ({
-      ...prevFilter,
-      status: newStatus,
-      currentPage: 1,
-    }));
-  };
-
-  // Ensure currentStatus is passed when updating the pagination filter
-  const setPaginationFilterWithStatus = (filter: PaginationFilter) => {
-    setPaginationFilter({
-      ...filter,
-      status: currentStatus,
-    });
-  };
   const handleAdd = () => {
     setModalData({
       taskId: "",
@@ -251,16 +236,14 @@ export default function useCompanyTaskList() {
   };
 
   const handleRowsModalOpen = (data: TaskGetPaging) => {
-    setIsRowModal(true);
-    console.log("Selected row data:", data);
+    setViewModalData(data);
+    setIsViewModalOpen(true);
   };
 
   return {
     companyTaskData,
     closeDeleteModal,
-    setPaginationFilter: setPaginationFilterWithStatus,
-    onStatusChange,
-    currentStatus,
+    setPaginationFilter,
     openModal,
     onDelete,
     modalData,
@@ -289,6 +272,10 @@ export default function useCompanyTaskList() {
     handleDateRangeApply,
     handleOverdueToggle,
     handleRowsModalOpen,
-    isRowModal,
+    isViewModalOpen,
+    setIsViewModalOpen,
+    viewModalData,
+    isLoading,
+    taskStatus,
   };
 }

@@ -9,10 +9,11 @@ interface AuthContextType {
 interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
-  user: User | null;
+  user?: User | null;
   token: string | null;
   userPermission?: PermissionsResponse;
   kpiData?: KpiData;
+  userId?: string;
 }
 
 interface CustomError {

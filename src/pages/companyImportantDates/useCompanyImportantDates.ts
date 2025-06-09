@@ -28,7 +28,7 @@ export default function useCalendar() {
       const end = item.taskDeadline ? new Date(item.taskDeadline) : start;
 
       return {
-        title: item.taskName || "Task Name",
+        title: (item.taskName || "Task Name") + " (Task)",
         description: item.taskDescription || "No description provided",
         start:
           start instanceof Date && !isNaN(start.getTime()) ? start : new Date(),
@@ -53,7 +53,7 @@ export default function useCalendar() {
       const eventDate = dateTime ? new Date(dateTime) : new Date();
 
       return {
-        title: (item.meetingName || "Meeting Name") + " (meeting)",
+        title: (item.meetingName || "Meeting Name") + " (Meeting)",
         description: item.meetingDescription || "No Topic",
         start:
           eventDate instanceof Date && !isNaN(eventDate.getTime())
@@ -75,7 +75,7 @@ export default function useCalendar() {
       // Use 'importantDate' field from API, not 'date'
       const deadline = item.importantDate ? new Date(item.importantDate) : null;
       return {
-        title: item.importantDateName || "Important Date",
+        title: item.importantDateName || "Important Dates",
         description: item.importantDateRemarks || "No Notes",
         start:
           deadline instanceof Date && !isNaN(deadline.getTime())
@@ -86,7 +86,7 @@ export default function useCalendar() {
             ? deadline
             : new Date(),
         eventId: item.importantDateId || "", // ensure string
-        bgColor: "#2f328b",
+        bgColor: item.color || "#2f328b",
         textColor: "#ffffff",
         eventType: "importantDate",
       };

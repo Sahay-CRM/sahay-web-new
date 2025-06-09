@@ -1,17 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { FormProvider, useForm } from "react-hook-form";
+
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyEmployee from "./useCompanyEmployee";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
-import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import ViewEmployeeModal from "./ViewEmployeeModal";
+import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function CompanyDesignation() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Company Employee", href: "" }]);
+  }, [setBreadcrumbs]);
+
   const {
     employeedata,
-    // isLoading,
+    isLoading,
     closeDeleteModal,
     setPaginationFilter,
     // currentStatus,
@@ -22,6 +38,10 @@ export default function CompanyDesignation() {
     paginationFilter,
     isChildData,
     permission,
+    isViewModalOpen,
+    setIsViewModalOpen,
+    handleRowsModalOpen,
+    viewModalData,
   } = useCompanyEmployee();
 
   //   const { setBreadcrumbs } = useBreadcrumbs();
@@ -68,6 +88,7 @@ export default function CompanyDesignation() {
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
   const navigate = useNavigate();
+
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
@@ -76,22 +97,41 @@ export default function CompanyDesignation() {
             Employee List
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
-            <SearchInput
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-              className="w-96"
-            />
             {permission.Add && (
               <Link to="/dashboard/employees/add">
                 <Button className="py-2 w-fit">Add Employee</Button>
               </Link>
             )}
+          </div>
+        </div>
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
             {canToggleColumns && (
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DropdownSearchMenu
+                        columns={columnToggleOptions}
+                        onToggleColumn={onToggleColumn}
+                        columnIcon={true}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs text-white">Toggle Visible Columns</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         </div>
@@ -114,13 +154,17 @@ export default function CompanyDesignation() {
                   }
                 : undefined
             }
+            onRowClick={(row) => {
+              handleRowsModalOpen(row as unknown as EmployeeData);
+            }}
             onDelete={(row) => onDelete(row as unknown as EmployeeData)}
             canDelete={(row) => !row.isSuperAdmin}
-            paginationDetails={employeedata}
+            paginationDetails={mapPaginationDetails(employeedata)}
+            isLoading={isLoading}
             setPaginationFilter={setPaginationFilter}
             permissionKey="employeeId"
-            localStorageId="EmployeeList"
             moduleKey="EMPLOYEE"
+            sortableColumns={["employeeName", "employeeType"]}
           />
         </div>
 
@@ -132,10 +176,16 @@ export default function CompanyDesignation() {
             modalData={`${modalData?.employeeName}`}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
-            onSubmit={() => conformDelete}
+            onSubmit={conformDelete}
             isChildData={isChildData}
           />
         )}
+        {/* View Meeting Modal */}
+        <ViewEmployeeModal
+          isModalOpen={isViewModalOpen}
+          modalData={viewModalData}
+          modalClose={() => setIsViewModalOpen(false)}
+        />
       </div>
     </FormProvider>
   );

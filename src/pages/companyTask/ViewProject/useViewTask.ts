@@ -20,6 +20,7 @@ export default function useViewCompanyTask() {
   const statusOptions = (taskStatus?.data ?? []).map((item) => ({
     label: item.taskStatus,
     value: item.taskStatusId,
+    color: item.color || "#2e3195",
   }));
 
   const handleStatusChange = (data: string) => {

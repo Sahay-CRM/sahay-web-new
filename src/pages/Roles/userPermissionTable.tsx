@@ -1,10 +1,10 @@
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useGetUserPerById } from "@/features/api/permission";
-import { useBreadcrumbs } from "@/components/shared/context/BreadcrumbContext";
 import PermissionTable from "@/components/shared/PermissionTable";
 import { Button } from "@/components/ui/button";
 import useUpdateUserPermission from "@/features/api/permission/useUpdateUserPermission";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 interface Permission {
   moduleId: string;
@@ -26,12 +26,14 @@ export default function UserPermissionTable() {
   const { data: userPerm } = useGetUserPerById(employeeId || "");
   const { setBreadcrumbs } = useBreadcrumbs();
 
+  const location = useLocation();
+  const userName = location.state?.userName;
+
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Admin", href: "/" },
       {
         label: "User Permissions",
-        href: "/dashboard/role/user-permission",
+        href: "/dashboard/roles/user-permission",
       },
       { label: "Edit Permissions" },
     ]);
@@ -90,8 +92,12 @@ export default function UserPermissionTable() {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Edit User Permission</h2>
-
+        <div>
+          <h2 className="text-xl">
+            Editing permissions for:{" "}
+            {userName ? <span className="font-bold">{userName}</span> : "User"}
+          </h2>
+        </div>
         <Button
           onClick={handleSavePermissions}
           disabled={updatePermission.isPending}

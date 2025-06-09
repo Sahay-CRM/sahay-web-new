@@ -6,12 +6,15 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { FormLabel, FormControl } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { isColorDark } from "@/features/utils/color.utils";
+import { useState } from "react";
 
 interface Option {
   id?: string | number;
   value?: string | number;
   label?: string | number;
-  color?: string; // Add color property
+  color?: string;
 }
 
 interface FormSelectProps {
@@ -26,12 +29,13 @@ interface FormSelectProps {
   className?: string;
   isMulti?: boolean;
   isMandatory?: boolean;
+  isSearchable?: boolean; // Add isSearchable prop
 }
 
 export default function FormSelect({
   id,
   label,
-  value,
+  value = "", // Default value to prevent uncontrolled behavior
   onChange,
   options,
   disabled = false,
@@ -40,15 +44,27 @@ export default function FormSelect({
   placeholder = "Select an option",
   isMulti = false,
   isMandatory = false,
+  isSearchable = false, // Default to false
 }: FormSelectProps) {
+  const [searchTerm, setSearchTerm] = useState(""); // State for search term
+
+  const filteredOptions = isSearchable
+    ? options.filter((opt) =>
+        String(opt.label).toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+    : options;
+
   // Helper to toggle selection for multi-select
   const toggleValue = (val: string) => {
     if (!Array.isArray(value)) {
+      // Initialize as array if not already
       onChange([val]);
     } else {
       if (value.includes(val)) {
+        // Remove if already selected
         onChange(value.filter((v) => v !== val));
       } else {
+        // Add if not selected
         onChange([...value, val]);
       }
     }
@@ -73,11 +89,15 @@ export default function FormSelect({
   };
 
   let selectedColor: string | undefined = undefined;
+  let selectedTextColor: string | undefined = undefined;
   if (!isMulti && value) {
     const selectedOption = options.find(
       (opt) => String(opt.value) === String(value),
     );
     selectedColor = selectedOption?.color;
+    if (selectedColor) {
+      selectedTextColor = isColorDark(selectedColor) ? "#fff" : "#000";
+    }
   }
 
   return (
@@ -90,7 +110,7 @@ export default function FormSelect({
       )}
 
       <Select
-        value={isMulti ? undefined : (value as string | undefined)}
+        value={isMulti ? "" : (value as string | undefined)} // Ensure value is always a string or undefined
         onValueChange={(val) => {
           if (isMulti) {
             toggleValue(val);
@@ -102,29 +122,43 @@ export default function FormSelect({
       >
         <FormControl>
           <SelectTrigger
-            className={`w-full mb-1 custom-select-trigger ${selectedColor ? "text-white" : "text-black"}`}
+            className={`w-full mb-1 py-5 custom-select-trigger ${
+              selectedColor
+                ? selectedTextColor === "#fff"
+                  ? "text-white"
+                  : "text-black"
+                : "text-black"
+            }`}
             id={id}
             style={
               selectedColor
                 ? {
                     backgroundColor: selectedColor,
-                    color: selectedColor ? "#fff" : "#000",
+                    color: selectedTextColor,
                   }
                 : undefined
             }
           >
-            <SelectValue
-              placeholder={placeholder}
-              className="text-white opacity-0"
-            >
-              {/* For multi-select, override default display with custom */}
-              {isMulti ? displayValue() : undefined}
-            </SelectValue>
+            {isMulti ? (
+              <div className="w-full text-left">{displayValue()}</div>
+            ) : (
+              <SelectValue placeholder={placeholder} />
+            )}
           </SelectTrigger>
         </FormControl>
 
         <SelectContent className="w-full max-h-60 overflow-auto">
-          {options
+          {isSearchable && (
+            <div className="p-2">
+              <Input
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)} // Keep dropdown open while typing
+                className="mb-2"
+              />
+            </div>
+          )}
+          {filteredOptions
             .filter((opt) => opt.value !== undefined && opt.value !== "")
             .map((opt) => {
               const stringVal = String(opt.value);
@@ -132,14 +166,18 @@ export default function FormSelect({
                 ? Array.isArray(value) && value.includes(stringVal)
                 : false;
               return (
-                <SelectItem key={stringVal} value={stringVal}>
+                <SelectItem
+                  key={stringVal}
+                  value={stringVal}
+                  className={checked ? "bg-blue-50" : ""}
+                >
                   {/* Show checkbox in multi-select */}
                   {isMulti && (
                     <input
                       type="checkbox"
                       checked={checked}
-                      readOnly
-                      className="mr-2 text-sm"
+                      onChange={() => {}} // Prevent direct interaction
+                      className="mr-2 text-sm pointer-events-none"
                     />
                   )}
                   {opt.label}

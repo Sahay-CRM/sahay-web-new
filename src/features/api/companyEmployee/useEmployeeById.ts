@@ -8,6 +8,9 @@ export default function useGetEmployeeById(id: string) {
   return useQuery({
     queryKey: ["get-employee-by-id", id],
     queryFn: async () => {
+      if (!id) {
+        throw new Error("Employee ID is required");
+      }
       const { data } = await Api.post<{ data: EmployeeDetailsById }>({
         url: Urls.getEmployeeById(id),
       });

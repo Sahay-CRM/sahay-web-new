@@ -2,31 +2,43 @@ import { Controller, FormProvider, useForm } from "react-hook-form";
 import ModalData from "@/components/shared/Modal/ModalData";
 import FormSelect from "@/components/shared/Form/FormSelect/selectuser";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
-import useDesignationFormModal from "./useDesignationFormModal";
+import {
+  useDesignationFormModalOptions,
+  useDesignationDropdownOptions,
+  useDesignationFormSubmit,
+} from "./useDesignationFormModal";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useState } from "react";
+import { useMemo } from "react";
 
 function DesignationAddFormModal({
   isModalOpen,
   modalClose,
   modalData,
 }: DesignationAddFormProps) {
-  const methods = useForm();
-  const {
-    register,
-    errors,
-    control,
-    DepartmentOptions,
-    designationOptions,
-    onSubmit,
-    handleModalClose,
-  } = useDesignationFormModal({
-    modalClose,
-    modalData,
+  // Use form with default values from modalData, and add isParentDesignation
+  const methods = useForm<DesignationData & { isParentDesignation?: boolean }>({
+    defaultValues: {
+      ...modalData,
+      isParentDesignation: Boolean(modalData?.parentId),
+    },
+  });
+  const { DepartmentOptions } = useDesignationFormModalOptions();
+  const departmentId = methods.watch("departmentId");
+  const { designationOptions } = useDesignationDropdownOptions(departmentId);
+  const handleSubmit = useDesignationFormSubmit(() => {
+    methods.reset();
+    modalClose();
   });
 
-  const [selectedprentswitch, setselectedparentswitch] = useState(false);
+  // Filter out the current designation from parent options if editing
+  const filteredDesignationOptions = useMemo(() => {
+    if (!modalData?.designationId) return designationOptions;
+    return designationOptions.filter(
+      (item) => item.value !== modalData.designationId,
+    );
+  }, [designationOptions, modalData?.designationId]);
+
   return (
     <FormProvider {...methods}>
       <ModalData
@@ -34,26 +46,23 @@ function DesignationAddFormModal({
         modalTitle={
           modalData?.designationId ? "Edit Designation" : "Add Designation"
         }
-        modalClose={handleModalClose}
+        modalClose={() => {
+          methods.reset();
+          modalClose();
+        }}
         buttons={[
           {
             btnText: "Submit",
             buttonCss: "py-1.5 px-5",
-            btnClick: onSubmit,
+            btnClick: methods.handleSubmit(handleSubmit),
           },
         ]}
       >
         <div className="space-y-4">
-          {/* <FormSelect
-            label="Department"
-            id="departmentId"
-            options={DepartmentOptions}
-            isMandatory
-            value=""
-          /> */}
           <Controller
             name="departmentId"
-            control={control}
+            control={methods.control}
+            rules={{ required: "Department is required" }}
             render={({ field, fieldState }) => (
               <FormSelect
                 {...field}
@@ -67,10 +76,10 @@ function DesignationAddFormModal({
           <div>
             <FormInputField
               id="designationName"
-              {...register("designationName", {
-                required: "Enter DesignationName Name",
+              {...methods.register("designationName", {
+                required: "Enter Designation Name",
               })}
-              error={errors.designationName}
+              error={methods.formState.errors.designationName}
               label="Designation Name"
               placeholder={"Enter Designation Name"}
               containerClass="mt-0 tb:mt-0"
@@ -81,29 +90,40 @@ function DesignationAddFormModal({
           <div className="space-y-2 mt-2">
             <div className="flex flex-col items-start space-y-2">
               <Label className="text-md" htmlFor="designationSwitch">
-                Is industry specific?
+                Is Parent Designation
               </Label>
-              <Switch
-                checked={selectedprentswitch}
-                onCheckedChange={() => {
-                  setselectedparentswitch(true);
-                }}
+              <Controller
+                name="isParentDesignation"
+                control={methods.control}
+                defaultValue={Boolean(modalData?.parentId)}
+                render={({ field }) => (
+                  <Switch
+                    checked={!!field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
               />
             </div>
           </div>
 
           {/* Show this only if switch is ON */}
-          {selectedprentswitch && (
+          {methods.watch("isParentDesignation") && (
             <div className="mt-4">
               <Controller
                 name="parentId"
-                control={control}
+                control={methods.control}
+                rules={{
+                  required: {
+                    value: true,
+                    message: "Parent Designation is required",
+                  },
+                }}
                 render={({ field, fieldState }) => (
                   <FormSelect
                     {...field}
                     value={field.value ?? ""}
                     label="Parent Designation"
-                    options={designationOptions}
+                    options={filteredDesignationOptions}
                     error={fieldState.error}
                     isMandatory={true}
                   />

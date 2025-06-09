@@ -3,8 +3,10 @@ import {
   getDesignationList,
 } from "@/features/api/designation";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { AxiosError } from "axios";
 import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
+import { toast } from "sonner";
 
 export default function useAdminUser() {
   const [addDesignationModal, setaddDesignationModal] = useState(false);
@@ -24,7 +26,7 @@ export default function useAdminUser() {
     search: "",
   });
 
-  const { data: designationList } = getDesignationList({
+  const { data: designationList, isLoading } = getDesignationList({
     filter: paginationFilter,
   });
 
@@ -42,7 +44,7 @@ export default function useAdminUser() {
   };
 
   const openModal = useCallback((data: DesignationData) => {
-    setModalData(data); // Set the data for the modal
+    setModalData(data);
     setaddDesignationModal(true);
   }, []);
 
@@ -55,7 +57,7 @@ export default function useAdminUser() {
       departmentId: "",
       departmentName: "",
       companyName: "",
-    }); // Clear modal data
+    });
     setaddDesignationModal(false);
     setIsDeleteModalOpen(false);
     setIsChildData("");
@@ -74,37 +76,41 @@ export default function useAdminUser() {
         onSuccess: () => {
           closeDeleteModal();
         },
+        onError: (error: Error) => {
+          const axiosError = error as AxiosError<{
+            message?: string;
+            status: number;
+          }>;
+
+          if (axiosError.response?.data?.status === 417) {
+            setIsChildData(axiosError.response?.data?.message);
+          } else if (axiosError.response?.data.status !== 417) {
+            toast.error(
+              `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+            );
+          }
+        },
       });
     }
   };
-  // const openImportModal = useCallback(() => {
-  //   setIsImportExportModalOpen(true);
-  //   setIsImport(true);
-  // }, []);
-  // const openExportModal = useCallback(() => {
-  //   setIsImportExportModalOpen(true);
-  //   setIsImport(false);
-  // }, []);
 
   return {
-    // isLoading,
+    isLoading,
     designationList,
     closeDeleteModal,
-    setPaginationFilter, // Use the updated function
-    // onStatusChange,
-    // currentStatus, // Return currentStatus state
+    setPaginationFilter,
+
     openModal,
     onDelete,
     modalData,
     conformDelete,
     handleAdd,
-    // Removed 'control' as it is not declared or initialized
-    // paginationFilter,
+
     addDesignationModal,
-    // openImportModal,
-    // openExportModal,
+
+    paginationFilter,
     isImportExportModalOpen,
-    // isImport,
+
     isDeleteModalOpen,
     setIsImportExportModalOpen,
     isChildData,

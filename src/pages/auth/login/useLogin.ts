@@ -47,13 +47,16 @@ const useLogin = () => {
     companyVerifyOtp(verifyCompanyData, {
       onSuccess: (response) => {
         if (response?.status) {
-          setToken(response?.data?.token, response?.data);
+          if (response?.data?.token) {
+            setToken(response.data.token, response.data);
+          }
+
           dispatch(
             setAuth({
-              token: response.data.token,
+              token: response.data.token ?? null,
               isLoading: false,
               isAuthenticated: true,
-              user: response.data,
+              userId: response.data.employeeId,
             }),
           );
           reset();
@@ -90,13 +93,13 @@ const useLogin = () => {
                 const token = dataRes.token;
                 dispatch(
                   setAuth({
-                    token: token,
+                    token: token ?? null,
                     isLoading: false,
                     isAuthenticated: true,
-                    user: dataRes,
+                    userId: dataRes.employeeId,
                   }),
                 );
-                setToken(token, dataRes);
+                setToken(token ?? "", dataRes);
                 setLoginDetails(null);
               } else {
                 throw new Error("No companies found.");

@@ -22,6 +22,8 @@ export default function useBrand() {
     currentPage: 1,
     pageSize: 10,
     search: "",
+    sortBy: "brandName",
+    sortOrder: "asc",
   });
 
   const { data: brand, isLoading } = useGetBrand({
@@ -98,5 +100,6 @@ export default function useBrand() {
     conformDelete,
     permission,
     isChildData,
+    paginationFilter,
   };
 }

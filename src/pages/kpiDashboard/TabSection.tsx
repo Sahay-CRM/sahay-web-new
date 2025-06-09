@@ -1,15 +1,14 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import useKpiDashboard from "./useKpiDashboard";
 
 export default function TabsSection({
   selectedPeriod,
   onSelectPeriod,
+  kpiStructure,
 }: {
   selectedPeriod: string;
   onSelectPeriod: (selectedPeriod: string) => void;
+  kpiStructure?: BaseResponse<FrequencyData> | null;
 }) {
-  const { kpiStructure } = useKpiDashboard({ selectedPeriod });
-
   return (
     <Tabs
       value={selectedPeriod}

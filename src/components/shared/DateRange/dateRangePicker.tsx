@@ -50,7 +50,7 @@ export default function DateRangePicker({
             id="date"
             variant={"outline"}
             className={cn(
-              "w-[300px] justify-start text-left font-normal",
+              "w-auto min-w-0 px-4 justify-start text-left font-normal",
               !date && "text-muted-foreground",
             )}
           >
@@ -61,6 +61,9 @@ export default function DateRangePicker({
                   {format(date.from, "LLL dd, y")} -{" "}
                   {format(date.to, "LLL dd, y")}
                 </>
+              ) : format(date.from, "yyyy-MM-dd") ===
+                format(new Date(), "yyyy-MM-dd") ? (
+                <>Today - {format(date.from, "dd MMMM yyyy")}</>
               ) : (
                 format(date.from, "LLL dd, y")
               )

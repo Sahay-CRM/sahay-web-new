@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-type DatePaging = BaseResponse<KPIFormData>;
+type DatePaging = BaseResponse<KPIFormDataProp>;
 
 export default function useAddUpdateDataPoint() {
   const addUpdateCompanyDatapointMutation = useMutation({
@@ -13,23 +13,11 @@ export default function useAddUpdateDataPoint() {
     mutationFn: async (data: KPIFormData) => {
       const isUpdate = Boolean(data.companykpimasterId);
 
-      const payload = {
-        dataPointName: data?.KPIMasterId?.KPILabel,
-        KPIMasterId: data?.KPIMasterId?.KPIMasterId,
-        coreParameterId: data?.coreParameterId?.coreParameterId,
-        dataPointLabel: data?.KPIMasterId?.KPIName,
-        productIds: data.productIds,
-        assignUser: data.assignUser,
-        validationType: data.validationType,
-        frequencyType: data.frequencyType,
-        unit: data.unit,
-      };
-
       const config = {
         url: isUpdate
           ? Urls.updateCompanyDatapoint(data.companykpimasterId!)
           : Urls.addCompanyDatapoint(),
-        data: payload,
+        data: data,
       };
 
       const { data: resData } = isUpdate
@@ -41,6 +29,8 @@ export default function useAddUpdateDataPoint() {
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["get-datapoint-list"] });
+      queryClient.resetQueries({ queryKey: ["get-datapoint-list-non-select"] });
+      queryClient.resetQueries({ queryKey: ["get-kpi-by-id"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

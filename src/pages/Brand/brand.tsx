@@ -1,14 +1,23 @@
-import { useState } from "react";
-import useBrand from "./useBrand";
+import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import ConformationDeleteModal from "./conformationDeleteModal";
 import PageNotAccess from "../PageNoAccess";
 import TableData from "@/components/shared/DataTable/DataTable";
 import BrandFormModal from "./BrandFormModal";
-import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-import { FormProvider, useForm } from "react-hook-form";
+import SearchInput from "@/components/shared/SearchInput";
+import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+
+import useBrand from "./useBrand";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useEffect } from "react";
 
 export default function Brand() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Brand", href: "" }]);
+  }, [setBreadcrumbs]);
+
   const {
     brand,
     isLoading,
@@ -23,33 +32,8 @@ export default function Brand() {
     conformDelete,
     permission,
     isChildData,
+    paginationFilter,
   } = useBrand();
-
-  // Column visibility state
-  const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "brandName", label: "Brand Name", visible: true },
-  ]);
-
-  // Filter visible columns
-  const visibleColumns = columnToggleOptions.reduce(
-    (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
-
-  // Toggle column visibility
-  const onToggleColumn = (key: string) => {
-    setColumnToggleOptions((prev) =>
-      prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
-    );
-  };
-  // Check if the number of columns is more than 3
-  const canToggleColumns = columnToggleOptions.length > 3;
 
   const methods = useForm();
 
@@ -70,12 +54,16 @@ export default function Brand() {
                 Add Brand
               </Button>
             )}
-            {canToggleColumns && (
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
-            )}
+          </div>
+        </div>
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
           </div>
         </div>
 
@@ -85,18 +73,21 @@ export default function Brand() {
               ...item,
               srNo: (brand.currentPage - 1) * brand.pageSize + index + 1,
             }))}
-            columns={visibleColumns}
+            columns={{
+              srNo: "Sr No",
+              brandName: "Brand Name",
+            }}
             primaryKey="brandId"
             onEdit={openModal}
             onDelete={onDelete}
-            paginationDetails={brand}
+            paginationDetails={mapPaginationDetails(brand)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
             moduleKey="BRAND"
             showIndexColumn={false}
             isActionButton={() => true}
             permissionKey="users"
-            localStorageId="brandTableDataWidth"
+            sortableColumns={["brandName"]}
           />
         </div>
 

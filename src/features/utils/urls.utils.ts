@@ -1,5 +1,7 @@
 export const baseUrl = import.meta.env.VITE_API_BASE;
 
+export const ImageBaseURL = import.meta.env.VITE_IMAGEURL;
+
 const Urls = {
   loginSendOtp: () => `${baseUrl}/auth/login`,
   loginVerifyOtp: () => `${baseUrl}/auth/verify-otp`,
@@ -128,6 +130,14 @@ const Urls = {
   getKpiVisualize: () => `${baseUrl}/company/kpi-data/get/visual`,
 
   getHealthScoreList: () => `${baseUrl}/company/health/dashboard/get`,
+
+  selectCompanyList: () => `${baseUrl}/auth/switch-company`,
+
+  uploadImage: () => `${baseUrl}/file/upload`,
+
+  getAllEmployeeDd: () => `${baseUrl}/company/employee/get-all`,
+
+  getUserLogById: () => `${baseUrl}/company/employee/get-log`,
 };
 
 export default Urls;
