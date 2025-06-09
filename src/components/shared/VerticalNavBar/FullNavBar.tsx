@@ -15,7 +15,7 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
 
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   const user = useSelector(getUserDetail);
-  const companyUrl = `${ImageBaseURL}/share/logo/${user?.companyLogo}`;
+  const companyUrl = `${ImageBaseURL}/share/company/logo/${user?.companyLogo}`;
 
   const handleAccordionToggle = (index: number) => {
     setActiveIndex((prevIndex) => (prevIndex === index ? -1 : index));
