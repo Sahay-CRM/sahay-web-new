@@ -2,6 +2,7 @@ import { useDdCompanyMeeting } from "@/features/api/companyMeeting";
 import { useAllCompanyTask } from "@/features/api/companyTask";
 import { useGetImportantDates } from "@/features/api/importantDates";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { isColorDark } from "@/features/utils/color.utils";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 
@@ -26,7 +27,8 @@ export default function useCalendar() {
           ? new Date(item.taskDeadline)
           : new Date();
       const end = item.taskDeadline ? new Date(item.taskDeadline) : start;
-
+      const bgColor = item.color || "#2e3195";
+      const textColor = isColorDark(bgColor) ? "#ffffff" : "#222222";
       return {
         title: (item.taskName || "Task Name") + " (Task)",
         description: item.taskDescription || "No description provided",
@@ -40,8 +42,8 @@ export default function useCalendar() {
             ? end
             : start,
         eventId: item.taskId || "", // ensure string
-        bgColor: item.color || "#2e3195",
-        textColor: "#ffffff",
+        bgColor,
+        textColor,
         eventType: "task",
       };
     });
@@ -51,7 +53,8 @@ export default function useCalendar() {
       // Use meetingDateTime for both start and end, matching local time
       const dateTime = item.meetingDateTime;
       const eventDate = dateTime ? new Date(dateTime) : new Date();
-
+      const bgColor = item.color || "#2e3195";
+      const textColor = isColorDark(bgColor) ? "#ffffff" : "#222222";
       return {
         title: (item.meetingName || "Meeting Name") + " (Meeting)",
         description: item.meetingDescription || "No Topic",
@@ -64,8 +67,8 @@ export default function useCalendar() {
             ? eventDate
             : new Date(),
         eventId: item.meetingId || "", // ensure string
-        bgColor: item.color || "#2e3195",
-        textColor: "#ffffff",
+        bgColor,
+        textColor,
         eventType: "meeting",
       };
     });
@@ -74,6 +77,8 @@ export default function useCalendar() {
     data.map((item) => {
       // Use 'importantDate' field from API, not 'date'
       const deadline = item.importantDate ? new Date(item.importantDate) : null;
+      const bgColor = item.color || "#2f328b";
+      const textColor = isColorDark(bgColor) ? "#ffffff" : "#222222";
       return {
         title: item.importantDateName || "Important Dates",
         description: item.importantDateRemarks || "No Notes",
@@ -86,8 +91,8 @@ export default function useCalendar() {
             ? deadline
             : new Date(),
         eventId: item.importantDateId || "", // ensure string
-        bgColor: item.color || "#2f328b",
-        textColor: "#ffffff",
+        bgColor,
+        textColor,
         eventType: "importantDate",
       };
     });

@@ -27,7 +27,9 @@ const ProjectView = () => {
     handleStatusChange,
     methods,
     taskPermission,
+    permission,
   } = useViewProject();
+
   const projectData = projectApiData?.data;
   if (!projectData) return null;
   const tasks = projectData?.ProjectTasks || [];
@@ -50,15 +52,17 @@ const ProjectView = () => {
                   {projectData.projectName}
                 </h2>
               </div>
-              <Button
-                onClick={() => {
-                  navigate(
-                    `/dashboard/projects/edit/${projectData?.projectId}?source=view`,
-                  );
-                }}
-              >
-                Edit Project
-              </Button>
+              {permission?.Edit && (
+                <Button
+                  onClick={() => {
+                    navigate(
+                      `/dashboard/projects/edit/${projectData?.projectId}?source=view`,
+                    );
+                  }}
+                >
+                  Edit Project
+                </Button>
+              )}
             </div>
 
             <div className="mb-4">
@@ -187,10 +191,17 @@ const ProjectView = () => {
                     {tasks.map((task) => (
                       <div
                         key={task.taskId}
-                        className="rounded-lg border bg-muted/30 p-4 text-md shadow-sm"
-                        onClick={() =>
-                          navigate(`/dashboard/tasks/view/${task.taskId}`)
-                        }
+                        className={`rounded-lg border bg-muted/30 p-4 text-md shadow-sm ${
+                          taskPermission.Edit ? "cursor-pointer" : ""
+                        }`}
+                        {...(taskPermission.Edit
+                          ? {
+                              onClick: () =>
+                                navigate(
+                                  `/dashboard/tasks/view/${task.taskId}`,
+                                ),
+                            }
+                          : {})}
                       >
                         <div className="flex items-center gap-2 mt-1">
                           <span className="font-medium text-muted-foreground">

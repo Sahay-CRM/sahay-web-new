@@ -402,10 +402,10 @@ export default function useAddEmployee() {
                 primaryKey="designationId"
                 paginationDetails={designationData as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
+                onCheckbox={() => true}
                 multiSelect={false}
                 selectedValue={field.value}
                 handleChange={field.onChange}
-                onCheckbox={() => true}
               />
             </>
           )}

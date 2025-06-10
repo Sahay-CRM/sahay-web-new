@@ -27,7 +27,7 @@ const AddProjectModal: React.FC<MeetingModalProps> = ({
   return (
     <ModalData
       isModalOpen={isModalOpen}
-      modalTitle="Add Meeting"
+      modalTitle={modalData.projectId ? "Update Project" : "Add Project"}
       modalClose={modalClose}
       buttons={[
         {

@@ -49,6 +49,7 @@ export default function useAddProject() {
       setIsInitialLoad(true);
       setHasInitializedData(false);
       reset({
+        projectId: companyProjectId || "",
         projectName: projectApiData?.data.projectName || "",
         projectDescription: projectApiData?.data.projectDescription || "",
         projectDeadline: projectApiData?.data.projectDeadline
@@ -269,6 +270,7 @@ export default function useAddProject() {
                 multiSelect={false}
                 selectedValue={field.value}
                 handleChange={field.onChange}
+                onCheckbox={() => true}
                 // permissionKey="--"
               />
             </>
@@ -353,7 +355,7 @@ export default function useAddProject() {
                 multiSelect={false}
                 selectedValue={field.value}
                 handleChange={field.onChange}
-                // permissionKey="--"
+                onCheckbox={() => true}
               />
             </>
           )}
@@ -493,6 +495,7 @@ export default function useAddProject() {
                 handleChange={(selectedItems: any[]) =>
                   handleSubParameterChange(selectedItems, field.onChange)
                 }
+                onCheckbox={() => true}
                 // permissionKey="--"
               />
             </>
@@ -611,6 +614,7 @@ export default function useAddProject() {
                 handleChange={(selectedItems: any[]) =>
                   handleEmployeeChange(selectedItems, field.onChange)
                 }
+                onCheckbox={() => true}
                 // permissionKey="--"
               />
             </>

@@ -220,8 +220,8 @@ export default function MeetingList() {
         </div>
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
-            title={"Delete User"}
-            label={"User Name :"}
+            title={"Delete Meeting"}
+            label={"Meeting Name :"}
             modalData={`${modalData?.meetingName}`}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}

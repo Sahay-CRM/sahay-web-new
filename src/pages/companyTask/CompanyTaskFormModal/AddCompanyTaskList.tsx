@@ -28,23 +28,21 @@ export default function AddMeeting({
     // projectListOption,
     projectListdata,
     repetitionOptions,
-    taskStatus,
-    taskType,
     employeedata,
-    setPaginationFilterTaskStatus,
-    setPaginationFilterTaskType,
     setPaginationFilterEmployee,
     setPaginationFilterProject,
     setPaginationFilterMeeting,
     meetingData,
     taskId,
+    taskStatusOptions,
+    taskTypeOptions,
   } = useAddCompanyEmployee();
 
   const { setBreadcrumbs } = useBreadcrumbs();
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Employee", href: "/dashboard/company-employee" },
+      { label: "Company Task", href: "/dashboard/tasks" },
       {
         label: taskId ? "Update Task" : "Add Task",
         href: "",
@@ -106,7 +104,7 @@ export default function AddMeeting({
                     }))}
                     isActionButton={() => false}
                     columns={{
-                      projectName: "ProjectName",
+                      projectName: "Project Name",
                     }}
                     primaryKey="projectId"
                     multiSelect={false}
@@ -128,6 +126,7 @@ export default function AddMeeting({
                         field.onChange("");
                       }
                     }}
+                    onCheckbox={() => true}
                     paginationDetails={projectListdata as PaginationFilter}
                     setPaginationFilter={setPaginationFilterProject}
                   />
@@ -136,183 +135,7 @@ export default function AddMeeting({
             />
           </Card>
         )}
-        {/* Step 2 - Basic Info */}
         {step === 2 && (
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
-              <FormInputField
-                label="Task Name"
-                {...register("taskName", { required: "Task Name is required" })}
-                error={errors.taskName}
-              />
-              <FormInputField
-                label="Task Description"
-                {...register("taskDescription", {
-                  required: "Task Description is required",
-                })}
-                error={errors.taskDescription}
-              />
-            </Card>
-          </div>
-        )}
-
-        {/* Step 3 - Schedule & Repetition */}
-        {step === 3 && (
-          <Card className="px-4 py-4">
-            <div className="space-y-4">
-              {/* Repetition Selection */}
-              <Controller
-                control={control}
-                name="repetition"
-                render={({ field }) => (
-                  <FormSelect
-                    label="Repetition"
-                    options={repetitionOptions}
-                    placeholder="Select Repetition"
-                    value={field.value}
-                    onChange={field.onChange}
-                    error={errors.repetition}
-                  />
-                )}
-              />
-
-              {/* Date Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {methods.watch("repetition") === "none" && (
-                  <Controller
-                    control={control}
-                    name="taskStartDate"
-                    render={({ field }) => (
-                      <FormDateTimePicker
-                        label="Task Start Date"
-                        value={field.value}
-                        onChange={field.onChange}
-                        error={errors.taskStartDate}
-                      />
-                    )}
-                  />
-                )}
-
-                {/* Task Deadline - Always visible and required */}
-                <Controller
-                  control={control}
-                  name="taskDeadline"
-                  rules={{ required: "Task Deadline is required" }}
-                  render={({ field }) => (
-                    <FormDateTimePicker
-                      label="Task Deadline"
-                      value={field.value}
-                      onChange={field.onChange}
-                      error={errors.taskDeadline}
-                    />
-                  )}
-                />
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {/* Step 4 - Task Status */}
-        {step === 4 && (
-          <Card className="px-4 py-4">
-            <Controller
-              name="taskStatus"
-              control={control}
-              rules={{ required: "Please select a Task Status" }}
-              render={({ field }) => (
-                <>
-                  {errors?.taskStatus && (
-                    <div className="mt-2">
-                      <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                        this field is required
-                      </span>
-                    </div>
-                  )}
-                  <TableData
-                    tableData={taskStatus?.data?.map((item, index) => ({
-                      ...item,
-                      srNo: index + 1,
-                    }))}
-                    isActionButton={() => false}
-                    columns={{
-                      taskStatus: "Task Status",
-                    }}
-                    primaryKey="taskStatusId"
-                    multiSelect={false}
-                    selectedValue={
-                      field.value as Record<string, unknown> | undefined
-                    }
-                    handleChange={(selected) => {
-                      if (
-                        selected &&
-                        typeof selected === "object" &&
-                        "taskStatusId" in selected
-                      ) {
-                        field.onChange(selected);
-                      } else {
-                        field.onChange(undefined);
-                      }
-                    }}
-                    paginationDetails={taskStatus as PaginationFilter}
-                    setPaginationFilter={setPaginationFilterTaskStatus}
-                  />
-                </>
-              )}
-            />
-          </Card>
-        )}
-
-        {/* Step 4 - Task Type */}
-        {step === 5 && (
-          <Card className="px-4 py-4">
-            <Controller
-              name="taskType"
-              control={control}
-              rules={{ required: "Please select a Task Type" }}
-              render={({ field }) => (
-                <>
-                  {errors?.taskType && (
-                    <div className="mt-2">
-                      <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                        this field is required
-                      </span>
-                    </div>
-                  )}
-                  <TableData
-                    tableData={taskType?.data?.map((item, index) => ({
-                      ...item,
-                      srNo: index + 1,
-                    }))}
-                    isActionButton={() => false}
-                    columns={{
-                      taskTypeName: "Task Type",
-                    }}
-                    primaryKey="taskTypeId"
-                    multiSelect={false}
-                    selectedValue={
-                      field.value as Record<string, unknown> | undefined
-                    }
-                    handleChange={(selected) => {
-                      if (
-                        selected &&
-                        typeof selected === "object" &&
-                        "taskTypeId" in selected
-                      ) {
-                        field.onChange(selected);
-                      } else {
-                        field.onChange(undefined);
-                      }
-                    }}
-                    paginationDetails={taskType as PaginationFilter}
-                    setPaginationFilter={setPaginationFilterTaskType}
-                  />
-                </>
-              )}
-            />
-          </Card>
-        )}
-        {/* Step 6 - Meeting */}
-        {step === 6 && (
           <Card className="px-4 py-4">
             <Controller
               name="meeting"
@@ -356,6 +179,7 @@ export default function AddMeeting({
                         field.onChange("");
                       }
                     }}
+                    onCheckbox={() => true}
                     paginationDetails={meetingData as PaginationFilter}
                     setPaginationFilter={setPaginationFilterMeeting}
                   />
@@ -365,8 +189,125 @@ export default function AddMeeting({
           </Card>
         )}
 
-        {/* Step 5 - Assign User */}
-        {step === 7 && (
+        {/* Step 3 - Basic Info */}
+        {step === 3 && (
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
+              <div>
+                <FormInputField
+                  label="Task Name"
+                  {...register("taskName", {
+                    required: "Task Name is required",
+                  })}
+                  error={errors.taskName}
+                />
+                <div className="mt-2">
+                  <label className="block mb-1 font-medium">
+                    Task Description <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    className="w-full border rounded-md p-2 text-base min-h-[40px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={5}
+                    {...register("taskDescription", {
+                      required: "Please Enter Task Description",
+                    })}
+                  />
+                  {errors.taskDescription && (
+                    <span className="text-red-600 text-sm">
+                      {errors.taskDescription.message}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-4">
+                {/* Repetition Selection */}
+                <Controller
+                  control={control}
+                  name="repetition"
+                  render={({ field }) => (
+                    <FormSelect
+                      label="Repetition"
+                      options={repetitionOptions}
+                      placeholder="Select Repetition"
+                      value={field.value}
+                      onChange={field.onChange}
+                      error={errors.repetition}
+                    />
+                  )}
+                />
+
+                {/* Date Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {methods.watch("repetition") === "none" && (
+                    <Controller
+                      control={control}
+                      name="taskStartDate"
+                      render={({ field }) => (
+                        <FormDateTimePicker
+                          label="Task Start Date"
+                          value={field.value}
+                          onChange={field.onChange}
+                          error={errors.taskStartDate}
+                        />
+                      )}
+                    />
+                  )}
+
+                  <Controller
+                    control={control}
+                    name="taskDeadline"
+                    rules={{ required: "Task Deadline is required" }}
+                    render={({ field }) => (
+                      <FormDateTimePicker
+                        label="Task Deadline"
+                        value={field.value}
+                        onChange={field.onChange}
+                        error={errors.taskDeadline}
+                      />
+                    )}
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-1/2">
+                    <Controller
+                      control={control}
+                      name="taskStatusId"
+                      rules={{ required: "Please select Task Status" }}
+                      render={({ field }) => (
+                        <FormSelect
+                          label="Task Status"
+                          options={taskStatusOptions}
+                          error={errors.taskStatusId}
+                          {...field}
+                          isMandatory={true}
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="w-1/2">
+                    <Controller
+                      control={control}
+                      name="taskTypeId"
+                      rules={{ required: "Please select Task Type" }}
+                      render={({ field }) => (
+                        <FormSelect
+                          label="Task Type"
+                          options={taskTypeOptions}
+                          error={errors.taskTypeId}
+                          {...field}
+                          isMandatory={true}
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Step 4 - Assign User */}
+        {step === 4 && (
           <Card className="px-4 py-4">
             <Controller
               name="assignUser"
@@ -414,6 +355,7 @@ export default function AddMeeting({
                           : [];
                         field.onChange(ids);
                       }}
+                      onCheckbox={() => true}
                       paginationDetails={employeedata as PaginationFilter}
                       setPaginationFilter={setPaginationFilterEmployee}
                     />
@@ -424,8 +366,8 @@ export default function AddMeeting({
           </Card>
         )}
 
-        {/* Step 8 - Comment (Optional) */}
-        {!taskId && step === 8 && (
+        {/* Step 5 - Comment (Optional) */}
+        {!taskId && step === 5 && (
           <Card className="px-4 py-4">
             <FormInputField
               label="Comment"

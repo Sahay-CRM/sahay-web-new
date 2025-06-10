@@ -13,19 +13,18 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
   modalClose,
   onSubmit,
 }) => {
-  // Flatten companyEmployee if it's an array of arrays
-  const joinersArr = Array.isArray(modalData?.joiners)
-    ? (modalData.joiners.flat?.() ?? modalData.joiners)
-    : [];
+  // const joinersArr = Array.isArray(modalData?.joiners)
+  //   ? (modalData.joiners.flat?.() ?? modalData.joiners)
+  //   : [];
 
-  const joiners = joinersArr
-    ?.filter((joiner) => !Array.isArray(joiner))
-    .map((joiner) => joiner?.employeeName);
+  // const joiners = joinersArr
+  //   ?.filter((joiner) => !Array.isArray(joiner))
+  //   .map((joiner) => joiner?.employeeName);
 
   return (
     <ModalData
       isModalOpen={isModalOpen}
-      modalTitle="Add Meeting"
+      modalTitle={modalData.meetingId ? "Update Meeting" : "Add Meeting"}
       modalClose={modalClose}
       buttons={[
         {
@@ -77,12 +76,12 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
             {modalData.meetingTypeName}
           </div>
         )}
-        {joiners && (
+        {/* {joiners && (
           <div className="col-span-2">
             <span className="font-medium text-primary">Joiners: </span>
             {joiners}
           </div>
-        )}
+        )} */}
       </div>
     </ModalData>
   );

@@ -31,7 +31,7 @@ const AddDatapoint = () => {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "KPI List", href: "" },
+      { label: "KPI List", href: "/dashboard/kpi" },
       { label: companykpimasterId ? "Update KPI" : "Add KPI", href: "" },
     ]);
   }, [companykpimasterId, setBreadcrumbs]);

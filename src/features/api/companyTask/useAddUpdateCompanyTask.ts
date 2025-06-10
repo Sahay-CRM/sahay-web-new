@@ -27,6 +27,7 @@ export default function useAddUpdateCompanyTask() {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["get-task-list"] });
       queryClient.resetQueries({ queryKey: ["get-task-by-id"] });
+      queryClient.resetQueries({ queryKey: ["dd-task-type"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

@@ -72,6 +72,20 @@ function Calendar() {
     }
   }, [selectedOption, taskEvents, meetingEvents, importantDateEvents]);
 
+  // Dynamically build options based on view permissions
+  const selectOptions = [];
+  if (permission.TASK?.View)
+    selectOptions.push({ value: "task", label: "Tasks" });
+  if (permission.MEETING_LIST?.View)
+    selectOptions.push({ value: "meeting", label: "Meeting" });
+  if (permission.IMPORTANT_DATE?.View)
+    selectOptions.push({
+      value: "importantDate",
+      label: "ImportantDate",
+    });
+  if (selectOptions.length > 1)
+    selectOptions.unshift({ value: "all", label: "All" });
+
   return (
     <FormProvider {...methods}>
       <div className="px-4 h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto">
@@ -84,19 +98,18 @@ function Calendar() {
               </Button>
             </div>
           )}
-          <div>
-            <FormSelect
-              value={selectedOption}
-              onChange={handleOptionChange}
-              options={[
-                { value: "all", label: "All" },
-                { value: "task", label: "Tasks" },
-                { value: "meeting", label: "Meeting" },
-                { value: "importantDate", label: "ImportantDate" },
-              ]}
-              className="h-9"
-            />
-          </div>
+          {(permission.TASK?.View ||
+            permission.MEETING?.View ||
+            permission.IMPORTANT_DATE?.View) && (
+            <div>
+              <FormSelect
+                value={selectedOption}
+                onChange={handleOptionChange}
+                options={selectOptions}
+                className="h-9"
+              />
+            </div>
+          )}
         </div>
         {addImportantDate && (
           <CalenderFormModal
