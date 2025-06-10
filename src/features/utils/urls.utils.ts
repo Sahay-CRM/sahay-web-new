@@ -10,7 +10,7 @@ const Urls = {
     `${baseUrl}/admin/user-permission/get/${id}`,
   CompanyTask: () => `${baseUrl}/company/tasks/employee`,
 
-  getAllModuleList: () => `${baseUrl}/module/get-all`,
+  getAllModuleList: () => `${baseUrl}/module/get-all-company`,
   getAllPermissionList: () => `${baseUrl}/permission/get`,
 
   updateUserPermission: (id: string) =>
