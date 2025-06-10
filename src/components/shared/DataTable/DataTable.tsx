@@ -398,6 +398,7 @@ const TableData = <T extends Record<string, unknown>>({
                             value=""
                             style={{ backgroundColor: "white", color: "#000" }}
                             className="text-black"
+                            disabled
                           >
                             Select
                           </option>

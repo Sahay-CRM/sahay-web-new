@@ -13,6 +13,14 @@ export default function UseUserLog() {
     taskStartDate: new Date(),
     taskDeadline: new Date(),
   });
+
+  const [appliedDateRange, setAppliedDateRange] = useState<{
+    taskStartDate: Date | undefined;
+    taskDeadline: Date | undefined;
+  }>({
+    taskStartDate: new Date(),
+    taskDeadline: new Date(),
+  });
   const [selectedEmployee, setSelectedEmployee] = useState<string>();
 
   const { data: employee } = ddAllEmployee();
@@ -30,8 +38,8 @@ export default function UseUserLog() {
   const { data: employeeLog } = useGetEmployeeLog({
     filter: {
       employeeId: selectedEmployee,
-      startDate: formatDate(taskDateRange.taskStartDate),
-      endDate: formatDate(taskDateRange.taskDeadline),
+      startDate: formatDate(appliedDateRange.taskStartDate),
+      endDate: formatDate(appliedDateRange.taskDeadline),
     },
     enable: !!selectedEmployee,
   });
@@ -85,21 +93,28 @@ export default function UseUserLog() {
   };
 
   const handleDateRangeApply = (range: DateRange | undefined) => {
-    if (range?.from && range?.to) {
-      setTaskDateRange({
-        taskStartDate: range.from,
-        taskDeadline: range.to,
-      });
-    } else if (range?.from) {
-      setTaskDateRange({
+    // This is called when Apply button is clicked
+    if (range?.from && !range?.to) {
+      const newTaskDateRange = {
         taskStartDate: range.from,
         taskDeadline: range.from,
-      });
+      };
+      setTaskDateRange(newTaskDateRange);
+      setAppliedDateRange(newTaskDateRange);
+    } else if (range?.from && range?.to) {
+      const newTaskDateRange = {
+        taskStartDate: range.from,
+        taskDeadline: range.to,
+      };
+      setTaskDateRange(newTaskDateRange);
+      setAppliedDateRange(newTaskDateRange);
     } else {
-      setTaskDateRange({
+      const newTaskDateRange = {
         taskStartDate: undefined,
         taskDeadline: undefined,
-      });
+      };
+      setTaskDateRange(newTaskDateRange);
+      setAppliedDateRange(newTaskDateRange);
     }
   };
 

@@ -34,10 +34,6 @@ export default function useDeleteUserLog() {
     <FormProvider {...methods}>
       <div className="">
         <div className="mb-10 flex gap-4 items-center">
-          <DateRangePicker
-            onChange={handleDateRangeChange}
-            onApply={handleDateRangeApply}
-          />
           <div>
             <FormSelect
               value={selectedEmployee}
@@ -47,6 +43,12 @@ export default function useDeleteUserLog() {
               isSearchable={true}
             />
           </div>
+          {selectedEmployee && (
+            <DateRangePicker
+              onChange={handleDateRangeChange}
+              onApply={handleDateRangeApply}
+            />
+          )}
         </div>
         <div className="">
           {employeeLog?.map((log) => (
