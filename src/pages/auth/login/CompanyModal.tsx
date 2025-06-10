@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { useForm, FormProvider, Controller } from "react-hook-form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { FormLabel } from "@/components/ui/form";
 import ModalData from "@/components/shared/Modal/ModalData";
+import { Input } from "@/components/ui/input"; // Import Input component
 
 interface CompanyModalProps {
   isModalOpen: boolean;
@@ -27,6 +27,7 @@ const CompanyModal: React.FC<CompanyModalProps> = ({
     control,
     formState: { errors },
   } = methods;
+  const [searchTerm, setSearchTerm] = useState("");
 
   const onSubmit = (data: FormValues) => {
     const selected = companies.find((c) => c.companyId === data.companyId);
@@ -37,8 +38,22 @@ const CompanyModal: React.FC<CompanyModalProps> = ({
   };
 
   const handleOpenChange = (open: boolean) => {
-    if (!open) modalClose();
+    if (!open) {
+      modalClose();
+      setSearchTerm(""); // Reset search term on modal close
+    }
   };
+
+  const filteredCompanies = useMemo(() => {
+    if (!searchTerm) {
+      return companies;
+    }
+    return companies.filter(
+      (company) =>
+        company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        company.userType?.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  }, [companies, searchTerm]);
 
   return (
     <FormProvider {...methods}>
@@ -54,38 +69,65 @@ const CompanyModal: React.FC<CompanyModalProps> = ({
           },
         ]}
       >
-        <div className="space-y-4">
-          <FormLabel htmlFor="companyId">Company</FormLabel>
+        <div className="pb-2">
+          <Input
+            type="text"
+            placeholder="Search company..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border rounded-md w-full mb-3"
+          />
           <Controller
             name="companyId"
             control={control}
             rules={{ required: "Please select a company" }}
             render={({ field }) => (
               <RadioGroup
-                className="flex flex-col gap-3"
+                className="flex flex-col gap-2 max-h-96 overflow-y-auto"
                 value={field.value}
                 onValueChange={field.onChange}
               >
-                {companies.map((c) => (
-                  <div key={c.companyId} className="flex items-center">
-                    <RadioGroupItem
-                      id={`company-${c.companyId}`}
-                      value={c.companyId}
-                      className="h-4 w-4"
-                    />
+                {filteredCompanies.length > 0 ? (
+                  filteredCompanies.map((c, index) => (
                     <label
+                      key={c.companyId + index}
                       htmlFor={`company-${c.companyId}`}
-                      className="ml-2 cursor-pointer"
+                      className={`flex items-center p-2.5 border rounded-md hover:bg-gray-50 cursor-pointer transition-colors ${
+                        field.value === c.companyId
+                          ? "bg-blue-50 border-blue-500"
+                          : "border-gray-200"
+                      }`}
                     >
-                      {c.companyName}
+                      <RadioGroupItem
+                        id={`company-${c.companyId}`}
+                        value={c.companyId}
+                        className="h-4 w-4"
+                      />
+                      <span className="ml-2.5">
+                        <span className="font-medium text-sm text-gray-800">
+                          {" "}
+                          {/* Adjusted text size */}
+                          {c.companyName}
+                        </span>
+                        <span className="text-xs text-gray-500 ml-1">
+                          {" "}
+                          {/* Adjusted text size and color */}({c.userType})
+                        </span>
+                      </span>
                     </label>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-center text-gray-500 py-4">
+                    No companies found.
+                  </p>
+                )}
               </RadioGroup>
             )}
           />
           {errors.companyId && (
-            <p className="text-red-600 text-sm">{errors.companyId.message}</p>
+            <p className="text-red-600 text-sm mt-1">
+              {errors.companyId.message}
+            </p>
           )}
         </div>
       </ModalData>

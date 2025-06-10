@@ -1,17 +1,19 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-interface AuthState {
-  token: string | null;
-  user: unknown | null;
-  isLoading?: boolean;
-  isAuthenticated?: boolean;
-}
+
 // Define the structure of your state
 const initialState: AuthState = {
   token: null,
   user: null,
   isLoading: false,
   isAuthenticated: false,
-  userPermission: [],
+  userPermission: {},
+  userId: "",
+  kpiData: {
+    dataPointEmpId: "",
+    startDate: "",
+    endDate: "",
+    selectFrequency: "",
+  },
 };
 
 export const authSlice = createSlice({
@@ -20,17 +22,33 @@ export const authSlice = createSlice({
   reducers: {
     setAuth: (state, action: PayloadAction<AuthState>) => {
       state.token = action.payload.token;
-      state.user = action.payload.user;
       state.isLoading = action.payload.isLoading;
+      state.userId = action.payload.userId;
       state.isAuthenticated = action.payload.isAuthenticated;
     },
-    setUserPermission: (state, action: PayloadAction<PermissionData[]>) => {
+    setUserId: (state, action: PayloadAction<string>) => {
+      state.userId = action.payload;
+    },
+    setUser: (state, action: PayloadAction<User | null>) => {
+      state.user = action.payload;
+    },
+    setUserPermission: (state, action: PayloadAction<PermissionsResponse>) => {
       state.userPermission = action.payload;
+    },
+    setKpiData: (state, action: PayloadAction<KpiData>) => {
+      state.kpiData = action.payload;
     },
     logout: () => initialState,
   },
 });
 
 // Export actions and reducer
-export const { setAuth, logout } = authSlice.actions;
+export const {
+  setAuth,
+  setUserPermission,
+  setUser,
+  logout,
+  setKpiData,
+  setUserId,
+} = authSlice.actions;
 export default authSlice.reducer;

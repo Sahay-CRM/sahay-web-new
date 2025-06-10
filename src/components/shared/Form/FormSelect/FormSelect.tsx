@@ -1,131 +1,197 @@
-"use client";
-
-import React from "react";
-import { twMerge } from "tailwind-merge";
 import {
   Select,
   SelectTrigger,
+  SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select"; // ShadCN components
-import { FormLabel } from "@/components/ui/form";
+} from "@/components/ui/select";
+import { FormLabel, FormControl } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { isColorDark } from "@/features/utils/color.utils";
+import { useState } from "react";
 
-// Define the type for each option in the select dropdown
 interface Option {
   id?: string | number;
   value?: string | number;
   label?: string | number;
+  color?: string;
 }
 
-// Define the props for the FormSelect component
-interface FormSelectProps
-  extends React.SelectHTMLAttributes<HTMLSelectElement> {
-  label?: string;
-  labelClass?: string;
-  containerClass?: string;
-  className?: string;
+interface FormSelectProps {
   id?: string;
-  placeholder?: string;
+  label?: string;
+  value?: string | string[]; // support string or string[]
+  onChange: (value: string | string[]) => void;
   options: Option[];
+  disabled?: boolean;
   error?: { message?: string };
+  placeholder?: string;
+  className?: string;
+  isMulti?: boolean;
   isMandatory?: boolean;
+  isSearchable?: boolean; // Add isSearchable prop
 }
 
-const FormSelect = React.forwardRef<HTMLDivElement, FormSelectProps>(
-  function FormSelect(
-    {
-      label,
-      options,
-      error,
-      className,
-      labelClass,
-      containerClass,
-      isMandatory,
-      placeholder,
-      ...rest
-    },
-    ref,
-  ) {
-    const [selectedValue, setSelectedValue] = React.useState<
-      string | number | undefined
-    >(
-      Array.isArray(rest.value)
-        ? rest.value[0]
-        : (rest.value ?? rest.defaultValue),
+export default function FormSelect({
+  id,
+  label,
+  value = "", // Default value to prevent uncontrolled behavior
+  onChange,
+  options,
+  disabled = false,
+  error,
+  className,
+  placeholder = "Select an option",
+  isMulti = false,
+  isMandatory = false,
+  isSearchable = false, // Default to false
+}: FormSelectProps) {
+  const [searchTerm, setSearchTerm] = useState(""); // State for search term
+
+  const filteredOptions = isSearchable
+    ? options.filter((opt) =>
+        String(opt.label).toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+    : options;
+
+  // Helper to toggle selection for multi-select
+  const toggleValue = (val: string) => {
+    if (!Array.isArray(value)) {
+      // Initialize as array if not already
+      onChange([val]);
+    } else {
+      if (value.includes(val)) {
+        // Remove if already selected
+        onChange(value.filter((v) => v !== val));
+      } else {
+        // Add if not selected
+        onChange([...value, val]);
+      }
+    }
+  };
+
+  const displayValue = () => {
+    if (isMulti) {
+      if (Array.isArray(value) && value.length > 0) {
+        const selectedLabels = options
+          .filter((opt) => value.includes(String(opt.value)))
+          .map((opt) => opt.label)
+          .join(", ");
+        return selectedLabels || placeholder;
+      }
+      return placeholder;
+    } else {
+      const selectedOption = options.find(
+        (opt) => String(opt.value) === String(value),
+      );
+      return selectedOption?.label ?? placeholder;
+    }
+  };
+
+  let selectedColor: string | undefined = undefined;
+  let selectedTextColor: string | undefined = undefined;
+  if (!isMulti && value) {
+    const selectedOption = options.find(
+      (opt) => String(opt.value) === String(value),
     );
+    selectedColor = selectedOption?.color;
+    if (selectedColor) {
+      selectedTextColor = isColorDark(selectedColor) ? "#fff" : "#000";
+    }
+  }
 
-    // Sync when value/defaultValue changes
-    React.useEffect(() => {
-      const newVal = Array.isArray(rest.value)
-        ? rest.value[0]
-        : (rest.value ?? rest.defaultValue);
-      setSelectedValue(newVal);
-    }, [rest.value, rest.defaultValue]);
+  return (
+    <div className={className}>
+      {label && (
+        <FormLabel className="mb-2" htmlFor={id}>
+          {label}{" "}
+          {isMandatory && <span className="text-red-500 text-[20px]">*</span>}
+        </FormLabel>
+      )}
 
-    const handleSelect = (value: string) => {
-      setSelectedValue(value);
-      rest.onChange?.({
-        target: { value },
-      } as React.ChangeEvent<HTMLSelectElement>);
-    };
-
-    const selectedOption =
-      options.find((opt) => String(opt.value) === String(selectedValue)) ||
-      null;
-    const displayValue = selectedOption?.label ?? placeholder;
-
-    return (
-      <div
-        className={twMerge("mt-2 w-full tb:mt-3 min-w-32", containerClass)}
-        ref={ref}
+      <Select
+        value={isMulti ? "" : (value as string | undefined)} // Ensure value is always a string or undefined
+        onValueChange={(val) => {
+          if (isMulti) {
+            toggleValue(val);
+          } else {
+            onChange(val);
+          }
+        }}
+        disabled={disabled}
       >
-        {label && (
-          <FormLabel className={twMerge("mb-2", labelClass)}>
-            {label} {isMandatory && <span className="text-red-500">*</span>}
-          </FormLabel>
-        )}
-
-        <Select value={selectedValue?.toString()} onValueChange={handleSelect}>
+        <FormControl>
           <SelectTrigger
-            className={twMerge(
-              "w-full bg-white border border-dark-600/70 p-2 text-left text-sm rounded-md",
-              className,
-            )}
+            className={`w-full mb-1 py-5 custom-select-trigger ${
+              selectedColor
+                ? selectedTextColor === "#fff"
+                  ? "text-white"
+                  : "text-black"
+                : "text-black"
+            }`}
+            id={id}
+            style={
+              selectedColor
+                ? {
+                    backgroundColor: selectedColor,
+                    color: selectedTextColor,
+                  }
+                : undefined
+            }
           >
-            <div
-              className={`${!selectedOption ? "text-muted-foreground" : ""}`}
-            >
-              {displayValue}
-            </div>
+            {isMulti ? (
+              <div className="w-full text-left">{displayValue()}</div>
+            ) : (
+              <SelectValue placeholder={placeholder} />
+            )}
           </SelectTrigger>
+        </FormControl>
 
-          <SelectContent className="bg-white border border-dark-600/600 shadow rounded-md">
-            {options
-              .filter(
-                (opt) =>
-                  opt.value !== undefined &&
-                  opt.value !== null &&
-                  opt.value !== "",
-              )
-              .map((opt) => (
+        <SelectContent className="w-full max-h-60 overflow-auto">
+          {isSearchable && (
+            <div className="p-2">
+              <Input
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)} // Keep dropdown open while typing
+                className="mb-2"
+              />
+            </div>
+          )}
+          {filteredOptions
+            .filter((opt) => opt.value !== undefined && opt.value !== "")
+            .map((opt) => {
+              const stringVal = String(opt.value);
+              const checked = isMulti
+                ? Array.isArray(value) && value.includes(stringVal)
+                : false;
+              return (
                 <SelectItem
-                  key={opt.id ?? String(opt.value)}
-                  value={String(opt.value)}
+                  key={stringVal}
+                  value={stringVal}
+                  className={checked ? "bg-blue-50" : ""}
                 >
+                  {/* Show checkbox in multi-select */}
+                  {isMulti && (
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => {}} // Prevent direct interaction
+                      className="mr-2 text-sm pointer-events-none"
+                    />
+                  )}
                   {opt.label}
                 </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
+              );
+            })}
+        </SelectContent>
+      </Select>
 
-        {error?.message && (
-          <span className="text-red-600 text-sm mt-1">{error.message}</span>
-        )}
-      </div>
-    );
-  },
-);
-
-FormSelect.displayName = "FormSelect";
-
-export default FormSelect;
+      {error?.message && (
+        <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+          {error.message}
+        </span>
+      )}
+    </div>
+  );
+}

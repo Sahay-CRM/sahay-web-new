@@ -49,26 +49,30 @@ const FormImage: React.FC<FormImageProps> = ({
         onClick={() => inputRef.current?.click()}
         className="relative w-full h-full m-auto border rounded-lg cursor-pointer bg-muted flex items-center justify-center overflow-hidden"
       >
-        {value ? (
-          <>
-            <img
-              src={value}
-              alt="preview"
-              className="object-cover w-full h-full"
-            />
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleRemove();
-              }}
-              className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-md"
-            >
-              <X size={16} className="text-red-500" />
-            </button>
-          </>
-        ) : (
-          <span className="text-sm text-muted-foreground">Click to upload</span>
-        )}
+        <div className="min-h-[100px] max-h-[200px] flex flex-col justify-center items-center">
+          {value ? (
+            <>
+              <img
+                src={value}
+                alt="preview"
+                className="object-cover w-full max-h-[200px] h-full"
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemove();
+                }}
+                className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-md"
+              >
+                <X size={16} className="text-red-500" />
+              </button>
+            </>
+          ) : (
+            <span className="text-sm text-muted-foreground">
+              Click to upload
+            </span>
+          )}
+        </div>
         <input
           ref={inputRef}
           type="file"

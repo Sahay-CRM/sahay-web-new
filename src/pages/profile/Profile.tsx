@@ -1,98 +1,100 @@
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+
 import { Card } from "@/components/ui/card";
-import { useAuth } from "@/features/auth/useAuth";
-import { baseUrl } from "@/features/utils/urls.utils";
-import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+
+import { getUserDetail } from "@/features/selectors/auth.selector";
+import logoImg from "@/assets/logo_1.png";
 
 export default function Profile() {
-  const { user } = useAuth();
-  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!user) return;
+  const profileData = useSelector(getUserDetail);
 
-    setUserDetails({
-      photo:
-        user.role === "COMPANYADMIN" ||
-        user.role === "EMPLOYEE" ||
-        user.role === "CONSULTANT"
-          ? null
-          : (user.photo ?? null), // convert undefined to null
-      userName:
-        user.role === "COMPANYADMIN" || user.role === "EMPLOYEE"
-          ? (user.employeeName ?? "")
-          : user.role === "CONSULTANT"
-            ? (user.consultantName ?? "")
-            : (user.adminUserName ?? ""),
-      userMobile:
-        user.role === "COMPANYADMIN" || user.role === "EMPLOYEE"
-          ? (user.employeeMobile ?? "")
-          : user.role === "CONSULTANT"
-            ? (user.consultantMobile ?? "")
-            : (user.adminUserMobile ?? ""),
-      userEmail:
-        user.role === "COMPANYADMIN" || user.role === "EMPLOYEE"
-          ? (user.employeeEmail ?? "")
-          : user.role === "CONSULTANT"
-            ? (user.consultantEmail ?? "")
-            : (user.adminUserEmail ?? ""),
-      role: user.role ?? "",
-    });
-  }, [user]);
+  // Hide Edit Profile button for CONSULTANT or SAHAY TEAMMATE
+  const hideEditProfile =
+    profileData?.employeeType === "CONSULTANT" ||
+    profileData?.employeeType === "SAHAY TEAMMATE" ||
+    profileData?.role === "CONSULTANT" ||
+    profileData?.role === "SAHAY TEAMMATE";
 
-  const details = userDetails
+  const details = profileData
     ? [
-        { label: "Name", value: userDetails.userName },
-        { label: "Position", value: userDetails.role.toLowerCase() },
-        { label: "Mobile No", value: userDetails.userMobile },
-        { label: "Email", value: userDetails.userEmail },
-        { label: "Followers", value: "64" },
-        { label: "Following", value: "326" },
+        { label: "Name", value: profileData?.employeeName },
+        { label: "Position", value: "Admin" },
+        {
+          label: "Employee Type",
+          value: profileData?.role || profileData?.employeeType,
+        },
+        { label: "Mobile No", value: profileData?.employeeMobile },
+        { label: "Email", value: profileData?.employeeEmail },
+        // Only show Reporting Manager fields if present
+        ...(profileData?.reportingManager
+          ? [
+              {
+                label: "Reporting Manager",
+                value: profileData?.reportingManager?.employeeName,
+              },
+              {
+                label: "Reporting Manager Email",
+                value: profileData?.reportingManager?.employeeEmail,
+              },
+            ]
+          : []),
+        {
+          label: "Company Name",
+          value: profileData?.company?.companyName,
+        },
       ]
     : [];
 
   return (
-    <div className="w-full h-full flex">
-      {/* Left Side - Image + Name */}
-      <div className="w-1/3 bg-white h-auto text-primary flex flex-col items-center p-8">
-        <div className="w-56 h-56 rounded-full overflow-hidden shadow-lg ring-4 ring-white mb-4 mt-8">
-          {userDetails?.photo ? (
+    <>
+      <div className="w-full flex justify-end mt-4">
+        {!hideEditProfile && (
+          <Button
+            onClick={() => {
+              navigate(`/dashboard/employees/edit/${profileData?.employeeId}`);
+            }}
+          >
+            Edit Profile
+          </Button>
+        )}
+      </div>
+      <div className="w-full h-full flex">
+        {/* Left Side - Image + Name */}
+        <div className="w-1/3 bg-white h-auto relative text-primary flex flex-col items-center p-8">
+          <div className="w-56 h-56 rounded-full overflow-hidden shadow-lg ring-4 ring-white mb-4 mt-8">
             <img
-              src={`${baseUrl}/share/profilePics/${user?.photo}`}
-              alt="Profile"
-              className="w-full h-full object-cover"
-              loading="lazy"
+              src={profileData?.photo ? profileData?.photo : logoImg}
+              alt="profile"
+              className="w-full rounded-full object-contain bg-black"
             />
-          ) : (
-            <div className="w-full h-full bg-gray-300 flex items-center justify-center text-5xl font-bold text-primary">
-              {userDetails?.userName?.[0] || "U"}
-            </div>
-          )}
-        </div>
-        <p className="text-2xl font-semibold text-primary">
-          {userDetails?.userName}
-        </p>
-      </div>
-
-      {/* Right Side - Detail Card */}
-      <div className="w-2/3 overflow-y-auto p-8">
-        <Card className="w-full border-0 shadow-none">
-          <div className="flex flex-col divide-y">
-            {details.map((item, index) => (
-              <div
-                key={index}
-                className={`flex justify-between px-6 py-6 ${
-                  index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                }`}
-              >
-                <p className="text-sm text-muted-foreground w-1/3">
-                  {item.label}
-                </p>
-                <p className="font-medium w-2/3 text-right">{item.value}</p>
-              </div>
-            ))}
           </div>
-        </Card>
+        </div>
+
+        {/* Right Side - Detail Card */}
+        <div className="w-2/3 overflow-y-auto p-8">
+          <Card className="w-full border-0 shadow-none">
+            <div className="flex flex-col divide-y">
+              {details.map((item, index) => (
+                <div
+                  key={index}
+                  className={`flex justify-between px-6 py-6 ${
+                    index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                  }`}
+                >
+                  <p className="text-sm text-muted-foreground w-1/3">
+                    {item.label}
+                  </p>
+                  <p className="font-medium w-2/3 text-right">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

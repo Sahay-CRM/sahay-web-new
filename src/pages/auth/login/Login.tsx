@@ -1,6 +1,6 @@
 import React from "react";
 import useLogin from "./useLogin";
-import logoImg from "@/assets/logo_1.png";
+import logoImg from "@/assets/Sahay_Logo_only.png";
 import background from "@/assets/background.png";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { Button } from "@/components/ui/button";
@@ -26,10 +26,10 @@ const Login: React.FC = () => {
     countryCode,
     setCountryCode,
     setCompanyModalOpen,
+    loginDetails,
   } = useLogin();
 
   const REGEXP_ONLY_DIGITS = "^[0-9]+$";
-
   const methods = useForm();
 
   return (
@@ -38,7 +38,7 @@ const Login: React.FC = () => {
         className="w-full h-screen grid grid-cols-1 md:grid-cols-2 overflow-hidden"
         onSubmit={handleFormSubmit}
       >
-        {/* Left - Background + Text + Logo */}
+        {/* Left - Background */}
         <div
           className="flex flex-col justify-between bg-cover bg-center p-6 text-white"
           style={{ backgroundImage: `url(${background})` }}
@@ -49,30 +49,13 @@ const Login: React.FC = () => {
           </div>
         </div>
 
-        {/* Right - Centered Small Form */}
+        {/* Right - Form */}
         <div className="flex items-center justify-center bg-white">
           <div className="w-full max-w-xl px-8 py-10">
             <div className="flex justify-center py-4">
               <img src={logoImg} alt="logo" className="w-[60%]" />
             </div>
             <div className="space-y-6">
-              {/* <Controller
-                name="userType"
-                control={control}
-                rules={{ required: "Please select a role" }}
-                render={({ field }) => (
-                  <FormSelect
-                    {...field}
-                    label="Login as"
-                    options={loginOptions}
-                    placeholder="Select login type"
-                    disabled={statusSentOtp}
-                    error={errors.userType}
-                    className="text-base"
-                  />
-                )}
-              /> */}
-
               <FormInputField
                 id="mobile"
                 label="Mobile Number"
@@ -85,7 +68,7 @@ const Login: React.FC = () => {
                 options={[{ value: "+91", label: "+91" }]}
                 selectedCodeValue={countryCode || "+91"}
                 onCountryCodeChange={setCountryCode}
-                className="text-lg"
+                className="text-lg py-5"
               />
 
               {statusSentOtp && (
@@ -131,7 +114,7 @@ const Login: React.FC = () => {
                 </div>
               )}
 
-              <Button type="submit" className="w-full text-base py-2.5 mt-2">
+              <Button type="submit" className="w-full text-base py-5 mt-2">
                 {statusSentOtp ? "Login" : "Send OTP"}
               </Button>
             </div>
@@ -140,19 +123,14 @@ const Login: React.FC = () => {
 
         {/* Company Selection Modal */}
         <CompanyModal
-          companies={companies?.map((c) => ({
-            companyId: c?.companyId,
-            consultantId: c?.consultantId,
-            companyName: c?.companyName,
-          }))}
+          companies={companies}
           isModalOpen={isCompanyModalOpen}
-          onSelect={(company) => handleLogin(company)}
-          modalClose={() => {
-            setCompanyModalOpen(false);
-            setTimeout(() => {
-              window.location.reload();
-            }, 300);
+          onSelect={(company) => {
+            if (loginDetails) {
+              handleLogin({ ...company, ...loginDetails });
+            }
           }}
+          modalClose={() => setCompanyModalOpen(false)}
         />
       </form>
     </Form>

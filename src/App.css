@@ -40,3 +40,10 @@
 .read-the-docs {
   color: #888;
 }
+
+.custom-select-trigger svg,
+.custom-select-trigger [data-icon],
+.custom-select-trigger .icon {
+  color: #fff !important;
+  fill: #fff !important;
+}
