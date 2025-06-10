@@ -179,7 +179,7 @@ const ProjectView = () => {
             <div className="bg-white p-6 rounded-xl shadow-sm flex flex-col h-full max-h-[80vh]">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Tasks</h2>
-                {(taskPermission.Add || taskPermission.Edit) && (
+                {taskPermission.Add && (
                   <Link to="/dashboard/tasks/add">
                     <Button className="py-2 w-fit">Add Task</Button>
                   </Link>
@@ -192,9 +192,9 @@ const ProjectView = () => {
                       <div
                         key={task.taskId}
                         className={`rounded-lg border bg-muted/30 p-4 text-md shadow-sm ${
-                          taskPermission.Edit ? "cursor-pointer" : ""
+                          taskPermission.View ? "cursor-pointer" : ""
                         }`}
-                        {...(taskPermission.Edit
+                        {...(taskPermission.View
                           ? {
                               onClick: () =>
                                 navigate(

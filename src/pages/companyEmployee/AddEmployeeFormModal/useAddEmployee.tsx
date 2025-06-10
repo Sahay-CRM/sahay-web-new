@@ -45,7 +45,11 @@ export default function useAddEmployee() {
       reset({
         employeeName: data.employeeName || "",
         employeeEmail: data.employeeEmail || "",
-        employeeMobile: data.employeeMobile || "",
+        employeeMobile: data.employeeMobile
+          ? data.employeeMobile.startsWith("+91")
+            ? data.employeeMobile.slice(3)
+            : data.employeeMobile
+          : "",
         employeeType: data.employeeType || "",
         department:
           typeof data.department === "object" && data.department !== null

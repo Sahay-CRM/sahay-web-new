@@ -187,7 +187,9 @@ export default function useAddEmployee() {
       dataPointName: data?.KPIMasterId?.KPILabel,
       KPIMasterId: data?.KPIMasterId?.KPIMasterId,
       KPIMaster: data?.KPIMasterId || null,
-      coreParameter: data?.coreParameterId || null,
+      coreParameterId:
+        data?.coreParameterId.coreParameterId ||
+        data.coreParameter.coreParameterId,
       dataPointLabel: data?.KPIMasterId?.KPIName,
       productIds: productIds,
       assignUser: assignUser,
@@ -205,6 +207,7 @@ export default function useAddEmployee() {
       hasData: datapointApiData?.hasData ?? false,
       visualFrequencyTypes: visualFrequencyTypes, // Add the formatted visualFrequencyTypes
     };
+    console.log(payload);
     addDatapoint(payload, {
       onSuccess: () => {
         handleModalClose();
