@@ -49,13 +49,13 @@ const FormImage: React.FC<FormImageProps> = ({
         onClick={() => inputRef.current?.click()}
         className="relative w-full h-full m-auto border rounded-lg cursor-pointer bg-muted flex items-center justify-center overflow-hidden"
       >
-        <div className="min-h-[100px] flex flex-col justify-center items-center">
+        <div className="min-h-[100px] max-h-[200px] flex flex-col justify-center items-center">
           {value ? (
             <>
               <img
                 src={value}
                 alt="preview"
-                className="object-cover w-full h-full"
+                className="object-cover w-full max-h-[200px] h-full"
               />
               <button
                 onClick={(e) => {

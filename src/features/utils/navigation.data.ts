@@ -131,7 +131,7 @@ export const companyNavigationData = [
     label: "User Log",
     link: "/dashboard/user-log",
     permission: "View",
-    moduleKey: "PRODUCT",
+    moduleKey: "USER_LOGS",
   },
   // {
   //   id: 15,

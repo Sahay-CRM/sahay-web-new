@@ -30,7 +30,10 @@ import { FormDatePicker } from "@/components/shared/Form/FormDatePicker/FormDate
 import { Button } from "@/components/ui/button";
 import { RefreshCcw } from "lucide-react";
 import TabsSection from "./TabSection";
-import { addUpdateKpi } from "@/features/api/kpiDashboard";
+import {
+  addUpdateKpi,
+  useGetKpiDashboardStructure,
+} from "@/features/api/kpiDashboard";
 import WarningDialog from "./WarningModal";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
@@ -47,13 +50,23 @@ function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
 
 export default function KPITable() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedPeriod, setSelectedPeriod] = useState("DAILY");
+  const [selectedPeriod, setSelectedPeriod] = useState("");
   const [showWarning, setShowWarning] = useState(false);
   const [pendingPeriod, setPendingPeriod] = useState<string | null>(null);
-  const { kpiStructure, kpiData } = useKpiDashboard({
+
+  const { data: kpiStructure } = useGetKpiDashboardStructure();
+
+  useEffect(() => {
+    if (!selectedPeriod && kpiStructure?.data && kpiStructure.data.length > 0) {
+      setSelectedPeriod(kpiStructure.data[0].frequencyType);
+    }
+  }, [kpiStructure, selectedPeriod]);
+
+  const { kpiData } = useKpiDashboard({
     selectedPeriod,
     selectedDate,
   });
+
   const isLoading = !kpiStructure || !kpiData;
 
   // Check if there are no KPIs available using totalCount

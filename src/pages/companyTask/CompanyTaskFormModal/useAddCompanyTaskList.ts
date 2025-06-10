@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { useGetCompanyProject } from "@/features/api/companyProject";
 import {
   useGetAllTaskStatus,
-  useAllTaskType,
   addUpdateCompanyTaskMutation,
   useGetCompanyTaskById,
+  useDdTaskType,
 } from "@/features/api/companyTask";
 import { getEmployee } from "@/features/api/companyEmployee";
 import { useNavigate, useParams } from "react-router-dom";
@@ -20,8 +20,8 @@ interface FormValues {
   taskStartDate: Date | null;
   taskDeadline: Date | null;
   repetition: string;
-  taskStatus?: TaskStatusAllRes;
-  taskType?: TaskTypeData;
+  taskStatusId?: string;
+  taskTypeId?: string;
   meeting?: string; // <-- add this line for meeting field
   assignUser: string[]; // always an array of employeeIds
   comment?: string;
@@ -43,8 +43,8 @@ export const useAddCompanyEmployee = () => {
       taskStartDate: null,
       taskDeadline: null,
       repetition: "none", // Default to "No Repetition"
-      taskStatus: undefined,
-      taskType: undefined,
+      taskStatusId: "",
+      taskTypeId: "",
       assignUser: [], // always an array
       comment: "",
     },
@@ -68,20 +68,8 @@ export const useAddCompanyEmployee = () => {
           ? new Date(taskDataById.data.taskDeadline)
           : null,
         repetition: "", // or map if available
-        taskStatus:
-          taskDataById.data.taskStatusId && taskDataById.data.taskStatusName
-            ? {
-                taskStatusId: taskDataById.data.taskStatusId,
-                taskStatus: taskDataById.data.taskStatusName,
-              }
-            : undefined,
-        taskType:
-          taskDataById && taskDataById.data
-            ? {
-                taskTypeId: taskDataById.data.taskTypeId,
-                taskTypeName: taskDataById.data.taskTypeName,
-              }
-            : undefined,
+        taskStatusId: taskDataById.data.taskStatusId || "",
+        taskTypeId: taskDataById.data.taskTypeId || "",
         assignUser: taskDataById.data.assignUsers
           ? taskDataById.data.assignUsers.map((user) => user.employeeId)
           : [],
@@ -91,18 +79,6 @@ export const useAddCompanyEmployee = () => {
 
   const [step, setStep] = useState(1);
 
-  const [paginationFilterTaskStatus, setPaginationFilterTaskStatus] =
-    useState<PaginationFilter>({
-      currentPage: 1,
-      pageSize: 10,
-      search: "",
-    });
-  const [paginationFilterTaskType, setPaginationFilterTaskType] =
-    useState<PaginationFilter>({
-      currentPage: 1,
-      pageSize: 10,
-      search: "",
-    });
   const [paginationFilterEmployee, setPaginationFilterEmployee] =
     useState<PaginationFilter>({
       currentPage: 1,
@@ -124,11 +100,10 @@ export const useAddCompanyEmployee = () => {
 
   //const { data: projectList } = useGetCompanyProjectAll();
   const { data: taskStatus } = useGetAllTaskStatus({
-    filter: paginationFilterTaskStatus,
+    filter: {},
   });
-  const { data: taskTypeData } = useAllTaskType({
-    filter: paginationFilterTaskType,
-  });
+  const { data: taskTypeData } = useDdTaskType();
+
   const { data: employeedata } = getEmployee({
     filter: paginationFilterEmployee,
   });
@@ -139,23 +114,19 @@ export const useAddCompanyEmployee = () => {
     filter: paginationFilterMeeting,
   });
 
-  const taskType = {
-    data: Array.isArray(taskTypeData?.data) ? taskTypeData.data : [],
-  };
+  const taskStatusOptions = taskStatus
+    ? taskStatus.data.map((status) => ({
+        label: status.taskStatus,
+        value: status.taskStatusId,
+      }))
+    : [];
 
-  // const projectListOption = [
-  //   {
-  //     label: "Please select Project",
-  //     value: "",
-  //     disabled: true,
-  //   },
-  //   ...(Array.isArray(projectList?.data)
-  //     ? projectList.data.map((item) => ({
-  //         label: item.projectName,
-  //         value: item.projectId,
-  //       }))
-  //     : []),
-  // ];
+  const taskTypeOptions = taskTypeData
+    ? taskTypeData.data.map((status) => ({
+        label: status.taskTypeName,
+        value: status.taskTypeId,
+      }))
+    : [];
 
   // Repetition options
   const repetitionOptions = [
@@ -168,25 +139,8 @@ export const useAddCompanyEmployee = () => {
 
   // Dynamically set steps based on taskId
   const steps = taskId
-    ? [
-        "Project",
-        "Basic Info",
-        "Schedule & Repetition",
-        "Task Status",
-        "Task Type",
-        "Meeting",
-        "Assign User",
-      ]
-    : [
-        "Project",
-        "Basic Info",
-        "Schedule & Repetition",
-        "Task Status",
-        "Task Type",
-        "Meeting",
-        "Assign User",
-        "Comment",
-      ];
+    ? ["Project", "Meeting", "Basic Info", "Assign User"]
+    : ["Project", "Meeting", "Basic Info", "Assign User", "Comment"];
 
   // Define required and optional fields for each step
   const stepFieldConfig: Record<
@@ -195,28 +149,34 @@ export const useAddCompanyEmployee = () => {
   > = taskId
     ? {
         1: { required: ["project"], optional: [] },
-        2: { required: ["taskName", "taskDescription"], optional: [] },
+        2: { required: ["meeting"], optional: [] },
         3: {
-          required: ["taskDeadline"],
+          required: [
+            "taskName",
+            "taskDescription",
+            "taskDeadline",
+            "taskStatusId",
+            "taskTypeId",
+          ],
           optional: ["taskStartDate", "repetition"],
-        }, // Task Deadline is required, others optional
-        4: { required: ["taskStatus"], optional: [] },
-        5: { required: ["taskType"], optional: [] },
-        6: { required: ["meeting"], optional: [] }, // Meeting is required
+        },
         7: { required: ["assignUser"], optional: [] },
       }
     : {
         1: { required: ["project"], optional: [] },
-        2: { required: ["taskName", "taskDescription"], optional: [] },
+        2: { required: ["meeting"], optional: [] },
         3: {
-          required: ["taskDeadline"],
+          required: [
+            "taskName",
+            "taskDescription",
+            "taskDeadline",
+            "taskStatusId",
+            "taskTypeId",
+          ],
           optional: ["taskStartDate", "repetition"],
-        }, // Task Deadline is required, others optional
-        4: { required: ["taskStatus"], optional: [] },
-        5: { required: ["taskType"], optional: [] },
-        6: { required: ["meeting"], optional: [] }, // Meeting is required
+        },
         7: { required: ["assignUser"], optional: [] },
-        8: { required: [], optional: ["comment"] }, // Comment is optional
+        8: { required: [], optional: ["comment"] },
       };
 
   const validateStep = async (): Promise<boolean> => {
@@ -259,8 +219,8 @@ export const useAddCompanyEmployee = () => {
             ? new Date(data.taskStartDate)
             : null,
           taskDeadline: data.taskDeadline ? new Date(data.taskDeadline) : null,
-          taskStatusId: data.taskStatus?.taskStatusId,
-          taskTypeId: data.taskType?.taskTypeId,
+          taskStatusId: data?.taskStatusId,
+          taskTypeId: data?.taskTypeId,
           comment: data.comment,
           employeeIds: assigneeIds,
           projectId: data.project,
@@ -273,8 +233,8 @@ export const useAddCompanyEmployee = () => {
             ? new Date(data.taskStartDate)
             : null,
           taskDeadline: data.taskDeadline ? new Date(data.taskDeadline) : null,
-          taskStatusId: data.taskStatus?.taskStatusId,
-          taskTypeId: data.taskType?.taskTypeId,
+          taskStatusId: data?.taskStatusId,
+          taskTypeId: data?.taskTypeId,
           comment: data.comment,
           employeeIds: assigneeIds,
           projectId: data.project,
@@ -298,16 +258,14 @@ export const useAddCompanyEmployee = () => {
     methods,
     // projectListOption,
     repetitionOptions,
-    taskStatus,
-    taskType,
     employeedata,
     projectListdata,
-    setPaginationFilterTaskStatus,
-    setPaginationFilterTaskType,
     setPaginationFilterEmployee,
     setPaginationFilterProject,
     setPaginationFilterMeeting,
     meetingData,
-    taskId, // expose taskId for component
+    taskId,
+    taskStatusOptions,
+    taskTypeOptions,
   };
 };

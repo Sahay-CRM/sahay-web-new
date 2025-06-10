@@ -55,6 +55,7 @@ export default function useAddEmployee() {
     if (meetingApiData?.data) {
       const data = meetingApiData.data;
       reset({
+        meetingId: companyMeetingId || "",
         meetingName: data.meetingName || "",
         meetingDescription: data.meetingDescription || "",
         meetingDateTime: data.meetingDateTime

@@ -171,7 +171,7 @@ export default function CompanyDesignation() {
         {/* Modal Component */}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
-            title={"Delete User"}
+            title={"Delete Company Employee"}
             label={"User Name :"}
             modalData={`${modalData?.employeeName}`}
             isModalOpen={isDeleteModalOpen}

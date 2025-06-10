@@ -26,7 +26,7 @@ const AddEmployeeModal: React.FC<TaskModalProps> = ({
   return (
     <ModalData
       isModalOpen={isModalOpen}
-      modalTitle="Add Employee"
+      modalTitle={modalData.employeeId ? "Update Employee" : "Add Employee"}
       modalClose={modalClose}
       buttons={[
         {
@@ -78,12 +78,12 @@ const AddEmployeeModal: React.FC<TaskModalProps> = ({
             {designation}
           </div>
         )}
-        {modalData?.employeeName && (
+        {modalData?.employee && (
           <div className="col-span-2">
             <span className="font-medium text-primary">
               Reporting Manager:{" "}
             </span>
-            {modalData.employeeName}
+            {modalData.employee?.employeeName}
           </div>
         )}
       </div>

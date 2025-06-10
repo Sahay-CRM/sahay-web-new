@@ -2,36 +2,49 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import { Card } from "@/components/ui/card";
-import { baseUrl } from "@/features/utils/urls.utils";
-import userDummy from "@/assets/userDummy.jpg";
 import { Button } from "@/components/ui/button";
-import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 
-import { getUserId } from "@/features/selectors/auth.selector";
+import { getUserDetail } from "@/features/selectors/auth.selector";
+import logoImg from "@/assets/logo_1.png";
 
 export default function Profile() {
-  const userId = useSelector(getUserId);
   const navigate = useNavigate();
 
-  const { data: profileData } = useGetEmployeeById(userId);
+  const profileData = useSelector(getUserDetail);
 
-  const details = profileData?.data
+  // Hide Edit Profile button for CONSULTANT or SAHAY TEAMMATE
+  const hideEditProfile =
+    profileData?.employeeType === "CONSULTANT" ||
+    profileData?.employeeType === "SAHAY TEAMMATE" ||
+    profileData?.role === "CONSULTANT" ||
+    profileData?.role === "SAHAY TEAMMATE";
+
+  const details = profileData
     ? [
-        { label: "Name", value: profileData?.data?.employeeName },
+        { label: "Name", value: profileData?.employeeName },
         { label: "Position", value: "Admin" },
-        { label: "Mobile No", value: profileData?.data?.employeeMobile },
-        { label: "Email", value: profileData?.data?.employeeEmail },
         {
-          label: "Reporting Manager",
-          value: profileData?.data?.reportingManager.employeeName,
+          label: "Employee Type",
+          value: profileData?.role || profileData?.employeeType,
         },
-        {
-          label: "Reporting Manager Email",
-          value: profileData?.data?.reportingManager.employeeEmail,
-        },
+        { label: "Mobile No", value: profileData?.employeeMobile },
+        { label: "Email", value: profileData?.employeeEmail },
+        // Only show Reporting Manager fields if present
+        ...(profileData?.reportingManager
+          ? [
+              {
+                label: "Reporting Manager",
+                value: profileData?.reportingManager?.employeeName,
+              },
+              {
+                label: "Reporting Manager Email",
+                value: profileData?.reportingManager?.employeeEmail,
+              },
+            ]
+          : []),
         {
           label: "Company Name",
-          value: profileData?.data?.company.companyName,
+          value: profileData?.company?.companyName,
         },
       ]
     : [];
@@ -39,35 +52,25 @@ export default function Profile() {
   return (
     <>
       <div className="w-full flex justify-end mt-4">
-        <Button
-          onClick={() => {
-            navigate(
-              `/dashboard/employees/edit/${profileData?.data?.employeeId}`,
-            );
-          }}
-        >
-          Edit Profile
-        </Button>
+        {!hideEditProfile && (
+          <Button
+            onClick={() => {
+              navigate(`/dashboard/employees/edit/${profileData?.employeeId}`);
+            }}
+          >
+            Edit Profile
+          </Button>
+        )}
       </div>
       <div className="w-full h-full flex">
         {/* Left Side - Image + Name */}
-        <div className="w-1/3 bg-white h-auto text-primary flex flex-col items-center p-8">
+        <div className="w-1/3 bg-white h-auto relative text-primary flex flex-col items-center p-8">
           <div className="w-56 h-56 rounded-full overflow-hidden shadow-lg ring-4 ring-white mb-4 mt-8">
-            {profileData?.data?.photo ? (
-              <img
-                src={`${baseUrl}/share/profilePics/${profileData?.data?.photo}`}
-                alt="Profile"
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            ) : (
-              <img
-                src={userDummy}
-                alt="Profile"
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            )}
+            <img
+              src={profileData?.photo ? profileData?.photo : logoImg}
+              alt="profile"
+              className="w-full rounded-full object-contain bg-black"
+            />
           </div>
         </div>
 

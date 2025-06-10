@@ -180,7 +180,7 @@ const DashboardLayout = () => {
             >
               <DropdownMenuGroup>
                 <DropdownMenuItem
-                  onClick={() => navigate("/administrator-panel/profile")}
+                  onClick={() => navigate("/dashboard/profile")}
                 >
                   <User2Icon />
                   User Profile

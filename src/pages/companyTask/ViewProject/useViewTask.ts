@@ -3,11 +3,14 @@ import {
   useGetCompanyTaskById,
 } from "@/features/api/companyTask";
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
 export default function useViewCompanyTask() {
+  const permission = useSelector(getUserPermission).TASK;
   const methods = useForm();
   const navigate = useNavigate();
   const { id: taskId } = useParams();
@@ -46,5 +49,6 @@ export default function useViewCompanyTask() {
     statusOptions,
     methods,
     handleStatusChange,
+    permission,
   };
 }

@@ -18,12 +18,14 @@ export default function useKpiDashboard({
     selectDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : null,
   };
 
-  const { data: kpiData } = useGetKpiDashboardData(data);
+  const { data: kpiData } = useGetKpiDashboardData({
+    filter: data,
+    enable: !!kpiStructure?.data?.length && !!selectedPeriod,
+  });
 
   const frequencyArray = kpiStructure?.data?.map((item) => item.frequencyType);
 
   return {
-    kpiStructure,
     frequencyArray,
     kpiData,
   };

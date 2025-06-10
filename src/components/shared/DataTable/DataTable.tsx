@@ -117,9 +117,10 @@ const TableData = <T extends Record<string, unknown>>({
   sortableColumns = [],
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
-  // Only show checkboxes if explicitly enabled with multiSelect OR if both selectedValue and handleChange are provided
+  // Only show checkboxes if explicitly enabled with multiSelect OR if both handleChange and onCheckbox are provided
   const showCheckboxes =
-    multiSelect || (!!selectedValue && !!handleChange && !!onCheckbox);
+    multiSelect ||
+    (typeof handleChange === "function" && typeof onCheckbox === "function");
 
   const permission = useSelector(getUserPermission)?.[moduleKey];
 

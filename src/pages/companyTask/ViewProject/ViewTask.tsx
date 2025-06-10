@@ -22,8 +22,14 @@ export default function CompanyTaskView() {
   }, [setBreadcrumbs]);
 
   const [showCommentInput, setShowCommentInput] = useState(false);
-  const { taskApiData, navigate, statusOptions, handleStatusChange, methods } =
-    useViewTask();
+  const {
+    taskApiData,
+    navigate,
+    statusOptions,
+    handleStatusChange,
+    methods,
+    permission,
+  } = useViewTask();
   const {
     register,
     handleSubmit,
@@ -62,13 +68,15 @@ export default function CompanyTaskView() {
                   {taskData.taskName}
                 </h2>
               </div>
-              <Button
-                onClick={() => {
-                  navigate(`/dashboard/tasks/edit/${taskData?.taskId}`);
-                }}
-              >
-                Edit Task
-              </Button>
+              {permission?.Edit && (
+                <Button
+                  onClick={() => {
+                    navigate(`/dashboard/tasks/edit/${taskData?.taskId}`);
+                  }}
+                >
+                  Edit Task
+                </Button>
+              )}
             </div>
 
             <div className="mb-4">

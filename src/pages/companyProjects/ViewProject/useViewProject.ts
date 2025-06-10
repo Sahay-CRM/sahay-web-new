@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+
 export default function useViewProject() {
   const methods = useForm();
   const navigate = useNavigate();
@@ -47,5 +48,6 @@ export default function useViewProject() {
     methods,
     handleStatusChange,
     taskPermission: permission.TASK,
+    permission: permission.PROJECT_LIST,
   };
 }

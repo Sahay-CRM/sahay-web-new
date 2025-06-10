@@ -92,7 +92,9 @@ const Urls = {
   getHealthScoreByParam: () => `${baseUrl}/company/health/score/sub-param`,
 
   getAllTaskTypeStatus: () => `${baseUrl}/task-status/get-all`,
+
   AllTaskTypeList: () => `${baseUrl}/task-type/get`,
+  ddTaskType: () => `${baseUrl}/task-type/get-all`,
   getCompanyLevelByCore: () => `${baseUrl}/company/health/weightage/level`,
   getSubParaByCorePara: () => `${baseUrl}/company/health/weightage/sub-param`,
 

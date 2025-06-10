@@ -2,20 +2,21 @@ import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 
-export default function useGetKpiDashboardData(
-  data: Record<string, string | null>,
-) {
+export default function useGetKpiDashboardData({
+  enable,
+  filter,
+}: FilterDataProps) {
   const query = useQuery({
-    queryKey: ["get-kpi-dashboard-data", data],
+    queryKey: ["get-kpi-dashboard-data", filter],
     queryFn: async () => {
       const response = await Api.post<{ data: KpiDataCell[][] }>({
         url: Urls.kpiDataGet(),
-        data: data,
+        data: filter,
       });
 
       return response.data;
     },
-    enabled: !!data,
+    enabled: !!enable,
     staleTime: 0,
   });
 
