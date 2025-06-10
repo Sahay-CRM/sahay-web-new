@@ -207,7 +207,6 @@ export default function useAddEmployee() {
       hasData: datapointApiData?.hasData ?? false,
       visualFrequencyTypes: visualFrequencyTypes, // Add the formatted visualFrequencyTypes
     };
-    console.log(payload);
     addDatapoint(payload, {
       onSuccess: () => {
         handleModalClose();
@@ -300,7 +299,8 @@ export default function useAddEmployee() {
                 {...field}
                 tableData={kpidata?.data.map((item, index) => ({
                   ...item,
-                  srNo: index + 1,
+                  srNo:
+                    (kpidata.currentPage - 1) * kpidata.pageSize + index + 1,
                   KPINames: `${item.KPIName} ( ${item.KPILabel} )`,
                 }))}
                 isActionButton={() => false}
@@ -532,7 +532,11 @@ export default function useAddEmployee() {
                 {...field}
                 tableData={coreparameterData?.data.map((item, index) => ({
                   ...item,
-                  srNo: index + 1,
+                  srNo:
+                    (coreparameterData.currentPage - 1) *
+                      coreparameterData.pageSize +
+                    index +
+                    1,
                 }))}
                 columns={visibleColumns}
                 primaryKey="coreParameterId"
@@ -622,7 +626,10 @@ export default function useAddEmployee() {
                 {...field}
                 tableData={ProductData?.data.map((item, index) => ({
                   ...item,
-                  srNo: index + 1,
+                  srNo:
+                    (ProductData.currentPage - 1) * ProductData.pageSize +
+                    index +
+                    1,
                 }))}
                 columns={visibleColumns}
                 primaryKey="productId"
@@ -720,7 +727,10 @@ export default function useAddEmployee() {
                 {...field}
                 tableData={employeedata?.data.map((item, index) => ({
                   ...item,
-                  srNo: index + 1,
+                  srNo:
+                    (employeedata.currentPage - 1) * employeedata.pageSize +
+                    index +
+                    1,
                 }))}
                 columns={visibleColumns}
                 primaryKey="employeeId"

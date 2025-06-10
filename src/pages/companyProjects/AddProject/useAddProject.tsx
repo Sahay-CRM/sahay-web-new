@@ -260,7 +260,11 @@ export default function useAddProject() {
                 {...field}
                 tableData={projectlistdata?.data.map((item, index) => ({
                   ...item,
-                  srNo: index + 1,
+                  srNo:
+                    (projectlistdata.currentPage - 1) *
+                      projectlistdata.pageSize +
+                    index +
+                    1,
                 }))}
                 isActionButton={() => false}
                 columns={visibleColumns}
@@ -345,7 +349,10 @@ export default function useAddProject() {
                 {...field}
                 tableData={mcoreparameter?.data.map((item, index) => ({
                   ...item,
-                  srNo: index + 1,
+                  srNo:
+                    (mcoreparameter.currentPage - 1) * mcoreparameter.pageSize +
+                    index +
+                    1,
                 }))}
                 isActionButton={() => false}
                 columns={visibleColumns}
@@ -482,7 +489,10 @@ export default function useAddProject() {
                 {...field}
                 tableData={subparameter?.data.map((item, index) => ({
                   ...item,
-                  srNo: index + 1,
+                  srNo:
+                    (subparameter.currentPage - 1) * subparameter.pageSize +
+                    index +
+                    1,
                 }))}
                 isActionButton={() => false}
                 columns={visibleColumns}
@@ -602,7 +612,10 @@ export default function useAddProject() {
                 {...field}
                 tableData={employeedata?.data.map((item, index) => ({
                   ...item,
-                  srNo: index + 1,
+                  srNo:
+                    (employeedata.currentPage - 1) * employeedata.pageSize +
+                    index +
+                    1,
                 }))}
                 columns={visibleColumns}
                 primaryKey="employeeId"

@@ -15,7 +15,7 @@ import {
 import useGetUserPermission from "./useGetUserPermission";
 import { companyNavigationData } from "@/features/utils/navigation.data";
 import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
-import logoImg from "@/assets/logo_1.png";
+import logoImg from "@/assets/userDummy.jpg";
 import LucideIcon from "@/components/shared/Icons/LucideIcon";
 
 import {
@@ -92,7 +92,7 @@ const DashboardLayout = () => {
   const handleLogin = async (data: Company) => {
     const verifyCompanyData = {
       selectedCompanyId: data.companyId,
-      mobile: user?.mobile ?? "",
+      mobile: user?.employeeMobile ?? "",
     };
 
     companyVerifyOtp(verifyCompanyData, {
@@ -104,10 +104,14 @@ const DashboardLayout = () => {
               token: response.data.token ?? null,
               isLoading: false,
               isAuthenticated: true,
+              userId: response.data.employeeId,
             }),
           );
           queryClient.resetQueries({
             queryKey: ["get-company-list"],
+          });
+          queryClient.resetQueries({
+            queryKey: ["get-employee-by-id", userId],
           });
           navigate("/dashboard");
           window.location.reload();

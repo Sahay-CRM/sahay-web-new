@@ -100,7 +100,11 @@ export default function AddMeeting({
                   <TableData
                     tableData={projectListdata?.data?.map((item, index) => ({
                       ...item,
-                      srNo: index + 1,
+                      srNo:
+                        (projectListdata.currentPage - 1) *
+                          projectListdata.pageSize +
+                        index +
+                        1,
                     }))}
                     isActionButton={() => false}
                     columns={{
@@ -153,7 +157,10 @@ export default function AddMeeting({
                   <TableData
                     tableData={meetingData?.data?.map((item, index) => ({
                       ...item,
-                      srNo: index + 1,
+                      srNo:
+                        (meetingData.currentPage - 1) * meetingData.pageSize +
+                        index +
+                        1,
                     }))}
                     isActionButton={() => false}
                     columns={{
@@ -334,7 +341,11 @@ export default function AddMeeting({
                     <TableData
                       tableData={employeedata?.data?.map((item, index) => ({
                         ...item,
-                        srNo: index + 1,
+                        srNo:
+                          (employeedata.currentPage - 1) *
+                            employeedata.pageSize +
+                          index +
+                          1,
                       }))}
                       isActionButton={() => false}
                       columns={{

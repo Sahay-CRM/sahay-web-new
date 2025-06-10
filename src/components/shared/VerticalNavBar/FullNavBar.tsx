@@ -1,7 +1,8 @@
 import { useState } from "react";
 import DrawerAccordion from "../DrawerAccordion";
 
-import logoImg from "@/assets/logo_1.png";
+import companyLogo from "@/assets/company-logo.jpeg";
+import logoImg from "@/assets/Sahay_Logo_only.png";
 import { useSelector } from "react-redux";
 import {
   getUserDetail,
@@ -37,9 +38,9 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
         <div className="flex items-center px-4 py-4 shadow-sm mt-auto cursor-pointer mb-4">
           <div className="flex w-[70px] h-[50px]">
             <img
-              src={user?.companyLogo ? user?.companyLogo : logoImg}
+              src={user?.companyLogo ? user?.companyLogo : companyLogo}
               alt="profile"
-              className="w-full rounded-full object-contain bg-black"
+              className="w-full rounded-full object-cover bg-black"
             />
           </div>
           <span className="ml-2 mr-1">{user?.companyName}</span>
