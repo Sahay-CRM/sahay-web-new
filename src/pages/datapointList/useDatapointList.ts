@@ -49,6 +49,7 @@ export default function useAdminUser() {
       productIds: [],
       assignUser: [],
       hasData: false,
+      coreParameterId: "",
     });
     setIsUserModalOpen(true);
   };
@@ -67,6 +68,7 @@ export default function useAdminUser() {
       KPIMasterId: "",
       KPIMaster: "",
       coreParameter: undefined as unknown as CoreParameter,
+      coreParameterId: "",
       unit: "",
       validationType: "",
       frequencyType: "",
