@@ -49,7 +49,7 @@ export default function Brand() {
             Brand List
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
-            {(permission.Add || permission.Edit) && (
+            {permission.Add && (
               <Button className="py-2 w-fit" onClick={handleAdd}>
                 Add Brand
               </Button>

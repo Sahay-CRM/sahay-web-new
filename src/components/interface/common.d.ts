@@ -785,7 +785,8 @@ interface KPIFormData {
   KPILabel?: string;
   KPIName?: string;
   KPIMaster: KPIMaster | string;
-  coreParameter: CoreParameter;
+  coreParameter?: CoreParameter;
+  coreParameterId: string;
   unit: string;
   validationType: string;
   frequencyType: string;

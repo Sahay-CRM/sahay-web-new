@@ -90,8 +90,7 @@ function Calendar() {
     <FormProvider {...methods}>
       <div className="px-4 h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto">
         <div className="mb-4 flex justify-between gap-5">
-          {(permission.IMPORTANT_DATE.Add ||
-            permission.IMPORTANT_DATE.Edit) && (
+          {permission.IMPORTANT_DATE.Add && (
             <div>
               <Button onClick={() => handleAddModal()}>
                 Add Important Date
