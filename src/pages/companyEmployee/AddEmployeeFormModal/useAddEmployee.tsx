@@ -12,6 +12,9 @@ import { getEmployee } from "@/features/api/companyEmployee";
 import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 import useGetDesignation from "@/features/api/designation/useGetDesignation";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
+import FormImage from "@/components/shared/Form/FormImage/FormImage";
+import { imageUploadMutation } from "@/features/api/file";
+import { ImageBaseURL } from "@/features/utils/urls.utils";
 
 export default function useAddEmployee() {
   const { id: companyEmployeeId } = useParams();
@@ -19,6 +22,7 @@ export default function useAddEmployee() {
 
   const { mutate: addEmployee } = useAddOrUpdateEmployee();
   const { data: employeeApiData } = useGetEmployeeById(companyEmployeeId || "");
+  const { mutate: uploadImage } = imageUploadMutation();
 
   const navigate = useNavigate();
   const {
@@ -30,6 +34,7 @@ export default function useAddEmployee() {
     reset,
     getValues,
     watch,
+    setValue,
   } = useForm({
     mode: "onChange",
   });
@@ -54,7 +59,10 @@ export default function useAddEmployee() {
             : data.designationId
               ? { designationId: data.designationId }
               : null,
-        employee: data.reportingManagerId,
+        employee: data.reportingManager || data.reportingManagerId,
+        photo: data?.photo
+          ? `${ImageBaseURL}/share/profilePics/${data.photo}`
+          : "",
       });
     }
   }, [employeeApiData, reset]);
@@ -87,7 +95,6 @@ export default function useAddEmployee() {
       data.department?.companyId ||
       data.companyId ||
       (employeeApiData?.data?.companyId ?? "");
-
     const payload = companyEmployeeId
       ? {
           employeeId: companyEmployeeId,
@@ -112,9 +119,60 @@ export default function useAddEmployee() {
         };
 
     addEmployee(payload, {
-      onSuccess: () => {
+      onSuccess: async (res) => {
+        // --- Image upload logic (type 1010) ---
+        const getEmployeeId = () => {
+          if (companyEmployeeId) return companyEmployeeId;
+          if (res && typeof res === "object") {
+            if (Array.isArray(res) && res.length > 0 && res[0]?.employeeId) {
+              return res[0].employeeId;
+            }
+            // Fix: get employeeId from res.data if present
+            if (res.data && res.data.employeeId) return res.data.employeeId;
+          }
+          return undefined;
+        };
+        const employeeId = getEmployeeId();
+        const uploadIfPresent = async (
+          file: File | string | null | undefined,
+          fileType: string,
+        ) => {
+          // Only upload if file is a new File or a data URL (not a URL string)
+          if (
+            file &&
+            ((typeof file === "string" && file.startsWith("data:")) ||
+              (typeof File !== "undefined" && file instanceof File))
+          ) {
+            const formData = new FormData();
+            formData.append("refId", employeeId || "");
+            formData.append("fileType", fileType);
+            formData.append("isMaster", "1");
+            formData.append("isUpdate", "1");
+            if (typeof file === "string" && file.startsWith("data:")) {
+              const arr = file.split(",");
+              const mime = arr[0].match(/:(.*?);/)?.[1] || "image/png";
+              const bstr = atob(arr[1]);
+              let n = bstr.length;
+              const u8arr = new Uint8Array(n);
+              while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+              }
+              formData.append(
+                "file",
+                new Blob([u8arr], { type: mime }),
+                "file.png",
+              );
+            } else {
+              formData.append("file", file as File);
+            }
+
+            await uploadImage(formData);
+          }
+        };
+        await uploadIfPresent(data.photo, "1010");
         handleModalClose();
         navigate("/dashboard/company-employee");
+        // window.location.reload();
       },
     });
   });
@@ -131,8 +189,16 @@ export default function useAddEmployee() {
       { value: "OWNER", label: "OWNER" },
     ];
     return (
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
+      <div className="flex gap-5">
+        {/* Photo Upload Card */}
+        <Card className="flex items-start w-1/3 px-4 py-4">
+          <FormImage
+            value={watch("photo") ?? ""}
+            onChange={(val: unknown) => setValue("photo", val)}
+            label="Upload Profile"
+          />
+        </Card>
+        <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4 w-2/3">
           <FormInputField
             label="Employee Name"
             {...register("employeeName", { required: "Name is required" })}

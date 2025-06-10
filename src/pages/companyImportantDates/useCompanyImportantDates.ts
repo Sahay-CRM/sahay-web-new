@@ -9,7 +9,7 @@ export default function useCalendar() {
   const [modalData, setModalData] = useState<ImportantDatesDataProps>(
     {} as ImportantDatesDataProps,
   );
-  const permission = useSelector(getUserPermission).IMPORTANT_DATE;
+  const permission = useSelector(getUserPermission);
   const [addImportantDate, setAddImportantDateModal] = useState(false);
 
   const { data: importantDatesList } = useGetImportantDates();

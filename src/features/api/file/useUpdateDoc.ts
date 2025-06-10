@@ -4,9 +4,9 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-export default function useUpdateImage() {
+export default function useUpdateDocs() {
   const docUploadMutation = useMutation({
-    mutationKey: ["upload-image"],
+    mutationKey: ["upload-docs"],
     mutationFn: async (formData: FormData) => {
       const { data: resData } = await Api.post({
         url: Urls.uploadDoc(),

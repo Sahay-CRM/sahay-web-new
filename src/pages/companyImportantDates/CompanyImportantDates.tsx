@@ -76,7 +76,8 @@ function Calendar() {
     <FormProvider {...methods}>
       <div className="px-4 h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto">
         <div className="mb-4 flex justify-between gap-5">
-          {(permission.Add || permission.Edit) && (
+          {(permission.IMPORTANT_DATE.Add ||
+            permission.IMPORTANT_DATE.Edit) && (
             <div>
               <Button onClick={() => handleAddModal()}>
                 Add Important Date
@@ -111,7 +112,10 @@ function Calendar() {
           endAccessor="end"
           className="rounded-lg p-1 shadow-sm"
           onSelectEvent={(event: EventData) => {
-            if (event.eventType === "importantDate") {
+            if (
+              event.eventType === "importantDate" &&
+              permission.IMPORTANT_DATE.Edit
+            ) {
               setAddImportantDateModal(true);
               setModalData({
                 importantDateName: event.importantDateName || event.title || "",
@@ -129,9 +133,12 @@ function Calendar() {
                 textColor: event.textColor,
                 eventType: event.eventType,
               });
-            } else if (event.eventType === "task") {
+            } else if (event.eventType === "task" && permission.TASK.Edit) {
               navigate(`/dashboard/tasks/edit/${event.eventId}`);
-            } else if (event.eventType === "meeting") {
+            } else if (
+              event.eventType === "meeting" &&
+              permission.MEETING.Edit
+            ) {
               navigate(`/dashboard/meeting/edit/${event.eventId}`);
             }
           }}
