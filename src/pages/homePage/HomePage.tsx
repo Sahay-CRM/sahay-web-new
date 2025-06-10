@@ -69,11 +69,11 @@ export default function HealthScoreDashboard() {
       </div>
 
       {/* Core Parameters Below Company Score */}
-      <div className="flex justify-center gap-8 w-full border-t pt-5">
+      <div className="grid grid-cols-3 items-center justify-center gap-8 w-full border-t pt-5">
         {individualDataList.map((param) => (
           <div
             key={param.coreParameterId}
-            className="flex flex-col items-center w-1/3"
+            className="flex flex-col items-center border-b"
           >
             <h3 className="text-md mb-5 text-black font-semibold">
               {param.coreParameterName}
@@ -95,7 +95,7 @@ export default function HealthScoreDashboard() {
               valueTextFontSize="24px"
               paddingVertical={20}
             />
-            <div className="mt-1 text-center">
+            <div className="mt-1 mb-5 text-center">
               <p className="text-md text-black font-semibold">
                 {param.totalScoreCP} / {param.totalWeightageCP}
               </p>
