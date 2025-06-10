@@ -139,7 +139,10 @@ export default function CompanyProject() {
           <TableData
             tableData={projectlistdata?.data.map((item, index) => ({
               ...item,
-              srNo: index + 1,
+              srNo:
+                (projectlistdata.currentPage - 1) * projectlistdata.pageSize +
+                index +
+                1,
               projectDeadline: item.projectDeadline
                 ? new Date(item.projectDeadline).toISOString().split("T")[0]
                 : "",

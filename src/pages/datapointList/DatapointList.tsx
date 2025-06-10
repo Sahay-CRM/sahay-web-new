@@ -16,6 +16,23 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+
+const validationOptions = [
+  { value: "EQUAL_TO", label: "= Equal to" },
+  { value: "GREATER_THAN_OR_EQUAL_TO", label: ">= Greater than or equal to" },
+  { value: "GREATER_THAN", label: "> Greater than" },
+  { value: "LESS_THAN", label: "< Less than" },
+  { value: "LESS_THAN_OR_EQUAL_TO", label: "<= Less than or equal to" },
+  { value: "BETWEEN", label: "Between" },
+  { value: "YES_NO", label: "Yes/No" },
+];
+
+// Helper to get label from value
+function getValidationLabel(value: string) {
+  const found = validationOptions.find((opt) => opt.value === value);
+  return found ? found.label : value;
+}
+
 export default function CompanyTaskList() {
   const {
     datpointData,
@@ -128,8 +145,12 @@ export default function CompanyTaskList() {
             key={datpointData?.currentPage}
             tableData={datpointData?.data.map((item, index) => ({
               ...item,
-              srNo: index + 1,
+              srNo:
+                (datpointData.currentPage - 1) * datpointData.pageSize +
+                index +
+                1,
               KPINameWithLabel: `${item.KPIName} - ${item.KPILabel}`,
+              validationType: getValidationLabel(item.validationType),
             }))}
             columns={visibleColumns}
             primaryKey="dataPointId"

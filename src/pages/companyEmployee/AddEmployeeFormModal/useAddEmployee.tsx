@@ -316,7 +316,10 @@ export default function useAddEmployee() {
                 {...field}
                 tableData={departmentData?.data.map((item, index) => ({
                   ...item,
-                  srNo: index + 1,
+                  srNo:
+                    (departmentData.currentPage - 1) * departmentData.pageSize +
+                    index +
+                    1,
                 }))}
                 isActionButton={() => false}
                 columns={visibleColumns}
@@ -399,7 +402,11 @@ export default function useAddEmployee() {
                 {...field}
                 tableData={designationData?.data.map((item, index) => ({
                   ...item,
-                  srNo: index + 1,
+                  srNo:
+                    (designationData.currentPage - 1) *
+                      designationData.pageSize +
+                    index +
+                    1,
                 }))}
                 isActionButton={() => false}
                 columns={visibleColumns}
@@ -476,7 +483,10 @@ export default function useAddEmployee() {
                 {...field}
                 tableData={employeedata?.data.map((item, index) => ({
                   ...item,
-                  srNo: index + 1,
+                  srNo:
+                    (employeedata.currentPage - 1) * employeedata.pageSize +
+                    index +
+                    1,
                 }))}
                 isActionButton={() => false}
                 columns={visibleColumns}

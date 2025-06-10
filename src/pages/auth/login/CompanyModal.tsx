@@ -88,9 +88,9 @@ const CompanyModal: React.FC<CompanyModalProps> = ({
                 onValueChange={field.onChange}
               >
                 {filteredCompanies.length > 0 ? (
-                  filteredCompanies.map((c) => (
+                  filteredCompanies.map((c, index) => (
                     <label
-                      key={c.companyId}
+                      key={c.companyId + index}
                       htmlFor={`company-${c.companyId}`}
                       className={`flex items-center p-2.5 border rounded-md hover:bg-gray-50 cursor-pointer transition-colors ${
                         field.value === c.companyId

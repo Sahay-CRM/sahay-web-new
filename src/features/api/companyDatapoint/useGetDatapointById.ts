@@ -13,6 +13,7 @@ export default function useGetDatapointById(id: string) {
       return resData.data;
     },
     enabled: !!id,
+    staleTime: 0,
   });
   return query;
 }

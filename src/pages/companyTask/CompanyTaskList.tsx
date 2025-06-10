@@ -167,7 +167,10 @@ export default function CompanyTaskList() {
             tableData={companyTaskData?.data.map(
               (item: TaskGetPaging, index: number) => ({
                 ...item,
-                srNo: index + 1,
+                srNo:
+                  (companyTaskData.currentPage - 1) * companyTaskData.pageSize +
+                  index +
+                  1,
                 status: item.taskStatusId,
                 taskDeadline: item.taskDeadline
                   ? new Date(item.taskDeadline).toISOString().split("T")[0]

@@ -266,9 +266,13 @@ export default function useAddEmployee() {
             return (
               <TableData
                 tableData={
-                  meeetingStatusData?.data?.map((item, idx) => ({
+                  meeetingStatusData?.data?.map((item, index) => ({
                     ...item,
-                    srNo: idx + 1,
+                    srNo:
+                      (meeetingStatusData.currentPage - 1) *
+                        meeetingStatusData.pageSize +
+                      index +
+                      1,
                   })) || []
                 }
                 columns={visibleColumns}
@@ -333,9 +337,13 @@ export default function useAddEmployee() {
             return (
               <TableData
                 tableData={
-                  meetingTypeData?.data?.map((item, idx) => ({
+                  meetingTypeData?.data?.map((item, index) => ({
                     ...item,
-                    srNo: idx + 1,
+                    srNo:
+                      (meetingTypeData.currentPage - 1) *
+                        meetingTypeData.pageSize +
+                      index +
+                      1,
                   })) || []
                 }
                 columns={visibleColumns}
@@ -422,7 +430,10 @@ export default function useAddEmployee() {
                 {...field}
                 tableData={employeedata?.data.map((item, index) => ({
                   ...item,
-                  srNo: index + 1,
+                  srNo:
+                    (employeedata.currentPage - 1) * employeedata.pageSize +
+                    index +
+                    1,
                 }))}
                 columns={visibleColumns}
                 primaryKey="employeeId"

@@ -140,7 +140,10 @@ export default function CompanyDesignation() {
           <TableData
             tableData={employeedata?.data.map((item, index) => ({
               ...item,
-              srNo: index + 1,
+              srNo:
+                (employeedata.currentPage - 1) * employeedata.pageSize +
+                index +
+                1,
             }))}
             columns={visibleColumns}
             primaryKey="employeeId"

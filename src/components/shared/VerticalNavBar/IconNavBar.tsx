@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import logoImg from "@/assets/S_logo.png";
-import mainLogoImg from "@/assets/logo_1.png";
+import mainLogoImg from "@/assets/company-logo.jpeg";
 import {
   getUserPermission,
   getUserDetail,
@@ -115,7 +115,7 @@ const CompanyLogo: React.FC = () => {
           <img
             src={user?.companyLogo ? user?.companyLogo : mainLogoImg}
             alt="company logo"
-            className="w-full h-full rounded-full object-contain bg-black"
+            className="w-full h-full rounded-full object-center"
           />
         </div>
       </div>

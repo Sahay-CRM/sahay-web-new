@@ -105,7 +105,10 @@ export default function MeetingList() {
             key={employeeData?.currentPage}
             tableData={employeeData?.data.map((item, index) => ({
               ...item,
-              srNo: index + 1,
+              srNo:
+                (employeeData.currentPage - 1) * employeeData.pageSize +
+                index +
+                1,
             }))}
             columns={visibleColumns}
             primaryKey="employeeId"
