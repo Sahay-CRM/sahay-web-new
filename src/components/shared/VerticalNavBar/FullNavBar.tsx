@@ -8,14 +8,12 @@ import {
   getUserPermission,
 } from "@/features/selectors/auth.selector";
 import { Link } from "react-router-dom";
-import { ImageBaseURL } from "@/features/utils/urls.utils";
 
 const FullNavBar = ({ data }: FullNavBarProps) => {
   const permissions = useSelector(getUserPermission);
 
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   const user = useSelector(getUserDetail);
-  const companyUrl = `${ImageBaseURL}/share/company/logo/${user?.companyLogo}`;
 
   const handleAccordionToggle = (index: number) => {
     setActiveIndex((prevIndex) => (prevIndex === index ? -1 : index));
@@ -39,7 +37,7 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
         <div className="flex items-center px-4 py-4 shadow-sm mt-auto cursor-pointer mb-4">
           <div className="flex w-[70px] h-[50px]">
             <img
-              src={user?.companyLogo ? companyUrl : logoImg}
+              src={user?.companyLogo ? user?.companyLogo : logoImg}
               alt="profile"
               className="w-full rounded-full object-contain bg-black"
             />

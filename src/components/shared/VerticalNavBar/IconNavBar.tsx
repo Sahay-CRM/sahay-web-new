@@ -93,9 +93,6 @@ const CompanyLogo: React.FC = () => {
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const logoRef = useRef<HTMLDivElement>(null);
 
-  const BaseURL = import.meta.env.VITE_IMAGEURL;
-  const companyUrl = `${BaseURL}/share/logo/${user?.companyLogo}`;
-
   const handleMouseEnter = () => {
     if (logoRef.current) {
       const rect = logoRef.current.getBoundingClientRect();
@@ -116,7 +113,7 @@ const CompanyLogo: React.FC = () => {
       <div ref={logoRef} className="flex justify-center items-center p-4 mb-4">
         <div className="w-8 h-8">
           <img
-            src={user?.companyLogo ? companyUrl : mainLogoImg}
+            src={user?.companyLogo ? user?.companyLogo : mainLogoImg}
             alt="company logo"
             className="w-full h-full rounded-full object-contain bg-black"
           />

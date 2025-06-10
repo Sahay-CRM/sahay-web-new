@@ -62,7 +62,6 @@ const DashboardLayout = () => {
 
   //  const { breadcrumbs } = useBreadcrumbs();
   const { bgColor } = useSidebarTheme();
-  const profileImage = `${ImageBaseURL}/share/profilePics/${user?.photo}`;
 
   useEffect(() => {
     if (permission) {
@@ -73,10 +72,18 @@ const DashboardLayout = () => {
   useEffect(() => {
     if (userData && userData.data) {
       const empData = userData.data;
-
-      dispatch(setUser(empData));
+      const updatedEmpData = {
+        ...empData,
+        ...(empData?.companyLogo && {
+          companyLogo: `${ImageBaseURL}/share/company/logo/${empData.companyLogo}`,
+        }),
+        ...(empData?.photo && {
+          photo: `${ImageBaseURL}/share/profilePics/${empData.photo}`,
+        }),
+      };
+      dispatch(setUser(updatedEmpData));
     }
-  }, [dispatch, user, userData]);
+  }, [dispatch, userData]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -146,7 +153,7 @@ const DashboardLayout = () => {
               <div className="flex items-center px-4 py-4-sm mt-auto cursor-pointer mb-1">
                 <div className="flex w-[50px] h-[50px]">
                   <img
-                    src={user?.photo ? profileImage : logoImg}
+                    src={user?.photo ? user?.photo : logoImg}
                     alt="profile"
                     className="w-full rounded-full object-contain bg-black"
                   />
