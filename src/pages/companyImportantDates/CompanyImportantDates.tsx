@@ -11,8 +11,9 @@ import { Calendar as BigCalendar } from "react-big-calendar";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { FormProvider, useForm } from "react-hook-form";
 import CalenderFormModal from "./calenderFormModal/CalenderFormModal";
-import { useNavigate } from "react-router-dom";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import ConfirmationTaskModal from "./confirmationTaskModal";
+import ConfirmationMeetingModal from "./confirmationMeetingModal";
 
 const locales = {
   "en-US": enUS,
@@ -39,6 +40,13 @@ function Calendar() {
     setModalData,
     modalData,
     permission,
+    isTaskModalOpen,
+    handleTaskModal,
+    handleMeetingModal,
+    isMeetingModalOpen,
+    meetingModalData,
+    taskModalData,
+    closeModal,
   } = useCalendar();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -50,8 +58,6 @@ function Calendar() {
   const [selectedOption, setSelectedOption] = useState<
     "all" | "task" | "meeting" | "importantDate"
   >("all");
-
-  const navigate = useNavigate();
 
   // Change handler to accept string value
   const handleOptionChange = (value: string | string[]) => {
@@ -98,7 +104,7 @@ function Calendar() {
             </div>
           )}
           {(permission.TASK?.View ||
-            permission.MEETING?.View ||
+            permission.MEETING_LIST?.View ||
             permission.IMPORTANT_DATE?.View) && (
             <div>
               <FormSelect
@@ -126,6 +132,7 @@ function Calendar() {
           onSelectEvent={(event: EventData) => {
             if (
               event.eventType === "importantDate" &&
+              permission.IMPORTANT_DATE &&
               permission.IMPORTANT_DATE.Edit
             ) {
               setAddImportantDateModal(true);
@@ -145,13 +152,17 @@ function Calendar() {
                 textColor: event.textColor,
                 eventType: event.eventType,
               });
-            } else if (event.eventType === "task" && permission.TASK.Edit) {
-              navigate(`/dashboard/tasks/edit/${event.eventId}`);
+            } else if (
+              event.eventType === "task" &&
+              permission.TASK &&
+              permission.TASK.Edit
+            ) {
+              handleTaskModal(event.eventId);
             } else if (
               event.eventType === "meeting" &&
-              permission.MEETING.Edit
+              permission.MEETING_LIST.Edit
             ) {
-              navigate(`/dashboard/meeting/edit/${event.eventId}`);
+              handleMeetingModal(event.eventId);
             }
           }}
           eventPropGetter={(event) => ({
@@ -162,6 +173,22 @@ function Calendar() {
             },
           })}
         />
+      </div>
+      <div>
+        {isTaskModalOpen && (
+          <ConfirmationTaskModal
+            isModalOpen={isTaskModalOpen}
+            modalClose={closeModal}
+            modalData={taskModalData}
+          />
+        )}
+        {isMeetingModalOpen && (
+          <ConfirmationMeetingModal
+            isModalOpen={isMeetingModalOpen}
+            modalClose={closeModal}
+            modalData={meetingModalData}
+          />
+        )}
       </div>
     </FormProvider>
   );

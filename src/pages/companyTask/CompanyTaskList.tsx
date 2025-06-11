@@ -222,56 +222,6 @@ export default function CompanyTaskList() {
             }}
             sortableColumns={["taskName", "taskDeadline"]}
           />
-
-          {/* <TableWithDropdown
-            tableData={companyTaskData?.data.map(
-              (item: TaskGetPaging, index: number) => ({
-                ...item,
-                srNo: index + 1,
-                status: item.taskStatusId,
-                taskDeadline: item.taskDeadline
-                  ? new Date(item.taskDeadline).toISOString().split("T")[0]
-                  : "",
-                assigneeNames: item.TaskEmployeeJunction
-                  ? item.TaskEmployeeJunction.map(
-                      (j) => j.Employee?.employeeName
-                    )
-                      .filter(Boolean)
-                      .join(", ")
-                  : "",
-              })
-            )}
-            columns={visibleColumns}
-            primaryKey="taskId"
-            onEdit={
-              permission.Edit
-                ? (row) => {
-                    navigate(`/dashboard/tasks/edit/${row.taskId}`);
-                  }
-                : undefined
-            }
-            onDelete={(row) => {
-              onDelete(row);
-            }}
-            viewButton={true}
-            isActionButton={() => true}
-            paginationDetails={mapPaginationDetails(companyTaskData)}
-            setPaginationFilter={setPaginationFilter}
-            isLoading={isLoading}
-            permissionKey="users"
-            localStorageId="CompanyTaskList"
-            statusOptions={statusOptions}
-            showDropdown={true}
-            handleStatusChange={handleStatusChange}
-            onViewButton={(row) => {
-              navigate(`/dashboard/tasks/view/${row.taskId}`);
-            }}
-            moduleKey="TASK"
-            onRowClick={(row) => {
-              handleRowsModalOpen(row);
-            }}
-            sortableColumns={["taskName", "taskDeadline"]}
-          /> */}
         </div>
 
         {/* Modal Component */}
