@@ -10,7 +10,7 @@ import {
   useGetCompanyMeetingStatus,
 } from "@/features/api/companyMeeting";
 import { getMeetingType } from "@/features/api/meetingType";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { docUploadMutation } from "@/features/api/file";
@@ -101,6 +101,8 @@ export default function useAddEmployee() {
     }
   }, [trigger]);
 
+  const [searchParams] = useSearchParams();
+
   const onSubmit = handleSubmit(async (data) => {
     const payload = {
       meetingName: data?.meetingName,
@@ -125,7 +127,12 @@ export default function useAddEmployee() {
         }
 
         handleModalClose();
-        navigate("/dashboard/meeting");
+        if (searchParams.get("from") === "task") {
+          navigate("/dashboard/tasks/add");
+          window.location.reload();
+        } else {
+          navigate("/dashboard/meeting");
+        }
       },
     });
   });

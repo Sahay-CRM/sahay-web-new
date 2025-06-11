@@ -13,6 +13,15 @@ export default function useCalendar() {
   const permission = useSelector(getUserPermission);
   const [addImportantDate, setAddImportantDateModal] = useState(false);
 
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
+  const [taskModalData, setTaskModalData] = useState<TaskGetPaging>(
+    {} as TaskGetPaging,
+  );
+  const [meetingModalData, setMeetingModalData] = useState<MeetingData>(
+    {} as MeetingData,
+  );
+
   const { data: importantDatesList } = useGetImportantDates();
   const { data: companyTask } = useAllCompanyTask();
   const { data: meetingData } = useDdCompanyMeeting();
@@ -128,6 +137,47 @@ export default function useCalendar() {
     setAddImportantDateModal(false);
   };
 
+  const handleTaskModal = (taskId: string) => {
+    setIsTaskModalOpen(true);
+
+    const tasksArray = Array.isArray(companyTask?.data)
+      ? companyTask.data
+      : companyTask?.data
+        ? [companyTask.data]
+        : [];
+    const taskData = tasksArray.find(
+      (task: TaskGetPaging) => task.taskId === taskId,
+    );
+
+    setTaskModalData(taskData);
+  };
+  const handleMeetingModal = (meetingId: string) => {
+    const meetingsArray = Array.isArray(meetingData)
+      ? meetingData
+      : meetingData
+        ? [meetingData]
+        : [];
+    const meeting = meetingsArray.find(
+      (m: MeetingData) => m.meetingId === meetingId,
+    );
+    if (meeting) {
+      setMeetingModalData(meeting as MeetingData);
+      setIsMeetingModalOpen(true);
+    } else {
+      setMeetingModalData({} as MeetingData);
+      setIsMeetingModalOpen(true); // Still open modal for debugging, or set to false if you want to block
+    }
+  };
+
+  const closeModal = () => {
+    setAddImportantDateModal(false);
+    setIsTaskModalOpen(false);
+    setIsMeetingModalOpen(false);
+    setModalData({} as ImportantDatesDataProps);
+    setTaskModalData({} as TaskGetPaging);
+    setMeetingModalData({} as MeetingData);
+  };
+
   return {
     taskEvents,
     meetingEvents,
@@ -139,5 +189,12 @@ export default function useCalendar() {
     setModalData,
     modalData,
     permission,
+    isTaskModalOpen,
+    handleTaskModal,
+    handleMeetingModal,
+    isMeetingModalOpen,
+    meetingModalData,
+    taskModalData,
+    closeModal,
   };
 }

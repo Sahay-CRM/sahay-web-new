@@ -18,7 +18,7 @@ import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 export default function useAddProject() {
   const { id: companyProjectId } = useParams();
   const [searchParams] = useSearchParams();
-  const source = searchParams.get("source") || "";
+
   const [isModalOpen, setModalOpen] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [hasInitializedData, setHasInitializedData] = useState(false);
@@ -148,10 +148,12 @@ export default function useAddProject() {
     addProject(payload, {
       onSuccess: () => {
         handleModalClose();
-        if (source == "view") {
-          navigate(`/dashboard/projects/view/${companyProjectId}`);
+        if (searchParams.get("from") === "task") {
+          navigate("/dashboard/tasks/add");
+          window.location.reload();
         } else {
-          navigate("/dashboard/projects");
+          navigate(`/dashboard/projects`);
+          window.location.reload();
         }
       },
     });

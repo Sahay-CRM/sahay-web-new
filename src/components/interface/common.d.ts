@@ -538,7 +538,7 @@ interface TaskStatusAllRes {
   taskStatusId: string;
   taskStatus: string;
   taskStatusOrder: number;
-  winLostTask: string | null;
+  winLostTask: string | number | null;
   color?: string;
 }
 
