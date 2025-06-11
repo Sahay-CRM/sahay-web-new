@@ -60,7 +60,6 @@ export default function CompanyTaskList() {
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
-    { key: "KPINameWithLabel", label: "KPI Name - Label", visible: true },
     {
       key: "KPIName",
       label: "KPI Name",
@@ -149,7 +148,6 @@ export default function CompanyTaskList() {
                 (datpointData.currentPage - 1) * datpointData.pageSize +
                 index +
                 1,
-              KPINameWithLabel: `${item.KPIName} - ${item.KPILabel}`,
               validationType: getValidationLabel(item.validationType),
             }))}
             columns={visibleColumns}

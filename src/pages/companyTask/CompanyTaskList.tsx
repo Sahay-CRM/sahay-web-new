@@ -225,7 +225,7 @@ export default function CompanyTaskList() {
             onRowClick={(row) => {
               handleRowsModalOpen(row);
             }}
-            sortableColumns={["taskName", "taskDeadline"]}
+            sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
           />
         </div>
 

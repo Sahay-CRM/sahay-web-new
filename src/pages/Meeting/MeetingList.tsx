@@ -211,7 +211,11 @@ export default function MeetingList() {
             permissionKey="users"
             localStorageId="MeetingList"
             moduleKey="MEETING_LIST"
-            sortableColumns={["meetingName", "meetingDateTime"]}
+            sortableColumns={[
+              "meetingName",
+              "meetingDateTime",
+              "meetingStatus",
+            ]}
             dropdownColumns={{
               meetingStatus: {
                 options: statusOptions ?? [],
