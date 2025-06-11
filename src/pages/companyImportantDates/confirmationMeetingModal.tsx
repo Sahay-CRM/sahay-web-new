@@ -30,7 +30,7 @@ export default function ConfirmationMeetingModal({
             btnText: "Edit",
             buttonCss: "py-1.5 px-5",
             btnClick: () =>
-              navigate(`/dashboard/tasks/edit/${modalData.meetingId}`),
+              navigate(`/dashboard/meeting/edit/${modalData.meetingId}`),
           },
         ]}
       >
