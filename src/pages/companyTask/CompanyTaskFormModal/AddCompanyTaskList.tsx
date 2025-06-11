@@ -10,6 +10,7 @@ import { useAddCompanyEmployee } from "./useAddCompanyTaskList";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
 
 interface AddAdminMeetingProps {
   isEditMode?: boolean;
@@ -36,6 +37,7 @@ export default function AddMeeting({
     taskId,
     taskStatusOptions,
     taskTypeOptions,
+    permission,
   } = useAddCompanyEmployee();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -84,6 +86,13 @@ export default function AddMeeting({
         {/* Step 1 - Project Selection */}
         {step === 1 && (
           <Card className="px-4 py-4">
+            <div>
+              {permission.PROJECT_LIST.Add && (
+                <Link to="/dashboard/projects/add?from=task">
+                  <Button className="py-2 w-fit">Add Company Project</Button>
+                </Link>
+              )}
+            </div>
             <Controller
               name="project"
               control={control}
@@ -141,6 +150,13 @@ export default function AddMeeting({
         )}
         {step === 2 && (
           <Card className="px-4 py-4">
+            <div className="flex items-center space-x-5 tb:space-x-7">
+              {permission.MEETING_LIST?.Add && (
+                <Link to="/dashboard/meeting/add?from=task">
+                  <Button className="py-2 w-fit">Add Meeting</Button>
+                </Link>
+              )}
+            </div>
             <Controller
               name="meeting"
               control={control}

@@ -11,6 +11,8 @@ import {
 import { getEmployee } from "@/features/api/companyEmployee";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGetCompanyMeeting } from "@/features/api/companyMeeting";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 
 interface FormValues {
   taskId?: string; // <-- make it optional
@@ -31,7 +33,7 @@ export const useAddCompanyEmployee = () => {
   const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
   const { id: taskId } = useParams();
   const { data: taskDataById } = useGetCompanyTaskById(taskId || "");
-
+  const permission = useSelector(getUserPermission);
   const navigate = useNavigate();
 
   const methods = useForm<FormValues>({
@@ -267,5 +269,6 @@ export const useAddCompanyEmployee = () => {
     taskId,
     taskStatusOptions,
     taskTypeOptions,
+    permission,
   };
 };

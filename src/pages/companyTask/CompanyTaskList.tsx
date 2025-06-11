@@ -47,6 +47,7 @@ export default function CompanyTaskList() {
     setIsViewModalOpen,
     viewModalData,
     taskStatus,
+    taskDateRange,
   } = useCompanyTaskList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -118,6 +119,10 @@ export default function CompanyTaskList() {
             <div className="z-10 relative flex items-center gap-2">
               {!showOverdue && (
                 <DateRangePicker
+                  value={{
+                    from: taskDateRange.taskStartDate,
+                    to: taskDateRange.taskDeadline,
+                  }}
                   onChange={handleDateRangeChange}
                   onApply={handleDateRangeApply}
                 />

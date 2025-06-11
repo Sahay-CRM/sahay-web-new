@@ -46,6 +46,7 @@ export default function MeetingList() {
     handleDateRangeApply,
     showOverdue,
     handleOverdueToggle,
+    taskDateRange,
   } = useMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -115,6 +116,10 @@ export default function MeetingList() {
             <div className="z-10 relative flex items-center gap-2">
               {!showOverdue && (
                 <DateRangePicker
+                  value={{
+                    from: taskDateRange.taskStartDate,
+                    to: taskDateRange.taskDeadline,
+                  }}
                   onChange={handleDateRangeChange}
                   onApply={handleDateRangeApply}
                 />

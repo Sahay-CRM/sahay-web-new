@@ -28,19 +28,26 @@ export default function useAdminUser() {
   const [isChildData, setIsChildData] = useState<string | undefined>();
   const [showOverdue, setShowOverdue] = useState(false);
 
+  // Calculate default 30-day range: 15 days before and after today
+  const today = new Date();
+  const before14 = new Date(today);
+  before14.setDate(today.getDate() - 14);
+  const after14 = new Date(today);
+  after14.setDate(today.getDate() + 14);
+
   const [taskDateRange, setTaskDateRange] = useState<{
     taskStartDate: Date | undefined;
     taskDeadline: Date | undefined;
   }>({
-    taskStartDate: new Date(),
-    taskDeadline: new Date(),
+    taskStartDate: before14,
+    taskDeadline: after14,
   });
   const [appliedDateRange, setAppliedDateRange] = useState<{
     taskStartDate: Date | undefined;
     taskDeadline: Date | undefined;
   }>({
-    taskStartDate: new Date(),
-    taskDeadline: new Date(),
+    taskStartDate: before14,
+    taskDeadline: after14,
   });
 
   // Add state for view modal
@@ -134,11 +141,20 @@ export default function useAdminUser() {
     setIsImport(false);
   }, []);
 
-  const statusOptions = meetingStatus?.map((item) => ({
-    label: item.meetingStatus,
-    value: item.meetingStatusId,
-    color: item.color || "#2e3195",
-  }));
+  // Filter status options based on showOverdue and winLostMeeting
+  const statusOptions = (meetingStatus ?? [])
+    .filter((item) => {
+      if (showOverdue) {
+        // Exclude items where winLostMeeting is "0" or "1" (string or number)
+        return item.winLostMeeting !== 0 && item.winLostMeeting !== 1;
+      }
+      return true;
+    })
+    .map((item) => ({
+      label: item.meetingStatus,
+      value: item.meetingStatusId,
+      color: item.color || "#2e3195",
+    }));
 
   const handleFilterChange = (selected: string[]) => {
     setFilters({

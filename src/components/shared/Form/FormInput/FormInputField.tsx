@@ -39,8 +39,8 @@ const FormInputField = forwardRef<HTMLInputElement, FormInputProps>(
     },
     ref,
   ) => {
-    const handleCodeChange: (value: string) => void =
-      onCountryCodeChange || (() => {});
+    const handleCodeChange = onCountryCodeChange || (() => {});
+
     return (
       <FormItem className={containerClass}>
         {label && (
@@ -65,6 +65,7 @@ const FormInputField = forwardRef<HTMLInputElement, FormInputProps>(
               id={id}
               placeholder={placeholder}
               className={cn("text-[20px] mt-2", className)}
+              autoComplete="off"
               {...rest}
               ref={ref}
             />
