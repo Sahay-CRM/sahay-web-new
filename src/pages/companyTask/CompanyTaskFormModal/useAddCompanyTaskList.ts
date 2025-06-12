@@ -270,5 +270,8 @@ export const useAddCompanyEmployee = () => {
     taskStatusOptions,
     taskTypeOptions,
     permission,
+    paginationFilterProject,
+    paginationFilterEmployee,
+    paginationFilterMeeting,
   };
 };

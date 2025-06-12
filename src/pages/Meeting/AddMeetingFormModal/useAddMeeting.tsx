@@ -22,6 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import SearchInput from "@/components/shared/SearchInput";
 
 export default function useAddEmployee() {
   const { id: companyMeetingId } = useParams();
@@ -254,6 +255,14 @@ export default function useAddEmployee() {
 
     return (
       <div>
+        <div>
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
+          />
+        </div>
         <Controller
           name="meetingStatusId"
           control={control}
@@ -325,6 +334,14 @@ export default function useAddEmployee() {
 
     return (
       <div>
+        <div>
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
+          />
+        </div>
         <Controller
           name="meetingTypeId"
           control={control}
@@ -410,6 +427,14 @@ export default function useAddEmployee() {
       <div>
         {" "}
         <div className=" mt-1 flex items-center justify-between">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
           {canToggleColumns && (
             <TooltipProvider>
               <Tooltip>

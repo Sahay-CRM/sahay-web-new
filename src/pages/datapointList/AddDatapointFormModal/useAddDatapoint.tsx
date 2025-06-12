@@ -21,6 +21,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import SearchInput from "@/components/shared/SearchInput";
 export default function useAddEmployee() {
   const { id: companykpimasterId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
@@ -262,6 +263,14 @@ export default function useAddEmployee() {
     return (
       <div>
         <div className=" mt-1 flex items-center justify-end">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
           {canToggleColumns && (
             <TooltipProvider>
               <Tooltip>
@@ -495,6 +504,14 @@ export default function useAddEmployee() {
     return (
       <div>
         <div className=" mt-1 flex items-center justify-end">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
           {canToggleColumns && (
             <TooltipProvider>
               <Tooltip>
@@ -596,6 +613,14 @@ export default function useAddEmployee() {
     return (
       <div>
         <div className=" mt-1 flex items-center justify-end">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
           {canToggleColumns && (
             <TooltipProvider>
               <Tooltip>
@@ -690,6 +715,14 @@ export default function useAddEmployee() {
     return (
       <div>
         <div className="mt-1 flex items-center justify-end">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
           {canToggleColumns && (
             <TooltipProvider>
               <Tooltip>

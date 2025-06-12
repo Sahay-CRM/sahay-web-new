@@ -14,6 +14,7 @@ import {
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
+import SearchInput from "@/components/shared/SearchInput";
 
 export default function useAddProject() {
   const { id: companyProjectId } = useParams();
@@ -235,6 +236,12 @@ export default function useAddProject() {
     return (
       <div>
         <div className=" mt-1 flex items-center justify-between">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-96"
+          />
           {canToggleColumns && (
             <div className="ml-4 ">
               <DropdownSearchMenu
@@ -324,6 +331,12 @@ export default function useAddProject() {
     return (
       <div>
         <div className=" mt-1 flex items-center justify-between">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-96"
+          />
           {canToggleColumns && (
             <div className="ml-4 ">
               <DropdownSearchMenu
@@ -464,6 +477,12 @@ export default function useAddProject() {
     return (
       <div>
         <div className=" mt-1 flex items-center justify-between">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-96"
+          />
           {canToggleColumns && (
             <div className="ml-4 ">
               <DropdownSearchMenu
@@ -587,6 +606,12 @@ export default function useAddProject() {
     return (
       <div>
         <div className=" mt-1 flex items-center justify-between">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-96"
+          />
           {canToggleColumns && (
             <div className="ml-4 ">
               <DropdownSearchMenu

@@ -11,6 +11,7 @@ import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
+import SearchInput from "@/components/shared/SearchInput";
 
 interface AddAdminMeetingProps {
   isEditMode?: boolean;
@@ -38,6 +39,9 @@ export default function AddMeeting({
     taskStatusOptions,
     taskTypeOptions,
     permission,
+    paginationFilterProject,
+    paginationFilterEmployee,
+    paginationFilterMeeting,
   } = useAddCompanyEmployee();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -86,7 +90,13 @@ export default function AddMeeting({
         {/* Step 1 - Project Selection */}
         {step === 1 && (
           <Card className="px-4 py-4">
-            <div>
+            <div className="flex items-center space-x-5 tb:space-x-7 mb-2">
+              <SearchInput
+                placeholder="Search..."
+                searchValue={paginationFilterProject?.search || ""}
+                setPaginationFilter={setPaginationFilterProject}
+                className="w-96"
+              />
               {permission.PROJECT_LIST.Add && (
                 <Link to="/dashboard/projects/add?from=task">
                   <Button className="py-2 w-fit">Add Company Project</Button>
@@ -151,6 +161,12 @@ export default function AddMeeting({
         {step === 2 && (
           <Card className="px-4 py-4">
             <div className="flex items-center space-x-5 tb:space-x-7">
+              <SearchInput
+                placeholder="Search..."
+                searchValue={paginationFilterMeeting?.search || ""}
+                setPaginationFilter={setPaginationFilterMeeting}
+                className="w-96"
+              />
               {permission.MEETING_LIST?.Add && (
                 <Link to="/dashboard/meeting/add?from=task">
                   <Button className="py-2 w-fit">Add Meeting</Button>
@@ -332,6 +348,14 @@ export default function AddMeeting({
         {/* Step 4 - Assign User */}
         {step === 4 && (
           <Card className="px-4 py-4">
+            <div>
+              <SearchInput
+                placeholder="Search..."
+                searchValue={paginationFilterEmployee?.search || ""}
+                setPaginationFilter={setPaginationFilterEmployee}
+                className="w-96"
+              />
+            </div>
             <Controller
               name="assignUser"
               control={control}
