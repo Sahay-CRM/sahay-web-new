@@ -20,6 +20,7 @@ import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import { format } from "date-fns";
 import DateRangePicker from "@/components/shared/DateRange";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import PageNotAccess from "../PageNoAccess";
 
 export default function MeetingList() {
   const {
@@ -86,6 +87,10 @@ export default function MeetingList() {
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
   const navigate = useNavigate();
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...methods}>

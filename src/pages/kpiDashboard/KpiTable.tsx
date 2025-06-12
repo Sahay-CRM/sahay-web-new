@@ -35,6 +35,8 @@ import {
   useGetKpiDashboardStructure,
 } from "@/features/api/kpiDashboard";
 import WarningDialog from "./WarningModal";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -53,6 +55,8 @@ export default function KPITable() {
   const [selectedPeriod, setSelectedPeriod] = useState("");
   const [showWarning, setShowWarning] = useState(false);
   const [pendingPeriod, setPendingPeriod] = useState<string | null>(null);
+
+  const permission = useSelector(getUserPermission).DATAPOINT_TABLE;
 
   const { data: kpiStructure } = useGetKpiDashboardStructure();
 
@@ -116,6 +120,21 @@ export default function KPITable() {
   const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
     {},
   );
+
+  // Warn on page refresh, reload, or close if there are unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (Object.keys(tempValues).length > 0) {
+        e.preventDefault();
+        e.returnValue = "";
+        return "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [tempValues]);
 
   const { mutate: addUpdateKpiData } = addUpdateKpi();
 
@@ -234,6 +253,11 @@ export default function KPITable() {
             const inputVal = inputValues[key] ?? cell?.data?.toString() ?? "";
             const isVisualized = kpi?.isVisualized;
 
+            // Permission logic
+            const canAdd = permission?.Add && !cell?.data;
+            const canEdit = permission?.Edit && !!cell?.data;
+            const canInput = !isVisualized && (canAdd || canEdit);
+
             if (validationType == "YES_NO") {
               const selectOptions = [
                 { value: "1", label: "Yes" },
@@ -252,13 +276,11 @@ export default function KPITable() {
                       isVisualized && "opacity-60",
                     )}
                   >
-                    {" "}
                     <FormSelect
                       value={inputVal}
                       onChange={
-                        isVisualized
-                          ? () => {}
-                          : (val) => {
+                        canInput
+                          ? (val) => {
                               setInputValues((prev) => ({
                                 ...prev,
                                 [key]: Array.isArray(val)
@@ -272,10 +294,11 @@ export default function KPITable() {
                                   : val,
                               }));
                             }
+                          : () => {}
                       }
                       options={selectOptions}
                       placeholder="Select"
-                      disabled={isVisualized}
+                      disabled={!canInput}
                     />
                   </div>
                 </TableCell>
@@ -294,27 +317,26 @@ export default function KPITable() {
                             : formatCompactNumber(inputVal)
                         }
                         onFocus={
-                          isVisualized
-                            ? undefined
-                            : () =>
+                          canInput
+                            ? () =>
                                 setInputFocused((prev) => ({
                                   ...prev,
                                   [key]: true,
                                 }))
+                            : undefined
                         }
                         onBlur={
-                          isVisualized
-                            ? undefined
-                            : () =>
+                          canInput
+                            ? () =>
                                 setInputFocused((prev) => ({
                                   ...prev,
                                   [key]: false,
                                 }))
+                            : undefined
                         }
                         onChange={
-                          isVisualized
-                            ? undefined
-                            : (e) => {
+                          canInput
+                            ? (e) => {
                                 const val = e.target.value;
                                 const isValidNumber =
                                   /^(\d+(\.\d*)?|\.\d*)?$/.test(val) ||
@@ -330,6 +352,7 @@ export default function KPITable() {
                                   [key]: e?.target.value,
                                 }));
                               }
+                            : undefined
                         }
                         className={clsx(
                           "border p-2 rounded-sm text-center text-sm w-[100px] h-[40px]",
@@ -343,12 +366,12 @@ export default function KPITable() {
                             )
                               ? "bg-green-100 border-green-500"
                               : "bg-red-100 border-red-500"),
-                          isVisualized &&
+                          (!canInput || isVisualized) &&
                             "opacity-60 cursor-not-allowed bg-gray-50",
                         )}
                         placeholder=""
-                        disabled={isVisualized}
-                        readOnly={isVisualized}
+                        disabled={!canInput}
+                        readOnly={!canInput}
                       />
                     </TooltipTrigger>
                     {inputVal && (

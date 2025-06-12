@@ -13,6 +13,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+import PageNotAccess from "../PageNoAccess";
 
 export default function MeetingList() {
   const {
@@ -27,6 +30,8 @@ export default function MeetingList() {
     paginationFilter,
     isLoading,
   } = useUserpermissionlist();
+
+  const permission = useSelector(getUserPermission).ROLES_PERMISSION;
 
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -61,6 +66,11 @@ export default function MeetingList() {
 
   const methods = useForm();
   const navigate = useNavigate();
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
+
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
