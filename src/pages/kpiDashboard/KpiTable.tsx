@@ -37,6 +37,7 @@ import {
 import WarningDialog from "./WarningModal";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { useNavigate, useLocation } from "react-router-dom";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -55,8 +56,141 @@ export default function KPITable() {
   const [selectedPeriod, setSelectedPeriod] = useState("");
   const [showWarning, setShowWarning] = useState(false);
   const [pendingPeriod, setPendingPeriod] = useState<string | null>(null);
-
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(
+    null,
+  );
   const permission = useSelector(getUserPermission).DATAPOINT_TABLE;
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Prepare input values for each cell - moved here so tempValues is available earlier
+  const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
+  const [tempValues, setTempValues] = useState<{ [key: string]: string }>({});
+  const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
+    {},
+  ); // Custom navigation interceptor for drawer/sidebar navigation
+  useEffect(() => {
+    // Store the original navigate function to restore later
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+    // Override history methods to intercept navigation
+    history.pushState = function (
+      data: unknown,
+      title: string,
+      url?: string | URL | null,
+    ) {
+      if (
+        Object.keys(tempValues).length > 0 &&
+        url &&
+        url !== location.pathname
+      ) {
+        // Check if this navigation should be intercepted
+        const targetPath = typeof url === "string" ? url : url?.toString();
+        if (targetPath && targetPath !== location.pathname) {
+          setPendingNavigation(targetPath);
+          setShowWarning(true);
+          return;
+        }
+      }
+      return originalPushState.call(this, data, title, url);
+    };
+
+    history.replaceState = function (
+      data: unknown,
+      title: string,
+      url?: string | URL | null,
+    ) {
+      if (
+        Object.keys(tempValues).length > 0 &&
+        url &&
+        url !== location.pathname
+      ) {
+        const targetPath = typeof url === "string" ? url : url?.toString();
+        if (targetPath && targetPath !== location.pathname) {
+          setPendingNavigation(targetPath);
+          setShowWarning(true);
+          return;
+        }
+      }
+      return originalReplaceState.call(this, data, title, url);
+    };
+
+    const handleNavigation = (event: Event) => {
+      // Check if there are unsaved changes
+      if (Object.keys(tempValues).length > 0) {
+        // Check if this is a navigation event from drawer/sidebar
+        const target = event.target as HTMLElement;
+
+        // Look for drawer navigation elements with more specific selectors
+        const isDrawerNavigation =
+          target?.closest('li[class*="cursor-pointer"]') ||
+          target?.closest('button[class*="hover:text-primary"]') ||
+          target?.closest('li[class*="hover:text-primary"]') ||
+          target?.closest("a[href]") ||
+          target?.closest('div[class*="cursor-pointer"]') ||
+          target?.closest('[data-sidebar="menu-button"]') ||
+          target?.closest('[data-slot="sidebar-menu-button"]');
+
+        if (isDrawerNavigation) {
+          event.preventDefault();
+          event.stopPropagation();
+
+          // Try to get the navigation path from various sources
+          let href = null;
+
+          if (target.closest("a")) {
+            href = target.closest("a")?.getAttribute("href");
+          } else {
+            // For drawer navigation items, try to extract the path
+            const clickElement =
+              target.closest("li") ||
+              target.closest("button") ||
+              target.closest("div");
+            const textContent = clickElement?.textContent?.toLowerCase().trim();
+
+            // Enhanced route mapping based on your navigation structure
+            const routeMap: { [key: string]: string } = {
+              "company designation": "/dashboard/company-designation",
+              "company employee": "/dashboard/company-employee",
+              calendar: "/dashboard/calendar",
+              "meeting list": "/dashboard/meeting",
+              "company task list": "/dashboard/tasks",
+              "company project list": "/dashboard/projects",
+              "kpi list": "/dashboard/kpi",
+              "kpi dashboard": "/dashboard/kpi-dashboard",
+              "health weightage": "/dashboard/business/health-weightage",
+              "health score": "/dashboard/business/healthscore-achieve",
+              "company level assign":
+                "/dashboard/business/company-level-assign",
+              "role & permission": "/dashboard/roles/user-permission",
+              brand: "/dashboard/brand",
+              product: "/dashboard/product",
+              "user log": "/dashboard/user-log",
+            };
+
+            if (textContent) {
+              href = routeMap[textContent];
+            }
+          }
+
+          if (href && href !== location.pathname) {
+            setPendingNavigation(href);
+            setShowWarning(true);
+          }
+        }
+      }
+    };
+
+    // Add event listeners to catch navigation attempts
+    document.addEventListener("click", handleNavigation, true);
+
+    return () => {
+      // Restore original methods
+      history.pushState = originalPushState;
+      history.replaceState = originalReplaceState;
+      document.removeEventListener("click", handleNavigation, true);
+    };
+  }, [tempValues, location.pathname]);
 
   const { data: kpiStructure } = useGetKpiDashboardStructure();
 
@@ -109,17 +243,9 @@ export default function KPITable() {
   const visualizedRows = useMemo(() => {
     return kpiRows.filter((row) => row.kpi.isVisualized);
   }, [kpiRows]);
-
   const nonVisualizedRows = useMemo(() => {
     return kpiRows.filter((row) => !row.kpi.isVisualized);
   }, [kpiRows]);
-
-  // Prepare input values for each cell
-  const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
-  const [tempValues, setTempValues] = useState<{ [key: string]: string }>({});
-  const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
-    {},
-  );
 
   // Warn on page refresh, reload, or close if there are unsaved changes
   useEffect(() => {
@@ -422,7 +548,6 @@ export default function KPITable() {
   const handleSubmit = () => {
     addUpdateKpiData(formatTempValuesToPayload(tempValues));
   };
-
   const handlePeriodChange = (newPeriod: string) => {
     if (Object.keys(tempValues).length > 0) {
       setPendingPeriod(newPeriod);
@@ -430,6 +555,56 @@ export default function KPITable() {
     } else {
       setSelectedPeriod(newPeriod);
     }
+  };
+  const handleWarningSubmit = () => {
+    handleSubmit();
+    setTempValues({});
+    setShowWarning(false);
+
+    // Handle period change
+    if (pendingPeriod) {
+      setSelectedPeriod(pendingPeriod);
+      setPendingPeriod(null);
+    }
+
+    // Handle navigation immediately
+    if (pendingNavigation) {
+      // Use setTimeout to ensure the state updates are processed first
+      setTimeout(() => {
+        navigate(pendingNavigation);
+        setPendingNavigation(null);
+      }, 0);
+    }
+  };
+
+  const handleWarningDiscard = () => {
+    setTempValues({});
+    setShowWarning(false);
+
+    // Handle period change
+    if (pendingPeriod) {
+      setSelectedPeriod(pendingPeriod);
+      setPendingPeriod(null);
+    }
+
+    // Handle navigation immediately
+    if (pendingNavigation) {
+      // Use setTimeout to ensure the state updates are processed first
+      setTimeout(() => {
+        navigate(pendingNavigation);
+        setPendingNavigation(null);
+      }, 0);
+    }
+  };
+
+  const handleWarningClose = () => {
+    // Reset pending period if user cancels
+    setPendingPeriod(null);
+
+    // Reset pending navigation if user cancels
+    setPendingNavigation(null);
+
+    setShowWarning(false);
   };
   if (isLoading) {
     return <Loader />;
@@ -560,23 +735,12 @@ export default function KPITable() {
             </TableBody>
           </Table>
         </div>
-      </div>
+      </div>{" "}
       <WarningDialog
         open={showWarning}
-        onSubmit={() => {
-          handleSubmit();
-          setTempValues({});
-          if (pendingPeriod) setSelectedPeriod(pendingPeriod);
-          setPendingPeriod(null);
-          setShowWarning(false);
-        }}
-        onDiscard={() => {
-          setTempValues({});
-          if (pendingPeriod) setSelectedPeriod(pendingPeriod);
-          setPendingPeriod(null);
-          setShowWarning(false);
-        }}
-        onClose={() => setShowWarning(false)}
+        onSubmit={handleWarningSubmit}
+        onDiscard={handleWarningDiscard}
+        onClose={handleWarningClose}
       />
     </FormProvider>
   );

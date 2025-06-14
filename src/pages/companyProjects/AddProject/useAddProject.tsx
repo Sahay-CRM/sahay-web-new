@@ -1,20 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { Card } from "@/components/ui/card";
-import TableData from "@/components/shared/DataTable/DataTable";
-import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-import { getEmployee } from "@/features/api/companyEmployee";
+import { useForm } from "react-hook-form";
 import {
   useAddUpdateCompanyProject,
   useGetCompanyProjectById,
-  useGetCorparameter,
-  useGetProjectStatus,
-  useGetSubParaFilter,
 } from "@/features/api/companyProject";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
-import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
-import SearchInput from "@/components/shared/SearchInput";
 
 export default function useAddProject() {
   const { id: companyProjectId } = useParams();
@@ -33,22 +24,12 @@ export default function useAddProject() {
     mode: "onChange",
   });
 
-  const {
-    register,
-    formState: { errors },
-    control,
-    handleSubmit,
-    trigger,
-    reset,
-    getValues,
-    watch,
-    setValue,
-  } = methods;
+  const { handleSubmit, trigger, reset, watch, setValue, getValues } = methods;
 
   useEffect(() => {
     if (projectApiData?.data) {
-      setIsInitialLoad(true);
-      setHasInitializedData(false);
+      setIsInitialLoad(true); // Set true before reset to manage dependent effects
+      setHasInitializedData(false); // Set false before reset
       reset({
         projectId: companyProjectId || "",
         projectName: projectApiData?.data.projectName || "",
@@ -59,63 +40,70 @@ export default function useAddProject() {
               "yyyy-MM-dd",
             )
           : "",
-        projectStatusId: projectApiData?.data.projectStatus || "",
+        projectStatusId: projectApiData?.data.projectStatus || "", // Store the whole object if API returns it
         subParameterId:
           projectApiData?.data.ProjectParameters?.subParameters?.map(
-            (item) => item.subParameterId,
+            (item) => item.subParameterId, // Store as array of IDs
           ) || [],
         coreParameterId:
-          projectApiData?.data.ProjectParameters?.coreParameter || undefined,
+          projectApiData?.data.ProjectParameters?.coreParameter || undefined, // Store the whole object
         employeeId:
           projectApiData?.data?.ProjectEmployees?.map(
-            (item) => item.employeeId,
+            (item) => item.employeeId, // Store as array of IDs
           ) || [],
       });
-      // Set flags after form data is set
+      // Set flags after form data is set and effects might have run
       setTimeout(() => {
         setIsInitialLoad(false);
         setHasInitializedData(true);
-      }, 200);
+      }, 0); // Use setTimeout to allow one render cycle for reset to apply
     } else {
       setIsInitialLoad(false);
       setHasInitializedData(false);
+      // Optionally reset form to defaults if no data and not editing
+      if (!companyProjectId) {
+        reset({
+          projectId: "",
+          projectName: "",
+          projectDescription: "",
+          projectDeadline: "",
+          projectStatusId: undefined,
+          subParameterId: [],
+          coreParameterId: undefined,
+          employeeId: [],
+        });
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectApiData, reset]);
+  }, [projectApiData, reset, companyProjectId]);
 
-  // Watch for core parameter changes and clear dependent fields
   const watchedCoreParameter = watch("coreParameterId");
   const [previousCoreParameterId, setPreviousCoreParameterId] = useState<
-    string | null
-  >(null);
+    string | undefined
+  >(undefined);
 
   useEffect(() => {
     const currentCoreParameterId = watchedCoreParameter?.coreParameterId;
 
-    // Only clear sub parameters if:
-    // 1. Not in initial load
-    // 2. Has initialized data (existing project)
-    // 3. Core parameter actually changed from previous value
     if (
-      !isInitialLoad &&
-      hasInitializedData &&
-      currentCoreParameterId &&
-      previousCoreParameterId &&
-      currentCoreParameterId !== previousCoreParameterId
+      !isInitialLoad && // Only act if not initial load
+      hasInitializedData && // And if data has been initialized (editing existing)
+      currentCoreParameterId !== previousCoreParameterId // And core parameter actually changed
     ) {
-      setValue("subParameterId", []);
+      // Clear subParameterId only if the coreParameterId has genuinely changed
+      // from a previously set value, not from undefined to a value during initial load.
+      if (previousCoreParameterId !== undefined) {
+        // Check if there was a previous value
+        setValue("subParameterId", []);
+      }
     }
-
-    // Update previous core parameter ID
-    if (currentCoreParameterId) {
-      setPreviousCoreParameterId(currentCoreParameterId);
-    }
+    // Update previous core parameter ID for the next comparison
+    setPreviousCoreParameterId(currentCoreParameterId);
   }, [
     watchedCoreParameter,
     setValue,
     isInitialLoad,
     hasInitializedData,
-    previousCoreParameterId,
+    previousCoreParameterId, // Add as dependency
   ]);
 
   const handleClose = () => setModalOpen(false);
@@ -128,23 +116,29 @@ export default function useAddProject() {
   }, [trigger]);
 
   const onSubmit = handleSubmit(async (data) => {
+    // Ensure IDs are correctly extracted if objects are stored in form state
+    const projectStatusIdValue =
+      data.projectStatusId?.projectStatusId || data.projectStatusId;
+    // subParameterId is expected to be an array of strings by the backend
+    // employeeId is expected to be an array of strings by the backend
+
     const payload = companyProjectId
       ? {
           projectId: companyProjectId || "",
           projectName: data.projectName,
           projectDescription: data.projectDescription,
           projectDeadline: data.projectDeadline,
-          projectStatusId: data.projectStatusId.projectStatusId,
-          subParameterIds: data.subParameterId,
-          otherProjectEmployees: data.employeeId,
+          projectStatusId: projectStatusIdValue,
+          subParameterIds: data.subParameterId, // Should be array of IDs
+          otherProjectEmployees: data.employeeId, // Should be array of IDs
         }
       : {
           projectName: data.projectName,
           projectDescription: data.projectDescription,
           projectDeadline: data.projectDeadline,
-          projectStatusId: data.projectStatusId.projectStatusId,
-          subParameterIds: data.subParameterId,
-          otherProjectEmployees: data.employeeId,
+          projectStatusId: projectStatusIdValue,
+          subParameterIds: data.subParameterId, // Should be array of IDs
+          otherProjectEmployees: data.employeeId, // Should be array of IDs
         };
 
     addProject(payload, {
@@ -152,10 +146,10 @@ export default function useAddProject() {
         handleModalClose();
         if (searchParams.get("from") === "task") {
           navigate("/dashboard/tasks/add");
-          window.location.reload();
+          // window.location.reload(); // Consider if reload is necessary or if cache invalidation is enough
         } else {
           navigate(`/dashboard/projects`);
-          window.location.reload();
+          // window.location.reload();
         }
       },
     });
@@ -166,520 +160,18 @@ export default function useAddProject() {
     setModalOpen(false);
   };
 
-  const ProjectInfo = () => {
-    return (
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
-          <FormInputField
-            label="Project Name"
-            {...register("projectName", { required: "Name is required" })}
-            error={errors.projectName}
-          />
-
-          <FormInputField
-            label="Project Description"
-            {...register("projectDescription", {
-              required: "Description is required",
-            })}
-            error={errors.projectDescription}
-          />
-
-          <FormInputField
-            id=""
-            type="date"
-            label="Project Deadline"
-            {...register("projectDeadline", {
-              required: "Date & Time is required",
-            })}
-            error={errors.projectDeadline}
-          />
-        </Card>
-      </div>
-    );
-  };
-
-  const ProjectStatus = () => {
-    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-      currentPage: 1,
-      pageSize: 25,
-      search: "",
-    });
-
-    const { data: projectlistdata } = useGetProjectStatus({
-      filter: paginationFilter,
-    });
-
-    const [columnToggleOptions, setColumnToggleOptions] = useState([
-      { key: "srNo", label: "Sr No", visible: true },
-      { key: "projectStatus", label: "Project Status", visible: true },
-    ]);
-
-    // Filter visible columns
-    const visibleColumns = columnToggleOptions.reduce(
-      (acc, col) => {
-        if (col.visible) acc[col.key] = col.label;
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-
-    // Toggle column visibility
-    const onToggleColumn = (key: string) => {
-      setColumnToggleOptions((prev) =>
-        prev.map((col) =>
-          col.key === key ? { ...col, visible: !col.visible } : col,
-        ),
-      );
-    };
-    // Check if the number of columns is more than 3
-    const canToggleColumns = columnToggleOptions.length > 3;
-
-    return (
-      <div>
-        <div className=" mt-1 flex items-center justify-between">
-          <SearchInput
-            placeholder="Search..."
-            searchValue={paginationFilter?.search || ""}
-            setPaginationFilter={setPaginationFilter}
-            className="w-96"
-          />
-          {canToggleColumns && (
-            <div className="ml-4 ">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
-            </div>
-          )}
-        </div>
-
-        <Controller
-          name="projectStatusId"
-          control={control}
-          rules={{ required: "Please select a project status" }}
-          render={({ field }) => (
-            <>
-              <div className="mb-4">
-                {errors?.projectStatusId && (
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors?.projectStatusId?.message || "")}
-                  </span>
-                )}
-              </div>
-              <TableData
-                {...field}
-                tableData={projectlistdata?.data.map((item, index) => ({
-                  ...item,
-                  srNo:
-                    (projectlistdata.currentPage - 1) *
-                      projectlistdata.pageSize +
-                    index +
-                    1,
-                }))}
-                isActionButton={() => false}
-                columns={visibleColumns}
-                primaryKey="projectStatusId"
-                paginationDetails={projectlistdata as PaginationFilter}
-                setPaginationFilter={setPaginationFilter}
-                multiSelect={false}
-                selectedValue={field.value}
-                handleChange={field.onChange}
-                onCheckbox={() => true}
-                // permissionKey="--"
-              />
-            </>
-          )}
-        />
-      </div>
-    );
-  };
-
-  const CoreParameter = () => {
-    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-      currentPage: 1,
-      pageSize: 25,
-      search: "",
-    });
-
-    const { data: mcoreparameter } = useGetCorparameter({
-      filter: paginationFilter,
-    });
-    const [columnToggleOptions, setColumnToggleOptions] = useState([
-      { key: "srNo", label: "Sr No", visible: true },
-      { key: "coreParameterName", label: "Core Parameter", visible: true },
-    ]);
-
-    // Filter visible columns
-    const visibleColumns = columnToggleOptions.reduce(
-      (acc, col) => {
-        if (col.visible) acc[col.key] = col.label;
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-
-    // Toggle column visibility
-    const onToggleColumn = (key: string) => {
-      setColumnToggleOptions((prev) =>
-        prev.map((col) =>
-          col.key === key ? { ...col, visible: !col.visible } : col,
-        ),
-      );
-    };
-    // Check if the number of columns is more than 3
-    const canToggleColumns = columnToggleOptions.length > 3;
-
-    return (
-      <div>
-        <div className=" mt-1 flex items-center justify-between">
-          <SearchInput
-            placeholder="Search..."
-            searchValue={paginationFilter?.search || ""}
-            setPaginationFilter={setPaginationFilter}
-            className="w-96"
-          />
-          {canToggleColumns && (
-            <div className="ml-4 ">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
-            </div>
-          )}
-        </div>
-
-        <Controller
-          name="coreParameterId"
-          control={control}
-          rules={{ required: "Please select a core parameter" }}
-          render={({ field }) => (
-            <>
-              <div className="mb-4">
-                {errors?.coreParameterId && (
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors?.coreParameterId?.message || "")}
-                  </span>
-                )}
-              </div>
-              <TableData
-                {...field}
-                tableData={mcoreparameter?.data.map((item, index) => ({
-                  ...item,
-                  srNo:
-                    (mcoreparameter.currentPage - 1) * mcoreparameter.pageSize +
-                    index +
-                    1,
-                }))}
-                isActionButton={() => false}
-                columns={visibleColumns}
-                primaryKey="coreParameterId"
-                paginationDetails={mcoreparameter as PaginationFilter}
-                setPaginationFilter={setPaginationFilter}
-                multiSelect={false}
-                selectedValue={field.value}
-                handleChange={field.onChange}
-                onCheckbox={() => true}
-              />
-            </>
-          )}
-        />
-      </div>
-    );
-  };
-  const SubParameter = () => {
-    const coreParameter = watch("coreParameterId");
-
-    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-      currentPage: 1,
-      pageSize: 25,
-      search: "",
-    });
-
-    // Reset pagination when core parameter changes
-    useEffect(() => {
-      setPaginationFilter((prev) => ({
-        ...prev,
-        currentPage: 1,
-      }));
-    }, [coreParameter?.coreParameterId]);
-
-    const { data: subparameter } = useGetSubParaFilter({
-      filter: {
-        ...paginationFilter,
-        coreParameterId: coreParameter?.coreParameterId,
-      },
-    });
-    const [columnToggleOptions, setColumnToggleOptions] = useState([
-      { key: "srNo", label: "Sr No", visible: true },
-      { key: "subParameterName", label: "Sub Parameter", visible: true },
-    ]);
-
-    // Filter visible columns
-    const visibleColumns = columnToggleOptions.reduce(
-      (acc, col) => {
-        if (col.visible) acc[col.key] = col.label;
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-
-    // Toggle column visibility
-    const onToggleColumn = (key: string) => {
-      setColumnToggleOptions((prev) =>
-        prev.map((col) =>
-          col.key === key ? { ...col, visible: !col.visible } : col,
-        ),
-      );
-    };
-    // Check if the number of columns is more than 3
-    const canToggleColumns = columnToggleOptions.length > 3;
-
-    // Helper to ensure selectedValue is always an array of IDs
-    const getSelectedSubParameterIds = (value: unknown) => {
-      if (!Array.isArray(value)) return [];
-      return value
-        .map((item: string | { subParameterId?: string }) => {
-          // Handle both string IDs and objects with subParameterId
-          if (typeof item === "string") return item;
-          if (
-            typeof item === "object" &&
-            item !== null &&
-            "subParameterId" in item &&
-            typeof item.subParameterId === "string"
-          ) {
-            return item.subParameterId;
-          }
-          return item;
-        })
-        .filter(Boolean); // Remove any undefined/null values
-    };
-
-    // Custom onChange handler to normalize data
-    const handleSubParameterChange = (
-      selectedItems: (string | { subParameterId?: string })[],
-      onChange: (value: string[]) => void,
-    ) => {
-      // Always store as array of string IDs, filter out undefined
-      const normalizedIds = selectedItems
-        .map((item) => (typeof item === "string" ? item : item.subParameterId))
-        .filter((id): id is string => typeof id === "string");
-      onChange(normalizedIds);
-    };
-
-    // Don't render the table if no core parameter is selected
-    if (!coreParameter?.coreParameterId) {
-      return (
-        <div className="text-center py-8 text-gray-500">
-          Please select a core parameter first
-        </div>
-      );
-    }
-
-    return (
-      <div>
-        <div className=" mt-1 flex items-center justify-between">
-          <SearchInput
-            placeholder="Search..."
-            searchValue={paginationFilter?.search || ""}
-            setPaginationFilter={setPaginationFilter}
-            className="w-96"
-          />
-          {canToggleColumns && (
-            <div className="ml-4 ">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
-            </div>
-          )}
-        </div>
-
-        <Controller
-          name="subParameterId"
-          control={control}
-          rules={{ required: "Please select a sub parameter" }}
-          render={({ field }) => (
-            <>
-              <div className="mb-4">
-                {errors?.subParameterId && (
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors?.subParameterId?.message || "")}
-                  </span>
-                )}
-              </div>
-              <TableData
-                {...field}
-                tableData={subparameter?.data.map((item, index) => ({
-                  ...item,
-                  srNo:
-                    (subparameter.currentPage - 1) * subparameter.pageSize +
-                    index +
-                    1,
-                }))}
-                isActionButton={() => false}
-                columns={visibleColumns}
-                primaryKey="subParameterId"
-                paginationDetails={subparameter as PaginationFilter}
-                setPaginationFilter={setPaginationFilter}
-                multiSelect={true}
-                selectedValue={getSelectedSubParameterIds(field.value)}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                handleChange={(selectedItems: any[]) =>
-                  handleSubParameterChange(selectedItems, field.onChange)
-                }
-                onCheckbox={() => true}
-                // permissionKey="--"
-              />
-            </>
-          )}
-        />
-      </div>
-    );
-  };
-  const Employees = () => {
-    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-      currentPage: 1,
-      pageSize: 25,
-      search: "",
-      //   status: currentStatus, // Use currentStatus state
-    });
-
-    const { data: employeedata } = getEmployee({
-      filter: paginationFilter,
-    });
-    const [columnToggleOptions, setColumnToggleOptions] = useState([
-      { key: "srNo", label: "Sr No", visible: true },
-      { key: "employeeName", label: "Joiners", visible: true },
-      { key: "employeeMobile", label: "Mobile", visible: true },
-    ]);
-
-    // Filter visible columns
-    const visibleColumns = columnToggleOptions.reduce(
-      (acc, col) => {
-        if (col.visible) acc[col.key] = col.label;
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-
-    // Toggle column visibility
-    const onToggleColumn = (key: string) => {
-      setColumnToggleOptions((prev) =>
-        prev.map((col) =>
-          col.key === key ? { ...col, visible: !col.visible } : col,
-        ),
-      );
-    };
-    // Check if the number of columns is more than 3
-    const canToggleColumns = columnToggleOptions.length > 3;
-
-    // Helper to ensure selectedValue is always an array of IDs for employees
-    const getSelectedEmployeeIds = (value: unknown): string[] => {
-      if (!Array.isArray(value)) return [];
-      return value
-        .map((item) => {
-          // Handle both string IDs and objects with employeeId
-          if (typeof item === "string") return item;
-          if (
-            typeof item === "object" &&
-            item !== null &&
-            "employeeId" in item
-          ) {
-            return (item as { employeeId: string }).employeeId;
-          }
-          return item;
-        })
-        .filter((id): id is string => typeof id === "string");
-    };
-
-    // Custom onChange handler to normalize data
-    const handleEmployeeChange = (
-      selectedItems: (string | { employeeId?: string })[],
-      onChange: (value: string[]) => void,
-    ) => {
-      // Always store as array of string IDs, filter out undefined
-      const normalizedIds = selectedItems
-        .map((item) => (typeof item === "string" ? item : item.employeeId))
-        .filter((id): id is string => typeof id === "string");
-      onChange(normalizedIds);
-    };
-
-    return (
-      <div>
-        <div className=" mt-1 flex items-center justify-between">
-          <SearchInput
-            placeholder="Search..."
-            searchValue={paginationFilter?.search || ""}
-            setPaginationFilter={setPaginationFilter}
-            className="w-96"
-          />
-          {canToggleColumns && (
-            <div className="ml-4 ">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-              />
-            </div>
-          )}
-        </div>
-
-        <Controller
-          name="employeeId"
-          control={control}
-          rules={{ required: "Please select a Employee" }}
-          render={({ field }) => (
-            <>
-              <div className="mb-4">
-                {errors?.employeeId && (
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors?.employeeId?.message || "")}
-                  </span>
-                )}
-              </div>
-              <TableData
-                {...field}
-                tableData={employeedata?.data.map((item, index) => ({
-                  ...item,
-                  srNo:
-                    (employeedata.currentPage - 1) * employeedata.pageSize +
-                    index +
-                    1,
-                }))}
-                columns={visibleColumns}
-                primaryKey="employeeId"
-                paginationDetails={employeedata as PaginationFilter}
-                setPaginationFilter={setPaginationFilter}
-                multiSelect={true}
-                selectedValue={getSelectedEmployeeIds(field.value)}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                handleChange={(selectedItems: any[]) =>
-                  handleEmployeeChange(selectedItems, field.onChange)
-                }
-                onCheckbox={() => true}
-                // permissionKey="--"
-              />
-            </>
-          )}
-        />
-      </div>
-    );
-  };
-
   return {
     isModalOpen,
     handleClose,
     onFinish,
     onSubmit,
-    ProjectInfo,
-    ProjectStatus,
-    CoreParameter,
-    SubParameter,
-    Employees,
-    meetingPreview: getValues(),
+    projectPreview: getValues(), // Renamed from meetingPreview
     trigger,
-    setValue,
-    methods,
+    methods, // Pass the whole methods object for FormProvider
     companyProjectId,
     isPending,
+    // Pass state needed by step components if they can't derive it or for complex interactions
+    isInitialLoad, // For SubParameter logic
+    hasInitializedData, // For SubParameter logic
   };
 }
