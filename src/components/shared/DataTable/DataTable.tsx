@@ -85,6 +85,8 @@ interface TableProps<T extends Record<string, unknown>> {
     }
   >;
   sortableColumns?: string[];
+  showActiveToggle?: boolean; // Add this line
+  onToggleActive?: (item: T) => void; // Add this line
 }
 
 const TableData = <T extends Record<string, unknown>>({
@@ -115,6 +117,8 @@ const TableData = <T extends Record<string, unknown>>({
   moduleKey = "",
   dropdownColumns = {},
   sortableColumns = [],
+  showActiveToggle = false,
+  onToggleActive,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   // Only show checkboxes if explicitly enabled with multiSelect OR if both handleChange and onCheckbox are provided
@@ -226,6 +230,10 @@ const TableData = <T extends Record<string, unknown>>({
     return <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />;
   };
 
+  const getActiveState = (item: T) => {
+    return (item as { isDeactivated?: boolean }).isDeactivated;
+  };
+
   return (
     <Card className="w-full p-2 mb-5">
       <div className="overflow-x-auto">
@@ -296,6 +304,7 @@ const TableData = <T extends Record<string, unknown>>({
                     ${onRowClick || showCheckboxes ? "cursor-pointer" : ""}
                     ${onRowClick ? "hover:bg-gray-100" : showCheckboxes ? "hover:bg-gray-100" : "hover:bg-gray-50"}
                     ${index % 2 === 0 ? "bg-gray-25" : "bg-white"}
+                    ${(item as { isDeactivated?: boolean }).isDeactivated ? "bg-gray-200 hover:bg-gray-300" : ""}
                   `}
                   onClick={() => handleRowClickOrCheckbox(item)}
                 >
@@ -444,6 +453,7 @@ const TableData = <T extends Record<string, unknown>>({
                               <TooltipContent>Edit</TooltipContent>
                             </Tooltip>
                           )}
+
                         {isEditDelete &&
                           isActionButton?.(item) &&
                           permission?.Delete &&
@@ -460,6 +470,31 @@ const TableData = <T extends Record<string, unknown>>({
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>Delete</TooltipContent>
+                            </Tooltip>
+                          )}
+                        {permission?.Delete &&
+                          showActiveToggle &&
+                          isActionButton?.(item) &&
+                          (!canDelete || canDelete(item)) && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  className={`h-8 w-auto px-2 ${
+                                    getActiveState(item)
+                                      ? "bg-primary hover:bg-primary"
+                                      : "bg-red-700/80 hover:bg-red-700"
+                                  }`}
+                                  onClick={() => onToggleActive?.(item)}
+                                >
+                                  {getActiveState(item) ? "Active" : "Inactive"}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {getActiveState(item)
+                                  ? "Set Inactive"
+                                  : "Set Active"}
+                              </TooltipContent>
                             </Tooltip>
                           )}
                         {customActions?.(item)}

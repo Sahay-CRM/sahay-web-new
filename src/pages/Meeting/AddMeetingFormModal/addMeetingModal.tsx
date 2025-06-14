@@ -5,6 +5,7 @@ interface MeetingModalProps {
   isModalOpen: boolean;
   modalClose: () => void;
   onSubmit: () => void;
+  isLoading?: boolean;
 }
 
 const AddMeetingModal: React.FC<MeetingModalProps> = ({
@@ -12,6 +13,7 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
   isModalOpen,
   modalClose,
   onSubmit,
+  isLoading,
 }) => {
   // const joinersArr = Array.isArray(modalData?.joiners)
   //   ? (modalData.joiners.flat?.() ?? modalData.joiners)
@@ -36,6 +38,7 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
           btnText: "Submit",
           buttonCss: "py-1.5 px-5",
           btnClick: onSubmit,
+          isLoading: isLoading,
         },
       ]}
     >

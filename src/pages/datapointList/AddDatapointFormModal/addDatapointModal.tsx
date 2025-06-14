@@ -20,6 +20,7 @@ interface DatapointModalProps {
   isModalOpen: boolean;
   modalClose: () => void;
   onSubmit: () => void;
+  isLoading?: boolean;
 }
 
 const AddDatapointModal: React.FC<DatapointModalProps> = ({
@@ -27,6 +28,7 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
   isModalOpen,
   modalClose,
   onSubmit,
+  isLoading,
 }) => {
   const isYesNo =
     typeof modalData?.validationTypeId === "object" &&
@@ -49,6 +51,7 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
             btnText: "Submit",
             buttonCss: "py-1.5 px-5",
             btnClick: onSubmit,
+            isLoading: isLoading,
           },
         ]}
       >

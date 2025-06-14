@@ -25,6 +25,7 @@ const AddDatapoint = () => {
     skipToStep,
     isLoading,
     companykpimasterId,
+    isPending,
   } = useAddDatapoint();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -103,7 +104,12 @@ const AddDatapoint = () => {
           <Button onClick={back} disabled={isFirstStep} className="w-fit">
             Previous
           </Button>
-          <Button onClick={isLastStep ? onFinish : next} className="w-fit">
+          <Button
+            onClick={isLastStep ? onFinish : next}
+            className="w-fit"
+            disabled={isPending}
+            isLoading={isPending}
+          >
             {isLastStep ? "Finish" : "Next"}
           </Button>
         </div>
@@ -118,6 +124,7 @@ const AddDatapoint = () => {
             isModalOpen={isModalOpen}
             modalClose={handleClose}
             onSubmit={onSubmit}
+            isLoading={isPending}
           />
         )}
       </div>

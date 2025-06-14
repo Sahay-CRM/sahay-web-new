@@ -7,7 +7,7 @@ export default function useProductFormModal({
   modalClose,
   modalData,
 }: ProductFormModalProps) {
-  const { mutate: addProduct } = productMutation();
+  const { mutate: addProduct, isPending } = productMutation();
   const { data: brandData } = useDdBrand();
   const {
     handleSubmit,
@@ -52,5 +52,6 @@ export default function useProductFormModal({
     setValue,
     control,
     brandOptions,
+    isPending,
   };
 }

@@ -10,12 +10,19 @@ export default function BrandFormModal({
   modalData,
 }: BrandFormModalProps) {
   const methods = useForm();
-  const { register, errors, onSubmit, handleModalClose, watch, setValue } =
-    useBrandFormModal({
-      isModalOpen,
-      modalClose,
-      modalData,
-    });
+  const {
+    register,
+    errors,
+    onSubmit,
+    handleModalClose,
+    watch,
+    setValue,
+    isLoading,
+  } = useBrandFormModal({
+    isModalOpen,
+    modalClose,
+    modalData,
+  });
 
   return (
     <FormProvider {...methods}>
@@ -28,6 +35,7 @@ export default function BrandFormModal({
             btnText: "Submit",
             buttonCss: "py-1.5 px-5",
             btnClick: onSubmit,
+            isLoading: isLoading,
           },
         ]}
       >

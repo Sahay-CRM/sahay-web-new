@@ -4,7 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 
 type DatePaging = BaseResponse<CompanyProjectDataProps>;
 
-export default function useGetSubParaFilter({ filter }: FilterDataProps) {
+export default function useGetSubParaFilter({
+  filter,
+  enable,
+}: FilterDataProps) {
   const query = useQuery({
     queryKey: ["get-sub-parameter-filter", filter],
     queryFn: async () => {
@@ -17,6 +20,7 @@ export default function useGetSubParaFilter({ filter }: FilterDataProps) {
 
       return resData;
     },
+    enabled: enable,
   });
   return query;
 }

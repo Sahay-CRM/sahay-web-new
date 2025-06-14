@@ -6,7 +6,6 @@ interface UsePaginationProps {
 }
 
 const paginationOptions = [
-  { id: "1000", label: "10", value: 10 },
   { id: "1001", label: "25", value: 25 },
   { id: "1002", label: "50", value: 50 },
   { id: "1003", label: "100", value: 100 },
@@ -17,7 +16,7 @@ const paginationOptions = [
 export default function usePagination({
   paginationDetail = {
     currentPage: 1,
-    pageSize: 10,
+    pageSize: 25,
     totalPage: 1,
     totalCount: 0,
     hasMore: false,

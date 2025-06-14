@@ -5,6 +5,7 @@ import ScoreDataTable from "@/components/shared/DataTable/HealthScore/ScoreDataT
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect } from "react";
+import PageNotAccess from "../PageNoAccess";
 
 export default function HealthScoreList() {
   const {
@@ -31,6 +32,10 @@ export default function HealthScoreList() {
   }, [setBreadcrumbs]);
 
   const isCoreSelected = !!coreParameterId;
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...formMethods}>
