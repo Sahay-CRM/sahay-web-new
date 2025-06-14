@@ -30,7 +30,8 @@ export default function useDesignationFormModal({
 
   const { DepartmentOptions } = useDesignationFormModalOptions();
   const { designationOptions } = useDesignationDropdownOptions(departmentId);
-  const submitDesignation = useDesignationFormSubmit(modalClose);
+  const { handleSubmit: submitDesignation, isLoading } =
+    useDesignationFormSubmit(modalClose);
 
   const onSubmit = handleSubmit((data) => {
     submitDesignation(data);
@@ -47,6 +48,7 @@ export default function useDesignationFormModal({
     DepartmentOptions,
     designationOptions,
     control,
+    isLoading,
   };
 }
 
@@ -90,8 +92,11 @@ export function useDesignationDropdownOptions(departmentId?: string) {
 }
 
 export function useDesignationFormSubmit(modalClose: () => void) {
-  const { mutate: addDesignation } = addUpdateDesignation();
-  return (data: DesignationData & { isParentDesignation?: boolean }) => {
+  const { mutate: addDesignation, isPending: isLoading } =
+    addUpdateDesignation();
+  const handleSubmit = (
+    data: DesignationData & { isParentDesignation?: boolean },
+  ) => {
     const submitData = {
       ...data,
       parentId: data.isParentDesignation ? data.parentId : null,
@@ -102,4 +107,5 @@ export function useDesignationFormSubmit(modalClose: () => void) {
       },
     });
   };
+  return { handleSubmit, isLoading };
 }

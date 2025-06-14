@@ -5,6 +5,7 @@ interface TaskModalProps {
   isModalOpen: boolean;
   modalClose: () => void;
   onSubmit: () => void;
+  isLoading: boolean;
 }
 
 const AddEmployeeModal: React.FC<TaskModalProps> = ({
@@ -12,6 +13,7 @@ const AddEmployeeModal: React.FC<TaskModalProps> = ({
   isModalOpen,
   modalClose,
   onSubmit,
+  isLoading,
 }) => {
   const department =
     modalData?.departmentName ||
@@ -38,6 +40,7 @@ const AddEmployeeModal: React.FC<TaskModalProps> = ({
           btnText: "Submit",
           buttonCss: "py-1.5 px-5",
           btnClick: onSubmit,
+          isLoading: isLoading,
         },
       ]}
     >

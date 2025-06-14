@@ -11,6 +11,8 @@ import {
 import { getEmployee } from "@/features/api/companyEmployee";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGetCompanyMeeting } from "@/features/api/companyMeeting";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 
 interface FormValues {
   taskId?: string; // <-- make it optional
@@ -27,11 +29,12 @@ interface FormValues {
   comment?: string;
 }
 
-export const useAddCompanyEmployee = () => {
-  const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
+// Renamed hook
+export const useAddCompanyTask = () => {
+  const { mutate: addUpdateTask, isPending } = addUpdateCompanyTaskMutation();
   const { id: taskId } = useParams();
   const { data: taskDataById } = useGetCompanyTaskById(taskId || "");
-
+  const permission = useSelector(getUserPermission);
   const navigate = useNavigate();
 
   const methods = useForm<FormValues>({
@@ -82,19 +85,19 @@ export const useAddCompanyEmployee = () => {
   const [paginationFilterEmployee, setPaginationFilterEmployee] =
     useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
     });
   const [paginationFilterProject, setPaginationFilterProject] =
     useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
     });
   const [paginationFilterMeeting, setPaginationFilterMeeting] =
     useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
     });
 
@@ -140,7 +143,7 @@ export const useAddCompanyEmployee = () => {
   // Dynamically set steps based on taskId
   const steps = taskId
     ? ["Project", "Meeting", "Basic Info", "Assign User"]
-    : ["Project", "Meeting", "Basic Info", "Assign User", "Comment"];
+    : ["Project", "Meeting", "Basic Info", "AssignUser", "Comment"];
 
   // Define required and optional fields for each step
   const stepFieldConfig: Record<
@@ -160,7 +163,10 @@ export const useAddCompanyEmployee = () => {
           ],
           optional: ["taskStartDate", "repetition"],
         },
-        7: { required: ["assignUser"], optional: [] },
+        // Adjusted step numbers to be contiguous for array indexing if needed,
+        // but direct object key access is fine.
+        // Assuming step numbers are 1, 2, 3, 4, (5 if not taskId)
+        4: { required: ["assignUser"], optional: [] }, // Was 7
       }
     : {
         1: { required: ["project"], optional: [] },
@@ -175,8 +181,8 @@ export const useAddCompanyEmployee = () => {
           ],
           optional: ["taskStartDate", "repetition"],
         },
-        7: { required: ["assignUser"], optional: [] },
-        8: { required: [], optional: ["comment"] },
+        4: { required: ["assignUser"], optional: [] }, // Was 7
+        5: { required: [], optional: ["comment"] }, // Was 8
       };
 
   const validateStep = async (): Promise<boolean> => {
@@ -256,7 +262,6 @@ export const useAddCompanyEmployee = () => {
     prevStep,
     onSubmit,
     methods,
-    // projectListOption,
     repetitionOptions,
     employeedata,
     projectListdata,
@@ -267,5 +272,10 @@ export const useAddCompanyEmployee = () => {
     taskId,
     taskStatusOptions,
     taskTypeOptions,
+    permission,
+    paginationFilterProject,
+    paginationFilterEmployee,
+    paginationFilterMeeting,
+    isPending,
   };
 };

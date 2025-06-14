@@ -12,6 +12,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import CompanyModal from "./CompanyModal";
+import { Loader2 } from "lucide-react"; // Add this import for spinner icon
 
 const Login: React.FC = () => {
   const {
@@ -27,6 +28,8 @@ const Login: React.FC = () => {
     setCountryCode,
     setCompanyModalOpen,
     loginDetails,
+    isSendingOtp,
+    isVerifyingOtp,
   } = useLogin();
 
   const REGEXP_ONLY_DIGITS = "^[0-9]+$";
@@ -114,7 +117,18 @@ const Login: React.FC = () => {
                 </div>
               )}
 
-              <Button type="submit" className="w-full text-base py-5 mt-2">
+              <Button
+                type="submit"
+                className="w-full text-base py-5 mt-2 flex items-center justify-center"
+                disabled={
+                  (!statusSentOtp && isSendingOtp) ||
+                  (statusSentOtp && isVerifyingOtp)
+                }
+              >
+                {((!statusSentOtp && isSendingOtp) ||
+                  (statusSentOtp && isVerifyingOtp)) && (
+                  <Loader2 className="animate-spin mr-2 h-5 w-5" />
+                )}
                 {statusSentOtp ? "Login" : "Send OTP"}
               </Button>
             </div>
@@ -122,16 +136,18 @@ const Login: React.FC = () => {
         </div>
 
         {/* Company Selection Modal */}
-        <CompanyModal
-          companies={companies}
-          isModalOpen={isCompanyModalOpen}
-          onSelect={(company) => {
-            if (loginDetails) {
-              handleLogin({ ...company, ...loginDetails });
-            }
-          }}
-          modalClose={() => setCompanyModalOpen(false)}
-        />
+        {isCompanyModalOpen && (
+          <CompanyModal
+            companies={companies}
+            isModalOpen={isCompanyModalOpen}
+            onSelect={(company) => {
+              if (loginDetails) {
+                handleLogin({ ...company, ...loginDetails });
+              }
+            }}
+            modalClose={() => setCompanyModalOpen(false)}
+          />
+        )}
       </form>
     </Form>
   );

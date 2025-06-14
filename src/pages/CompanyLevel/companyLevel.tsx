@@ -2,6 +2,7 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import useCompanyLevel from "./useCompanyLevel";
 import { FormProvider, useForm } from "react-hook-form";
 import { useEffect } from "react";
+import PageNotAccess from "../PageNoAccess";
 
 export default function CompanyLevelAssign() {
   const methods = useForm();
@@ -31,6 +32,10 @@ export default function CompanyLevelAssign() {
     (item: CompanyLevelJunction) =>
       item.coreParameterId === selectedCoreParameters,
   )?.currentLevelId;
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...methods}>

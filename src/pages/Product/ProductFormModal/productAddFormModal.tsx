@@ -20,6 +20,7 @@ export default function ProductFormModal({
     setValue,
     control,
     brandOptions,
+    isPending,
   } = useProductFormModal({
     isModalOpen,
     modalClose,
@@ -37,6 +38,7 @@ export default function ProductFormModal({
             btnText: "Submit",
             buttonCss: "py-1.5 px-5",
             btnClick: onSubmit,
+            isLoading: isPending,
           },
         ]}
       >

@@ -166,12 +166,12 @@ const DashboardLayout = () => {
                   <span className="ml-2 mr-1 font-medium">
                     {user?.employeeName}
                   </span>
-                  <span className="ml-2 mr-1 text-sm">
+                  {/* <span className="ml-2 mr-1 text-sm">
                     {user?.role ||
                       (user && "employeeType" in user
                         ? (user as { employeeType?: string }).employeeType
                         : undefined)}
-                  </span>
+                  </span> */}
                 </div>
               </div>
             </DropdownMenuTrigger>

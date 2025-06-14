@@ -18,6 +18,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import PageNotAccess from "../PageNoAccess";
 
 export default function CompanyDesignation() {
   const {
@@ -71,6 +72,10 @@ export default function CompanyDesignation() {
   // Check if the number of columns is more than 3
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...methods}>

@@ -16,6 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import PageNotAccess from "../PageNoAccess";
 
 const validationOptions = [
   { value: "EQUAL_TO", label: "= Equal to" },
@@ -60,7 +61,6 @@ export default function CompanyTaskList() {
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
-    { key: "KPINameWithLabel", label: "KPI Name - Label", visible: true },
     {
       key: "KPIName",
       label: "KPI Name",
@@ -92,6 +92,10 @@ export default function CompanyTaskList() {
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
   const navigate = useNavigate();
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...methods}>
@@ -149,7 +153,6 @@ export default function CompanyTaskList() {
                 (datpointData.currentPage - 1) * datpointData.pageSize +
                 index +
                 1,
-              KPINameWithLabel: `${item.KPIName} - ${item.KPILabel}`,
               validationType: getValidationLabel(item.validationType),
             }))}
             columns={visibleColumns}

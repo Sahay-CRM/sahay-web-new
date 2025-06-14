@@ -80,10 +80,7 @@ export default function EmployeeRoutes() {
         <Route path="tasks" Component={CompanyTask} />
         <Route path="tasks/add" element={<AddCompanyTaskList />} />
         <Route path="tasks/view/:id" element={<CompanyTaskView />} />
-        <Route
-          path="tasks/edit/:id"
-          element={<AddCompanyTaskList isEditMode />}
-        />
+        <Route path="tasks/edit/:id" element={<AddCompanyTaskList />} />
         <Route path="projects" Component={CompanyProjects} />
         <Route path="projects/add" element={<AddCompanyProjectList />} />
         <Route path="projects/edit/:id" element={<AddCompanyProjectList />} />

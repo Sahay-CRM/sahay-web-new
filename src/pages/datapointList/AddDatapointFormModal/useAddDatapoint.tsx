@@ -21,11 +21,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import SearchInput from "@/components/shared/SearchInput";
+
 export default function useAddEmployee() {
   const { id: companykpimasterId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
 
-  const { mutate: addDatapoint } = useAddUpdateDatapoint();
+  const { mutate: addDatapoint, isPending } = useAddUpdateDatapoint();
   const navigate = useNavigate();
 
   const { data: datapointApiData, isLoading: isDatapointLoading } =
@@ -227,7 +229,7 @@ export default function useAddEmployee() {
   const Kpi = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
     });
     const { data: kpidata } = useGetKpiNonSel({
@@ -262,6 +264,14 @@ export default function useAddEmployee() {
     return (
       <div>
         <div className=" mt-1 flex items-center justify-end">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
           {canToggleColumns && (
             <TooltipProvider>
               <Tooltip>
@@ -457,7 +467,7 @@ export default function useAddEmployee() {
   const CoreParameter = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
       //   status: currentStatus, // Use currentStatus state
     });
@@ -495,6 +505,14 @@ export default function useAddEmployee() {
     return (
       <div>
         <div className=" mt-1 flex items-center justify-end">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
           {canToggleColumns && (
             <TooltipProvider>
               <Tooltip>
@@ -558,7 +576,7 @@ export default function useAddEmployee() {
   const Product = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
       //   status: currentStatus, // Use currentStatus state
     });
@@ -596,6 +614,14 @@ export default function useAddEmployee() {
     return (
       <div>
         <div className=" mt-1 flex items-center justify-end">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
           {canToggleColumns && (
             <TooltipProvider>
               <Tooltip>
@@ -650,7 +676,7 @@ export default function useAddEmployee() {
   const AssignUser = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
       //   status: currentStatus, // Use currentStatus state
     });
@@ -690,6 +716,14 @@ export default function useAddEmployee() {
     return (
       <div>
         <div className="mt-1 flex items-center justify-end">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
           {canToggleColumns && (
             <TooltipProvider>
               <Tooltip>
@@ -853,5 +887,6 @@ export default function useAddEmployee() {
     skipToStep: isUpdateMode ? 5 : isUpdateModeforFalse ? 1 : 0,
     isLoading: isDatapointLoading,
     companykpimasterId,
+    isPending,
   };
 }

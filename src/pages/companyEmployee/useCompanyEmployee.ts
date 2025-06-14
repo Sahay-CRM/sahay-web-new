@@ -1,4 +1,5 @@
 import { deleteEmployee, getEmployee } from "@/features/api/companyEmployee";
+import useAddOrUpdateEmployee from "@/features/api/companyEmployee/useAddEmployee";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { AxiosError } from "axios";
 import { useCallback, useState } from "react";
@@ -21,13 +22,15 @@ export default function useAdminUser() {
   );
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
-    pageSize: 10,
+    pageSize: 25,
     search: "",
   });
 
   const { data: employeedata, isLoading } = getEmployee({
     filter: paginationFilter,
   });
+
+  const { mutate: addEmployee } = useAddOrUpdateEmployee();
 
   const { mutate: deleteEmployeeById } = deleteEmployee();
 
@@ -123,11 +126,24 @@ export default function useAdminUser() {
     setViewModalData(data);
     setIsViewModalOpen(true);
   };
+
+  const handleInactive = useCallback(
+    (data: EmployeeDetails) => {
+      if (data.employeeId && data.employeeId) {
+        addEmployee({
+          employeeId: data.employeeId,
+          isDeactivated: !data.isDeactivated,
+          employeeMobile: data.employeeMobile,
+        });
+      }
+    },
+    [addEmployee],
+  );
+
   return {
     isLoading,
     employeedata,
     closeDeleteModal,
-
     openModal,
     setPaginationFilter,
     onDelete,
@@ -148,5 +164,6 @@ export default function useAdminUser() {
     isViewModalOpen,
     setIsViewModalOpen,
     viewModalData,
+    handleInactive,
   };
 }

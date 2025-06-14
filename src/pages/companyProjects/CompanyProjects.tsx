@@ -18,6 +18,7 @@ import {
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import PageNotAccess from "../PageNoAccess";
 
 export default function CompanyProject() {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -82,6 +83,11 @@ export default function CompanyProject() {
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
   const navigate = useNavigate();
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
+
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">

@@ -22,20 +22,28 @@ export default function useCompanyTaskList() {
   const [viewModalData, setViewModalData] = useState<TaskGetPaging>(
     {} as TaskGetPaging,
   );
+
+  // Calculate default 30-day range: 15 days before and after today
+  const today = new Date();
+  const before14 = new Date(today);
+  before14.setDate(today.getDate() - 14);
+  const after14 = new Date(today);
+  after14.setDate(today.getDate() + 14);
+
   const [taskDateRange, setTaskDateRange] = useState<{
     taskStartDate: Date | undefined;
     taskDeadline: Date | undefined;
   }>({
-    taskStartDate: new Date(),
-    taskDeadline: new Date(),
+    taskStartDate: before14,
+    taskDeadline: after14,
   });
 
   const [appliedDateRange, setAppliedDateRange] = useState<{
     taskStartDate: Date | undefined;
     taskDeadline: Date | undefined;
   }>({
-    taskStartDate: new Date(),
-    taskDeadline: new Date(),
+    taskStartDate: before14,
+    taskDeadline: after14,
   });
 
   const [showOverdue, setShowOverdue] = useState(false);
@@ -45,7 +53,7 @@ export default function useCompanyTaskList() {
   // Pagination Details and Filter
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
-    pageSize: 10,
+    pageSize: 25,
     search: "",
   });
 
@@ -92,11 +100,20 @@ export default function useCompanyTaskList() {
     filter: {},
   });
 
-  const statusOptions = (taskStatus?.data ?? []).map((item) => ({
-    label: item.taskStatus,
-    value: item.taskStatusId,
-    color: item.color || "#2e3195",
-  }));
+  // Filter status options based on showOverdue and winLostTask
+  const statusOptions = (taskStatus?.data ?? [])
+    .filter((item) => {
+      if (showOverdue) {
+        // Exclude items where winLostTask is "0" or "1"
+        return item.winLostTask !== 0 && item.winLostTask !== 1;
+      }
+      return true;
+    })
+    .map((item) => ({
+      label: item.taskStatus,
+      value: item.taskStatusId,
+      color: item.color || "#2e3195",
+    }));
 
   const handleAdd = () => {
     setModalData({

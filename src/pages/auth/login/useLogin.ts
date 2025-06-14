@@ -20,6 +20,8 @@ const useLogin = () => {
   const [isCompanyModalOpen, setCompanyModalOpen] = useState(false);
   const [loginDetails, setLoginDetails] = useState<Login | null>(null);
   const [countryCode, setCountryCode] = useState("+91");
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
   const {
     register,
@@ -71,19 +73,26 @@ const useLogin = () => {
     setLoginDetails(data);
 
     if (!statusSentOtp) {
+      setIsSendingOtp(true);
       sendOtp(
         { mobile: countryCode + data.mobile },
         {
           onSuccess: (response) => {
             setStatusSentOtp(response.status);
+            setIsSendingOtp(false);
+          },
+          onError: () => {
+            setIsSendingOtp(false);
           },
         },
       );
     } else {
+      setIsVerifyingOtp(true);
       verifyOtp(
         { mobile: countryCode + data.mobile, otp: data.otp },
         {
           onSuccess: (response) => {
+            setIsVerifyingOtp(false);
             if (response.status) {
               const dataRes = response.data;
               if (Array.isArray(dataRes) && dataRes.length > 1) {
@@ -108,6 +117,9 @@ const useLogin = () => {
               throw new Error(response.message || "Invalid OTP");
             }
           },
+          onError: () => {
+            setIsVerifyingOtp(false);
+          },
         },
       );
     }
@@ -130,6 +142,8 @@ const useLogin = () => {
     reset,
     onSubmit,
     loginDetails,
+    isSendingOtp,
+    isVerifyingOtp,
   };
 };
 

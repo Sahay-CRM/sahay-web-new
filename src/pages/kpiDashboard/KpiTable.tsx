@@ -35,6 +35,9 @@ import {
   useGetKpiDashboardStructure,
 } from "@/features/api/kpiDashboard";
 import WarningDialog from "./WarningModal";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+import { useNavigate, useLocation } from "react-router-dom";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -53,6 +56,141 @@ export default function KPITable() {
   const [selectedPeriod, setSelectedPeriod] = useState("");
   const [showWarning, setShowWarning] = useState(false);
   const [pendingPeriod, setPendingPeriod] = useState<string | null>(null);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(
+    null,
+  );
+  const permission = useSelector(getUserPermission).DATAPOINT_TABLE;
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Prepare input values for each cell - moved here so tempValues is available earlier
+  const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
+  const [tempValues, setTempValues] = useState<{ [key: string]: string }>({});
+  const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
+    {},
+  ); // Custom navigation interceptor for drawer/sidebar navigation
+  useEffect(() => {
+    // Store the original navigate function to restore later
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+    // Override history methods to intercept navigation
+    history.pushState = function (
+      data: unknown,
+      title: string,
+      url?: string | URL | null,
+    ) {
+      if (
+        Object.keys(tempValues).length > 0 &&
+        url &&
+        url !== location.pathname
+      ) {
+        // Check if this navigation should be intercepted
+        const targetPath = typeof url === "string" ? url : url?.toString();
+        if (targetPath && targetPath !== location.pathname) {
+          setPendingNavigation(targetPath);
+          setShowWarning(true);
+          return;
+        }
+      }
+      return originalPushState.call(this, data, title, url);
+    };
+
+    history.replaceState = function (
+      data: unknown,
+      title: string,
+      url?: string | URL | null,
+    ) {
+      if (
+        Object.keys(tempValues).length > 0 &&
+        url &&
+        url !== location.pathname
+      ) {
+        const targetPath = typeof url === "string" ? url : url?.toString();
+        if (targetPath && targetPath !== location.pathname) {
+          setPendingNavigation(targetPath);
+          setShowWarning(true);
+          return;
+        }
+      }
+      return originalReplaceState.call(this, data, title, url);
+    };
+
+    const handleNavigation = (event: Event) => {
+      // Check if there are unsaved changes
+      if (Object.keys(tempValues).length > 0) {
+        // Check if this is a navigation event from drawer/sidebar
+        const target = event.target as HTMLElement;
+
+        // Look for drawer navigation elements with more specific selectors
+        const isDrawerNavigation =
+          target?.closest('li[class*="cursor-pointer"]') ||
+          target?.closest('button[class*="hover:text-primary"]') ||
+          target?.closest('li[class*="hover:text-primary"]') ||
+          target?.closest("a[href]") ||
+          target?.closest('div[class*="cursor-pointer"]') ||
+          target?.closest('[data-sidebar="menu-button"]') ||
+          target?.closest('[data-slot="sidebar-menu-button"]');
+
+        if (isDrawerNavigation) {
+          event.preventDefault();
+          event.stopPropagation();
+
+          // Try to get the navigation path from various sources
+          let href = null;
+
+          if (target.closest("a")) {
+            href = target.closest("a")?.getAttribute("href");
+          } else {
+            // For drawer navigation items, try to extract the path
+            const clickElement =
+              target.closest("li") ||
+              target.closest("button") ||
+              target.closest("div");
+            const textContent = clickElement?.textContent?.toLowerCase().trim();
+
+            // Enhanced route mapping based on your navigation structure
+            const routeMap: { [key: string]: string } = {
+              "company designation": "/dashboard/company-designation",
+              "company employee": "/dashboard/company-employee",
+              calendar: "/dashboard/calendar",
+              "meeting list": "/dashboard/meeting",
+              "company task list": "/dashboard/tasks",
+              "company project list": "/dashboard/projects",
+              "kpi list": "/dashboard/kpi",
+              "kpi dashboard": "/dashboard/kpi-dashboard",
+              "health weightage": "/dashboard/business/health-weightage",
+              "health score": "/dashboard/business/healthscore-achieve",
+              "company level assign":
+                "/dashboard/business/company-level-assign",
+              "role & permission": "/dashboard/roles/user-permission",
+              brand: "/dashboard/brand",
+              product: "/dashboard/product",
+              "user log": "/dashboard/user-log",
+            };
+
+            if (textContent) {
+              href = routeMap[textContent];
+            }
+          }
+
+          if (href && href !== location.pathname) {
+            setPendingNavigation(href);
+            setShowWarning(true);
+          }
+        }
+      }
+    };
+
+    // Add event listeners to catch navigation attempts
+    document.addEventListener("click", handleNavigation, true);
+
+    return () => {
+      // Restore original methods
+      history.pushState = originalPushState;
+      history.replaceState = originalReplaceState;
+      document.removeEventListener("click", handleNavigation, true);
+    };
+  }, [tempValues, location.pathname]);
 
   const { data: kpiStructure } = useGetKpiDashboardStructure();
 
@@ -105,17 +243,24 @@ export default function KPITable() {
   const visualizedRows = useMemo(() => {
     return kpiRows.filter((row) => row.kpi.isVisualized);
   }, [kpiRows]);
-
   const nonVisualizedRows = useMemo(() => {
     return kpiRows.filter((row) => !row.kpi.isVisualized);
   }, [kpiRows]);
 
-  // Prepare input values for each cell
-  const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
-  const [tempValues, setTempValues] = useState<{ [key: string]: string }>({});
-  const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
-    {},
-  );
+  // Warn on page refresh, reload, or close if there are unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (Object.keys(tempValues).length > 0) {
+        e.preventDefault();
+        e.returnValue = "";
+        return "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [tempValues]);
 
   const { mutate: addUpdateKpiData } = addUpdateKpi();
 
@@ -183,7 +328,7 @@ export default function KPITable() {
           </TableCell>
           <TableCell
             className={clsx(
-              "px-3 py-2 bg-gray-100 sticky left-[60px] z-10 w-[140px]",
+              " py-2 bg-gray-100 sticky left-[60px] z-10 w-fit min-w-[102%] mr-2",
             )}
           >
             {" "}
@@ -191,7 +336,7 @@ export default function KPITable() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-md font-semibold cursor-default">
+                    <span className="text-md cursor-default">
                       {kpi?.kpiName}
                     </span>
                   </TooltipTrigger>
@@ -202,7 +347,7 @@ export default function KPITable() {
               </TooltipProvider>
             </div>
           </TableCell>
-          <TableCell className="px-3 py-2 w-[120px] bg-gray-100 sticky left-[200px] z-10">
+          <TableCell className="px-3 py-2 w-fit bg-gray-100 sticky left-[205px] z-10 pl-0 ml-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -224,7 +369,7 @@ export default function KPITable() {
               </Tooltip>
             </TooltipProvider>
           </TableCell>
-          <TableCell className="w-[60px] bg-gray-100 sticky left-[320px] z-10 text-center"></TableCell>
+          {/* <TableCell className="w-[60px] bg-gray-100 sticky left-[320px] z-10 text-center"></TableCell> */}
           {headers.map((_, colIdx) => {
             const cell = dataRow?.[colIdx];
             const key = `${assignee.dataPointEmpId}/${cell?.startDate}/${cell?.endDate}`;
@@ -233,6 +378,11 @@ export default function KPITable() {
             const value2 = cell?.value2;
             const inputVal = inputValues[key] ?? cell?.data?.toString() ?? "";
             const isVisualized = kpi?.isVisualized;
+
+            // Permission logic
+            const canAdd = permission?.Add && !cell?.data;
+            const canEdit = permission?.Edit && !!cell?.data;
+            const canInput = !isVisualized && (canAdd || canEdit);
 
             if (validationType == "YES_NO") {
               const selectOptions = [
@@ -252,13 +402,11 @@ export default function KPITable() {
                       isVisualized && "opacity-60",
                     )}
                   >
-                    {" "}
                     <FormSelect
                       value={inputVal}
                       onChange={
-                        isVisualized
-                          ? () => {}
-                          : (val) => {
+                        canInput
+                          ? (val) => {
                               setInputValues((prev) => ({
                                 ...prev,
                                 [key]: Array.isArray(val)
@@ -272,10 +420,11 @@ export default function KPITable() {
                                   : val,
                               }));
                             }
+                          : () => {}
                       }
                       options={selectOptions}
                       placeholder="Select"
-                      disabled={isVisualized}
+                      disabled={!canInput}
                     />
                   </div>
                 </TableCell>
@@ -294,27 +443,26 @@ export default function KPITable() {
                             : formatCompactNumber(inputVal)
                         }
                         onFocus={
-                          isVisualized
-                            ? undefined
-                            : () =>
+                          canInput
+                            ? () =>
                                 setInputFocused((prev) => ({
                                   ...prev,
                                   [key]: true,
                                 }))
+                            : undefined
                         }
                         onBlur={
-                          isVisualized
-                            ? undefined
-                            : () =>
+                          canInput
+                            ? () =>
                                 setInputFocused((prev) => ({
                                   ...prev,
                                   [key]: false,
                                 }))
+                            : undefined
                         }
                         onChange={
-                          isVisualized
-                            ? undefined
-                            : (e) => {
+                          canInput
+                            ? (e) => {
                                 const val = e.target.value;
                                 const isValidNumber =
                                   /^(\d+(\.\d*)?|\.\d*)?$/.test(val) ||
@@ -330,6 +478,7 @@ export default function KPITable() {
                                   [key]: e?.target.value,
                                 }));
                               }
+                            : undefined
                         }
                         className={clsx(
                           "border p-2 rounded-sm text-center text-sm w-[100px] h-[40px]",
@@ -343,12 +492,12 @@ export default function KPITable() {
                             )
                               ? "bg-green-100 border-green-500"
                               : "bg-red-100 border-red-500"),
-                          isVisualized &&
+                          (!canInput || isVisualized) &&
                             "opacity-60 cursor-not-allowed bg-gray-50",
                         )}
                         placeholder=""
-                        disabled={isVisualized}
-                        readOnly={isVisualized}
+                        disabled={!canInput}
+                        readOnly={!canInput}
                       />
                     </TooltipTrigger>
                     {inputVal && (
@@ -399,7 +548,6 @@ export default function KPITable() {
   const handleSubmit = () => {
     addUpdateKpiData(formatTempValuesToPayload(tempValues));
   };
-
   const handlePeriodChange = (newPeriod: string) => {
     if (Object.keys(tempValues).length > 0) {
       setPendingPeriod(newPeriod);
@@ -407,6 +555,56 @@ export default function KPITable() {
     } else {
       setSelectedPeriod(newPeriod);
     }
+  };
+  const handleWarningSubmit = () => {
+    handleSubmit();
+    setTempValues({});
+    setShowWarning(false);
+
+    // Handle period change
+    if (pendingPeriod) {
+      setSelectedPeriod(pendingPeriod);
+      setPendingPeriod(null);
+    }
+
+    // Handle navigation immediately
+    if (pendingNavigation) {
+      // Use setTimeout to ensure the state updates are processed first
+      setTimeout(() => {
+        navigate(pendingNavigation);
+        setPendingNavigation(null);
+      }, 0);
+    }
+  };
+
+  const handleWarningDiscard = () => {
+    setTempValues({});
+    setShowWarning(false);
+
+    // Handle period change
+    if (pendingPeriod) {
+      setSelectedPeriod(pendingPeriod);
+      setPendingPeriod(null);
+    }
+
+    // Handle navigation immediately
+    if (pendingNavigation) {
+      // Use setTimeout to ensure the state updates are processed first
+      setTimeout(() => {
+        navigate(pendingNavigation);
+        setPendingNavigation(null);
+      }, 0);
+    }
+  };
+
+  const handleWarningClose = () => {
+    // Reset pending period if user cancels
+    setPendingPeriod(null);
+
+    // Reset pending navigation if user cancels
+    setPendingNavigation(null);
+
+    setShowWarning(false);
   };
   if (isLoading) {
     return <Loader />;
@@ -480,15 +678,15 @@ export default function KPITable() {
                 />
                 <TableHead
                   className={clsx(
-                    "px-3 py-2 bg-primary sticky left-[60px] z-20 text-white w-[140px] text-center",
+                    "px-3 py-2 bg-primary sticky left-[60px] z-20 text-white w-fit text-center",
                   )}
                 >
                   KPI
                 </TableHead>
-                <TableHead className="px-3 py-2 w-[120px] bg-primary sticky left-[200px] z-20 text-white text-center">
+                <TableHead className="px-3 py-2 w-fit bg-primary sticky left-[200px] z-20 text-white text-center">
                   Goal
                 </TableHead>
-                <TableHead className="w-[60px] bg-primary sticky left-[320px] z-20" />
+                {/* <TableHead className="w-[60px] bg-primary sticky left-[320px] z-20" /> */}
                 {headers.map((header, i) => (
                   <TableHead
                     key={i}
@@ -537,23 +735,12 @@ export default function KPITable() {
             </TableBody>
           </Table>
         </div>
-      </div>
+      </div>{" "}
       <WarningDialog
         open={showWarning}
-        onSubmit={() => {
-          handleSubmit();
-          setTempValues({});
-          if (pendingPeriod) setSelectedPeriod(pendingPeriod);
-          setPendingPeriod(null);
-          setShowWarning(false);
-        }}
-        onDiscard={() => {
-          setTempValues({});
-          if (pendingPeriod) setSelectedPeriod(pendingPeriod);
-          setPendingPeriod(null);
-          setShowWarning(false);
-        }}
-        onClose={() => setShowWarning(false)}
+        onSubmit={handleWarningSubmit}
+        onDiscard={handleWarningDiscard}
+        onClose={handleWarningClose}
       />
     </FormProvider>
   );

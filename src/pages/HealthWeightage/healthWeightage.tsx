@@ -6,6 +6,7 @@ import useHealthWeightage from "./useHealthWeightage";
 import useUpdateHealthWeightage from "@/features/api/Business/useUpdateHealthWeightage";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect } from "react";
+import PageNotAccess from "../PageNoAccess";
 
 export default function HealthWeightage() {
   const {
@@ -71,6 +72,10 @@ export default function HealthWeightage() {
       onEdit();
     }
   };
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...formMethods}>

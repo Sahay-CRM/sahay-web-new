@@ -28,10 +28,10 @@ const WarningDialog: React.FC<WarningDialogProps> = ({
         <DialogHeader className="flex flex-row items-center gap-2">
           <AlertTriangle className="text-yellow-500 h-5 w-5" />
           <DialogTitle>Unsaved Changes</DialogTitle>
-        </DialogHeader>
+        </DialogHeader>{" "}
         <p className="text-sm text-muted-foreground mt-2">
           You have some unsaved changes. Do you want to submit them or discard
-          them before switching?
+          them before continuing?
         </p>
         <DialogFooter className="flex justify-end space-x-3 mt-4">
           <Button variant="outline" onClick={onDiscard}>

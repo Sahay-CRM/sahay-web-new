@@ -20,6 +20,7 @@ import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import { format } from "date-fns";
 import DateRangePicker from "@/components/shared/DateRange";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import PageNotAccess from "../PageNoAccess";
 
 export default function MeetingList() {
   const {
@@ -46,6 +47,7 @@ export default function MeetingList() {
     handleDateRangeApply,
     showOverdue,
     handleOverdueToggle,
+    taskDateRange,
   } = useMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -86,6 +88,10 @@ export default function MeetingList() {
   const methods = useForm();
   const navigate = useNavigate();
 
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
+
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
@@ -115,6 +121,10 @@ export default function MeetingList() {
             <div className="z-10 relative flex items-center gap-2">
               {!showOverdue && (
                 <DateRangePicker
+                  value={{
+                    from: taskDateRange.taskStartDate,
+                    to: taskDateRange.taskDeadline,
+                  }}
                   onChange={handleDateRangeChange}
                   onApply={handleDateRangeApply}
                 />
@@ -206,7 +216,11 @@ export default function MeetingList() {
             permissionKey="users"
             localStorageId="MeetingList"
             moduleKey="MEETING_LIST"
-            sortableColumns={["meetingName", "meetingDateTime"]}
+            sortableColumns={[
+              "meetingName",
+              "meetingDateTime",
+              "meetingStatus",
+            ]}
             dropdownColumns={{
               meetingStatus: {
                 options: statusOptions ?? [],

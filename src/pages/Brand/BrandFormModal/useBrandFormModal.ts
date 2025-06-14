@@ -7,7 +7,7 @@ export default function useBrandFormModal({
   modalClose,
   modalData,
 }: BrandFormModalProps) {
-  const { mutate: addBrand } = brandMutation();
+  const { mutate: addBrand, isPending: isLoading } = brandMutation();
   const { mutate: uploadImage } = imageUploadMutation();
 
   const {
@@ -99,5 +99,6 @@ export default function useBrandFormModal({
     watch,
     handleModalClose,
     setValue,
+    isLoading,
   };
 }

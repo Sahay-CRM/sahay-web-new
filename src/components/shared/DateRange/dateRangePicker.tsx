@@ -16,13 +16,16 @@ interface DateRangePickerProps {
   className?: string;
   onChange?: (range: DateRange | undefined) => void;
   onApply?: (range: DateRange | undefined) => void;
+  value?: { from: Date | undefined; to: Date | undefined }; // <-- add this line
 }
 
 export default function DateRangePicker({
   className,
   onChange,
   onApply,
+  value, // <-- add this line
 }: DateRangePickerProps) {
+  // Use controlled value if provided, otherwise use local state
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: new Date(),
   });
@@ -30,6 +33,14 @@ export default function DateRangePicker({
     from: new Date(),
   });
   const [isOpen, setIsOpen] = React.useState(false);
+
+  // Sync local state with controlled value
+  React.useEffect(() => {
+    if (value) {
+      setDate(value);
+      setTempDate(value);
+    }
+  }, [value]);
 
   const handleSelect = (range: DateRange | undefined) => {
     setTempDate(range);

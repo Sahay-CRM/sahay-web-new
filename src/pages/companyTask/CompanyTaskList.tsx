@@ -20,6 +20,7 @@ import ViewMeetingModal from "./ViewMeetingModal";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import PageNotAccess from "../PageNoAccess";
 
 export default function CompanyTaskList() {
   const {
@@ -47,6 +48,7 @@ export default function CompanyTaskList() {
     setIsViewModalOpen,
     viewModalData,
     taskStatus,
+    taskDateRange,
   } = useCompanyTaskList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -90,6 +92,10 @@ export default function CompanyTaskList() {
   const methods = useForm();
   const navigate = useNavigate();
 
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
+
   return (
     <FormProvider {...methods}>
       <div className="w-full  overflow-x-auto">
@@ -118,6 +124,10 @@ export default function CompanyTaskList() {
             <div className="z-10 relative flex items-center gap-2">
               {!showOverdue && (
                 <DateRangePicker
+                  value={{
+                    from: taskDateRange.taskStartDate,
+                    to: taskDateRange.taskDeadline,
+                  }}
                   onChange={handleDateRangeChange}
                   onApply={handleDateRangeApply}
                 />
@@ -220,58 +230,8 @@ export default function CompanyTaskList() {
             onRowClick={(row) => {
               handleRowsModalOpen(row);
             }}
-            sortableColumns={["taskName", "taskDeadline"]}
+            sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
           />
-
-          {/* <TableWithDropdown
-            tableData={companyTaskData?.data.map(
-              (item: TaskGetPaging, index: number) => ({
-                ...item,
-                srNo: index + 1,
-                status: item.taskStatusId,
-                taskDeadline: item.taskDeadline
-                  ? new Date(item.taskDeadline).toISOString().split("T")[0]
-                  : "",
-                assigneeNames: item.TaskEmployeeJunction
-                  ? item.TaskEmployeeJunction.map(
-                      (j) => j.Employee?.employeeName
-                    )
-                      .filter(Boolean)
-                      .join(", ")
-                  : "",
-              })
-            )}
-            columns={visibleColumns}
-            primaryKey="taskId"
-            onEdit={
-              permission.Edit
-                ? (row) => {
-                    navigate(`/dashboard/tasks/edit/${row.taskId}`);
-                  }
-                : undefined
-            }
-            onDelete={(row) => {
-              onDelete(row);
-            }}
-            viewButton={true}
-            isActionButton={() => true}
-            paginationDetails={mapPaginationDetails(companyTaskData)}
-            setPaginationFilter={setPaginationFilter}
-            isLoading={isLoading}
-            permissionKey="users"
-            localStorageId="CompanyTaskList"
-            statusOptions={statusOptions}
-            showDropdown={true}
-            handleStatusChange={handleStatusChange}
-            onViewButton={(row) => {
-              navigate(`/dashboard/tasks/view/${row.taskId}`);
-            }}
-            moduleKey="TASK"
-            onRowClick={(row) => {
-              handleRowsModalOpen(row);
-            }}
-            sortableColumns={["taskName", "taskDeadline"]}
-          /> */}
         </div>
 
         {/* Modal Component */}
