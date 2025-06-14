@@ -65,11 +65,11 @@ interface Company {
 // kk
 interface EmployeeData {
   employeeId?: string;
-  employeeName: string;
-  employeeEmail: string;
+  employeeName?: string;
+  employeeEmail?: string;
   employeeMobile: string;
-  companyId: string;
-  employeeType: string;
+  companyId?: string;
+  employeeType?: string;
   departmentId?: string | null | DepartmentData;
   designationId?: string | null | Designation;
   isSuperAdmin?: boolean;
@@ -83,6 +83,7 @@ interface EmployeeData {
   department?: DepartmentData;
   designation?: Designation | null;
   employee?: EmployeeDataModal;
+  isDeactivated?: boolean;
 }
 
 // kk
@@ -465,6 +466,7 @@ interface EmployeeDetails {
   reportingManagerId: null;
   companyAdminName: string;
   reportingManager: null;
+  isDeactivated?: boolean;
 }
 
 interface EmployeeCompany {
@@ -490,6 +492,7 @@ interface EmployeeDetailsById {
   companyLogo?: string;
   photo?: string;
   isSuperAdmin: boolean;
+  isDeactivated?: boolean;
 }
 
 interface Designation {

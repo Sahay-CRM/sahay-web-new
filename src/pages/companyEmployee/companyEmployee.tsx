@@ -43,6 +43,7 @@ export default function CompanyDesignation() {
     setIsViewModalOpen,
     handleRowsModalOpen,
     viewModalData,
+    handleInactive,
   } = useCompanyEmployee();
 
   //   const { setBreadcrumbs } = useBreadcrumbs();
@@ -93,6 +94,7 @@ export default function CompanyDesignation() {
   if (permission && permission.View === false) {
     return <PageNotAccess />;
   }
+  console.log(employeedata);
 
   return (
     <FormProvider {...methods}>
@@ -163,7 +165,12 @@ export default function CompanyDesignation() {
                 : undefined
             }
             onRowClick={(row) => {
-              handleRowsModalOpen(row as unknown as EmployeeData);
+              if (
+                row?.employeeType == "OWNER" ||
+                row?.employeeType == "EMPLOYEE"
+              ) {
+                handleRowsModalOpen(row as unknown as EmployeeData);
+              }
             }}
             onDelete={(row) => onDelete(row as unknown as EmployeeData)}
             canDelete={(row) => !row.isSuperAdmin}
@@ -173,6 +180,10 @@ export default function CompanyDesignation() {
             permissionKey="employeeId"
             moduleKey="EMPLOYEE"
             sortableColumns={["employeeName", "employeeType"]}
+            showActiveToggle={true}
+            onToggleActive={(item) => {
+              handleInactive(item);
+            }}
           />
         </div>
 

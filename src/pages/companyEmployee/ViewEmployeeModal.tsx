@@ -34,7 +34,11 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
           buttonCss: "py-1.5 px-5",
           btnClick: modalClose,
         },
-        ...(permission.Edit
+        ...(permission.Edit &&
+        !!(
+          modalData?.employeeType == "OWNER" ||
+          modalData?.employeeType == "EMPLOYEE"
+        )
           ? [
               {
                 btnText: "Edit",

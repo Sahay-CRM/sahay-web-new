@@ -35,6 +35,7 @@ export default function useAddEmployee() {
     getValues,
     watch,
     setValue,
+    setFocus, // Add setFocus
   } = useForm({
     mode: "onChange",
   });
@@ -80,11 +81,25 @@ export default function useAddEmployee() {
   const handleClose = () => setModalOpen(false);
 
   const onFinish = useCallback(async () => {
-    const isValid = await trigger();
-    if (isValid) {
-      setModalOpen(true);
+    const isValid = await trigger(); // Validate all registered fields
+
+    if (!isValid) {
+      // If form is not valid, try to set focus in sequence
+      if (errors.employeeName) {
+        setFocus("employeeName");
+      } else if (errors.employeeEmail) {
+        setFocus("employeeEmail");
+      } else if (errors.employeeMobile) {
+        setFocus("employeeMobile");
+      } else if (errors.employeeType) {
+        setFocus("employeeType"); // For FormSelect, ensure it can receive focus
+      }
+      // Add more else-if for other fields in the current step if necessary
+      return; // Don't open modal if form is invalid
     }
-  }, [trigger]);
+
+    setModalOpen(true); // Open modal only if form is valid
+  }, [trigger, errors, setFocus, setModalOpen]); // Updated dependencies
 
   const onSubmit = handleSubmit(async (data) => {
     // Ensure employeeMobile starts with +91, but don't add if already present
@@ -203,22 +218,28 @@ export default function useAddEmployee() {
           />
         </Card>
         <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4 w-2/3">
-          <FormInputField
-            label="Employee Name"
-            {...register("employeeName", { required: "Name is required" })}
-            error={errors.employeeName}
-          />
-          <FormInputField
-            label="Email"
-            {...register("employeeEmail", {
-              required: "Email is required",
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: "Enter valid email",
-              },
-            })}
-            error={errors.employeeEmail}
-          />
+          <div>
+            <FormInputField
+              label="Employee Name"
+              {...register("employeeName", { required: "Name is required" })}
+              error={errors.employeeName}
+              onFocus={(e) => e.target.select()}
+            />
+          </div>
+          <div>
+            <FormInputField
+              label="Email"
+              {...register("employeeEmail", {
+                required: "Email is required",
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Enter valid email",
+                },
+              })}
+              error={errors.employeeEmail}
+              onFocus={(e) => e.target.select()}
+            />
+          </div>
           <FormInputField
             id="employeeMobile"
             label="Mobile Number"
