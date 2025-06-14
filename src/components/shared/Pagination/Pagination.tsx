@@ -32,7 +32,7 @@ const Pagination: React.FC<PaginationProps> = ({
   } = usePagination({
     paginationDetail: {
       currentPage: paginationDetails?.currentPage ?? 1,
-      pageSize: paginationDetails?.pageSize ?? 10,
+      pageSize: paginationDetails?.pageSize ?? 25,
       totalPage: paginationDetails?.totalPage ?? 1,
       totalCount: paginationDetails?.totalCount ?? 0,
       hasMore: paginationDetails?.hasMore ?? false,
