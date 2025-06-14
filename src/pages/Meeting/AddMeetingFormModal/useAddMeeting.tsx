@@ -29,7 +29,7 @@ export default function useAddEmployee() {
   const [isModalOpen, setModalOpen] = useState(false);
   const [removedFileIds, setRemovedFileIds] = useState<string[]>([]);
 
-  const { mutate: addMeeting } = useAddUpdateCompanyMeeting();
+  const { mutate: addMeeting, isPending } = useAddUpdateCompanyMeeting();
   const navigate = useNavigate();
   const { data: meetingApiData } = useGetCompanyMeetingById(
     companyMeetingId || "",
@@ -91,6 +91,7 @@ export default function useAddEmployee() {
         );
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meetingApiData, reset, setValue]);
 
   const handleClose = () => setModalOpen(false);
@@ -600,5 +601,6 @@ export default function useAddEmployee() {
     UploadDoc,
     methods, // Export methods for FormProvider
     companyMeetingId,
+    isPending,
   };
 }

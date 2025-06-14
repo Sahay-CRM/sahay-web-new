@@ -42,6 +42,7 @@ export default function AddMeeting({
     paginationFilterProject,
     paginationFilterEmployee,
     paginationFilterMeeting,
+    isPending,
   } = useAddCompanyEmployee();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -81,7 +82,11 @@ export default function AddMeeting({
           {step < steps.length ? (
             <Button onClick={nextStep}>Next</Button>
           ) : (
-            <Button onClick={handleSubmit(onSubmit)}>
+            <Button
+              onClick={handleSubmit(onSubmit)}
+              disabled={isPending}
+              isLoading={isPending}
+            >
               {isEditMode ? "Update" : "Submit"}
             </Button>
           )}

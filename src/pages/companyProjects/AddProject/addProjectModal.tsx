@@ -5,6 +5,7 @@ interface MeetingModalProps {
   isModalOpen: boolean;
   modalClose: () => void;
   onSubmit: () => void;
+  isLoading?: boolean;
 }
 
 const AddProjectModal: React.FC<MeetingModalProps> = ({
@@ -12,6 +13,7 @@ const AddProjectModal: React.FC<MeetingModalProps> = ({
   isModalOpen,
   modalClose,
   onSubmit,
+  isLoading,
 }) => {
   const employees =
     modalData?.ProjectEmployees?.map((emp) => emp?.employeeName)
@@ -39,6 +41,7 @@ const AddProjectModal: React.FC<MeetingModalProps> = ({
           btnText: "Submit",
           buttonCss: "py-1.5 px-5",
           btnClick: onSubmit,
+          isLoading: isLoading,
         },
       ]}
     >

@@ -26,10 +26,14 @@ function DesignationAddFormModal({
   const { DepartmentOptions } = useDesignationFormModalOptions();
   const departmentId = methods.watch("departmentId");
   const { designationOptions } = useDesignationDropdownOptions(departmentId);
-  const handleSubmit = useDesignationFormSubmit(() => {
-    methods.reset();
-    modalClose();
-  });
+
+  // Get handleSubmit and loading state
+  const { handleSubmit: submitHandler, isLoading } = useDesignationFormSubmit(
+    () => {
+      methods.reset();
+      modalClose();
+    },
+  );
 
   // Filter out the current designation from parent options if editing
   const filteredDesignationOptions = useMemo(() => {
@@ -54,7 +58,8 @@ function DesignationAddFormModal({
           {
             btnText: "Submit",
             buttonCss: "py-1.5 px-5",
-            btnClick: methods.handleSubmit(handleSubmit),
+            btnClick: methods.handleSubmit(submitHandler),
+            isLoading, // Pass loading state here
           },
         ]}
       >

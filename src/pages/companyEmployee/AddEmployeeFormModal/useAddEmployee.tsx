@@ -20,7 +20,7 @@ export default function useAddEmployee() {
   const { id: companyEmployeeId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
 
-  const { mutate: addEmployee } = useAddOrUpdateEmployee();
+  const { mutate: addEmployee, isPending } = useAddOrUpdateEmployee();
   const { data: employeeApiData } = useGetEmployeeById(companyEmployeeId || "");
   const { mutate: uploadImage } = imageUploadMutation();
 
@@ -548,5 +548,6 @@ export default function useAddEmployee() {
     companyEmployeeId,
     trigger,
     showNextStep,
+    isPending,
   };
 }

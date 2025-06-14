@@ -21,6 +21,7 @@ const AddProject = () => {
     trigger,
     meetingPreview,
     companyProjectId,
+    isPending,
     methods, // Get form methods from the hook
   } = useAddProject();
 
@@ -79,7 +80,12 @@ const AddProject = () => {
           <Button onClick={back} disabled={isFirstStep} className="w-fit">
             Previous
           </Button>
-          <Button onClick={isLastStep ? onFinish : next} className="w-fit">
+          <Button
+            onClick={isLastStep ? onFinish : next}
+            className="w-fit"
+            disabled={isPending}
+            isLoading={isPending}
+          >
             {isLastStep ? "Finish" : "Next"}
           </Button>
         </div>
@@ -94,6 +100,7 @@ const AddProject = () => {
             isModalOpen={isModalOpen}
             modalClose={handleClose}
             onSubmit={onSubmit}
+            isLoading={isPending}
           />
         )}
       </div>

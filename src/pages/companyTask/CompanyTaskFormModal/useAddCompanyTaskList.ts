@@ -30,7 +30,7 @@ interface FormValues {
 }
 
 export const useAddCompanyEmployee = () => {
-  const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
+  const { mutate: addUpdateTask, isPending } = addUpdateCompanyTaskMutation();
   const { id: taskId } = useParams();
   const { data: taskDataById } = useGetCompanyTaskById(taskId || "");
   const permission = useSelector(getUserPermission);
@@ -273,5 +273,6 @@ export const useAddCompanyEmployee = () => {
     paginationFilterProject,
     paginationFilterEmployee,
     paginationFilterMeeting,
+    isPending,
   };
 };

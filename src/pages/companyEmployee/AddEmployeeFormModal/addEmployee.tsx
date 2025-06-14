@@ -21,6 +21,7 @@ const AddEmployee = () => {
     employeePreview,
     showNextStep,
     companyEmployeeId,
+    isPending,
   } = useAddEmployee();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -79,10 +80,21 @@ const AddEmployee = () => {
 
         {/* Navigation Buttons */}
         <div className="flex justify-end gap-5 mb-5 ">
-          <Button onClick={back} disabled={isFirstStep} className="w-fit">
+          <Button
+            onClick={back}
+            disabled={isFirstStep || isPending}
+            className="w-fit"
+            type="button"
+          >
             Previous
           </Button>
-          <Button onClick={isLastStep ? onFinish : next} className="w-fit">
+          <Button
+            onClick={isLastStep ? onFinish : next}
+            className="w-fit"
+            isLoading={isPending}
+            type="button"
+            disabled={isPending}
+          >
             {isLastStep ? "Finish" : "Next"}
           </Button>
         </div>
@@ -97,6 +109,7 @@ const AddEmployee = () => {
             isModalOpen={isModalOpen}
             modalClose={handleClose}
             onSubmit={onSubmit}
+            isLoading={isPending}
           />
         )}
       </div>

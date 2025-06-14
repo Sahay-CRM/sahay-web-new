@@ -22,11 +22,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import SearchInput from "@/components/shared/SearchInput";
+
 export default function useAddEmployee() {
   const { id: companykpimasterId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
 
-  const { mutate: addDatapoint } = useAddUpdateDatapoint();
+  const { mutate: addDatapoint, isPending } = useAddUpdateDatapoint();
   const navigate = useNavigate();
 
   const { data: datapointApiData, isLoading: isDatapointLoading } =
@@ -886,5 +887,6 @@ export default function useAddEmployee() {
     skipToStep: isUpdateMode ? 5 : isUpdateModeforFalse ? 1 : 0,
     isLoading: isDatapointLoading,
     companykpimasterId,
+    isPending,
   };
 }

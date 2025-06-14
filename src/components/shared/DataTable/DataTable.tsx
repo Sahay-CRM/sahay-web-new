@@ -117,7 +117,7 @@ const TableData = <T extends Record<string, unknown>>({
   moduleKey = "",
   dropdownColumns = {},
   sortableColumns = [],
-  showActiveToggle = true,
+  showActiveToggle = false,
   onToggleActive,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});

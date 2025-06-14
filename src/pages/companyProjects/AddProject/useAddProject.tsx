@@ -24,7 +24,7 @@ export default function useAddProject() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [hasInitializedData, setHasInitializedData] = useState(false);
 
-  const { mutate: addProject } = useAddUpdateCompanyProject();
+  const { mutate: addProject, isPending } = useAddUpdateCompanyProject();
   const { data: projectApiData } = useGetCompanyProjectById(
     companyProjectId || "",
   );
@@ -80,6 +80,7 @@ export default function useAddProject() {
       setIsInitialLoad(false);
       setHasInitializedData(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectApiData, reset]);
 
   // Watch for core parameter changes and clear dependent fields
@@ -679,5 +680,6 @@ export default function useAddProject() {
     setValue,
     methods,
     companyProjectId,
+    isPending,
   };
 }

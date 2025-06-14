@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { twMerge } from "tailwind-merge";
+import { SpinnerIcon } from "../../Icons";
 // import { CloseIcon } from "../Icons";
 
 const ModalData: React.FC<ModalProps> = ({
@@ -57,10 +58,24 @@ const ModalData: React.FC<ModalProps> = ({
                 <Button
                   key={index}
                   onClick={button.btnClick}
-                  className={twMerge(defaultClasses, button.buttonCss)}
+                  className={
+                    twMerge(defaultClasses, button.buttonCss) +
+                    `${button.isLoading ? " cursor-not-allowed" : ""}`
+                  }
                   disabled={button.isLoading}
                 >
-                  {button.isLoading ? "Loading..." : button.btnText}
+                  {button.isLoading ? (
+                    <>
+                      <span
+                        className={`mr-2 ${button.isLoading ? "animate-spin cursor-not-allowed" : ""}`}
+                      >
+                        <SpinnerIcon />
+                      </span>
+                      {button.btnText}
+                    </>
+                  ) : (
+                    button.btnText
+                  )}
                 </Button>
               );
             })}
