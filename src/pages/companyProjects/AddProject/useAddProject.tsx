@@ -201,7 +201,7 @@ export default function useAddProject() {
   const ProjectStatus = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
     });
 
@@ -297,7 +297,7 @@ export default function useAddProject() {
   const CoreParameter = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
     });
 
@@ -391,7 +391,7 @@ export default function useAddProject() {
 
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
     });
 
@@ -539,7 +539,7 @@ export default function useAddProject() {
   const Employees = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
       //   status: currentStatus, // Use currentStatus state
     });

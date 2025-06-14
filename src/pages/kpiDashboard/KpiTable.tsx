@@ -202,7 +202,7 @@ export default function KPITable() {
           </TableCell>
           <TableCell
             className={clsx(
-              "px-3 py-2 bg-gray-100 sticky left-[60px] z-10 w-[140px]",
+              " py-2 bg-gray-100 sticky left-[60px] z-10 w-fit min-w-[102%] mr-2",
             )}
           >
             {" "}
@@ -210,7 +210,7 @@ export default function KPITable() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-md font-semibold cursor-default">
+                    <span className="text-md cursor-default">
                       {kpi?.kpiName}
                     </span>
                   </TooltipTrigger>
@@ -221,7 +221,7 @@ export default function KPITable() {
               </TooltipProvider>
             </div>
           </TableCell>
-          <TableCell className="px-3 py-2 w-[120px] bg-gray-100 sticky left-[200px] z-10">
+          <TableCell className="px-3 py-2 w-fit bg-gray-100 sticky left-[205px] z-10 pl-0 ml-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -243,7 +243,7 @@ export default function KPITable() {
               </Tooltip>
             </TooltipProvider>
           </TableCell>
-          <TableCell className="w-[60px] bg-gray-100 sticky left-[320px] z-10 text-center"></TableCell>
+          {/* <TableCell className="w-[60px] bg-gray-100 sticky left-[320px] z-10 text-center"></TableCell> */}
           {headers.map((_, colIdx) => {
             const cell = dataRow?.[colIdx];
             const key = `${assignee.dataPointEmpId}/${cell?.startDate}/${cell?.endDate}`;
@@ -503,15 +503,15 @@ export default function KPITable() {
                 />
                 <TableHead
                   className={clsx(
-                    "px-3 py-2 bg-primary sticky left-[60px] z-20 text-white w-[140px] text-center",
+                    "px-3 py-2 bg-primary sticky left-[60px] z-20 text-white w-fit text-center",
                   )}
                 >
                   KPI
                 </TableHead>
-                <TableHead className="px-3 py-2 w-[120px] bg-primary sticky left-[200px] z-20 text-white text-center">
+                <TableHead className="px-3 py-2 w-fit bg-primary sticky left-[200px] z-20 text-white text-center">
                   Goal
                 </TableHead>
-                <TableHead className="w-[60px] bg-primary sticky left-[320px] z-20" />
+                {/* <TableHead className="w-[60px] bg-primary sticky left-[320px] z-20" /> */}
                 {headers.map((header, i) => (
                   <TableHead
                     key={i}

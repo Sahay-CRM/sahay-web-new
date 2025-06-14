@@ -84,19 +84,19 @@ export const useAddCompanyEmployee = () => {
   const [paginationFilterEmployee, setPaginationFilterEmployee] =
     useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
     });
   const [paginationFilterProject, setPaginationFilterProject] =
     useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
     });
   const [paginationFilterMeeting, setPaginationFilterMeeting] =
     useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
     });
 

@@ -229,7 +229,7 @@ export default function useAddEmployee() {
   const Kpi = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
     });
     const { data: kpidata } = useGetKpiNonSel({
@@ -467,7 +467,7 @@ export default function useAddEmployee() {
   const CoreParameter = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
       //   status: currentStatus, // Use currentStatus state
     });
@@ -576,7 +576,7 @@ export default function useAddEmployee() {
   const Product = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
       //   status: currentStatus, // Use currentStatus state
     });
@@ -676,7 +676,7 @@ export default function useAddEmployee() {
   const AssignUser = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
       //   status: currentStatus, // Use currentStatus state
     });

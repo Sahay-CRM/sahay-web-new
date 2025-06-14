@@ -16,7 +16,7 @@ export default function useAdminUser() {
   // Pagination Details and Filter
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
-    pageSize: 10,
+    pageSize: 25,
     search: "",
   });
 

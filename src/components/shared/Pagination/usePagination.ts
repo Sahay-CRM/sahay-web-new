@@ -17,7 +17,7 @@ const paginationOptions = [
 export default function usePagination({
   paginationDetail = {
     currentPage: 1,
-    pageSize: 10,
+    pageSize: 25,
     totalPage: 1,
     totalCount: 0,
     hasMore: false,

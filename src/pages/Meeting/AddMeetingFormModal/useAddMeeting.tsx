@@ -232,7 +232,7 @@ export default function useAddEmployee() {
   const MeetingStatus = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
     });
 
@@ -312,7 +312,7 @@ export default function useAddEmployee() {
   const MeetingType = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
     });
 
@@ -390,7 +390,7 @@ export default function useAddEmployee() {
   const Joiners = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 25,
       search: "",
       //   status: currentStatus, // Use currentStatus state
     });
