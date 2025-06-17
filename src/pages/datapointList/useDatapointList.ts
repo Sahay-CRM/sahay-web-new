@@ -3,8 +3,10 @@ import {
   useGetCompanyDatapoint,
 } from "@/features/api/companyDatapoint";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { AxiosError } from "axios";
 import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
+import { toast } from "sonner";
 
 export default function useAdminUser() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -96,6 +98,20 @@ export default function useAdminUser() {
       deleteDatapointById(modalData.dataPointId, {
         onSuccess: () => {
           closeDeleteModal();
+        },
+        onError: (error: Error) => {
+          const axiosError = error as AxiosError<{
+            message?: string;
+            status: number;
+          }>;
+
+          if (axiosError.response?.data?.status === 417) {
+            setIsChildData(axiosError.response?.data?.message);
+          } else if (axiosError.response?.data.status !== 417) {
+            toast.error(
+              `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+            );
+          }
         },
       });
     }

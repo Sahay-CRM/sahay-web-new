@@ -5,9 +5,11 @@ import {
   useGetCompanyProject,
 } from "@/features/api/companyProject";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { AxiosError } from "axios";
 import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function useAdminUser() {
   const navigate = useNavigate();
@@ -99,6 +101,20 @@ export default function useAdminUser() {
       deleteProjectById(modalData.projectId, {
         onSuccess: () => {
           closeDeleteModal();
+        },
+        onError: (error: Error) => {
+          const axiosError = error as AxiosError<{
+            message?: string;
+            status: number;
+          }>;
+
+          if (axiosError.response?.data?.status === 417) {
+            setIsChildData(axiosError.response?.data?.message);
+          } else if (axiosError.response?.data.status !== 417) {
+            toast.error(
+              `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+            );
+          }
         },
       });
     }

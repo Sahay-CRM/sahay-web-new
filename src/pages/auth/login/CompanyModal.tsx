@@ -106,12 +106,7 @@ const CompanyModal: React.FC<CompanyModalProps> = ({
                       <span className="ml-2.5">
                         <span className="font-medium text-sm text-gray-800">
                           {" "}
-                          {/* Adjusted text size */}
                           {c.companyName}
-                        </span>
-                        <span className="text-xs text-gray-500 ml-1">
-                          {" "}
-                          {/* Adjusted text size and color */}({c.userType})
                         </span>
                       </span>
                     </label>

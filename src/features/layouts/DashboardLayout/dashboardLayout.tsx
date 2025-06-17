@@ -39,6 +39,7 @@ import { useAuth } from "@/features/auth/useAuth";
 import { queryClient } from "@/queryClient";
 import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { Button } from "@/components/ui/button";
 
 interface FailureReasonType {
   response?: {
@@ -180,62 +181,73 @@ const DashboardLayout = () => {
             </div>
             <Breadcrumbs items={breadcrumbs} />
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div className="flex items-center px-4 py-4-sm mt-auto cursor-pointer mb-1">
-                <div className="flex w-[50px] h-[50px]">
-                  <img
-                    src={user?.photo ? user?.photo : logoImg}
-                    alt="profile"
-                    className="w-full rounded-full object-contain bg-black"
-                  />
-                </div>
-                <div className="flex flex-col items-start">
-                  <span className="ml-2 mr-1 font-medium">
-                    {user?.employeeName}
-                  </span>
-                  {/* <span className="ml-2 mr-1 text-sm">
+          <div className="flex items-center justify-end gap-x-4 pt-1">
+            <div className="w-fit">
+              <Button
+                variant="outline"
+                className=""
+                onClick={() => setCompanyModalOpen(true)}
+              >
+                Switch Company
+              </Button>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center px-4 py-4-sm mt-auto cursor-pointer mb-1">
+                  <div className="flex w-[50px] h-[50px]">
+                    <img
+                      src={user?.photo ? user?.photo : logoImg}
+                      alt="profile"
+                      className="w-full rounded-full object-contain bg-black"
+                    />
+                  </div>
+                  <div className="flex flex-col items-start">
+                    <span className="ml-2 mr-1 font-medium">
+                      {user?.employeeName}
+                    </span>
+                    {/* <span className="ml-2 mr-1 text-sm">
                     {user?.role ||
-                      (user && "employeeType" in user
+                    (user && "employeeType" in user
                         ? (user as { employeeType?: string }).employeeType
                         : undefined)}
-                  </span> */}
+                        </span> */}
+                  </div>
                 </div>
-              </div>
-            </DropdownMenuTrigger>
+              </DropdownMenuTrigger>
 
-            <DropdownMenuContent
-              className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg bg-white p-2 border"
-              side="bottom"
-              align="end"
-              sideOffset={4}
-            >
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => navigate("/dashboard/profile")}
-                >
-                  <User2Icon />
-                  User Profile
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              {(companies?.length ?? 0) > 0 && (
+              <DropdownMenuContent
+                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg bg-white p-2 border"
+                side="bottom"
+                align="end"
+                sideOffset={4}
+              >
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => navigate("/dashboard/profile")}
+                  >
+                    <User2Icon />
+                    User Profile
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                {/* {(companies?.length ?? 0) > 0 && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
-                    <DropdownMenuItem onClick={() => setCompanyModalOpen(true)}>
+                  <DropdownMenuItem onClick={() => setCompanyModalOpen(true)}>
                       <User2Icon />
                       Switch Company
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
+                      </DropdownMenuItem>
+                      </DropdownMenuGroup>
                 </>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut />
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                )} */}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           {isCompanyModalOpen && (companies?.length ?? 0) > 0 && (
             <CompanyModal
               companies={companies ?? []}

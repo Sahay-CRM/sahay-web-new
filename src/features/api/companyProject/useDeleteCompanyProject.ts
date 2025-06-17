@@ -3,7 +3,6 @@ import { toast } from "sonner";
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { queryClient } from "@/queryClient";
-import { AxiosError } from "axios";
 type DatePaging = BaseResponse<CompanyProjectDataProps>;
 
 export default function useDeleteCompanyProject() {
@@ -22,9 +21,6 @@ export default function useDeleteCompanyProject() {
       toast.success(response?.message);
       queryClient.resetQueries({ queryKey: ["get-project-by-id"] });
       queryClient.resetQueries({ queryKey: ["get-project-list"] });
-    },
-    onError: (error: AxiosError<{ message?: string }>) => {
-      toast.error(error.response?.data?.message);
     },
   });
 

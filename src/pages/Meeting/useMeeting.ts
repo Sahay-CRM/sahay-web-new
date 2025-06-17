@@ -7,6 +7,8 @@ import useGetCompanyMeeting from "@/features/api/companyMeeting/useGetCompanyMee
 import { useAddUpdateCompanyMeetingStatus } from "@/features/api/companyMeeting/useAddUpdateCompanyMeetingStatus";
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 const toLocalISOString = (date: Date | undefined) => {
   if (!date) return undefined;
@@ -127,6 +129,20 @@ export default function useAdminUser() {
       deleteMeetingById(modalData.meetingId, {
         onSuccess: () => {
           closeDeleteModal();
+        },
+        onError: (error: Error) => {
+          const axiosError = error as AxiosError<{
+            message?: string;
+            status: number;
+          }>;
+
+          if (axiosError.response?.data?.status === 417) {
+            setIsChildData(axiosError.response?.data?.message);
+          } else if (axiosError.response?.data.status !== 417) {
+            toast.error(
+              `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+            );
+          }
         },
       });
     }

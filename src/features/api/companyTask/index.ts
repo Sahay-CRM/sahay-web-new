@@ -6,3 +6,4 @@ export { default as useGetAllTaskStatus } from "./useGetAllTaskStatus";
 export { default as useAllTaskType } from "./useAllTaskType";
 export { default as useAllCompanyTask } from "./useAllCompanyTask";
 export { default as useDdTaskType } from "./useDdTaskType";
+export { default as deleteCompanyTaskMutation } from "./useDeleteCompanyTask";
