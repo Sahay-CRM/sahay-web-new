@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Navigate, Outlet, useNavigate } from "react-router-dom";
 import { LogOut, User2Icon } from "lucide-react";
 
 import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
@@ -14,7 +14,11 @@ import {
 } from "@/features/reducers/auth.reducer";
 import useGetUserPermission from "./useGetUserPermission";
 import { companyNavigationData } from "@/features/utils/navigation.data";
-import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
+import {
+  getIsLoading,
+  getUserDetail,
+  getUserId,
+} from "@/features/selectors/auth.selector";
 import logoImg from "@/assets/userDummy.jpg";
 import LucideIcon from "@/components/shared/Icons/LucideIcon";
 
@@ -36,6 +40,14 @@ import { queryClient } from "@/queryClient";
 import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
+interface FailureReasonType {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
 const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
   const dispatch = useDispatch();
@@ -53,10 +65,21 @@ const DashboardLayout = () => {
   const userId = useSelector(getUserId);
   const navigate = useNavigate();
 
+  const isLoggedIn = useSelector(getIsLoading);
+
   const { data: permission } = useGetUserPermission();
   const { mutate: companyVerifyOtp } = verifyCompanyOtpMutation();
 
-  const { data: userData } = useGetEmployeeById(userId);
+  const { data: userData, failureReason } = useGetEmployeeById(userId);
+
+  const dataFetchingErr =
+    typeof failureReason === "object" &&
+    failureReason !== null &&
+    "response" in failureReason &&
+    (failureReason as FailureReasonType).response?.data?.message
+      ? (failureReason as FailureReasonType).response?.data?.message
+      : undefined;
+  console.log(dataFetchingErr);
 
   const { data: companies } = useGetCompanyList();
 
@@ -122,6 +145,13 @@ const DashboardLayout = () => {
   };
 
   const { breadcrumbs } = useBreadcrumbs();
+  if (isLoggedIn) return <Navigate to="/login" />;
+
+  if (dataFetchingErr === "Invalid jwt token") {
+    dispatch(logout());
+    return <Navigate to="/login" />;
+  }
+
   return (
     <div className="flex h-screen bg-gray-200 gap-x-4">
       <div
