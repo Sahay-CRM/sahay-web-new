@@ -3,7 +3,6 @@ import { toast } from "sonner";
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { queryClient } from "@/queryClient";
-import { AxiosError } from "axios";
 type DatePaging = BaseResponse<CompanyMeetingDataProps>;
 
 export default function useDeleteCompanyMeeting() {
@@ -21,9 +20,6 @@ export default function useDeleteCompanyMeeting() {
     onSuccess: (response) => {
       toast.success(response?.message);
       queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
-    },
-    onError: (error: AxiosError<{ message?: string }>) => {
-      toast.error(error.response?.data?.message);
     },
   });
 

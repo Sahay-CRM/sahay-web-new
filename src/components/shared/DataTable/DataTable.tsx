@@ -305,8 +305,18 @@ const TableData = <T extends Record<string, unknown>>({
                     ${onRowClick ? "hover:bg-gray-100" : showCheckboxes ? "hover:bg-gray-100" : "hover:bg-gray-50"}
                     ${index % 2 === 0 ? "bg-gray-25" : "bg-white"}
                     ${(item as { isDeactivated?: boolean }).isDeactivated ? "bg-gray-200 hover:bg-gray-300" : ""}
+                    ${(item as { isDisabled?: boolean }).isDisabled ? "bg-gray-200 opacity-60 pointer-events-none select-none" : ""}
                   `}
-                  onClick={() => handleRowClickOrCheckbox(item)}
+                  onClick={() => {
+                    if (!(item as { isDisabled?: boolean }).isDisabled) {
+                      handleRowClickOrCheckbox(item);
+                    }
+                  }}
+                  aria-disabled={
+                    (item as { isDisabled?: boolean }).isDisabled
+                      ? true
+                      : undefined
+                  }
                 >
                   {showCheckboxes && (
                     <TableCell
@@ -317,9 +327,11 @@ const TableData = <T extends Record<string, unknown>>({
                         id={`${String(item[primaryKey])}-checkbox`}
                         className="w-[19px] aspect-square tb:w-[18px]"
                         containerClass="p-2 tb:p-3 mt-0 tb:mt-0"
-                        onChange={(e) =>
-                          handleCheckboxChange(item, e.target.checked)
-                        }
+                        onChange={(e) => {
+                          if (!(item as { isDisabled?: boolean }).isDisabled) {
+                            handleCheckboxChange(item, e.target.checked);
+                          }
+                        }}
                         checked={
                           multiSelect
                             ? Array.isArray(selectedValue) &&
@@ -334,6 +346,7 @@ const TableData = <T extends Record<string, unknown>>({
                             : (selectedValue as T)?.[primaryKey] ===
                               item[primaryKey]
                         }
+                        disabled={(item as { isDisabled?: boolean }).isDisabled}
                       />
                     </TableCell>
                   )}
@@ -399,9 +412,13 @@ const TableData = <T extends Record<string, unknown>>({
                             typeof item.status === "string" ? item.status : ""
                           }
                           onChange={(e) =>
+                            !(item as { isDisabled?: boolean }).isDisabled &&
                             dropdownColumns[clm].onChange(item, e.target.value)
                           }
-                          onClick={(e) => e.stopPropagation()} // Prevent row click when interacting with dropdown
+                          onClick={(e) => e.stopPropagation()}
+                          disabled={
+                            (item as { isDisabled?: boolean }).isDisabled
+                          }
                         >
                           <option
                             value=""
@@ -445,7 +462,14 @@ const TableData = <T extends Record<string, unknown>>({
                                   variant="outline"
                                   size="sm"
                                   className="h-8 w-8 p-0"
-                                  onClick={() => onEdit?.(item)}
+                                  onClick={() =>
+                                    !(item as { isDisabled?: boolean })
+                                      .isDisabled && onEdit?.(item)
+                                  }
+                                  disabled={
+                                    (item as { isDisabled?: boolean })
+                                      .isDisabled
+                                  }
                                 >
                                   <Pencil className="w-4 h-4" />
                                 </Button>
@@ -464,7 +488,14 @@ const TableData = <T extends Record<string, unknown>>({
                                   variant="outline"
                                   size="sm"
                                   className="h-8 w-8 p-0 text-red-600"
-                                  onClick={() => onDelete?.(item)}
+                                  onClick={() =>
+                                    !(item as { isDisabled?: boolean })
+                                      .isDisabled && onDelete?.(item)
+                                  }
+                                  disabled={
+                                    (item as { isDisabled?: boolean })
+                                      .isDisabled
+                                  }
                                 >
                                   <Trash className="w-4 h-4" />
                                 </Button>
@@ -485,7 +516,14 @@ const TableData = <T extends Record<string, unknown>>({
                                       ? "bg-primary hover:bg-primary"
                                       : "bg-red-700/80 hover:bg-red-700"
                                   }`}
-                                  onClick={() => onToggleActive?.(item)}
+                                  onClick={() =>
+                                    !(item as { isDisabled?: boolean })
+                                      .isDisabled && onToggleActive?.(item)
+                                  }
+                                  disabled={
+                                    (item as { isDisabled?: boolean })
+                                      .isDisabled
+                                  }
                                 >
                                   {getActiveState(item) ? "Active" : "Inactive"}
                                 </Button>
@@ -507,7 +545,14 @@ const TableData = <T extends Record<string, unknown>>({
                                     variant="outline"
                                     size="sm"
                                     className="h-8 w-8 p-0"
-                                    onClick={() => onAdditionButton(item)}
+                                    onClick={() =>
+                                      !(item as { isDisabled?: boolean })
+                                        .isDisabled && onAdditionButton(item)
+                                    }
+                                    disabled={
+                                      (item as { isDisabled?: boolean })
+                                        .isDisabled
+                                    }
                                   >
                                     <KeyRound className="w-4 h-4" />
                                   </Button>
@@ -523,7 +568,14 @@ const TableData = <T extends Record<string, unknown>>({
                                     variant="outline"
                                     size="sm"
                                     className="h-8 w-8 p-0"
-                                    onClick={() => onAdditionButton(item)}
+                                    onClick={() =>
+                                      !(item as { isDisabled?: boolean })
+                                        .isDisabled && onAdditionButton(item)
+                                    }
+                                    disabled={
+                                      (item as { isDisabled?: boolean })
+                                        .isDisabled
+                                    }
                                   >
                                     <KeyRound className="w-4 h-4" />
                                   </Button>
@@ -538,7 +590,13 @@ const TableData = <T extends Record<string, unknown>>({
                                 variant="outline"
                                 size="sm"
                                 className="h-8 w-8 p-0"
-                                onClick={() => onViewButton(item)}
+                                onClick={() =>
+                                  !(item as { isDisabled?: boolean })
+                                    .isDisabled && onViewButton(item)
+                                }
+                                disabled={
+                                  (item as { isDisabled?: boolean }).isDisabled
+                                }
                               >
                                 <EyeIcon className="w-4 h-4" />
                               </Button>

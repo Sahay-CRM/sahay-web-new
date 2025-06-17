@@ -1,12 +1,15 @@
 import {
+  deleteCompanyTaskMutation,
   useGetAllTaskStatus,
   useGetCompanyTask,
 } from "@/features/api/companyTask";
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { AxiosError } from "axios";
 import { useCallback, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { useSelector } from "react-redux";
+import { toast } from "sonner";
 
 export default function useCompanyTaskList() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -49,6 +52,7 @@ export default function useCompanyTaskList() {
   const [showOverdue, setShowOverdue] = useState(false);
 
   const { mutate: updateCompanyTask } = useAddUpdateCompanyTask();
+  const { mutate: deleteTaskById } = deleteCompanyTaskMutation();
 
   // Pagination Details and Filter
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
@@ -163,7 +167,29 @@ export default function useCompanyTaskList() {
     setIsChildData("");
   }, []);
 
-  const conformDelete = async () => {};
+  const conformDelete = async () => {
+    if (modalData && modalData.taskId) {
+      deleteTaskById(modalData.taskId, {
+        onSuccess: () => {
+          closeDeleteModal();
+        },
+        onError: (error: Error) => {
+          const axiosError = error as AxiosError<{
+            message?: string;
+            status: number;
+          }>;
+
+          if (axiosError.response?.data?.status === 417) {
+            setIsChildData(axiosError.response?.data?.message);
+          } else if (axiosError.response?.data.status !== 417) {
+            toast.error(
+              `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+            );
+          }
+        },
+      });
+    }
+  };
 
   const openImportModal = useCallback(() => {
     setIsImportExportModalOpen(true);

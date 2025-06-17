@@ -5,9 +5,10 @@ import {
   useGetCoreParameterDropdown,
 } from "@/features/api/Business";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface Selection {
   coreParameter: {
@@ -18,6 +19,7 @@ interface Selection {
     id: string;
     name: string;
   };
+  isChanged: boolean;
 }
 
 export default function useCompanyLevel() {
@@ -26,8 +28,11 @@ export default function useCompanyLevel() {
   const [isSaving, setIsSaving] = useState(false);
   const permission = useSelector(getUserPermission).COMPANY_LEVEL_ASSIGN;
   const navigate = useNavigate();
+  const isInitialized = useRef(false);
+  const initialSelectionsRef = useRef<Selection[]>([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // New state to track all selections in the requested format
+  // Enhanced state to track all selections with change status
   const [allSelections, setAllSelections] = useState<Selection[]>([]);
 
   // Map: levelId -> subParameterId (single select)
@@ -45,109 +50,149 @@ export default function useCompanyLevel() {
     value: item.coreParameterId,
   }));
 
+  // Initialize selections from companyLevelAssign when data is loaded
+  useEffect(() => {
+    if (
+      !isInitialized.current &&
+      companyLevelAssign?.data &&
+      coreParaOptions &&
+      allLevel?.data
+    ) {
+      const initialSelections = companyLevelAssign.data.map(
+        (item: CompanyLevelJunction) => {
+          const coreParamName =
+            coreParaOptions.find((opt) => opt.value === item.coreParameterId)
+              ?.label || "";
+          const levelName =
+            allLevel.data.find((level) => level.levelId === item.currentLevelId)
+              ?.levelName || "";
+
+          return {
+            coreParameter: {
+              id: item.coreParameterId,
+              name: coreParamName,
+            },
+            level: {
+              id: item.currentLevelId,
+              name: levelName,
+            },
+            isChanged: false,
+          };
+        },
+      );
+      setAllSelections(initialSelections);
+      initialSelectionsRef.current = initialSelections;
+      isInitialized.current = true;
+    }
+  }, [companyLevelAssign?.data, coreParaOptions, allLevel?.data]);
+
   const handleCorePara = useCallback(
     (data: string) => {
       setCoreParameters(data);
 
-      // Find matching entry in companyLevelAssign
-      const matched = companyLevelAssign?.data?.find(
-        (item: CompanyLevelJunction) => item.coreParameterId === data,
+      // Find the selection for the newly chosen core parameter in allSelections
+      const currentCoreParameterSelection = allSelections.find(
+        (selection) => selection.coreParameter.id === data,
       );
-      if (matched) {
-        setSelectedLevel(matched.currentLevelId);
-        // Update allSelections with the matched level
-        const coreParamName =
-          coreParaOptions?.find((opt) => opt.value === data)?.label || "";
-        const levelName =
-          allLevel?.data?.find(
-            (level) => level.levelId === matched.currentLevelId,
-          )?.levelName || "";
 
-        setAllSelections((prev) => {
-          const existingIndex = prev.findIndex(
-            (item) => item.coreParameter.id === data,
-          );
-          if (existingIndex >= 0) {
-            const newSelections = [...prev];
-            newSelections[existingIndex] = {
-              coreParameter: {
-                id: data,
-                name: coreParamName,
-              },
-              level: {
-                id: matched.currentLevelId,
-                name: levelName,
-              },
-            };
-            return newSelections;
-          }
-          return [
-            ...prev,
-            {
-              coreParameter: {
-                id: data,
-                name: coreParamName,
-              },
-              level: {
-                id: matched.currentLevelId,
-                name: levelName,
-              },
-            },
-          ];
-        });
+      if (currentCoreParameterSelection) {
+        // If there's an existing selection (either changed or original), set selectedLevel to that
+        setSelectedLevel(currentCoreParameterSelection.level.id);
       } else {
-        setSelectedLevel("");
+        // If it's a new core parameter not yet in allSelections, fetch from companyLevelAssign
+        // This case should ideally not be hit if initialSelectionsRef correctly populates allSelections initially.
+        const matched = companyLevelAssign?.data?.find(
+          (item: CompanyLevelJunction) => item.coreParameterId === data,
+        );
+        if (matched) {
+          setSelectedLevel(matched.currentLevelId);
+          // Add to allSelections with isChanged: false. This should generally only happen if a core parameter
+          // was not present in the initial companyLevelAssign data but is now being interacted with.
+          setAllSelections((prev) => {
+            const updatedMap = new Map(
+              prev.map((item) => [item.coreParameter.id, item]),
+            );
+            updatedMap.set(data, {
+              coreParameter: {
+                id: data,
+                name:
+                  coreParaOptions?.find((opt) => opt.value === data)?.label ||
+                  "",
+              },
+              level: {
+                id: matched.currentLevelId,
+                name:
+                  allLevel?.data?.find(
+                    (level) => level.levelId === matched.currentLevelId,
+                  )?.levelName || "",
+              },
+              isChanged: false,
+            });
+            return Array.from(updatedMap.values());
+          });
+        } else {
+          setSelectedLevel("");
+        }
       }
     },
-    [companyLevelAssign, coreParaOptions, allLevel],
+    [companyLevelAssign?.data, coreParaOptions, allLevel?.data, allSelections],
   );
 
   const handleLevelSelect = useCallback(
     (levelId: string) => {
       setSelectedLevel(levelId);
 
-      // Update allSelections with the new level
-      const coreParamName =
-        coreParaOptions?.find((opt) => opt.value === selectedCoreParameters)
-          ?.label || "";
-      const levelName =
-        allLevel?.data?.find((level) => level.levelId === levelId)?.levelName ||
-        "";
-
       setAllSelections((prev) => {
-        const existingIndex = prev.findIndex(
-          (item) => item.coreParameter.id === selectedCoreParameters,
+        // Create a new Map from previous selections for easy updates
+        const updatedMap = new Map(
+          prev.map((item) => [item.coreParameter.id, item]),
         );
-        if (existingIndex >= 0) {
-          const newSelections = [...prev];
-          newSelections[existingIndex] = {
-            coreParameter: {
-              id: selectedCoreParameters,
-              name: coreParamName,
-            },
-            level: {
-              id: levelId,
-              name: levelName,
-            },
-          };
-          return newSelections;
-        }
-        return [
-          ...prev,
-          {
-            coreParameter: {
-              id: selectedCoreParameters,
-              name: coreParamName,
-            },
-            level: {
-              id: levelId,
-              name: levelName,
-            },
+
+        // Find the current core parameter's original level from DB data
+        const originalLevel = companyLevelAssign?.data?.find(
+          (item: CompanyLevelJunction) =>
+            item.coreParameterId === selectedCoreParameters,
+        )?.currentLevelId;
+
+        // Create the updated selection object
+        const updatedSelection: Selection = {
+          coreParameter: {
+            id: selectedCoreParameters,
+            name:
+              coreParaOptions?.find(
+                (opt) => opt.value === selectedCoreParameters,
+              )?.label || "",
           },
-        ];
+          level: {
+            id: levelId,
+            name:
+              allLevel?.data?.find((level) => level.levelId === levelId)
+                ?.levelName || "",
+          },
+          isChanged: originalLevel !== levelId, // Correctly set isChanged
+        };
+
+        // Update the map with the new/updated selection
+        updatedMap.set(selectedCoreParameters, updatedSelection);
+
+        // Convert the map back to an array for the state
+        const newAllSelections = Array.from(updatedMap.values());
+
+        // Set hasUnsavedChanges if any selection is changed
+        setHasUnsavedChanges(
+          newAllSelections.some((selection) => selection.isChanged),
+        );
+
+        return newAllSelections;
       });
     },
-    [selectedCoreParameters, coreParaOptions, allLevel],
+    [
+      selectedCoreParameters,
+      coreParaOptions,
+      allLevel?.data,
+      companyLevelAssign?.data,
+      setHasUnsavedChanges,
+    ],
   );
 
   const handleSubParaCheck = (subParaId: string) => {
@@ -179,23 +224,46 @@ export default function useCompanyLevel() {
   };
 
   const handleSave = () => {
-    if (!selectedCoreParameters || !selectedLevel) return;
     setIsSaving(true);
 
-    // Prepare payload for updating company level assignment
-    const payload = allSelections.map((selection) => {
-      // Find existing junction if it exists
+    // Filter for only changed selections
+    const changedSelections = allSelections.filter(
+      (selection) => selection.isChanged,
+    );
+
+    // Log all changed selections before saving
+    if (changedSelections.length > 0) {
+      console.log(
+        "All changes to be saved (pre-uniqueness filter):",
+        changedSelections.map((selection) => ({
+          coreParameterId: selection.coreParameter.id,
+          coreParameterName: selection.coreParameter.name,
+          levelId: selection.level.id,
+          levelName: selection.level.name,
+        })),
+      );
+    }
+
+    // Ensure unique coreParameterId entries in the final payload, keeping the latest level
+    const uniquePayloadMap = new Map<string, CompanyLevelJunction>();
+    changedSelections.forEach((selection) => {
       const existingJunction = companyLevelAssign?.data?.find(
         (item: CompanyLevelJunction) =>
           item.coreParameterId === selection.coreParameter.id,
       );
-
-      return {
-        companyLevelJunctionId: existingJunction?.companyLevelJunctionId || "", // Use existing ID or empty string for new entries
+      uniquePayloadMap.set(selection.coreParameter.id, {
+        companyLevelJunctionId: existingJunction?.companyLevelJunctionId || "",
         coreParameterId: selection.coreParameter.id,
         currentLevelId: selection.level.id,
-      };
+      });
     });
+    const payload = Array.from(uniquePayloadMap.values());
+
+    if (payload.length === 0) {
+      toast.info("No changes to save.");
+      setIsSaving(false);
+      return; // Exit if no changes
+    }
 
     companyLevelMutation(payload, {
       onSuccess: () => {
@@ -203,12 +271,22 @@ export default function useCompanyLevel() {
         navigate("/dashboard/business/company-level-assign");
         setCoreParameters("");
         setSelectedLevel("");
+        isInitialized.current = false;
+        setAllSelections([]);
+        setHasUnsavedChanges(false); // Reset on successful save
       },
       onError: () => {
         setIsSaving(false);
       },
     });
   };
+
+  const handleCancel = useCallback(() => {
+    setAllSelections(initialSelectionsRef.current);
+    setCoreParameters("");
+    setSelectedLevel("");
+    setHasUnsavedChanges(false); // Reset on cancel
+  }, []);
 
   return {
     selectedCoreParameters,
@@ -225,5 +303,7 @@ export default function useCompanyLevel() {
     companyLevelAssign,
     allSelections,
     permission,
+    handleCancel,
+    hasUnsavedChanges,
   };
 }

@@ -787,9 +787,9 @@ interface KPIFormData {
   KPIMasterId: string;
   KPILabel?: string;
   KPIName?: string;
-  KPIMaster: KPIMaster | string;
+  KPIMaster: KPIMaster;
   coreParameter?: CoreParameter;
-  coreParameterId: string;
+  coreParameterId: string | null;
   unit: string;
   validationType: string;
   frequencyType: string;
@@ -800,6 +800,7 @@ interface KPIFormData {
   assignUser: DataPointEmployee[];
   hasData: boolean;
   visualFrequencyTypes?: string;
+  hasDataEmployeeIds?: string[];
 }
 
 interface KPIFormDataProp {
@@ -880,6 +881,7 @@ interface Assignee {
   employeeName: string;
   value1: string | number | null;
   value2?: string | number | null;
+  photo?: string | null;
 }
 
 interface Kpi {
@@ -945,4 +947,13 @@ interface UserLogDetails {
   id: string;
   updateDetail: string;
   updateTime: string | Date;
+}
+
+interface ChangeLog<T> {
+  refId: string;
+  refType: string;
+  oldValue: T;
+  newValue: T;
+  logType: string;
+  logTime: string;
 }

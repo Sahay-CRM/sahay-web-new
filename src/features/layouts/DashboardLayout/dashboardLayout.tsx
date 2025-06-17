@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Navigate, Outlet, useNavigate } from "react-router-dom";
 import { LogOut, User2Icon } from "lucide-react";
 
 import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
@@ -14,7 +14,11 @@ import {
 } from "@/features/reducers/auth.reducer";
 import useGetUserPermission from "./useGetUserPermission";
 import { companyNavigationData } from "@/features/utils/navigation.data";
-import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
+import {
+  getIsLoading,
+  getUserDetail,
+  getUserId,
+} from "@/features/selectors/auth.selector";
 import logoImg from "@/assets/userDummy.jpg";
 import LucideIcon from "@/components/shared/Icons/LucideIcon";
 
@@ -35,6 +39,15 @@ import { useAuth } from "@/features/auth/useAuth";
 import { queryClient } from "@/queryClient";
 import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { Button } from "@/components/ui/button";
+
+interface FailureReasonType {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(true);
@@ -53,11 +66,20 @@ const DashboardLayout = () => {
   const userId = useSelector(getUserId);
   const navigate = useNavigate();
 
+  const isLoggedIn = useSelector(getIsLoading);
+
   const { data: permission } = useGetUserPermission();
   const { mutate: companyVerifyOtp } = verifyCompanyOtpMutation();
 
-  const { data: userData } = useGetEmployeeById(userId);
+  const { data: userData, failureReason } = useGetEmployeeById(userId);
 
+  const dataFetchingErr =
+    typeof failureReason === "object" &&
+    failureReason !== null &&
+    "response" in failureReason &&
+    (failureReason as FailureReasonType).response?.data?.message
+      ? (failureReason as FailureReasonType).response?.data?.message
+      : undefined;
   const { data: companies } = useGetCompanyList();
 
   //  const { breadcrumbs } = useBreadcrumbs();
@@ -101,20 +123,23 @@ const DashboardLayout = () => {
           setToken(response?.data?.token ?? "", response?.data);
           dispatch(
             setAuth({
+              userId: response.data.employeeId,
               token: response.data.token ?? null,
               isLoading: false,
               isAuthenticated: true,
-              userId: response.data.employeeId,
             }),
           );
           queryClient.resetQueries({
             queryKey: ["get-company-list"],
           });
           queryClient.resetQueries({
+            queryKey: ["userPermission"],
+          });
+          queryClient.resetQueries({
             queryKey: ["get-employee-by-id", userId],
           });
-          navigate("/dashboard");
           window.location.reload();
+          navigate("/dashboard");
           setCompanyModalOpen(false);
         }
       },
@@ -122,6 +147,13 @@ const DashboardLayout = () => {
   };
 
   const { breadcrumbs } = useBreadcrumbs();
+  if (isLoggedIn) return <Navigate to="/login" />;
+
+  if (dataFetchingErr === "Invalid jwt token") {
+    dispatch(logout());
+    return <Navigate to="/login" />;
+  }
+
   return (
     <div className="flex h-screen bg-gray-200 gap-x-4">
       <div
@@ -152,62 +184,73 @@ const DashboardLayout = () => {
             </div>
             <Breadcrumbs items={breadcrumbs} />
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div className="flex items-center px-4 py-4-sm mt-auto cursor-pointer mb-1">
-                <div className="flex w-[50px] h-[50px]">
-                  <img
-                    src={user?.photo ? user?.photo : logoImg}
-                    alt="profile"
-                    className="w-full rounded-full object-contain bg-black"
-                  />
-                </div>
-                <div className="flex flex-col items-start">
-                  <span className="ml-2 mr-1 font-medium">
-                    {user?.employeeName}
-                  </span>
-                  {/* <span className="ml-2 mr-1 text-sm">
+          <div className="flex items-center justify-end gap-x-4 pt-1">
+            <div className="w-fit">
+              <Button
+                variant="outline"
+                className=""
+                onClick={() => setCompanyModalOpen(true)}
+              >
+                Switch Company
+              </Button>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center px-4 py-4-sm mt-auto cursor-pointer mb-1">
+                  <div className="flex w-[50px] h-[50px]">
+                    <img
+                      src={user?.photo ? user?.photo : logoImg}
+                      alt="profile"
+                      className="w-full rounded-full object-contain bg-black"
+                    />
+                  </div>
+                  <div className="flex flex-col items-start">
+                    <span className="ml-2 mr-1 font-medium">
+                      {user?.employeeName}
+                    </span>
+                    {/* <span className="ml-2 mr-1 text-sm">
                     {user?.role ||
-                      (user && "employeeType" in user
+                    (user && "employeeType" in user
                         ? (user as { employeeType?: string }).employeeType
                         : undefined)}
-                  </span> */}
+                        </span> */}
+                  </div>
                 </div>
-              </div>
-            </DropdownMenuTrigger>
+              </DropdownMenuTrigger>
 
-            <DropdownMenuContent
-              className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg bg-white p-2 border"
-              side="bottom"
-              align="end"
-              sideOffset={4}
-            >
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => navigate("/dashboard/profile")}
-                >
-                  <User2Icon />
-                  User Profile
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              {(companies?.length ?? 0) > 0 && (
+              <DropdownMenuContent
+                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg bg-white p-2 border"
+                side="bottom"
+                align="end"
+                sideOffset={4}
+              >
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => navigate("/dashboard/profile")}
+                  >
+                    <User2Icon />
+                    User Profile
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                {/* {(companies?.length ?? 0) > 0 && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
-                    <DropdownMenuItem onClick={() => setCompanyModalOpen(true)}>
+                  <DropdownMenuItem onClick={() => setCompanyModalOpen(true)}>
                       <User2Icon />
                       Switch Company
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
+                      </DropdownMenuItem>
+                      </DropdownMenuGroup>
                 </>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut />
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                )} */}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           {isCompanyModalOpen && (companies?.length ?? 0) > 0 && (
             <CompanyModal
               companies={companies ?? []}

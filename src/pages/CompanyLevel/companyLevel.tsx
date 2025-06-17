@@ -18,7 +18,9 @@ export default function CompanyLevelAssign() {
     selectedLevel,
     handleLevelSelect,
     permission,
-    companyLevelAssign, // <-- add this
+    companyLevelAssign,
+    handleCancel,
+    hasUnsavedChanges,
   } = useCompanyLevel();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -40,21 +42,36 @@ export default function CompanyLevelAssign() {
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
-        <h1 className="font-semibold capitalize text-xl text-black mb-4">
-          Company Level Assign
-        </h1>
-        <div className="flex justify-end">
-          {" "}
-          {(permission.Add || permission.Edit) && (
-            <button
-              type="button"
-              className="mt-4 mb-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark disabled:bg-primary/50 disabled:cursor-not-allowed"
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              {isSaving ? "Saving..." : "Update"}
-            </button>
-          )}
+        <div className="flex justify-between h-[65px] overflow-hidden">
+          <h1 className="font-semibold capitalize text-xl text-black mb-4">
+            Company Level Assign
+          </h1>
+          <div className="flex justify-end">
+            {hasUnsavedChanges && (
+              <>
+                {(permission.Add || permission.Edit) && (
+                  <button
+                    type="button"
+                    className="mt-4 mb-2 px-4 py-1 bg-primary text-white rounded hover:bg-primary-dark disabled:bg-primary/50 disabled:cursor-not-allowed"
+                    onClick={handleSave}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? "Saving..." : "Update"}
+                  </button>
+                )}
+                {(permission.Add || permission.Edit) && (
+                  <button
+                    type="button"
+                    className="mt-4 mb-2 ml-2 px-4 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:bg-gray-500/50 disabled:cursor-not-allowed"
+                    onClick={handleCancel}
+                    disabled={isSaving}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
         <div className="flex gap-10">
@@ -97,20 +114,20 @@ export default function CompanyLevelAssign() {
                         // Determine style for each level
                         let liClass =
                           "flex items-center border-b last:border-0 py-1.5 px-1.5 pl-4 cursor-pointer";
+
+                        // Apply style for the original default from the database if it's NOT the currently selected one
                         if (
-                          (selectedLevel === "" &&
-                            defaultLevelId === level.levelId) ||
-                          selectedLevel === level.levelId
+                          defaultLevelId === level.levelId &&
+                          selectedLevel !== level.levelId
                         ) {
-                          // If no selection, default is blue. If selected, selected is blue.
-                          liClass += " bg-primary text-white";
-                        } else if (
-                          selectedLevel !== "" &&
-                          defaultLevelId === level.levelId
-                        ) {
-                          // If user has selected a different level, default becomes gray.
-                          liClass += " bg-gray-300 text-black";
+                          liClass += " bg-gray-500 text-white";
                         }
+
+                        // Always apply style for the currently selected level by the user (this overrides if it's also the default)
+                        if (selectedLevel === level.levelId) {
+                          liClass += " bg-primary text-white";
+                        }
+
                         return (
                           <li
                             key={level.levelId}

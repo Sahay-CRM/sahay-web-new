@@ -3,8 +3,10 @@ import {
   useGetCompanyDatapoint,
 } from "@/features/api/companyDatapoint";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { AxiosError } from "axios";
 import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
+import { toast } from "sonner";
 
 export default function useAdminUser() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -38,8 +40,8 @@ export default function useAdminUser() {
       dataPointName: "",
       dataPointLabel: "",
       KPIMasterId: "",
-      KPIMaster: "",
-      coreParameter: undefined as unknown as CoreParameter,
+      KPIMaster: {} as KPIMaster,
+      coreParameter: {} as CoreParameter,
       unit: "",
       validationType: "",
       frequencyType: "",
@@ -66,7 +68,7 @@ export default function useAdminUser() {
       dataPointName: "",
       dataPointLabel: "",
       KPIMasterId: "",
-      KPIMaster: "",
+      KPIMaster: {} as KPIMaster,
       coreParameter: undefined as unknown as CoreParameter,
       coreParameterId: "",
       unit: "",
@@ -96,6 +98,20 @@ export default function useAdminUser() {
       deleteDatapointById(modalData.dataPointId, {
         onSuccess: () => {
           closeDeleteModal();
+        },
+        onError: (error: Error) => {
+          const axiosError = error as AxiosError<{
+            message?: string;
+            status: number;
+          }>;
+
+          if (axiosError.response?.data?.status === 417) {
+            setIsChildData(axiosError.response?.data?.message);
+          } else if (axiosError.response?.data.status !== 417) {
+            toast.error(
+              `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+            );
+          }
         },
       });
     }

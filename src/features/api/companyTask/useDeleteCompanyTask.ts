@@ -9,12 +9,12 @@ type DatePaging = BaseResponse<CompanyProjectDataProps>;
 export default function useDeleteCompanyTask() {
   const deleteCompanyTaskMutation = useMutation({
     mutationKey: ["delete-company-task"],
-    mutationFn: async (data: CompanyProjectDataProps) => {
-      if (!data?.projectId) {
+    mutationFn: async (taskId: string) => {
+      if (!taskId) {
         throw new Error("Something Went Wrong");
       }
       const { data: resData } = await Api.delete<DatePaging>({
-        url: Urls.deleteCompanyTask(data.projectId),
+        url: Urls.deleteCompanyTask(taskId),
       });
       return resData;
     },
