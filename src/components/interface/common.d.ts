@@ -948,3 +948,12 @@ interface UserLogDetails {
   updateDetail: string;
   updateTime: string | Date;
 }
+
+interface ChangeLog<T> {
+  refId: string;
+  refType: string;
+  oldValue: T;
+  newValue: T;
+  logType: string;
+  logTime: string;
+}

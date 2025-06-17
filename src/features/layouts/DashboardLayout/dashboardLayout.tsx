@@ -123,20 +123,23 @@ const DashboardLayout = () => {
           setToken(response?.data?.token ?? "", response?.data);
           dispatch(
             setAuth({
+              userId: response.data.employeeId,
               token: response.data.token ?? null,
               isLoading: false,
               isAuthenticated: true,
-              userId: response.data.employeeId,
             }),
           );
           queryClient.resetQueries({
             queryKey: ["get-company-list"],
           });
           queryClient.resetQueries({
+            queryKey: ["userPermission"],
+          });
+          queryClient.resetQueries({
             queryKey: ["get-employee-by-id", userId],
           });
-          navigate("/dashboard");
           window.location.reload();
+          navigate("/dashboard");
           setCompanyModalOpen(false);
         }
       },

@@ -44,24 +44,55 @@ export default function UseUserLog() {
     enable: !!selectedEmployee,
   });
 
-  const sortedEmployeeLog = employeeLog
-    ?.filter((log) => {
-      const logDate = new Date(log.updateTime).getTime();
-      const startDate = taskDateRange.taskStartDate
-        ? new Date(taskDateRange.taskStartDate).getTime()
-        : undefined;
-      const endDate = taskDateRange.taskDeadline
-        ? new Date(taskDateRange.taskDeadline).getTime()
-        : undefined;
+  const sortedEmployeeLog = Array.isArray(employeeLog)
+    ? employeeLog
+        .filter((log): log is ChangeLog<unknown> => {
+          // Ensure log and log.logTime are valid before creating a Date
+          if (!log || typeof log.logTime !== "string") {
+            return false;
+          }
+          const logDate = new Date(log.logTime);
+          if (isNaN(logDate.getTime())) {
+            // Check if date is valid
+            return false;
+          }
 
-      return (
-        (!startDate || logDate >= startDate) && (!endDate || logDate <= endDate)
-      );
-    })
-    .sort(
-      (a, b) =>
-        new Date(b.updateTime).getTime() - new Date(a.updateTime).getTime(),
-    );
+          const logDateTime = logDate.getTime();
+          // Use appliedDateRange for filtering fetched logs
+          const startDate = appliedDateRange.taskStartDate
+            ? new Date(appliedDateRange.taskStartDate).getTime()
+            : undefined;
+          const endDate = appliedDateRange.taskDeadline
+            ? new Date(appliedDateRange.taskDeadline).getTime()
+            : undefined;
+
+          return (
+            (!startDate || logDateTime >= startDate) &&
+            (!endDate || logDateTime <= endDate)
+          );
+        })
+        .sort((a, b) => {
+          // Ensure a, b and their logTime are valid
+          if (
+            !a ||
+            typeof a.logTime !== "string" ||
+            !b ||
+            typeof b.logTime !== "string"
+          ) {
+            return 0;
+          }
+          const dateA = new Date(a.logTime);
+          const dateB = new Date(b.logTime);
+
+          if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+            return 0; // Handle invalid dates
+          }
+          return dateB.getTime() - dateA.getTime(); // Sort descending by logTime
+        })
+    : [];
+
+  // console.log("Original employeeLog from API:", employeeLog);
+  // console.log("Processed sortedEmployeeLog:", sortedEmployeeLog);
 
   const employeeOptions =
     employee?.map((emp) => ({
