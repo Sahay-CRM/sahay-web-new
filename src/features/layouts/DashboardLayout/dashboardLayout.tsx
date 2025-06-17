@@ -79,8 +79,6 @@ const DashboardLayout = () => {
     (failureReason as FailureReasonType).response?.data?.message
       ? (failureReason as FailureReasonType).response?.data?.message
       : undefined;
-  console.log(dataFetchingErr);
-
   const { data: companies } = useGetCompanyList();
 
   //  const { breadcrumbs } = useBreadcrumbs();

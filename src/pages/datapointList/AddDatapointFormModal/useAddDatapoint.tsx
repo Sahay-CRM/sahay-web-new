@@ -22,6 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import SearchInput from "@/components/shared/SearchInput";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function useAddEmployee() {
   const { id: companykpimasterId } = useParams();
@@ -32,6 +33,28 @@ export default function useAddEmployee() {
 
   const { data: datapointApiData, isLoading: isDatapointLoading } =
     useGetDatapointById(companykpimasterId || "");
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "KPI List", href: "/dashboard/kpi" },
+      { label: companykpimasterId ? "Update KPI" : "Add KPI", href: "" },
+      ...(companykpimasterId
+        ? [
+            {
+              label: `${
+                typeof datapointApiData?.KPIMaster === "object" &&
+                datapointApiData?.KPIMaster
+                  ? datapointApiData.KPIMaster.KPIName
+                  : ""
+              }`,
+              href: `/dashboard/kpi/${companykpimasterId}`,
+            },
+          ]
+        : []),
+    ]);
+  }, [companykpimasterId, datapointApiData, setBreadcrumbs]);
 
   const {
     register,
@@ -68,7 +91,10 @@ export default function useAddEmployee() {
         validationTypeId: data?.validationType || "",
       };
 
-      // Handle visualFrequencyTypes - convert comma-separated string to array
+      resetObj.hasDataEmployeeIds = data?.hasDataEmployeeIds || [];
+
+      resetObj.KPIName = data?.KPIMaster?.KPIName;
+
       if (data?.visualFrequencyTypes) {
         resetObj.visualFrequencyTypes = data.visualFrequencyTypes.split(",");
       } else {
@@ -417,8 +443,7 @@ export default function useAddEmployee() {
                 onChange={field.onChange}
                 options={validationOptions}
                 error={errors.validationTypeId}
-                disabled={hasData}
-                className={hasData ? "bg-gray-100  p-2 rounded-md" : ""}
+                className="p-2 rounded-md"
               />
             )}
           />
@@ -437,7 +462,7 @@ export default function useAddEmployee() {
                   isMulti={true}
                   placeholder="Select visual frequency types"
                   disabled={false}
-                  key={selectedFrequency} // Force re-render when frequency changes
+                  key={selectedFrequency}
                 />
               )}
             />
@@ -500,7 +525,7 @@ export default function useAddEmployee() {
     // Check if the number of columns is more than 3
     const canToggleColumns = columnToggleOptions.length > 3;
 
-    const hasData = datapointApiData?.hasData;
+    const coreParameterSelectable = !!datapointApiData?.coreParameterId;
 
     return (
       <div>
@@ -562,8 +587,10 @@ export default function useAddEmployee() {
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
                 selectedValue={field.value}
-                handleChange={hasData ? () => {} : field.onChange}
-                onCheckbox={() => !hasData}
+                handleChange={
+                  coreParameterSelectable ? () => {} : field.onChange
+                }
+                onCheckbox={() => coreParameterSelectable}
                 isActionButton={() => false}
               />
             </>
@@ -709,9 +736,8 @@ export default function useAddEmployee() {
         ),
       );
     };
-    // Check if the number of columns is more than 3
     const canToggleColumns = columnToggleOptions.length > 3;
-    const hasData = datapointApiData?.hasData;
+    const hasDataEmployeeIds = datapointApiData?.hasDataEmployeeIds || [];
 
     return (
       <div>
@@ -759,20 +785,31 @@ export default function useAddEmployee() {
               </div>
               <TableData
                 {...field}
-                tableData={employeedata?.data.map((item, index) => ({
-                  ...item,
-                  srNo:
-                    (employeedata.currentPage - 1) * employeedata.pageSize +
-                    index +
-                    1,
-                }))}
+                tableData={
+                  (employeedata?.data
+                    ? employeedata.data.filter((item) => !item.isDeactivated)
+                    : []
+                  ).map((item, index) => ({
+                    ...item,
+                    srNo:
+                      employeedata &&
+                      employeedata.currentPage &&
+                      employeedata.pageSize
+                        ? (employeedata.currentPage - 1) *
+                            employeedata.pageSize +
+                          index +
+                          1
+                        : index + 1,
+                    isDisabled: hasDataEmployeeIds.includes(item.employeeId),
+                  })) || []
+                }
                 columns={visibleColumns}
                 primaryKey="employeeId"
                 paginationDetails={employeedata as PaginationFilter}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={true}
                 selectedValue={field.value}
-                handleChange={hasData ? () => {} : field.onChange}
+                handleChange={field.onChange}
                 isActionButton={() => false}
               />
             </>
@@ -810,63 +847,68 @@ export default function useAddEmployee() {
     };
 
     const hasData = datapointApiData?.hasData;
+    const hasDataEmployeeIds = datapointApiData?.hasDataEmployeeIds || [];
 
     return (
       <div className="flex flex-col gap-6">
-        {selectedEmployees.map((emp: DataPointEmployee, index: number) => (
-          <div key={emp?.employeeId || index} className="flex flex-col gap-2">
-            <Label className="text-[18px] mb-0">{getEmployeeName(emp)}</Label>
-            <div
-              className={`grid ${
-                showBoth ? "grid-cols-2" : "grid-cols-1"
-              } gap-4 mt-0`}
-            >
-              {!showYesNo && (
-                <>
-                  <FormInputField
-                    label="Goal Value 1"
-                    isMandatory
-                    {...register(`goalValue1_${emp.employeeId}`, {
-                      required: "Please enter Goal Value 1",
-                    })}
-                    error={errors?.[`goalValue1_${emp.employeeId}`]}
-                    disabled={hasData}
-                    readOnly={hasData}
-                  />
-                  {showBoth && (
+        {selectedEmployees.map((emp: DataPointEmployee, index: number) => {
+          const isDisabled =
+            hasData && hasDataEmployeeIds.includes(emp.employeeId);
+          return (
+            <div key={emp?.employeeId || index} className="flex flex-col gap-2">
+              <Label className="text-[18px] mb-0">{getEmployeeName(emp)}</Label>
+              <div
+                className={`grid ${
+                  showBoth ? "grid-cols-2" : "grid-cols-1"
+                } gap-4 mt-0`}
+              >
+                {!showYesNo && (
+                  <>
                     <FormInputField
+                      label="Goal Value 1"
                       isMandatory
-                      label="Goal Value 2"
-                      {...register(`goalValue2_${emp.employeeId}`, {
-                        required: "Please enter Goal Value 2",
+                      {...register(`goalValue1_${emp.employeeId}`, {
+                        required: "Please enter Goal Value 1",
                       })}
-                      error={errors?.[`goalValue2_${emp.employeeId}`]}
-                      disabled={hasData}
-                      readOnly={hasData}
+                      error={errors?.[`goalValue1_${emp.employeeId}`]}
+                      disabled={isDisabled}
+                      readOnly={isDisabled}
                     />
-                  )}
-                </>
-              )}
-              {showYesNo && (
-                <Controller
-                  name={`yesno_${emp.employeeId}`}
-                  control={control}
-                  rules={{ required: "Please select Yes or No" }}
-                  render={({ field, fieldState }) => (
-                    <FormSelect
-                      {...field}
-                      label="Yes/No"
-                      options={yesnoOptions}
-                      error={fieldState.error}
-                      isMandatory={true}
-                      disabled={hasData}
-                    />
-                  )}
-                />
-              )}
+                    {showBoth && (
+                      <FormInputField
+                        isMandatory
+                        label="Goal Value 2"
+                        {...register(`goalValue2_${emp.employeeId}`, {
+                          required: "Please enter Goal Value 2",
+                        })}
+                        error={errors?.[`goalValue2_${emp.employeeId}`]}
+                        disabled={isDisabled}
+                        readOnly={isDisabled}
+                      />
+                    )}
+                  </>
+                )}
+                {showYesNo && (
+                  <Controller
+                    name={`yesno_${emp.employeeId}`}
+                    control={control}
+                    rules={{ required: "Please select Yes or No" }}
+                    render={({ field, fieldState }) => (
+                      <FormSelect
+                        {...field}
+                        label="Yes/No"
+                        options={yesnoOptions}
+                        error={fieldState.error}
+                        isMandatory={true}
+                        disabled={isDisabled}
+                      />
+                    )}
+                  />
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -888,5 +930,6 @@ export default function useAddEmployee() {
     isLoading: isDatapointLoading,
     companykpimasterId,
     isPending,
+    datapointApiData,
   };
 }

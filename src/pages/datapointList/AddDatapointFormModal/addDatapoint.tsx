@@ -5,8 +5,6 @@ import { FormProvider, useForm } from "react-hook-form";
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import Loader from "@/components/shared/Loader/Loader";
-import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { useEffect } from "react";
 
 const AddDatapoint = () => {
   const {
@@ -22,58 +20,42 @@ const AddDatapoint = () => {
     GoalValue,
     trigger,
     KpiPreview,
-    skipToStep,
     isLoading,
-    companykpimasterId,
     isPending,
+    companykpimasterId,
   } = useAddDatapoint();
-
-  const { setBreadcrumbs } = useBreadcrumbs();
-
-  useEffect(() => {
-    setBreadcrumbs([
-      { label: "KPI List", href: "/dashboard/kpi" },
-      { label: companykpimasterId ? "Update KPI" : "Add KPI", href: "" },
-    ]);
-  }, [companykpimasterId, setBreadcrumbs]);
 
   const methods = useForm({ mode: "onChange" });
 
-  const steps = [
-    <Kpi />,
-    <Frequency />,
-    <CoreParameter />,
-    <Product />,
-    <AssignUser />,
-    <GoalValue />,
-  ];
+  // Build steps array based on companykpimasterId and datapointApiData?.coreParameterId
+  let steps = [];
+  let stepNames = [];
 
-  const visibleSteps =
-    skipToStep === 5
-      ? [<Frequency />, <GoalValue />]
-      : skipToStep > 0
-        ? steps.slice(skipToStep)
-        : steps;
-
-  const visibleStepNames =
-    skipToStep === 5
-      ? ["Frequency", "Goal Value"]
-      : skipToStep === 1
-        ? [
-            "Frequency",
-            "Core Parameter",
-            "Product",
-            "Assign User",
-            "Goal Value",
-          ]
-        : [
-            "KPI",
-            "Frequency",
-            "Core Parameter",
-            "Product",
-            "Assign User",
-            "Goal Value",
-          ];
+  if (companykpimasterId) {
+    // Hide KPI step
+    steps = [<Frequency />, <CoreParameter />];
+    stepNames = ["Frequency", "Core Parameter"];
+    steps.push(<Product />, <AssignUser />, <GoalValue />);
+    stepNames.push("Product", "Assign User", "Goal Value");
+  } else {
+    // Show all steps
+    steps = [
+      <Kpi />,
+      <Frequency />,
+      <CoreParameter />,
+      <Product />,
+      <AssignUser />,
+      <GoalValue />,
+    ];
+    stepNames = [
+      "KPI",
+      "Frequency",
+      "Core Parameter",
+      "Product",
+      "Assign User",
+      "Goal Value",
+    ];
+  }
 
   const {
     back,
@@ -83,7 +65,7 @@ const AddDatapoint = () => {
     currentStep,
     isFirstStep,
     isLastStep,
-  } = useStepForm(visibleSteps, trigger);
+  } = useStepForm(steps, trigger);
 
   // Show loader while API data is being fetched
   if (isLoading) {
@@ -95,7 +77,7 @@ const AddDatapoint = () => {
       <div>
         <StepProgress
           currentStep={currentStep}
-          stepNames={visibleStepNames}
+          stepNames={stepNames}
           totalSteps={totalSteps}
         />
 

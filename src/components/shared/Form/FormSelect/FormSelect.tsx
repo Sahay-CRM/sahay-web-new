@@ -5,10 +5,15 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { isColorDark } from "@/features/utils/color.utils";
 import { useState } from "react";
+import { CheckIcon } from "lucide-react";
 
 interface Option {
   id?: string | number;
@@ -20,7 +25,7 @@ interface Option {
 interface FormSelectProps {
   id?: string;
   label?: string;
-  value?: string | string[]; // support string or string[]
+  value?: string | string[];
   onChange: (value: string | string[]) => void;
   options: Option[];
   disabled?: boolean;
@@ -29,13 +34,13 @@ interface FormSelectProps {
   className?: string;
   isMulti?: boolean;
   isMandatory?: boolean;
-  isSearchable?: boolean; // Add isSearchable prop
+  isSearchable?: boolean;
 }
 
 export default function FormSelect({
   id,
   label,
-  value = "", // Default value to prevent uncontrolled behavior
+  value = "",
   onChange,
   options,
   disabled = false,
@@ -44,9 +49,10 @@ export default function FormSelect({
   placeholder = "Select an option",
   isMulti = false,
   isMandatory = false,
-  isSearchable = false, // Default to false
+  isSearchable = false,
 }: FormSelectProps) {
-  const [searchTerm, setSearchTerm] = useState(""); // State for search term
+  const [searchTerm, setSearchTerm] = useState("");
+  const [open, setOpen] = useState(false);
 
   const filteredOptions = isSearchable
     ? options.filter((opt) =>
@@ -54,30 +60,14 @@ export default function FormSelect({
       )
     : options;
 
-  // Helper to toggle selection for multi-select
-  const toggleValue = (val: string) => {
-    if (!Array.isArray(value)) {
-      // Initialize as array if not already
-      onChange([val]);
-    } else {
-      if (value.includes(val)) {
-        // Remove if already selected
-        onChange(value.filter((v) => v !== val));
-      } else {
-        // Add if not selected
-        onChange([...value, val]);
-      }
-    }
-  };
-
   const displayValue = () => {
     if (isMulti) {
-      if (Array.isArray(value) && value.length > 0) {
-        const selectedLabels = options
-          .filter((opt) => value.includes(String(opt.value)))
+      const selected = Array.isArray(value) ? value : [];
+      if (selected.length > 0) {
+        return options
+          .filter((opt) => selected.includes(String(opt.value)))
           .map((opt) => opt.label)
           .join(", ");
-        return selectedLabels || placeholder;
       }
       return placeholder;
     } else {
@@ -88,17 +78,14 @@ export default function FormSelect({
     }
   };
 
-  let selectedColor: string | undefined = undefined;
-  let selectedTextColor: string | undefined = undefined;
-  if (!isMulti && value) {
-    const selectedOption = options.find(
-      (opt) => String(opt.value) === String(value),
-    );
-    selectedColor = selectedOption?.color;
-    if (selectedColor) {
-      selectedTextColor = isColorDark(selectedColor) ? "#fff" : "#000";
+  const handleMultiChange = (val: string) => {
+    const selected = Array.isArray(value) ? value : [];
+    if (selected.includes(val)) {
+      onChange(selected.filter((v) => v !== val));
+    } else {
+      onChange([...selected, val]);
     }
-  }
+  };
 
   return (
     <div className={className}>
@@ -109,88 +96,89 @@ export default function FormSelect({
         </FormLabel>
       )}
 
-      <Select
-        value={isMulti ? "" : (value as string | undefined)} // Ensure value is always a string or undefined
-        onValueChange={(val) => {
-          if (isMulti) {
-            toggleValue(val);
-          } else {
-            onChange(val);
-          }
-        }}
-        disabled={disabled}
-      >
-        <FormControl>
-          <SelectTrigger
-            className={`w-full mb-1 py-5 custom-select-trigger ${
-              selectedColor
-                ? selectedTextColor === "#fff"
-                  ? "text-white"
-                  : "text-black"
-                : "text-black"
-            }`}
-            id={id}
-            style={
-              selectedColor
-                ? {
-                    backgroundColor: selectedColor,
-                    color: selectedTextColor,
-                  }
-                : undefined
-            }
-          >
-            {isMulti ? (
-              <div className="w-full text-left">{displayValue()}</div>
-            ) : (
+      {!isMulti && (
+        <Select
+          value={value as string}
+          onValueChange={(val) => onChange(val)}
+          disabled={disabled}
+        >
+          <FormControl>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder={placeholder} />
-            )}
-          </SelectTrigger>
-        </FormControl>
+            </SelectTrigger>
+          </FormControl>
 
-        <SelectContent className="w-full max-h-60 overflow-auto">
-          {isSearchable && (
-            <div className="p-2">
+          <SelectContent className="w-full max-h-60 overflow-auto">
+            {isSearchable && (
+              <div className="p-2">
+                <Input
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="mb-2"
+                />
+              </div>
+            )}
+            {filteredOptions.map((opt) => (
+              <SelectItem key={opt.value} value={String(opt.value)}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
+      {isMulti && (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              disabled={disabled}
+              className="w-full border rounded-md px-3 py-1.5 text-left"
+            >
+              {displayValue()}
+            </button>
+          </PopoverTrigger>
+          {/* <PopoverContent className="w-full p-2"> */}
+          <PopoverContent
+            className="p-2"
+            style={{ width: "var(--radix-popover-trigger-width)" }}
+          >
+            {isSearchable && (
               <Input
                 placeholder="Search..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)} // Keep dropdown open while typing
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="mb-2"
               />
+            )}
+            <div className="max-h-60 overflow-auto">
+              {filteredOptions.map((opt) => {
+                const stringVal = String(opt.value);
+                const selected = Array.isArray(value)
+                  ? value.includes(stringVal)
+                  : false;
+                return (
+                  <div
+                    key={stringVal}
+                    className="flex items-center gap-2 p-1 hover:bg-gray-100 rounded cursor-pointer"
+                    onClick={() => handleMultiChange(stringVal)}
+                  >
+                    <input type="checkbox" checked={selected} readOnly />
+                    <span>{opt.label}</span>
+                    {selected && (
+                      <CheckIcon className="ml-auto text-blue-500" />
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          )}
-          {filteredOptions
-            .filter((opt) => opt.value !== undefined && opt.value !== "")
-            .map((opt) => {
-              const stringVal = String(opt.value);
-              const checked = isMulti
-                ? Array.isArray(value) && value.includes(stringVal)
-                : false;
-              return (
-                <SelectItem
-                  key={stringVal}
-                  value={stringVal}
-                  className={checked ? "bg-blue-50" : ""}
-                >
-                  {/* Show checkbox in multi-select */}
-                  {isMulti && (
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => {}} // Prevent direct interaction
-                      className="mr-2 text-sm pointer-events-none"
-                    />
-                  )}
-                  {opt.label}
-                </SelectItem>
-              );
-            })}
-        </SelectContent>
-      </Select>
+          </PopoverContent>
+        </Popover>
+      )}
 
       {error?.message && (
-        <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-          {error.message}
-        </span>
+        <span className="text-red-600 text-sm">{error.message}</span>
       )}
     </div>
   );
