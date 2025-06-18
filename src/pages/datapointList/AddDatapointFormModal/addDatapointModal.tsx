@@ -39,7 +39,7 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
     <div>
       <ModalData
         isModalOpen={isModalOpen}
-        modalTitle={modalData?.KPIName ? "Update Datapoint" : "Add Datapoint"}
+        modalTitle={modalData?.KPIName ? "Update KPI" : "Add KPI"}
         modalClose={modalClose}
         buttons={[
           {

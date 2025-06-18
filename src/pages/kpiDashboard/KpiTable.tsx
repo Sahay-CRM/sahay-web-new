@@ -6,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import clsx from "clsx";
 import useKpiDashboard from "./useKpiDashboard";
 import {
@@ -38,7 +38,6 @@ import WarningDialog from "./WarningModal";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ImageBaseURL } from "@/features/utils/urls.utils";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -206,7 +205,8 @@ export default function KPITable() {
     selectedDate,
   });
 
-  const isLoading = !kpiStructure || !kpiData;
+  const isLoading = !kpiStructure;
+  // const isLoading = false;
 
   // Check if there are no KPIs available using totalCount
   const hasNoKpis = useMemo(() => {
@@ -296,7 +296,6 @@ export default function KPITable() {
             )
           : undefined;
       }
-
       return (
         <TableRow key={assignee.dataPointEmpId} className="border-b">
           <TableCell
@@ -304,24 +303,14 @@ export default function KPITable() {
               "px-3 py-2 w-[60px] bg-gray-100 sticky left-0 z-10",
             )}
           >
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Avatar
-                    className={`h-8 w-8 ${getColorFromName(
-                      assignee?.employeeName,
-                    )}`}
-                  >
-                    {assignee.photo ? (
-                      <AvatarImage
-                        src={`${ImageBaseURL}/share/profilePics/${assignee.photo}`}
-                        alt={assignee.employeeName}
-                      />
-                    ) : null}
+            <Avatar
+              className={`h-8 w-8 ${getColorFromName(assignee?.employeeName)}`}
+            >
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
                     <AvatarFallback
-                      className={`${getColorFromName(
-                        assignee?.employeeName,
-                      )} font-bold`}
+                      className={`${getColorFromName(assignee?.employeeName)} font-bold`}
                     >
                       {(() => {
                         if (!assignee?.employeeName) return "";
@@ -332,11 +321,11 @@ export default function KPITable() {
                         return (firstInitial + lastInitial).toUpperCase();
                       })()}
                     </AvatarFallback>
-                  </Avatar>
-                </TooltipTrigger>
-                <TooltipContent>{assignee?.employeeName}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                  </TooltipTrigger>
+                  <TooltipContent>{assignee?.employeeName}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </Avatar>
           </TableCell>
           <TableCell
             className={clsx(
@@ -359,7 +348,7 @@ export default function KPITable() {
               </TooltipProvider>
             </div>
           </TableCell>
-          <TableCell className="px-3 py-2 w-fit bg-gray-100 sticky left-[205px] z-10 pl-0 ml-2">
+          <TableCell className="px-3 py-2 w-fit bg-gray-100 sticky left-[202px] z-10 pl-0 ml-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
