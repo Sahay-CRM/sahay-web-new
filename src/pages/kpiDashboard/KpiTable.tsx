@@ -329,15 +329,14 @@ export default function KPITable() {
           </TableCell>
           <TableCell
             className={clsx(
-              " py-2 bg-gray-100 sticky left-[60px] z-10 w-fit min-w-[102%] mr-2",
+              "py-2 bg-gray-100 sticky left-[60px] z-10 w-[150px] min-w-[150px] max-w-[150px] p-0",
             )}
           >
-            {" "}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-md cursor-default">
+                    <span className="text-md cursor-default w-full break-all whitespace-pre-line overflow-hidden">
                       {kpi?.kpiName}
                     </span>
                   </TooltipTrigger>
@@ -348,11 +347,11 @@ export default function KPITable() {
               </TooltipProvider>
             </div>
           </TableCell>
-          <TableCell className="px-3 py-2 w-fit bg-gray-100 sticky left-[202px] z-10 pl-0 ml-2">
+          <TableCell className="px-3 py-2 w-[80px] bg-gray-100 sticky left-[210px] break-words z-10 pl-0 ml-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="truncate max-w-[100px] inline-block cursor-default">
+                  <span className="truncate max-w-[100px] inline-block cursor-default break-words w-full">
                     {getFormattedValue(
                       kpi.validationType,
                       assignee?.value1,
@@ -679,12 +678,12 @@ export default function KPITable() {
                 />
                 <TableHead
                   className={clsx(
-                    "px-3 py-2 bg-primary sticky left-[60px] z-20 text-white w-fit text-center",
+                    "px-3 py-2 bg-primary sticky left-[60px] z-20 text-white w-[150px] text-center",
                   )}
                 >
                   KPI
                 </TableHead>
-                <TableHead className="px-3 py-2 w-fit bg-primary sticky left-[200px] z-20 text-white text-center">
+                <TableHead className="px-3 py-2 w-[80px] bg-primary sticky left-[210px] z-20 text-white text-center">
                   Goal
                 </TableHead>
                 {/* <TableHead className="w-[60px] bg-primary sticky left-[320px] z-20" /> */}
