@@ -839,14 +839,14 @@ export default function useAddEmployee() {
       return found?.employeeName || emp.employeeId || "";
     };
 
-    const hasData = datapointApiData?.hasData;
-    const hasDataEmployeeIds = datapointApiData?.hasDataEmployeeIds || [];
+    // const hasData = datapointApiData?.hasData;
+    // const hasDataEmployeeIds = datapointApiData?.hasDataEmployeeIds || [];
 
     return (
       <div className="flex flex-col gap-6">
         {selectedEmployees.map((emp: DataPointEmployee, index: number) => {
-          const isDisabled =
-            hasData && hasDataEmployeeIds.includes(emp.employeeId);
+          // const isDisabled =
+          //   hasData && hasDataEmployeeIds.includes(emp.employeeId);
           return (
             <div key={emp?.employeeId || index} className="flex flex-col gap-2">
               <Label className="text-[18px] mb-0">{getEmployeeName(emp)}</Label>
@@ -864,8 +864,8 @@ export default function useAddEmployee() {
                         required: "Please enter Goal Value 1",
                       })}
                       error={errors?.[`goalValue1_${emp.employeeId}`]}
-                      disabled={isDisabled}
-                      readOnly={isDisabled}
+                      // disabled={isDisabled}
+                      // readOnly={isDisabled}
                     />
                     {showBoth && (
                       <FormInputField
@@ -875,8 +875,8 @@ export default function useAddEmployee() {
                           required: "Please enter Goal Value 2",
                         })}
                         error={errors?.[`goalValue2_${emp.employeeId}`]}
-                        disabled={isDisabled}
-                        readOnly={isDisabled}
+                        // disabled={isDisabled}
+                        // readOnly={isDisabled}
                       />
                     )}
                   </>
@@ -893,7 +893,7 @@ export default function useAddEmployee() {
                         options={yesnoOptions}
                         error={fieldState.error}
                         isMandatory={true}
-                        disabled={isDisabled}
+                        // disabled={isDisabled}
                       />
                     )}
                   />
