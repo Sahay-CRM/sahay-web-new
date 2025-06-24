@@ -116,11 +116,10 @@ export default function useAddProject() {
   }, [trigger]);
 
   const onSubmit = handleSubmit(async (data) => {
-    // Ensure IDs are correctly extracted if objects are stored in form state
+    console.log(data);
+
     const projectStatusIdValue =
       data.projectStatusId?.projectStatusId || data.projectStatusId;
-    // subParameterId is expected to be an array of strings by the backend
-    // employeeId is expected to be an array of strings by the backend
 
     const payload = companyProjectId
       ? {
@@ -165,13 +164,12 @@ export default function useAddProject() {
     handleClose,
     onFinish,
     onSubmit,
-    projectPreview: getValues(), // Renamed from meetingPreview
+    projectPreview: getValues(),
     trigger,
-    methods, // Pass the whole methods object for FormProvider
+    methods,
     companyProjectId,
     isPending,
-    // Pass state needed by step components if they can't derive it or for complex interactions
-    isInitialLoad, // For SubParameter logic
-    hasInitializedData, // For SubParameter logic
+    isInitialLoad,
+    hasInitializedData,
   };
 }

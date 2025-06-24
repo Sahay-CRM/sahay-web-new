@@ -205,7 +205,7 @@ const CoreParameter = () => {
       <Controller
         name="coreParameterId"
         control={control}
-        rules={{ required: "Please select a core parameter" }}
+        // rules={{ required: "Please select a core parameter" }}
         render={({ field }) => (
           <>
             {errors?.coreParameterId && (
@@ -230,7 +230,7 @@ const CoreParameter = () => {
               paginationDetails={coreParameterData as PaginationFilter}
               setPaginationFilter={setPaginationFilter}
               multiSelect={false}
-              selectedValue={field.value} // field.value might be an object or just ID
+              selectedValue={field.value}
               handleChange={(selected) => field.onChange(selected)} // Store the whole selected object
               onCheckbox={() => true}
             />
@@ -260,7 +260,6 @@ const SubParameter = () => {
   });
 
   useEffect(() => {
-    // Reset pagination only if coreParameterIdValue changes and it's not the initial undefined state
     if (coreParameterIdValue) {
       setPaginationFilter((prev) => ({ ...prev, currentPage: 1, search: "" }));
     }
@@ -271,8 +270,6 @@ const SubParameter = () => {
       ...paginationFilter,
       coreParameterId: coreParameterIdValue,
     },
-    // Disable query if coreParameterIdValue is not set,
-    // or if it's initial load and we are waiting for data to be set by reset
     enable: !!coreParameterIdValue && (!isInitialLoad || hasInitializedData),
   });
 
@@ -323,9 +320,9 @@ const SubParameter = () => {
         )}
       </div>
       <Controller
-        name="subParameterId" // This should store an array of subParameter IDs
+        name="subParameterId"
         control={control}
-        rules={{ required: "Please select at least one sub parameter" }}
+        // rules={{ required: "Please select at least one sub parameter" }}
         render={({ field }) => (
           <>
             {errors?.subParameterId && (
@@ -352,8 +349,10 @@ const SubParameter = () => {
               multiSelect={true}
               selectedValue={field.value || []} // Expects array of IDs
               handleChange={(selectedItems) => {
-                const ids = selectedItems.map(
-                  (item: SubParameter) => item.subParameterId,
+                const ids = selectedItems.map((item: SubParameter | string) =>
+                  typeof item === "object" && item !== null
+                    ? item.subParameterId
+                    : item,
                 );
                 field.onChange(ids);
               }}
@@ -377,7 +376,9 @@ const Employees = () => {
     pageSize: 25,
     search: "",
   });
-  const { data: employeeData } = getEmployee({ filter: paginationFilter });
+  const { data: employeeData } = getEmployee({
+    filter: { ...paginationFilter, isDeactivated: false },
+  });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "employeeName", label: "Employee Name", visible: true },
@@ -444,11 +445,12 @@ const Employees = () => {
               paginationDetails={employeeData as PaginationFilter}
               setPaginationFilter={setPaginationFilter}
               multiSelect={true}
-              selectedValue={field.value || []} // Expects array of IDs
+              selectedValue={field.value || []}
               handleChange={(selectedItems) => {
-                // selectedItems are objects from TableData
-                const ids = selectedItems.map(
-                  (item: Employee) => item.employeeId,
+                const ids = selectedItems.map((item: Employee | string) =>
+                  typeof item === "object" && item !== null
+                    ? item.employeeId
+                    : item,
                 );
                 field.onChange(ids);
               }}

@@ -20,15 +20,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Imports for API hooks and functions used by step components
 import { getEmployee } from "@/features/api/companyEmployee";
 import { useGetCompanyMeetingStatus } from "@/features/api/companyMeeting";
 import { getMeetingType } from "@/features/api/meetingType";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
-// Define MeetingData type if not already globally available
-// interface MeetingData { /* ... properties ... */ }
-// Define EmployeeData type if not already globally available
-// interface EmployeeData { employeeId: string; employeeName?: string; /* ... other properties ... */ }
 
 // --- MeetingInfo Component Definition ---
 const MeetingInfo = () => {
@@ -235,7 +230,7 @@ const Joiners = () => {
   });
 
   const { data: employeedata } = getEmployee({
-    filter: paginationFilter,
+    filter: { ...paginationFilter, isDeactivated: false },
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },

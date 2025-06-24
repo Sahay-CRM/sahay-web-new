@@ -108,7 +108,7 @@ export const useAddCompanyTask = () => {
   const { data: taskTypeData } = useDdTaskType();
 
   const { data: employeedata } = getEmployee({
-    filter: paginationFilterEmployee,
+    filter: { ...paginationFilterEmployee, isDeactivated: false },
   });
   const { data: projectListdata } = useGetCompanyProject({
     filter: paginationFilterProject,

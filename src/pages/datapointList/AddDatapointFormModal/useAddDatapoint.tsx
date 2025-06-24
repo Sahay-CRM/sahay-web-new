@@ -494,7 +494,6 @@ export default function useAddEmployee() {
       currentPage: 1,
       pageSize: 25,
       search: "",
-      //   status: currentStatus, // Use currentStatus state
     });
 
     const { data: coreparameterData } = useGetCoreParameter({
@@ -587,9 +586,7 @@ export default function useAddEmployee() {
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={false}
                 selectedValue={field.value}
-                handleChange={
-                  coreParameterSelectable ? () => {} : field.onChange
-                }
+                handleChange={field.onChange}
                 onCheckbox={() => coreParameterSelectable}
                 isActionButton={() => false}
               />
@@ -605,7 +602,6 @@ export default function useAddEmployee() {
       currentPage: 1,
       pageSize: 25,
       search: "",
-      //   status: currentStatus, // Use currentStatus state
     });
 
     const { data: ProductData } = useGetProduct({
@@ -635,8 +631,6 @@ export default function useAddEmployee() {
     };
     // Check if the number of columns is more than 3
     const canToggleColumns = columnToggleOptions.length > 3;
-
-    const hasData = datapointApiData?.hasData;
 
     return (
       <div>
@@ -690,7 +684,7 @@ export default function useAddEmployee() {
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={true}
                 selectedValue={field.value}
-                handleChange={hasData ? () => {} : field.onChange}
+                handleChange={field.onChange}
                 isActionButton={() => false}
               />
             </>
@@ -705,11 +699,10 @@ export default function useAddEmployee() {
       currentPage: 1,
       pageSize: 25,
       search: "",
-      //   status: currentStatus, // Use currentStatus state
     });
 
     const { data: employeedata } = getEmployee({
-      filter: paginationFilter,
+      filter: { ...paginationFilter, isDeactivated: false },
     });
 
     const [columnToggleOptions, setColumnToggleOptions] = useState([
