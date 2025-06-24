@@ -336,7 +336,7 @@ export default function KPITable() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-md cursor-default w-full break-all whitespace-pre-line overflow-hidden">
+                    <span className="text-md cursor-default w-full break-words whitespace-pre-line overflow-hidden">
                       {kpi?.kpiName}
                     </span>
                   </TooltipTrigger>
