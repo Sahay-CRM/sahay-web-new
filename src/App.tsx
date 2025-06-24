@@ -5,8 +5,13 @@ import AuthProvider from "./features/auth/AuthProvider";
 import { SidebarThemeProvider } from "./features/auth/SidebarThemeProvider";
 import { Toaster } from "sonner";
 import { BreadcrumbProvider } from "./features/context/BreadcrumbContext";
+import { useEffect } from "react";
+import { onFirebaseMessageListener } from "./firebaseConfig";
 
 function App() {
+  useEffect(() => {
+    onFirebaseMessageListener();
+  }, []);
   return (
     <>
       <AuthProvider>

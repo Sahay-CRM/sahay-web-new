@@ -12,3 +12,6 @@ export const getUserPermission = (store: RootState): PermissionsResponse =>
 
 export const getKpiData = (store: RootState): KpiData =>
   store.auth.kpiData as KpiData;
+
+export const getFireBaseToken = (store: RootState): string | null =>
+  store.auth.fireBaseToken || null;

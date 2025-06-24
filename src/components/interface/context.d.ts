@@ -14,6 +14,7 @@ interface AuthState {
   userPermission?: PermissionsResponse;
   kpiData?: KpiData;
   userId?: string;
+  fireBaseToken?: string | null;
 }
 
 interface CustomError {

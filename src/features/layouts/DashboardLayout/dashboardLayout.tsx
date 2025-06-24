@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet, useNavigate } from "react-router-dom";
-import { LogOut, User2Icon } from "lucide-react";
+import { Bell, LogOut, User2Icon } from "lucide-react";
 
 import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
 import VerticalNavBar from "@/components/shared/VerticalNavBar/VerticalNavBar";
@@ -9,6 +9,7 @@ import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
 import {
   logout,
   setAuth,
+  setFireBaseToken,
   setUser,
   setUserPermission,
 } from "@/features/reducers/auth.reducer";
@@ -40,6 +41,13 @@ import { queryClient } from "@/queryClient";
 import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { Button } from "@/components/ui/button";
+import {
+  onFirebaseMessageListener,
+  requestFirebaseNotificationPermission,
+  deleteFirebaseToken,
+} from "@/firebaseConfig";
+import { selectNotifications } from "@/features/reducers/notification.reducer";
+import { fireTokenMutation } from "@/features/api";
 
 interface FailureReasonType {
   response?: {
@@ -65,6 +73,11 @@ const DashboardLayout = () => {
   const user = useSelector(getUserDetail);
   const userId = useSelector(getUserId);
   const navigate = useNavigate();
+  const notifications = useSelector(selectNotifications);
+
+  const { mutate: foreToken } = fireTokenMutation();
+
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   const isLoggedIn = useSelector(getIsLoading);
 
@@ -107,7 +120,8 @@ const DashboardLayout = () => {
     }
   }, [dispatch, userData]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await deleteFirebaseToken();
     dispatch(logout());
   };
 
@@ -116,6 +130,7 @@ const DashboardLayout = () => {
       selectedCompanyId: data.companyId,
       mobile: user?.employeeMobile ?? "",
     };
+    // console.log(verifyCompanyData, "verifyCompanyData");
 
     companyVerifyOtp(verifyCompanyData, {
       onSuccess: (response) => {
@@ -129,18 +144,32 @@ const DashboardLayout = () => {
               isAuthenticated: true,
             }),
           );
-          queryClient.resetQueries({
-            queryKey: ["get-company-list"],
+          requestFirebaseNotificationPermission().then((firebaseToken) => {
+            if (firebaseToken && typeof firebaseToken === "string") {
+              dispatch(setFireBaseToken(firebaseToken));
+            } else if (firebaseToken) {
+              dispatch(setFireBaseToken(String(firebaseToken)));
+            }
+            foreToken(
+              {
+                webToken: firebaseToken,
+                employeeId: response.data.employeeId,
+              },
+              {
+                onSuccess: () => {
+                  onFirebaseMessageListener();
+                  queryClient.resetQueries({ queryKey: ["get-company-list"] });
+                  queryClient.resetQueries({ queryKey: ["userPermission"] });
+                  queryClient.resetQueries({
+                    queryKey: ["get-employee-by-id", userId],
+                  });
+                  window.location.reload();
+                  setCompanyModalOpen(false);
+                },
+              },
+            );
           });
-          queryClient.resetQueries({
-            queryKey: ["userPermission"],
-          });
-          queryClient.resetQueries({
-            queryKey: ["get-employee-by-id", userId],
-          });
-          window.location.reload();
-          navigate("/dashboard");
-          setCompanyModalOpen(false);
+          return;
         }
       },
     });
@@ -184,7 +213,69 @@ const DashboardLayout = () => {
             </div>
             <Breadcrumbs items={breadcrumbs} />
           </div>
-          <div className="flex items-center justify-end gap-x-4 pt-1">
+          <div className="flex items-center justify-end gap-x-4 pt-1 relative">
+            {/* notification */}
+            <div className="relative">
+              <div>
+                <Button
+                  variant="ghost"
+                  className="p-2 border"
+                  onClick={() => setIsNotificationOpen((prev) => !prev)}
+                >
+                  <Bell />
+                </Button>
+              </div>
+              {isNotificationOpen && (
+                <div>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setIsNotificationOpen(false)}
+                    style={{ background: "transparent" }}
+                  />
+                  <div className="absolute right-0 top-12 bg-white shadow-2xl border rounded-lg p-4 w-80 z-20">
+                    {notifications.length > 0 ? (
+                      <>
+                        <ul>
+                          {notifications
+                            .slice(0, 5)
+                            .map((notification, index) => (
+                              <li
+                                key={index}
+                                className="border-b last:border-b-0 py-2"
+                              >
+                                <p className="font-semibold">
+                                  {notification.title}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  {notification.body}
+                                </p>
+                              </li>
+                            ))}
+                        </ul>
+                        {notifications.length > 5 && (
+                          <div className="text-center mt-2">
+                            <Button
+                              variant="link"
+                              onClick={() => {
+                                navigate("/dashboard/notifications");
+                                setIsNotificationOpen(false);
+                              }}
+                            >
+                              View All Notifications
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-sm text-gray-600">
+                        No new notifications
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="w-fit">
               <Button
                 variant="outline"
