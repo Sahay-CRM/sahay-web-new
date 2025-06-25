@@ -134,9 +134,6 @@ const useLogin = () => {
                     userId: dataRes.employeeId,
                   }),
                 );
-                setToken(token ?? "", dataRes);
-                setLoginDetails(null);
-
                 requestFirebaseNotificationPermission().then(
                   (firebaseToken) => {
                     if (firebaseToken && typeof firebaseToken === "string") {
@@ -159,6 +156,8 @@ const useLogin = () => {
                     );
                   },
                 );
+                setToken(token ?? "", dataRes);
+                setLoginDetails(null);
               } else {
                 throw new Error("No companies found.");
               }

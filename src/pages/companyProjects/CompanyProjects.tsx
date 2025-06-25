@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyProject from "./useCompanyProject";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
@@ -19,6 +18,7 @@ import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
+import ConformationDeleteModal from "./conformationDeleteModal";
 
 export default function CompanyProject() {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -197,10 +197,8 @@ export default function CompanyProject() {
 
         {/* Modal Component */}
         {isDeleteModalOpen && (
-          <ConfirmationDeleteModal
-            title={"Delete User"}
-            label={"User Name :"}
-            modalData={`${modalData?.projectName}`}
+          <ConformationDeleteModal
+            modalData={modalData}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}

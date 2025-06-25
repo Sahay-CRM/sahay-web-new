@@ -12,6 +12,7 @@ function App() {
   useEffect(() => {
     onFirebaseMessageListener();
   }, []);
+
   return (
     <>
       <AuthProvider>

@@ -42,9 +42,13 @@ export const deleteFirebaseToken = async () => {
 export const onFirebaseMessageListener = () => {
   onMessage(messaging, (payload) => {
     const { data } = payload;
-    const title = data?.title;
-    const body = data?.body;
-    store.dispatch(addNotification({ title, body, data }));
+    const notification = payload.notification;
+    const title = notification?.title;
+    const body = notification?.body;
+
+    store.dispatch(
+      addNotification({ title: title || "", body: body || "", data }),
+    );
     import("sonner").then(({ toast }) => {
       toast.success(body || "You have a new notification!", {
         description: title,

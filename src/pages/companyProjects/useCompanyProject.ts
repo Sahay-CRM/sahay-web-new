@@ -23,7 +23,6 @@ export default function useAdminUser() {
     {} as IProjectFormData,
   );
   const permission = useSelector(getUserPermission).PROJECT_LIST;
-  const [currentStatus, setCurrentStatus] = useState<number>(1); // Add state for currentStatus
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
 
@@ -52,26 +51,8 @@ export default function useAdminUser() {
       }))
     : [];
 
-  const onStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStatus = Number(event.target.value);
-    setCurrentStatus(newStatus); // Update currentStatus state
-
-    // Update pagination filter to include the selected status
-    setPaginationFilter((prevFilter) => ({
-      ...prevFilter,
-      status: newStatus,
-      currentPage: 1, // Reset to the first page
-    }));
-  };
   const { mutate: addProject } = useAddUpdateCompanyProject();
 
-  // Ensure currentStatus is passed when updating the pagination filter
-  const setPaginationFilterWithStatus = (filter: PaginationFilter) => {
-    setPaginationFilter({
-      ...filter,
-      status: currentStatus, // Always include the currentStatus
-    });
-  };
   const handleAdd = () => {
     setModalData(modalData); // or undefined
     setIsUserModalOpen(true);
@@ -154,9 +135,7 @@ export default function useAdminUser() {
   return {
     projectlistdata,
     closeDeleteModal,
-    setPaginationFilter: setPaginationFilterWithStatus,
-    onStatusChange,
-    currentStatus,
+    setPaginationFilter,
     openModal,
     onDelete,
     modalData,

@@ -42,12 +42,18 @@ import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { Button } from "@/components/ui/button";
 import {
-  onFirebaseMessageListener,
   requestFirebaseNotificationPermission,
   deleteFirebaseToken,
 } from "@/firebaseConfig";
-import { selectNotifications } from "@/features/reducers/notification.reducer";
+import {
+  selectNotifications,
+  clearNotifications,
+  markNotificationRead,
+  setNotifications,
+} from "@/features/reducers/notification.reducer";
 import { fireTokenMutation } from "@/features/api";
+import useGetUserNotification from "./useGetUserNotification";
+import { updateNotiMutation } from "@/features/api/Notification";
 
 interface FailureReasonType {
   response?: {
@@ -58,33 +64,34 @@ interface FailureReasonType {
 }
 
 const DashboardLayout = () => {
-  const [open, setOpen] = useState(true);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const [open, setOpen] = useState(true);
+
   const toggleDrawer = useCallback((e: { preventDefault: () => void }) => {
     e?.preventDefault();
     setOpen((prev) => !prev);
   }, []);
 
-  const handleToggleDrawer = useCallback(() => {
-    setOpen((prev) => !prev);
-  }, []);
   const [isCompanyModalOpen, setCompanyModalOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const { setToken } = useAuth();
+
   const user = useSelector(getUserDetail);
   const userId = useSelector(getUserId);
-  const navigate = useNavigate();
   const notifications = useSelector(selectNotifications);
-
-  const { mutate: foreToken } = fireTokenMutation();
-
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-
   const isLoggedIn = useSelector(getIsLoading);
 
-  const { data: permission } = useGetUserPermission();
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  const { mutate: foreToken } = fireTokenMutation();
+  const { mutate: updateNotification } = updateNotiMutation();
   const { mutate: companyVerifyOtp } = verifyCompanyOtpMutation();
 
+  const { data: permission } = useGetUserPermission();
   const { data: userData, failureReason } = useGetEmployeeById(userId);
+  const { data: notificationData } = useGetUserNotification();
 
   const dataFetchingErr =
     typeof failureReason === "object" &&
@@ -95,7 +102,10 @@ const DashboardLayout = () => {
       : undefined;
   const { data: companies } = useGetCompanyList();
 
-  //  const { breadcrumbs } = useBreadcrumbs();
+  const handleToggleDrawer = useCallback(() => {
+    setOpen((prev) => !prev);
+  }, []);
+
   const { bgColor } = useSidebarTheme();
 
   useEffect(() => {
@@ -103,6 +113,12 @@ const DashboardLayout = () => {
       dispatch(setUserPermission(permission));
     }
   }, [dispatch, permission]);
+
+  useEffect(() => {
+    if (notificationData && Array.isArray(notificationData.data)) {
+      dispatch(setNotifications(notificationData.data));
+    }
+  }, [dispatch, notificationData]);
 
   useEffect(() => {
     if (userData && userData.data) {
@@ -123,6 +139,29 @@ const DashboardLayout = () => {
   const handleLogout = async () => {
     await deleteFirebaseToken();
     dispatch(logout());
+    dispatch(clearNotifications());
+  };
+
+  const handleMarkAsRead = (notification: AppNotification) => {
+    const updateData = {
+      title: notification.title,
+      notificationId: notification.notificationId,
+      notifiedTime: notification.data?.notifiedTime ?? "",
+      employeeId: userId,
+    };
+    updateNotification(updateData, {
+      onSuccess: () => {
+        const index = notifications.findIndex(
+          (n) => n.notificationId === notification.notificationId,
+        );
+
+        if (index !== -1) {
+          dispatch(markNotificationRead(index));
+        }
+
+        handleView(notification.data?.type, notification.data?.typeId);
+      },
+    });
   };
 
   const handleLogin = async (data: Company) => {
@@ -130,7 +169,6 @@ const DashboardLayout = () => {
       selectedCompanyId: data.companyId,
       mobile: user?.employeeMobile ?? "",
     };
-    // console.log(verifyCompanyData, "verifyCompanyData");
 
     companyVerifyOtp(verifyCompanyData, {
       onSuccess: (response) => {
@@ -157,7 +195,6 @@ const DashboardLayout = () => {
               },
               {
                 onSuccess: () => {
-                  onFirebaseMessageListener();
                   queryClient.resetQueries({ queryKey: ["get-company-list"] });
                   queryClient.resetQueries({ queryKey: ["userPermission"] });
                   queryClient.resetQueries({
@@ -182,6 +219,15 @@ const DashboardLayout = () => {
     dispatch(logout());
     return <Navigate to="/login" />;
   }
+
+  const handleView = (type?: string, typeId?: string) => {
+    if (type === "TASK" && typeId) {
+      navigate(`/dashboard/tasks/view/${typeId}`);
+    } else if (type === "PROJECT" && typeId) {
+      navigate(`/dashboard/projects/view/${typeId}`);
+    }
+    setIsNotificationOpen(false);
+  };
 
   return (
     <div className="flex h-screen bg-gray-200 gap-x-4">
@@ -219,10 +265,17 @@ const DashboardLayout = () => {
               <div>
                 <Button
                   variant="ghost"
-                  className="p-2 border"
-                  onClick={() => setIsNotificationOpen((prev) => !prev)}
+                  className="p-2 border relative"
+                  onClick={() => {
+                    setIsNotificationOpen((prev) => !prev);
+                  }}
                 >
                   <Bell />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                      {unreadCount}
+                    </span>
+                  )}
                 </Button>
               </div>
               {isNotificationOpen && (
@@ -232,39 +285,50 @@ const DashboardLayout = () => {
                     onClick={() => setIsNotificationOpen(false)}
                     style={{ background: "transparent" }}
                   />
-                  <div className="absolute right-0 top-12 bg-white shadow-2xl border rounded-lg p-4 w-80 z-20">
+                  <div className="absolute right-0 top-12 bg-white shadow-2xl border rounded-lg p-4 w-[400px] z-20">
                     {notifications.length > 0 ? (
                       <>
-                        <ul>
+                        <ul className="h-80 overflow-scroll">
                           {notifications
                             .slice(0, 5)
-                            .map((notification, index) => (
+                            .map((notification: AppNotification, index) => (
                               <li
                                 key={index}
-                                className="border-b last:border-b-0 py-2"
+                                className={`border-b last:border-b-0 py-1 mb-1 last:mb-0 rounded-md px-2 ${
+                                  notification?.isRead
+                                    ? "bg-white"
+                                    : "bg-gray-200"
+                                } cursor-pointer hover:bg-gray-300 transition`}
+                                onClick={() => {
+                                  handleMarkAsRead(notification);
+                                }}
                               >
-                                <p className="font-semibold">
-                                  {notification.title}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  {notification.body}
-                                </p>
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-grow">
+                                    <div>
+                                      <span className="font-semibold text-sm">
+                                        {notification?.title}
+                                      </span>
+                                    </div>
+                                    <p className="text-[13px] mt-1 text-gray-600">
+                                      {notification?.body}
+                                    </p>
+                                  </div>
+                                </div>
                               </li>
                             ))}
                         </ul>
-                        {notifications.length > 5 && (
-                          <div className="text-center mt-2">
-                            <Button
-                              variant="link"
-                              onClick={() => {
-                                navigate("/dashboard/notifications");
-                                setIsNotificationOpen(false);
-                              }}
-                            >
-                              View All Notifications
-                            </Button>
-                          </div>
-                        )}
+                        <div className="text-center mt-2 border-t">
+                          <Button
+                            variant="link"
+                            onClick={() => {
+                              navigate("/dashboard/notifications");
+                              setIsNotificationOpen(false);
+                            }}
+                          >
+                            View All Notifications
+                          </Button>
+                        </div>
                       </>
                     ) : (
                       <p className="text-sm text-gray-600">
@@ -299,12 +363,6 @@ const DashboardLayout = () => {
                     <span className="ml-2 mr-1 font-medium">
                       {user?.employeeName}
                     </span>
-                    {/* <span className="ml-2 mr-1 text-sm">
-                    {user?.role ||
-                    (user && "employeeType" in user
-                        ? (user as { employeeType?: string }).employeeType
-                        : undefined)}
-                        </span> */}
                   </div>
                 </div>
               </DropdownMenuTrigger>
@@ -323,17 +381,6 @@ const DashboardLayout = () => {
                     User Profile
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
-                {/* {(companies?.length ?? 0) > 0 && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => setCompanyModalOpen(true)}>
-                      <User2Icon />
-                      Switch Company
-                      </DropdownMenuItem>
-                      </DropdownMenuGroup>
-                </>
-                )} */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut />

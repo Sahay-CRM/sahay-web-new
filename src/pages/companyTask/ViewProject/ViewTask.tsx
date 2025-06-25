@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import PageNotAccess from "@/pages/PageNoAccess";
 
 export default function CompanyTaskView() {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -50,6 +51,10 @@ export default function CompanyTaskView() {
     setShowCommentInput(false);
     reset({ comment: "" });
   };
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...methods}>
