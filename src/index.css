@@ -169,3 +169,7 @@
     --chart-5: oklch(0.645 0.246 16.439);
   }
 }
+
+.react-datepicker {
+  width: max-content !important;
+}
