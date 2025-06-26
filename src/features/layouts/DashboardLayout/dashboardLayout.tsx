@@ -294,10 +294,10 @@ const DashboardLayout = () => {
                             .map((notification: AppNotification, index) => (
                               <li
                                 key={index}
-                                className={`border-b last:border-b-0 py-1 mb-1 last:mb-0 rounded-md px-2 ${
+                                className={`border py-1 mb-1 last:mb-0 rounded-md px-2 ${
                                   notification?.isRead
-                                    ? "bg-white"
-                                    : "bg-gray-200"
+                                    ? "bg-gray-200"
+                                    : "bg-white"
                                 } cursor-pointer hover:bg-gray-300 transition`}
                                 onClick={() => {
                                   handleMarkAsRead(notification);
@@ -311,7 +311,17 @@ const DashboardLayout = () => {
                                       </span>
                                     </div>
                                     <p className="text-[13px] mt-1 text-gray-600">
-                                      {notification?.body}
+                                      {(() => {
+                                        const words =
+                                          notification?.body?.split(" ") || [];
+                                        if (words.length > 8) {
+                                          return (
+                                            words.slice(0, 8).join(" ") +
+                                            " [...]"
+                                          );
+                                        }
+                                        return notification?.body;
+                                      })()}
                                     </p>
                                   </div>
                                 </div>

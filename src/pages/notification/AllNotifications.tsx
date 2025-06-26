@@ -41,15 +41,30 @@ const AllNotifications = () => {
               <tr className="bg-gray-100">
                 <th className="py-2 px-4 border-b">Title</th>
                 <th className="py-2 px-4 border-b">Body</th>
+                <th className="py-2 px-4 border-b">Date Time</th>
                 <th className="py-2 px-4 border-b">Action</th>
               </tr>
             </thead>
             <tbody>
               {notifications.map((notification, index) => (
-                <tr key={index} className="border-b hover:bg-gray-50">
+                <tr
+                  key={index}
+                  className={`border-b hover:bg-gray-50 ${
+                    notification?.isRead
+                      ? "bg-gray-200 border-white"
+                      : "bg-white"
+                  }`}
+                >
                   <td className="py-2 px-4">{notification?.title}</td>
                   <td className="py-2 px-4">{notification?.body}</td>
-
+                  <td className="py-2 px-4">
+                    {notification?.data?.notifiedTime
+                      ? (() => {
+                          const date = new Date(notification.data.notifiedTime);
+                          return date.toLocaleString();
+                        })()
+                      : ""}
+                  </td>
                   <td className="py-2 px-4">
                     {notification?.data?.type && notification?.data?.typeId && (
                       <Button
