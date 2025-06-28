@@ -18,8 +18,8 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
   const permission = useSelector(getUserPermission).DATAPOINT_LIST;
 
   const handleEdit = () => {
-    if (modalData?.dataPointId) {
-      navigate(`/dashboard/kpi/edit/${modalData.dataPointId}`);
+    if (modalData?.kpiId) {
+      navigate(`/dashboard/kpi/edit/${modalData.kpiId}`);
     }
   };
 
@@ -46,6 +46,20 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
       ]}
     >
       <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-700 mb-6">
+        {modalData?.dataPointLabel && (
+          <div>
+            <span className="font-medium text-primary">
+              Data Point Label :{" "}
+            </span>
+            {modalData.dataPointLabel}
+          </div>
+        )}
+        {modalData?.dataPointName && (
+          <div>
+            <span className="font-medium text-primary">Data Point Name : </span>
+            {modalData.dataPointName}
+          </div>
+        )}
         {modalData?.KPILabel && (
           <div>
             <span className="font-medium text-primary">KPI Label : </span>
@@ -58,16 +72,10 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
             {modalData.KPIName}
           </div>
         )}
-        {modalData?.frequencyType && (
+        {modalData?.tag && (
           <div>
-            <span className="font-medium text-primary">Frequency Type : </span>
-            {modalData.frequencyType}
-          </div>
-        )}
-        {modalData?.selectedType && (
-          <div>
-            <span className="font-medium text-primary">Selected Type : </span>
-            {modalData.selectedType}
+            <span className="font-medium text-primary">Tag : </span>
+            {modalData.tag}
           </div>
         )}
         {modalData?.validationType && (
@@ -76,51 +84,51 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
             {modalData.validationType}
           </div>
         )}
+        {modalData?.frequencyType && (
+          <div>
+            <span className="font-medium text-primary">Frequency Type : </span>
+            {modalData.frequencyType}
+          </div>
+        )}
+        {modalData?.visualFrequencyTypes && (
+          <div>
+            <span className="font-medium text-primary">
+              Visual Frequency Types :{" "}
+            </span>
+            {modalData.visualFrequencyTypes}
+          </div>
+        )}
+        {modalData?.selectedType && (
+          <div>
+            <span className="font-medium text-primary">Selected Type : </span>
+            {modalData.selectedType}
+          </div>
+        )}
         {modalData?.unit && (
           <div>
             <span className="font-medium text-primary">Unit Type : </span>
             {modalData.unit}
           </div>
         )}
+        {modalData?.value1 && (
+          <div>
+            <span className="font-medium text-primary">Value 1 : </span>
+            {modalData.value1}
+          </div>
+        )}
+        {modalData?.value2 && (
+          <div>
+            <span className="font-medium text-primary">Value 2 : </span>
+            {modalData.value2}
+          </div>
+        )}
+        {modalData?.employeeName && (
+          <div>
+            <span className="font-medium text-primary">Employee Name : </span>
+            {modalData.employeeName}
+          </div>
+        )}
       </div>
-
-      {/* Employee Junction Data */}
-      {modalData?.dataPointEmployeeJunction?.length > 0 && (
-        <div className="text-sm text-gray-700">
-          <div className="font-semibold text-primary mb-2">
-            Employee KPI Values:
-          </div>
-          <div className="border rounded-md divide-y">
-            {modalData.dataPointEmployeeJunction.map((emp) => (
-              <div
-                key={emp.dataPointEmpId}
-                className={`p-2 grid gap-4 items-center ${
-                  emp.value2 !== "0" ? "grid-cols-3" : "grid-cols-2"
-                }`}
-              >
-                <div>
-                  <span className="font-medium">Name: </span>
-                  {emp.employeeName}
-                </div>
-                <div>
-                  <span className="font-medium">Value 1: </span>
-                  {modalData.validationType === "YES_NO"
-                    ? emp.value1 === "1"
-                      ? "Yes"
-                      : "No"
-                    : emp.value1}
-                </div>
-                {emp.value2 !== "0" && (
-                  <div>
-                    <span className="font-medium">Value 2: </span>
-                    {emp.value2}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </ModalData>
   );
 };

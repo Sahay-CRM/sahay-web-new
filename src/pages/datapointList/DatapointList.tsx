@@ -156,14 +156,14 @@ export default function CompanyTaskList() {
               validationType: getValidationLabel(item.validationType),
             }))}
             columns={visibleColumns}
-            primaryKey="dataPointId"
+            primaryKey="kpiId"
             onDelete={(row) => {
               onDelete(row);
             }}
             onEdit={
               permission.Edit
                 ? (row) => {
-                    navigate(`/dashboard/kpi/edit/${row.dataPointId}`);
+                    navigate(`/dashboard/kpi/edit/${row.kpiId}`);
                   }
                 : undefined
             }

@@ -11,11 +11,11 @@ export default function useAddUpdateDataPoint() {
   const addUpdateCompanyDatapointMutation = useMutation({
     mutationKey: ["add-or-update-Datapoint-list"],
     mutationFn: async (data: KPIFormData) => {
-      const isUpdate = Boolean(data.companykpimasterId);
+      const isUpdate = Boolean(data.kpiId);
 
       const config = {
         url: isUpdate
-          ? Urls.updateCompanyDatapoint(data.companykpimasterId!)
+          ? Urls.updateCompanyDatapoint(data.kpiId!)
           : Urls.addCompanyDatapoint(),
         data: data,
       };

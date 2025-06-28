@@ -2,19 +2,17 @@ import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-import { getEmployee } from "@/features/api/companyEmployee";
+import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import { useNavigate, useParams } from "react-router-dom";
-import { Label } from "@/components/ui/label";
+
 import FormSelect from "@/components/shared/Form/FormSelect";
 import {
   useAddUpdateDatapoint,
   useGetDatapointById,
   useGetKpiNonSel,
 } from "@/features/api/companyDatapoint";
-import useGetCoreParameter from "@/features/api/coreParameter/useGetCoreParameter";
-import { useGetProduct } from "@/features/api/Product";
+// import { useGetProduct } from "@/features/api/Product";
 import { Card } from "@/components/ui/card";
-import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import {
   Tooltip,
   TooltipContent,
@@ -23,6 +21,9 @@ import {
 } from "@/components/ui/tooltip";
 import SearchInput from "@/components/shared/SearchInput";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useGetCoreParameterDropdown } from "@/features/api/Business";
+import { Label } from "recharts";
+import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 
 export default function useAddEmployee() {
   const { id: companykpimasterId } = useParams();
@@ -65,15 +66,14 @@ export default function useAddEmployee() {
     reset,
     getValues,
     setValue,
+    watch,
   } = useForm({
     mode: "onChange",
   });
 
-  // Watch for frequency changes to clear visualFrequencyTypes
   const watchedFrequency = useWatch({ name: "frequencyId", control });
 
   useEffect(() => {
-    // Clear visualFrequencyTypes when frequency changes (but not on initial load)
     if (watchedFrequency && !datapointApiData) {
       setValue("visualFrequencyTypes", []);
     }
@@ -81,68 +81,46 @@ export default function useAddEmployee() {
 
   useEffect(() => {
     if (datapointApiData) {
-      const data = datapointApiData;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const resetObj: any = {
-        KPIMasterId: data?.KPIMasterId,
-        coreParameterId: data?.coreParameter,
-        frequencyId: data?.frequencyType || "",
-        unit: data?.unit || "",
-        validationTypeId: data?.validationType || "",
-      };
-
-      resetObj.hasDataEmployeeIds = data?.hasDataEmployeeIds || [];
-
-      resetObj.KPIName = data?.KPIMaster?.KPIName;
-
-      if (data?.visualFrequencyTypes) {
-        resetObj.visualFrequencyTypes = data.visualFrequencyTypes.split(",");
-      } else {
-        resetObj.visualFrequencyTypes = []; // Initialize as empty array
-      }
-
-      if (Array.isArray(data?.DataPointProductJunction)) {
-        resetObj.productId = data.DataPointProductJunction.map(
-          (u: ProductData) => ({
-            productId: u.productId,
-            productName: u.productName,
-          }),
+      setValue("KPIMasterId", {
+        KPIMasterId: datapointApiData.KPIMasterId,
+        KPIName:
+          datapointApiData.KPIMaster?.KPIName ||
+          datapointApiData.dataPointLabel,
+        KPILabel:
+          datapointApiData.KPIMaster?.KPILabel ||
+          datapointApiData.dataPointName,
+      });
+      // Set frequency
+      setValue("frequencyId", datapointApiData.frequencyType);
+      // Set validation type
+      setValue("validationTypeId", datapointApiData.validationType);
+      // Set unit
+      setValue("employeeId", datapointApiData.employeeId);
+      setValue("unit", datapointApiData.unit);
+      setValue("value1", datapointApiData.value1);
+      setValue("value2", datapointApiData.value2);
+      setValue("tag", datapointApiData.tag);
+      if (
+        datapointApiData.validationType === "YES_NO" &&
+        datapointApiData.employeeId
+      ) {
+        setValue(
+          `yesno_${datapointApiData.employeeId}`,
+          datapointApiData.value1 === "1"
+            ? { value: "1", label: "Yes" }
+            : { value: "0", label: "No" },
         );
       }
-      if (Array.isArray(data?.dataPointEmployeeJunction)) {
-        resetObj.employeeId = data.dataPointEmployeeJunction.map(
-          (u: DataPointEmployee) => ({
-            employeeId: u.employeeId,
-            employeeName: u.employeeName,
-          }),
-        );
-        data.dataPointEmployeeJunction.forEach((u: DataPointEmployee) => {
-          resetObj[`goalValue1_${u.employeeId}`] = u.value1;
-          resetObj[`yesno_${u.employeeId}`] = u.value1;
-          resetObj[`goalValue2_${u.employeeId}`] = u.value2;
-        });
-        const isYesNo =
-          (resetObj.validationType &&
-            (resetObj.validationType.validationType === "YES_NO" ||
-              resetObj.validationType === "YES_NO")) ||
-          false;
-        if (isYesNo) {
-          datapointApiData.dataPointEmployeeJunction.forEach(
-            (u: DataPointEmployee) => {
-              const yesNoValue = u.value1 === "1" ? "1" : "0";
-
-              resetObj[`yesno_${u.employeeId}`] = {
-                value: yesNoValue,
-                label: yesNoValue === "1" ? "Yes" : "No",
-              };
-            },
-          );
-        }
+      // Set core parameter
+      setValue("coreParameterId", datapointApiData.coreParameterId);
+      if (datapointApiData.visualFrequencyTypes) {
+        const visualFrequencyArray = datapointApiData.visualFrequencyTypes
+          .split(",")
+          .map((type) => type.trim());
+        setValue("visualFrequencyTypes", visualFrequencyArray);
       }
-
-      reset(resetObj);
     }
-  }, [datapointApiData, reset]);
+  }, [datapointApiData, setValue]);
 
   const handleClose = () => setModalOpen(false);
 
@@ -154,92 +132,127 @@ export default function useAddEmployee() {
   }, [trigger]);
 
   const onSubmit = handleSubmit(async (data) => {
-    // Normalize selected employees
-    let selectedEmployees = data.employeeId || [];
-    if (!Array.isArray(selectedEmployees)) {
-      selectedEmployees = selectedEmployees ? [selectedEmployees] : [];
-    }
-    // Prepare productIds as array of strings, or blank array if not selected
-    let productIds: string[] = [];
-    if (Array.isArray(data.productId) && data.productId.length > 0) {
-      productIds = data.productId.map((p: ProductData) =>
-        typeof p === "object" && p !== null
-          ? String(p.productId ?? p.productId ?? "")
-          : String(p ?? ""),
-      );
-    }
-    // frequencyId and validationTypeId are now string values
-    const frequencyValue = data.frequencyId;
-    const unit = data.unit;
-    const validationTypeValue = data.validationTypeId;
+    console.log(data);
 
-    // Format visualFrequencyTypes as comma-separated string
-    const visualFrequencyTypes = Array.isArray(data.visualFrequencyTypes)
+    // Convert visualFrequencyTypes array to comma-separated string if it's an array
+    const visualFrequencyTypesStr = Array.isArray(data.visualFrequencyTypes)
       ? data.visualFrequencyTypes.join(",")
-      : data.visualFrequencyTypes || "";
+      : data.visualFrequencyTypes;
 
-    const assignUser = selectedEmployees.map((emp: DataPointEmployee) => {
-      const obj: DataPointEmployee = {
-        employeeId: emp.employeeId,
-        employeeName: emp.employeeName,
-        value1: "", // Provide a default value, will be overwritten below
-      };
-      if (
-        String(validationTypeValue) === "6" ||
-        validationTypeValue === "BETWEEN"
-      ) {
-        obj.value1 = data[`goalValue1_${emp.employeeId}`];
-        obj.value2 = data[`goalValue2_${emp.employeeId}`];
-      } else if (
-        String(validationTypeValue) === "7" ||
-        validationTypeValue === "YES_NO"
-      ) {
-        const yesnoValue = data[`yesno_${emp.employeeId}`];
-        let value = yesnoValue;
-        if (typeof yesnoValue === "object" && yesnoValue !== null) {
-          value = yesnoValue.value;
+    const simplePayload = companykpimasterId
+      ? {
+          kpiId: companykpimasterId,
+          KPIMasterId: data.KPIMasterId.KPIMasterId,
+          coreParameterId: data.coreParameterId,
+          employeeId: data.employeeId,
+          frequencyId: data.frequencyId,
+          tag: data.tag,
+          unit: data.unit,
+          validationType: data.validationType,
+          value1: data.value1,
+          value2: data.value2,
+          frequencyType: data.frequencyType,
+          visualFrequencyTypes: visualFrequencyTypesStr,
         }
-        if (value === "1" || value === 1 || value === "yes") {
-          obj.value1 = "1";
-        } else {
-          obj.value1 = "0";
-        }
-      } else {
-        obj.value1 = data[`goalValue1_${emp.employeeId}`];
-      }
-      return obj;
-    });
-    const payload: KPIFormData = {
-      dataPointId: datapointApiData?.dataPointId || "", // or "" for new
-      companykpimasterId: companykpimasterId || "",
-      dataPointName: data?.KPIMasterId?.KPILabel,
-      KPIMasterId: data?.KPIMasterId?.KPIMasterId,
-      KPIMaster: data?.KPIMasterId || null,
-      coreParameterId:
-        data?.coreParameterId.coreParameterId ||
-        data.coreParameter.coreParameterId,
-      dataPointLabel: data?.KPIMasterId?.KPIName,
-      productIds: productIds,
-      assignUser: assignUser,
-      validationType: validationTypeValue,
-      frequencyType: frequencyValue,
-      unit: unit,
-      selectedType: "", // Set appropriately if needed
-      dataPointEmployeeJunction: assignUser,
-      DataPointProductJunction: Array.isArray(data.productId)
-        ? data.productId.map((p: ProductData) => ({
-            productId: p.productId,
-            productName: p.productName,
-          }))
-        : [],
-      hasData: datapointApiData?.hasData ?? false,
-      visualFrequencyTypes: visualFrequencyTypes, // Add the formatted visualFrequencyTypes
-    };
-    addDatapoint(payload, {
+      : {
+          KPIMasterId: data.KPIMasterId.KPIMasterId,
+          coreParameterId: data.coreParameterId,
+          employeeId: data.employeeId,
+          frequencyId: data.frequencyId,
+          tag: data.tag,
+          unit: data.unit,
+          validationType: data.validationType,
+          value1: data.value1,
+          value2: data.value2,
+          frequencyType: data.frequencyType,
+          visualFrequencyTypes: visualFrequencyTypesStr,
+        };
+    addDatapoint(simplePayload, {
       onSuccess: () => {
         handleModalClose();
       },
     });
+
+    // let selectedEmployees = data.employeeId || [];
+    // if (!Array.isArray(selectedEmployees)) {
+    //   selectedEmployees = selectedEmployees ? [selectedEmployees] : [];
+    // }
+    // let productIds: string[] = [];
+    // if (Array.isArray(data.productId) && data.productId.length > 0) {
+    //   productIds = data.productId.map((p: ProductData) =>
+    //     typeof p === "object" && p !== null
+    //       ? String(p.productId ?? p.productId ?? "")
+    //       : String(p ?? "")
+    //   );
+    // }
+    // const frequencyValue = data.frequencyId;
+    // const unit = data.unit;
+    // const validationTypeValue = data.validationTypeId;
+
+    // const visualFrequencyTypes = Array.isArray(data.visualFrequencyTypes)
+    //   ? data.visualFrequencyTypes.join(",")
+    //   : data.visualFrequencyTypes || "";
+
+    // const assignUser = selectedEmployees.map((emp: DataPointEmployee) => {
+    //   const obj: DataPointEmployee = {
+    //     employeeId: emp.employeeId,
+    //     employeeName: emp.employeeName,
+    //     value1: "", // Provide a default value, will be overwritten below
+    //   };
+    //   if (
+    //     String(validationTypeValue) === "6" ||
+    //     validationTypeValue === "BETWEEN"
+    //   ) {
+    //     obj.value1 = data[`goalValue1_${emp.employeeId}`];
+    //     obj.value2 = data[`goalValue2_${emp.employeeId}`];
+    //   } else if (
+    //     String(validationTypeValue) === "7" ||
+    //     validationTypeValue === "YES_NO"
+    //   ) {
+    //     const yesnoValue = data[`yesno_${emp.employeeId}`];
+    //     let value = yesnoValue;
+    //     if (typeof yesnoValue === "object" && yesnoValue !== null) {
+    //       value = yesnoValue.value;
+    //     }
+    //     if (value === "1" || value === 1 || value === "yes") {
+    //       obj.value1 = "1";
+    //     } else {
+    //       obj.value1 = "0";
+    //     }
+    //   } else {
+    //     obj.value1 = data[`goalValue1_${emp.employeeId}`];
+    //   }
+    //   return obj;
+    // });
+    // const payload: KPIFormData = {
+    //   dataPointId: datapointApiData?.dataPointId || "", // or "" for new
+    //   companykpimasterId: companykpimasterId || "",
+    //   dataPointName: data?.KPIMasterId?.KPILabel,
+    //   KPIMasterId: data?.KPIMasterId?.KPIMasterId,
+    //   KPIMaster: data?.KPIMasterId || null,
+    //   coreParameterId: data?.coreParameterId,
+    //   dataPointLabel: data?.KPIMasterId?.KPIName,
+    //   productIds: productIds,
+    //   assignUser: assignUser,
+    //   validationType: validationTypeValue,
+    //   frequencyType: frequencyValue,
+    //   unit: unit,
+    //   selectedType: "", // Set appropriately if needed
+    //   dataPointEmployeeJunction: assignUser,
+    //   DataPointProductJunction: Array.isArray(data.productId)
+    //     ? data.productId.map((p: ProductData) => ({
+    //         productId: p.productId,
+    //         productName: p.productName,
+    //       }))
+    //     : [],
+    //   hasData: datapointApiData?.hasData ?? false,
+    //   visualFrequencyTypes: visualFrequencyTypes, // Add the formatted visualFrequencyTypes
+    // };
+    // addDatapoint(payload, {
+    //   onSuccess: () => {
+    //     handleModalClose();
+    //   },
+    // });
     navigate("/dashboard/kpi");
   });
 
@@ -366,6 +379,15 @@ export default function useAddEmployee() {
       { value: "YEARLY", label: "YEARLY" },
     ];
 
+    const { data: corePara } = useGetCoreParameterDropdown();
+
+    const coreParameterOption = corePara
+      ? corePara.data.map((status) => ({
+          label: status.coreParameterName,
+          value: status.coreParameterId,
+        }))
+      : [];
+
     // Get the selected frequency value
     const selectedFrequency = useWatch({ name: "frequencyId", control });
 
@@ -398,14 +420,14 @@ export default function useAddEmployee() {
       { value: "BETWEEN", label: "Between" },
       { value: "YES_NO", label: "Yes/No" },
     ];
-    const unitTypeOptions = [
-      { value: "Number", label: "Number" },
-      { value: "Percentage", label: "Percentage (%)" },
-      { value: "Dollar", label: "Dollar ($)" },
-      { value: "Euro", label: "Euro (€)" },
-      { value: "Pounds", label: "Pounds (£)" },
-      { value: "INR", label: "INR (₹)" },
-    ];
+    // const unitTypeOptions = [
+    //   { value: "Number", label: "Number" },
+    //   { value: "Percentage", label: "Percentage (%)" },
+    //   { value: "Dollar", label: "Dollar ($)" },
+    //   { value: "Euro", label: "Euro (€)" },
+    //   { value: "Pounds", label: "Pounds (£)" },
+    //   { value: "INR", label: "INR (₹)" },
+    // ];
 
     const hasData = datapointApiData?.hasData;
 
@@ -434,7 +456,7 @@ export default function useAddEmployee() {
           />
           <Controller
             control={control}
-            name="validationTypeId"
+            name="validationType"
             rules={{ required: "Validation Type is required" }}
             render={({ field }) => (
               <FormSelect
@@ -442,7 +464,7 @@ export default function useAddEmployee() {
                 value={field.value}
                 onChange={field.onChange}
                 options={validationOptions}
-                error={errors.validationTypeId}
+                error={errors.validationType}
                 className="p-2 rounded-md"
               />
             )}
@@ -462,13 +484,15 @@ export default function useAddEmployee() {
                   isMulti={true}
                   placeholder="Select visual frequency types"
                   disabled={false}
-                  key={selectedFrequency}
+                  key={
+                    selectedFrequency + "-" + (watch("coreParameterId") || "")
+                  }
                 />
               )}
             />
           )}
 
-          <Controller
+          {/* <Controller
             control={control}
             name="unit"
             // Removed required validation to make it optional
@@ -483,344 +507,51 @@ export default function useAddEmployee() {
                 placeholder="Select unit type"
               />
             )}
+          /> */}
+
+          <FormInputField label="Unit" {...register(`unit`)} />
+
+          <Controller
+            control={control}
+            name="coreParameterId"
+            rules={{ required: "Core Parameter is required" }}
+            render={({ field }) => (
+              <FormSelect
+                label="Core Parameter"
+                value={field.value}
+                onChange={field.onChange}
+                options={coreParameterOption}
+                error={errors.coreParameterId}
+                isMandatory
+              />
+            )}
           />
         </Card>
       </div>
     );
   };
 
-  const CoreParameter = () => {
-    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-      currentPage: 1,
-      pageSize: 25,
-      search: "",
-    });
-
-    const { data: coreparameterData } = useGetCoreParameter({
-      filter: paginationFilter,
-    });
-    const [columnToggleOptions, setColumnToggleOptions] = useState([
-      { key: "srNo", label: "Sr No", visible: true },
-      { key: "coreParameterName", label: "Core Parameter Name", visible: true },
-    ]);
-
-    // Filter visible columns
-    const visibleColumns = columnToggleOptions.reduce(
-      (acc, col) => {
-        if (col.visible) acc[col.key] = col.label;
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-
-    // Toggle column visibility
-    const onToggleColumn = (key: string) => {
-      setColumnToggleOptions((prev) =>
-        prev.map((col) =>
-          col.key === key ? { ...col, visible: !col.visible } : col,
-        ),
-      );
-    };
-    // Check if the number of columns is more than 3
-    const canToggleColumns = columnToggleOptions.length > 3;
-
-    const coreParameterSelectable = !!datapointApiData?.coreParameterId;
-
-    return (
-      <div>
-        <div className=" mt-1 flex items-center justify-end">
-          <div>
-            <SearchInput
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-              className="w-80"
-            />
-          </div>
-          {canToggleColumns && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div>
-                    <DropdownSearchMenu
-                      columns={columnToggleOptions}
-                      onToggleColumn={onToggleColumn}
-                      columnIcon={true}
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs text-white">Toggle Visible Columns</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
-
-        <Controller
-          name="coreParameterId"
-          control={control}
-          rules={{ required: "Please select a CoreParameter" }}
-          render={({ field }) => (
-            <>
-              <div className="mb-4">
-                {errors?.coreParameterId && (
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors?.coreParameterId?.message || "")}
-                  </span>
-                )}
-              </div>
-              <TableData
-                {...field}
-                tableData={coreparameterData?.data.map((item, index) => ({
-                  ...item,
-                  srNo:
-                    (coreparameterData.currentPage - 1) *
-                      coreparameterData.pageSize +
-                    index +
-                    1,
-                }))}
-                columns={visibleColumns}
-                primaryKey="coreParameterId"
-                paginationDetails={coreparameterData as PaginationFilter}
-                setPaginationFilter={setPaginationFilter}
-                multiSelect={false}
-                selectedValue={field.value}
-                handleChange={field.onChange}
-                onCheckbox={() => coreParameterSelectable}
-                isActionButton={() => false}
-              />
-            </>
-          )}
-        />
-      </div>
-    );
-  };
-
-  const Product = () => {
-    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-      currentPage: 1,
-      pageSize: 25,
-      search: "",
-    });
-
-    const { data: ProductData } = useGetProduct({
-      filter: paginationFilter,
-    });
-    const [columnToggleOptions, setColumnToggleOptions] = useState([
-      { key: "srNo", label: "Sr No", visible: true },
-      { key: "productName", label: "Product Name", visible: true },
-    ]);
-
-    // Filter visible columns
-    const visibleColumns = columnToggleOptions.reduce(
-      (acc, col) => {
-        if (col.visible) acc[col.key] = col.label;
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-
-    // Toggle column visibility
-    const onToggleColumn = (key: string) => {
-      setColumnToggleOptions((prev) =>
-        prev.map((col) =>
-          col.key === key ? { ...col, visible: !col.visible } : col,
-        ),
-      );
-    };
-    // Check if the number of columns is more than 3
-    const canToggleColumns = columnToggleOptions.length > 3;
-
-    return (
-      <div>
-        <div className=" mt-1 flex items-center justify-end">
-          <div>
-            <SearchInput
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-              className="w-80"
-            />
-          </div>
-          {canToggleColumns && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div>
-                    <DropdownSearchMenu
-                      columns={columnToggleOptions}
-                      onToggleColumn={onToggleColumn}
-                      columnIcon={true}
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs text-white">Toggle Visible Columns</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
-
-        <Controller
-          name="productId"
-          control={control}
-          // No rules here, so it's optional
-          render={({ field }) => (
-            <>
-              <TableData
-                {...field}
-                tableData={ProductData?.data.map((item, index) => ({
-                  ...item,
-                  srNo:
-                    (ProductData.currentPage - 1) * ProductData.pageSize +
-                    index +
-                    1,
-                }))}
-                columns={visibleColumns}
-                primaryKey="productId"
-                paginationDetails={ProductData as PaginationFilter}
-                setPaginationFilter={setPaginationFilter}
-                multiSelect={true}
-                selectedValue={field.value}
-                handleChange={field.onChange}
-                isActionButton={() => false}
-              />
-            </>
-          )}
-        />
-      </div>
-    );
-  };
-
   const AssignUser = () => {
-    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-      currentPage: 1,
-      pageSize: 25,
-      search: "",
-    });
+    const { data: employeedata } = useGetEmployeeDd();
 
-    const { data: employeedata } = getEmployee({
-      filter: { ...paginationFilter, isDeactivated: false },
-    });
+    const allOptions = (employeedata?.data || [])
+      .filter((item) => !item.isDeactivated)
+      .map((emp) => ({
+        value: emp.employeeId,
+        label: emp.employeeName,
+      }));
 
-    const [columnToggleOptions, setColumnToggleOptions] = useState([
-      { key: "srNo", label: "Sr No", visible: true },
-      { key: "employeeName", label: "Assign User", visible: true },
-      { key: "departmentName", label: "Department", visible: true },
-      { key: "employeeType", label: "Employee Type", visible: true },
-    ]);
+    const employee = watch("employeeId");
 
-    // Filter visible columns
-    const visibleColumns = columnToggleOptions.reduce(
-      (acc, col) => {
-        if (col.visible) acc[col.key] = col.label;
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-
-    // Toggle column visibility
-    const onToggleColumn = (key: string) => {
-      setColumnToggleOptions((prev) =>
-        prev.map((col) =>
-          col.key === key ? { ...col, visible: !col.visible } : col,
-        ),
+    const getEmployeeName = (emp: DataPointEmployee) => {
+      if (emp?.employeeName) return emp.employeeName;
+      const found = employeedata?.data?.find(
+        (e: EmployeeDetails) => e.employeeId === emp.employeeId,
       );
+      return found?.employeeName || emp.employeeId || "";
     };
-    const canToggleColumns = columnToggleOptions.length > 3;
-    const hasDataEmployeeIds = datapointApiData?.hasDataEmployeeIds || [];
 
-    return (
-      <div>
-        <div className="mt-1 flex items-center justify-end">
-          <div>
-            <SearchInput
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-              className="w-80"
-            />
-          </div>
-          {canToggleColumns && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div>
-                    <DropdownSearchMenu
-                      columns={columnToggleOptions}
-                      onToggleColumn={onToggleColumn}
-                      columnIcon={true}
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs text-white">Toggle Visible Columns</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
-
-        <Controller
-          name="employeeId"
-          control={control}
-          rules={{ required: "Please select a Assign User" }}
-          render={({ field }) => (
-            <>
-              <div className="mb-4">
-                {errors?.employeeId && (
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors?.employeeId?.message || "")}
-                  </span>
-                )}
-              </div>
-              <TableData
-                {...field}
-                tableData={
-                  (employeedata?.data
-                    ? employeedata.data.filter((item) => !item.isDeactivated)
-                    : []
-                  ).map((item, index) => ({
-                    ...item,
-                    srNo:
-                      employeedata &&
-                      employeedata.currentPage &&
-                      employeedata.pageSize
-                        ? (employeedata.currentPage - 1) *
-                            employeedata.pageSize +
-                          index +
-                          1
-                        : index + 1,
-                    isDisabled: hasDataEmployeeIds.includes(item.employeeId),
-                  })) || []
-                }
-                columns={visibleColumns}
-                primaryKey="employeeId"
-                paginationDetails={employeedata as PaginationFilter}
-                setPaginationFilter={setPaginationFilter}
-                multiSelect={true}
-                selectedValue={field.value}
-                handleChange={field.onChange}
-                isActionButton={() => false}
-              />
-            </>
-          )}
-        />
-      </div>
-    );
-  };
-
-  const GoalValue = () => {
-    // Now validationTypeId is a string value
     const validationTypeId = useWatch({ name: "validationTypeId", control });
-    const selectedEmployees = useWatch({ name: "employeeId", control }) || [];
-
-    // Get all employees for fallback lookup
-    const { data: employeedata } = getEmployee({
-      filter: { currentPage: 1, pageSize: 1000, search: "" },
-    });
 
     const showBoth = validationTypeId === "6" || validationTypeId === "BETWEEN";
     const showYesNo = validationTypeId === "7" || validationTypeId === "YES_NO";
@@ -830,78 +561,104 @@ export default function useAddEmployee() {
       { label: "No", value: "0" },
     ];
 
-    // Helper to get employeeName by id if missing
-    const getEmployeeName = (emp: DataPointEmployee) => {
-      if (emp?.employeeName) return emp.employeeName;
-      const found = employeedata?.data?.find(
-        (e: EmployeeDetails) => e.employeeId === emp.employeeId,
-      );
-      return found?.employeeName || emp.employeeId || "";
-    };
-
-    // const hasData = datapointApiData?.hasData;
-    // const hasDataEmployeeIds = datapointApiData?.hasDataEmployeeIds || [];
-
     return (
-      <div className="flex flex-col gap-6">
-        {selectedEmployees.map((emp: DataPointEmployee, index: number) => {
-          // const isDisabled =
-          //   hasData && hasDataEmployeeIds.includes(emp.employeeId);
-          return (
-            <div key={emp?.employeeId || index} className="flex flex-col gap-2">
-              <Label className="text-[18px] mb-0">{getEmployeeName(emp)}</Label>
-              <div
-                className={`grid ${
-                  showBoth ? "grid-cols-2" : "grid-cols-1"
-                } gap-4 mt-0`}
-              >
-                {!showYesNo && (
-                  <>
-                    <FormInputField
-                      label="Goal Value 1"
-                      isMandatory
-                      {...register(`goalValue1_${emp.employeeId}`, {
-                        required: "Please enter Goal Value 1",
-                      })}
-                      error={errors?.[`goalValue1_${emp.employeeId}`]}
-                      // disabled={isDisabled}
-                      // readOnly={isDisabled}
-                    />
-                    {showBoth && (
+      <div>
+        <div className="w-fit min-w-96">
+          <Controller
+            control={control}
+            name="employeeId"
+            rules={{ required: "Employee is required" }}
+            render={({ field }) => (
+              <FormSelect
+                label="Employee"
+                value={field.value}
+                onChange={(value) => {
+                  field.onChange(value);
+                  setValue("employeeId", value);
+                }}
+                options={allOptions}
+                error={errors.employeeId}
+                isMandatory
+                disabled={!!datapointApiData?.hasData}
+              />
+            )}
+          />
+        </div>
+        <div className="mt-5">
+          {employee && (
+            <div>
+              <div key={employee} className="flex flex-col gap-2">
+                <Label className="text-[18px] mb-0">
+                  {getEmployeeName(employee)}
+                </Label>
+                <div
+                  className={`grid ${
+                    showBoth ? "grid-cols-2" : "grid-cols-1"
+                  } gap-4 mt-0`}
+                >
+                  {!showYesNo && (
+                    <>
                       <FormInputField
+                        label="Goal Value 1"
                         isMandatory
-                        label="Goal Value 2"
-                        {...register(`goalValue2_${emp.employeeId}`, {
-                          required: "Please enter Goal Value 2",
+                        {...register(`value1`, {
+                          required: "Please enter Goal Value 1",
                         })}
-                        error={errors?.[`goalValue2_${emp.employeeId}`]}
+                        error={errors?.value1}
                         // disabled={isDisabled}
                         // readOnly={isDisabled}
                       />
-                    )}
-                  </>
-                )}
-                {showYesNo && (
-                  <Controller
-                    name={`yesno_${emp.employeeId}`}
-                    control={control}
-                    rules={{ required: "Please select Yes or No" }}
-                    render={({ field, fieldState }) => (
-                      <FormSelect
-                        {...field}
-                        label="Yes/No"
-                        options={yesnoOptions}
-                        error={fieldState.error}
-                        isMandatory={true}
-                        // disabled={isDisabled}
-                      />
-                    )}
-                  />
-                )}
+                      {showBoth && (
+                        <FormInputField
+                          isMandatory
+                          label="Goal Value 2"
+                          {...register(`value2`, {
+                            required: "Please enter Goal Value 2",
+                          })}
+                          error={errors?.value2}
+                          // disabled={isDisabled}
+                          // readOnly={isDisabled}
+                        />
+                      )}
+                    </>
+                  )}
+                  {showYesNo && (
+                    <Controller
+                      name={`value1`}
+                      control={control}
+                      rules={{ required: "Please select Yes or No" }}
+                      render={({ field, fieldState }) => {
+                        const selectedOption =
+                          field.value?.value ?? field.value ?? "";
+                        return (
+                          <FormSelect
+                            {...field}
+                            label="Yes/No"
+                            options={yesnoOptions}
+                            error={fieldState.error}
+                            isMandatory={true}
+                            value={selectedOption}
+                            onChange={field.onChange}
+                          />
+                        );
+                      }}
+                    />
+                  )}
+                </div>
+                <FormInputField
+                  label="Tag"
+                  // isMandatory
+                  {...register(`tag`, {
+                    required: "Please enter Tag",
+                  })}
+                  error={errors?.tag}
+                  // disabled={isDisabled}
+                  // readOnly={isDisabled}
+                />
               </div>
             </div>
-          );
-        })}
+          )}
+        </div>
       </div>
     );
   };
@@ -913,10 +670,7 @@ export default function useAddEmployee() {
     onSubmit,
     Kpi,
     Frequency,
-    CoreParameter,
-    Product,
     AssignUser,
-    GoalValue,
     KpiPreview: getValues(),
     trigger,
     skipToStep: isUpdateMode ? 5 : isUpdateModeforFalse ? 1 : 0,

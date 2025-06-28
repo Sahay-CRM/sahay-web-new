@@ -14,10 +14,9 @@ const AddDatapoint = () => {
     onSubmit,
     Kpi,
     Frequency,
-    CoreParameter,
-    Product,
+    // Product,
     AssignUser,
-    GoalValue,
+    // GoalValue,
     trigger,
     KpiPreview,
     isLoading,
@@ -33,28 +32,14 @@ const AddDatapoint = () => {
 
   if (companykpimasterId) {
     // Hide KPI step
-    steps = [<Frequency />, <CoreParameter />];
-    stepNames = ["Frequency", "Core Parameter"];
-    steps.push(<Product />, <AssignUser />, <GoalValue />);
-    stepNames.push("Product", "Assign User", "Goal Value");
+    steps = [<Frequency />];
+    stepNames = ["Frequency"];
+    steps.push(<AssignUser />);
+    stepNames.push("Assign User");
   } else {
     // Show all steps
-    steps = [
-      <Kpi />,
-      <Frequency />,
-      <CoreParameter />,
-      <Product />,
-      <AssignUser />,
-      <GoalValue />,
-    ];
-    stepNames = [
-      "KPI",
-      "Frequency",
-      "Core Parameter",
-      "Product",
-      "Assign User",
-      "Goal Value",
-    ];
+    steps = [<Kpi />, <Frequency />, <AssignUser />];
+    stepNames = ["KPI", "Frequency", "Assign User", "Goal Value"];
   }
 
   const {
