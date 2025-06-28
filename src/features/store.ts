@@ -5,14 +5,17 @@ import { persistReducer, persistStore } from "redux-persist";
 import { combineReducers } from "redux";
 
 import authReducer from "./reducers/auth.reducer";
+import notificationReducer from "./reducers/notification.reducer";
 
 const persistConfig = {
   key: "root",
   storage,
+  blacklist: ["notification"],
 };
 
 const rootReducer = combineReducers({
   auth: authReducer,
+  notification: notificationReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

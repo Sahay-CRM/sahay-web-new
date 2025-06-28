@@ -60,6 +60,9 @@ const KPIDashboard = lazy(() => import("../pages/kpiDashboard/KpiDashboard"));
 // );
 
 const UserLog = lazy(() => import("../pages/UserLog"));
+const AllNotifications = lazy(
+  () => import("../pages/notification/AllNotifications"),
+);
 
 export default function EmployeeRoutes() {
   return (
@@ -67,6 +70,9 @@ export default function EmployeeRoutes() {
       <Route index element={<Navigate to="/dashboard" replace />} />
       <Route path="/dashboard" element={<DashboardLayout />}>
         <Route index element={<AddGraph />} />
+
+        <Route path="notifications" Component={AllNotifications} />
+
         <Route path="profile" Component={Profile} />
         <Route path="settings" Component={Theme} />
         <Route path="company-designation" Component={companydesignation} />

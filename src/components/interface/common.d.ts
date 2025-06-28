@@ -779,28 +779,56 @@ interface DataPointEmployee {
   value2?: string;
 }
 
+// interface KPIFormData {
+//   companykpimasterId?: string;
+//   dataPointId: string;
+//   dataPointName: string;
+//   dataPointLabel: string;
+//   KPIMasterId: string;
+//   KPILabel?: string;
+//   KPIName?: string;
+//   KPIMaster: KPIMaster;
+//   coreParameter?: CoreParameter;
+//   coreParameterId: string | null;
+//   unit: string;
+//   validationType: string;
+//   frequencyType: string;
+//   selectedType: string;
+//   dataPointEmployeeJunction: DataPointEmployee[];
+//   DataPointProductJunction: ProductData[];
+//   productIds: ProductData[] | string[];
+//   assignUser: DataPointEmployee[];
+//   hasData: boolean;
+//   visualFrequencyTypes?: string;
+//   hasDataEmployeeIds?: string[];
+// }
+
 interface KPIFormData {
-  companykpimasterId?: string;
-  dataPointId: string;
-  dataPointName: string;
-  dataPointLabel: string;
-  KPIMasterId: string;
-  KPILabel?: string;
+  kpiId?: string;
+  dataPointName?: string;
+  dataPointLabel?: string;
+  KPIMasterId?: string;
+  KPIMaster?: {
+    KPIName: string;
+    KPILabel: string;
+  };
   KPIName?: string;
-  KPIMaster: KPIMaster;
-  coreParameter?: CoreParameter;
-  coreParameterId: string | null;
-  unit: string;
+  KPILabel?: string;
   validationType: string;
   frequencyType: string;
-  selectedType: string;
-  dataPointEmployeeJunction: DataPointEmployee[];
-  DataPointProductJunction: ProductData[];
-  productIds: ProductData[] | string[];
-  assignUser: DataPointEmployee[];
-  hasData: boolean;
-  visualFrequencyTypes?: string;
-  hasDataEmployeeIds?: string[];
+  selectedType?: string | null;
+  unit: string;
+  coreParameter?: {
+    coreParameterId: string;
+  };
+  visualFrequencyTypes: string;
+  employeeId: string;
+  value1: string;
+  value2: string;
+  tag: string;
+  coreParameterId: string;
+  hasData?: boolean;
+  employeeName?: string;
 }
 
 interface KPIFormDataProp {
@@ -892,6 +920,11 @@ interface Kpi {
   validationType: string;
   assignees: Assignee[];
   isVisualized: boolean;
+  employeeName: string;
+  value1: string;
+  value2?: string | null;
+  photo?: string | null;
+  tag?: string;
 }
 
 interface FrequencyData {
@@ -933,7 +966,7 @@ interface HealthScoreResponse {
 }
 
 interface KpiDataCell {
-  dataPointEmpId: string;
+  kpiId: string;
   validationType: string;
   startDate: string;
   endDate: string;

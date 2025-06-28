@@ -37,7 +37,7 @@ import {
 import WarningDialog from "./WarningModal";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -47,13 +47,20 @@ function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
     (data[0].length === 0 ||
       (typeof data[0][0] === "object" &&
         data[0][0] !== null &&
-        "dataPointEmpId" in data[0][0]))
+        "kpiId" in data[0][0]))
   );
 }
 
 export default function KPITable() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { data: kpiStructure, isLoading: isKpiStructureLoading } =
+    useGetKpiDashboardStructure();
+
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedPeriod, setSelectedPeriod] = useState("");
+
+  const urlSelectedPeriod = searchParams.get("selectedType");
+  const [selectedPeriod, setSelectedPeriod] = useState(urlSelectedPeriod || "");
+
   const [showWarning, setShowWarning] = useState(false);
   const [pendingPeriod, setPendingPeriod] = useState<string | null>(null);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(
@@ -62,6 +69,26 @@ export default function KPITable() {
   const permission = useSelector(getUserPermission).DATAPOINT_TABLE;
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    if (!isKpiStructureLoading && kpiStructure?.data?.length) {
+      const urlSelectedPeriod = searchParams.get("selectedType");
+      const availablePeriods = kpiStructure.data.map(
+        (item) => item.frequencyType,
+      );
+
+      // Set to URL param if valid, otherwise first available period
+      const newPeriod =
+        urlSelectedPeriod && availablePeriods.includes(urlSelectedPeriod)
+          ? urlSelectedPeriod
+          : kpiStructure.data[0].frequencyType;
+
+      if (newPeriod !== selectedPeriod) {
+        setSelectedPeriod(newPeriod);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kpiStructure, isKpiStructureLoading, searchParams]);
 
   // Prepare input values for each cell - moved here so tempValues is available earlier
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
@@ -192,7 +219,13 @@ export default function KPITable() {
     };
   }, [tempValues, location.pathname]);
 
-  const { data: kpiStructure } = useGetKpiDashboardStructure();
+  useEffect(() => {
+    if (selectedPeriod) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("selectedType", selectedPeriod);
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [selectedPeriod, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (!selectedPeriod && kpiStructure?.data && kpiStructure.data.length > 0) {
@@ -228,16 +261,8 @@ export default function KPITable() {
   ); // Flatten KPI structure to rows: each row = { kpi, assignee }
   const kpiRows = useMemo(() => {
     if (!filteredData.length || !filteredData[0].kpis) return [];
-    const rows: { kpi: Kpi; assignee: Assignee }[] = [];
-    filteredData[0].kpis.forEach((kpi) => {
-      kpi.assignees?.forEach((assignee) => {
-        rows.push({
-          kpi,
-          assignee,
-        });
-      });
-    });
-    return rows;
+    // Each kpi is a row now
+    return filteredData[0].kpis.map((kpi) => ({ kpi }));
   }, [filteredData]);
 
   // Separate rows by visualization status
@@ -282,9 +307,9 @@ export default function KPITable() {
   const methods = useForm();
 
   // Helper function to render table rows
-  const renderKpiRows = (rows: { kpi: Kpi; assignee: Assignee }[]) => {
+  const renderKpiRows = (rows: { kpi: Kpi }[]) => {
     return rows.map((row) => {
-      const { kpi, assignee } = row;
+      const { kpi } = row;
       let dataRow: KpiDataCell[] | undefined = undefined;
       if (isKpiDataCellArrayArray(kpiData?.data)) {
         dataRow = isKpiDataCellArrayArray(kpiData?.data)
@@ -292,29 +317,29 @@ export default function KPITable() {
               (cells) =>
                 Array.isArray(cells) &&
                 cells.length > 0 &&
-                cells[0].dataPointEmpId === assignee.dataPointEmpId,
+                cells[0].kpiId === kpi.kpiId,
             )
           : undefined;
       }
       return (
-        <TableRow key={assignee.dataPointEmpId} className="border-b">
+        <TableRow key={kpi.kpiId} className="border-b">
           <TableCell
             className={clsx(
               "px-3 py-2 w-[60px] bg-gray-100 sticky left-0 z-10",
             )}
           >
             <Avatar
-              className={`h-8 w-8 ${getColorFromName(assignee?.employeeName)}`}
+              className={`h-8 w-8 ${getColorFromName(kpi?.employeeName)}`}
             >
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <AvatarFallback
-                      className={`${getColorFromName(assignee?.employeeName)} font-bold`}
+                      className={`${getColorFromName(kpi?.employeeName)} font-bold`}
                     >
                       {(() => {
-                        if (!assignee?.employeeName) return "";
-                        const names = assignee.employeeName.split(" ");
+                        if (!kpi?.employeeName) return "";
+                        const names = kpi.employeeName.split(" ");
                         const firstInitial = names[0]?.[0] ?? "";
                         const lastInitial =
                           names.length > 1 ? names[names.length - 1][0] : "";
@@ -322,7 +347,7 @@ export default function KPITable() {
                       })()}
                     </AvatarFallback>
                   </TooltipTrigger>
-                  <TooltipContent>{assignee?.employeeName}</TooltipContent>
+                  <TooltipContent>{kpi?.employeeName}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </Avatar>
@@ -336,8 +361,8 @@ export default function KPITable() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-md cursor-default w-full break-all whitespace-pre-line overflow-hidden">
-                      {kpi?.kpiName}
+                    <span className="text-md cursor-default w-full break-words whitespace-pre-line overflow-hidden">
+                      {kpi?.kpiName} {kpi.tag}
                     </span>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -354,16 +379,17 @@ export default function KPITable() {
                   <span className="truncate max-w-[100px] inline-block cursor-default break-words w-full">
                     {getFormattedValue(
                       kpi.validationType,
-                      assignee?.value1,
-                      assignee?.value2,
+                      kpi?.value1,
+                      kpi?.value2,
+                      kpi?.unit,
                     )}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
                   <span>
                     {kpi.validationType === "BETWEEN"
-                      ? `${assignee?.value1 ?? ""} - ${assignee?.value2 ?? ""}`
-                      : (assignee?.value1 ?? "")}
+                      ? `${kpi?.value1 ?? ""} - ${kpi?.value2 ?? ""}`
+                      : (kpi?.value1 ?? "")}
                   </span>
                 </TooltipContent>
               </Tooltip>
@@ -372,7 +398,7 @@ export default function KPITable() {
           {/* <TableCell className="w-[60px] bg-gray-100 sticky left-[320px] z-10 text-center"></TableCell> */}
           {headers.map((_, colIdx) => {
             const cell = dataRow?.[colIdx];
-            const key = `${assignee.dataPointEmpId}/${cell?.startDate}/${cell?.endDate}`;
+            const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
             const validationType = cell?.validationType;
             const value1 = cell?.value1;
             const value2 = cell?.value2;
@@ -519,25 +545,26 @@ export default function KPITable() {
     validationType: string,
     value1: string | number | null,
     value2?: string | number | null,
+    unit?: string | null,
   ) {
     const formatted1 = formatCompactNumber(value1);
     const formatted2 = formatCompactNumber(value2);
 
     if (validationType === "BETWEEN") {
-      return `${formatted1} - ${formatted2}`;
+      return `${formatted1} ${unit} - ${formatted2} ${unit}`;
     }
 
     switch (validationType) {
       case "EQUAL_TO":
-        return `= ${formatted1}`;
+        return `= ${formatted1} ${unit}`;
       case "GREATER_THAN":
-        return `> ${formatted1}`;
+        return `> ${formatted1} ${unit}`;
       case "LESS_THAN":
-        return `< ${formatted1}`;
+        return `< ${formatted1} ${unit}`;
       case "GREATER_THAN_OR_EQUAL_TO":
-        return `≥ ${formatted1}`;
+        return `≥ ${formatted1} ${unit}`;
       case "LESS_THAN_OR_EQUAL_TO":
-        return `≤ ${formatted1}`;
+        return `≤ ${formatted1} ${unit}`;
       case "YES_NO":
         return value1 === "1" ? "✓(Yes)" : "✗(No)";
       default:
@@ -554,16 +581,22 @@ export default function KPITable() {
       setShowWarning(true);
     } else {
       setSelectedPeriod(newPeriod);
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("selectedType", newPeriod);
+      setSearchParams(newParams, { replace: true });
     }
   };
+
   const handleWarningSubmit = () => {
     handleSubmit();
     setTempValues({});
     setShowWarning(false);
 
-    // Handle period change
     if (pendingPeriod) {
       setSelectedPeriod(pendingPeriod);
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("selectedType", pendingPeriod);
+      setSearchParams(newParams, { replace: true });
       setPendingPeriod(null);
     }
 
@@ -581,9 +614,11 @@ export default function KPITable() {
     setTempValues({});
     setShowWarning(false);
 
-    // Handle period change
     if (pendingPeriod) {
       setSelectedPeriod(pendingPeriod);
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("selectedType", pendingPeriod);
+      setSearchParams(newParams, { replace: true });
       setPendingPeriod(null);
     }
 

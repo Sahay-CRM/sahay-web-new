@@ -186,9 +186,9 @@ export function getColorFromName(name?: string) {
 
 export function formatTempValuesToPayload(tempValues: Record<string, string>) {
   return Object.entries(tempValues).map(([key, value]) => {
-    const [dataPointEmpId, startDate, endDate] = key.split("/");
+    const [kpiId, startDate, endDate] = key.split("/");
     return {
-      dataPointEmpId,
+      kpiId,
       startDate,
       endDate,
       data: value,

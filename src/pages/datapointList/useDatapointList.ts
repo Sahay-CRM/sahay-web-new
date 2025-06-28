@@ -35,8 +35,7 @@ export default function useAdminUser() {
 
   const handleAdd = () => {
     setModalData({
-      companykpimasterId: "",
-      dataPointId: "",
+      kpiId: "",
       dataPointName: "",
       dataPointLabel: "",
       KPIMasterId: "",
@@ -46,12 +45,13 @@ export default function useAdminUser() {
       validationType: "",
       frequencyType: "",
       selectedType: "",
-      dataPointEmployeeJunction: [],
-      DataPointProductJunction: [],
-      productIds: [],
-      assignUser: [],
       hasData: false,
       coreParameterId: "",
+      visualFrequencyTypes: "",
+      employeeId: "",
+      value1: "",
+      value2: "",
+      tag: "",
     });
     setIsUserModalOpen(true);
   };
@@ -63,23 +63,23 @@ export default function useAdminUser() {
 
   const closeDeleteModal = (): void => {
     setModalData({
-      companykpimasterId: "",
-      dataPointId: "",
+      kpiId: "",
       dataPointName: "",
       dataPointLabel: "",
       KPIMasterId: "",
       KPIMaster: {} as KPIMaster,
-      coreParameter: undefined as unknown as CoreParameter,
-      coreParameterId: "",
+      coreParameter: {} as CoreParameter,
       unit: "",
       validationType: "",
       frequencyType: "",
       selectedType: "",
-      dataPointEmployeeJunction: [],
-      DataPointProductJunction: [],
-      productIds: [],
-      assignUser: [],
       hasData: false,
+      coreParameterId: "",
+      visualFrequencyTypes: "",
+      employeeId: "",
+      value1: "",
+      value2: "",
+      tag: "",
     }); // Clear modal data
     setIsUserModalOpen(false);
     setIsDeleteModalOpen(false);
@@ -94,8 +94,8 @@ export default function useAdminUser() {
   }, []);
 
   const conformDelete = async () => {
-    if (modalData && modalData.dataPointId) {
-      deleteDatapointById(modalData.dataPointId, {
+    if (modalData && modalData.kpiId) {
+      deleteDatapointById(modalData.kpiId, {
         onSuccess: () => {
           closeDeleteModal();
         },

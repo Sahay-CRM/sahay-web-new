@@ -4,10 +4,15 @@ import {
   verifyOtpMutation,
 } from "@/features/api/login";
 import { useAuth } from "@/features/auth/useAuth";
-import { setAuth } from "@/features/reducers/auth.reducer";
+import { setAuth, setFireBaseToken } from "@/features/reducers/auth.reducer";
 import { useDispatch } from "react-redux";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import {
+  onFirebaseMessageListener,
+  requestFirebaseNotificationPermission,
+} from "@/firebaseConfig";
+import { fireTokenMutation } from "@/features/api";
 
 const useLogin = () => {
   const dispatch = useDispatch();
@@ -39,6 +44,8 @@ const useLogin = () => {
     },
   });
 
+  const { mutate: foreToken } = fireTokenMutation();
+
   const handleLogin = async (data: CompanyLogin) => {
     const verifyCompanyData = {
       selectedCompanyId: data.companyId,
@@ -61,9 +68,28 @@ const useLogin = () => {
               userId: response.data.employeeId,
             }),
           );
-          reset();
-          setCompanyModalOpen(false);
-          setLoginDetails(null);
+          requestFirebaseNotificationPermission().then((firebaseToken) => {
+            if (firebaseToken && typeof firebaseToken === "string") {
+              dispatch(setFireBaseToken(firebaseToken));
+            } else if (firebaseToken) {
+              dispatch(setFireBaseToken(String(firebaseToken)));
+            }
+            onFirebaseMessageListener();
+            foreToken(
+              {
+                webToken: firebaseToken,
+                employeeId: response.data.employeeId,
+              },
+              {
+                onSuccess: () => {
+                  window.location.reload();
+                  reset();
+                  setCompanyModalOpen(false);
+                  setLoginDetails(null);
+                },
+              },
+            );
+          });
         }
       },
     });
@@ -107,6 +133,28 @@ const useLogin = () => {
                     isAuthenticated: true,
                     userId: dataRes.employeeId,
                   }),
+                );
+                requestFirebaseNotificationPermission().then(
+                  (firebaseToken) => {
+                    if (firebaseToken && typeof firebaseToken === "string") {
+                      dispatch(setFireBaseToken(firebaseToken));
+                    } else if (firebaseToken) {
+                      dispatch(setFireBaseToken(String(firebaseToken)));
+                    }
+                    onFirebaseMessageListener();
+                    foreToken(
+                      {
+                        webToken: firebaseToken,
+                        employeeId: response.data.employeeId,
+                      },
+                      {
+                        onSuccess: () => {
+                          window.location.reload();
+                          setCompanyModalOpen(false);
+                        },
+                      },
+                    );
+                  },
                 );
                 setToken(token ?? "", dataRes);
                 setLoginDetails(null);

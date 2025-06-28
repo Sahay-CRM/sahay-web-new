@@ -140,6 +140,14 @@ const Urls = {
   getAllEmployeeDd: () => `${baseUrl}/company/employee/get-all`,
 
   getUserLogById: () => `${baseUrl}/company/employee/get-log`,
+
+  updateFireToken: () => `${baseUrl}/firebase/fcm-token/update`,
+
+  getUserFireNotification: () =>
+    `${baseUrl}/company/employee/logs/notification-get`,
+
+  updateFireNotificationAsRead: () =>
+    `${baseUrl}/company/employee/logs/notification-update`,
 };
 
 export default Urls;

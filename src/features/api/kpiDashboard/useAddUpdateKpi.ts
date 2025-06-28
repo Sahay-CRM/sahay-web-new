@@ -6,7 +6,7 @@ import { AxiosError } from "axios";
 import { toast } from "sonner";
 
 type KpiUpdateData = {
-  dataPointEmpId: string;
+  kpiId: string;
   startDate: string;
   endDate: string;
   data: string;
