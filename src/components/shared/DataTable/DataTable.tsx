@@ -87,6 +87,17 @@ interface TableProps<T extends Record<string, unknown>> {
   sortableColumns?: string[];
   showActiveToggle?: boolean; // Add this line
   onToggleActive?: (item: T) => void; // Add this line
+  otherButton?: ExtraButton[];
+}
+
+interface ExtraButton {
+  buttonText?: string;
+  buttonClick?: (
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+  ) => void;
+  buttonVariant?: string;
+  buttonCss: string;
+  btnDisable?: string;
 }
 
 const TableData = <T extends Record<string, unknown>>({
@@ -119,6 +130,7 @@ const TableData = <T extends Record<string, unknown>>({
   sortableColumns = [],
   showActiveToggle = false,
   onToggleActive,
+  otherButton = [],
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   // Only show checkboxes if explicitly enabled with multiSelect OR if both handleChange and onCheckbox are provided
@@ -453,6 +465,34 @@ const TableData = <T extends Record<string, unknown>>({
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex gap-1 items-center justify-start">
+                        {otherButton &&
+                          otherButton.map((btn, index) => (
+                            <Tooltip key={index}>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant={
+                                    btn.buttonVariant as
+                                      | "link"
+                                      | "default"
+                                      | "destructive"
+                                      | "outline"
+                                      | "secondary"
+                                      | "ghost"
+                                      | null
+                                      | undefined
+                                  }
+                                  size="sm"
+                                  className={btn.buttonCss}
+                                  onClick={btn.buttonClick}
+                                  disabled={!!btn.btnDisable}
+                                >
+                                  <span>{btn.buttonText}</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>{btn.buttonText}</TooltipContent>
+                            </Tooltip>
+                          ))}
+
                         {isEditDelete &&
                           isActionButton?.(item) &&
                           permission?.Edit && (

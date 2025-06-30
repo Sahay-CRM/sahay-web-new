@@ -94,7 +94,6 @@ export default function CompanyDesignation() {
   if (permission && permission.View === false) {
     return <PageNotAccess />;
   }
-  console.log(employeedata);
 
   return (
     <FormProvider {...methods}>

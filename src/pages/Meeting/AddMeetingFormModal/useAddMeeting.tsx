@@ -41,21 +41,14 @@ export default function useAddMeeting() {
           : "",
         meetingStatusId: data.meetingStatus || undefined,
         meetingTypeId: data.meetingType || undefined,
-        employeeId:
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data.joiners?.map((ele: any) => ({
-            employeeId: ele.employeeId,
-            // Potentially include other details if needed by TableData's selectedValue comparison
-            employeeName: ele.employeeName, // Assuming employeeName is available for initial display
-          })),
-        // Initialize meetingDocuments and removedFileIdsArray for the form
+        employeeId: data.joiners,
         meetingDocuments: Array.isArray(data.files)
           ? data.files.map((f: { fileId: string; fileName: string }) => ({
               fileId: f.fileId,
               fileName: f.fileName,
             }))
           : [],
-        removedFileIdsArray: [], // Initialize as empty array
+        removedFileIdsArray: [],
       });
     }
   }, [meetingApiData, reset, companyMeetingId, setValue]);
@@ -80,8 +73,13 @@ export default function useAddMeeting() {
       meetingStatusId: data?.meetingStatusId?.meetingStatusId,
       joiners: data?.employeeId?.map(
         (ele: { employeeId: string }) => ele?.employeeId,
-      ), // Assuming employeeId is an array of objects
+      ),
       companyMeetingId: companyMeetingId || "",
+      teamLeaders: Array.isArray(data?.employeeId)
+        ? data.employeeId
+            .filter((emp: EmployeeDetails) => emp.isTeamLeader)
+            .map((emp: EmployeeDetails) => emp.employeeId)
+        : [],
     };
 
     addMeeting(payload, {
@@ -92,7 +90,6 @@ export default function useAddMeeting() {
               ?.companyMeetingId || companyMeetingId;
 
         if (typeof meetingId === "string" && meetingId) {
-          // Access meetingDocuments and removedFileIdsArray from form data
           handleFileOperations(
             meetingId,
             data.meetingDocuments || [],
@@ -122,11 +119,11 @@ export default function useAddMeeting() {
     ) => {
       const formData = new FormData();
       formData.append("refId", meetingId);
-      formData.append("imageType", "MEETING"); // Ensure this matches backend expectation
+      formData.append("imageType", "MEETING");
       formData.append("isMaster", "0");
       formData.append("fileType", fileType);
       if (file instanceof File || typeof file === "string") {
-        formData.append("files", file); // Backend expects 'files' (plural)
+        formData.append("files", file);
         docUpload(formData, {
           onSuccess: () => {
             queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
@@ -151,7 +148,7 @@ export default function useAddMeeting() {
       formData.append("imageType", "MEETING");
       formData.append("isMaster", "0");
       formData.append("removedFiles", removedIds.join(",")); // Send as comma-separated string
-      docUpload(formData); // No file field, just metadata for removal
+      docUpload(formData);
     }
   };
 

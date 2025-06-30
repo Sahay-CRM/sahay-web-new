@@ -292,29 +292,68 @@ const Joiners = () => {
         </p>
       )}
       <Controller
-        name="employeeId" // This should be an array of selected employee objects
+        name="employeeId"
         control={control}
-        // rules={{ required: "Please select at least one joiner" }} // Optional: add validation
-        render={({ field }) => (
-          <TableData
-            tableData={employeedata?.data.map((item, index) => ({
-              ...item,
-              srNo:
-                (employeedata.currentPage - 1) * employeedata.pageSize +
-                index +
-                1,
-            }))}
-            columns={visibleColumns}
-            primaryKey="employeeId" // Key used to identify unique rows
-            paginationDetails={mapPaginationDetails(employeedata)}
-            setPaginationFilter={setPaginationFilter}
-            multiSelect={true}
-            selectedValue={field.value || []} // Ensure field.value is an array
-            handleChange={(selectedItems) => field.onChange(selectedItems)} // Pass array of selected items
-            isActionButton={() => false}
-            onCheckbox={() => true}
-          />
-        )}
+        render={({ field }) => {
+          return (
+            <TableData
+              tableData={employeedata?.data.map((item, index) => {
+                // Merge isTeamLeader from selected employees if present
+                const selected = (field.value || []).find(
+                  (emp: EmployeeDetails) => emp.employeeId === item.employeeId,
+                );
+                return {
+                  ...item,
+                  srNo:
+                    (employeedata.currentPage - 1) * employeedata.pageSize +
+                    index +
+                    1,
+                  isTeamLeader: selected?.isTeamLeader || false,
+                };
+              })}
+              columns={visibleColumns}
+              primaryKey="employeeId"
+              paginationDetails={mapPaginationDetails(employeedata)}
+              setPaginationFilter={setPaginationFilter}
+              multiSelect={true}
+              selectedValue={field.value || []}
+              handleChange={(selectedItems) => field.onChange(selectedItems)}
+              customActions={(row: EmployeeDetails) => {
+                const isSelected = (field.value || []).some(
+                  (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
+                );
+                if (!isSelected) return null;
+
+                // Find the selected employee object
+                const selectedEmp = (field.value || []).find(
+                  (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
+                );
+                const isTeamLeader = selectedEmp?.isTeamLeader;
+
+                return (
+                  <Button
+                    variant={isTeamLeader ? "secondary" : "outline"}
+                    className="py-0.5 px-5"
+                    onClick={() => {
+                      // Toggle isTeamLeader for this employee
+                      const updated = (field.value || []).map(
+                        (emp: EmployeeDetails) =>
+                          emp.employeeId === row.employeeId
+                            ? { ...emp, isTeamLeader: !emp.isTeamLeader }
+                            : emp,
+                      );
+                      console.log(updated);
+
+                      field.onChange(updated);
+                    }}
+                  >
+                    {isTeamLeader ? "Unset Team Leader" : "Set Team Leader"}
+                  </Button>
+                );
+              }}
+            />
+          );
+        }}
       />
     </div>
   );

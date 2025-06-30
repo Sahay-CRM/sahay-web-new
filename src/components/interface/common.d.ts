@@ -290,6 +290,7 @@ interface CompanyMeetingDataProps {
       fileName: string;
     },
   ];
+  teamLeaders?: string[];
 }
 
 interface CompanyDatapointDataProps {
@@ -468,6 +469,7 @@ interface EmployeeDetails {
   companyAdminName: string;
   reportingManager: null;
   isDeactivated?: boolean;
+  isTeamLeader?: boolean;
 }
 
 interface EmployeeCompany {
