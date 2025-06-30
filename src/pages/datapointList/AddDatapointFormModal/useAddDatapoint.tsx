@@ -93,7 +93,7 @@ export default function useAddEmployee() {
       // Set frequency
       setValue("frequencyId", datapointApiData.frequencyType);
       // Set validation type
-      setValue("validationTypeId", datapointApiData.validationType);
+      setValue("validationType", datapointApiData.validationType);
       // Set unit
       setValue("employeeId", datapointApiData.employeeId);
       setValue("unit", datapointApiData.unit);
@@ -187,7 +187,7 @@ export default function useAddEmployee() {
     // }
     // const frequencyValue = data.frequencyId;
     // const unit = data.unit;
-    // const validationTypeValue = data.validationTypeId;
+    // const validationTypeValue = data.validationType;
 
     // const visualFrequencyTypes = Array.isArray(data.visualFrequencyTypes)
     //   ? data.visualFrequencyTypes.join(",")
@@ -551,10 +551,10 @@ export default function useAddEmployee() {
       return found?.employeeName || emp.employeeId || "";
     };
 
-    const validationTypeId = useWatch({ name: "validationTypeId", control });
+    const validationType = useWatch({ name: "validationType", control });
 
-    const showBoth = validationTypeId === "6" || validationTypeId === "BETWEEN";
-    const showYesNo = validationTypeId === "7" || validationTypeId === "YES_NO";
+    const showBoth = validationType === "6" || validationType === "BETWEEN";
+    const showYesNo = validationType === "7" || validationType === "YES_NO";
 
     const yesnoOptions = [
       { label: "Yes", value: "1" },
