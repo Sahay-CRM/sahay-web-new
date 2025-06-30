@@ -322,6 +322,7 @@ interface CompanyMeetingStatusDataProps {
 interface CompanyMeetingTypeDataProps {
   meetingTypeId: string;
   meetingTypeName: string;
+  parentType?: string;
 }
 
 interface CompanyProjectDataProps {

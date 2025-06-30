@@ -25,6 +25,82 @@ import { useGetCompanyMeetingStatus } from "@/features/api/companyMeeting";
 import { getMeetingType } from "@/features/api/meetingType";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 
+const MeetingType = () => {
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext();
+  const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
+    currentPage: 1,
+    pageSize: 25,
+    search: "",
+  });
+
+  const { data: meetingTypeData } = getMeetingType({
+    filter: paginationFilter,
+  });
+  const [columnToggleOptions] = useState([
+    { key: "srNo", label: "Sr No", visible: true },
+    { key: "meetingTypeName", label: "Meeting Type Name", visible: true },
+    { key: "parentType", label: "Parent Type", visible: true },
+  ]);
+
+  const visibleColumns = columnToggleOptions.reduce(
+    (acc, col) => {
+      if (col.visible) acc[col.key] = col.label;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
+
+  return (
+    <div>
+      <div className="mb-2">
+        <SearchInput
+          placeholder="Search Type..."
+          searchValue={paginationFilter?.search || ""}
+          setPaginationFilter={setPaginationFilter}
+          className="w-80"
+        />
+      </div>
+      {errors.meetingTypeId && (
+        <p className="text-red-500 text-sm mb-2">
+          {typeof errors.meetingTypeId?.message === "string"
+            ? errors.meetingTypeId.message
+            : ""}
+        </p>
+      )}
+      <Controller
+        name="meetingTypeId"
+        control={control}
+        rules={{ required: "Please select a meeting type" }}
+        render={({ field }) => (
+          <TableData
+            tableData={
+              meetingTypeData?.data?.map((item, index) => ({
+                ...item,
+                srNo:
+                  (meetingTypeData.currentPage - 1) * meetingTypeData.pageSize +
+                  index +
+                  1,
+              })) || []
+            }
+            columns={visibleColumns}
+            primaryKey="meetingTypeId"
+            multiSelect={false}
+            selectedValue={field.value}
+            handleChange={field.onChange}
+            paginationDetails={mapPaginationDetails(meetingTypeData)}
+            setPaginationFilter={setPaginationFilter}
+            onCheckbox={() => true}
+            isActionButton={() => false}
+          />
+        )}
+      />
+    </div>
+  );
+};
+
 // --- MeetingInfo Component Definition ---
 const MeetingInfo = () => {
   const {
@@ -133,82 +209,6 @@ const MeetingStatus = () => {
             handleChange={field.onChange}
             paginationDetails={mapPaginationDetails(meeetingStatusData)}
             setPaginationFilter={setPaginationFilter}
-            isActionButton={() => false}
-          />
-        )}
-      />
-    </div>
-  );
-};
-
-// --- MeetingType Component Definition ---
-const MeetingType = () => {
-  const {
-    control,
-    formState: { errors },
-  } = useFormContext();
-  const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-    currentPage: 1,
-    pageSize: 25,
-    search: "",
-  });
-
-  const { data: meetingTypeData } = getMeetingType({
-    filter: paginationFilter,
-  });
-  const [columnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "meetingTypeName", label: "Meeting Type Name", visible: true },
-  ]);
-
-  const visibleColumns = columnToggleOptions.reduce(
-    (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
-
-  return (
-    <div>
-      <div className="mb-2">
-        <SearchInput
-          placeholder="Search Type..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-80"
-        />
-      </div>
-      {errors.meetingTypeId && (
-        <p className="text-red-500 text-sm mb-2">
-          {typeof errors.meetingTypeId?.message === "string"
-            ? errors.meetingTypeId.message
-            : ""}
-        </p>
-      )}
-      <Controller
-        name="meetingTypeId"
-        control={control}
-        rules={{ required: "Please select a meeting type" }}
-        render={({ field }) => (
-          <TableData
-            tableData={
-              meetingTypeData?.data?.map((item, index) => ({
-                ...item,
-                srNo:
-                  (meetingTypeData.currentPage - 1) * meetingTypeData.pageSize +
-                  index +
-                  1,
-              })) || []
-            }
-            columns={visibleColumns}
-            primaryKey="meetingTypeId"
-            multiSelect={false}
-            selectedValue={field.value}
-            handleChange={field.onChange}
-            paginationDetails={mapPaginationDetails(meetingTypeData)}
-            setPaginationFilter={setPaginationFilter}
-            onCheckbox={() => true}
             isActionButton={() => false}
           />
         )}
@@ -468,9 +468,9 @@ const AddMeeting = () => {
   }, [companyMeetingId, setBreadcrumbs]);
 
   const steps = [
+    <MeetingType key="meetingType" />,
     <MeetingInfo key="meetingInfo" />,
     <MeetingStatus key="meetingStatus" />,
-    <MeetingType key="meetingType" />,
     <Joiners key="joiners" />,
     <UploadDoc key="uploadDoc" />,
   ];
@@ -486,9 +486,9 @@ const AddMeeting = () => {
   } = useStepForm(steps, trigger);
 
   const stepNames = [
+    "Meeting Type",
     "Meeting Info",
     "Meeting Status",
-    "Meeting Type",
     "Joiners",
     "Upload Document",
   ];

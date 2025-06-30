@@ -48,6 +48,8 @@ export default function MeetingList() {
     showOverdue,
     handleOverdueToggle,
     taskDateRange,
+    handleDetailToggle,
+    showDetail,
   } = useMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -141,6 +143,13 @@ export default function MeetingList() {
                 multiSelect
               />
             </div>
+            <Button
+              variant={showDetail ? "outline" : "destructive"}
+              onClick={handleDetailToggle}
+              className="py-2 w-fit"
+            >
+              {showDetail ? "Show Detail" : "Show All Other"}
+            </Button>
             <Button
               variant={showOverdue ? "destructive" : "outline"}
               onClick={handleOverdueToggle}
