@@ -279,9 +279,10 @@ interface CompanyMeetingDataProps {
   meetingDescription: string;
   meetingDateTime: string;
   meetingTypeId: string;
+  parentType?: string;
   meetingStatusId: string;
   companyMeetingId?: string;
-  joiners?: string[];
+  joiners?: string[] | Joiners[];
   meetingStatus?: CompanyMeetingStatusDataProps;
   meetingType?: CompanyMeetingTypeDataProps;
   files?: [
@@ -291,6 +292,12 @@ interface CompanyMeetingDataProps {
     },
   ];
   teamLeaders?: string[];
+}
+
+interface Joiners {
+  employeeId: string;
+  employeeName: string;
+  isTeamLeader?: boolean;
 }
 
 interface CompanyDatapointDataProps {

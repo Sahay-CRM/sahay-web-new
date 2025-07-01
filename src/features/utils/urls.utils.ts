@@ -143,6 +143,11 @@ const Urls = {
 
   updateFireToken: () => `${baseUrl}/firebase/fcm-token/update`,
 
+  detailMeetingCheckStatus: (id: string) =>
+    `${baseUrl}/company/detail-meeting/start/${id}`,
+
+  endMeeting: (id: string) => `${baseUrl}/company/detail-meeting/end/${id}`,
+
   getUserFireNotification: () =>
     `${baseUrl}/company/employee/logs/notification-get`,
 

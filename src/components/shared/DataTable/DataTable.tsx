@@ -130,7 +130,7 @@ const TableData = <T extends Record<string, unknown>>({
   sortableColumns = [],
   showActiveToggle = false,
   onToggleActive,
-  otherButton = [],
+  // otherButton = [],
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   // Only show checkboxes if explicitly enabled with multiSelect OR if both handleChange and onCheckbox are provided
@@ -464,8 +464,11 @@ const TableData = <T extends Record<string, unknown>>({
                       className="text-left sticky right-0 pr-6 bg-white"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="flex gap-1 items-center justify-start">
-                        {otherButton &&
+                      <div className="flex gap-2 items-start">
+                        {customActions && (
+                          <div className="w-fit">{customActions?.(item)}</div>
+                        )}
+                        {/* {otherButton &&
                           otherButton.map((btn, index) => (
                             <Tooltip key={index}>
                               <TooltipTrigger asChild>
@@ -491,7 +494,7 @@ const TableData = <T extends Record<string, unknown>>({
                               </TooltipTrigger>
                               <TooltipContent>{btn.buttonText}</TooltipContent>
                             </Tooltip>
-                          ))}
+                          ))} */}
 
                         {isEditDelete &&
                           isActionButton?.(item) &&
@@ -575,7 +578,7 @@ const TableData = <T extends Record<string, unknown>>({
                               </TooltipContent>
                             </Tooltip>
                           )}
-                        {customActions?.(item)}
+
                         {typeof additionalButton === "function"
                           ? additionalButton(item) &&
                             permission?.Edit && (

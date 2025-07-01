@@ -25,6 +25,8 @@ const AllNotifications = () => {
             navigate(`/dashboard/tasks/view/${typeId}`);
           } else if (type === "PROJECT" && typeId) {
             navigate(`/dashboard/projects/view/${typeId}`);
+          } else if (type === "MEETING" && typeId) {
+            navigate(`/dashboard/meeting/detail/${typeId}`);
           }
         },
       });

@@ -8,6 +8,7 @@ import {
 } from "firebase/messaging";
 import { addNotification } from "./features/reducers/notification.reducer";
 import store from "./features/store";
+import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyApKwRS0eZK2Dkjwb7gTpbuLvQ5Yf2EzT4",
@@ -64,3 +65,5 @@ export const onFirebaseMessageListener = () => {
     });
   });
 };
+
+export const database = getDatabase(app);

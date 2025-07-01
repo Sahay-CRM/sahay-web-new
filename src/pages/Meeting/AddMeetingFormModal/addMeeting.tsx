@@ -323,8 +323,6 @@ const Joiners = () => {
                   (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
                 );
                 if (!isSelected) return null;
-
-                // Find the selected employee object
                 const selectedEmp = (field.value || []).find(
                   (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
                 );
@@ -333,21 +331,18 @@ const Joiners = () => {
                 return (
                   <Button
                     variant={isTeamLeader ? "secondary" : "outline"}
-                    className="py-0.5 px-5"
+                    className=" px-3 text-[13px]"
                     onClick={() => {
-                      // Toggle isTeamLeader for this employee
                       const updated = (field.value || []).map(
                         (emp: EmployeeDetails) =>
                           emp.employeeId === row.employeeId
                             ? { ...emp, isTeamLeader: !emp.isTeamLeader }
                             : emp,
                       );
-                      console.log(updated);
-
                       field.onChange(updated);
                     }}
                   >
-                    {isTeamLeader ? "Unset Team Leader" : "Set Team Leader"}
+                    {isTeamLeader ? "Remove" : "Set Team Leader"}
                   </Button>
                 );
               }}

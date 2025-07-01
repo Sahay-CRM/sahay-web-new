@@ -21,6 +21,8 @@ import { format } from "date-fns";
 import DateRangePicker from "@/components/shared/DateRange";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
+import { useSelector } from "react-redux";
+import { getUserId } from "@/features/selectors/auth.selector";
 
 export default function MeetingList() {
   const {
@@ -53,6 +55,8 @@ export default function MeetingList() {
   } = useMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
+  const userId = useSelector(getUserId);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setBreadcrumbs([{ label: "Company Meeting", href: "" }]);
@@ -88,7 +92,6 @@ export default function MeetingList() {
   };
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
-  const navigate = useNavigate();
 
   if (permission && permission.View === false) {
     return <PageNotAccess />;
@@ -212,6 +215,48 @@ export default function MeetingList() {
                   }
                 : undefined
             }
+            customActions={(row) => {
+              if (row.parentType !== "DETAIL") return null;
+              const isTeamLeader = Array.isArray(row.joiners)
+                ? row.joiners.some(
+                    (emp) =>
+                      emp &&
+                      typeof emp === "object" &&
+                      emp.employeeId === userId &&
+                      emp.isTeamLeader === true,
+                  )
+                : false;
+
+              return (
+                <>
+                  {isTeamLeader ? (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="py-1 px-3 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/dashboard/meeting/detail/${row.meetingId}`);
+                      }}
+                    >
+                      Start Meeting
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="py-1 px-3 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/dashboard/meeting/detail/${row.meetingId}`);
+                      }}
+                    >
+                      Join Meeting
+                    </Button>
+                  )}
+                </>
+              );
+            }}
             isActionButton={() => true}
             onDelete={(row) => {
               onDelete(row as unknown as MeetingData);
