@@ -59,8 +59,8 @@ export const onFirebaseMessageListener = () => {
       addNotification({ title: title || "", body: body || "", data }),
     );
     import("sonner").then(({ toast }) => {
-      toast.success(body || "You have a new notification!", {
-        description: title,
+      toast.success(title || "You have a new notification!", {
+        description: body,
       });
     });
   });

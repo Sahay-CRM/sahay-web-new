@@ -6,6 +6,7 @@ import { getUserId } from "@/features/selectors/auth.selector";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect } from "react";
 import PageNotAccess from "@/pages/PageNoAccess";
+import MeetingUi from "./MeetingUi";
 
 export default function DetailedMeeting() {
   const {
@@ -34,7 +35,7 @@ export default function DetailedMeeting() {
     <div>
       <Card className="px-4 mb-3">
         <div className="flex gap-4 justify-between">
-          <div className="space-y-2">
+          <div className=" grid gap-3 grid-cols-2">
             <div>
               <span>Meeting Name: </span>
               <span className="font-semibold text-black">
@@ -68,7 +69,7 @@ export default function DetailedMeeting() {
               <div>
                 {Array.isArray(meetingData?.data.joiners) &&
                 meetingData.data.joiners.length > 0 ? (
-                  <ul className="list-disc pl-5">
+                  <ul className="list-disc pl-5 grid gap-x-10 grid-cols-2">
                     {(meetingData.data.joiners as Joiners[]).map((joiner) => (
                       <li key={joiner.employeeId}>
                         <span className="font-medium">
@@ -123,6 +124,7 @@ export default function DetailedMeeting() {
         </div>
       </Card>
       <div>{meetingResponse !== null && JSON.stringify(meetingResponse)}</div>
+      <MeetingUi />
     </div>
   );
 }
