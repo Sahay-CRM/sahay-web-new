@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import useMeetingUi from "./useMeetingUi";
 import Tasks from "./Tasks";
 import Projects from "./Projects/projects";
+import KPITable from "./KpiTable";
 
 interface MeetingUiProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -72,7 +73,7 @@ export default function MeetingUi({
   };
 
   return (
-    <div className="flex h-full min-h-[500px] mt-5">
+    <div className="flex h-full min-h-[500px] mt-5 overflow-hidden">
       <div
         className={`flex transition-all duration-300 ${isCollapsed ? "w-[50px]" : "w-[200px]"}`}
       >
@@ -100,7 +101,7 @@ export default function MeetingUi({
                   >
                     <div className="flex items-center gap-2">
                       <CalendarCheck className="h-4 w-4" />
-                      {!isCollapsed && "discussion"}
+                      {!isCollapsed && "Discussion"}
                     </div>
                   </div>
                   {!isCollapsed && (
@@ -149,7 +150,17 @@ export default function MeetingUi({
                   {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
                 </Button>
               </div>
-              <div className="flex-1 px-4 w-full min-w-5xl max-h-[500px] min-h-[500px] overflow-scroll">
+              <div
+                className="flex-1 px-4 max-h-[500px] min-h-[500px] overflow-x-auto transition-all duration-300"
+                style={{
+                  width: isCollapsed
+                    ? "calc(100vw - 50px - 400px)"
+                    : "calc(100vw - 200px - 350px)",
+                  minWidth: 0,
+                  transitionDuration: "7000px",
+                  animation: "ease-in-out",
+                }}
+              >
                 <TabsContent value="agenda" className="">
                   <div className="space-y-4">
                     <h3 className="font-semibold">Agenda</h3>
@@ -391,45 +402,7 @@ export default function MeetingUi({
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <h3 className="font-semibold">KPIs (15 min)</h3>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                #
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Accounts
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Due Date
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Project Description
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {[2, 3, 4, 5, 6, 7, 8, 9].map((item) => (
-                              <tr key={item}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {item}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  Account {item}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  2025-{item}-{item * 2}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  Description {item}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                      <KPITable />
                     </div>
                   )}
                 </TabsContent>
