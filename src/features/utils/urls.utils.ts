@@ -153,6 +153,35 @@ const Urls = {
 
   updateFireNotificationAsRead: () =>
     `${baseUrl}/company/employee/logs/notification-update`,
+
+  addMeetingAgendaIssue: () =>
+    `${baseUrl}/company/detail-meeting/agenda/issue/create`,
+  updateMeetingAgendaIssue: (id: string) =>
+    `${baseUrl}/company/detail-meeting/agenda/issue/update/${id}`,
+  deleteMeetingAgendaIssue: (id: string) =>
+    `${baseUrl}/company/detail-meeting/agenda/issue/delete/${id}`,
+
+  getMeetingAgendaIssue: () =>
+    `${baseUrl}/company/detail-meeting/agenda/issue/get`,
+  getMeetingAgendaObjective: () =>
+    `${baseUrl}/company/detail-meeting/agenda/objective/get`,
+
+  addMeetingAgendaObjective: () =>
+    `${baseUrl}/company/detail-meeting/agenda/objective/create`,
+  updateMeetingAgendaObjective: (id: string) =>
+    `${baseUrl}/company/detail-meeting/agenda/objective/update/${id}`,
+  deleteMeetingAgendaObjective: (id: string) =>
+    `${baseUrl}/company/detail-meeting/agenda/objective/delete/${id}`,
+
+  addMeetingTaskData: () => `${baseUrl}/company/detail-meeting/task/add`,
+  getMeetingTaskData: () => `${baseUrl}/company/detail-meeting/task/get`,
+  deleteMeetingTaskData: (id: string) =>
+    `${baseUrl}/company/detail-meeting/task/remove/${id}`,
+
+  addMeetingProjectData: () => `${baseUrl}/company/detail-meeting/project/add`,
+  getMeetingProjectData: () => `${baseUrl}/company/detail-meeting/project/get`,
+  deleteMeetingProjectData: (id: string) =>
+    `${baseUrl}/company/detail-meeting/project/remove/${id}`,
 };
 
 export default Urls;

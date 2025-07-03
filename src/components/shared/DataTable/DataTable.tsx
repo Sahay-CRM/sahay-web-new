@@ -496,56 +496,58 @@ const TableData = <T extends Record<string, unknown>>({
                             </Tooltip>
                           ))} */}
 
-                        {isEditDelete &&
-                          isActionButton?.(item) &&
-                          permission?.Edit && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
-                                  onClick={() =>
-                                    !(item as { isDisabled?: boolean })
-                                      .isDisabled && onEdit?.(item)
-                                  }
-                                  disabled={
-                                    (item as { isDisabled?: boolean })
-                                      .isDisabled
-                                  }
-                                >
-                                  <Pencil className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Edit</TooltipContent>
-                            </Tooltip>
-                          )}
+                        {(moduleKey
+                          ? isEditDelete &&
+                            isActionButton?.(item) &&
+                            permission?.Edit
+                          : true) && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() =>
+                                  !(item as { isDisabled?: boolean })
+                                    .isDisabled && onEdit?.(item)
+                                }
+                                disabled={
+                                  (item as { isDisabled?: boolean }).isDisabled
+                                }
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit</TooltipContent>
+                          </Tooltip>
+                        )}
 
-                        {isEditDelete &&
-                          isActionButton?.(item) &&
-                          permission?.Delete &&
-                          (!canDelete || canDelete(item)) && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 text-red-600"
-                                  onClick={() =>
-                                    !(item as { isDisabled?: boolean })
-                                      .isDisabled && onDelete?.(item)
-                                  }
-                                  disabled={
-                                    (item as { isDisabled?: boolean })
-                                      .isDisabled
-                                  }
-                                >
-                                  <Trash className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Delete</TooltipContent>
-                            </Tooltip>
-                          )}
+                        {(moduleKey
+                          ? isEditDelete &&
+                            isActionButton?.(item) &&
+                            permission?.Delete &&
+                            (!canDelete || canDelete(item))
+                          : true) && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-red-600"
+                                onClick={() =>
+                                  !(item as { isDisabled?: boolean })
+                                    .isDisabled && onDelete?.(item)
+                                }
+                                disabled={
+                                  (item as { isDisabled?: boolean }).isDisabled
+                                }
+                              >
+                                <Trash className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete</TooltipContent>
+                          </Tooltip>
+                        )}
                         {permission?.Delete &&
                           showActiveToggle &&
                           isActionButton?.(item) &&

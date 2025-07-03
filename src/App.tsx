@@ -7,11 +7,14 @@ import { Toaster } from "sonner";
 import { BreadcrumbProvider } from "./features/context/BreadcrumbContext";
 import { useEffect } from "react";
 import { onFirebaseMessageListener } from "./firebaseConfig";
+import { FormProvider, useForm } from "react-hook-form";
 
 function App() {
   useEffect(() => {
     onFirebaseMessageListener();
   }, []);
+
+  const methods = useForm();
 
   return (
     <>
@@ -19,8 +22,10 @@ function App() {
         <SidebarThemeProvider>
           <QueryClientProvider client={queryClient}>
             <BreadcrumbProvider>
-              <AppRoutes />
-              <Toaster richColors position="bottom-right" />
+              <FormProvider {...methods}>
+                <AppRoutes />
+                <Toaster richColors position="bottom-right" />
+              </FormProvider>
             </BreadcrumbProvider>
           </QueryClientProvider>
         </SidebarThemeProvider>

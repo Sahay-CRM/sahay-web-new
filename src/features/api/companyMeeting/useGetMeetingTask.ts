@@ -1,23 +1,26 @@
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
+interface MeetingTaskRes {
+  detailMeetingTaskId: string;
+  detailMeetingId: string;
+  taskId: string;
+}
+type DatePaging = BaseResponse<MeetingTaskRes>;
 
-type DatePaging = BaseResponse<TaskGetPaging>;
-
-export default function useGetCompanyTask({ filter, enable }: FilterDataProps) {
+export default function useGetMeetingTask({ filter }: FilterDataProps) {
   const query = useQuery({
-    queryKey: ["get-task-list", filter],
+    queryKey: ["get-meeting-tasks-res", filter],
     queryFn: async () => {
       const { data: resData } = await Api.post<DatePaging>({
-        url: Urls.getAllCompanyTaskByPage(),
+        url: Urls.getMeetingTaskData(),
         data: {
           ...filter,
         },
       });
 
-      return resData;
+      return resData.data;
     },
-    enabled: enable,
   });
   return query;
 }

@@ -3,6 +3,7 @@ import {
   endMeetingMutation,
   useGetCompanyMeetingById,
 } from "@/features/api/companyMeeting";
+import { queryClient } from "@/queryClient";
 import { getDatabase, off, onValue, ref } from "firebase/database";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -10,7 +11,9 @@ import { useParams } from "react-router-dom";
 export default function useDetailedMeeting() {
   const { id: meetingId } = useParams();
 
-  const [meetingResponse, setMeetingResponse] = useState(null);
+  const [meetingResponse, setMeetingResponse] = useState<MeetingResFire | null>(
+    null,
+  );
 
   const { data: meetingData, failureReason } = useGetCompanyMeetingById(
     meetingId ?? "",
@@ -24,6 +27,25 @@ export default function useDetailedMeeting() {
     }
   }, [createMeet, meetingId]);
 
+  const handleUpdatedRefresh = useCallback(async () => {
+    const activeTab = meetingResponse?.activeScreen;
+
+    await Promise.all([
+      ...(activeTab === "agenda"
+        ? [
+            queryClient.resetQueries({ queryKey: ["get-meeting-issue"] }),
+            queryClient.resetQueries({ queryKey: ["get-meeting-objective"] }),
+          ]
+        : []),
+      ...(activeTab === "tasks"
+        ? [queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] })]
+        : []),
+      ...(activeTab === "project"
+        ? [queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] })]
+        : []),
+    ]);
+  }, [meetingResponse?.activeScreen]);
+
   useEffect(() => {
     const db = getDatabase();
     const meetingRef = ref(db, `meetings/${meetingId}`);
@@ -32,6 +54,7 @@ export default function useDetailedMeeting() {
       if (snapshot.exists()) {
         const data = snapshot.val();
         setMeetingResponse(data);
+        handleUpdatedRefresh();
       } else {
         setMeetingResponse(null);
       }
@@ -40,7 +63,7 @@ export default function useDetailedMeeting() {
     return () => {
       off(meetingRef);
     };
-  }, [meetingId]);
+  }, [handleUpdatedRefresh, meetingId]);
 
   const handleCloseMeeting = useCallback(() => {
     if (meetingId) {

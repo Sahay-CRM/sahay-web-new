@@ -27,13 +27,19 @@ export default function DetailedMeeting() {
     ]);
   }, [setBreadcrumbs]);
 
+  const isTeamLeader =
+    Array.isArray(meetingData?.data.joiners) &&
+    (meetingData.data.joiners as Joiners[]).some(
+      (joiner) => joiner.employeeId === userId && joiner.isTeamLeader,
+    );
+
   if (failureReason) {
     return <PageNotAccess />;
   }
 
   return (
     <div>
-      <Card className="px-4 mb-3">
+      <Card className="px-4 mb-3 h-52 overflow-hidden">
         <div className="flex gap-4 justify-between">
           <div className=" grid gap-3 grid-cols-2">
             <div>
@@ -124,7 +130,11 @@ export default function DetailedMeeting() {
         </div>
       </Card>
       <div>{meetingResponse !== null && JSON.stringify(meetingResponse)}</div>
-      <MeetingUi />
+      <MeetingUi
+        meetingResponse={meetingResponse}
+        isTeamLeader={isTeamLeader}
+        activeScreen={meetingResponse?.activeScreen}
+      />
     </div>
   );
 }

@@ -3,7 +3,10 @@ import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 type DatePaging = BaseResponse<CompanyProjectDataProps>;
 
-export default function useGetCompanyProject({ filter }: FilterDataProps) {
+export default function useGetCompanyProject({
+  filter,
+  enable,
+}: FilterDataProps) {
   const query = useQuery({
     queryKey: ["get-project-list", filter],
     queryFn: async () => {
@@ -16,6 +19,7 @@ export default function useGetCompanyProject({ filter }: FilterDataProps) {
 
       return resData;
     },
+    enabled: !!enable,
   });
   return query;
 }

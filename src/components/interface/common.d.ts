@@ -1000,3 +1000,28 @@ interface ChangeLog<T> {
   logType: string;
   logTime: string;
 }
+
+interface MeetingIssue {
+  detailMeetingAgendaIssueId: string;
+  detailMeetingId: string;
+  agendaIssue: string;
+}
+
+interface MeetingObjective {
+  detailMeetingAgendaObjectiveId: string;
+  detailMeetingId: string;
+  agendaObjective: string;
+}
+
+interface MeetingResFire {
+  activeScreen?: string;
+  meetingId: string;
+  updatedAt: string | number;
+  agenda?: { updatedAt: string | number };
+  conclusion?: { updatedAt: string | number };
+  discussion?: { updatedAt: string | number };
+}
+
+interface HandleTabChangeLocalProps {
+  (tab: string): void;
+}

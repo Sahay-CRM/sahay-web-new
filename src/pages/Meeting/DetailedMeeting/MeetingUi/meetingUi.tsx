@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ClipboardList,
@@ -7,48 +7,69 @@ import {
   ChevronLeft,
   ChevronRight,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import useMeetingUi from "./useMeetingUi";
+import Tasks from "./Tasks";
+import Projects from "./Projects/projects";
 
-interface AgendaItem {
-  id: string;
-  text: string;
-  type: "issue" | "suggestion";
+interface MeetingUiProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  meetingResponse: any;
+  isTeamLeader: boolean;
+  activeScreen?: string;
 }
 
-export default function VerticalTabs() {
+export default function MeetingUi({
+  meetingResponse,
+  isTeamLeader,
+  activeScreen,
+}: MeetingUiProps) {
+  const {
+    objectiveInput,
+    issueInput,
+    handleAddIssue,
+    handleAddObjective,
+    setIssueInput,
+    setObjectiveInput,
+    issueData,
+    objectiveData,
+    editing,
+    startEdit,
+    cancelEdit,
+    updateEdit,
+    setEditingValue,
+    handleDelete,
+    canEdit,
+    tabChangeFireBase,
+    meetingId,
+    tasksFireBase,
+    projectFireBase,
+  } = useMeetingUi({ meetingResponse, isTeamLeader });
+
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
-  const [issueInput, setIssueInput] = useState("");
-  const [suggestionInput, setSuggestionInput] = useState("");
+  const [activeTab, setActiveTab] = useState(
+    activeScreen ? activeScreen.toLowerCase() : "agenda",
+  );
 
-  const addAgendaItem = (type: "issue" | "suggestion") => {
-    const text = type === "issue" ? issueInput : suggestionInput;
-    if (text.trim() === "") return;
+  // Sync with activeScreen from props for all users
+  useEffect(() => {
+    if (activeScreen && activeScreen.toLowerCase() !== activeTab) {
+      setActiveTab(activeScreen.toLowerCase());
+    }
+  }, [activeScreen, activeTab]);
 
-    const newItem: AgendaItem = {
-      id: Date.now().toString(),
-      text,
-      type,
-    };
+  const canShowAddEdit = canEdit;
 
-    setAgendaItems([...agendaItems, newItem]);
-    if (type === "issue") {
-      setIssueInput("");
-    } else {
-      setSuggestionInput("");
+  const handleTabChangeLocal: HandleTabChangeLocalProps = (tab) => {
+    setActiveTab(tab);
+    if (isTeamLeader) {
+      tabChangeFireBase(tab);
     }
   };
-
-  const removeAgendaItem = (id: string) => {
-    setAgendaItems(agendaItems.filter((item) => item.id !== id));
-  };
-
-  // Filter items by type
-  const issues = agendaItems.filter((item) => item.type === "issue");
-  const suggestions = agendaItems.filter((item) => item.type === "suggestion");
 
   return (
     <div className="flex h-full min-h-[500px] mt-5">
@@ -57,7 +78,8 @@ export default function VerticalTabs() {
       >
         <Tabs
           orientation="vertical"
-          defaultValue="agenda"
+          value={activeTab}
+          onValueChange={handleTabChangeLocal}
           className={`flex ${isCollapsed ? "flex-col items-center" : ""}`}
         >
           <div className="flex w-full">
@@ -72,51 +94,51 @@ export default function VerticalTabs() {
                   <ClipboardList className="h-4 w-4" />
                   {!isCollapsed && "Agenda"}
                 </TabsTrigger>
-
-                {/* Tasks with dropdown */}
                 <div className="relative w-full">
                   <div
                     className={`flex items-center justify-between cursor-pointer ${isCollapsed ? "p-2" : "gap-2 p-2"}`}
                   >
                     <div className="flex items-center gap-2">
                       <CalendarCheck className="h-4 w-4" />
-                      {!isCollapsed && "Description"}
+                      {!isCollapsed && "discussion"}
                     </div>
                   </div>
                   {!isCollapsed && (
                     <div className="ml-6 mt-1 space-y-1">
                       <TabsTrigger
-                        value="Tasks"
+                        value="tasks"
                         className="text-left w-full justify-start text-sm"
+                        disabled={!meetingResponse}
                       >
                         Tasks
                       </TabsTrigger>
                       <TabsTrigger
-                        value="Project"
+                        value="project"
                         className="w-full justify-start text-left text-sm"
+                        disabled={!meetingResponse}
                       >
                         Project
                       </TabsTrigger>
                       <TabsTrigger
-                        value="KPIs"
+                        value="kpis"
                         className="w-full justify-start text-sm"
+                        disabled={!meetingResponse}
                       >
                         KPIs
                       </TabsTrigger>
                     </div>
                   )}
                 </div>
-
                 <TabsTrigger
                   value="conclusion"
                   className={`justify-start text-left w-full ${isCollapsed ? "p-2" : "gap-2"}`}
+                  disabled={!meetingResponse}
                 >
                   <CheckCircle className="h-4 w-4" />
                   {!isCollapsed && "Conclusion"}
                 </TabsTrigger>
               </TabsList>
             </div>
-
             <Card className="ml-5 p-0 gap-2">
               <div>
                 <Button
@@ -137,34 +159,92 @@ export default function VerticalTabs() {
                       {/* Issues Column */}
                       <div className="space-y-2 border-r pr-5 py-2 px-4">
                         <h4 className="font-medium">Issues</h4>
-                        <div className="flex gap-2">
-                          <Input
-                            value={issueInput}
-                            onChange={(e) => setIssueInput(e.target.value)}
-                            placeholder="Enter an issue"
-                          />
-                          <Button onClick={() => addAgendaItem("issue")}>
-                            Add
-                          </Button>
-                        </div>
+                        {/* Hide add/edit UI if cannot edit */}
+                        {canShowAddEdit && (
+                          <div className="flex gap-2">
+                            <Input
+                              value={issueInput}
+                              onChange={(e) => setIssueInput(e.target.value)}
+                              placeholder="Enter an issue"
+                            />
+                            <Button onClick={() => handleAddIssue()}>
+                              Add
+                            </Button>
+                          </div>
+                        )}
                         <div className="mt-2 space-y-2">
-                          {issues.length > 0 ? (
+                          {issueData?.data && issueData.data.length > 0 ? (
                             <ul className="space-y-2">
-                              {issues.map((item) => (
-                                <li
-                                  key={item.id}
-                                  className="flex items-center justify-between p-2 border rounded"
-                                >
-                                  <span>{item.text}</span>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeAgendaItem(item.id)}
+                              {issueData?.data &&
+                                issueData.data.map((item) => (
+                                  <li
+                                    key={item.detailMeetingAgendaIssueId}
+                                    className="flex items-center justify-between px-2 border rounded"
                                   >
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                  </Button>
-                                </li>
-                              ))}
+                                    {editing.type === "issue" &&
+                                    editing.id ===
+                                      item.detailMeetingAgendaIssueId &&
+                                    canShowAddEdit ? (
+                                      <>
+                                        <Input
+                                          value={editing.value}
+                                          onChange={(e) =>
+                                            setEditingValue(e.target.value)
+                                          }
+                                          className="mr-2"
+                                        />
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={updateEdit}
+                                          className="mr-1"
+                                        >
+                                          Submit
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={cancelEdit}
+                                        >
+                                          Cancel
+                                        </Button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span>{item.agendaIssue}</span>
+                                        {canShowAddEdit && (
+                                          <div className="flex gap-1">
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() =>
+                                                startEdit(
+                                                  "issue",
+                                                  item.detailMeetingAgendaIssueId,
+                                                  item.agendaIssue,
+                                                )
+                                              }
+                                            >
+                                              <Pencil className="h-4 w-4 text-blue-500" />
+                                            </Button>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() =>
+                                                handleDelete(
+                                                  item.detailMeetingAgendaIssueId,
+                                                  "Issue",
+                                                )
+                                              }
+                                            >
+                                              <Trash2 className="h-4 w-4 text-red-500" />
+                                            </Button>
+                                          </div>
+                                        )}
+                                      </>
+                                    )}
+                                  </li>
+                                ))}
                             </ul>
                           ) : (
                             <p className="text-gray-500 text-sm">
@@ -176,39 +256,99 @@ export default function VerticalTabs() {
 
                       {/* Suggestions Column */}
                       <div className="space-y-2 py-2 px-4">
-                        <h4 className="font-medium">Suggestions</h4>
-                        <div className="flex gap-2">
-                          <Input
-                            value={suggestionInput}
-                            onChange={(e) => setSuggestionInput(e.target.value)}
-                            placeholder="Enter a suggestion"
-                          />
-                          <Button onClick={() => addAgendaItem("suggestion")}>
-                            Add
-                          </Button>
-                        </div>
+                        <h4 className="font-medium">Objective</h4>
+                        {canShowAddEdit && (
+                          <div className="flex gap-2">
+                            <Input
+                              value={objectiveInput}
+                              onChange={(e) =>
+                                setObjectiveInput(e.target.value)
+                              }
+                              placeholder="Enter a suggestion"
+                            />
+                            <Button onClick={() => handleAddObjective()}>
+                              Add
+                            </Button>
+                          </div>
+                        )}
                         <div className="mt-2 space-y-2">
-                          {suggestions.length > 0 ? (
+                          {objectiveData?.data &&
+                          objectiveData.data.length > 0 ? (
                             <ul className="space-y-2">
-                              {suggestions.map((item) => (
-                                <li
-                                  key={item.id}
-                                  className="flex items-center justify-between p-2 border rounded"
-                                >
-                                  <span>{item.text}</span>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeAgendaItem(item.id)}
+                              {objectiveData?.data &&
+                                objectiveData.data.map((item) => (
+                                  <li
+                                    key={item.detailMeetingAgendaObjectiveId}
+                                    className="flex items-center justify-between px-2 border rounded"
                                   >
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                  </Button>
-                                </li>
-                              ))}
+                                    {editing.type === "objective" &&
+                                    editing.id ===
+                                      item.detailMeetingAgendaObjectiveId &&
+                                    canShowAddEdit ? (
+                                      <>
+                                        <Input
+                                          value={editing.value}
+                                          onChange={(e) =>
+                                            setEditingValue(e.target.value)
+                                          }
+                                          className="mr-2"
+                                        />
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={updateEdit}
+                                          className="mr-1"
+                                        >
+                                          Submit
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={cancelEdit}
+                                        >
+                                          Cancel
+                                        </Button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span>{item.agendaObjective}</span>
+                                        {canShowAddEdit && (
+                                          <div className="flex gap-1">
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() =>
+                                                startEdit(
+                                                  "objective",
+                                                  item.detailMeetingAgendaObjectiveId,
+                                                  item.agendaObjective,
+                                                )
+                                              }
+                                            >
+                                              <Pencil className="h-4 w-4 text-blue-500" />
+                                            </Button>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() =>
+                                                handleDelete(
+                                                  item.detailMeetingAgendaObjectiveId,
+                                                  "Objective",
+                                                )
+                                              }
+                                            >
+                                              <Trash2 className="h-4 w-4 text-red-500" />
+                                            </Button>
+                                          </div>
+                                        )}
+                                      </>
+                                    )}
+                                  </li>
+                                ))}
                             </ul>
                           ) : (
                             <p className="text-gray-500 text-sm">
-                              No suggestions added
+                              No Objective added
                             </p>
                           )}
                         </div>
@@ -216,74 +356,97 @@ export default function VerticalTabs() {
                     </div>
                   </div>
                 </TabsContent>
-
-                {/* Rest of the TabsContent components remain the same */}
-                <TabsContent value="Tasks" className="p-4 border rounded-lg">
-                  <div className="space-y-2">
-                    <h3 className="font-semibold">Menu 1 Content</h3>
-                    <p>This is the content for Menu 1</p>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="Project" className="p-4 border rounded-lg">
-                  <div className="space-y-2">
-                    <h3 className="font-semibold">Menu 2 Content</h3>
-                    <p>This is the content for Menu 2</p>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="KPIs" className="p-4 border rounded-lg">
-                  <div className="space-y-4">
-                    <h3 className="font-semibold">KPIs (15 min)</h3>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              #
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Accounts
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Due Date
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Project Description
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {[2, 3, 4, 5, 6, 7, 8, 9].map((item) => (
-                            <tr key={item}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {item}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                Account {item}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                2025-{item}-{item * 2}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                Description {item}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                <TabsContent value="tasks" className="p-4 border rounded-lg">
+                  {!meetingResponse ? (
+                    <div className="text-gray-500 text-sm">
+                      This tab will be available when the meeting starts.
                     </div>
-                  </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Tasks
+                        meetingId={meetingId ?? ""}
+                        tasksFireBase={tasksFireBase}
+                      />
+                    </div>
+                  )}
                 </TabsContent>
-
+                <TabsContent value="project" className="p-4 border rounded-lg">
+                  {!meetingResponse ? (
+                    <div className="text-gray-500 text-sm">
+                      This tab will be available when the meeting starts.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Projects
+                        meetingId={meetingId ?? ""}
+                        projectFireBase={projectFireBase}
+                      />
+                    </div>
+                  )}
+                </TabsContent>
+                <TabsContent value="kpis" className="p-4 border rounded-lg">
+                  {!meetingResponse ? (
+                    <div className="text-gray-500 text-sm">
+                      This tab will be available when the meeting starts.
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <h3 className="font-semibold">KPIs (15 min)</h3>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                #
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Accounts
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Due Date
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Project Description
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {[2, 3, 4, 5, 6, 7, 8, 9].map((item) => (
+                              <tr key={item}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {item}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  Account {item}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  2025-{item}-{item * 2}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  Description {item}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
                 <TabsContent
                   value="conclusion"
                   className="p-4 border rounded-lg"
                 >
-                  <div className="space-y-2">
-                    <h3 className="font-semibold">Conclusion (5 min)</h3>
-                    <p>Summarize key points and action items</p>
-                  </div>
+                  {!meetingResponse ? (
+                    <div className="text-gray-500 text-sm">
+                      This tab will be available when the meeting starts.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <h3 className="font-semibold">Conclusion (5 min)</h3>
+                      <p>Summarize key points and action items</p>
+                    </div>
+                  )}
                 </TabsContent>
               </div>
             </Card>
