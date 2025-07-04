@@ -834,8 +834,8 @@ interface KPIFormData {
   visualFrequencyTypes: string;
   employeeId: string;
   value1: string;
-  value2: string;
-  tag: string;
+  value2?: string;
+  tag?: string;
   coreParameterId: string;
   hasData?: boolean;
   employeeName?: string;
@@ -1024,4 +1024,47 @@ interface MeetingResFire {
 
 interface HandleTabChangeLocalProps {
   (tab: string): void;
+}
+
+interface KpiAllList {
+  dataPointName?: string;
+  dataPointLabel?: string;
+  KPIMasterId?: string;
+  kpiId: string;
+  kpiName: string;
+  kpiLabel: string;
+  validationType: string;
+  frequencyType: string;
+  selectedType?: string | null;
+  coreParameterId?: string;
+  employeeName?: string;
+  dataPointEmployeeJunction?: {
+    dataPointEmpId: string;
+    employeeId: string;
+    value1: string;
+    value2: string;
+    employeeName: string;
+  }[];
+  dataArray?: KpiDataCell[];
+  tag?: string | null;
+  value1: string;
+  value2?: string | null;
+  unit?: string;
+  isVisualized: boolean;
+}
+
+interface SelectedKpisData {
+  kpiId: string;
+  kpiName: string;
+  kpiLabel: string;
+  frequencyType: string;
+  tag?: string | null;
+  unit: string;
+  validationType: string;
+  employeeName: string;
+  isVisualized: boolean;
+  value1: string;
+  value2?: string | null;
+  photo?: string | null;
+  dataArray: KpiDataCell[];
 }

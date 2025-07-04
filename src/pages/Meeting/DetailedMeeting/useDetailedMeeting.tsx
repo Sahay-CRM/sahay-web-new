@@ -43,6 +43,9 @@ export default function useDetailedMeeting() {
       ...(activeTab === "project"
         ? [queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] })]
         : []),
+      ...(activeTab === "kpis"
+        ? [queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] })]
+        : []),
     ]);
   }, [meetingResponse?.activeScreen]);
 

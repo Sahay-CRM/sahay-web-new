@@ -22,6 +22,7 @@ import {
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
+import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
 
 interface TasksProps {
   meetingId: string;
@@ -38,6 +39,7 @@ export default function Tasks({ meetingId, tasksFireBase }: TasksProps) {
   const { data: taskStatus } = useGetAllTaskStatus({
     filter: {},
   });
+  const { mutate: updateCompanyTask } = useAddUpdateCompanyTask();
 
   const { mutate: addMeetingTask } = addMeetingTaskDataMutation();
   const { mutate: deleteTaskById } = deleteMeetingTaskMutation();
@@ -107,7 +109,7 @@ export default function Tasks({ meetingId, tasksFireBase }: TasksProps) {
       taskStatusId: data,
       taskId: row?.taskId,
     };
-    console.log(payload);
+    updateCompanyTask(payload);
   };
 
   const conformDelete = useCallback(
@@ -169,12 +171,10 @@ export default function Tasks({ meetingId, tasksFireBase }: TasksProps) {
         </div>
       </div>
       <TableData
-        tableData={
-          selectedTask?.data?.map((task) => ({ ...task })) as Record<
-            string,
-            unknown
-          >[]
-        }
+        tableData={selectedTask?.data?.map((task) => ({
+          ...task,
+          status: task.taskStatusId,
+        }))}
         columns={visibleColumns}
         primaryKey="taskId"
         // onEdit={navigate(`/dashboard/tasks/edit/${row.taskId}`)}

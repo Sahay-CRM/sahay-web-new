@@ -101,6 +101,8 @@ const Urls = {
   updateHealthWeightage: () => `${baseUrl}/company/health/weightage/update`,
   //Datapoint
   getDatapointList: () => `${baseUrl}/company/kpi/get`,
+  ddAllDatapointList: () => `${baseUrl}/company/kpi/get-all`,
+
   getKpinonselectList: () => `${baseUrl}/kpi/get/non-select`,
   updateCompanyDatapoint: (id: string) => `${baseUrl}/company/kpi/update/${id}`,
   addCompanyDatapoint: () => `${baseUrl}/company/kpi/create`,
@@ -182,6 +184,14 @@ const Urls = {
   getMeetingProjectData: () => `${baseUrl}/company/detail-meeting/project/get`,
   deleteMeetingProjectData: (id: string) =>
     `${baseUrl}/company/detail-meeting/project/remove/${id}`,
+
+  addMeetingKpisData: () => `${baseUrl}/company/detail-meeting/kpi/add`,
+  getMeetingKpisData: () => `${baseUrl}/company/detail-meeting/kpi/get`,
+  getMeetingSelectedKpisData: () =>
+    `${baseUrl}/company/detail-meeting/kpi/get-data`,
+  deleteMeetingKpisData: (id: string) =>
+    `${baseUrl}/company/detail-meeting/kpi/remove/${id}`,
+  allKpiList: () => `${baseUrl}/company/kpi/get-detail-meeting`,
 };
 
 export default Urls;

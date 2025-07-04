@@ -1,3 +1,6 @@
+import { useEffect, useState, useMemo } from "react";
+import { Ellipsis, RefreshCcw } from "lucide-react";
+import { format } from "date-fns";
 import {
   Table,
   TableBody,
@@ -11,12 +14,12 @@ import clsx from "clsx";
 import useKpiDashboard from "./useKpiDashboard";
 import {
   formatCompactNumber,
+  formatTempValuesToPayload,
   // formatTempValuesToPayload,
   getColorFromName,
-  getKpiHeadersFromData,
   isValidInput,
 } from "@/features/utils/formatting.utils";
-import { useEffect, useState, useMemo } from "react";
+
 import {
   Tooltip,
   TooltipContent,
@@ -28,14 +31,18 @@ import { FormProvider, useForm } from "react-hook-form";
 import Loader from "@/components/shared/Loader/Loader";
 import { FormDatePicker } from "@/components/shared/Form/FormDatePicker/FormDatePicker";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw } from "lucide-react";
 import TabsSection from "./TabSection";
-import {
-  // addUpdateKpi,
-  useGetKpiDashboardStructure,
-} from "@/features/api/kpiDashboard";
+
 import WarningDialog from "./WarningModal";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import KpisSearchDropdown from "./KpiSearchDropdown";
+import {
+  addMeetingKpisDataMutation,
+  // useGetMeetingKpis,
+  useGetMeetingSelectedKpis,
+} from "@/features/api/companyMeeting";
+import KpiDrawer from "./KpiDrawer";
+import { addUpdateKpi } from "@/features/api/kpiDashboard";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -49,10 +56,13 @@ function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   );
 }
 
-export default function KPITable() {
+interface KpisProps {
+  meetingId: string;
+  kpisFireBase: () => void;
+}
+
+export default function KPITable({ meetingId, kpisFireBase }: KpisProps) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data: kpiStructure, isLoading: isKpiStructureLoading } =
-    useGetKpiDashboardStructure();
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -65,28 +75,104 @@ export default function KPITable() {
     null,
   );
 
+  const { mutate: addKpiList } = addMeetingKpisDataMutation();
+
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    if (!isKpiStructureLoading && kpiStructure?.data?.length) {
-      const urlSelectedPeriod = searchParams.get("selectedType");
-      const availablePeriods = kpiStructure.data.map(
-        (item) => item.frequencyType,
-      );
+  const { data: selectedKpis, isLoading: meetingLoading } =
+    useGetMeetingSelectedKpis({
+      filter: {
+        meetingId: meetingId,
+      },
+    });
 
-      // Set to URL param if valid, otherwise first available period
-      const newPeriod =
-        urlSelectedPeriod && availablePeriods.includes(urlSelectedPeriod)
-          ? urlSelectedPeriod
-          : kpiStructure.data[0].frequencyType;
+  const selectedKpisTyped = useMemo(
+    () => (Array.isArray(selectedKpis) ? selectedKpis : []),
+    [selectedKpis],
+  );
 
-      if (newPeriod !== selectedPeriod) {
-        setSelectedPeriod(newPeriod);
+  // Tabs data
+  const kpiStructure = useMemo(
+    () => ({
+      data: selectedKpisTyped,
+      totalCount: selectedKpisTyped.length,
+      success: true,
+      status: 200,
+      message: "",
+      currentPage: 1,
+      pageSize: selectedKpisTyped.length,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+      hasMore: false,
+      totalPage: 1,
+      sortBy: "",
+      sortOrder: "",
+    }),
+    [selectedKpisTyped],
+  );
+
+  const isLoading = !kpiStructure && !meetingLoading;
+
+  // Filtered data for selected period
+  const filteredKpiData = useMemo(() => {
+    return (
+      selectedKpisTyped.filter(
+        (item: FrequencyData) => item.frequencyType == selectedPeriod,
+      ) ?? []
+    );
+  }, [selectedKpisTyped, selectedPeriod]);
+
+  // Table headers from first kpi's dataArray
+  const kpiHeaders = useMemo(() => {
+    const firstKpi = filteredKpiData[0]?.kpis?.[0] as
+      | SelectedKpisData
+      | undefined;
+    if (!firstKpi || !Array.isArray(firstKpi.dataArray)) return [];
+    return firstKpi.dataArray.map((cell: KpiDataCell) => {
+      const start = cell.startDate ? new Date(cell.startDate) : null;
+      const end = cell.endDate ? new Date(cell.endDate) : null;
+      if (selectedPeriod === "DAILY") {
+        return {
+          label: start ? format(start, "dd MMM") : "",
+          year: start ? format(start, "yyyy") : "",
+        };
+      } else {
+        return {
+          label: start ? format(start, "dd MMM") : "",
+          year: end ? format(end, "dd MMM") : "",
+        };
       }
+    });
+  }, [filteredKpiData, selectedPeriod]);
+
+  // Table rows: each kpi is a row
+  const kpiTableRows = useMemo(() => {
+    if (!filteredKpiData.length || !filteredKpiData[0].kpis) return [];
+    // If kpis are already SelectedKpisData[]
+    if (
+      (filteredKpiData[0].kpis as unknown as SelectedKpisData[])[0]?.dataArray
+    ) {
+      return (filteredKpiData[0].kpis as unknown as SelectedKpisData[]).map(
+        (kpi) => ({ kpi }),
+      );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kpiStructure, isKpiStructureLoading, searchParams]);
+    // Otherwise, fallback to empty
+    return [];
+  }, [filteredKpiData]);
+
+  // Visualized/non-visualized rows
+  const visualizedKpiRows = useMemo(() => {
+    return kpiTableRows.filter(
+      (row: { kpi: KpiAllList }) => row.kpi.isVisualized,
+    );
+  }, [kpiTableRows]);
+  const nonVisualizedKpiRows = useMemo(() => {
+    return kpiTableRows.filter(
+      (row: { kpi: KpiAllList }) => !row.kpi.isVisualized,
+    );
+  }, [kpiTableRows]);
 
   // Prepare input values for each cell - moved here so tempValues is available earlier
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
@@ -236,40 +322,10 @@ export default function KPITable() {
     selectedDate,
   });
 
-  const isLoading = !kpiStructure;
-  // const isLoading = false;
-
   // Check if there are no KPIs available using totalCount
-  const hasNoKpis = useMemo(() => {
-    return !kpiStructure?.totalCount || kpiStructure.totalCount === 0;
-  }, [kpiStructure]);
-  // Memoize filteredData
-  const filteredData = useMemo(() => {
-    return (
-      kpiStructure?.data?.filter(
-        (item) => item.frequencyType == selectedPeriod,
-      ) ?? []
-    );
-  }, [kpiStructure, selectedPeriod]);
-
-  // Use type guard for headers
-  const headers = getKpiHeadersFromData(
-    isKpiDataCellArrayArray(kpiData?.data) ? kpiData.data : [],
-    selectedPeriod,
-  ); // Flatten KPI structure to rows: each row = { kpi, assignee }
-  const kpiRows = useMemo(() => {
-    if (!filteredData.length || !filteredData[0].kpis) return [];
-    // Each kpi is a row now
-    return filteredData[0].kpis.map((kpi) => ({ kpi }));
-  }, [filteredData]);
-
-  // Separate rows by visualization status
-  const visualizedRows = useMemo(() => {
-    return kpiRows.filter((row) => row.kpi.isVisualized);
-  }, [kpiRows]);
-  const nonVisualizedRows = useMemo(() => {
-    return kpiRows.filter((row) => !row.kpi.isVisualized);
-  }, [kpiRows]);
+  // const hasNoKpis = useMemo(() => {
+  //   return !kpiStructure?.totalCount || kpiStructure.totalCount === 0;
+  // }, [kpiStructure]);
 
   // Warn on page refresh, reload, or close if there are unsaved changes
   useEffect(() => {
@@ -286,7 +342,7 @@ export default function KPITable() {
     };
   }, [tempValues]);
 
-  // const { mutate: addUpdateKpiData } = addUpdateKpi();
+  const { mutate: addUpdateKpiData } = addUpdateKpi();
 
   useEffect(() => {
     if (isKpiDataCellArrayArray(kpiData?.data)) {
@@ -304,51 +360,50 @@ export default function KPITable() {
 
   const methods = useForm();
 
+  // const [menuOpen, setMenuOpen] = useState<{ [kpiId: string]: boolean }>({});
+
+  // Drawer state
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedKpi, setSelectedKpi] = useState<KpiAllList | null>(null);
+
   // Helper function to render table rows
-  const renderKpiRows = (rows: { kpi: Kpi }[]) => {
-    return rows.map((row) => {
+  const renderKpiRows = (rows: { kpi: KpiAllList }[]) => {
+    return rows.map((row: { kpi: KpiAllList }) => {
       const { kpi } = row;
-      let dataRow: KpiDataCell[] | undefined = undefined;
-      if (isKpiDataCellArrayArray(kpiData?.data)) {
-        dataRow = isKpiDataCellArrayArray(kpiData?.data)
-          ? (kpiData.data as KpiDataCell[][]).find(
-              (cells) =>
-                Array.isArray(cells) &&
-                cells.length > 0 &&
-                cells[0].kpiId === kpi.kpiId,
-            )
-          : undefined;
-      }
+      // Use kpi.dataArray for columns
+      const dataRow: KpiDataCell[] = kpi.dataArray || [];
       return (
-        <TableRow key={kpi.kpiId} className="border-b">
+        <TableRow key={kpi.kpiId} className="border-b ">
           <TableCell
             className={clsx(
               "px-3 py-2 w-[60px] bg-gray-100 sticky left-0 z-10",
             )}
           >
-            <Avatar
-              className={`h-8 w-8 ${getColorFromName(kpi?.employeeName)}`}
-            >
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <AvatarFallback
-                      className={`${getColorFromName(kpi?.employeeName)} font-bold`}
-                    >
-                      {(() => {
-                        if (!kpi?.employeeName) return "";
-                        const names = kpi.employeeName.split(" ");
-                        const firstInitial = names[0]?.[0] ?? "";
-                        const lastInitial =
-                          names.length > 1 ? names[names.length - 1][0] : "";
-                        return (firstInitial + lastInitial).toUpperCase();
-                      })()}
-                    </AvatarFallback>
-                  </TooltipTrigger>
-                  <TooltipContent>{kpi?.employeeName}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </Avatar>
+            <div className="flex gap-3 items-center">
+              <Avatar
+                className={`h-8 w-8 ${getColorFromName(kpi?.employeeName)}`}
+              >
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AvatarFallback
+                        className={`${getColorFromName(kpi?.employeeName)} font-bold`}
+                      >
+                        {(() => {
+                          if (!kpi?.employeeName) return "";
+                          const names = kpi.employeeName.split(" ");
+                          const firstInitial = names[0]?.[0] ?? "";
+                          const lastInitial =
+                            names.length > 1 ? names[names.length - 1][0] : "";
+                          return (firstInitial + lastInitial).toUpperCase();
+                        })()}
+                      </AvatarFallback>
+                    </TooltipTrigger>
+                    <TooltipContent>{kpi?.employeeName}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </Avatar>
+            </div>
           </TableCell>
           <TableCell
             className={clsx(
@@ -368,6 +423,18 @@ export default function KPITable() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
+              {/* Add button to open drawer */}
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => {
+                  setSelectedKpi(kpi);
+                  setDrawerOpen(true);
+                }}
+                className="ml-2"
+              >
+                <Ellipsis size={18} />
+              </Button>
             </div>
           </TableCell>
           <TableCell className="px-3 py-2 w-[80px] bg-gray-100 sticky left-[210px] break-words z-10 pl-0 ml-2">
@@ -393,19 +460,17 @@ export default function KPITable() {
               </Tooltip>
             </TooltipProvider>
           </TableCell>
-          {/* <TableCell className="w-[60px] bg-gray-100 sticky left-[320px] z-10 text-center"></TableCell> */}
-          {headers.map((_, colIdx) => {
-            const cell = dataRow?.[colIdx];
+          {kpiHeaders.map((_: { label: string; year: string }, i: number) => {
+            const cell = dataRow?.[i];
             const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
             const validationType = cell?.validationType;
             const value1 = cell?.value1;
             const value2 = cell?.value2;
             const inputVal = inputValues[key] ?? cell?.data?.toString() ?? "";
             const isVisualized = kpi?.isVisualized;
-
             // Permission logic
-            const canAdd = true;
-            const canEdit = true;
+            const canAdd = !cell?.data;
+            const canEdit = !!cell?.data;
             const canInput = !isVisualized && (canAdd || canEdit);
 
             if (validationType == "YES_NO") {
@@ -415,7 +480,7 @@ export default function KPITable() {
               ];
               const isValid = inputVal === String(value1);
               return (
-                <TableCell key={colIdx} className="px-3 py-2">
+                <TableCell key={i} className="px-3 py-2">
                   <div
                     className={clsx(
                       "rounded-sm text-sm w-[100px] h-[40px]",
@@ -455,7 +520,7 @@ export default function KPITable() {
               );
             }
             return (
-              <TableCell key={colIdx} className="px-3 py-2">
+              <TableCell key={i} className="px-3 py-2">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -571,7 +636,12 @@ export default function KPITable() {
   }
 
   const handleSubmit = () => {
-    // addUpdateKpiData(formatTempValuesToPayload(tempValues));
+    // console.log(formatTempValuesToPayload(tempValues));
+    addUpdateKpiData(formatTempValuesToPayload(tempValues), {
+      onSuccess: () => {
+        kpisFireBase();
+      },
+    });
   };
   const handlePeriodChange = (newPeriod: string) => {
     if (Object.keys(tempValues).length > 0) {
@@ -612,20 +682,22 @@ export default function KPITable() {
     setTempValues({});
     setShowWarning(false);
 
-    if (pendingPeriod) {
-      setSelectedPeriod(pendingPeriod);
+    // Save to local variables before resetting
+    const nextPeriod = pendingPeriod;
+    const nextNavigation = pendingNavigation;
+    setPendingPeriod(null);
+    setPendingNavigation(null);
+
+    if (nextPeriod) {
+      setSelectedPeriod(nextPeriod);
       const newParams = new URLSearchParams(searchParams);
-      newParams.set("selectedType", pendingPeriod);
+      newParams.set("selectedType", nextPeriod);
       setSearchParams(newParams, { replace: true });
-      setPendingPeriod(null);
     }
 
-    // Handle navigation immediately
-    if (pendingNavigation) {
-      // Use setTimeout to ensure the state updates are processed first
+    if (nextNavigation) {
       setTimeout(() => {
-        navigate(pendingNavigation);
-        setPendingNavigation(null);
+        navigate(nextNavigation);
       }, 0);
     }
   };
@@ -644,23 +716,42 @@ export default function KPITable() {
   }
 
   // Show empty state when no KPIs are available
-  if (hasNoKpis) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No KPIs Available
-          </h3>
-          <p className="text-gray-500">
-            Please add KPI first to view the dashboard.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // if (hasNoKpis) {
+  //   return (
+  //     <div className="flex flex-col items-center justify-center py-12">
+  //       <div className="text-center">
+  //         <h3 className="text-lg font-medium text-gray-900 mb-2">
+  //           No KPIs Available
+  //         </h3>
+  //         <p className="text-gray-500">
+  //           Please add KPI first to view the dashboard.
+  //         </p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
+  const handleAddKpis = (tasks: KpiAllList[]) => {
+    const payload = {
+      meetingId: meetingId,
+      kpiIds: tasks.map((item) => item.kpiId),
+    };
+    addKpiList(payload, {
+      onSuccess: () => {
+        kpisFireBase();
+      },
+    });
+  };
 
   return (
     <FormProvider {...methods}>
+      <div>
+        <KpisSearchDropdown
+          onAdd={handleAddKpis}
+          minSearchLength={2}
+          filterProps={{ pageSize: 20 }}
+        />
+      </div>
       <div className="flex justify-between">
         {" "}
         <div className="flex justify-between items-center">
@@ -719,50 +810,51 @@ export default function KPITable() {
                 <TableHead className="px-3 py-2 w-[80px] bg-primary sticky left-[210px] z-20 text-white text-center">
                   Goal
                 </TableHead>
-                {/* <TableHead className="w-[60px] bg-primary sticky left-[320px] z-20" /> */}
-                {headers.map((header, i) => (
-                  <TableHead
-                    key={i}
-                    className="px-3 py-2 w-[100px] whitespace-nowrap bg-white text-gray-600"
-                  >
-                    <div className="flex flex-col items-center leading-tight">
-                      <span>{header.label}</span>
-                      {header.year && (
-                        <span className="text-xs text-muted-foreground">
-                          {header.year}
-                        </span>
-                      )}
-                    </div>
-                  </TableHead>
-                ))}
+                {kpiHeaders.map(
+                  (header: { label: string; year: string }, i: number) => (
+                    <TableHead
+                      key={i}
+                      className="px-3 py-2 w-[100px] whitespace-nowrap bg-white text-gray-600"
+                    >
+                      <div className="flex flex-col items-center leading-tight">
+                        <span>{header.label}</span>
+                        {header.year && (
+                          <span className="text-xs text-muted-foreground">
+                            {header.year}
+                          </span>
+                        )}
+                      </div>
+                    </TableHead>
+                  ),
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
               {/* Visualized KPIs Section */}
-              {visualizedRows.length > 0 && (
+              {visualizedKpiRows.length > 0 && (
                 <>
                   <TableRow>
                     <TableCell
-                      colSpan={4 + headers.length}
+                      colSpan={4 + kpiHeaders.length}
                       className="bg-gray-100 border-b px-3 py-1"
                     />
                   </TableRow>
-                  {renderKpiRows(visualizedRows)}
+                  {renderKpiRows(visualizedKpiRows)}
                 </>
               )}
 
               {/* Non-Visualized KPIs Section */}
-              {nonVisualizedRows.length > 0 && (
+              {nonVisualizedKpiRows.length > 0 && (
                 <>
-                  {visualizedRows.length > 0 && (
+                  {visualizedKpiRows.length > 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={4 + headers.length}
+                        colSpan={4 + kpiHeaders.length}
                         className="bg-gray-100 border-b px-3 py-1"
                       />
                     </TableRow>
                   )}
-                  {renderKpiRows(nonVisualizedRows)}
+                  {renderKpiRows(nonVisualizedKpiRows)}
                 </>
               )}
             </TableBody>
@@ -774,6 +866,11 @@ export default function KPITable() {
         onSubmit={handleWarningSubmit}
         onDiscard={handleWarningDiscard}
         onClose={handleWarningClose}
+      />
+      <KpiDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        kpiId={selectedKpi?.kpiId}
       />
     </FormProvider>
   );

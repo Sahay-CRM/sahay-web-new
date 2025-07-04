@@ -23,3 +23,8 @@ export { default as deleteMeetingTaskMutation } from "./useDeleteMeetingTask";
 export { default as addMeetingProjectDataMutation } from "./useAddMeetingProjectData";
 export { default as useGetMeetingProject } from "./useGetMeetingProject";
 export { default as deleteMeetingProjectMutation } from "./useDeleteMeetingProject";
+
+export { default as addMeetingKpisDataMutation } from "./useAddMeetingKpisData";
+export { default as deleteMeetingKpisMutation } from "./useDeleteMeetingKpis";
+export { default as useGetMeetingKpis } from "./useGetMeetingKpis";
+export { default as useGetMeetingSelectedKpis } from "./useGetMeetingSelectedKpis";

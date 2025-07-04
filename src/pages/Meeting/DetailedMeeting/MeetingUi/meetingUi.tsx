@@ -49,6 +49,7 @@ export default function MeetingUi({
     meetingId,
     tasksFireBase,
     projectFireBase,
+    kpisFireBase,
   } = useMeetingUi({ meetingResponse, isTeamLeader });
 
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -402,7 +403,10 @@ export default function MeetingUi({
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <KPITable />
+                      <KPITable
+                        meetingId={meetingId ?? ""}
+                        kpisFireBase={kpisFireBase}
+                      />
                     </div>
                   )}
                 </TabsContent>

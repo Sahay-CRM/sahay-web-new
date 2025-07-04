@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/tooltip";
 import ProjectSearchDropdown from "./ProjectSearchDropdown";
 import {
+  useAddUpdateCompanyProject,
   useGetAllProjectStatus,
   useGetCompanyProject,
 } from "@/features/api/companyProject";
@@ -42,6 +43,8 @@ export default function Projects({ meetingId, projectFireBase }: ProjectProps) {
       meetingId: meetingId,
     },
   });
+
+  const { mutate: addProject } = useAddUpdateCompanyProject();
 
   const stopApi = meetProject?.map((item) => item.projectId) ?? [];
 
@@ -105,7 +108,7 @@ export default function Projects({ meetingId, projectFireBase }: ProjectProps) {
       projectStatusId: data,
       projectId: row?.projectId,
     };
-    console.log(payload);
+    addProject(payload);
   };
 
   const conformDelete = useCallback(
@@ -168,10 +171,10 @@ export default function Projects({ meetingId, projectFireBase }: ProjectProps) {
       </div>
       <TableData
         tableData={
-          (selectedProjects?.data?.map((item) => ({ ...item })) as Record<
-            string,
-            unknown
-          >[]) ?? []
+          selectedProjects?.data?.map((item) => ({
+            ...item,
+            status: item.projectStatusId,
+          })) ?? []
         }
         columns={visibleColumns}
         primaryKey="projectId"
