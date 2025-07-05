@@ -16,6 +16,10 @@ const notificationSlice = createSlice({
         isRead = action.payload.data.isRead === "true";
       }
       state.unshift({ ...action.payload, isRead });
+      // Keep only the latest 5 notifications
+      if (state.length > 5) {
+        state.length = 5;
+      }
     },
     setNotifications: (_state, action: PayloadAction<AppNotification[]>) => {
       return action.payload;
