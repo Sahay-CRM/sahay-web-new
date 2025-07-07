@@ -15,7 +15,6 @@ interface TimerProps {
   showEditButton?: boolean;
   meetingId: string;
   tabName: string;
-  showIcon?: boolean;
 }
 
 const Timer: React.FC<TimerProps> = ({
@@ -29,7 +28,6 @@ const Timer: React.FC<TimerProps> = ({
   showEditButton = true,
   meetingId,
   tabName,
-  showIcon,
 }) => {
   const [timeLeft, setTimeLeft] = useState(initialMinutes * 60);
   const [isEditing, setIsEditing] = useState(false);
@@ -169,7 +167,6 @@ const Timer: React.FC<TimerProps> = ({
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <Clock className="h-4 w-4 text-primary" />
-      {showIcon && <Clock className="h-4 w-4 text-primary" />}
       {isEditing ? (
         <div className="flex items-center gap-2">
           <Input
@@ -207,14 +204,13 @@ const Timer: React.FC<TimerProps> = ({
                   : `-${formatTime(Math.abs(displayTime))}`}
           </span>
           {showEditButton && !readOnly && (
-            <Button
-              variant="ghost"
-              size="sm"
+            <span
               onClick={handleEdit}
-              className="h-6 w-6 p-0 ml-1 hover:bg-gray-100"
+              className="h-6 w-6 ml-1 cursor-pointer flex items-center justify-center hover:bg-gray-100 rounded"
+              title="Edit"
             >
               <Pencil className="h-3 w-3 text-gray-500 hover:text-gray-700" />
-            </Button>
+            </span>
           )}
         </div>
       )}

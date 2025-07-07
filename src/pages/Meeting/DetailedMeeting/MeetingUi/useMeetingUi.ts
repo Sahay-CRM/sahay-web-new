@@ -13,13 +13,13 @@ import {
 
 interface UseMeetingUiOptions {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  meetingResponse: any;
+  meetingStart: any;
   isTeamLeader: boolean;
 }
 
 export default function useMeetingUi({
   isTeamLeader,
-  meetingResponse,
+  meetingStart,
 }: UseMeetingUiOptions) {
   const { id: meetingId } = useParams();
 
@@ -158,7 +158,7 @@ export default function useMeetingUi({
   };
 
   const agendaFireBase = () => {
-    if (meetingResponse && meetingResponse !== null) {
+    if (meetingStart) {
       const db = getDatabase();
       const meetRef = ref(db, `meetings/${meetingId}/agenda`);
       update(meetRef, {
@@ -178,7 +178,7 @@ export default function useMeetingUi({
   // };
 
   const tasksFireBase = () => {
-    if (meetingResponse && meetingResponse !== null) {
+    if (meetingStart) {
       const db = getDatabase();
       const meetRef = ref(db, `meetings/${meetingId}/discussion/tasks`);
       update(meetRef, {
@@ -188,7 +188,7 @@ export default function useMeetingUi({
   };
 
   const projectFireBase = () => {
-    if (meetingResponse && meetingResponse !== null) {
+    if (meetingStart) {
       const db = getDatabase();
       const meetRef = ref(db, `meetings/${meetingId}/discussion/project`);
       update(meetRef, {
@@ -197,7 +197,7 @@ export default function useMeetingUi({
     }
   };
   const kpisFireBase = () => {
-    if (meetingResponse && meetingResponse !== null) {
+    if (meetingStart) {
       const db = getDatabase();
       const meetRef = ref(db, `meetings/${meetingId}/discussion/kpis`);
       update(meetRef, {
@@ -207,7 +207,7 @@ export default function useMeetingUi({
   };
 
   const conclusionFireBase = () => {
-    if (meetingResponse && meetingResponse !== null) {
+    if (meetingStart) {
       const db = getDatabase();
       const meetRef = ref(db, `meetings/${meetingId}/conclusion`);
       update(meetRef, {
@@ -219,7 +219,7 @@ export default function useMeetingUi({
   const tabChangeFireBase = useCallback(
     async (tab: string) => {
       tab = tab.toLowerCase();
-      if (meetingResponse && meetingResponse !== null && tab) {
+      if (meetingStart) {
         const db = getDatabase();
         const meetRef = ref(db, `meetings/${meetingId}`);
         update(meetRef, {
@@ -227,7 +227,7 @@ export default function useMeetingUi({
         });
       }
     },
-    [meetingId, meetingResponse],
+    [meetingId, meetingStart],
   );
 
   return {

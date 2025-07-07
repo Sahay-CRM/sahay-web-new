@@ -15,6 +15,7 @@ export default function DetailedMeeting() {
     failureReason,
     meetingResponse,
     handleCloseMeeting,
+    isMeetingStart,
   } = useDetailedMeeting();
   const userId = useSelector(getUserId);
 
@@ -100,7 +101,7 @@ export default function DetailedMeeting() {
             (meetingData.data.joiners as Joiners[]).some(
               (joiner) => joiner.employeeId === userId && joiner.isTeamLeader,
             ) ? (
-              meetingResponse !== null ? (
+              isMeetingStart ? (
                 <Button
                   variant="outline"
                   className="cursor-pointer bg-red-800 text-white py-5 px-8 hover:bg-red-800/80 hover:text-white"
@@ -131,7 +132,7 @@ export default function DetailedMeeting() {
       </Card>
       <div>{meetingResponse !== null && JSON.stringify(meetingResponse)}</div>
       <MeetingUi
-        meetingResponse={meetingResponse}
+        meetingStart={isMeetingStart}
         isTeamLeader={isTeamLeader}
         activeScreen={meetingResponse?.activeScreen}
       />

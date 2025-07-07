@@ -7,12 +7,10 @@ import { queryClient } from "@/queryClient";
 import { getDatabase, off, onValue, ref } from "firebase/database";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { setAllTimers } from "@/features/reducers/meetingTimers.reducer";
 
 export default function useDetailedMeeting() {
   const { id: meetingId } = useParams();
-  const dispatch = useDispatch();
+  const [isMeetingStart, setIsMeetingStart] = useState(false);
 
   const [meetingResponse, setMeetingResponse] = useState<MeetingResFire | null>(
     null,
@@ -27,17 +25,9 @@ export default function useDetailedMeeting() {
   const handleStartMeeting = useCallback(() => {
     if (meetingId) {
       createMeet(meetingId);
-      // Dispatch default timers to Redux
-      const defaultTimers = {
-        agenda: 9 * 60,
-        tasks: 1 * 60,
-        project: 1 * 60,
-        kpis: 1 * 60,
-        conclusion: 1 * 60,
-      };
-      dispatch(setAllTimers({ meetingId, timers: defaultTimers }));
+      setIsMeetingStart(true);
     }
-  }, [createMeet, meetingId, dispatch]);
+  }, [createMeet, meetingId]);
 
   const handleUpdatedRefresh = useCallback(async () => {
     const activeTab = meetingResponse?.activeScreen;
@@ -82,7 +72,11 @@ export default function useDetailedMeeting() {
 
   const handleCloseMeeting = useCallback(() => {
     if (meetingId) {
-      endMeet(meetingId);
+      endMeet(meetingId, {
+        onSuccess: () => {
+          setIsMeetingStart(false);
+        },
+      });
     }
   }, [endMeet, meetingId]);
 
@@ -93,5 +87,6 @@ export default function useDetailedMeeting() {
     failureReason: (failureReason as any)?.response?.data ?? failureReason,
     meetingResponse,
     handleCloseMeeting,
+    isMeetingStart,
   };
 }

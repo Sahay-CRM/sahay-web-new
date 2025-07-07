@@ -23,7 +23,7 @@ export default function useCreateDetailMeeting() {
       return resData;
     },
     onSuccess: (res) => {
-      toast.success(res.data.message || "Operation successful");
+      toast.success(res.message || "Meeting Started");
       // queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {

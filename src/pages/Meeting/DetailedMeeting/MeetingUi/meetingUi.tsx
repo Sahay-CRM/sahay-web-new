@@ -22,17 +22,24 @@ type HandleTabChangeLocalProps = (tab: string) => void;
 
 interface MeetingUiProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  meetingResponse: any;
+  meetingStart: any;
   isTeamLeader: boolean;
   activeScreen?: string;
+  meetingEnded?: boolean;
+  onLogTabTimes?: (data: {
+    defaultTimes: Record<string, number>;
+    spentTimes: Record<string, number>;
+  }) => void;
 }
 
 const TAB_NAMES = ["agenda", "tasks", "project", "kpis", "conclusion"];
 
 export default function MeetingUi({
-  meetingResponse,
+  meetingStart,
   isTeamLeader,
   activeScreen,
+  meetingEnded,
+  onLogTabTimes,
 }: MeetingUiProps) {
   const {
     objectiveInput,
@@ -55,14 +62,14 @@ export default function MeetingUi({
     tasksFireBase,
     projectFireBase,
     kpisFireBase,
-  } = useMeetingUi({ meetingResponse, isTeamLeader });
+  } = useMeetingUi({ meetingStart, isTeamLeader });
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState(
     activeScreen ? activeScreen.toLowerCase() : "agenda",
   );
 
-  const isMeetingStarted = meetingResponse && meetingResponse !== null;
+  const isMeetingStarted = meetingStart === true;
 
   const safeMeetingId = meetingId ?? "";
 
@@ -71,7 +78,7 @@ export default function MeetingUi({
       const stored = localStorage.getItem(
         `meeting-${safeMeetingId}-timer-${tab}`,
       );
-      return stored ? parseInt(stored) : 1;
+      return stored ? parseInt(stored) : 5;
     },
     [safeMeetingId],
   );
@@ -143,16 +150,16 @@ export default function MeetingUi({
     });
   };
 
-  const handleTimeSpent = (tab: string, seconds: number) => {
-    setTabTimes((prev) => {
-      const updated = { ...prev, [tab]: seconds };
-      localStorage.setItem(
-        `meeting-${safeMeetingId}-timer-spent-${tab}`,
-        String(seconds),
-      );
-      return updated;
-    });
-  };
+  // const handleTimeSpent = (tab: string, seconds: number) => {
+  //   setTabTimes((prev) => {
+  //     const updated = { ...prev, [tab]: seconds };
+  //     localStorage.setItem(
+  //       `meeting-${safeMeetingId}-timer-spent-${tab}`,
+  //       String(seconds)
+  //     );
+  //     return updated;
+  //   });
+  // };
 
   useEffect(() => {
     if (activeScreen && activeScreen.toLowerCase() !== activeTab) {
@@ -182,6 +189,16 @@ export default function MeetingUi({
     0,
     agendaInitialMinutes * 60 - agendaSpentSeconds,
   );
+
+  useEffect(() => {
+    if (meetingEnded && onLogTabTimes) {
+      onLogTabTimes({
+        defaultTimes: timerMinutesMap,
+        spentTimes: tabTimes,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meetingEnded]);
 
   return (
     <div className="flex gap-3">
@@ -216,13 +233,9 @@ export default function MeetingUi({
                           }
                           isActive={activeTab === "agenda" && isMeetingStarted}
                           className="ml-auto"
-                          onTimeSpent={(seconds) =>
-                            handleTimeSpent("agenda", seconds)
-                          }
                           showEditButton={!isMeetingStarted}
-                          meetingId={safeMeetingId}
+                          meetingId={meetingId || safeMeetingId}
                           tabName="agenda"
-                          showIcon={!isMeetingStarted}
                         />
                       </div>
                     )}
@@ -251,36 +264,8 @@ export default function MeetingUi({
                     {!isCollapsed && (
                       <div className="ml-6 mt-1 space-y-1">
                         <TabsTrigger
-                          value="tasks"
-                          className="text-left w-full justify-start text-sm"
-                          disabled={!meetingResponse}
-                        >
-                          <div className="flex items-center w-full gap-6">
-                            <span className="flex-1 text-left">Tasks</span>
-                            <Timer
-                              key={isMeetingStarted + "-" + activeTab}
-                              initialMinutes={timerMinutesMap["tasks"]}
-                              onTimeChange={(minutes) =>
-                                handleTimeChange("tasks", minutes)
-                              }
-                              isActive={
-                                activeTab === "tasks" && isMeetingStarted
-                              }
-                              className="ml-auto"
-                              onTimeSpent={(seconds) =>
-                                handleTimeSpent("tasks", seconds)
-                              }
-                              showEditButton={!isMeetingStarted}
-                              meetingId={safeMeetingId}
-                              tabName="tasks"
-                              showIcon={!isMeetingStarted}
-                            />
-                          </div>
-                        </TabsTrigger>
-                        <TabsTrigger
                           value="project"
                           className="w-full justify-start text-left text-sm"
-                          disabled={!meetingResponse}
                         >
                           <div className="flex items-center w-full gap-6">
                             <span className="flex-1 text-left">Project</span>
@@ -294,20 +279,38 @@ export default function MeetingUi({
                                 activeTab === "project" && isMeetingStarted
                               }
                               className="ml-auto"
-                              onTimeSpent={(seconds) =>
-                                handleTimeSpent("project", seconds)
-                              }
                               showEditButton={!isMeetingStarted}
                               meetingId={safeMeetingId}
                               tabName="project"
-                              showIcon={!isMeetingStarted}
                             />
                           </div>
                         </TabsTrigger>
                         <TabsTrigger
+                          value="tasks"
+                          className="text-left w-full justify-start text-sm"
+                        >
+                          <div className="flex items-center w-full gap-6">
+                            <span className="flex-1 text-left">Tasks</span>
+                            <Timer
+                              key={isMeetingStarted + "-" + activeTab}
+                              initialMinutes={timerMinutesMap["tasks"]}
+                              onTimeChange={(minutes) =>
+                                handleTimeChange("tasks", minutes)
+                              }
+                              isActive={
+                                activeTab === "tasks" && isMeetingStarted
+                              }
+                              className="ml-auto"
+                              showEditButton={!isMeetingStarted}
+                              meetingId={safeMeetingId}
+                              tabName="tasks"
+                            />
+                          </div>
+                        </TabsTrigger>
+
+                        <TabsTrigger
                           value="kpis"
                           className="w-full justify-start text-sm"
-                          disabled={!meetingResponse}
                         >
                           <div className="flex items-center w-full gap-6">
                             <span className="flex-1 text-left">KPIs</span>
@@ -321,13 +324,9 @@ export default function MeetingUi({
                                 activeTab === "kpis" && isMeetingStarted
                               }
                               className="ml-auto"
-                              onTimeSpent={(seconds) =>
-                                handleTimeSpent("kpis", seconds)
-                              }
                               showEditButton={!isMeetingStarted}
                               meetingId={safeMeetingId}
                               tabName="kpis"
-                              showIcon={!isMeetingStarted}
                             />
                           </div>
                         </TabsTrigger>
@@ -337,25 +336,11 @@ export default function MeetingUi({
                   <TabsTrigger
                     value="conclusion"
                     className={`justify-start text-left w-full ${isCollapsed ? "p-2" : "gap-2"}`}
-                    disabled={!meetingResponse}
                   >
                     <CheckCircle className="h-4 w-4" />
                     {!isCollapsed && (
                       <div className="flex items-center w-full gap-6">
                         <span className="flex-1 text-left">Conclusion</span>
-                        {/* <Timer
-                          initialMinutes={timerMinutesMap["conclusion"]}
-                          onTimeChange={(minutes) =>
-                            handleTimeChange("conclusion", minutes)
-                          }
-                          isActive={
-                            activeTab === "conclusion" && isMeetingStarted
-                          }
-                          className="ml-auto"
-                          showEditButton={true}
-                          meetingId={safeMeetingId}
-                          tabName="conclusion"
-                        /> */}
                       </div>
                     )}
                   </TabsTrigger>
@@ -375,7 +360,7 @@ export default function MeetingUi({
                   className="flex-1 px-4 max-h-[500px] min-h-[500px] overflow-x-auto transition-all duration-300"
                   style={{
                     width: isCollapsed
-                      ? "calc(100vw - 50px - 700px)"
+                      ? "calc(100vw - 50px - 800px)"
                       : "calc(100vw - 200px - 850px)",
                     minWidth: 0,
                     transitionDuration: "7000px",
@@ -385,7 +370,6 @@ export default function MeetingUi({
                   <TabsContent value="agenda" className="">
                     <div className="space-y-4">
                       <h3 className="font-semibold">Agenda</h3>
-
                       <div className="grid grid-cols-2 border rounded-lg">
                         <div className="space-y-2 border-r pr-5 py-2 px-4">
                           <h4 className="font-medium">Issues</h4>
@@ -586,66 +570,42 @@ export default function MeetingUi({
                     </div>
                   </TabsContent>
                   <TabsContent value="tasks" className="p-4 border rounded-lg">
-                    {!meetingResponse ? (
-                      <div className="text-gray-500 text-sm">
-                        This tab will be available when the meeting starts.
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <Tasks
-                          meetingId={safeMeetingId}
-                          tasksFireBase={tasksFireBase}
-                        />
-                      </div>
-                    )}
+                    <div className="space-y-2">
+                      <Tasks
+                        meetingId={safeMeetingId}
+                        tasksFireBase={tasksFireBase}
+                      />
+                    </div>
                   </TabsContent>
                   <TabsContent
                     value="project"
                     className="p-4 border rounded-lg"
                   >
-                    {!meetingResponse ? (
-                      <div className="text-gray-500 text-sm">
-                        This tab will be available when the meeting starts.
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <Projects
-                          meetingId={safeMeetingId}
-                          projectFireBase={projectFireBase}
-                        />
-                      </div>
-                    )}
+                    <div className="space-y-2">
+                      <Projects
+                        meetingId={safeMeetingId}
+                        projectFireBase={projectFireBase}
+                      />
+                    </div>
                   </TabsContent>
                   <TabsContent value="kpis" className="p-4 border rounded-lg">
-                    {!meetingResponse ? (
-                      <div className="text-gray-500 text-sm">
-                        This tab will be available when the meeting starts.
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <KPITable
-                          meetingId={safeMeetingId}
-                          kpisFireBase={kpisFireBase}
-                        />
-                      </div>
-                    )}
+                    <div className="space-y-4">
+                      <KPITable
+                        meetingId={safeMeetingId}
+                        kpisFireBase={kpisFireBase}
+                      />
+                    </div>
                   </TabsContent>
                   <TabsContent
                     value="conclusion"
                     className="p-4 border rounded-lg"
                   >
-                    {!meetingResponse ? (
-                      <div className="text-gray-500 text-sm">
-                        This tab will be available when the meeting starts.
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <h3 className="font-semibold">
-                          Conclusion ({timerMinutesMap["conclusion"]} min)
-                        </h3>
-                        <p>Summarize key points and action items</p>
-                      </div>
-                    )}
+                    <div className="space-y-2">
+                      <h3 className="font-semibold">
+                        Conclusion ({timerMinutesMap["conclusion"]} min)
+                      </h3>
+                      <p>Summarize key points and action items</p>
+                    </div>
                   </TabsContent>
                 </div>
               </Card>
@@ -653,7 +613,7 @@ export default function MeetingUi({
           </Tabs>
         </div>
       </div>
-      <div className="w-[28%]">dddd</div>
+      <div className="w-[25%] bg-gray-300 rounded-2xl p-2 ">dddd</div>
     </div>
   );
 }
