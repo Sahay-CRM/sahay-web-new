@@ -3,6 +3,8 @@ import useDetailedMeeting from "./useDetailedMeeting";
 import { Button } from "@/components/ui/button";
 import PageNotAccess from "@/pages/PageNoAccess";
 import MeetingUi from "./MeetingUi";
+import { useContext, useEffect } from "react";
+import SidebarControlContext from "@/features/layouts/DashboardLayout/SidebarControlContext";
 
 export default function DetailedMeeting() {
   const {
@@ -22,6 +24,15 @@ export default function DetailedMeeting() {
     (meetingData.data.joiners as Joiners[]).some(
       (joiner) => joiner.employeeId === userId && joiner.isTeamLeader,
     );
+
+  const sidebarControl = useContext(SidebarControlContext);
+  useEffect(() => {
+    if (sidebarControl) {
+      sidebarControl.setOpen(false);
+    }
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (failureReason) {
     return <PageNotAccess />;

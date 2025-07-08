@@ -1,28 +1,34 @@
 import { useState, useEffect, useCallback } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  ClipboardList,
-  CalendarCheck,
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  Trash2,
-  Pencil,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import useMeetingUi from "./useMeetingUi";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+
+import {
+  ChevronRight,
+  ChevronLeft,
+  List,
+  Calendar,
+  Folder,
+  CheckSquare,
+  BarChart2,
+  ClipboardCheck,
+} from "lucide-react";
+import Timer from "@/components/shared/Timer";
 import Tasks from "./Tasks";
 import Projects from "./Projects/projects";
 import KPITable from "./KpiTable";
-import Timer from "@/components/shared/Timer";
+import useMeetingUi from "./useMeetingUi";
+import Agenda from "./Agenda";
 
-type HandleTabChangeLocalProps = (tab: string) => void;
+type ActiveTab =
+  | "agenda"
+  | "discussion"
+  | "projects"
+  | "tasks"
+  | "kpis"
+  | "conclusion";
 
 interface MeetingUiProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  meetingStart: any;
+  meetingStart: boolean;
   isTeamLeader: boolean;
   activeScreen?: string;
   meetingEnded?: boolean;
@@ -48,31 +54,13 @@ interface MeetingUiProps {
   };
 }
 
-const TAB_NAMES = ["agenda", "tasks", "project", "kpis", "conclusion"];
-
-export default function MeetingUi({
+export default function MeetingUI({
   meetingStart,
   isTeamLeader,
-  activeScreen,
   onTabTimesChange,
   meetingTiming,
 }: MeetingUiProps) {
   const {
-    objectiveInput,
-    issueInput,
-    handleAddIssue,
-    handleAddObjective,
-    setIssueInput,
-    setObjectiveInput,
-    issueData,
-    objectiveData,
-    editing,
-    startEdit,
-    cancelEdit,
-    updateEdit,
-    setEditingValue,
-    handleDelete,
-    canEdit,
     tabChangeFireBase,
     meetingId,
     tasksFireBase,
@@ -82,24 +70,19 @@ export default function MeetingUi({
     setTimerMinutesMap,
   } = useMeetingUi({ meetingStart, isTeamLeader, meetingTiming });
 
-  console.log(meetingTiming);
-
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState(
-    activeScreen ? activeScreen.toLowerCase() : "agenda",
-  );
+  const [activeTab, setActiveTab] = useState<ActiveTab>("agenda");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isRightSidebarCollapsed, setRightIsSidebarCollapsed] = useState(false);
 
   const isMeetingStarted = meetingStart === true;
-
   const safeMeetingId = meetingId ?? "";
 
-  // State for spent time per tab
-  const [tabTimes, setTabTimes] = useState(() => {
-    const obj: Record<string, number> = {};
-    TAB_NAMES.forEach((tab) => {
-      obj[tab] = 0; // default to 0 seconds
-    });
-    return obj;
+  const [tabTimes, setTabTimes] = useState({
+    agenda: 0,
+    projects: 0,
+    tasks: 0,
+    kpis: 0,
+    conclusion: 0,
   });
 
   const getInitialMinutes = useCallback(
@@ -127,16 +110,15 @@ export default function MeetingUi({
     const newTimerMinutesMap: Record<string, number> = {};
     const newTabTimes: Record<string, number> = {};
 
-    TAB_NAMES.forEach((tab) => {
+    ["agenda", "projects", "tasks", "kpis", "conclusion"].forEach((tab) => {
       newTimerMinutesMap[tab] = getInitialMinutes(tab);
       newTabTimes[tab] = getInitialSpent(tab);
     });
 
     setTimerMinutesMap(newTimerMinutesMap);
-    setTabTimes(newTabTimes);
+    // setTabTimes(newTabTimes);
   }, [getInitialMinutes, getInitialSpent, safeMeetingId, setTimerMinutesMap]);
 
-  // Save timer minutes to localStorage when changed
   const handleTimeChange = (tab: string, minutes: number) => {
     setTimerMinutesMap((prev) => {
       const updated = { ...prev, [tab]: minutes };
@@ -176,12 +158,6 @@ export default function MeetingUi({
   };
 
   useEffect(() => {
-    if (activeScreen && activeScreen.toLowerCase() !== activeTab) {
-      setActiveTab(activeScreen.toLowerCase());
-    }
-  }, [activeScreen, activeTab]);
-
-  useEffect(() => {
     if (typeof onTabTimesChange === "function") {
       onTabTimesChange({
         defaultTimes: timerMinutesMap,
@@ -190,11 +166,8 @@ export default function MeetingUi({
     }
   }, [tabTimes, timerMinutesMap, onTabTimesChange]);
 
-  const canShowAddEdit = canEdit;
-
-  const handleTabChangeLocal: HandleTabChangeLocalProps = (tab) => {
+  const handleTabChange = (tab: ActiveTab) => {
     setActiveTab(tab);
-
     if (isTeamLeader) {
       tabChangeFireBase(tab);
     }
@@ -202,7 +175,7 @@ export default function MeetingUi({
 
   const discussionAllocatedMinutes =
     (timerMinutesMap["tasks"] || 0) +
-    (timerMinutesMap["project"] || 0) +
+    (timerMinutesMap["projects"] || 0) +
     (timerMinutesMap["kpis"] || 0);
   const discussionAllocatedSeconds = discussionAllocatedMinutes * 60;
 
@@ -210,516 +183,444 @@ export default function MeetingUi({
     ? Math.floor(Number(meetingTiming.conclusionTimePlanned) / 60)
     : undefined;
 
-  // Map actual times from meetingTiming (in seconds)
-  const actualTimes = {
-    agenda: Number(meetingTiming?.agendaTimeActual) || 0,
-    tasks: Number(meetingTiming?.discussionTaskTimeActual) || 0,
-    project: Number(meetingTiming?.discussionProjectTimeActual) || 0,
-    kpis: Number(meetingTiming?.discussionKPITimeActual) || 0,
-    conclusion: Number(meetingTiming?.conclusionTimeActual) || 0,
-  };
-
   return (
-    <div className="flex gap-3">
-      <div className="flex h-full min-h-[500px] mt-5 overflow-hidden w-[75%]">
+    <div className="w-full">
+      <div className="flex h-screen relative">
+        {/* Sidebar */}
         <div
-          className={`flex transition-all duration-300 ${isCollapsed ? "w-[50px]" : "w-[200px]"}`}
+          className={`${isSidebarCollapsed ? "w-16 ease-in-out duration-700" : "w-80 ease-in-out duration-700"} border rounded-2xl p-4 bg-gray-50 transition-all duration-300 relative overflow-hidden`}
         >
-          <Tabs
-            orientation="vertical"
-            value={activeTab}
-            onValueChange={handleTabChangeLocal}
-            className={`flex ${isCollapsed ? "flex-col items-center" : ""}`}
+          <h1
+            className={`text-xl font-bold mb-6 flex items-center ${isSidebarCollapsed ? "justify-center" : "justify-start"}`}
           >
-            <div className="flex w-full">
-              <div className="relative w-fit">
-                <TabsList
-                  className={`flex ${isCollapsed ? "flex-col h-auto gap-2 p-2" : "flex-col h-auto gap-2 p-2 w-full"}`}
-                >
-                  <TabsTrigger
-                    value="agenda"
-                    className={`justify-start text-left w-full ${isCollapsed ? "p-2" : "gap-2"}`}
-                  >
-                    <ClipboardList className="h-4 w-4" />
-                    {!isCollapsed && (
-                      <div className="flex items-center w-full gap-6">
-                        <span className="flex-1 text-left">Agenda</span>
-                        <Timer
-                          key={isMeetingStarted + "-" + activeTab}
-                          timeOverride={timerMinutesMap["Agenda"]}
-                          onTimeChange={(minutes) =>
-                            handleTimeChange("agenda", minutes)
-                          }
-                          isActive={activeTab === "agenda" && isMeetingStarted}
-                          className="ml-auto"
-                          showEditButton={!isMeetingStarted}
-                          meetingId={meetingId || safeMeetingId}
-                          tabName="agenda"
-                          onTimeSpent={(seconds) =>
-                            handleTimeSpent("agenda", seconds)
-                          }
-                        />
-                        {/* Show actual time if available */}
-                        {actualTimes.agenda > 0 && (
-                          <div className="flex items-center text-xs text-gray-500 mt-1">
-                            <span>Actual: </span>
-                            <Timer
-                              timeOverride={actualTimes.agenda}
-                              readOnly={true}
-                              className="ml-1"
-                              showEditButton={false}
-                              meetingId={meetingId || safeMeetingId}
-                              tabName="agenda-actual"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </TabsTrigger>
-                  <div className="relative w-full">
-                    <div
-                      className={`flex items-center justify-between cursor-pointer ${isCollapsed ? "p-2" : "gap-2 p-2"}`}
-                    >
-                      <div className="flex items-center w-full gap-6">
-                        <CalendarCheck className="h-4 w-4" />
-                        {!isCollapsed && (
-                          <div className="flex items-center w-full gap-6">
-                            <span className="flex-1 text-left">Discussion</span>
-                            <Timer
-                              timeOverride={discussionAllocatedSeconds}
-                              readOnly={true}
-                              className="ml-auto"
-                              showEditButton={false}
-                              meetingId={safeMeetingId}
-                              tabName="discussion"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {!isCollapsed && (
-                      <div className="ml-6 mt-1 space-y-1">
-                        <TabsTrigger
-                          value="project"
-                          className="w-full justify-start text-left text-sm"
-                        >
-                          <div className="flex items-center w-full gap-6">
-                            <span className="flex-1 text-left">Project</span>
-                            <Timer
-                              key={isMeetingStarted + "-" + activeTab}
-                              initialMinutes={timerMinutesMap["project"]}
-                              onTimeChange={(minutes) =>
-                                handleTimeChange("project", minutes)
-                              }
-                              isActive={
-                                activeTab === "project" && isMeetingStarted
-                              }
-                              className="ml-auto"
-                              showEditButton={!isMeetingStarted}
-                              meetingId={safeMeetingId}
-                              tabName="project"
-                              onTimeSpent={(seconds) =>
-                                handleTimeSpent("project", seconds)
-                              }
-                            />
-                            {/* Show actual time if available */}
-                            {actualTimes.project > 0 && (
-                              <div className="flex items-center text-xs text-gray-500 mt-1">
-                                <span>Actual: </span>
-                                <Timer
-                                  timeOverride={actualTimes.project}
-                                  readOnly={true}
-                                  className="ml-1"
-                                  showEditButton={false}
-                                  meetingId={safeMeetingId}
-                                  tabName="project-actual"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="tasks"
-                          className="text-left w-full justify-start text-sm"
-                        >
-                          <div className="flex items-center w-full gap-6">
-                            <span className="flex-1 text-left">Tasks</span>
-                            <Timer
-                              key={isMeetingStarted + "-" + activeTab}
-                              initialMinutes={timerMinutesMap["tasks"]}
-                              onTimeChange={(minutes) =>
-                                handleTimeChange("tasks", minutes)
-                              }
-                              isActive={
-                                activeTab === "tasks" && isMeetingStarted
-                              }
-                              className="ml-auto"
-                              showEditButton={!isMeetingStarted}
-                              meetingId={safeMeetingId}
-                              tabName="tasks"
-                              onTimeSpent={(seconds) =>
-                                handleTimeSpent("tasks", seconds)
-                              }
-                            />
-                            {/* Show actual time if available */}
-                            {actualTimes.tasks > 0 && (
-                              <div className="flex items-center text-xs text-gray-500 mt-1">
-                                <span>Actual: </span>
-                                <Timer
-                                  timeOverride={actualTimes.tasks}
-                                  readOnly={true}
-                                  className="ml-1"
-                                  showEditButton={false}
-                                  meetingId={safeMeetingId}
-                                  tabName="tasks-actual"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </TabsTrigger>
+            {isSidebarCollapsed ? (
+              <List className="h-5 w-5" />
+            ) : (
+              "Core Team Meeting"
+            )}
+          </h1>
 
-                        <TabsTrigger
-                          value="kpis"
-                          className="w-full justify-start text-sm"
-                        >
-                          <div className="flex items-center w-full gap-6">
-                            <span className="flex-1 text-left">KPIs</span>
-                            <Timer
-                              key={isMeetingStarted + "-" + activeTab}
-                              initialMinutes={timerMinutesMap["kpis"]}
-                              onTimeChange={(minutes) =>
-                                handleTimeChange("kpis", minutes)
-                              }
-                              isActive={
-                                activeTab === "kpis" && isMeetingStarted
-                              }
-                              className="ml-auto"
-                              showEditButton={!isMeetingStarted}
-                              meetingId={safeMeetingId}
-                              tabName="kpis"
-                              onTimeSpent={(seconds) =>
-                                handleTimeSpent("kpis", seconds)
-                              }
-                            />
-                            {/* Show actual time if available */}
-                            {actualTimes.kpis > 0 && (
-                              <div className="flex items-center text-xs text-gray-500 mt-1">
-                                <span>Actual: </span>
-                                <Timer
-                                  timeOverride={actualTimes.kpis}
-                                  readOnly={true}
-                                  className="ml-1"
-                                  showEditButton={false}
-                                  meetingId={safeMeetingId}
-                                  tabName="kpis-actual"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </TabsTrigger>
-                      </div>
+          <nav className="space-y-1">
+            <Button
+              variant={activeTab === "agenda" ? "default" : "ghost"}
+              className={`${isSidebarCollapsed ? "w-8 h-8 p-0 justify-center" : "w-full justify-start"} border cursor-pointer`}
+              onClick={() => handleTabChange("agenda")}
+            >
+              {isSidebarCollapsed ? (
+                <Calendar className="h-4 w-4" />
+              ) : (
+                <>
+                  <Calendar className="h-4 w-4" />
+                  Agenda
+                  <Timer
+                    timeOverride={timerMinutesMap["agenda"]}
+                    onTimeChange={(minutes) =>
+                      handleTimeChange("agenda", minutes)
+                    }
+                    isActive={activeTab === "agenda" && isMeetingStarted}
+                    className="ml-auto"
+                    showEditButton={!isMeetingStarted}
+                    meetingId={safeMeetingId}
+                    tabName="agenda"
+                    onTimeSpent={(seconds) =>
+                      handleTimeSpent("agenda", seconds)
+                    }
+                  />
+                </>
+              )}
+            </Button>
+
+            <div className="space-y-1">
+              <Button
+                variant={
+                  activeTab.startsWith("discussion") ||
+                  ["projects", "tasks", "kpis"].includes(activeTab)
+                    ? "default"
+                    : "ghost"
+                }
+                className={`${isSidebarCollapsed ? "w-8 h-8 p-0 justify-center" : "w-full justify-between"} bg-gray-200 border my-2 `}
+              >
+                {isSidebarCollapsed ? (
+                  <Folder className="h-4 w-4" />
+                ) : (
+                  <>
+                    <div className="flex items-center text-black">
+                      <Folder className="mr-2 h-4 w-4" />
+                      Discussion
+                    </div>
+                    {!isSidebarCollapsed && (
+                      <>
+                        <Timer
+                          timeOverride={discussionAllocatedSeconds}
+                          readOnly={true}
+                          className="ml-2"
+                          showEditButton={false}
+                          meetingId={safeMeetingId}
+                          tabName="discussion"
+                        />
+                      </>
                     )}
-                  </div>
-                  <TabsTrigger
-                    value="conclusion"
-                    className={`justify-start text-left w-full ${isCollapsed ? "p-2" : "gap-2"}`}
-                  >
-                    <CheckCircle className="h-4 w-4" />
-                    {!isCollapsed && (
-                      <div className="flex items-center w-full gap-6">
-                        <span className="flex-1 text-left">
-                          Conclusion
-                          {conclusionPlannedMinutes !== undefined
-                            ? ` (${conclusionPlannedMinutes} min)`
-                            : ""}
-                        </span>
-                        {/* Show actual time if available */}
-                        {actualTimes.conclusion > 0 && (
-                          <div className="flex items-center text-xs text-gray-500 ml-2">
-                            <span>Actual: </span>
-                            <Timer
-                              timeOverride={actualTimes.conclusion}
-                              readOnly={true}
-                              className="ml-1"
-                              showEditButton={false}
-                              meetingId={safeMeetingId}
-                              tabName="conclusion-actual"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-              <Card className="ml-5 p-0 gap-2">
-                <div>
+                  </>
+                )}
+              </Button>
+
+              {!isSidebarCollapsed && (
+                <div className="ml-4 space-y-1 mt-1">
                   <Button
-                    variant="ghost"
-                    className={` ${isCollapsed ? "rotate-180" : ""}`}
-                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    variant={activeTab === "projects" ? "default" : "ghost"}
+                    className="w-full justify-start border cursor-pointer mb-2"
+                    onClick={() => handleTabChange("projects")}
                   >
-                    {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
+                    <CheckSquare className="mr-2 h-4 w-4" />
+                    Projects
+                    <Timer
+                      initialMinutes={timerMinutesMap["projects"]}
+                      onTimeChange={(minutes) =>
+                        handleTimeChange("projects", minutes)
+                      }
+                      isActive={activeTab === "projects" && isMeetingStarted}
+                      className="ml-auto"
+                      showEditButton={!isMeetingStarted}
+                      meetingId={safeMeetingId}
+                      tabName="projects"
+                      onTimeSpent={(seconds) =>
+                        handleTimeSpent("projects", seconds)
+                      }
+                    />
+                  </Button>
+                  <Button
+                    variant={activeTab === "tasks" ? "default" : "ghost"}
+                    className="w-full justify-start border cursor-pointer mb-2"
+                    onClick={() => handleTabChange("tasks")}
+                  >
+                    <List className="mr-2 h-4 w-4" />
+                    Tasks
+                    <Timer
+                      initialMinutes={timerMinutesMap["tasks"]}
+                      onTimeChange={(minutes) =>
+                        handleTimeChange("tasks", minutes)
+                      }
+                      isActive={activeTab === "tasks" && isMeetingStarted}
+                      className="ml-auto"
+                      showEditButton={!isMeetingStarted}
+                      meetingId={safeMeetingId}
+                      tabName="tasks"
+                      onTimeSpent={(seconds) =>
+                        handleTimeSpent("tasks", seconds)
+                      }
+                    />
+                  </Button>
+                  <Button
+                    variant={activeTab === "kpis" ? "default" : "ghost"}
+                    className="w-full justify-start border cursor-pointer"
+                    onClick={() => handleTabChange("kpis")}
+                  >
+                    <BarChart2 className="mr-2 h-4 w-4" />
+                    KPIs
+                    <Timer
+                      initialMinutes={timerMinutesMap["kpis"]}
+                      onTimeChange={(minutes) =>
+                        handleTimeChange("kpis", minutes)
+                      }
+                      isActive={activeTab === "kpis" && isMeetingStarted}
+                      className="ml-auto"
+                      showEditButton={!isMeetingStarted}
+                      meetingId={safeMeetingId}
+                      tabName="kpis"
+                      onTimeSpent={(seconds) =>
+                        handleTimeSpent("kpis", seconds)
+                      }
+                    />
                   </Button>
                 </div>
-                <div
-                  className="flex-1 px-4 max-h-[500px] min-h-[500px] overflow-x-auto transition-all duration-300"
-                  style={{
-                    width: isCollapsed
-                      ? "calc(100vw - 50px - 800px)"
-                      : "calc(100vw - 200px - 850px)",
-                    minWidth: 0,
-                    transitionDuration: "7000px",
-                    animation: "ease-in-out",
-                  }}
-                >
-                  <TabsContent value="agenda" className="">
-                    <div className="space-y-4">
-                      <h3 className="font-semibold">Agenda</h3>
-                      <div className="grid grid-cols-2 border rounded-lg">
-                        <div className="space-y-2 border-r pr-5 py-2 px-4">
-                          <h4 className="font-medium">Issues</h4>
-                          {canShowAddEdit && (
-                            <div className="flex gap-2">
-                              <Input
-                                value={issueInput}
-                                onChange={(e) => setIssueInput(e.target.value)}
-                                placeholder="Enter an issue"
-                              />
-                              <Button onClick={() => handleAddIssue()}>
-                                Add
-                              </Button>
-                            </div>
-                          )}
-                          <div className="mt-2 space-y-2">
-                            {issueData?.data && issueData.data.length > 0 ? (
-                              <ul className="space-y-2">
-                                {issueData?.data &&
-                                  issueData.data.map((item) => (
-                                    <li
-                                      key={item.detailMeetingAgendaIssueId}
-                                      className="flex items-center justify-between px-2 border rounded"
-                                    >
-                                      {editing.type === "issue" &&
-                                      editing.id ===
-                                        item.detailMeetingAgendaIssueId &&
-                                      canShowAddEdit ? (
-                                        <>
-                                          <Input
-                                            value={editing.value}
-                                            onChange={(e) =>
-                                              setEditingValue(e.target.value)
-                                            }
-                                            className="mr-2"
-                                          />
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={updateEdit}
-                                            className="mr-1"
-                                          >
-                                            Submit
-                                          </Button>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={cancelEdit}
-                                          >
-                                            Cancel
-                                          </Button>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <span>{item.agendaIssue}</span>
-                                          {canShowAddEdit && (
-                                            <div className="flex gap-1">
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() =>
-                                                  startEdit(
-                                                    "issue",
-                                                    item.detailMeetingAgendaIssueId,
-                                                    item.agendaIssue,
-                                                  )
-                                                }
-                                              >
-                                                <Pencil className="h-4 w-4 text-blue-500" />
-                                              </Button>
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() =>
-                                                  handleDelete(
-                                                    item.detailMeetingAgendaIssueId,
-                                                    "Issue",
-                                                  )
-                                                }
-                                              >
-                                                <Trash2 className="h-4 w-4 text-red-500" />
-                                              </Button>
-                                            </div>
-                                          )}
-                                        </>
-                                      )}
-                                    </li>
-                                  ))}
-                              </ul>
-                            ) : (
-                              <p className="text-gray-500 text-sm">
-                                No issues added
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Suggestions Column */}
-                        <div className="space-y-2 py-2 px-4">
-                          <h4 className="font-medium">Objective</h4>
-                          {canShowAddEdit && (
-                            <div className="flex gap-2">
-                              <Input
-                                value={objectiveInput}
-                                onChange={(e) =>
-                                  setObjectiveInput(e.target.value)
-                                }
-                                placeholder="Enter a suggestion"
-                              />
-                              <Button onClick={() => handleAddObjective()}>
-                                Add
-                              </Button>
-                            </div>
-                          )}
-                          <div className="mt-2 space-y-2">
-                            {objectiveData?.data &&
-                            objectiveData.data.length > 0 ? (
-                              <ul className="space-y-2">
-                                {objectiveData?.data &&
-                                  objectiveData.data.map((item) => (
-                                    <li
-                                      key={item.detailMeetingAgendaObjectiveId}
-                                      className="flex items-center justify-between px-2 border rounded"
-                                    >
-                                      {editing.type === "objective" &&
-                                      editing.id ===
-                                        item.detailMeetingAgendaObjectiveId &&
-                                      canShowAddEdit ? (
-                                        <>
-                                          <Input
-                                            value={editing.value}
-                                            onChange={(e) =>
-                                              setEditingValue(e.target.value)
-                                            }
-                                            className="mr-2"
-                                          />
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={updateEdit}
-                                            className="mr-1"
-                                          >
-                                            Submit
-                                          </Button>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={cancelEdit}
-                                          >
-                                            Cancel
-                                          </Button>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <span>{item.agendaObjective}</span>
-                                          {canShowAddEdit && (
-                                            <div className="flex gap-1">
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() =>
-                                                  startEdit(
-                                                    "objective",
-                                                    item.detailMeetingAgendaObjectiveId,
-                                                    item.agendaObjective,
-                                                  )
-                                                }
-                                              >
-                                                <Pencil className="h-4 w-4 text-blue-500" />
-                                              </Button>
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() =>
-                                                  handleDelete(
-                                                    item.detailMeetingAgendaObjectiveId,
-                                                    "Objective",
-                                                  )
-                                                }
-                                              >
-                                                <Trash2 className="h-4 w-4 text-red-500" />
-                                              </Button>
-                                            </div>
-                                          )}
-                                        </>
-                                      )}
-                                    </li>
-                                  ))}
-                              </ul>
-                            ) : (
-                              <p className="text-gray-500 text-sm">
-                                No Objective added
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="tasks" className="p-4 border rounded-lg">
-                    <div className="space-y-2">
-                      <Tasks
-                        meetingId={safeMeetingId}
-                        tasksFireBase={tasksFireBase}
-                      />
-                    </div>
-                  </TabsContent>
-                  <TabsContent
-                    value="project"
-                    className="p-4 border rounded-lg"
-                  >
-                    <div className="space-y-2">
-                      <Projects
-                        meetingId={safeMeetingId}
-                        projectFireBase={projectFireBase}
-                      />
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="kpis" className="p-4 border rounded-lg">
-                    <div className="space-y-4">
-                      <KPITable
-                        meetingId={safeMeetingId}
-                        kpisFireBase={kpisFireBase}
-                      />
-                    </div>
-                  </TabsContent>
-                  <TabsContent
-                    value="conclusion"
-                    className="p-4 border rounded-lg"
-                  >
-                    <div className="space-y-2">
-                      <h3 className="font-semibold">
-                        Conclusion ({timerMinutesMap["conclusion"]} min)
-                      </h3>
-                      <p>Summarize key points and action items</p>
-                    </div>
-                  </TabsContent>
-                </div>
-              </Card>
+              )}
             </div>
-          </Tabs>
+
+            <Button
+              variant={activeTab === "conclusion" ? "default" : "ghost"}
+              className={`${isSidebarCollapsed ? "w-8 h-8 p-0 justify-center" : "w-full justify-start"} mt-2 border cursor-pointer `}
+              onClick={() => handleTabChange("conclusion")}
+            >
+              {isSidebarCollapsed ? (
+                <ClipboardCheck className="h-4 w-4" />
+              ) : (
+                <>
+                  <ClipboardCheck className="mr-2 h-4 w-4" />
+                  Conclusion
+                  {conclusionPlannedMinutes !== undefined && (
+                    <span className="ml-auto text-sm">
+                      ({conclusionPlannedMinutes} min)
+                    </span>
+                  )}
+                </>
+              )}
+            </Button>
+          </nav>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className=" z-10 -mx-4 rounded-full w-9 h-9 bg-white border shadow-sm"
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        >
+          {isSidebarCollapsed ? (
+            <ChevronRight className="h-6 w-6" />
+          ) : (
+            <ChevronLeft className="h-6 w-6" />
+          )}
+        </Button>
+
+        <div className="flex-1 px-7 overflow-auto">
+          <Card className="h-full">
+            {/* Agenda Content */}
+            {activeTab === "agenda" && (
+              <div>
+                <CardHeader>
+                  <CardTitle>Agenda</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div>
+                    <Agenda
+                      meetingId={safeMeetingId}
+                      meetingStart={meetingStart}
+                      isTeamLeader={isTeamLeader}
+                    />
+                  </div>
+                </CardContent>
+              </div>
+            )}
+
+            {/* Projects Content */}
+            {activeTab === "projects" && (
+              <div className="space-y-4">
+                <CardHeader>
+                  <CardTitle>Projects</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Projects
+                    meetingId={safeMeetingId}
+                    projectFireBase={projectFireBase}
+                  />
+                </CardContent>
+              </div>
+            )}
+
+            {/* Tasks Content */}
+            {activeTab === "tasks" && (
+              <div className="space-y-4">
+                <CardHeader>
+                  <CardTitle>Tasks</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Tasks
+                    meetingId={safeMeetingId}
+                    tasksFireBase={tasksFireBase}
+                  />
+                </CardContent>
+              </div>
+            )}
+
+            {/* KPIs Content */}
+            {activeTab === "kpis" && (
+              <div className="space-y-4">
+                <CardHeader>
+                  <CardTitle>KPIs</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <KPITable
+                    meetingId={safeMeetingId}
+                    kpisFireBase={kpisFireBase}
+                  />
+                </CardContent>
+              </div>
+            )}
+
+            {/* Conclusion Content */}
+            {activeTab === "conclusion" && (
+              <div>
+                <CardHeader>
+                  <CardTitle>Conclusion</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span>Summary of decisions</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span>Action items</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 border-b">
+                      <span>Next steps</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </div>
+            )}
+          </Card>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className=" z-10 -mx-4  rounded-full w-9 h-9 bg-white border shadow-sm"
+          onClick={() => setRightIsSidebarCollapsed(!isRightSidebarCollapsed)}
+        >
+          {isRightSidebarCollapsed ? (
+            <ChevronRight className="h-6 w-6" />
+          ) : (
+            <ChevronLeft className="h-6 w-6" />
+          )}
+        </Button>
+        <div
+          className={`${isRightSidebarCollapsed ? "w-16 ease-in-out duration-700" : "w-80 ease-in-out duration-700"} border rounded-2xl p-4 bg-gray-50 transition-all duration-300 relative overflow-hidden`}
+        >
+          <h1
+            className={`text-xl font-bold mb-6 flex items-center ${isRightSidebarCollapsed ? "justify-center" : "justify-start"}`}
+          >
+            {isRightSidebarCollapsed ? (
+              <List className="h-5 w-5" />
+            ) : (
+              "Core Team Meeting"
+            )}
+          </h1>
+
+          <nav className="space-y-1">
+            <Button
+              variant={activeTab === "agenda" ? "default" : "ghost"}
+              className={`${isRightSidebarCollapsed ? "w-8 h-8 p-0 justify-center" : "w-full justify-start"} border cursor-pointer`}
+              onClick={() => handleTabChange("agenda")}
+            >
+              {isRightSidebarCollapsed ? (
+                <Calendar className="h-4 w-4" />
+              ) : (
+                <>
+                  <Calendar className="h-4 w-4" />
+                  Agenda
+                  <Timer
+                    timeOverride={timerMinutesMap["agenda"]}
+                    onTimeChange={(minutes) =>
+                      handleTimeChange("agenda", minutes)
+                    }
+                    isActive={activeTab === "agenda" && isMeetingStarted}
+                    className="ml-auto"
+                    showEditButton={!isMeetingStarted}
+                    meetingId={safeMeetingId}
+                    tabName="agenda"
+                    onTimeSpent={(seconds) =>
+                      handleTimeSpent("agenda", seconds)
+                    }
+                  />
+                </>
+              )}
+            </Button>
+
+            <div className="space-y-1">
+              <Button
+                variant={
+                  activeTab.startsWith("discussion") ||
+                  ["projects", "tasks", "kpis"].includes(activeTab)
+                    ? "default"
+                    : "ghost"
+                }
+                className={`${isRightSidebarCollapsed ? "w-8 h-8 p-0 justify-center" : "w-full justify-between"} bg-gray-200 border my-2 `}
+              >
+                {isRightSidebarCollapsed ? (
+                  <Folder className="h-4 w-4" />
+                ) : (
+                  <>
+                    <div className="flex items-center text-black">
+                      <Folder className="mr-2 h-4 w-4" />
+                      Discussion
+                    </div>
+                    {!isRightSidebarCollapsed && (
+                      <>
+                        <Timer
+                          timeOverride={discussionAllocatedSeconds}
+                          readOnly={true}
+                          className="ml-2"
+                          showEditButton={false}
+                          meetingId={safeMeetingId}
+                          tabName="discussion"
+                        />
+                      </>
+                    )}
+                  </>
+                )}
+              </Button>
+
+              {!isRightSidebarCollapsed && (
+                <div className="ml-4 space-y-1 mt-1">
+                  <Button
+                    variant={activeTab === "projects" ? "default" : "ghost"}
+                    className="w-full justify-start border cursor-pointer mb-2"
+                    onClick={() => handleTabChange("projects")}
+                  >
+                    <CheckSquare className="mr-2 h-4 w-4" />
+                    Projects
+                    <Timer
+                      initialMinutes={timerMinutesMap["projects"]}
+                      onTimeChange={(minutes) =>
+                        handleTimeChange("projects", minutes)
+                      }
+                      isActive={activeTab === "projects" && isMeetingStarted}
+                      className="ml-auto"
+                      showEditButton={!isMeetingStarted}
+                      meetingId={safeMeetingId}
+                      tabName="projects"
+                      onTimeSpent={(seconds) =>
+                        handleTimeSpent("projects", seconds)
+                      }
+                    />
+                  </Button>
+                  <Button
+                    variant={activeTab === "tasks" ? "default" : "ghost"}
+                    className="w-full justify-start border cursor-pointer mb-2"
+                    onClick={() => handleTabChange("tasks")}
+                  >
+                    <List className="mr-2 h-4 w-4" />
+                    Tasks
+                    <Timer
+                      initialMinutes={timerMinutesMap["tasks"]}
+                      onTimeChange={(minutes) =>
+                        handleTimeChange("tasks", minutes)
+                      }
+                      isActive={activeTab === "tasks" && isMeetingStarted}
+                      className="ml-auto"
+                      showEditButton={!isMeetingStarted}
+                      meetingId={safeMeetingId}
+                      tabName="tasks"
+                      onTimeSpent={(seconds) =>
+                        handleTimeSpent("tasks", seconds)
+                      }
+                    />
+                  </Button>
+                  <Button
+                    variant={activeTab === "kpis" ? "default" : "ghost"}
+                    className="w-full justify-start border cursor-pointer"
+                    onClick={() => handleTabChange("kpis")}
+                  >
+                    <BarChart2 className="mr-2 h-4 w-4" />
+                    KPIs
+                    <Timer
+                      initialMinutes={timerMinutesMap["kpis"]}
+                      onTimeChange={(minutes) =>
+                        handleTimeChange("kpis", minutes)
+                      }
+                      isActive={activeTab === "kpis" && isMeetingStarted}
+                      className="ml-auto"
+                      showEditButton={!isMeetingStarted}
+                      meetingId={safeMeetingId}
+                      tabName="kpis"
+                      onTimeSpent={(seconds) =>
+                        handleTimeSpent("kpis", seconds)
+                      }
+                    />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </nav>
         </div>
       </div>
-      <div className="w-[25%] bg-gray-300 rounded-2xl p-2 ">dddd</div>
     </div>
   );
 }

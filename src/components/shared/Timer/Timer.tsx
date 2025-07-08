@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Pencil, Clock } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { useDispatch } from "react-redux";
 
 interface TimerProps {
@@ -164,18 +164,17 @@ const Timer: React.FC<TimerProps> = ({
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <Clock className="h-4 w-4 text-primary" />
       {isEditing ? (
         <div className="flex items-center gap-2">
           <Input
             type="number"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
-            className="w-16 h-8 text-center"
+            className="w-14 h-9 p-0 text-center no-arrows"
             min="1"
             max="999"
           />
-          <span className="text-sm text-muted-foreground">min</span>
+          {/* <span className="text-sm text-muted-foreground">min</span> */}
           <Button size="sm" onClick={handleSaveEdit} className="h-8 px-2">
             ✓
           </Button>
