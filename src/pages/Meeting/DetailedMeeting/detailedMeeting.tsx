@@ -1,10 +1,6 @@
 import { Card } from "@/components/ui/card";
 import useDetailedMeeting from "./useDetailedMeeting";
 import { Button } from "@/components/ui/button";
-import { useSelector } from "react-redux";
-import { getUserId } from "@/features/selectors/auth.selector";
-import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { useEffect } from "react";
 import PageNotAccess from "@/pages/PageNoAccess";
 import MeetingUi from "./MeetingUi";
 
@@ -14,19 +10,12 @@ export default function DetailedMeeting() {
     handleStartMeeting,
     failureReason,
     meetingResponse,
-    handleCloseMeeting,
     isMeetingStart,
+    userId,
+    handleTabTimesUpdate,
+    handleCloseMeetingWithLog,
+    meetingTiming,
   } = useDetailedMeeting();
-  const userId = useSelector(getUserId);
-
-  const { setBreadcrumbs } = useBreadcrumbs();
-
-  useEffect(() => {
-    setBreadcrumbs([
-      { label: "Meeting", href: "/dashboard/meeting" },
-      { label: "Meeting Detail", href: "" },
-    ]);
-  }, [setBreadcrumbs]);
 
   const isTeamLeader =
     Array.isArray(meetingData?.data.joiners) &&
@@ -105,7 +94,7 @@ export default function DetailedMeeting() {
                 <Button
                   variant="outline"
                   className="cursor-pointer bg-red-800 text-white py-5 px-8 hover:bg-red-800/80 hover:text-white"
-                  onClick={handleCloseMeeting}
+                  onClick={handleCloseMeetingWithLog}
                 >
                   End Meeting
                 </Button>
@@ -135,6 +124,9 @@ export default function DetailedMeeting() {
         meetingStart={isMeetingStart}
         isTeamLeader={isTeamLeader}
         activeScreen={meetingResponse?.activeScreen}
+        meetingEnded={!isMeetingStart === false}
+        onTabTimesChange={handleTabTimesUpdate}
+        meetingTiming={meetingTiming}
       />
     </div>
   );

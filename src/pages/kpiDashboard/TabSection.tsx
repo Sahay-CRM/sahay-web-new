@@ -1,4 +1,5 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatFrequencyType } from "@/features/utils/app.utils";
 
 export default function TabsSection({
   selectedPeriod,
@@ -22,7 +23,7 @@ export default function TabsSection({
             value={tab.frequencyType}
             className="rounded-none bg-white border-b-2 border-transparent p-2 text-sm font-medium text-muted-foreground hover:text-primary data-[state=active]:border-b-primary data-[state=active]:text-primary"
           >
-            {tab.frequencyType}{" "}
+            {formatFrequencyType(tab.frequencyType)}{" "}
             <span className="ml-1 text-xs">({tab?.count})</span>
           </TabsTrigger>
         ))}

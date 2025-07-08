@@ -30,6 +30,22 @@ interface MeetingUiProps {
     defaultTimes: Record<string, number>;
     spentTimes: Record<string, number>;
   }) => void;
+  onTabTimesChange?: (data: {
+    defaultTimes: Record<string, number>;
+    spentTimes: Record<string, number>;
+  }) => void;
+  meetingTiming?: {
+    agendaTimePlanned?: string;
+    discussionTaskTimePlanned?: string;
+    discussionProjectTimePlanned?: string;
+    discussionKPITimePlanned?: string;
+    conclusionTimePlanned?: string;
+    agendaTimeActual?: string;
+    discussionTaskTimeActual?: string;
+    discussionProjectTimeActual?: string;
+    discussionKPITimeActual?: string;
+    conclusionTimeActual?: string;
+  };
 }
 
 const TAB_NAMES = ["agenda", "tasks", "project", "kpis", "conclusion"];
@@ -38,8 +54,8 @@ export default function MeetingUi({
   meetingStart,
   isTeamLeader,
   activeScreen,
-  meetingEnded,
-  onLogTabTimes,
+  onTabTimesChange,
+  meetingTiming,
 }: MeetingUiProps) {
   const {
     objectiveInput,
@@ -62,7 +78,11 @@ export default function MeetingUi({
     tasksFireBase,
     projectFireBase,
     kpisFireBase,
-  } = useMeetingUi({ meetingStart, isTeamLeader });
+    timerMinutesMap,
+    setTimerMinutesMap,
+  } = useMeetingUi({ meetingStart, isTeamLeader, meetingTiming });
+
+  console.log(meetingTiming);
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState(
@@ -73,15 +93,25 @@ export default function MeetingUi({
 
   const safeMeetingId = meetingId ?? "";
 
+  // State for spent time per tab
+  const [tabTimes, setTabTimes] = useState(() => {
+    const obj: Record<string, number> = {};
+    TAB_NAMES.forEach((tab) => {
+      obj[tab] = 0; // default to 0 seconds
+    });
+    return obj;
+  });
+
   const getInitialMinutes = useCallback(
     (tab: string) => {
       const stored = localStorage.getItem(
         `meeting-${safeMeetingId}-timer-${tab}`,
       );
-      return stored ? parseInt(stored) : 5;
+      return stored ? parseInt(stored) : 1;
     },
     [safeMeetingId],
   );
+
   const getInitialSpent = useCallback(
     (tab: string) => {
       const stored = localStorage.getItem(
@@ -91,22 +121,6 @@ export default function MeetingUi({
     },
     [safeMeetingId],
   );
-
-  const [timerMinutesMap, setTimerMinutesMap] = useState(() => {
-    const obj: Record<string, number> = {};
-    TAB_NAMES.forEach((tab) => {
-      obj[tab] = getInitialMinutes(tab);
-    });
-    return obj;
-  });
-  // State for spent time per tab
-  const [tabTimes, setTabTimes] = useState(() => {
-    const obj: Record<string, number> = {};
-    TAB_NAMES.forEach((tab) => {
-      obj[tab] = getInitialSpent(tab);
-    });
-    return obj;
-  });
 
   // Reset timer data when meetingId changes
   useEffect(() => {
@@ -120,7 +134,7 @@ export default function MeetingUi({
 
     setTimerMinutesMap(newTimerMinutesMap);
     setTabTimes(newTabTimes);
-  }, [getInitialMinutes, getInitialSpent, safeMeetingId]);
+  }, [getInitialMinutes, getInitialSpent, safeMeetingId, setTimerMinutesMap]);
 
   // Save timer minutes to localStorage when changed
   const handleTimeChange = (tab: string, minutes: number) => {
@@ -150,22 +164,31 @@ export default function MeetingUi({
     });
   };
 
-  // const handleTimeSpent = (tab: string, seconds: number) => {
-  //   setTabTimes((prev) => {
-  //     const updated = { ...prev, [tab]: seconds };
-  //     localStorage.setItem(
-  //       `meeting-${safeMeetingId}-timer-spent-${tab}`,
-  //       String(seconds)
-  //     );
-  //     return updated;
-  //   });
-  // };
+  const handleTimeSpent = (tab: string, seconds: number) => {
+    setTabTimes((prev) => {
+      const updated = { ...prev, [tab]: seconds };
+      localStorage.setItem(
+        `meeting-${safeMeetingId}-timer-spent-${tab}`,
+        String(seconds),
+      );
+      return updated;
+    });
+  };
 
   useEffect(() => {
     if (activeScreen && activeScreen.toLowerCase() !== activeTab) {
       setActiveTab(activeScreen.toLowerCase());
     }
   }, [activeScreen, activeTab]);
+
+  useEffect(() => {
+    if (typeof onTabTimesChange === "function") {
+      onTabTimesChange({
+        defaultTimes: timerMinutesMap,
+        spentTimes: tabTimes,
+      });
+    }
+  }, [tabTimes, timerMinutesMap, onTabTimesChange]);
 
   const canShowAddEdit = canEdit;
 
@@ -183,22 +206,18 @@ export default function MeetingUi({
     (timerMinutesMap["kpis"] || 0);
   const discussionAllocatedSeconds = discussionAllocatedMinutes * 60;
 
-  const agendaInitialMinutes = timerMinutesMap["agenda"];
-  const agendaSpentSeconds = tabTimes["agenda"] || 0;
-  const agendaRemainingSeconds = Math.max(
-    0,
-    agendaInitialMinutes * 60 - agendaSpentSeconds,
-  );
+  const conclusionPlannedMinutes = meetingTiming?.conclusionTimePlanned
+    ? Math.floor(Number(meetingTiming.conclusionTimePlanned) / 60)
+    : undefined;
 
-  useEffect(() => {
-    if (meetingEnded && onLogTabTimes) {
-      onLogTabTimes({
-        defaultTimes: timerMinutesMap,
-        spentTimes: tabTimes,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meetingEnded]);
+  // Map actual times from meetingTiming (in seconds)
+  const actualTimes = {
+    agenda: Number(meetingTiming?.agendaTimeActual) || 0,
+    tasks: Number(meetingTiming?.discussionTaskTimeActual) || 0,
+    project: Number(meetingTiming?.discussionProjectTimeActual) || 0,
+    kpis: Number(meetingTiming?.discussionKPITimeActual) || 0,
+    conclusion: Number(meetingTiming?.conclusionTimeActual) || 0,
+  };
 
   return (
     <div className="flex gap-3">
@@ -227,7 +246,7 @@ export default function MeetingUi({
                         <span className="flex-1 text-left">Agenda</span>
                         <Timer
                           key={isMeetingStarted + "-" + activeTab}
-                          timeOverride={agendaRemainingSeconds}
+                          timeOverride={timerMinutesMap["Agenda"]}
                           onTimeChange={(minutes) =>
                             handleTimeChange("agenda", minutes)
                           }
@@ -236,7 +255,24 @@ export default function MeetingUi({
                           showEditButton={!isMeetingStarted}
                           meetingId={meetingId || safeMeetingId}
                           tabName="agenda"
+                          onTimeSpent={(seconds) =>
+                            handleTimeSpent("agenda", seconds)
+                          }
                         />
+                        {/* Show actual time if available */}
+                        {actualTimes.agenda > 0 && (
+                          <div className="flex items-center text-xs text-gray-500 mt-1">
+                            <span>Actual: </span>
+                            <Timer
+                              timeOverride={actualTimes.agenda}
+                              readOnly={true}
+                              className="ml-1"
+                              showEditButton={false}
+                              meetingId={meetingId || safeMeetingId}
+                              tabName="agenda-actual"
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
                   </TabsTrigger>
@@ -282,7 +318,24 @@ export default function MeetingUi({
                               showEditButton={!isMeetingStarted}
                               meetingId={safeMeetingId}
                               tabName="project"
+                              onTimeSpent={(seconds) =>
+                                handleTimeSpent("project", seconds)
+                              }
                             />
+                            {/* Show actual time if available */}
+                            {actualTimes.project > 0 && (
+                              <div className="flex items-center text-xs text-gray-500 mt-1">
+                                <span>Actual: </span>
+                                <Timer
+                                  timeOverride={actualTimes.project}
+                                  readOnly={true}
+                                  className="ml-1"
+                                  showEditButton={false}
+                                  meetingId={safeMeetingId}
+                                  tabName="project-actual"
+                                />
+                              </div>
+                            )}
                           </div>
                         </TabsTrigger>
                         <TabsTrigger
@@ -304,7 +357,24 @@ export default function MeetingUi({
                               showEditButton={!isMeetingStarted}
                               meetingId={safeMeetingId}
                               tabName="tasks"
+                              onTimeSpent={(seconds) =>
+                                handleTimeSpent("tasks", seconds)
+                              }
                             />
+                            {/* Show actual time if available */}
+                            {actualTimes.tasks > 0 && (
+                              <div className="flex items-center text-xs text-gray-500 mt-1">
+                                <span>Actual: </span>
+                                <Timer
+                                  timeOverride={actualTimes.tasks}
+                                  readOnly={true}
+                                  className="ml-1"
+                                  showEditButton={false}
+                                  meetingId={safeMeetingId}
+                                  tabName="tasks-actual"
+                                />
+                              </div>
+                            )}
                           </div>
                         </TabsTrigger>
 
@@ -327,7 +397,24 @@ export default function MeetingUi({
                               showEditButton={!isMeetingStarted}
                               meetingId={safeMeetingId}
                               tabName="kpis"
+                              onTimeSpent={(seconds) =>
+                                handleTimeSpent("kpis", seconds)
+                              }
                             />
+                            {/* Show actual time if available */}
+                            {actualTimes.kpis > 0 && (
+                              <div className="flex items-center text-xs text-gray-500 mt-1">
+                                <span>Actual: </span>
+                                <Timer
+                                  timeOverride={actualTimes.kpis}
+                                  readOnly={true}
+                                  className="ml-1"
+                                  showEditButton={false}
+                                  meetingId={safeMeetingId}
+                                  tabName="kpis-actual"
+                                />
+                              </div>
+                            )}
                           </div>
                         </TabsTrigger>
                       </div>
@@ -340,7 +427,26 @@ export default function MeetingUi({
                     <CheckCircle className="h-4 w-4" />
                     {!isCollapsed && (
                       <div className="flex items-center w-full gap-6">
-                        <span className="flex-1 text-left">Conclusion</span>
+                        <span className="flex-1 text-left">
+                          Conclusion
+                          {conclusionPlannedMinutes !== undefined
+                            ? ` (${conclusionPlannedMinutes} min)`
+                            : ""}
+                        </span>
+                        {/* Show actual time if available */}
+                        {actualTimes.conclusion > 0 && (
+                          <div className="flex items-center text-xs text-gray-500 ml-2">
+                            <span>Actual: </span>
+                            <Timer
+                              timeOverride={actualTimes.conclusion}
+                              readOnly={true}
+                              className="ml-1"
+                              showEditButton={false}
+                              meetingId={safeMeetingId}
+                              tabName="conclusion-actual"
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
                   </TabsTrigger>

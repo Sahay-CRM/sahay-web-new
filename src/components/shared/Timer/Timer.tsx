@@ -48,19 +48,15 @@ const Timer: React.FC<TimerProps> = ({
       } = JSON.parse(savedTimer);
 
       if (isActive && wasActive && endTime) {
-        // Active tab: recalculate remaining time
         const now = Date.now();
         const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
         setTimeLeft(remaining);
-
         if (remaining <= 0) {
           setIsOvertime(true);
           setOvertimeSeconds(Math.abs(remaining));
         }
       } else {
-        // Inactive tab: use stored remaining seconds
         setTimeLeft(remainingSeconds);
-
         if (remainingSeconds <= 0) {
           setIsOvertime(true);
           setOvertimeSeconds(0);
@@ -85,14 +81,12 @@ const Timer: React.FC<TimerProps> = ({
     saveTimerState();
   }, [isActive, saveTimerState]);
 
-  // Save when time changes
   useEffect(() => {
     if (isActive) {
       saveTimerState();
     }
   }, [timeLeft, isActive, saveTimerState]);
 
-  // Cleanup when timer completes
   useEffect(() => {
     if (timeLeft === 0 && isActive) {
       localStorage.removeItem(storageKey);
@@ -108,10 +102,14 @@ const Timer: React.FC<TimerProps> = ({
         setTimeLeft((prevTime) => {
           if (prevTime > 0) {
             const newTime = prevTime - 1;
+            // Report time spent (original time minus remaining time)
+            onTimeSpent?.(initialMinutes * 60 - newTime);
             return newTime;
           } else {
             setIsOvertime(true);
             setOvertimeSeconds((prev) => prev + 1);
+            // Report full time spent when in overtime
+            onTimeSpent?.(initialMinutes * 60 + overtimeSeconds + 1);
             return 0;
           }
         });
@@ -121,7 +119,7 @@ const Timer: React.FC<TimerProps> = ({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, readOnly, onTimeSpent]);
+  }, [isActive, readOnly, onTimeSpent, initialMinutes, overtimeSeconds]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

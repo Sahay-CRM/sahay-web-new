@@ -28,3 +28,6 @@ export { default as addMeetingKpisDataMutation } from "./useAddMeetingKpisData";
 export { default as deleteMeetingKpisMutation } from "./useDeleteMeetingKpis";
 export { default as useGetMeetingKpis } from "./useGetMeetingKpis";
 export { default as useGetMeetingSelectedKpis } from "./useGetMeetingSelectedKpis";
+
+export { default as addMeetingTimeMutation } from "./useUpdateMeetingTime";
+export { default as useGetMeetingTiming } from "./useGetMeetingTiming";

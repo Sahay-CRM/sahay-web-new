@@ -17,7 +17,7 @@ interface KPIFormDataProp {
   KPIName?: string;
   KPIMasterId?: DatapointListData;
   frequencyId?: string;
-  validationTypeId?: string;
+  validationType?: string;
   visualFrequencyTypes?: string[];
   unit?: string;
   coreParameterId?: string;
@@ -47,9 +47,9 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
   isLoading,
 }) => {
   const isYesNo =
-    typeof modalData?.validationTypeId === "object" &&
-    (modalData?.validationTypeId === "YES_NO" ||
-      modalData?.validationTypeId === "7");
+    typeof modalData?.validationType === "object" &&
+    (modalData?.validationType === "YES_NO" ||
+      modalData?.validationType === "7");
 
   return (
     <div>
@@ -101,9 +101,9 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
               Validation Type :{" "}
             </span>
             <span className="text-black font-bold">
-              {typeof modalData?.validationTypeId === "string"
-                ? modalData.validationTypeId
-                : modalData?.validationTypeId || "-"}
+              {typeof modalData?.validationType === "string"
+                ? modalData.validationType
+                : modalData?.validationType || "-"}
             </span>
           </div>
 

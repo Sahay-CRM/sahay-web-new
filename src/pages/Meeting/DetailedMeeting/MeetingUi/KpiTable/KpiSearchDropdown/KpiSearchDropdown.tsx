@@ -122,7 +122,7 @@ const KpisSearchDropdown: React.FC<KpisSearchDropdownProps> = ({
                     {renderData ? (
                       renderData(item, checked)
                     ) : (
-                      <span>{item.kpiName}</span>
+                      <span>{item.KPIName}</span>
                     )}
                   </li>
                 );

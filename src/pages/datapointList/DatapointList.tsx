@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
+import { formatFrequencyType } from "@/features/utils/app.utils";
 
 const validationOptions = [
   { value: "EQUAL_TO", label: "= Equal to" },
@@ -154,6 +155,7 @@ export default function CompanyTaskList() {
                 index +
                 1,
               validationType: getValidationLabel(item.validationType),
+              frequencyType: formatFrequencyType(item.frequencyType),
             }))}
             columns={visibleColumns}
             primaryKey="kpiId"

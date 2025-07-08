@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getDatabase, ref, update } from "firebase/database";
 
@@ -15,16 +15,32 @@ interface UseMeetingUiOptions {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   meetingStart: any;
   isTeamLeader: boolean;
+  meetingTiming?: {
+    agendaTimePlanned?: string;
+    discussionTaskTimePlanned?: string;
+    discussionProjectTimePlanned?: string;
+    discussionKPITimePlanned?: string;
+    conclusionTimePlanned?: string;
+  };
 }
 
 export default function useMeetingUi({
   isTeamLeader,
   meetingStart,
+  meetingTiming,
 }: UseMeetingUiOptions) {
   const { id: meetingId } = useParams();
 
   const [issueInput, setIssueInput] = useState("");
   const [objectiveInput, setObjectiveInput] = useState("");
+
+  const TAB_NAMES = [
+    "agenda",
+    "tasks",
+    "project",
+    "kpis",
+    "conclusion",
+  ] as const;
 
   const [editing, setEditing] = useState<{
     type: "issue" | "objective" | null;
@@ -37,6 +53,46 @@ export default function useMeetingUi({
 
   const { mutate: deleteIssue } = deleteMeetingIssueMutation();
   const { mutate: deleteObjective } = deleteMeetingObjectiveMutation();
+
+  const [timerMinutesMap, setTimerMinutesMap] = useState<
+    Record<string, number>
+  >(() => {
+    const defaultTimes: Record<string, number> = {};
+    TAB_NAMES.forEach((tab) => {
+      defaultTimes[tab] = 1; // Default fallback
+    });
+
+    // Set from meetingTiming if available
+    if (meetingTiming) {
+      if (meetingTiming.agendaTimePlanned) {
+        defaultTimes.agenda = Math.floor(
+          Number(meetingTiming.agendaTimePlanned) / 60,
+        );
+      }
+      if (meetingTiming.discussionTaskTimePlanned) {
+        defaultTimes.tasks = Math.floor(
+          Number(meetingTiming.discussionTaskTimePlanned) / 60,
+        );
+      }
+      if (meetingTiming.discussionProjectTimePlanned) {
+        defaultTimes.project = Math.floor(
+          Number(meetingTiming.discussionProjectTimePlanned) / 60,
+        );
+      }
+      if (meetingTiming.discussionKPITimePlanned) {
+        defaultTimes.kpis = Math.floor(
+          Number(meetingTiming.discussionKPITimePlanned) / 60,
+        );
+      }
+      if (meetingTiming.conclusionTimePlanned) {
+        defaultTimes.conclusion = Math.floor(
+          Number(meetingTiming.conclusionTimePlanned) / 60,
+        );
+      }
+    }
+
+    return defaultTimes;
+  });
 
   const { data: issueData } = useGetMeetingIssue({
     filter: {
@@ -230,6 +286,43 @@ export default function useMeetingUi({
     [meetingId, meetingStart],
   );
 
+  useEffect(() => {
+    if (meetingTiming) {
+      const newTimerMinutesMap: Record<string, number> = {};
+
+      if (meetingTiming.agendaTimePlanned) {
+        newTimerMinutesMap.agenda = Math.floor(
+          Number(meetingTiming.agendaTimePlanned) / 60,
+        );
+      }
+      if (meetingTiming.discussionTaskTimePlanned) {
+        newTimerMinutesMap.tasks = Math.floor(
+          Number(meetingTiming.discussionTaskTimePlanned) / 60,
+        );
+      }
+      if (meetingTiming.discussionProjectTimePlanned) {
+        newTimerMinutesMap.project = Math.floor(
+          Number(meetingTiming.discussionProjectTimePlanned) / 60,
+        );
+      }
+      if (meetingTiming.discussionKPITimePlanned) {
+        newTimerMinutesMap.kpis = Math.floor(
+          Number(meetingTiming.discussionKPITimePlanned) / 60,
+        );
+      }
+      if (meetingTiming.conclusionTimePlanned) {
+        newTimerMinutesMap.conclusion = Math.floor(
+          Number(meetingTiming.conclusionTimePlanned) / 60,
+        );
+      }
+
+      setTimerMinutesMap((prev) => ({
+        ...prev,
+        ...newTimerMinutesMap,
+      }));
+    }
+  }, [meetingTiming]);
+
   return {
     objectiveInput,
     issueInput,
@@ -248,10 +341,11 @@ export default function useMeetingUi({
     canEdit,
     meetingId,
     tabChangeFireBase,
-
+    timerMinutesMap,
     tasksFireBase,
     conclusionFireBase,
     projectFireBase,
     kpisFireBase,
+    setTimerMinutesMap,
   };
 }

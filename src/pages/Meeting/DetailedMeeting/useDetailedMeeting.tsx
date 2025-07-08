@@ -1,20 +1,67 @@
 import {
+  addMeetingTimeMutation,
   createMeetingMutation,
   endMeetingMutation,
   useGetCompanyMeetingById,
+  useGetMeetingTiming,
 } from "@/features/api/companyMeeting";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { getUserId } from "@/features/selectors/auth.selector";
 import { queryClient } from "@/queryClient";
 import { getDatabase, off, onValue, ref } from "firebase/database";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 
 export default function useDetailedMeeting() {
   const { id: meetingId } = useParams();
   const [isMeetingStart, setIsMeetingStart] = useState(false);
 
+  const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
+
   const [meetingResponse, setMeetingResponse] = useState<MeetingResFire | null>(
     null,
   );
+
+  const userId = useSelector(getUserId);
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "Meeting", href: "/dashboard/meeting" },
+      { label: "Meeting Detail", href: "" },
+    ]);
+  }, [setBreadcrumbs]);
+
+  const { mutate: updateTime } = addMeetingTimeMutation();
+
+  // Ref to store latest tab times
+  const latestTimesRef = useRef<{
+    defaultTimes: Record<
+      "agenda" | "tasks" | "project" | "kpis" | "conclusion",
+      number
+    >;
+    spentTimes: Record<
+      "agenda" | "tasks" | "project" | "kpis" | "conclusion",
+      number
+    >;
+  }>({
+    defaultTimes: {
+      agenda: 0,
+      tasks: 0,
+      project: 0,
+      kpis: 0,
+      conclusion: 0,
+    },
+    spentTimes: {
+      agenda: 0,
+      tasks: 0,
+      project: 0,
+      kpis: 0,
+      conclusion: 0,
+    },
+  });
 
   const { data: meetingData, failureReason } = useGetCompanyMeetingById(
     meetingId ?? "",
@@ -24,10 +71,30 @@ export default function useDetailedMeeting() {
 
   const handleStartMeeting = useCallback(() => {
     if (meetingId) {
-      createMeet(meetingId);
-      setIsMeetingStart(true);
+      createMeet(meetingId, {
+        onSuccess: () => {
+          const { defaultTimes } = latestTimesRef.current;
+
+          // Prepare the payload for updateTime
+          const payload = {
+            meetingId: meetingId,
+            agendaTimePlanned: String((defaultTimes.agenda ?? 0) * 60),
+            discussionTaskTimePlanned: String((defaultTimes.tasks ?? 0) * 60),
+            discussionProjectTimePlanned: String(
+              (defaultTimes.project ?? 0) * 60,
+            ),
+            discussionKPITimePlanned: String((defaultTimes.kpis ?? 0) * 60),
+          };
+
+          updateTime(payload, {
+            onSuccess: () => {
+              setIsMeetingStart(true);
+            },
+          });
+        },
+      });
     }
-  }, [createMeet, meetingId]);
+  }, [createMeet, meetingId, updateTime]);
 
   const handleUpdatedRefresh = useCallback(async () => {
     const activeTab = meetingResponse?.activeScreen;
@@ -70,6 +137,14 @@ export default function useDetailedMeeting() {
     };
   }, [handleUpdatedRefresh, meetingId]);
 
+  useEffect(() => {
+    if (meetingResponse) {
+      setIsMeetingStart(true);
+    } else {
+      setIsMeetingStart(false);
+    }
+  }, [meetingResponse]);
+
   const handleCloseMeeting = useCallback(() => {
     if (meetingId) {
       endMeet(meetingId, {
@@ -80,6 +155,31 @@ export default function useDetailedMeeting() {
     }
   }, [endMeet, meetingId]);
 
+  const handleTabTimesUpdate = (data: {
+    defaultTimes: Record<string, number>;
+    spentTimes: Record<string, number>;
+  }) => {
+    latestTimesRef.current = data;
+  };
+
+  // Log only when End Meeting is clicked
+  const handleCloseMeetingWithLog = () => {
+    handleCloseMeeting();
+
+    const { spentTimes } = latestTimesRef.current;
+
+    // Prepare the payload for updateTime
+    const payload = {
+      meetingId: meetingData?.data.meetingId || "",
+      agendaTimeActual: String(spentTimes.agenda ?? 0),
+      discussionTaskTimeActual: String(spentTimes.tasks ?? 0),
+      discussionProjectTimeActual: String(spentTimes.project ?? 0),
+      discussionKPITimeActual: String(spentTimes.kpis ?? 0),
+    };
+
+    updateTime(payload);
+  };
+
   return {
     meetingData,
     handleStartMeeting,
@@ -88,5 +188,9 @@ export default function useDetailedMeeting() {
     meetingResponse,
     handleCloseMeeting,
     isMeetingStart,
+    userId,
+    handleTabTimesUpdate,
+    handleCloseMeetingWithLog,
+    meetingTiming,
   };
 }

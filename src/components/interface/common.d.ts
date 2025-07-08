@@ -1031,8 +1031,8 @@ interface KpiAllList {
   dataPointLabel?: string;
   KPIMasterId?: string;
   kpiId: string;
-  kpiName: string;
-  kpiLabel: string;
+  KPIName: string;
+  KPILabel: string;
   validationType: string;
   frequencyType: string;
   selectedType?: string | null;
@@ -1067,4 +1067,102 @@ interface SelectedKpisData {
   value2?: string | null;
   photo?: string | null;
   dataArray: KpiDataCell[];
+}
+
+interface MeetingDetailsTiming {
+  meetingId: string;
+  agendaTimePlanned?: string;
+  agendaTimeActual?: string;
+  discussionTaskTimePlanned?: string;
+  discussionTaskTimeActual?: string;
+  discussionProjectTimePlanned?: string;
+  discussionProjectTimeActual?: string;
+  discussionKPITimePlanned?: string;
+  discussionKPITimeActual?: string;
+  conclusionTimePlanned?: string;
+  conclusionTimeActual?: string;
+}
+
+interface ConclusionResponse {
+  success: boolean;
+  status: number;
+  message: string;
+  data: {
+    agenda: {
+      issue: string[];
+      objective: string[];
+    };
+    discussion: {
+      taskUpdate: {
+        oldValues: {
+          taskName: string;
+          taskDescription: string;
+          taskDeadline: string;
+          taskType: string;
+          taskStatus: string;
+          project: string;
+          meeting: string;
+          subParameters: string;
+          taskEmployees: string;
+        };
+        newValues: {
+          taskName: string;
+          taskDescription: string;
+          taskDeadline: string;
+          taskType: string;
+          taskStatus: string;
+          project: string;
+          meeting: string;
+          subParameters: string;
+          taskEmployees: string;
+        };
+      }[];
+      projectUpdate: {
+        oldValues: {
+          projectName: string;
+          projectDescription: string;
+          projectDeadline: string;
+          projectStatus: string;
+          subParameters: string;
+          projectEmployees: string;
+        };
+        newValues: {
+          projectName: string;
+          projectDescription: string;
+          projectDeadline: string;
+          projectStatus: string;
+          subParameters: string;
+          projectEmployees: string;
+        };
+      }[];
+      kpiUpdate: {
+        oldValues: {
+          kpiName: string;
+          kpiFrequency: string;
+          kpiValidationType: string;
+          kpiVisualFrequencyTypes: string | null;
+          kpiUnit: string;
+          coreParameter: string;
+          value1: string;
+          value2: string;
+        };
+        newValues: {
+          kpiName: string;
+          kpiFrequency: string;
+          kpiValidationType: string;
+          kpiVisualFrequencyTypes: string | null;
+          kpiUnit: string;
+          coreParameter: string;
+          value1: string;
+          value2: string;
+        };
+        recData?: {
+          kpiId: string;
+          startDate: string;
+          endDate: string;
+          data: string;
+        }[];
+      }[];
+    };
+  };
 }

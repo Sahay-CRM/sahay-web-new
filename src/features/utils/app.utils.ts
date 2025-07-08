@@ -12,6 +12,11 @@ export function capitalizeFirstLetter(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+export function formatFrequencyType(value: string) {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+}
+
 export function notifyMessage(
   message: string,
   type: "error" | "warn" | "success" = "error",

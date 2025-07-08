@@ -51,6 +51,17 @@ function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   );
 }
 
+// Helper to format numbers to three decimal places
+function formatToThreeDecimals(value: string | number | null | undefined) {
+  if (value === null || value === undefined || value === "") return "";
+  const num = Number(value);
+  if (isNaN(num)) return value;
+  return num.toLocaleString(undefined, {
+    maximumFractionDigits: 3,
+    minimumFractionDigits: 0,
+  });
+}
+
 export default function KPITable() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: kpiStructure, isLoading: isKpiStructureLoading } =
@@ -388,8 +399,8 @@ export default function KPITable() {
                 <TooltipContent>
                   <span>
                     {kpi.validationType === "BETWEEN"
-                      ? `${kpi?.value1 ?? ""} - ${kpi?.value2 ?? ""}`
-                      : (kpi?.value1 ?? "")}
+                      ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(kpi?.value2)}`
+                      : formatToThreeDecimals(kpi?.value1)}
                   </span>
                 </TooltipContent>
               </Tooltip>

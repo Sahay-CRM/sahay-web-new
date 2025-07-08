@@ -192,6 +192,14 @@ const Urls = {
   deleteMeetingKpisData: (id: string) =>
     `${baseUrl}/company/detail-meeting/kpi/remove/${id}`,
   allKpiList: () => `${baseUrl}/company/kpi/get-detail-meeting`,
+
+  timeUpdateByMeeting: (id: string) =>
+    `${baseUrl}/company/detail-meeting/update/${id}`,
+  getTimeByMeeting: (id: string) =>
+    `${baseUrl}/company/detail-meeting/get/${id}`,
+
+  getConclusionByMeeting: (id: string) =>
+    `${baseUrl}/company/detail-meeting/get-conclusion/${id}`,
 };
 
 export default Urls;

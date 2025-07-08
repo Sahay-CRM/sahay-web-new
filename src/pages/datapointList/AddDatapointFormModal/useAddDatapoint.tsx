@@ -132,8 +132,6 @@ export default function useAddEmployee() {
   }, [trigger]);
 
   const onSubmit = handleSubmit(async (data) => {
-    console.log(data);
-
     // Convert visualFrequencyTypes array to comma-separated string if it's an array
     const visualFrequencyTypesStr = Array.isArray(data.visualFrequencyTypes)
       ? data.visualFrequencyTypes.join(",")
@@ -172,87 +170,6 @@ export default function useAddEmployee() {
         handleModalClose();
       },
     });
-
-    // let selectedEmployees = data.employeeId || [];
-    // if (!Array.isArray(selectedEmployees)) {
-    //   selectedEmployees = selectedEmployees ? [selectedEmployees] : [];
-    // }
-    // let productIds: string[] = [];
-    // if (Array.isArray(data.productId) && data.productId.length > 0) {
-    //   productIds = data.productId.map((p: ProductData) =>
-    //     typeof p === "object" && p !== null
-    //       ? String(p.productId ?? p.productId ?? "")
-    //       : String(p ?? "")
-    //   );
-    // }
-    // const frequencyValue = data.frequencyId;
-    // const unit = data.unit;
-    // const validationTypeValue = data.validationType;
-
-    // const visualFrequencyTypes = Array.isArray(data.visualFrequencyTypes)
-    //   ? data.visualFrequencyTypes.join(",")
-    //   : data.visualFrequencyTypes || "";
-
-    // const assignUser = selectedEmployees.map((emp: DataPointEmployee) => {
-    //   const obj: DataPointEmployee = {
-    //     employeeId: emp.employeeId,
-    //     employeeName: emp.employeeName,
-    //     value1: "", // Provide a default value, will be overwritten below
-    //   };
-    //   if (
-    //     String(validationTypeValue) === "6" ||
-    //     validationTypeValue === "BETWEEN"
-    //   ) {
-    //     obj.value1 = data[`goalValue1_${emp.employeeId}`];
-    //     obj.value2 = data[`goalValue2_${emp.employeeId}`];
-    //   } else if (
-    //     String(validationTypeValue) === "7" ||
-    //     validationTypeValue === "YES_NO"
-    //   ) {
-    //     const yesnoValue = data[`yesno_${emp.employeeId}`];
-    //     let value = yesnoValue;
-    //     if (typeof yesnoValue === "object" && yesnoValue !== null) {
-    //       value = yesnoValue.value;
-    //     }
-    //     if (value === "1" || value === 1 || value === "yes") {
-    //       obj.value1 = "1";
-    //     } else {
-    //       obj.value1 = "0";
-    //     }
-    //   } else {
-    //     obj.value1 = data[`goalValue1_${emp.employeeId}`];
-    //   }
-    //   return obj;
-    // });
-    // const payload: KPIFormData = {
-    //   dataPointId: datapointApiData?.dataPointId || "", // or "" for new
-    //   companykpimasterId: companykpimasterId || "",
-    //   dataPointName: data?.KPIMasterId?.KPILabel,
-    //   KPIMasterId: data?.KPIMasterId?.KPIMasterId,
-    //   KPIMaster: data?.KPIMasterId || null,
-    //   coreParameterId: data?.coreParameterId,
-    //   dataPointLabel: data?.KPIMasterId?.KPIName,
-    //   productIds: productIds,
-    //   assignUser: assignUser,
-    //   validationType: validationTypeValue,
-    //   frequencyType: frequencyValue,
-    //   unit: unit,
-    //   selectedType: "", // Set appropriately if needed
-    //   dataPointEmployeeJunction: assignUser,
-    //   DataPointProductJunction: Array.isArray(data.productId)
-    //     ? data.productId.map((p: ProductData) => ({
-    //         productId: p.productId,
-    //         productName: p.productName,
-    //       }))
-    //     : [],
-    //   hasData: datapointApiData?.hasData ?? false,
-    //   visualFrequencyTypes: visualFrequencyTypes, // Add the formatted visualFrequencyTypes
-    // };
-    // addDatapoint(payload, {
-    //   onSuccess: () => {
-    //     handleModalClose();
-    //   },
-    // });
     navigate("/dashboard/kpi");
   });
 
@@ -371,12 +288,12 @@ export default function useAddEmployee() {
 
   const Frequency = () => {
     const frequenceOptions = [
-      { value: "DAILY", label: "DAILY" },
-      { value: "WEEKLY", label: "WEEKLY" },
-      { value: "MONTHLY", label: "MONTHLY" },
-      { value: "QUARTERLY", label: "QUARTERLY" },
-      { value: "HALFYEARLY", label: "HALFYEARLY" },
-      { value: "YEARLY", label: "YEARLY" },
+      { value: "DAILY", label: "Daily" },
+      { value: "WEEKLY", label: "Weekly" },
+      { value: "MONTHLY", label: "Monthly" },
+      { value: "QUARTERLY", label: "Quarterly" },
+      { value: "HALFYEARLY", label: "Half-Yearly" },
+      { value: "YEARLY", label: "Yearly" },
     ];
 
     const { data: corePara } = useGetCoreParameterDropdown();
@@ -466,6 +383,7 @@ export default function useAddEmployee() {
                 options={validationOptions}
                 error={errors.validationType}
                 className="p-2 rounded-md"
+                isMandatory
               />
             )}
           />
@@ -484,6 +402,7 @@ export default function useAddEmployee() {
                   isMulti={true}
                   placeholder="Select visual frequency types"
                   disabled={false}
+                  // className="text-[15px] "
                   key={
                     selectedFrequency + "-" + (watch("coreParameterId") || "")
                   }
@@ -648,9 +567,7 @@ export default function useAddEmployee() {
                 <FormInputField
                   label="Tag"
                   // isMandatory
-                  {...register(`tag`, {
-                    required: "Please enter Tag",
-                  })}
+                  {...register(`tag`)}
                   error={errors?.tag}
                   // disabled={isDisabled}
                   // readOnly={isDisabled}
