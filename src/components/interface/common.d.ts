@@ -275,12 +275,12 @@ interface ImportantDatesDataProps {
 
 interface CompanyMeetingDataProps {
   meetingId?: string;
-  meetingName: string;
-  meetingDescription: string;
-  meetingDateTime: string;
-  meetingTypeId: string;
+  meetingName?: string;
+  meetingDescription?: string;
+  meetingDateTime?: string;
+  meetingTypeId?: string;
   parentType?: string;
-  meetingStatusId: string;
+  meetingStatusId?: string;
   companyMeetingId?: string;
   joiners?: string[] | Joiners[];
   meetingStatus?: CompanyMeetingStatusDataProps;
@@ -298,6 +298,7 @@ interface Joiners {
   employeeId: string;
   employeeName: string;
   isTeamLeader?: boolean;
+  photo?: string;
 }
 
 interface CompanyDatapointDataProps {

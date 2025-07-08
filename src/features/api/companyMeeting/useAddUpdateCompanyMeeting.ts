@@ -11,7 +11,7 @@ export default function useAddUpdateCompanyMeeting() {
   const addUpdateCompanyMeetingMutation = useMutation({
     mutationKey: ["add-or-update-meeting-list"],
     mutationFn: async (data: CompanyMeetingDataProps) => {
-      const isUpdate = Boolean(data.companyMeetingId);
+      const isUpdate = Boolean(data?.companyMeetingId);
 
       const config = {
         url: isUpdate

@@ -192,7 +192,7 @@ export default function MeetingList() {
                 1,
               status: item.meetingStatusId,
               meetingDateTime: format(
-                new Date(item.meetingDateTime),
+                new Date(item.meetingDateTime ?? 0),
                 "dd/MM/yyyy hh:mm a",
               ),
               joinerNames:

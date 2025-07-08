@@ -165,12 +165,12 @@ export default function KPITable({ meetingId, kpisFireBase }: KpisProps) {
   // Visualized/non-visualized rows
   const visualizedKpiRows = useMemo(() => {
     return kpiTableRows.filter(
-      (row: { kpi: KpiAllList }) => row.kpi.isVisualized,
+      (row: { kpi: SelectedKpisData }) => row.kpi.isVisualized,
     );
   }, [kpiTableRows]);
   const nonVisualizedKpiRows = useMemo(() => {
     return kpiTableRows.filter(
-      (row: { kpi: KpiAllList }) => !row.kpi.isVisualized,
+      (row: { kpi: SelectedKpisData }) => !row.kpi.isVisualized,
     );
   }, [kpiTableRows]);
 
@@ -364,11 +364,11 @@ export default function KPITable({ meetingId, kpisFireBase }: KpisProps) {
 
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedKpi, setSelectedKpi] = useState<KpiAllList | null>(null);
+  const [selectedKpi, setSelectedKpi] = useState<SelectedKpisData | null>(null);
 
   // Helper function to render table rows
-  const renderKpiRows = (rows: { kpi: KpiAllList }[]) => {
-    return rows.map((row: { kpi: KpiAllList }) => {
+  const renderKpiRows = (rows: { kpi: SelectedKpisData }[]) => {
+    return rows.map((row: { kpi: SelectedKpisData }) => {
       const { kpi } = row;
       // Use kpi.dataArray for columns
       const dataRow: KpiDataCell[] = kpi.dataArray || [];
@@ -731,7 +731,7 @@ export default function KPITable({ meetingId, kpisFireBase }: KpisProps) {
   //   );
   // }
 
-  const handleAddKpis = (tasks: KpiAllList[]) => {
+  const handleAddKpis = (tasks: SelectedKpisData[]) => {
     const payload = {
       meetingId: meetingId,
       kpiIds: tasks.map((item) => item.kpiId),

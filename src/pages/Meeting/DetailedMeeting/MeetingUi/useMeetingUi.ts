@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getDatabase, ref, update } from "firebase/database";
+import { useSelector } from "react-redux";
+import { getUserId } from "@/features/selectors/auth.selector";
+import { addUpdateCompanyMeetingMutation } from "@/features/api/companyMeeting";
 
 interface UseMeetingUiOptions {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -13,13 +16,18 @@ interface UseMeetingUiOptions {
     discussionKPITimePlanned?: string;
     conclusionTimePlanned?: string;
   };
+  meetingJoiners?: Joiners[] | string[];
 }
 
 export default function useMeetingUi({
   meetingStart,
   meetingTiming,
+  meetingJoiners,
 }: UseMeetingUiOptions) {
   const { id: meetingId } = useParams();
+  const userId = useSelector(getUserId);
+
+  const { mutate: updateMeetingTeamLeader } = addUpdateCompanyMeetingMutation();
 
   const TAB_NAMES = [
     "agenda",
@@ -156,6 +164,25 @@ export default function useMeetingUi({
     }
   }, [meetingTiming]);
 
+  const handleAddTeamLeader = (data: Joiners) => {
+    const teamLeader = (meetingJoiners as Joiners[])
+      ?.filter((da) => da.isTeamLeader)
+      .map((item) => item.employeeId);
+
+    let updatedTeamLeaders: string[];
+    if (teamLeader?.includes(data.employeeId)) {
+      updatedTeamLeaders = teamLeader.filter((id) => id !== data.employeeId);
+    } else {
+      updatedTeamLeaders = [...(teamLeader || []), data.employeeId];
+    }
+
+    const payload = {
+      companyMeetingId: meetingId,
+      teamLeaders: updatedTeamLeaders,
+    };
+    updateMeetingTeamLeader(payload);
+  };
+
   return {
     meetingId,
     tabChangeFireBase,
@@ -165,5 +192,7 @@ export default function useMeetingUi({
     projectFireBase,
     kpisFireBase,
     setTimerMinutesMap,
+    userId,
+    handleAddTeamLeader,
   };
 }
