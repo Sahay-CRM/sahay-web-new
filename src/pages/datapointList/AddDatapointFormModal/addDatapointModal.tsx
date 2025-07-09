@@ -16,7 +16,7 @@ interface DatapointListData {
 interface KPIFormDataProp {
   KPIName?: string;
   KPIMasterId?: DatapointListData;
-  frequencyId?: string;
+  frequencyType?: string;
   validationType?: string;
   visualFrequencyTypes?: string[];
   unit?: string;
@@ -82,9 +82,9 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
           <div>
             <span className="font-medium text-gray-700">Frequency : </span>
             <span className="text-black font-bold">
-              {typeof modalData?.frequencyId === "string"
-                ? modalData.frequencyId
-                : modalData?.frequencyId || "-"}
+              {typeof modalData?.frequencyType === "string"
+                ? modalData.frequencyType
+                : modalData?.frequencyType || "-"}
             </span>
           </div>
           <div>

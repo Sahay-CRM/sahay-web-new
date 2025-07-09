@@ -32,3 +32,6 @@ export { default as useGetMeetingSelectedKpis } from "./useGetMeetingSelectedKpi
 
 export { default as addMeetingTimeMutation } from "./useUpdateMeetingTime";
 export { default as useGetMeetingTiming } from "./useGetMeetingTiming";
+
+export { default as addMeetingNotesMutation } from "./useAddMeetingNotes";
+export { default as useGetMeetingNotes } from "./useGetMeetingNotes";

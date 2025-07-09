@@ -3,19 +3,17 @@ import { useParams } from "react-router-dom";
 import { getDatabase, ref, update } from "firebase/database";
 import { useSelector } from "react-redux";
 import { getUserId } from "@/features/selectors/auth.selector";
-import { addUpdateCompanyMeetingMutation } from "@/features/api/companyMeeting";
+import {
+  addMeetingTimeMutation,
+  addUpdateCompanyMeetingMutation,
+} from "@/features/api/companyMeeting";
+import { queryClient } from "@/queryClient";
 
 interface UseMeetingUiOptions {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   meetingStart: any;
   isTeamLeader: boolean;
-  meetingTiming?: {
-    agendaTimePlanned?: string;
-    discussionTaskTimePlanned?: string;
-    discussionProjectTimePlanned?: string;
-    discussionKPITimePlanned?: string;
-    conclusionTimePlanned?: string;
-  };
+  meetingTiming?: MeetingDetailsTiming;
   meetingJoiners?: Joiners[] | string[];
 }
 
@@ -27,7 +25,11 @@ export default function useMeetingUi({
   const { id: meetingId } = useParams();
   const userId = useSelector(getUserId);
 
+  const checkEmployee = meetingTiming?.employeeList;
+
   const { mutate: updateMeetingTeamLeader } = addUpdateCompanyMeetingMutation();
+
+  const { mutate: updateTime } = addMeetingTimeMutation();
 
   const TAB_NAMES = [
     "agenda",
@@ -37,43 +39,35 @@ export default function useMeetingUi({
     "conclusion",
   ] as const;
 
+  const TAB_TO_TIMING_KEY: Record<string, keyof MeetingDetailsTiming> = {
+    agenda: "agendaTimePlanned",
+    tasks: "discussionTaskTimePlanned",
+    projects: "discussionProjectTimePlanned",
+    kpis: "discussionKPITimePlanned",
+    conclusion: "conclusionTimePlanned",
+  };
+
+  function getLocalStorageMinutes(
+    meetingId: string | undefined,
+    tab: string,
+  ): number {
+    if (!meetingId) return 1;
+    const stored = localStorage.getItem(`meeting-${meetingId}-timer-${tab}`);
+    return stored ? parseInt(stored) : 1;
+  }
+
   const [timerMinutesMap, setTimerMinutesMap] = useState<
     Record<string, number>
   >(() => {
     const defaultTimes: Record<string, number> = {};
     TAB_NAMES.forEach((tab) => {
-      defaultTimes[tab] = 1; // Default fallback
+      const timingKey = TAB_TO_TIMING_KEY[tab];
+      if (meetingTiming && meetingTiming[timingKey]) {
+        defaultTimes[tab] = Math.floor(Number(meetingTiming[timingKey]) / 60);
+      } else {
+        defaultTimes[tab] = getLocalStorageMinutes(meetingId, tab);
+      }
     });
-
-    // Set from meetingTiming if available
-    if (meetingTiming) {
-      if (meetingTiming.agendaTimePlanned) {
-        defaultTimes.agenda = Math.floor(
-          Number(meetingTiming.agendaTimePlanned) / 60,
-        );
-      }
-      if (meetingTiming.discussionTaskTimePlanned) {
-        defaultTimes.tasks = Math.floor(
-          Number(meetingTiming.discussionTaskTimePlanned) / 60,
-        );
-      }
-      if (meetingTiming.discussionProjectTimePlanned) {
-        defaultTimes.projects = Math.floor(
-          Number(meetingTiming.discussionProjectTimePlanned) / 60,
-        );
-      }
-      if (meetingTiming.discussionKPITimePlanned) {
-        defaultTimes.kpis = Math.floor(
-          Number(meetingTiming.discussionKPITimePlanned) / 60,
-        );
-      }
-      if (meetingTiming.conclusionTimePlanned) {
-        defaultTimes.conclusion = Math.floor(
-          Number(meetingTiming.conclusionTimePlanned) / 60,
-        );
-      }
-    }
-
     return defaultTimes;
   });
 
@@ -131,38 +125,20 @@ export default function useMeetingUi({
   );
 
   useEffect(() => {
-    if (meetingTiming) {
-      const newTimerMinutesMap: Record<string, number> = {};
-
-      if (meetingTiming.agendaTimePlanned) {
-        newTimerMinutesMap.agenda = Math.floor(
-          Number(meetingTiming.agendaTimePlanned) / 60,
+    const newTimerMinutesMap: Record<string, number> = {};
+    TAB_NAMES.forEach((tab) => {
+      const timingKey = TAB_TO_TIMING_KEY[tab];
+      if (meetingTiming && meetingTiming[timingKey]) {
+        newTimerMinutesMap[tab] = Math.floor(
+          Number(meetingTiming[timingKey]) / 60,
         );
+      } else {
+        newTimerMinutesMap[tab] = getLocalStorageMinutes(meetingId, tab);
       }
-      if (meetingTiming.discussionTaskTimePlanned) {
-        newTimerMinutesMap.tasks = Math.floor(
-          Number(meetingTiming.discussionTaskTimePlanned) / 60,
-        );
-      }
-      if (meetingTiming.discussionProjectTimePlanned) {
-        newTimerMinutesMap.projects = Math.floor(
-          Number(meetingTiming.discussionProjectTimePlanned) / 60,
-        );
-      }
-      if (meetingTiming.discussionKPITimePlanned) {
-        newTimerMinutesMap.kpis = Math.floor(
-          Number(meetingTiming.discussionKPITimePlanned) / 60,
-        );
-      }
-      if (meetingTiming.conclusionTimePlanned) {
-        newTimerMinutesMap.conclusion = Math.floor(
-          Number(meetingTiming.conclusionTimePlanned) / 60,
-        );
-      }
-
-      setTimerMinutesMap(newTimerMinutesMap);
-    }
-  }, [meetingTiming]);
+    });
+    setTimerMinutesMap(newTimerMinutesMap);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meetingTiming, meetingId]);
 
   const handleAddTeamLeader = (data: Joiners) => {
     const teamLeader = (meetingJoiners as Joiners[])
@@ -180,7 +156,32 @@ export default function useMeetingUi({
       companyMeetingId: meetingId,
       teamLeaders: updatedTeamLeaders,
     };
-    updateMeetingTeamLeader(payload);
+    updateMeetingTeamLeader(payload, {
+      onSuccess: () => {
+        queryClient.resetQueries({ queryKey: ["get-meeting-details-timing"] });
+      },
+    });
+  };
+
+  const handleCheckIn = (employeeId: string) => {
+    if (meetingId) {
+      updateTime({
+        meetingId: meetingId,
+        employeeId: employeeId,
+        attendanceMark: true,
+      });
+    }
+  };
+
+  const handleCheckOut = (employeeId: string) => {
+    if (meetingId) {
+      updateTime({
+        meetingId: meetingId,
+        employeeId: employeeId,
+        attendanceMark: false,
+      });
+    }
+    // setCheckedInMap((prev) => ({ ...prev, [employeeId]: false }));
   };
 
   return {
@@ -194,5 +195,8 @@ export default function useMeetingUi({
     setTimerMinutesMap,
     userId,
     handleAddTeamLeader,
+    handleCheckIn,
+    handleCheckOut,
+    checkEmployee,
   };
 }

@@ -200,6 +200,15 @@ const Urls = {
 
   getConclusionByMeeting: (id: string) =>
     `${baseUrl}/company/detail-meeting/get-conclusion/${id}`,
+
+  addMeetingNots: (id: string) =>
+    `${baseUrl}/company/detail-meeting/note/create/${id}`,
+
+  updateMeetingNots: (id: string) =>
+    `${baseUrl}/company/detail-meeting/note/update/${id}`,
+
+  getMeetingNots: (id: string) =>
+    `${baseUrl}/company/detail-meeting/note/get/${id}`,
 };
 
 export default Urls;

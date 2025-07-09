@@ -71,7 +71,7 @@ export default function useAddEmployee() {
     mode: "onChange",
   });
 
-  const watchedFrequency = useWatch({ name: "frequencyId", control });
+  const watchedFrequency = useWatch({ name: "frequencyType", control });
 
   useEffect(() => {
     if (watchedFrequency && !datapointApiData) {
@@ -91,7 +91,7 @@ export default function useAddEmployee() {
           datapointApiData.dataPointName,
       });
       // Set frequency
-      setValue("frequencyId", datapointApiData.frequencyType);
+      setValue("frequencyType", datapointApiData.frequencyType);
       // Set validation type
       setValue("validationType", datapointApiData.validationType);
       // Set unit
@@ -143,7 +143,7 @@ export default function useAddEmployee() {
           KPIMasterId: data.KPIMasterId.KPIMasterId,
           coreParameterId: data.coreParameterId,
           employeeId: data.employeeId,
-          frequencyId: data.frequencyId,
+          // frequencyType: data.frequencyType,
           tag: data.tag,
           unit: data.unit,
           validationType: data.validationType,
@@ -156,7 +156,7 @@ export default function useAddEmployee() {
           KPIMasterId: data.KPIMasterId.KPIMasterId,
           coreParameterId: data.coreParameterId,
           employeeId: data.employeeId,
-          frequencyId: data.frequencyId,
+          // frequencyType: data.frequencyType,
           tag: data.tag,
           unit: data.unit,
           validationType: data.validationType,
@@ -306,7 +306,7 @@ export default function useAddEmployee() {
       : [];
 
     // Get the selected frequency value
-    const selectedFrequency = useWatch({ name: "frequencyId", control });
+    const selectedFrequency = useWatch({ name: "frequencyType", control });
 
     // Filter visual frequency options based on selected frequency
     const getFilteredVisualFrequencyOptions = () => {
@@ -353,7 +353,7 @@ export default function useAddEmployee() {
         <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
           <Controller
             control={control}
-            name="frequencyId"
+            name="frequencyType"
             rules={{ required: "Frequency is required" }}
             render={({ field }) => (
               <FormSelect
@@ -365,7 +365,7 @@ export default function useAddEmployee() {
                   setValue("visualFrequencyTypes", []);
                 }}
                 options={frequenceOptions}
-                error={errors.frequencyId}
+                error={errors.frequencyType}
                 disabled={hasData}
                 className={hasData ? "bg-gray-100 p-2 rounded-md" : ""}
               />

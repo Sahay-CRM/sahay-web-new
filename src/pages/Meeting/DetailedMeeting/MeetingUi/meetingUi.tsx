@@ -12,6 +12,7 @@ import {
   BarChart2,
   ClipboardCheck,
   Crown,
+  CircleCheckBig,
 } from "lucide-react";
 import Tasks from "./Tasks";
 import Projects from "./Projects/projects";
@@ -63,18 +64,7 @@ interface MeetingUiProps {
     defaultTimes: Record<string, number>;
     spentTimes: Record<string, number>;
   }) => void;
-  meetingTiming?: {
-    agendaTimePlanned?: string;
-    discussionTaskTimePlanned?: string;
-    discussionProjectTimePlanned?: string;
-    discussionKPITimePlanned?: string;
-    conclusionTimePlanned?: string;
-    agendaTimeActual?: string;
-    discussionTaskTimeActual?: string;
-    discussionProjectTimeActual?: string;
-    discussionKPITimeActual?: string;
-    conclusionTimeActual?: string;
-  };
+  meetingTiming?: MeetingDetailsTiming;
   meetingJoiners?: Joiners[] | string[];
   handleStartMeeting: () => void;
   handleCloseMeetingWithLog: () => void;
@@ -99,6 +89,9 @@ export default function MeetingUI({
     setTimerMinutesMap,
     userId,
     handleAddTeamLeader,
+    handleCheckIn,
+    handleCheckOut,
+    checkEmployee,
   } = useMeetingUi({
     meetingStart,
     isTeamLeader,
@@ -109,6 +102,13 @@ export default function MeetingUI({
   const [activeTab, setActiveTab] = useState<ActiveTab>("agenda");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isRightSidebarCollapsed, setRightIsSidebarCollapsed] = useState(false);
+  const [mainMeetingMinutes, setMainMeetingMinutes] = useState(
+    meetingStart ? 3 : 4,
+  );
+
+  useEffect(() => {
+    setMainMeetingMinutes(meetingStart ? 3 : 4);
+  }, [meetingStart]);
 
   const isMeetingStarted = meetingStart === true;
   const safeMeetingId = meetingId ?? "";
@@ -120,10 +120,6 @@ export default function MeetingUI({
     kpis: 0,
     conclusion: 0,
   });
-
-  const [checkedInMap, setCheckedInMap] = useState<{
-    [employeeId: string]: boolean;
-  }>({});
 
   const getInitialMinutes = useCallback(
     (tab: string) => {
@@ -223,27 +219,22 @@ export default function MeetingUI({
     ? Math.floor(Number(meetingTiming.conclusionTimePlanned) / 60)
     : undefined;
 
-  const handleCheckIn = (employeeId: string) => {
-    setCheckedInMap((prev) => ({ ...prev, [employeeId]: true }));
-  };
-
-  const handleCheckOut = (employeeId: string) => {
-    setCheckedInMap((prev) => ({ ...prev, [employeeId]: false }));
-  };
-
-  const totalMinutes = meetingTiming
-    ? (parseInt(meetingTiming.agendaTimePlanned ?? "0") +
-        parseInt(meetingTiming.discussionTaskTimePlanned ?? "0") +
-        parseInt(meetingTiming.discussionProjectTimePlanned ?? "0") +
-        parseInt(meetingTiming.discussionKPITimePlanned ?? "0")) /
-      60
-    : 0;
+  const totalMinutes =
+    discussionAllocatedMinutes + (timerMinutesMap["agenda"] || 0);
 
   let meetingActionArea: React.ReactNode;
   if (isRightSidebarCollapsed) {
     meetingActionArea = (
       <div className="flex items-center justify-center w-full h-12 text-white font-semibold text-lg bg-[#303290] rounded-full">
-        {totalMinutes} min
+        {/* Show timer for main meeting */}
+        <Timer
+          initialMinutes={mainMeetingMinutes}
+          onTimeChange={setMainMeetingMinutes}
+          isActive={meetingStart}
+          showEditButton={!meetingStart}
+          meetingId={safeMeetingId}
+          tabName="main"
+        />
       </div>
     );
   } else {
@@ -253,29 +244,25 @@ export default function MeetingUI({
         (meetingJoiners as Joiners[]).some(
           (joiner) => joiner.employeeId === userId && joiner.isTeamLeader,
         ) ? (
-          meetingStart ? (
-            <Button
-              variant="outline"
-              className="cursor-pointer w-full bg-red-800 text-white py-5 px-8 hover:bg-red-800/80 hover:text-white rounded-full text-lg font-semibold flex items-center justify-between"
-              onClick={handleCloseMeetingWithLog}
-            >
-              <span>End Meeting</span>
-              <span className="ml-4 text-base font-normal">
-                {totalMinutes} min
-              </span>
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              className="cursor-pointer w-full bg-[#303290] text-white py-5 px-8 hover:bg-[#303290]/80 hover:text-white rounded-full text-lg font-semibold flex items-center justify-between"
-              onClick={handleStartMeeting}
-            >
-              <span>Start Meeting</span>
-              <span className="ml-4 text-base font-normal">
-                {totalMinutes} min
-              </span>
-            </Button>
-          )
+          <Button
+            variant="outline"
+            className={`cursor-pointer w-full ${meetingStart ? "bg-red-800" : "bg-[#303290]"} text-white py-5 px-8 hover:bg-opacity-80 rounded-full text-lg font-semibold flex items-center justify-between`}
+            onClick={
+              meetingStart ? handleCloseMeetingWithLog : handleStartMeeting
+            }
+          >
+            <span>{meetingStart ? "End Meeting" : "Start Meeting"}</span>
+            <span className="ml-4 text-base font-normal">
+              <Timer
+                initialMinutes={mainMeetingMinutes}
+                onTimeChange={setMainMeetingMinutes}
+                isActive={meetingStart}
+                showEditButton={!meetingStart}
+                meetingId={safeMeetingId}
+                tabName="main"
+              />
+            </span>
+          </Button>
         ) : (
           <Button
             variant="outline"
@@ -296,7 +283,7 @@ export default function MeetingUI({
       <div className="flex h-[calc(100vh-150px)] relative">
         {/* Sidebar */}
         <div
-          className={`${isSidebarCollapsed ? "w-16 ease-in-out duration-700" : "w-80 ease-in-out duration-700"} border rounded-2xl p-4 bg-gray-50 transition-all duration-300 relative overflow-hidden`}
+          className={`${isSidebarCollapsed ? "w-16 ease-in-out duration-700" : "w-80 ease-in-out duration-700"} border rounded-2xl p-4 bg-gray-50 transition-all duration-300 relative overflow-hidden overflow-y-auto min-h-[200px]`}
         >
           <h1
             className={`text-xl font-bold mb-6 flex items-center ${isSidebarCollapsed ? "justify-center" : "justify-start"}`}
@@ -582,7 +569,7 @@ export default function MeetingUI({
           )}
         </Button>
         <div
-          className={`${isRightSidebarCollapsed ? "w-16 ease-in-out duration-700" : "w-80 ease-in-out duration-700"} border rounded-2xl p-4 bg-gray-50 transition-all duration-300 relative overflow-hidden`}
+          className={`${isRightSidebarCollapsed ? "w-16 ease-in-out duration-700" : "w-80 ease-in-out duration-700"} border rounded-2xl p-4 bg-gray-50 transition-all duration-300 relative overflow-hidden overflow-y-auto min-h-[200px]`}
         >
           <nav className="space-y-1">
             <div className="">
@@ -595,27 +582,28 @@ export default function MeetingUI({
                     Attendees
                   </div>
                   <div className="grid grid-cols-6 gap-2 ">
-                    {(meetingJoiners as Joiners[])?.map((item, index) => (
+                    {(checkEmployee || []).map((item, index) => (
                       <div key={index + item.employeeId} className="relative">
                         {item.isTeamLeader && (
-                          <span className="absolute -top-0 right-1 z-10 bg-gray-200 shadow-2xl rounded-full p-0.5">
+                          <span className="absolute -top-0 right-1 z-10 bg-white shadow-2xl rounded-full p-0.5">
                             <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
                           </span>
                         )}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Avatar className="h-8 mt-2 w-8 relative cursor-pointer">
+                            <Avatar
+                              className={`h-8 mt-2 w-8 relative cursor-pointer`}
+                            >
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <AvatarFallback className="font-bold">
                                       <img
-                                        src={
-                                          item.photo ? item.photo : userProfile
-                                        }
+                                        src={userProfile}
                                         alt="profile"
-                                        className={`w-full rounded-full object-cover outline-2 outline-blue-400 bg-black ${item.isTeamLeader ? "border-2 border-green-700" : ""}`}
+                                        className={`w-full rounded-full object-cover outline-2 outline-blue-400 bg-black `}
                                       />
+                                      {/* Show check icon if checked in */}
                                     </AvatarFallback>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -625,16 +613,15 @@ export default function MeetingUI({
                               </TooltipProvider>
                             </Avatar>
                           </DropdownMenuTrigger>
+                          {item.attendanceMark && (
+                            <span className="absolute -bottom-1.5 right-0 bg-white rounded-full p-0.5">
+                              <CircleCheckBig className="w-4 h-4 text-green-600" />
+                            </span>
+                          )}
                           <DropdownMenuContent>
-                            {!checkedInMap[item.employeeId] ? (
-                              <DropdownMenuItem
-                                onClick={() => handleCheckIn(item.employeeId)}
-                              >
-                                Check In
-                              </DropdownMenuItem>
-                            ) : (
-                              isTeamLeader && (
-                                <div>
+                            {item.attendanceMark ? (
+                              <div>
+                                {isTeamLeader && (
                                   <DropdownMenuItem
                                     onClick={() => handleAddTeamLeader(item)}
                                     className="border mb-2"
@@ -643,17 +630,23 @@ export default function MeetingUI({
                                       ? "Remove TeamLeader"
                                       : "Add TeamLeader"}
                                   </DropdownMenuItem>
-
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      handleCheckOut(item.employeeId)
-                                    }
-                                    className="border"
-                                  >
-                                    Check Out
-                                  </DropdownMenuItem>
-                                </div>
-                              )
+                                )}
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleCheckOut(item.employeeId)
+                                  }
+                                  className="border"
+                                >
+                                  Check Out
+                                </DropdownMenuItem>
+                              </div>
+                            ) : (
+                              <DropdownMenuItem
+                                onClick={() => handleCheckIn(item.employeeId)}
+                                className="border"
+                              >
+                                Check In
+                              </DropdownMenuItem>
                             )}
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -707,17 +700,21 @@ export default function MeetingUI({
                     <PopoverContent className="p-0 w-80">
                       <MeetingNotes
                         joiners={meetingJoiners as Joiners[]}
-                        userId={userId}
+                        employeeId={userId}
+                        meetingId={meetingId ?? ""}
                       />
                     </PopoverContent>
                   </Popover>
                 </div>
               ) : (
                 <div className="mt-6 flex justify-center">
-                  <MeetingNotes
-                    joiners={meetingJoiners as Joiners[]}
-                    userId={userId}
-                  />
+                  {meetingStart && (
+                    <MeetingNotes
+                      joiners={meetingJoiners as Joiners[]}
+                      employeeId={userId}
+                      meetingId={meetingId ?? ""}
+                    />
+                  )}
                 </div>
               ))}
           </nav>

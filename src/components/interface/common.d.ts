@@ -292,6 +292,8 @@ interface CompanyMeetingDataProps {
     },
   ];
   teamLeaders?: string[];
+  employeeId?: string;
+  attendanceMark?: boolean;
 }
 
 interface Joiners {
@@ -1082,6 +1084,14 @@ interface MeetingDetailsTiming {
   discussionKPITimeActual?: string;
   conclusionTimePlanned?: string;
   conclusionTimeActual?: string;
+  employeeList?: {
+    isTeamLeader?: boolean;
+    employeeName: string;
+    employeeId: string;
+    attendanceMark: boolean | null;
+  }[];
+  employeeId?: string;
+  attendanceMark?: boolean | null;
 }
 
 interface ConclusionResponse {
@@ -1166,4 +1176,10 @@ interface ConclusionResponse {
       }[];
     };
   };
+}
+
+interface MeetingNotesRes {
+  employeeId: string;
+  note: string;
+  detailMeetingNoteId: string;
 }
