@@ -293,7 +293,7 @@ export default function MeetingUI({
 
   return (
     <div className="w-full">
-      <div className="flex h-screen relative">
+      <div className="flex h-[calc(100vh-150px)] relative">
         {/* Sidebar */}
         <div
           className={`${isSidebarCollapsed ? "w-16 ease-in-out duration-700" : "w-80 ease-in-out duration-700"} border rounded-2xl p-4 bg-gray-50 transition-all duration-300 relative overflow-hidden`}

@@ -731,7 +731,7 @@ export default function KPITable({ meetingId, kpisFireBase }: KpisProps) {
   //   );
   // }
 
-  const handleAddKpis = (tasks: SelectedKpisData[]) => {
+  const handleAddKpis = (tasks: KpiAllList[]) => {
     const payload = {
       meetingId: meetingId,
       kpiIds: tasks.map((item) => item.kpiId),
