@@ -12,7 +12,6 @@ import {
   BarChart2,
   ClipboardCheck,
   Crown,
-  CircleCheckBig,
 } from "lucide-react";
 import Tasks from "./Tasks";
 import Projects from "./Projects/projects";
@@ -68,6 +67,7 @@ interface MeetingUiProps {
   meetingJoiners?: Joiners[] | string[];
   handleStartMeeting: () => void;
   handleCloseMeetingWithLog: () => void;
+  follow?: string;
 }
 
 export default function MeetingUI({
@@ -78,6 +78,8 @@ export default function MeetingUI({
   meetingJoiners,
   handleStartMeeting,
   handleCloseMeetingWithLog,
+  follow,
+  activeScreen,
 }: MeetingUiProps) {
   const {
     tabChangeFireBase,
@@ -92,6 +94,7 @@ export default function MeetingUI({
     handleCheckIn,
     handleCheckOut,
     checkEmployee,
+    handleFollow,
   } = useMeetingUi({
     meetingStart,
     isTeamLeader,
@@ -99,7 +102,11 @@ export default function MeetingUI({
     meetingJoiners,
   });
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>("agenda");
+  const isFollower = userId === follow;
+
+  const [activeTab, setActiveTab] = useState<ActiveTab>(
+    (activeScreen as ActiveTab) || "agenda",
+  );
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isRightSidebarCollapsed, setRightIsSidebarCollapsed] = useState(false);
   const [mainMeetingMinutes, setMainMeetingMinutes] = useState(
@@ -109,6 +116,13 @@ export default function MeetingUI({
   useEffect(() => {
     setMainMeetingMinutes(meetingStart ? 3 : 4);
   }, [meetingStart]);
+
+  // Sync activeTab with activeScreen prop in real time
+  useEffect(() => {
+    if (activeScreen) {
+      setActiveTab(activeScreen as ActiveTab);
+    }
+  }, [activeScreen]);
 
   const isMeetingStarted = meetingStart === true;
   const safeMeetingId = meetingId ?? "";
@@ -203,9 +217,12 @@ export default function MeetingUI({
   }, [tabTimes, timerMinutesMap, onTabTimesChange]);
 
   const handleTabChange = (tab: ActiveTab) => {
-    setActiveTab(tab);
-    if (isTeamLeader) {
-      tabChangeFireBase(tab);
+    // Only allow if user is the follower
+    if (isFollower) {
+      setActiveTab(tab);
+      if (isTeamLeader) {
+        tabChangeFireBase(tab);
+      }
     }
   };
 
@@ -246,13 +263,15 @@ export default function MeetingUI({
         ) ? (
           <Button
             variant="outline"
-            className={`cursor-pointer w-full ${meetingStart ? "bg-red-800" : "bg-[#303290]"} text-white py-5 px-8 hover:bg-opacity-80 rounded-full text-lg font-semibold flex items-center justify-between`}
+            className={`cursor-pointer hover:text-white w-full ${meetingStart ? "bg-red-800" : "bg-[#303290]"} text-white py-5 px-8 hover:bg-opacity-80 rounded-full text-lg font-semibold flex items-center justify-between`}
             onClick={
               meetingStart ? handleCloseMeetingWithLog : handleStartMeeting
             }
           >
-            <span>{meetingStart ? "End Meeting" : "Start Meeting"}</span>
-            <span className="ml-4 text-base font-normal">
+            <span className="hover:text-white">
+              {meetingStart ? "End Meeting" : "Start Meeting"}
+            </span>
+            <span className="ml-4 text-base hover:text-white font-normal">
               <Timer
                 initialMinutes={mainMeetingMinutes}
                 onTimeChange={setMainMeetingMinutes}
@@ -300,6 +319,7 @@ export default function MeetingUI({
               variant={activeTab === "agenda" ? "default" : "ghost"}
               className={`${isSidebarCollapsed ? "w-8 h-8 p-0 justify-center" : "w-full justify-start"} border cursor-pointer`}
               onClick={() => handleTabChange("agenda")}
+              disabled={!isFollower}
             >
               {isSidebarCollapsed ? (
                 <Calendar className="h-4 w-4" />
@@ -366,6 +386,7 @@ export default function MeetingUI({
                     variant={activeTab === "projects" ? "default" : "ghost"}
                     className="w-full justify-start border cursor-pointer mb-2"
                     onClick={() => handleTabChange("projects")}
+                    disabled={!isFollower}
                   >
                     <CheckSquare className="mr-2 h-4 w-4" />
                     Projects
@@ -388,6 +409,7 @@ export default function MeetingUI({
                     variant={activeTab === "tasks" ? "default" : "ghost"}
                     className="w-full justify-start border cursor-pointer mb-2"
                     onClick={() => handleTabChange("tasks")}
+                    disabled={!isFollower}
                   >
                     <List className="mr-2 h-4 w-4" />
                     Tasks
@@ -410,6 +432,7 @@ export default function MeetingUI({
                     variant={activeTab === "kpis" ? "default" : "ghost"}
                     className="w-full justify-start border cursor-pointer"
                     onClick={() => handleTabChange("kpis")}
+                    disabled={!isFollower}
                   >
                     <BarChart2 className="mr-2 h-4 w-4" />
                     KPIs
@@ -436,6 +459,7 @@ export default function MeetingUI({
               variant={activeTab === "conclusion" ? "default" : "ghost"}
               className={`${isSidebarCollapsed ? "w-8 h-8 p-0 justify-center" : "w-full justify-start"} mt-2 border cursor-pointer `}
               onClick={() => handleTabChange("conclusion")}
+              disabled={!isFollower}
             >
               {isSidebarCollapsed ? (
                 <ClipboardCheck className="h-4 w-4" />
@@ -590,7 +614,7 @@ export default function MeetingUI({
                           </span>
                         )}
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                          <DropdownMenuTrigger asChild disabled={!meetingStart}>
                             <Avatar
                               className={`h-8 mt-2 w-8 relative cursor-pointer`}
                             >
@@ -613,42 +637,66 @@ export default function MeetingUI({
                               </TooltipProvider>
                             </Avatar>
                           </DropdownMenuTrigger>
-                          {item.attendanceMark && (
-                            <span className="absolute -bottom-1.5 right-0 bg-white rounded-full p-0.5">
-                              <CircleCheckBig className="w-4 h-4 text-green-600" />
-                            </span>
-                          )}
-                          <DropdownMenuContent>
-                            {item.attendanceMark ? (
-                              <div>
-                                {isTeamLeader && (
+                          {meetingStart && (
+                            <>
+                              {item.attendanceMark ? (
+                                <DropdownMenuContent>
+                                  {isTeamLeader && (
+                                    <DropdownMenuItem
+                                      onClick={() => handleAddTeamLeader(item)}
+                                      className="border mb-2"
+                                    >
+                                      {item.isTeamLeader
+                                        ? "Remove TeamLeader"
+                                        : "Add TeamLeader"}
+                                    </DropdownMenuItem>
+                                  )}
                                   <DropdownMenuItem
-                                    onClick={() => handleAddTeamLeader(item)}
+                                    onClick={() =>
+                                      handleCheckOut(item.employeeId)
+                                    }
                                     className="border mb-2"
                                   >
-                                    {item.isTeamLeader
-                                      ? "Remove TeamLeader"
-                                      : "Add TeamLeader"}
+                                    Check Out
                                   </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleCheckOut(item.employeeId)
-                                  }
-                                  className="border"
-                                >
-                                  Check Out
-                                </DropdownMenuItem>
-                              </div>
-                            ) : (
-                              <DropdownMenuItem
-                                onClick={() => handleCheckIn(item.employeeId)}
-                                className="border"
-                              >
-                                Check In
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
+                                  {/* 
+                                  {item.employeeId !== follow && follow ? (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleFollow(item.employeeId)
+                                      }
+                                      className="border"
+                                    >
+                                      Follow
+                                    </DropdownMenuItem>
+                                  ) : null} */}
+                                  {item.employeeId !== follow &&
+                                  userId === follow &&
+                                  follow ? (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleFollow(item.employeeId)
+                                      }
+                                      className="border"
+                                    >
+                                      Follow
+                                    </DropdownMenuItem>
+                                  ) : null}
+                                </DropdownMenuContent>
+                              ) : (
+                                <DropdownMenuContent>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleCheckIn(item.employeeId)
+                                    }
+                                    className="border"
+                                  >
+                                    Check In
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              )}
+                            </>
+                          )}
                         </DropdownMenu>
                       </div>
                     ))}

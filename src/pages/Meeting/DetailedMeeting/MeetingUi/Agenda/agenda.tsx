@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { CircleX, CornerDownLeft, Pencil, Trash2 } from "lucide-react";
 import { getDatabase, ref, update } from "firebase/database";
 
 import { Button } from "@/components/ui/button";
@@ -172,13 +172,20 @@ export default function Agenda({
         <div className="space-y-2 border-r pr-5 py-2 px-4">
           <h4 className="font-medium">Issues</h4>
           {canEdit && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 relative">
               <Input
                 value={issueInput}
                 onChange={(e) => setIssueInput(e.target.value)}
                 placeholder="Enter an issue"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleAddIssue();
+                  }
+                }}
               />
-              <Button onClick={() => handleAddIssue()}>Add</Button>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
+                <CornerDownLeft className="text-gray-400 w-4" />
+              </span>
             </div>
           )}
           <div className="mt-2 space-y-2">
@@ -192,24 +199,30 @@ export default function Agenda({
                     {editing.type === "issue" &&
                     editing.id === item.detailMeetingAgendaIssueId &&
                     canEdit ? (
-                      <>
-                        <Input
-                          value={editing.value}
-                          onChange={(e) => setEditingValue(e.target.value)}
-                          className="mr-2"
-                        />
+                      <div className="w-full flex items-center gap-1">
+                        <div className="relative w-full">
+                          <Input
+                            value={editing.value}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            className="mr-2"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                updateEdit();
+                              }
+                            }}
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
+                            <CornerDownLeft className="text-gray-400 w-4" />
+                          </span>
+                        </div>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={updateEdit}
-                          className="mr-1"
+                          onClick={cancelEdit}
                         >
-                          Submit
+                          <CircleX />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={cancelEdit}>
-                          Cancel
-                        </Button>
-                      </>
+                      </div>
                     ) : (
                       <>
                         <span>{item.agendaIssue}</span>
@@ -256,13 +269,20 @@ export default function Agenda({
         <div className="space-y-2 py-2 px-4">
           <h4 className="font-medium">Objective</h4>
           {canEdit && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 relative">
               <Input
                 value={objectiveInput}
                 onChange={(e) => setObjectiveInput(e.target.value)}
                 placeholder="Enter a suggestion"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleAddObjective();
+                  }
+                }}
               />
-              <Button onClick={() => handleAddObjective()}>Add</Button>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
+                <CornerDownLeft className="text-gray-400 w-4" />
+              </span>
             </div>
           )}
           <div className="mt-2 space-y-2">
@@ -276,24 +296,27 @@ export default function Agenda({
                     {editing.type === "objective" &&
                     editing.id === item.detailMeetingAgendaObjectiveId &&
                     canEdit ? (
-                      <>
-                        <Input
-                          value={editing.value}
-                          onChange={(e) => setEditingValue(e.target.value)}
-                          className="mr-2"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={updateEdit}
-                          className="mr-1"
-                        >
-                          Submit
-                        </Button>
+                      <div className="w-full flex items-center gap-1">
+                        <div className="relative w-full">
+                          <Input
+                            value={editing.value}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            className="mr-2"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                updateEdit();
+                              }
+                            }}
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
+                            <CornerDownLeft className="text-gray-400 w-4" />
+                          </span>
+                        </div>
+
                         <Button variant="ghost" size="sm" onClick={cancelEdit}>
-                          Cancel
+                          <CircleX />
                         </Button>
-                      </>
+                      </div>
                     ) : (
                       <>
                         <span>{item.agendaObjective}</span>

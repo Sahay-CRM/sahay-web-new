@@ -23,6 +23,7 @@ import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
+import { queryClient } from "@/queryClient";
 
 interface TasksProps {
   meetingId: string;
@@ -67,6 +68,7 @@ export default function Tasks({ meetingId, tasksFireBase }: TasksProps) {
     };
     addMeetingTask(payload, {
       onSuccess: () => {
+        queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
         tasksFireBase();
         // setSelectedTask(tasks);
       },
@@ -121,6 +123,7 @@ export default function Tasks({ meetingId, tasksFireBase }: TasksProps) {
         };
         deleteTaskById(payload, {
           onSuccess: () => {
+            queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
             tasksFireBase();
           },
           onError: (error: Error) => {

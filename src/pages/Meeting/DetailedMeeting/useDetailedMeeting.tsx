@@ -1,3 +1,9 @@
+import { getDatabase, off, onValue, ref, update } from "firebase/database";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
+import { queryClient } from "@/queryClient";
+
 import {
   addMeetingTimeMutation,
   createMeetingMutation,
@@ -5,17 +11,19 @@ import {
   useGetCompanyMeetingById,
   useGetMeetingTiming,
 } from "@/features/api/companyMeeting";
+
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { getUserId } from "@/features/selectors/auth.selector";
-import { queryClient } from "@/queryClient";
-import { getDatabase, off, onValue, ref } from "firebase/database";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
 
 export default function useDetailedMeeting() {
   const { id: meetingId } = useParams();
   const [isMeetingStart, setIsMeetingStart] = useState(false);
+
+  const { data: meetingData, failureReason } = useGetCompanyMeetingById(
+    meetingId ?? "",
+  );
+  const { mutate: createMeet } = createMeetingMutation();
+  const { mutate: endMeet } = endMeetingMutation();
 
   const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
 
@@ -63,12 +71,6 @@ export default function useDetailedMeeting() {
     },
   });
 
-  const { data: meetingData, failureReason } = useGetCompanyMeetingById(
-    meetingId ?? "",
-  );
-  const { mutate: createMeet } = createMeetingMutation();
-  const { mutate: endMeet } = endMeetingMutation();
-
   const handleStartMeeting = useCallback(() => {
     if (meetingId) {
       createMeet(meetingId, {
@@ -88,13 +90,25 @@ export default function useDetailedMeeting() {
 
           updateTime(payload, {
             onSuccess: () => {
+              updateTime({
+                meetingId: meetingId,
+                employeeId: userId,
+                attendanceMark: true,
+              });
               setIsMeetingStart(true);
+
+              // Set default follow to current user
+              if (userId) {
+                const db = getDatabase();
+                const meetRef = ref(db, `meetings/${meetingId}`);
+                update(meetRef, { follow: userId });
+              }
             },
           });
         },
       });
     }
-  }, [createMeet, meetingId, updateTime]);
+  }, [createMeet, meetingId, updateTime, userId]);
 
   const handleUpdatedRefresh = useCallback(async () => {
     const activeTab = meetingResponse?.activeScreen;
@@ -115,6 +129,7 @@ export default function useDetailedMeeting() {
       ...(activeTab === "kpis"
         ? [queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] })]
         : []),
+      queryClient.resetQueries({ queryKey: ["get-meeting-details-timing"] }),
     ]);
   }, [meetingResponse?.activeScreen]);
 

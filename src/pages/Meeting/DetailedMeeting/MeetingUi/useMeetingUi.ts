@@ -10,8 +10,7 @@ import {
 import { queryClient } from "@/queryClient";
 
 interface UseMeetingUiOptions {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  meetingStart: any;
+  meetingStart: boolean;
   isTeamLeader: boolean;
   meetingTiming?: MeetingDetailsTiming;
   meetingJoiners?: Joiners[] | string[];
@@ -165,23 +164,55 @@ export default function useMeetingUi({
 
   const handleCheckIn = (employeeId: string) => {
     if (meetingId) {
-      updateTime({
-        meetingId: meetingId,
-        employeeId: employeeId,
-        attendanceMark: true,
-      });
+      updateTime(
+        {
+          meetingId: meetingId,
+          employeeId: employeeId,
+          attendanceMark: true,
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          onSuccess: () => {
+            if (meetingId) {
+              const db = getDatabase();
+              const meetRef = ref(db, `meetings/${meetingId}`);
+              update(meetRef, { updatedAt: new Date().toISOString() });
+            }
+          },
+        },
+      );
     }
   };
 
   const handleCheckOut = (employeeId: string) => {
     if (meetingId) {
-      updateTime({
-        meetingId: meetingId,
-        employeeId: employeeId,
-        attendanceMark: false,
-      });
+      updateTime(
+        {
+          meetingId: meetingId,
+          employeeId: employeeId,
+          attendanceMark: false,
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          onSuccess: () => {
+            if (meetingId) {
+              const db = getDatabase();
+              const meetRef = ref(db, `meetings/${meetingId}`);
+              update(meetRef, { updatedAt: new Date().toISOString() });
+            }
+          },
+        },
+      );
     }
-    // setCheckedInMap((prev) => ({ ...prev, [employeeId]: false }));
+  };
+
+  // Add handleFollow to update 'follow' field in Firebase
+  const handleFollow = (employeeId: string) => {
+    if (meetingId) {
+      const db = getDatabase();
+      const meetRef = ref(db, `meetings/${meetingId}`);
+      update(meetRef, { follow: employeeId });
+    }
   };
 
   return {
@@ -198,5 +229,6 @@ export default function useMeetingUi({
     handleCheckIn,
     handleCheckOut,
     checkEmployee,
+    handleFollow, // Expose handleFollow
   };
 }

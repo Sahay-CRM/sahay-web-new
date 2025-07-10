@@ -3,6 +3,7 @@ import PageNotAccess from "@/pages/PageNoAccess";
 import MeetingUi from "./MeetingUi";
 import { useContext, useEffect } from "react";
 import SidebarControlContext from "@/features/layouts/DashboardLayout/SidebarControlContext";
+import { SpinnerIcon } from "@/components/shared/Icons";
 
 export default function DetailedMeeting() {
   const {
@@ -17,11 +18,13 @@ export default function DetailedMeeting() {
     meetingTiming,
   } = useDetailedMeeting();
 
-  const isTeamLeader =
-    Array.isArray(meetingData?.data.joiners) &&
-    (meetingData.data.joiners as Joiners[]).some(
-      (joiner) => joiner.employeeId === userId && joiner.isTeamLeader,
-    );
+  const joiner = Array.isArray(meetingData?.data.joiners)
+    ? (meetingData.data.joiners as Joiners[]).find(
+        (j) => j.employeeId === userId,
+      )
+    : undefined;
+  const isTeamLeader = !!joiner?.isTeamLeader;
+  const isJoinerNotTeamLeader = !!joiner && !joiner.isTeamLeader;
 
   const sidebarControl = useContext(SidebarControlContext);
   useEffect(() => {
@@ -31,13 +34,36 @@ export default function DetailedMeeting() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const isUserJoiner = !!joiner;
+
+  if (!isUserJoiner) {
+    return <div>You are not a participant in this meeting.</div>;
+  }
+  const isLoading = !meetingData; // or use a loading flag from your hook if available
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-20">
+        <div className="animate-spin">
+          <SpinnerIcon />
+        </div>
+      </div>
+    );
+  }
+
   if (failureReason) {
     return <PageNotAccess />;
+  }
+
+  // Show message if user is joiner, not team leader, and meeting hasn't started
+  if (isJoinerNotTeamLeader && !isMeetingStart) {
+    return <div>Meeting is not started</div>;
   }
 
   return (
     <div>
       <div>{meetingResponse !== null && JSON.stringify(meetingResponse)}</div>
+
       <MeetingUi
         meetingStart={isMeetingStart}
         isTeamLeader={isTeamLeader}
@@ -48,6 +74,7 @@ export default function DetailedMeeting() {
         meetingJoiners={meetingData?.data.joiners}
         handleStartMeeting={handleStartMeeting}
         handleCloseMeetingWithLog={handleCloseMeetingWithLog}
+        follow={meetingResponse?.follow}
       />
     </div>
   );

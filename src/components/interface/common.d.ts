@@ -1023,6 +1023,7 @@ interface MeetingResFire {
   agenda?: { updatedAt: string | number };
   conclusion?: { updatedAt: string | number };
   discussion?: { updatedAt: string | number };
+  follow?: string;
 }
 
 interface HandleTabChangeLocalProps {
@@ -1092,6 +1093,7 @@ interface MeetingDetailsTiming {
   }[];
   employeeId?: string;
   attendanceMark?: boolean | null;
+  updatedAt?: string;
 }
 
 interface ConclusionResponse {

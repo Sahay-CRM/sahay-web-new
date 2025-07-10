@@ -22,6 +22,7 @@ import {
   useGetMeetingProject,
 } from "@/features/api/companyMeeting";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import { queryClient } from "@/queryClient";
 
 interface ProjectProps {
   meetingId: string;
@@ -67,8 +68,8 @@ export default function Projects({ meetingId, projectFireBase }: ProjectProps) {
     };
     addMeetingProject(payload, {
       onSuccess: () => {
+        queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
         projectFireBase();
-        // setSelectedTask(tasks);
       },
     });
   };
@@ -121,6 +122,7 @@ export default function Projects({ meetingId, projectFireBase }: ProjectProps) {
         deleteProjectById(payload, {
           onSuccess: () => {
             projectFireBase();
+            queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
           },
           onError: (error: Error) => {
             const axiosError = error as AxiosError<{

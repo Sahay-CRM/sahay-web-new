@@ -25,6 +25,7 @@ export default function useAddMeetingProjectData() {
     onSuccess: () => {
       toast.success("Data Added");
       queryClient.resetQueries({ queryKey: ["get-project-list-meeting"] });
+      queryClient.resetQueries({ queryKey: ["get-project-list"] });
       // queryClient.resetQueries({ queryKey: ["get-meeting-objective"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {

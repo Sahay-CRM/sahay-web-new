@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { SearchIcon } from "@/components/shared/Icons";
 import { useDdAllMeetingKpis } from "@/features/api/KpiList";
+import { CornerDownLeft } from "lucide-react";
 
 interface KpisSearchDropdownProps {
   onAdd: (selectedTasks: KpiAllList[]) => void;
@@ -22,7 +23,6 @@ const KpisSearchDropdown: React.FC<KpisSearchDropdownProps> = ({
 }) => {
   const [searchValue, setSearchValue] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedKpis, setSelectedKpis] = useState<KpiAllList[]>([]);
   const inputRef = useRef<HTMLDivElement>(null);
 
   // Only fetch when minSearchLength+ chars
@@ -55,27 +55,15 @@ const KpisSearchDropdown: React.FC<KpisSearchDropdownProps> = ({
     };
   }, [showDropdown]);
 
-  // Checkbox logic
-  const handleCheckboxChange = (task: KpiAllList, checked: boolean) => {
-    setSelectedKpis((prev) => {
-      if (checked) {
-        return [...prev, task];
-      } else {
-        return prev.filter((t) => t.kpiId !== task.kpiId);
-      }
-    });
-  };
-
-  // Add button logic
-  const handleAdd = () => {
-    onAdd(selectedKpis);
+  // On item click logic
+  const handleSelect = (item: KpiAllList) => {
+    onAdd([item]);
     setShowDropdown(false);
-    setSelectedKpis([]);
     setSearchValue("");
   };
 
   return (
-    <div className="relative w-80" ref={inputRef}>
+    <div className="relative w-80 z-50 mb-3" ref={inputRef}>
       <div className="relative h-10 w-full max-w-sm">
         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4">
           <SearchIcon />
@@ -88,8 +76,11 @@ const KpisSearchDropdown: React.FC<KpisSearchDropdownProps> = ({
             setSearchValue(e.target.value);
             setShowDropdown(e.target.value.length >= minSearchLength);
           }}
-          className={`pl-8 pr-2 w-96 h-10 py-2 text-sm ${inputClassName}`}
+          className={`pl-8 pr-2 w-full h-10 py-2 text-sm ${inputClassName}`}
         />
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
+          <CornerDownLeft className="text-gray-400 w-4" />
+        </span>
       </div>
       {/* Dropdown */}
       {showDropdown && shouldFetch && (
@@ -102,42 +93,20 @@ const KpisSearchDropdown: React.FC<KpisSearchDropdownProps> = ({
             <div className="p-2 text-center text-gray-500">No Kpis found</div>
           ) : (
             <ul>
-              {kpisList.map((item) => {
-                const checked = !!selectedKpis.find(
-                  (t) => t.kpiId === item.kpiId,
-                );
-                return (
-                  <li
-                    key={item.kpiId}
-                    className="flex items-center px-2 py-1 hover:bg-gray-100"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(e) =>
-                        handleCheckboxChange(item, e.target.checked)
-                      }
-                      className="mr-2"
-                    />
-                    {renderData ? (
-                      renderData(item, checked)
-                    ) : (
-                      <span>{item.KPIName}</span>
-                    )}
-                  </li>
-                );
-              })}
+              {kpisList.map((item) => (
+                <li
+                  key={item.kpiId}
+                  className="flex items-center px-2 py-1 hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleSelect(item)}
+                >
+                  {renderData ? (
+                    renderData(item, false)
+                  ) : (
+                    <span>{item.KPIName}</span>
+                  )}
+                </li>
+              ))}
             </ul>
-          )}
-          {selectedKpis.length > 0 && (
-            <div className="p-2 border-t flex justify-end">
-              <button
-                className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
-                onClick={handleAdd}
-              >
-                Add
-              </button>
-            </div>
           )}
         </div>
       )}

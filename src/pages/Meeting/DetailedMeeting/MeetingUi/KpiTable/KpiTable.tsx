@@ -43,6 +43,7 @@ import {
 } from "@/features/api/companyMeeting";
 import KpiDrawer from "./KpiDrawer";
 import { addUpdateKpi } from "@/features/api/kpiDashboard";
+import { queryClient } from "@/queryClient";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -433,7 +434,7 @@ export default function KPITable({ meetingId, kpisFireBase }: KpisProps) {
                 }}
                 className="ml-2"
               >
-                <Ellipsis size={18} />
+                <Ellipsis size={18} className="rotate-90" />
               </Button>
             </div>
           </TableCell>
@@ -520,7 +521,7 @@ export default function KPITable({ meetingId, kpisFireBase }: KpisProps) {
               );
             }
             return (
-              <TableCell key={i} className="px-3 py-2">
+              <TableCell key={i} className="px-3 py-2 ">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -570,7 +571,7 @@ export default function KPITable({ meetingId, kpisFireBase }: KpisProps) {
                             : undefined
                         }
                         className={clsx(
-                          "border p-2 rounded-sm text-center text-sm w-[100px] h-[40px]",
+                          "border p-2 rounded-sm text-center text-sm w-[60px] h-[40px]",
                           inputVal !== "" &&
                             validationType &&
                             (isValidInput(
@@ -738,6 +739,7 @@ export default function KPITable({ meetingId, kpisFireBase }: KpisProps) {
     };
     addKpiList(payload, {
       onSuccess: () => {
+        queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] });
         kpisFireBase();
       },
     });
@@ -761,7 +763,7 @@ export default function KPITable({ meetingId, kpisFireBase }: KpisProps) {
             kpiStructure={kpiStructure}
           />
         </div>{" "}
-        <div className="flex gap-4 items-center justify-end">
+        <div className="flex gap-4 items-center justify-end mb-4">
           {Object.keys(tempValues).length > 0 && (
             <Button onClick={handleSubmit}>Submit</Button>
           )}
