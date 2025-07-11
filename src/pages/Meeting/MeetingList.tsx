@@ -229,30 +229,72 @@ export default function MeetingList() {
 
               return (
                 <>
-                  {isTeamLeader ? (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="py-1 px-3 cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/dashboard/meeting/detail/${row.meetingId}`);
-                      }}
-                    >
-                      Start Meeting
-                    </Button>
+                  {row.detailMeetingStatus === "ENDED" ? (
+                    <div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="py-1 px-3 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(
+                            `/dashboard/meeting/detail/${row.meetingId}`,
+                          );
+                        }}
+                      >
+                        Detailed Meeting
+                      </Button>
+                    </div>
                   ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="py-1 px-3 cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/dashboard/meeting/detail/${row.meetingId}`);
-                      }}
-                    >
-                      Join Meeting
-                    </Button>
+                    <div>
+                      {isTeamLeader ? (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="py-1 px-3 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(
+                              `/dashboard/meeting/detail/${row.meetingId}`,
+                            );
+                          }}
+                        >
+                          Start Meeting
+                        </Button>
+                      ) : (
+                        <div>
+                          {row.detailMeetingStatus === "NOT STARTED" ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="py-1 px-3 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(
+                                  `/dashboard/meeting/detail/${row.meetingId}`,
+                                );
+                              }}
+                            >
+                              Meeting Not Started
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="py-1 px-3 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(
+                                  `/dashboard/meeting/detail/${row.meetingId}`,
+                                );
+                              }}
+                            >
+                              Join Meeting
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </>
               );

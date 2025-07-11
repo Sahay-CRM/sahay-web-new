@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { getDatabase, ref, update } from "firebase/database";
 import { useSelector } from "react-redux";
@@ -30,45 +30,21 @@ export default function useMeetingUi({
 
   const { mutate: updateTime } = addMeetingTimeMutation();
 
-  const TAB_NAMES = [
-    "agenda",
-    "tasks",
-    "projects",
-    "kpis",
-    "conclusion",
-  ] as const;
+  // const TAB_NAMES = [
+  //   "agenda",
+  //   "tasks",
+  //   "projects",
+  //   "kpis",
+  //   "conclusion",
+  // ] as const;
 
-  const TAB_TO_TIMING_KEY: Record<string, keyof MeetingDetailsTiming> = {
-    agenda: "agendaTimePlanned",
-    tasks: "discussionTaskTimePlanned",
-    projects: "discussionProjectTimePlanned",
-    kpis: "discussionKPITimePlanned",
-    conclusion: "conclusionTimePlanned",
-  };
-
-  function getLocalStorageMinutes(
-    meetingId: string | undefined,
-    tab: string,
-  ): number {
-    if (!meetingId) return 1;
-    const stored = localStorage.getItem(`meeting-${meetingId}-timer-${tab}`);
-    return stored ? parseInt(stored) : 1;
-  }
-
-  const [timerMinutesMap, setTimerMinutesMap] = useState<
-    Record<string, number>
-  >(() => {
-    const defaultTimes: Record<string, number> = {};
-    TAB_NAMES.forEach((tab) => {
-      const timingKey = TAB_TO_TIMING_KEY[tab];
-      if (meetingTiming && meetingTiming[timingKey]) {
-        defaultTimes[tab] = Math.floor(Number(meetingTiming[timingKey]) / 60);
-      } else {
-        defaultTimes[tab] = getLocalStorageMinutes(meetingId, tab);
-      }
-    });
-    return defaultTimes;
-  });
+  // const TAB_TO_TIMING_KEY: Record<string, keyof MeetingDetailsTiming> = {
+  //   agenda: "agendaTimePlanned",
+  //   tasks: "discussionTaskTimePlanned",
+  //   projects: "discussionProjectTimePlanned",
+  //   kpis: "discussionKPITimePlanned",
+  //   conclusion: "conclusionTimePlanned",
+  // };
 
   const tasksFireBase = () => {
     if (meetingStart) {
@@ -122,22 +98,6 @@ export default function useMeetingUi({
     },
     [meetingId, meetingStart],
   );
-
-  useEffect(() => {
-    const newTimerMinutesMap: Record<string, number> = {};
-    TAB_NAMES.forEach((tab) => {
-      const timingKey = TAB_TO_TIMING_KEY[tab];
-      if (meetingTiming && meetingTiming[timingKey]) {
-        newTimerMinutesMap[tab] = Math.floor(
-          Number(meetingTiming[timingKey]) / 60,
-        );
-      } else {
-        newTimerMinutesMap[tab] = getLocalStorageMinutes(meetingId, tab);
-      }
-    });
-    setTimerMinutesMap(newTimerMinutesMap);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meetingTiming, meetingId]);
 
   const handleAddTeamLeader = (data: Joiners) => {
     const teamLeader = (meetingJoiners as Joiners[])
@@ -218,12 +178,10 @@ export default function useMeetingUi({
   return {
     meetingId,
     tabChangeFireBase,
-    timerMinutesMap,
     tasksFireBase,
     conclusionFireBase,
     projectFireBase,
     kpisFireBase,
-    setTimerMinutesMap,
     userId,
     handleAddTeamLeader,
     handleCheckIn,

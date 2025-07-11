@@ -27,7 +27,6 @@ const Timer: React.FC<TimerProps> = ({
   onTimeSpent,
   showEditButton = true,
   meetingId,
-  tabName,
 }) => {
   const [timeLeft, setTimeLeft] = useState(initialMinutes * 60);
   const [isEditing, setIsEditing] = useState(false);
@@ -36,7 +35,9 @@ const Timer: React.FC<TimerProps> = ({
   const [overtimeSeconds, setOvertimeSeconds] = useState(0);
   const dispatch = useDispatch();
 
-  const storageKey = `timer_${meetingId}_${tabName}`;
+  // Change storageKey to always be `meeting_${meetingId}_timer_main`
+  // Remove all logic that depends on tabName for storage
+  const storageKey = `meeting_${meetingId}_timer_main`;
 
   useEffect(() => {
     const savedTimer = localStorage.getItem(storageKey);
@@ -63,7 +64,7 @@ const Timer: React.FC<TimerProps> = ({
         }
       }
     }
-  }, [dispatch, meetingId, tabName, storageKey, isActive]);
+  }, [dispatch, meetingId, storageKey, isActive]);
 
   const saveTimerState = useCallback(() => {
     const stateToSave = {

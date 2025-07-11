@@ -23,8 +23,12 @@ export default function DetailedMeeting() {
         (j) => j.employeeId === userId,
       )
     : undefined;
+
   const isTeamLeader = !!joiner?.isTeamLeader;
   const isJoinerNotTeamLeader = !!joiner && !joiner.isTeamLeader;
+
+  const isMeetingNotStarted =
+    meetingData?.data?.detailMeetingStatus === "NOT STARTED" && !isMeetingStart;
 
   const sidebarControl = useContext(SidebarControlContext);
   useEffect(() => {
@@ -34,11 +38,11 @@ export default function DetailedMeeting() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isUserJoiner = !!joiner;
+  // const isUserJoiner = !!joiner;
 
-  if (!isUserJoiner) {
-    return <div>You are not a participant in this meeting.</div>;
-  }
+  // if (!isUserJoiner) {
+  //   return <div>You are not a participant in this meeting.</div>;
+  // }
   const isLoading = !meetingData; // or use a loading flag from your hook if available
 
   if (isLoading) {
@@ -56,8 +60,12 @@ export default function DetailedMeeting() {
   }
 
   // Show message if user is joiner, not team leader, and meeting hasn't started
-  if (isJoinerNotTeamLeader && !isMeetingStart) {
-    return <div>Meeting is not started</div>;
+  if (isJoinerNotTeamLeader && !isMeetingNotStarted && !isMeetingStart) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-3xl">
+        Meeting is not started
+      </div>
+    );
   }
 
   return (

@@ -39,8 +39,9 @@ export default function useDetailedMeeting() {
     setBreadcrumbs([
       { label: "Meeting", href: "/dashboard/meeting" },
       { label: "Meeting Detail", href: "" },
+      { label: `${meetingData?.data.meetingName}`, href: "" },
     ]);
-  }, [setBreadcrumbs]);
+  }, [meetingData?.data.meetingName, setBreadcrumbs]);
 
   const { mutate: updateTime } = addMeetingTimeMutation();
 

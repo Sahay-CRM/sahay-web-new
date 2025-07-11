@@ -282,7 +282,7 @@ const TableData = <T extends Record<string, unknown>>({
                 </TableHead>
               ))}
               {showActionsColumn && (
-                <TableHead className="w-[100px] sticky right-0 text-left pr-6 bg-primary">
+                <TableHead className="w-[200px] sticky right-0 text-left pr-6 bg-primary">
                   Actions
                 </TableHead>
               )}
@@ -466,36 +466,10 @@ const TableData = <T extends Record<string, unknown>>({
                     >
                       <div className="flex gap-2 items-start">
                         {customActions && (
-                          <div className="w-fit">{customActions?.(item)}</div>
+                          <div className="w-[150px]">
+                            {customActions?.(item)}
+                          </div>
                         )}
-                        {/* {otherButton &&
-                          otherButton.map((btn, index) => (
-                            <Tooltip key={index}>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant={
-                                    btn.buttonVariant as
-                                      | "link"
-                                      | "default"
-                                      | "destructive"
-                                      | "outline"
-                                      | "secondary"
-                                      | "ghost"
-                                      | null
-                                      | undefined
-                                  }
-                                  size="sm"
-                                  className={btn.buttonCss}
-                                  onClick={btn.buttonClick}
-                                  disabled={!!btn.btnDisable}
-                                >
-                                  <span>{btn.buttonText}</span>
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>{btn.buttonText}</TooltipContent>
-                            </Tooltip>
-                          ))} */}
-
                         {(moduleKey
                           ? isEditDelete &&
                             isActionButton?.(item) &&

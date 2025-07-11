@@ -294,6 +294,7 @@ interface CompanyMeetingDataProps {
   teamLeaders?: string[];
   employeeId?: string;
   attendanceMark?: boolean;
+  detailMeetingStatus?: string;
 }
 
 interface Joiners {
@@ -1094,6 +1095,7 @@ interface MeetingDetailsTiming {
   employeeId?: string;
   attendanceMark?: boolean | null;
   updatedAt?: string;
+  status?: string; // Added to match backend response
 }
 
 interface ConclusionResponse {
