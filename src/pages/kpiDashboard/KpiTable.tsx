@@ -304,25 +304,6 @@ export default function KPITable() {
     return groups;
   }, [filteredData]);
 
-  // Separate groups by visualization status
-  const visualizedGroups = useMemo(() => {
-    return groupedKpiRows
-      .map((group) => ({
-        ...group,
-        kpis: group.kpis.filter((row) => row.kpi.isVisualized),
-      }))
-      .filter((group) => group.kpis.length > 0);
-  }, [groupedKpiRows]);
-
-  const nonVisualizedGroups = useMemo(() => {
-    return groupedKpiRows
-      .map((group) => ({
-        ...group,
-        kpis: group.kpis.filter((row) => !row.kpi.isVisualized),
-      }))
-      .filter((group) => group.kpis.length > 0);
-  }, [groupedKpiRows]);
-
   // Helper function to render core parameter header row
   const renderCoreParameterHeader = (coreParameter: {
     coreParameterId: string;
@@ -331,13 +312,12 @@ export default function KPITable() {
     return (
       <TableRow
         key={`header-${coreParameter.coreParameterId}`}
-        className="bg-blue-50"
+        className="bg-blue-100 h-8"
       >
-        <TableCell
-          colSpan={4 + headers.length}
-          className="px-3 py-2 font-semibold text-blue-800 text-left"
-        >
-          {coreParameter.coreParameterName}
+        <TableCell colSpan={4 + headers.length} className="px-3">
+          <div className="w-5xl text-left sticky text-primary font-medium text-sm left-8 z-10 leading-0">
+            {coreParameter.coreParameterName}
+          </div>
         </TableCell>
       </TableRow>
     );
@@ -345,7 +325,10 @@ export default function KPITable() {
 
   // Helper function to render table rows
   const renderKpiRows = (rows: { kpi: Kpi }[]) => {
-    return rows.map((row) => {
+    const visualizedRows = rows.filter((row) => row.kpi.isVisualized);
+    const nonVisualizedRows = rows.filter((row) => !row.kpi.isVisualized);
+
+    const renderRow = (row: { kpi: Kpi }) => {
       const { kpi } = row;
       let dataRow: KpiDataCell[] | undefined = undefined;
       if (isKpiDataCellArrayArray(kpiData?.data)) {
@@ -365,79 +348,87 @@ export default function KPITable() {
               "px-3 py-2 w-[60px] bg-gray-100 sticky left-0 z-10",
             )}
           >
-            <Avatar
-              className={`h-8 w-8 ${getColorFromName(kpi?.employeeName)}`}
-            >
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <AvatarFallback
-                      className={`${getColorFromName(kpi?.employeeName)} font-bold`}
+            <div>
+              <table>
+                <tbody>
+                  <tr>
+                    <td className="bg-transparent">
+                      <Avatar
+                        className={`h-8 w-8 ${getColorFromName(kpi?.employeeName)}`}
+                      >
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <AvatarFallback
+                                className={`${getColorFromName(kpi?.employeeName)} font-bold`}
+                              >
+                                {(() => {
+                                  if (!kpi?.employeeName) return "";
+                                  const names = kpi.employeeName.split(" ");
+                                  const firstInitial = names[0]?.[0] ?? "";
+                                  const lastInitial =
+                                    names.length > 1
+                                      ? names[names.length - 1][0]
+                                      : "";
+                                  return (
+                                    firstInitial + lastInitial
+                                  ).toUpperCase();
+                                })()}
+                              </AvatarFallback>
+                            </TooltipTrigger>
+                            <TooltipContent>{kpi?.employeeName}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </Avatar>
+                    </td>
+                    <td className="w-[100px] min-w-[100px]">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-md cursor-default break-words whitespace-pre-line overflow-hidden m-0 p-0">
+                              {kpi?.kpiName}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <span>{kpi?.kpiLabel}</span>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </td>
+                    <td
+                      className={clsx(
+                        "px-3 py-2 w-[150px] break-all overflow-hidden bg-gray-100 sticky left-0 z-10",
+                      )}
                     >
-                      {(() => {
-                        if (!kpi?.employeeName) return "";
-                        const names = kpi.employeeName.split(" ");
-                        const firstInitial = names[0]?.[0] ?? "";
-                        const lastInitial =
-                          names.length > 1 ? names[names.length - 1][0] : "";
-                        return (firstInitial + lastInitial).toUpperCase();
-                      })()}
-                    </AvatarFallback>
-                  </TooltipTrigger>
-                  <TooltipContent>{kpi?.employeeName}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </Avatar>
-          </TableCell>
-          <TableCell
-            className={clsx(
-              "py-2 bg-gray-100 sticky left-[60px] z-10 w-[150px] min-w-[150px] max-w-[150px] p-0",
-            )}
-          >
-            <div className="flex items-center gap-2 w-full">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-md cursor-default w-full break-words whitespace-pre-line overflow-hidden">
-                      {kpi?.kpiName}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <span>{kpi?.kpiLabel}</span>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                      {kpi.tag}
+                    </td>
+                    <td className="px-3 py-2 w-[80px] bg-gray-100 sticky left-[210px] break-words z-10 pl-0 ml-2">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="truncate max-w-[100px] inline-block cursor-default break-words w-full">
+                              {getFormattedValue(
+                                kpi.validationType,
+                                kpi?.value1,
+                                kpi?.value2,
+                                kpi?.unit,
+                              )}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <span>
+                              {kpi.validationType === "BETWEEN"
+                                ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(kpi?.value2)}`
+                                : formatToThreeDecimals(kpi?.value1)}
+                            </span>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </TableCell>
-          <TableCell
-            className={clsx(
-              "px-3 py-2 w-[20px] break-all overflow-hidden bg-gray-100 sticky left-0 z-10",
-            )}
-          >
-            {kpi.tag}
-          </TableCell>
-          <TableCell className="px-3 py-2 w-[80px] bg-gray-100 sticky left-[210px] break-words z-10 pl-0 ml-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="truncate max-w-[100px] inline-block cursor-default break-words w-full">
-                    {getFormattedValue(
-                      kpi.validationType,
-                      kpi?.value1,
-                      kpi?.value2,
-                      kpi?.unit,
-                    )}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <span>
-                    {kpi.validationType === "BETWEEN"
-                      ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(kpi?.value2)}`
-                      : formatToThreeDecimals(kpi?.value1)}
-                  </span>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </TableCell>
 
           {/* <TableCell className="w-[60px] bg-gray-100 sticky left-[320px] z-10 text-center"></TableCell> */}
@@ -583,7 +574,22 @@ export default function KPITable() {
           })}
         </TableRow>
       );
-    });
+    };
+
+    return (
+      <>
+        {visualizedRows.map(renderRow)}
+        {visualizedRows.length > 0 && nonVisualizedRows.length > 0 && (
+          <TableRow>
+            <TableCell
+              colSpan={4 + headers.length}
+              className="h-4 bg-gray-50"
+            />
+          </TableRow>
+        )}
+        {nonVisualizedRows.map(renderRow)}
+      </>
+    );
   };
 
   const renderGroupedKpiRows = (
@@ -592,21 +598,25 @@ export default function KPITable() {
       kpis: { kpi: Kpi }[];
     }[],
   ) => {
-    return groups.map((group, groupIndex) => (
-      <React.Fragment key={group.coreParameter.coreParameterId}>
-        {renderCoreParameterHeader(group.coreParameter)}
-        {renderKpiRows(group.kpis)}
-        {/* Add gap between groups except for the last group */}
-        {groupIndex < groups.length - 1 && (
-          <TableRow>
-            <TableCell
-              colSpan={4 + headers.length}
-              className="h-4 bg-gray-50"
-            />
-          </TableRow>
-        )}
-      </React.Fragment>
-    ));
+    return groups.map((group, groupIndex) => {
+      // console.log(group);
+
+      return (
+        <React.Fragment key={group.coreParameter.coreParameterId}>
+          {renderCoreParameterHeader(group.coreParameter)}
+          {renderKpiRows(group.kpis)}
+
+          {groupIndex < groups.length - 1 && (
+            <TableRow>
+              <TableCell
+                colSpan={4 + headers.length}
+                className="h-4 bg-gray-50"
+              />
+            </TableRow>
+          )}
+        </React.Fragment>
+      );
+    });
   };
 
   // Warn on page refresh, reload, or close if there are unsaved changes
@@ -809,19 +819,33 @@ export default function KPITable() {
             <TableHeader>
               <TableRow className="h-[50px]">
                 <TableHead
-                  className={clsx(
-                    "bg-primary w-[60px] px-3 py-2 sticky left-0 z-20",
-                  )}
-                />
-                <TableHead
-                  className={clsx(
-                    "px-3 py-2 bg-primary sticky left-[60px] z-20 text-white w-[150px] text-center",
-                  )}
+                  className={clsx("bg-primary w-[60px] sticky left-0 z-20")}
                 >
-                  KPI
-                </TableHead>
-                <TableHead className="px-3 py-2 w-[80px] bg-primary sticky left-[210px] z-20 text-white text-center">
-                  Goal
+                  <div>
+                    <table className="bg-transparent border-0">
+                      <thead>
+                        <tr className="h-[50px]">
+                          <td
+                            className={clsx(
+                              "px-3 py-2 bg-transparent sticky left-[30px] z-20 text-white w-[120px] text-base text-center",
+                            )}
+                          >
+                            KPI
+                          </td>
+                          <td
+                            className={clsx(
+                              "px-3 py-2 bg-transparent sticky left-[60px] z-20 text-white text-base w-[120px] text-center",
+                            )}
+                          >
+                            Tag
+                          </td>
+                          <td className="px-3 py-2 w-[80px] bg-primary sticky left-[210px] z-20 text-white text-center">
+                            Goal
+                          </td>
+                        </tr>
+                      </thead>
+                    </table>
+                  </div>
                 </TableHead>
                 {/* <TableHead className="w-[60px] bg-primary sticky left-[320px] z-20" /> */}
                 {headers.map((header, i) => (
@@ -843,12 +867,14 @@ export default function KPITable() {
             </TableHeader>
             <TableBody>
               {/* Visualized KPIs Section */}
-              {visualizedGroups.length > 0 && (
-                <>{renderGroupedKpiRows(visualizedGroups)}</>
-              )}
+              {/* {visualizedGroups.length > 0 && (
+                <>
+                  {renderGroupedKpiRows(visualizedGroups)}
+                </>
+              )} */}
 
               {/* Non-Visualized KPIs Section */}
-              {nonVisualizedGroups.length > 0 && (
+              {/* {nonVisualizedGroups.length > 0 && (
                 <>
                   {visualizedGroups.length > 0 && (
                     <TableRow>
@@ -858,9 +884,9 @@ export default function KPITable() {
                       />
                     </TableRow>
                   )}
-                  {renderGroupedKpiRows(nonVisualizedGroups)}
                 </>
-              )}
+              )} */}
+              {renderGroupedKpiRows(groupedKpiRows)}
             </TableBody>
           </Table>
         </div>
