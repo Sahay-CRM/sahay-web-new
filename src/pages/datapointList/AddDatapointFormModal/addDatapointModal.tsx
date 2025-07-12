@@ -16,8 +16,8 @@ interface DatapointListData {
 interface KPIFormDataProp {
   KPIName?: string;
   KPIMasterId?: DatapointListData;
-  frequencyId?: string;
-  validationTypeId?: string;
+  frequencyType?: string;
+  validationType?: string;
   visualFrequencyTypes?: string[];
   unit?: string;
   coreParameterId?: string;
@@ -47,9 +47,9 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
   isLoading,
 }) => {
   const isYesNo =
-    typeof modalData?.validationTypeId === "object" &&
-    (modalData?.validationTypeId === "YES_NO" ||
-      modalData?.validationTypeId === "7");
+    typeof modalData?.validationType === "object" &&
+    (modalData?.validationType === "YES_NO" ||
+      modalData?.validationType === "7");
 
   return (
     <div>
@@ -82,9 +82,9 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
           <div>
             <span className="font-medium text-gray-700">Frequency : </span>
             <span className="text-black font-bold">
-              {typeof modalData?.frequencyId === "string"
-                ? modalData.frequencyId
-                : modalData?.frequencyId || "-"}
+              {typeof modalData?.frequencyType === "string"
+                ? modalData.frequencyType
+                : modalData?.frequencyType || "-"}
             </span>
           </div>
           <div>
@@ -101,9 +101,9 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
               Validation Type :{" "}
             </span>
             <span className="text-black font-bold">
-              {typeof modalData?.validationTypeId === "string"
-                ? modalData.validationTypeId
-                : modalData?.validationTypeId || "-"}
+              {typeof modalData?.validationType === "string"
+                ? modalData.validationType
+                : modalData?.validationType || "-"}
             </span>
           </div>
 

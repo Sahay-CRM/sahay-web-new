@@ -13,7 +13,7 @@ const AddDatapoint = () => {
     handleClose,
     onSubmit,
     Kpi,
-    Frequency,
+    Details,
     // Product,
     AssignUser,
     // GoalValue,
@@ -22,6 +22,7 @@ const AddDatapoint = () => {
     isLoading,
     isPending,
     companykpimasterId,
+    datapointApiData,
   } = useAddDatapoint();
 
   const methods = useForm({ mode: "onChange" });
@@ -32,14 +33,14 @@ const AddDatapoint = () => {
 
   if (companykpimasterId) {
     // Hide KPI step
-    steps = [<Frequency />];
-    stepNames = ["Frequency"];
+    steps = [<Details />];
+    stepNames = ["Details"];
     steps.push(<AssignUser />);
     stepNames.push("Assign User");
   } else {
     // Show all steps
-    steps = [<Kpi />, <Frequency />, <AssignUser />];
-    stepNames = ["KPI", "Frequency", "Assign User", "Goal Value"];
+    steps = [<Kpi />, <Details />, <AssignUser />];
+    stepNames = ["KPI", "Details", "Assign User", "Goal Value"];
   }
 
   const {
@@ -60,11 +61,20 @@ const AddDatapoint = () => {
   return (
     <FormProvider {...methods}>
       <div>
-        <StepProgress
-          currentStep={currentStep}
-          stepNames={stepNames}
-          totalSteps={totalSteps}
-        />
+        <div className="flex items-center">
+          {companykpimasterId && (
+            <div className="min-w-fit text-lg mr-2 font-semibold text-[#2e3090]">
+              {datapointApiData?.KPIMaster?.KPIName}
+            </div>
+          )}
+          <div className="w-full">
+            <StepProgress
+              currentStep={currentStep}
+              stepNames={stepNames}
+              totalSteps={totalSteps}
+            />
+          </div>
+        </div>
 
         {/* Navigation Buttons */}
         <div className="flex justify-end gap-5 mb-5 ">

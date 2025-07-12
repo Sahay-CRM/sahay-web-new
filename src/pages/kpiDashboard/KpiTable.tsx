@@ -38,6 +38,13 @@ import WarningDialog from "./WarningModal";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import React from "react";
+
+interface CoreParameterGroup {
+  coreParameterId: string;
+  coreParameterName: string;
+  kpis: Kpi[];
+}
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -49,6 +56,17 @@ function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
         data[0][0] !== null &&
         "kpiId" in data[0][0]))
   );
+}
+
+// Helper to format numbers to three decimal places
+function formatToThreeDecimals(value: string | number | null | undefined) {
+  if (value === null || value === undefined || value === "") return "";
+  const num = Number(value);
+  if (isNaN(num)) return value;
+  return num.toLocaleString(undefined, {
+    maximumFractionDigits: 3,
+    minimumFractionDigits: 0,
+  });
 }
 
 export default function KPITable() {
@@ -258,53 +276,72 @@ export default function KPITable() {
   const headers = getKpiHeadersFromData(
     isKpiDataCellArrayArray(kpiData?.data) ? kpiData.data : [],
     selectedPeriod,
-  ); // Flatten KPI structure to rows: each row = { kpi, assignee }
-  const kpiRows = useMemo(() => {
+  );
+
+  // Group KPIs by core parameter
+  const groupedKpiRows = useMemo(() => {
     if (!filteredData.length || !filteredData[0].kpis) return [];
-    // Each kpi is a row now
-    return filteredData[0].kpis.map((kpi) => ({ kpi }));
+
+    const groups: {
+      coreParameter: { coreParameterId: string; coreParameterName: string };
+      kpis: { kpi: Kpi }[];
+    }[] = [];
+
+    // Use the new CoreParameterGroup interface for type safety
+    (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
+      if (coreParam.kpis && Array.isArray(coreParam.kpis)) {
+        const kpiRows = coreParam.kpis.map((kpi: Kpi) => ({ kpi }));
+        groups.push({
+          coreParameter: {
+            coreParameterId: coreParam.coreParameterId,
+            coreParameterName: coreParam.coreParameterName,
+          },
+          kpis: kpiRows,
+        });
+      }
+    });
+
+    return groups;
   }, [filteredData]);
 
-  // Separate rows by visualization status
-  const visualizedRows = useMemo(() => {
-    return kpiRows.filter((row) => row.kpi.isVisualized);
-  }, [kpiRows]);
-  const nonVisualizedRows = useMemo(() => {
-    return kpiRows.filter((row) => !row.kpi.isVisualized);
-  }, [kpiRows]);
+  // Separate groups by visualization status
+  const visualizedGroups = useMemo(() => {
+    return groupedKpiRows
+      .map((group) => ({
+        ...group,
+        kpis: group.kpis.filter((row) => row.kpi.isVisualized),
+      }))
+      .filter((group) => group.kpis.length > 0);
+  }, [groupedKpiRows]);
 
-  // Warn on page refresh, reload, or close if there are unsaved changes
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (Object.keys(tempValues).length > 0) {
-        e.preventDefault();
-        e.returnValue = "";
-        return "";
-      }
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [tempValues]);
+  const nonVisualizedGroups = useMemo(() => {
+    return groupedKpiRows
+      .map((group) => ({
+        ...group,
+        kpis: group.kpis.filter((row) => !row.kpi.isVisualized),
+      }))
+      .filter((group) => group.kpis.length > 0);
+  }, [groupedKpiRows]);
 
-  const { mutate: addUpdateKpiData } = addUpdateKpi();
-
-  useEffect(() => {
-    if (isKpiDataCellArrayArray(kpiData?.data)) {
-      const initialValues: { [key: string]: string } = {};
-      kpiData.data.forEach((row: KpiDataCell[], rowIndex: number) => {
-        row.forEach((cell: KpiDataCell, colIndex: number) => {
-          initialValues[`${rowIndex}-${colIndex}`] =
-            cell?.data?.toString() ?? "";
-        });
-      });
-      setInputValues(initialValues);
-      setTempValues({});
-    }
-  }, [kpiData]);
-
-  const methods = useForm();
+  // Helper function to render core parameter header row
+  const renderCoreParameterHeader = (coreParameter: {
+    coreParameterId: string;
+    coreParameterName: string;
+  }) => {
+    return (
+      <TableRow
+        key={`header-${coreParameter.coreParameterId}`}
+        className="bg-blue-50"
+      >
+        <TableCell
+          colSpan={4 + headers.length}
+          className="px-3 py-2 font-semibold text-blue-800 text-left"
+        >
+          {coreParameter.coreParameterName}
+        </TableCell>
+      </TableRow>
+    );
+  };
 
   // Helper function to render table rows
   const renderKpiRows = (rows: { kpi: Kpi }[]) => {
@@ -362,7 +399,7 @@ export default function KPITable() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="text-md cursor-default w-full break-words whitespace-pre-line overflow-hidden">
-                      {kpi?.kpiName} {kpi.tag}
+                      {kpi?.kpiName}
                     </span>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -371,6 +408,13 @@ export default function KPITable() {
                 </Tooltip>
               </TooltipProvider>
             </div>
+          </TableCell>
+          <TableCell
+            className={clsx(
+              "px-3 py-2 w-[20px] break-all overflow-hidden bg-gray-100 sticky left-0 z-10",
+            )}
+          >
+            {kpi.tag}
           </TableCell>
           <TableCell className="px-3 py-2 w-[80px] bg-gray-100 sticky left-[210px] break-words z-10 pl-0 ml-2">
             <TooltipProvider>
@@ -388,13 +432,14 @@ export default function KPITable() {
                 <TooltipContent>
                   <span>
                     {kpi.validationType === "BETWEEN"
-                      ? `${kpi?.value1 ?? ""} - ${kpi?.value2 ?? ""}`
-                      : (kpi?.value1 ?? "")}
+                      ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(kpi?.value2)}`
+                      : formatToThreeDecimals(kpi?.value1)}
                   </span>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </TableCell>
+
           {/* <TableCell className="w-[60px] bg-gray-100 sticky left-[320px] z-10 text-center"></TableCell> */}
           {headers.map((_, colIdx) => {
             const cell = dataRow?.[colIdx];
@@ -541,6 +586,62 @@ export default function KPITable() {
     });
   };
 
+  const renderGroupedKpiRows = (
+    groups: {
+      coreParameter: { coreParameterId: string; coreParameterName: string };
+      kpis: { kpi: Kpi }[];
+    }[],
+  ) => {
+    return groups.map((group, groupIndex) => (
+      <React.Fragment key={group.coreParameter.coreParameterId}>
+        {renderCoreParameterHeader(group.coreParameter)}
+        {renderKpiRows(group.kpis)}
+        {/* Add gap between groups except for the last group */}
+        {groupIndex < groups.length - 1 && (
+          <TableRow>
+            <TableCell
+              colSpan={4 + headers.length}
+              className="h-4 bg-gray-50"
+            />
+          </TableRow>
+        )}
+      </React.Fragment>
+    ));
+  };
+
+  // Warn on page refresh, reload, or close if there are unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (Object.keys(tempValues).length > 0) {
+        e.preventDefault();
+        e.returnValue = "";
+        return "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [tempValues]);
+
+  const { mutate: addUpdateKpiData } = addUpdateKpi();
+
+  useEffect(() => {
+    if (isKpiDataCellArrayArray(kpiData?.data)) {
+      const initialValues: { [key: string]: string } = {};
+      kpiData.data.forEach((row: KpiDataCell[], rowIndex: number) => {
+        row.forEach((cell: KpiDataCell, colIndex: number) => {
+          initialValues[`${rowIndex}-${colIndex}`] =
+            cell?.data?.toString() ?? "";
+        });
+      });
+      setInputValues(initialValues);
+      setTempValues({});
+    }
+  }, [kpiData]);
+
+  const methods = useForm();
+
   function getFormattedValue(
     validationType: string,
     value1: string | number | null,
@@ -549,22 +650,23 @@ export default function KPITable() {
   ) {
     const formatted1 = formatCompactNumber(value1);
     const formatted2 = formatCompactNumber(value2);
+    const safeUnit = unit ?? "";
 
     if (validationType === "BETWEEN") {
-      return `${formatted1} ${unit} - ${formatted2} ${unit}`;
+      return `${formatted1} ${safeUnit} - ${formatted2} ${safeUnit}`;
     }
 
     switch (validationType) {
       case "EQUAL_TO":
-        return `= ${formatted1} ${unit}`;
+        return `= ${formatted1} ${safeUnit}`;
       case "GREATER_THAN":
-        return `> ${formatted1} ${unit}`;
+        return `> ${formatted1} ${safeUnit}`;
       case "LESS_THAN":
-        return `< ${formatted1} ${unit}`;
+        return `< ${formatted1} ${safeUnit}`;
       case "GREATER_THAN_OR_EQUAL_TO":
-        return `≥ ${formatted1} ${unit}`;
+        return `≥ ${formatted1} ${safeUnit}`;
       case "LESS_THAN_OR_EQUAL_TO":
-        return `≤ ${formatted1} ${unit}`;
+        return `≤ ${formatted1} ${safeUnit}`;
       case "YES_NO":
         return value1 === "1" ? "✓(Yes)" : "✗(No)";
       default:
@@ -741,22 +843,14 @@ export default function KPITable() {
             </TableHeader>
             <TableBody>
               {/* Visualized KPIs Section */}
-              {visualizedRows.length > 0 && (
-                <>
-                  <TableRow>
-                    <TableCell
-                      colSpan={4 + headers.length}
-                      className="bg-gray-100 border-b px-3 py-1"
-                    />
-                  </TableRow>
-                  {renderKpiRows(visualizedRows)}
-                </>
+              {visualizedGroups.length > 0 && (
+                <>{renderGroupedKpiRows(visualizedGroups)}</>
               )}
 
               {/* Non-Visualized KPIs Section */}
-              {nonVisualizedRows.length > 0 && (
+              {nonVisualizedGroups.length > 0 && (
                 <>
-                  {visualizedRows.length > 0 && (
+                  {visualizedGroups.length > 0 && (
                     <TableRow>
                       <TableCell
                         colSpan={4 + headers.length}
@@ -764,7 +858,7 @@ export default function KPITable() {
                       />
                     </TableRow>
                   )}
-                  {renderKpiRows(nonVisualizedRows)}
+                  {renderGroupedKpiRows(nonVisualizedGroups)}
                 </>
               )}
             </TableBody>

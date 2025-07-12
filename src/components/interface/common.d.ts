@@ -826,7 +826,7 @@ interface KPIFormData {
   value1: string;
   value2: string;
   tag: string;
-  coreParameterId: string;
+  coreParameterId?: string;
   hasData?: boolean;
   employeeName?: string;
 }
@@ -927,10 +927,16 @@ interface Kpi {
   tag?: string;
 }
 
+interface CoreParameterGroup {
+  coreParameterId: string;
+  coreParameterName: string;
+  kpis: Kpi[];
+}
+
 interface FrequencyData {
   srNo?: number;
   frequencyType: string;
-  kpis: Kpi[];
+  kpis: CoreParameterGroup[];
   count: number;
 }
 

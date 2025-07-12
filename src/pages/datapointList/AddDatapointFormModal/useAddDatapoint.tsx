@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/tooltip";
 import SearchInput from "@/components/shared/SearchInput";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { useGetCoreParameterDropdown } from "@/features/api/Business";
+// import { useGetCoreParameterDropdown } from "@/features/api/Business";
 import { Label } from "recharts";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 
@@ -71,7 +71,7 @@ export default function useAddEmployee() {
     mode: "onChange",
   });
 
-  const watchedFrequency = useWatch({ name: "frequencyId", control });
+  const watchedFrequency = useWatch({ name: "frequencyType", control });
 
   useEffect(() => {
     if (watchedFrequency && !datapointApiData) {
@@ -91,9 +91,9 @@ export default function useAddEmployee() {
           datapointApiData.dataPointName,
       });
       // Set frequency
-      setValue("frequencyId", datapointApiData.frequencyType);
+      setValue("frequencyType", datapointApiData.frequencyType);
       // Set validation type
-      setValue("validationTypeId", datapointApiData.validationType);
+      setValue("validationType", datapointApiData.validationType);
       // Set unit
       setValue("employeeId", datapointApiData.employeeId);
       setValue("unit", datapointApiData.unit);
@@ -112,7 +112,7 @@ export default function useAddEmployee() {
         );
       }
       // Set core parameter
-      setValue("coreParameterId", datapointApiData.coreParameterId);
+      // setValue("coreParameterId", datapointApiData.coreParameterId);
       if (datapointApiData.visualFrequencyTypes) {
         const visualFrequencyArray = datapointApiData.visualFrequencyTypes
           .split(",")
@@ -132,8 +132,6 @@ export default function useAddEmployee() {
   }, [trigger]);
 
   const onSubmit = handleSubmit(async (data) => {
-    console.log(data);
-
     // Convert visualFrequencyTypes array to comma-separated string if it's an array
     const visualFrequencyTypesStr = Array.isArray(data.visualFrequencyTypes)
       ? data.visualFrequencyTypes.join(",")
@@ -143,9 +141,9 @@ export default function useAddEmployee() {
       ? {
           kpiId: companykpimasterId,
           KPIMasterId: data.KPIMasterId.KPIMasterId,
-          coreParameterId: data.coreParameterId,
+          // coreParameterId: data.coreParameterId,
           employeeId: data.employeeId,
-          frequencyId: data.frequencyId,
+          // frequencyType: data.frequencyType,
           tag: data.tag,
           unit: data.unit,
           validationType: data.validationType,
@@ -156,9 +154,9 @@ export default function useAddEmployee() {
         }
       : {
           KPIMasterId: data.KPIMasterId.KPIMasterId,
-          coreParameterId: data.coreParameterId,
+          // coreParameterId: data.coreParameterId,
           employeeId: data.employeeId,
-          frequencyId: data.frequencyId,
+          // frequencyType: data.frequencyType,
           tag: data.tag,
           unit: data.unit,
           validationType: data.validationType,
@@ -172,87 +170,6 @@ export default function useAddEmployee() {
         handleModalClose();
       },
     });
-
-    // let selectedEmployees = data.employeeId || [];
-    // if (!Array.isArray(selectedEmployees)) {
-    //   selectedEmployees = selectedEmployees ? [selectedEmployees] : [];
-    // }
-    // let productIds: string[] = [];
-    // if (Array.isArray(data.productId) && data.productId.length > 0) {
-    //   productIds = data.productId.map((p: ProductData) =>
-    //     typeof p === "object" && p !== null
-    //       ? String(p.productId ?? p.productId ?? "")
-    //       : String(p ?? "")
-    //   );
-    // }
-    // const frequencyValue = data.frequencyId;
-    // const unit = data.unit;
-    // const validationTypeValue = data.validationTypeId;
-
-    // const visualFrequencyTypes = Array.isArray(data.visualFrequencyTypes)
-    //   ? data.visualFrequencyTypes.join(",")
-    //   : data.visualFrequencyTypes || "";
-
-    // const assignUser = selectedEmployees.map((emp: DataPointEmployee) => {
-    //   const obj: DataPointEmployee = {
-    //     employeeId: emp.employeeId,
-    //     employeeName: emp.employeeName,
-    //     value1: "", // Provide a default value, will be overwritten below
-    //   };
-    //   if (
-    //     String(validationTypeValue) === "6" ||
-    //     validationTypeValue === "BETWEEN"
-    //   ) {
-    //     obj.value1 = data[`goalValue1_${emp.employeeId}`];
-    //     obj.value2 = data[`goalValue2_${emp.employeeId}`];
-    //   } else if (
-    //     String(validationTypeValue) === "7" ||
-    //     validationTypeValue === "YES_NO"
-    //   ) {
-    //     const yesnoValue = data[`yesno_${emp.employeeId}`];
-    //     let value = yesnoValue;
-    //     if (typeof yesnoValue === "object" && yesnoValue !== null) {
-    //       value = yesnoValue.value;
-    //     }
-    //     if (value === "1" || value === 1 || value === "yes") {
-    //       obj.value1 = "1";
-    //     } else {
-    //       obj.value1 = "0";
-    //     }
-    //   } else {
-    //     obj.value1 = data[`goalValue1_${emp.employeeId}`];
-    //   }
-    //   return obj;
-    // });
-    // const payload: KPIFormData = {
-    //   dataPointId: datapointApiData?.dataPointId || "", // or "" for new
-    //   companykpimasterId: companykpimasterId || "",
-    //   dataPointName: data?.KPIMasterId?.KPILabel,
-    //   KPIMasterId: data?.KPIMasterId?.KPIMasterId,
-    //   KPIMaster: data?.KPIMasterId || null,
-    //   coreParameterId: data?.coreParameterId,
-    //   dataPointLabel: data?.KPIMasterId?.KPIName,
-    //   productIds: productIds,
-    //   assignUser: assignUser,
-    //   validationType: validationTypeValue,
-    //   frequencyType: frequencyValue,
-    //   unit: unit,
-    //   selectedType: "", // Set appropriately if needed
-    //   dataPointEmployeeJunction: assignUser,
-    //   DataPointProductJunction: Array.isArray(data.productId)
-    //     ? data.productId.map((p: ProductData) => ({
-    //         productId: p.productId,
-    //         productName: p.productName,
-    //       }))
-    //     : [],
-    //   hasData: datapointApiData?.hasData ?? false,
-    //   visualFrequencyTypes: visualFrequencyTypes, // Add the formatted visualFrequencyTypes
-    // };
-    // addDatapoint(payload, {
-    //   onSuccess: () => {
-    //     handleModalClose();
-    //   },
-    // });
     navigate("/dashboard/kpi");
   });
 
@@ -369,27 +286,27 @@ export default function useAddEmployee() {
     );
   };
 
-  const Frequency = () => {
+  const Details = () => {
     const frequenceOptions = [
-      { value: "DAILY", label: "DAILY" },
-      { value: "WEEKLY", label: "WEEKLY" },
-      { value: "MONTHLY", label: "MONTHLY" },
-      { value: "QUARTERLY", label: "QUARTERLY" },
-      { value: "HALFYEARLY", label: "HALFYEARLY" },
-      { value: "YEARLY", label: "YEARLY" },
+      { value: "DAILY", label: "Daily" },
+      { value: "WEEKLY", label: "Weekly" },
+      { value: "MONTHLY", label: "Monthly" },
+      { value: "QUARTERLY", label: "Quarterly" },
+      { value: "HALFYEARLY", label: "Half-Yearly" },
+      { value: "YEARLY", label: "Yearly" },
     ];
 
-    const { data: corePara } = useGetCoreParameterDropdown();
+    // const { data: corePara } = useGetCoreParameterDropdown();
 
-    const coreParameterOption = corePara
-      ? corePara.data.map((status) => ({
-          label: status.coreParameterName,
-          value: status.coreParameterId,
-        }))
-      : [];
+    // const coreParameterOption = corePara
+    //   ? corePara.data.map((status) => ({
+    //       label: status.coreParameterName,
+    //       value: status.coreParameterId,
+    //     }))
+    //   : [];
 
     // Get the selected frequency value
-    const selectedFrequency = useWatch({ name: "frequencyId", control });
+    const selectedFrequency = useWatch({ name: "frequencyType", control });
 
     // Filter visual frequency options based on selected frequency
     const getFilteredVisualFrequencyOptions = () => {
@@ -436,7 +353,7 @@ export default function useAddEmployee() {
         <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
           <Controller
             control={control}
-            name="frequencyId"
+            name="frequencyType"
             rules={{ required: "Frequency is required" }}
             render={({ field }) => (
               <FormSelect
@@ -448,9 +365,10 @@ export default function useAddEmployee() {
                   setValue("visualFrequencyTypes", []);
                 }}
                 options={frequenceOptions}
-                error={errors.frequencyId}
+                error={errors.frequencyType}
                 disabled={hasData}
                 className={hasData ? "bg-gray-100 p-2 rounded-md" : ""}
+                isMandatory
               />
             )}
           />
@@ -466,6 +384,7 @@ export default function useAddEmployee() {
                 options={validationOptions}
                 error={errors.validationType}
                 className="p-2 rounded-md"
+                isMandatory
               />
             )}
           />
@@ -484,9 +403,8 @@ export default function useAddEmployee() {
                   isMulti={true}
                   placeholder="Select visual frequency types"
                   disabled={false}
-                  key={
-                    selectedFrequency + "-" + (watch("coreParameterId") || "")
-                  }
+                  // className="text-[15px] "
+                  key={selectedFrequency + "-" + (watch("frequencyType") || "")}
                 />
               )}
             />
@@ -511,7 +429,7 @@ export default function useAddEmployee() {
 
           <FormInputField label="Unit" {...register(`unit`)} />
 
-          <Controller
+          {/* <Controller
             control={control}
             name="coreParameterId"
             rules={{ required: "Core Parameter is required" }}
@@ -525,7 +443,7 @@ export default function useAddEmployee() {
                 isMandatory
               />
             )}
-          />
+          /> */}
         </Card>
       </div>
     );
@@ -551,10 +469,10 @@ export default function useAddEmployee() {
       return found?.employeeName || emp.employeeId || "";
     };
 
-    const validationTypeId = useWatch({ name: "validationTypeId", control });
+    const validationType = useWatch({ name: "validationType", control });
 
-    const showBoth = validationTypeId === "6" || validationTypeId === "BETWEEN";
-    const showYesNo = validationTypeId === "7" || validationTypeId === "YES_NO";
+    const showBoth = validationType === "6" || validationType === "BETWEEN";
+    const showYesNo = validationType === "7" || validationType === "YES_NO";
 
     const yesnoOptions = [
       { label: "Yes", value: "1" },
@@ -648,9 +566,7 @@ export default function useAddEmployee() {
                 <FormInputField
                   label="Tag"
                   // isMandatory
-                  {...register(`tag`, {
-                    required: "Please enter Tag",
-                  })}
+                  {...register(`tag`)}
                   error={errors?.tag}
                   // disabled={isDisabled}
                   // readOnly={isDisabled}
@@ -669,7 +585,7 @@ export default function useAddEmployee() {
     onFinish,
     onSubmit,
     Kpi,
-    Frequency,
+    Details,
     AssignUser,
     KpiPreview: getValues(),
     trigger,

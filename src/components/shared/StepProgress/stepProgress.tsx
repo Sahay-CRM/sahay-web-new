@@ -32,15 +32,17 @@ const StepProgress: React.FC<StepProgressProps> = ({
         <div className="flex items-center gap-3">
           <div
             className={`text-center shadow-md rounded-full flex items-center justify-center ${
-              isCurrent ? "font-semibold text-white bg-black" : "bg-dark-600/50"
+              isCurrent
+                ? "font-semibold text-white bg-black"
+                : "bg-dark-600/50 border shadow-2xl"
             }`}
           >
             {isCompleted ? (
-              <span className="block w-10">
+              <span className="block w-8">
                 <CheckMarkIcon />
               </span>
             ) : (
-              <div className="px-4 py-2 text-base">
+              <div className="px-2 text-sm">
                 <span>{step}</span>
               </div>
             )}
@@ -53,8 +55,8 @@ const StepProgress: React.FC<StepProgressProps> = ({
   };
 
   return (
-    <div className="w-full px-6 py-2">
-      <div className="flex mb-2 justify-between">
+    <div className="w-full pr-6 pl-3 py-2">
+      <div className="flex justify-between">
         {[...Array(totalSteps)].map((_, index) => renderStep(index + 1))}
       </div>
     </div>
