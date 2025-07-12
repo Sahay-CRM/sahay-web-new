@@ -29,7 +29,7 @@ export default function CompanyLevelAssign() {
     setBreadcrumbs([{ label: "Company Level", href: "" }]);
   }, [setBreadcrumbs]);
 
-  // Find the default levelId for the selected core parameter
+  // Find the default levelId for the selected Business Function
   const defaultLevelId = companyLevelAssign?.data?.find(
     (item: CompanyLevelJunction) =>
       item.coreParameterId === selectedCoreParameters,
@@ -77,7 +77,7 @@ export default function CompanyLevelAssign() {
         <div className="flex gap-10">
           <div className="w-1/2 mt-2">
             <div>
-              <h2 className="font-semibold mb-2">Select Core Parameter</h2>
+              <h2 className="font-semibold mb-2">Select Business Function</h2>
               {coreParaOptions && coreParaOptions.length > 0 && (
                 <div className="bg-white w-full">
                   <ul className="border rounded-lg overflow-hidden">

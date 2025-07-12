@@ -20,26 +20,34 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const messaging = getMessaging(app);
+
+// Check for browser support before initializing messaging
+export const isMessagingSupported = () =>
+  "serviceWorker" in navigator &&
+  "PushManager" in window &&
+  window.isSecureContext;
+
+export const messaging = isMessagingSupported() ? getMessaging(app) : undefined;
 
 // Request permission and get token
 export const requestFirebaseNotificationPermission = async () => {
-  // Always get a fresh token
+  if (!isMessagingSupported() || !messaging) return null;
   const token = await getToken(messaging, {
     vapidKey:
       "BJpCqAZmB7SKd965C9duzsmn8w9ubGMFsKlhe5oQgDk9EDXHKbn243LkjKEFIc771lNoQ4_hmhMqXJS8w2-UEoQ",
   });
-
   return token;
 };
 
 // Delete FCM token
 export const deleteFirebaseToken = async () => {
+  if (!isMessagingSupported() || !messaging) return;
   await firebaseDeleteToken(messaging);
 };
 
 // Listen for foreground messages
 export const onFirebaseMessageListener = () => {
+  if (!isMessagingSupported() || !messaging) return;
   onMessage(messaging, (payload) => {
     const { data } = payload;
     const notification = payload.notification;

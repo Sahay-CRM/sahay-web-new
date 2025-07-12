@@ -1,11 +1,20 @@
 import { CheckMarkIcon } from "@/components/shared/Icons";
 import React from "react";
 
+interface StepProgressProps {
+  currentStep: number;
+  stepNames: string[];
+  totalSteps: number;
+  isLoading?: boolean;
+  header?: React.ReactNode; // NEW optional prop
+}
+
 const StepProgress: React.FC<StepProgressProps> = ({
   currentStep,
   stepNames,
   isLoading = false,
   totalSteps,
+  header,
 }) => {
   const renderStep = (step: number) => {
     const isCompleted = step < currentStep;
@@ -26,21 +35,23 @@ const StepProgress: React.FC<StepProgressProps> = ({
       >
         {isLoading && (
           <div className="absolute inset-0 bg-dark-200 z-50 flex justify-center items-center">
-            loadding....
+            loading...
           </div>
         )}
         <div className="flex items-center gap-3">
           <div
             className={`text-center shadow-md rounded-full flex items-center justify-center ${
-              isCurrent ? "font-semibold text-white bg-black" : "bg-dark-600/50"
+              isCurrent
+                ? "font-semibold text-white bg-black"
+                : "bg-dark-600/50 border shadow-2xl"
             }`}
           >
             {isCompleted ? (
-              <span className="block w-10">
+              <span className="block w-8">
                 <CheckMarkIcon />
               </span>
             ) : (
-              <div className="px-4 py-2 text-base">
+              <div className="px-2 text-sm">
                 <span>{step}</span>
               </div>
             )}
@@ -53,9 +64,19 @@ const StepProgress: React.FC<StepProgressProps> = ({
   };
 
   return (
-    <div className="w-full px-6 py-2">
-      <div className="flex mb-2 justify-between">
-        {[...Array(totalSteps)].map((_, index) => renderStep(index + 1))}
+    <div className="w-full pr-6 pl-3 py-2">
+      <div className="flex items-center">
+        {header && (
+          <div className="text-lg mr-2 min-w-fit font-semibold text-[#2e3090]">
+            {header}
+          </div>
+        )}
+
+        <div className="w-full">
+          <div className="flex justify-between">
+            {[...Array(totalSteps)].map((_, index) => renderStep(index + 1))}
+          </div>
+        </div>
       </div>
     </div>
   );

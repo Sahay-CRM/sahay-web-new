@@ -138,7 +138,7 @@ const ProjectView = () => {
 
                 <div>
                   <p className="text-md text-muted-foreground font-medium">
-                    Project Sub Parameter:
+                    Project Key Result Area:
                   </p>
                   <div className="flex gap-2 flex-wrap">
                     {projectData.ProjectParameters?.subParameters?.map(

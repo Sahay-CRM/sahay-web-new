@@ -392,6 +392,7 @@ const AddEmployee = () => {
     showNextStep,
     companyEmployeeId,
     isPending,
+    employeeApiData,
     methods, // This is the methods object from useForm in useAddEmployee
   } = useAddEmployee();
 
@@ -406,8 +407,20 @@ const AddEmployee = () => {
           : "Company Employee Add",
         href: "",
       },
+      ...(companyEmployeeId
+        ? [
+            {
+              label: `${
+                employeeApiData?.data?.employeeName
+                  ? employeeApiData?.data?.employeeName
+                  : ""
+              }`,
+              href: `/dashboard/kpi/${companyEmployeeId}`,
+            },
+          ]
+        : []),
     ]);
-  }, [setBreadcrumbs, companyEmployeeId]);
+  }, [setBreadcrumbs, companyEmployeeId, employeeApiData?.data?.employeeName]);
 
   const steps = showNextStep
     ? [
@@ -444,6 +457,9 @@ const AddEmployee = () => {
           currentStep={currentStep}
           stepNames={stepNames}
           totalSteps={totalSteps}
+          header={
+            companyEmployeeId ? employeeApiData?.data?.employeeName : null
+          }
         />
 
         <div className="flex justify-end gap-5 mb-5 ">
@@ -464,6 +480,12 @@ const AddEmployee = () => {
           >
             {isLastStep ? "Finish" : "Next"}
           </Button>
+
+          {companyEmployeeId && !isLastStep && (
+            <Button onClick={onFinish} className="w-fit">
+              Submit
+            </Button>
+          )}
         </div>
 
         <div className="step-content w-full">{stepContent}</div>
