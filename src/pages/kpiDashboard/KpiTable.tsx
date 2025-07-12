@@ -576,8 +576,8 @@ export default function KPITable() {
 
     return (
       <>
-        {visualizedRows.map(renderRow)}
-        {visualizedRows.length > 0 && nonVisualizedRows.length > 0 && (
+        {nonVisualizedRows.map(renderRow)}
+        {nonVisualizedRows.length > 0 && visualizedRows.length > 0 && (
           <TableRow>
             <TableCell
               colSpan={4 + headers.length}
@@ -585,7 +585,7 @@ export default function KPITable() {
             />
           </TableRow>
         )}
-        {nonVisualizedRows.map(renderRow)}
+        {visualizedRows.map(renderRow)}
       </>
     );
   };
