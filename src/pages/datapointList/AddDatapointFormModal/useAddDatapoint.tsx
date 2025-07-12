@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/tooltip";
 import SearchInput from "@/components/shared/SearchInput";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { useGetCoreParameterDropdown } from "@/features/api/Business";
 import { Label } from "recharts";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 
@@ -300,16 +299,6 @@ export default function useAddEmployee() {
       { value: "HALFYEARLY", label: "Half-Yearly" },
       { value: "YEARLY", label: "Yearly" },
     ];
-
-    const { data: corePara } = useGetCoreParameterDropdown();
-
-    const coreParameterOption = corePara
-      ? corePara.data.map((status) => ({
-          label: status.coreParameterName,
-          value: status.coreParameterId,
-        }))
-      : [];
-
     // Get the selected frequency value
     const selectedFrequency = useWatch({ name: "frequencyType", control });
 
@@ -373,6 +362,7 @@ export default function useAddEmployee() {
                 error={errors.frequencyType}
                 disabled={hasData}
                 className={hasData ? "bg-gray-100 p-2 rounded-md" : ""}
+                isMandatory
               />
             )}
           />
@@ -415,41 +405,7 @@ export default function useAddEmployee() {
               )}
             />
           )}
-
-          {/* <Controller
-            control={control}
-            name="unit"
-            // Removed required validation to make it optional
-            render={({ field }) => (
-              <FormSelect
-                label="Unit Type"
-                value={field.value}
-                onChange={field.onChange}
-                options={unitTypeOptions}
-                error={errors.unit}
-                disabled={false} // Always enabled, not disabled in edit mode
-                placeholder="Select unit type"
-              />
-            )}
-          /> */}
-
           <FormInputField label="Unit" {...register(`unit`)} />
-
-          <Controller
-            control={control}
-            name="coreParameterId"
-            rules={{ required: "Core Parameter is required" }}
-            render={({ field }) => (
-              <FormSelect
-                label="Core Parameter"
-                value={field.value}
-                onChange={field.onChange}
-                options={coreParameterOption}
-                error={errors.coreParameterId}
-                isMandatory
-              />
-            )}
-          />
         </Card>
       </div>
     );
