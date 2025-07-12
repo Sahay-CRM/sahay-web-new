@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/tooltip";
 import SearchInput from "@/components/shared/SearchInput";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-// import { useGetCoreParameterDropdown } from "@/features/api/Business";
+import { useGetCoreParameterDropdown } from "@/features/api/Business";
 import { Label } from "recharts";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 
@@ -111,6 +111,8 @@ export default function useAddEmployee() {
             : { value: "0", label: "No" },
         );
       }
+      // Set core parameter
+      setValue("coreParameterId", datapointApiData.coreParameterId);
       if (datapointApiData.visualFrequencyTypes) {
         const visualFrequencyArray = datapointApiData.visualFrequencyTypes
           .split(",")
@@ -139,7 +141,7 @@ export default function useAddEmployee() {
       ? {
           kpiId: companykpimasterId,
           KPIMasterId: data.KPIMasterId.KPIMasterId,
-          // coreParameterId: data.coreParameterId,
+          coreParameterId: data.coreParameterId,
           employeeId: data.employeeId,
           // frequencyType: data.frequencyType,
           tag: data.tag,
@@ -152,7 +154,7 @@ export default function useAddEmployee() {
         }
       : {
           KPIMasterId: data.KPIMasterId.KPIMasterId,
-          // coreParameterId: data.coreParameterId,
+          coreParameterId: data.coreParameterId,
           employeeId: data.employeeId,
           // frequencyType: data.frequencyType,
           tag: data.tag,
@@ -192,13 +194,7 @@ export default function useAddEmployee() {
 
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
-      { key: "KPIName", label: "KPI Name", visible: true },
-      { key: "KPILabel", label: "KPI Description (Tooltip)", visible: true },
-      {
-        key: "coreParameterName",
-        label: "Business Function Name",
-        visible: true,
-      },
+      { key: "KPINames", label: "KPI Name", visible: true },
     ]);
 
     // Filter visible columns
@@ -271,7 +267,7 @@ export default function useAddEmployee() {
                   ...item,
                   srNo:
                     (kpidata.currentPage - 1) * kpidata.pageSize + index + 1,
-                  // KPINames: `${item.KPIName} ( ${item.KPILabel} )`,
+                  KPINames: `${item.KPIName} ( ${item.KPILabel} )`,
                 }))}
                 isActionButton={() => false}
                 columns={visibleColumns}
@@ -290,7 +286,7 @@ export default function useAddEmployee() {
     );
   };
 
-  const Details = () => {
+  const Frequency = () => {
     const frequenceOptions = [
       { value: "DAILY", label: "Daily" },
       { value: "WEEKLY", label: "Weekly" },
@@ -300,16 +296,33 @@ export default function useAddEmployee() {
       { value: "YEARLY", label: "Yearly" },
     ];
 
+    const { data: corePara } = useGetCoreParameterDropdown();
+
+    const coreParameterOption = corePara
+      ? corePara.data.map((status) => ({
+          label: status.coreParameterName,
+          value: status.coreParameterId,
+        }))
+      : [];
+
+    // Get the selected frequency value
     const selectedFrequency = useWatch({ name: "frequencyType", control });
 
+    // Filter visual frequency options based on selected frequency
     const getFilteredVisualFrequencyOptions = () => {
       if (!selectedFrequency) return frequenceOptions;
+
       const frequencyIndex = frequenceOptions.findIndex(
         (opt) => opt.value === selectedFrequency,
       );
+
       if (frequencyIndex === -1) return frequenceOptions;
+
+      // Return only options that come after the selected frequency
       return frequenceOptions.slice(frequencyIndex + 1);
     };
+
+    // Check if visual frequency should be shown (not when YEARLY is selected)
     const shouldShowVisualFrequency = selectedFrequency !== "YEARLY";
 
     const validationOptions = [
@@ -324,6 +337,14 @@ export default function useAddEmployee() {
       { value: "BETWEEN", label: "Between" },
       { value: "YES_NO", label: "Yes/No" },
     ];
+    // const unitTypeOptions = [
+    //   { value: "Number", label: "Number" },
+    //   { value: "Percentage", label: "Percentage (%)" },
+    //   { value: "Dollar", label: "Dollar ($)" },
+    //   { value: "Euro", label: "Euro (€)" },
+    //   { value: "Pounds", label: "Pounds (£)" },
+    //   { value: "INR", label: "INR (₹)" },
+    // ];
 
     const hasData = datapointApiData?.hasData;
 
@@ -340,13 +361,13 @@ export default function useAddEmployee() {
                 value={field.value}
                 onChange={(value) => {
                   field.onChange(value);
+                  // Clear visualFrequencyTypes immediately when frequency changes
                   setValue("visualFrequencyTypes", []);
                 }}
                 options={frequenceOptions}
                 error={errors.frequencyType}
                 disabled={hasData}
                 className={hasData ? "bg-gray-100 p-2 rounded-md" : ""}
-                isMandatory
               />
             )}
           />
@@ -381,12 +402,49 @@ export default function useAddEmployee() {
                   isMulti={true}
                   placeholder="Select visual frequency types"
                   disabled={false}
-                  key={selectedFrequency + "-" + (watch("frequencyType") || "")}
+                  // className="text-[15px] "
+                  key={
+                    selectedFrequency + "-" + (watch("coreParameterId") || "")
+                  }
                 />
               )}
             />
           )}
+
+          {/* <Controller
+            control={control}
+            name="unit"
+            // Removed required validation to make it optional
+            render={({ field }) => (
+              <FormSelect
+                label="Unit Type"
+                value={field.value}
+                onChange={field.onChange}
+                options={unitTypeOptions}
+                error={errors.unit}
+                disabled={false} // Always enabled, not disabled in edit mode
+                placeholder="Select unit type"
+              />
+            )}
+          /> */}
+
           <FormInputField label="Unit" {...register(`unit`)} />
+
+          <Controller
+            control={control}
+            name="coreParameterId"
+            rules={{ required: "Core Parameter is required" }}
+            render={({ field }) => (
+              <FormSelect
+                label="Core Parameter"
+                value={field.value}
+                onChange={field.onChange}
+                options={coreParameterOption}
+                error={errors.coreParameterId}
+                isMandatory
+              />
+            )}
+          />
         </Card>
       </div>
     );
@@ -466,6 +524,8 @@ export default function useAddEmployee() {
                           required: "Please enter Goal Value 1",
                         })}
                         error={errors?.value1}
+                        // disabled={isDisabled}
+                        // readOnly={isDisabled}
                       />
                       {showBoth && (
                         <FormInputField
@@ -475,6 +535,8 @@ export default function useAddEmployee() {
                             required: "Please enter Goal Value 2",
                           })}
                           error={errors?.value2}
+                          // disabled={isDisabled}
+                          // readOnly={isDisabled}
                         />
                       )}
                     </>
@@ -504,8 +566,11 @@ export default function useAddEmployee() {
                 </div>
                 <FormInputField
                   label="Tag"
+                  // isMandatory
                   {...register(`tag`)}
                   error={errors?.tag}
+                  // disabled={isDisabled}
+                  // readOnly={isDisabled}
                 />
               </div>
             </div>
@@ -521,7 +586,7 @@ export default function useAddEmployee() {
     onFinish,
     onSubmit,
     Kpi,
-    Details,
+    Frequency,
     AssignUser,
     KpiPreview: getValues(),
     trigger,

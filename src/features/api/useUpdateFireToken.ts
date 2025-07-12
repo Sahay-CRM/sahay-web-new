@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 interface ForeTokenProps {
   employeeId: string;
-  webToken: string;
+  webToken: string | null;
 }
 
 export default function useUpdateFireToken() {

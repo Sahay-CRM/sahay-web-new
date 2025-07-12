@@ -4,12 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 
 export default function useGetUserPerById(adminUserId: string) {
   return useQuery({
-    queryKey: ["get-adminUserPer-byId"],
+    queryKey: ["get-adminUserPer-byId", adminUserId],
     queryFn: async () => {
       const { data } = await Api.post<{ data: PermissionsResponse }>({
         url: Urls.userPermissionById(adminUserId),
       });
       return data;
     },
+    staleTime: 0,
   });
 }
