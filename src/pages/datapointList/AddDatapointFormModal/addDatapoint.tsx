@@ -62,16 +62,19 @@ const AddDatapoint = () => {
     <FormProvider {...methods}>
       <div>
         <div className="flex items-center">
-          {companykpimasterId && (
+          {/* {companykpimasterId && (
             <div className="min-w-fit text-lg mr-2 font-semibold text-[#2e3090]">
               {datapointApiData?.KPIMaster?.KPIName}
             </div>
-          )}
+          )} */}
           <div className="w-full">
             <StepProgress
               currentStep={currentStep}
               stepNames={stepNames}
               totalSteps={totalSteps}
+              header={
+                companykpimasterId ? datapointApiData?.KPIMaster?.KPIName : null
+              }
             />
           </div>
         </div>
@@ -89,6 +92,12 @@ const AddDatapoint = () => {
           >
             {isLastStep ? "Finish" : "Next"}
           </Button>
+
+          {companykpimasterId && !isLastStep && (
+            <Button onClick={onFinish} className="w-fit">
+              Submit
+            </Button>
+          )}
         </div>
 
         {/* Step Content */}

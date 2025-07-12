@@ -2,7 +2,8 @@ import { Controller, FormProvider, useFormContext } from "react-hook-form"; // A
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import StepProgress from "@/components/shared/StepFom/StepForm"; // Ensure this is the correct StepProgress component
+// import StepProgress from "@/components/shared/StepFom/StepForm"; // Ensure this is the correct StepProgress component
+import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
@@ -412,6 +413,7 @@ export default function AddCompanyTask() {
     steps: stepNamesArray, // Renamed to avoid conflict with step components
     methods,
     taskId,
+    taskDataById,
     isPending,
   } = hookProps;
 
@@ -424,8 +426,18 @@ export default function AddCompanyTask() {
         label: taskId ? "Update Task" : "Add Task",
         href: "",
       },
+      ...(taskId
+        ? [
+            {
+              label: `${
+                taskDataById?.data.taskName ? taskDataById?.data.taskName : ""
+              }`,
+              href: `/dashboard/kpi/${taskId}`,
+            },
+          ]
+        : []),
     ]);
-  }, [setBreadcrumbs, taskId]);
+  }, [setBreadcrumbs, taskDataById?.data.taskName, taskId]);
 
   const { handleSubmit } = methods;
 
@@ -460,6 +472,7 @@ export default function AddCompanyTask() {
           currentStep={step}
           totalSteps={totalSteps} // Use adjusted totalSteps
           stepNames={stepNamesArray}
+          header={taskId ? taskDataById?.data.taskName : null}
         />
 
         <div className="flex items-end justify-end gap-2 mt-2 mb-4">
@@ -480,6 +493,11 @@ export default function AddCompanyTask() {
               type="submit"
             >
               {taskId ? "Update" : "Submit"}
+            </Button>
+          )}
+          {taskId && step < totalSteps && (
+            <Button onClick={handleSubmit(onSubmit)} className="w-fit">
+              Submit
             </Button>
           )}
         </div>
