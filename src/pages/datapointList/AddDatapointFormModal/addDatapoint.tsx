@@ -13,7 +13,6 @@ const AddDatapoint = () => {
     handleClose,
     onSubmit,
     Kpi,
-    Details,
     // Product,
     AssignUser,
     // GoalValue,
@@ -23,6 +22,7 @@ const AddDatapoint = () => {
     isPending,
     companykpimasterId,
     datapointApiData,
+    Details,
   } = useAddDatapoint();
 
   const methods = useForm({ mode: "onChange" });

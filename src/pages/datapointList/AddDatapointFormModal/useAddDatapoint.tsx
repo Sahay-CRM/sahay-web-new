@@ -286,7 +286,7 @@ export default function useAddEmployee() {
     );
   };
 
-  const Frequency = () => {
+  const Details = () => {
     const frequenceOptions = [
       { value: "DAILY", label: "Daily" },
       { value: "WEEKLY", label: "Weekly" },
@@ -586,7 +586,7 @@ export default function useAddEmployee() {
     onFinish,
     onSubmit,
     Kpi,
-    Frequency,
+    Details,
     AssignUser,
     KpiPreview: getValues(),
     trigger,
