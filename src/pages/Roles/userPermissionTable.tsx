@@ -342,8 +342,9 @@ export default function UserPermissionTableMerged() {
         href: "/dashboard/roles/user-permission",
       },
       { label: "Edit Permissions" },
+      { label: `${userName || ""}` },
     ]);
-  }, [setBreadcrumbs]);
+  }, [setBreadcrumbs, userName]);
 
   useEffect(() => {
     if (userPerm?.data) {

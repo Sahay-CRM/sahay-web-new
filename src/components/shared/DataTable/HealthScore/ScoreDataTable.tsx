@@ -80,7 +80,7 @@ export default function ScoreDataTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-1/2">Sub Parameter Name</TableHead>
+            <TableHead className="w-1/2">Key Result Area Name</TableHead>
             <TableHead className="text-center">Score</TableHead>
             {showSwitch && (
               <TableHead className="text-center">Disabled</TableHead>

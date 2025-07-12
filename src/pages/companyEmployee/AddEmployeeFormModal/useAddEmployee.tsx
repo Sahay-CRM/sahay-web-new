@@ -189,5 +189,6 @@ export default function useAddEmployee() {
     isPending,
     methods,
     departmentApiConfig: department,
+    employeeApiData,
   };
 }

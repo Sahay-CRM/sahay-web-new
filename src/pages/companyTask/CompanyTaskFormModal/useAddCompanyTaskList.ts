@@ -277,5 +277,6 @@ export const useAddCompanyTask = () => {
     paginationFilterEmployee,
     paginationFilterMeeting,
     isPending,
+    taskDataById,
   };
 };

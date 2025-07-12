@@ -67,8 +67,6 @@ export default function HealthScoreDashboard() {
           </div>
         )}
       </div>
-
-      {/* Core Parameters Below Company Score */}
       <div className="grid grid-cols-3 items-center justify-center gap-8 w-full border-t pt-5">
         {individualDataList.map((param) => (
           <div

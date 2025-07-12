@@ -66,21 +66,10 @@ const AddProjectModal: React.FC<MeetingModalProps> = ({
             {modalData.projectDeadline}
           </div>
         )}
-        {/* {modalData?.projectStatusId?.projectName && (
-          <div>
-            <span className="font-medium text-primary">Project Status: </span>
-            {modalData.projectStatusId.projectName}
-          </div>
-        )}
-        {modalData?.coreParameterId?.coreParameterName && (
-          <div>
-            <span className="font-medium text-primary">Core Parameter: </span>
-            {modalData.coreParameterId.coreParameterName}
-          </div>
-        )} */}
+
         {subParameters && (
           <div>
-            <span className="font-medium text-primary">Sub Parameter: </span>
+            <span className="font-medium text-primary">Key Result Area: </span>
             {subParameters}
           </div>
         )}

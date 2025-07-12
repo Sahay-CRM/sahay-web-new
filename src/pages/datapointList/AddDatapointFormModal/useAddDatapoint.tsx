@@ -194,7 +194,13 @@ export default function useAddEmployee() {
 
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
-      { key: "KPINames", label: "KPI Name", visible: true },
+      {
+        key: "KPIName",
+        label: "KPI Name",
+        visible: true,
+      },
+      { key: "KPILabel", label: "KPI Description (Tooltip)", visible: true },
+      { key: "coreParameterName", label: "Business Function", visible: true },
     ]);
 
     // Filter visible columns
@@ -267,7 +273,6 @@ export default function useAddEmployee() {
                   ...item,
                   srNo:
                     (kpidata.currentPage - 1) * kpidata.pageSize + index + 1,
-                  KPINames: `${item.KPIName} ( ${item.KPILabel} )`,
                 }))}
                 isActionButton={() => false}
                 columns={visibleColumns}
@@ -286,7 +291,7 @@ export default function useAddEmployee() {
     );
   };
 
-  const Frequency = () => {
+  const Details = () => {
     const frequenceOptions = [
       { value: "DAILY", label: "Daily" },
       { value: "WEEKLY", label: "Weekly" },
@@ -586,7 +591,7 @@ export default function useAddEmployee() {
     onFinish,
     onSubmit,
     Kpi,
-    Frequency,
+    Details,
     AssignUser,
     KpiPreview: getValues(),
     trigger,

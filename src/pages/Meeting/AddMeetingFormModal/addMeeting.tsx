@@ -490,6 +490,7 @@ const AddMeeting = () => {
     methods, // This is the methods object from useForm in useAddMeeting
     companyMeetingId,
     isPending,
+    meetingApiData,
   } = useAddMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -498,8 +499,20 @@ const AddMeeting = () => {
     setBreadcrumbs([
       { label: "Company Meeting", href: "/dashboard/meeting" },
       { label: companyMeetingId ? "Update Meeting" : "Add Meeting", href: "" },
+      ...(companyMeetingId
+        ? [
+            {
+              label: `${
+                meetingApiData?.data?.meetingName
+                  ? meetingApiData?.data?.meetingName
+                  : ""
+              }`,
+              href: `/dashboard/kpi/${companyMeetingId}`,
+            },
+          ]
+        : []),
     ]);
-  }, [companyMeetingId, setBreadcrumbs]);
+  }, [companyMeetingId, meetingApiData?.data?.meetingName, setBreadcrumbs]);
 
   const steps = [
     <MeetingType key="meetingType" />,
@@ -534,6 +547,7 @@ const AddMeeting = () => {
           currentStep={currentStep}
           stepNames={stepNames}
           totalSteps={totalSteps}
+          header={companyMeetingId ? meetingApiData?.data?.meetingName : null}
         />
 
         <div className="flex justify-end gap-5 mb-5 ">
@@ -554,6 +568,11 @@ const AddMeeting = () => {
           >
             {isLastStep ? "Finish" : "Next"}
           </Button>
+          {companyMeetingId && !isLastStep && (
+            <Button onClick={onFinish} className="w-fit">
+              Submit
+            </Button>
+          )}
         </div>
 
         <div className="step-content w-full">{stepContent}</div>
