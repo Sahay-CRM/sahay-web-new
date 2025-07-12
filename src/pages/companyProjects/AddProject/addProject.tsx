@@ -474,6 +474,7 @@ const AddProject = () => {
     companyProjectId,
     isPending,
     methods,
+    projectApiData,
   } = useAddProject();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -487,8 +488,21 @@ const AddProject = () => {
           : "Add Company Project",
         href: "",
       },
+      ...(companyProjectId
+        ? [
+            {
+              label: `${
+                // typeof projectApiData?.KPIMaster === "object" &&
+                projectApiData?.data.projectName
+                  ? projectApiData.data.projectName
+                  : ""
+              }`,
+              href: `/dashboard/kpi/${companyProjectId}`,
+            },
+          ]
+        : []),
     ]);
-  }, [setBreadcrumbs, companyProjectId]);
+  }, [setBreadcrumbs, companyProjectId, projectApiData?.data.projectName]);
 
   const steps = [
     <ProjectInfo key="projectInfo" />,
@@ -523,6 +537,7 @@ const AddProject = () => {
           currentStep={currentStep}
           stepNames={stepNames}
           totalSteps={totalSteps}
+          header={companyProjectId ? projectApiData?.data.projectName : null}
         />
 
         <div className="flex justify-end gap-5 mb-5 ">
@@ -543,6 +558,11 @@ const AddProject = () => {
           >
             {isLastStep ? "Finish" : "Next"}
           </Button>
+          {companyProjectId && !isLastStep && (
+            <Button onClick={onFinish} className="w-fit">
+              Submit
+            </Button>
+          )}
         </div>
 
         <div className="step-content w-full">{stepContent}</div>

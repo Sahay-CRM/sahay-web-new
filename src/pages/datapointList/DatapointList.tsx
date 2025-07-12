@@ -66,9 +66,10 @@ export default function CompanyTaskList() {
       label: "KPI Name",
       visible: true,
     },
-    { key: "KPILabel", label: "KPI Label", visible: true },
+    { key: "KPILabel", label: "KPI Description (Tooltip)", visible: true },
     { key: "validationType", label: "Validation Type", visible: true },
     { key: "frequencyType", label: "Frequency", visible: true },
+    { key: "coreParameterName", label: "Core Parameter Name", visible: true },
   ]);
 
   // Filter visible columns

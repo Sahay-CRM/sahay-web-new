@@ -1,11 +1,20 @@
 import { CheckMarkIcon } from "@/components/shared/Icons";
 import React from "react";
 
+interface StepProgressProps {
+  currentStep: number;
+  stepNames: string[];
+  totalSteps: number;
+  isLoading?: boolean;
+  header?: React.ReactNode; // NEW optional prop
+}
+
 const StepProgress: React.FC<StepProgressProps> = ({
   currentStep,
   stepNames,
   isLoading = false,
   totalSteps,
+  header,
 }) => {
   const renderStep = (step: number) => {
     const isCompleted = step < currentStep;
@@ -26,7 +35,7 @@ const StepProgress: React.FC<StepProgressProps> = ({
       >
         {isLoading && (
           <div className="absolute inset-0 bg-dark-200 z-50 flex justify-center items-center">
-            loadding....
+            loading...
           </div>
         )}
         <div className="flex items-center gap-3">
@@ -56,8 +65,17 @@ const StepProgress: React.FC<StepProgressProps> = ({
 
   return (
     <div className="w-full pr-6 pl-3 py-2">
-      <div className="flex justify-between">
-        {[...Array(totalSteps)].map((_, index) => renderStep(index + 1))}
+      <div className="flex items-center">
+        {header && (
+          <div className="min-w-[90px] max-w-[150px] truncate text-lg mr-2 font-semibold text-[#2e3090]">
+            {header}
+          </div>
+        )}
+        <div className="w-full">
+          <div className="flex justify-between">
+            {[...Array(totalSteps)].map((_, index) => renderStep(index + 1))}
+          </div>
+        </div>
       </div>
     </div>
   );

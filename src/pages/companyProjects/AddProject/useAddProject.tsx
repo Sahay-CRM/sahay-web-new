@@ -116,8 +116,6 @@ export default function useAddProject() {
   }, [trigger]);
 
   const onSubmit = handleSubmit(async (data) => {
-    console.log(data);
-
     const projectStatusIdValue =
       data.projectStatusId?.projectStatusId || data.projectStatusId;
 
@@ -171,5 +169,6 @@ export default function useAddProject() {
     isPending,
     isInitialLoad,
     hasInitializedData,
+    projectApiData,
   };
 }
