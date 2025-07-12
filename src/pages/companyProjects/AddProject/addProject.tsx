@@ -166,7 +166,7 @@ const CoreParameter = () => {
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
-    { key: "coreParameterName", label: "Core Parameter", visible: true },
+    { key: "coreParameterName", label: "Business Function", visible: true },
   ]);
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
@@ -188,7 +188,7 @@ const CoreParameter = () => {
     <div>
       <div className="mt-1 flex items-center justify-between mb-2">
         <SearchInput
-          placeholder="Search Core Parameters..."
+          placeholder="Search Business Function..."
           searchValue={paginationFilter?.search || ""}
           setPaginationFilter={setPaginationFilter}
           className="w-96"
@@ -205,7 +205,7 @@ const CoreParameter = () => {
       <Controller
         name="coreParameterId"
         control={control}
-        // rules={{ required: "Please select a core parameter" }}
+        // rules={{ required: "Please select a Business Function" }}
         render={({ field }) => (
           <>
             {errors?.coreParameterId && (
@@ -275,7 +275,7 @@ const SubParameter = () => {
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
-    { key: "subParameterName", label: "Sub Parameter", visible: true },
+    { key: "subParameterName", label: "Key Result Area", visible: true },
   ]);
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
@@ -296,7 +296,7 @@ const SubParameter = () => {
   if (!coreParameterIdValue) {
     return (
       <div className="text-center py-8 text-gray-500">
-        Please select a core parameter first.
+        Please select a Business Function first.
       </div>
     );
   }
@@ -305,7 +305,7 @@ const SubParameter = () => {
     <div>
       <div className="mt-1 flex items-center justify-between mb-2">
         <SearchInput
-          placeholder="Search Sub Parameters..."
+          placeholder="Search..."
           searchValue={paginationFilter?.search || ""}
           setPaginationFilter={setPaginationFilter}
           className="w-96"
@@ -322,7 +322,6 @@ const SubParameter = () => {
       <Controller
         name="subParameterId"
         control={control}
-        // rules={{ required: "Please select at least one sub parameter" }}
         render={({ field }) => (
           <>
             {errors?.subParameterId && (
@@ -525,8 +524,8 @@ const AddProject = () => {
   const stepNames = [
     "Project Info",
     "Project Status",
-    "Core Parameter",
-    "Sub Parameter",
+    "Business Function",
+    "Key Result Area",
     "Employees",
   ];
 

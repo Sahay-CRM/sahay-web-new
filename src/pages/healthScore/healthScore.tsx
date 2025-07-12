@@ -62,8 +62,6 @@ export default function HealthScoreList() {
             )}
           </div>
         </div>
-
-        {/* Core Parameter Select */}
         <div className="flex flex-col sm:flex-row gap-10">
           <Controller
             control={control}
@@ -71,14 +69,14 @@ export default function HealthScoreList() {
             render={({ field }) => (
               <FormSelect
                 {...field}
-                label="Core Parameter"
+                label="Business Function"
                 options={
                   coreParams?.data.map((param) => ({
                     label: param.coreParameterName,
                     value: param.coreParameterId, // 👈 corrected value for fetch
                   })) ?? []
                 }
-                placeholder="Select Core Parameter"
+                placeholder="Select Business Function"
               />
             )}
           />
@@ -122,7 +120,7 @@ export default function HealthScoreList() {
           )
         ) : (
           <div className="text-center text-muted-foreground mt-8">
-            Please select a core parameter to view scores
+            Please select a Business Function to view scores
           </div>
         )}
       </div>

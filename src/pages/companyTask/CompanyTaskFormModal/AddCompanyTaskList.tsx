@@ -464,10 +464,6 @@ export default function AddCompanyTask() {
   return (
     <FormProvider {...methods}>
       <div className="w-full mx-auto p-4">
-        <h2 className="text-xl font-semibold mb-4">
-          {taskId ? "Update Company Task" : "Add Company Task"}
-        </h2>
-
         <StepProgress
           currentStep={step}
           totalSteps={totalSteps} // Use adjusted totalSteps

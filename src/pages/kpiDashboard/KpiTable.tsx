@@ -278,7 +278,6 @@ export default function KPITable() {
     selectedPeriod,
   );
 
-  // Group KPIs by core parameter
   const groupedKpiRows = useMemo(() => {
     if (!filteredData.length || !filteredData[0].kpis) return [];
 
@@ -304,7 +303,6 @@ export default function KPITable() {
     return groups;
   }, [filteredData]);
 
-  // Helper function to render core parameter header row
   const renderCoreParameterHeader = (coreParameter: {
     coreParameterId: string;
     coreParameterName: string;

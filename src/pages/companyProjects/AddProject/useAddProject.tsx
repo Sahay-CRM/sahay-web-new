@@ -85,18 +85,14 @@ export default function useAddProject() {
     const currentCoreParameterId = watchedCoreParameter?.coreParameterId;
 
     if (
-      !isInitialLoad && // Only act if not initial load
-      hasInitializedData && // And if data has been initialized (editing existing)
-      currentCoreParameterId !== previousCoreParameterId // And core parameter actually changed
+      !isInitialLoad &&
+      hasInitializedData &&
+      currentCoreParameterId !== previousCoreParameterId
     ) {
-      // Clear subParameterId only if the coreParameterId has genuinely changed
-      // from a previously set value, not from undefined to a value during initial load.
       if (previousCoreParameterId !== undefined) {
-        // Check if there was a previous value
         setValue("subParameterId", []);
       }
     }
-    // Update previous core parameter ID for the next comparison
     setPreviousCoreParameterId(currentCoreParameterId);
   }, [
     watchedCoreParameter,

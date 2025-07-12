@@ -90,7 +90,7 @@ export default function useCompanyLevel() {
     (data: string) => {
       setCoreParameters(data);
 
-      // Find the selection for the newly chosen core parameter in allSelections
+      // Find the selection for the newly chosen Business Function in allSelections
       const currentCoreParameterSelection = allSelections.find(
         (selection) => selection.coreParameter.id === data,
       );
@@ -99,14 +99,14 @@ export default function useCompanyLevel() {
         // If there's an existing selection (either changed or original), set selectedLevel to that
         setSelectedLevel(currentCoreParameterSelection.level.id);
       } else {
-        // If it's a new core parameter not yet in allSelections, fetch from companyLevelAssign
+        // If it's a new Business Function not yet in allSelections, fetch from companyLevelAssign
         // This case should ideally not be hit if initialSelectionsRef correctly populates allSelections initially.
         const matched = companyLevelAssign?.data?.find(
           (item: CompanyLevelJunction) => item.coreParameterId === data,
         );
         if (matched) {
           setSelectedLevel(matched.currentLevelId);
-          // Add to allSelections with isChanged: false. This should generally only happen if a core parameter
+          // Add to allSelections with isChanged: false. This should generally only happen if a Business Function
           // was not present in the initial companyLevelAssign data but is now being interacted with.
           setAllSelections((prev) => {
             const updatedMap = new Map(
@@ -148,7 +148,7 @@ export default function useCompanyLevel() {
           prev.map((item) => [item.coreParameter.id, item]),
         );
 
-        // Find the current core parameter's original level from DB data
+        // Find the current Business Function's original level from DB data
         const originalLevel = companyLevelAssign?.data?.find(
           (item: CompanyLevelJunction) =>
             item.coreParameterId === selectedCoreParameters,
@@ -230,20 +230,6 @@ export default function useCompanyLevel() {
     const changedSelections = allSelections.filter(
       (selection) => selection.isChanged,
     );
-
-    // Log all changed selections before saving
-    if (changedSelections.length > 0) {
-      console.log(
-        "All changes to be saved (pre-uniqueness filter):",
-        changedSelections.map((selection) => ({
-          coreParameterId: selection.coreParameter.id,
-          coreParameterName: selection.coreParameter.name,
-          levelId: selection.level.id,
-          levelName: selection.level.name,
-        })),
-      );
-    }
-
     // Ensure unique coreParameterId entries in the final payload, keeping the latest level
     const uniquePayloadMap = new Map<string, CompanyLevelJunction>();
     changedSelections.forEach((selection) => {

@@ -106,9 +106,9 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
             <ul className="list-disc list-inside text-gray-700">
               {modalData.ProjectSubParameterJunction?.map((item) => (
                 <li key={item.projectSubParameterId}>
-                  <span className="font-medium">Core Parameter:</span>{" "}
+                  <span className="font-medium">Business Function:</span>{" "}
                   {item.subPara?.coreParameter?.coreParameterName} |{" "}
-                  <span className="font-medium">Sub Parameter:</span>{" "}
+                  <span className="font-medium">Key Result Area:</span>{" "}
                   {item.subPara?.subParameterName}
                 </li>
               ))}
