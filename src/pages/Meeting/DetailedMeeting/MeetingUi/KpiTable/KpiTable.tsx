@@ -723,22 +723,23 @@ export default function KPITable({ meetingId, kpisFireBase }: KpisProps) {
   ) {
     const formatted1 = formatCompactNumber(value1);
     const formatted2 = formatCompactNumber(value2);
+    const safeUnit = unit ?? "";
 
     if (validationType === "BETWEEN") {
-      return `${formatted1} ${unit} - ${formatted2} ${unit}`;
+      return `${formatted1} ${safeUnit} - ${formatted2} ${safeUnit}`;
     }
 
     switch (validationType) {
       case "EQUAL_TO":
-        return `= ${formatted1} ${unit}`;
+        return `= ${formatted1} ${safeUnit}`;
       case "GREATER_THAN":
-        return `> ${formatted1} ${unit}`;
+        return `> ${formatted1} ${safeUnit}`;
       case "LESS_THAN":
-        return `< ${formatted1} ${unit}`;
+        return `< ${formatted1} ${safeUnit}`;
       case "GREATER_THAN_OR_EQUAL_TO":
-        return `≥ ${formatted1} ${unit}`;
+        return `≥ ${formatted1} ${safeUnit}`;
       case "LESS_THAN_OR_EQUAL_TO":
-        return `≤ ${formatted1} ${unit}`;
+        return `≤ ${formatted1} ${safeUnit}`;
       case "YES_NO":
         return value1 === "1" ? "✓(Yes)" : "✗(No)";
       default:

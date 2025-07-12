@@ -166,6 +166,7 @@ export default function useDetailedMeeting() {
       endMeet(meetingId, {
         onSuccess: () => {
           setIsMeetingStart(false);
+          window.location.reload();
         },
       });
     }
