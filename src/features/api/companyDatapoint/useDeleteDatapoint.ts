@@ -9,13 +9,20 @@ type DatePaging = BaseResponse<DataPoint>;
 export default function useDeleteDatapoint() {
   const deleteDatapointMutation = useMutation({
     mutationKey: ["delete-Datapoint"],
-    mutationFn: async (data: string) => {
-      if (!data) {
+    mutationFn: async ({
+      id,
+      force = false,
+    }: {
+      id: string;
+      force?: boolean;
+    }) => {
+      if (!id) {
         throw new Error("Something Went Wrong");
       }
-      const { data: resData } = await Api.delete<DatePaging>({
-        url: Urls.deleteDatapointMeeting(data),
-      });
+      const url = force
+        ? Urls.deleteDatapointForce(id)
+        : Urls.deleteDatapointMeeting(id);
+      const { data: resData } = await Api.delete<DatePaging>({ url });
       return resData;
     },
     onSuccess: (response) => {

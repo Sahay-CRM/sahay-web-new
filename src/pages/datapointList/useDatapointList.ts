@@ -16,7 +16,7 @@ export default function useAdminUser() {
   const [isImport, setIsImport] = useState(false);
   const permission = useSelector(getUserPermission).DATAPOINT_LIST;
 
-  const { mutate: deleteDatapointById } = useDeleteDatapoint();
+  const { mutate: deleteDatapoint } = useDeleteDatapoint();
   const [isChildData, setIsChildData] = useState<string | undefined>();
   const [viewModalData, setViewModalData] = useState<KPIFormData>(
     {} as KPIFormData,
@@ -95,25 +95,50 @@ export default function useAdminUser() {
 
   const conformDelete = async () => {
     if (modalData && modalData.kpiId) {
-      deleteDatapointById(modalData.kpiId, {
-        onSuccess: () => {
-          closeDeleteModal();
-        },
-        onError: (error: Error) => {
-          const axiosError = error as AxiosError<{
-            message?: string;
-            status: number;
-          }>;
+      deleteDatapoint(
+        { id: modalData.kpiId, force: false },
+        {
+          onSuccess: () => {
+            closeDeleteModal();
+          },
+          onError: (error: Error) => {
+            const axiosError = error as AxiosError<{
+              message?: string;
+              status: number;
+            }>;
 
-          if (axiosError.response?.data?.status === 417) {
-            setIsChildData(axiosError.response?.data?.message);
-          } else if (axiosError.response?.data.status !== 417) {
+            if (axiosError.response?.data?.status === 417) {
+              setIsChildData(axiosError.response?.data?.message);
+            } else if (axiosError.response?.data.status !== 417) {
+              toast.error(
+                `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+              );
+            }
+          },
+        },
+      );
+    }
+  };
+
+  const onForceSubmit = async () => {
+    if (modalData && modalData.kpiId) {
+      deleteDatapoint(
+        { id: modalData.kpiId, force: true },
+        {
+          onSuccess: () => {
+            closeDeleteModal();
+          },
+          onError: (error: Error) => {
+            const axiosError = error as AxiosError<{
+              message?: string;
+              status: number;
+            }>;
             toast.error(
               `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
             );
-          }
+          },
         },
-      });
+      );
     }
   };
 
@@ -139,6 +164,7 @@ export default function useAdminUser() {
     onDelete,
     modalData,
     conformDelete,
+    onForceSubmit, // added
     handleAdd,
     paginationFilter,
     isUserModalOpen,
