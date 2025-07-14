@@ -51,15 +51,21 @@ export default function CompanyProject() {
   } = useCompanyProject();
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "projectName", label: "Project Name", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "20px" },
+    { key: "projectName", label: "Project Name", visible: true, width: "90px" },
     {
       key: "projectDeadline",
       label: "Project Deadline",
       visible: true,
+      width: "90px",
     },
-    { key: "projectDescription", label: "Project Description", visible: true },
-    { key: "projectStatus", label: "Status", visible: true },
+    {
+      key: "projectDescription",
+      label: "Project Description",
+      visible: true,
+      width: "90px",
+    },
+    { key: "projectStatus", label: "Status", visible: true, width: "90px" },
   ]);
 
   // Toggle column visibility
@@ -73,10 +79,15 @@ export default function CompanyProject() {
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
 
   // Check if the number of columns is more than 3

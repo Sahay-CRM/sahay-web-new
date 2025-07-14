@@ -44,22 +44,38 @@ export default function CompanyDesignation() {
   }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "designationName", label: "Designation Name", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "20px" },
+    {
+      key: "designationName",
+      label: "Designation Name",
+      visible: true,
+      width: "90px",
+    },
     {
       key: "departmentName",
       label: "Department Name",
       visible: true,
+      width: "90px",
     },
-    { key: "parentName", label: "Parent Designation", visible: true },
+    {
+      key: "parentName",
+      label: "Parent Designation",
+      visible: true,
+      width: "90px",
+    },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
 
   const onToggleColumn = (key: string) => {

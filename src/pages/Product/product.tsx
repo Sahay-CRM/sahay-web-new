@@ -44,18 +44,23 @@ export default function Product() {
 
   // Column visibility state
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "productName", label: "Product Name", visible: true },
-    { key: "brandName", label: "Brand Name", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "90px" },
+    { key: "productName", label: "Product Name", visible: true, width: "90px" },
+    { key: "brandName", label: "Brand Name", visible: true, width: "90px" },
   ]);
   const [tableRenderKey, setTableRenderKey] = useState(0);
   // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
 
   // Toggle column visibility

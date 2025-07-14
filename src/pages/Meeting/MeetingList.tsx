@@ -57,24 +57,35 @@ export default function MeetingList() {
   }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "meetingName", label: "Meeting Name", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "10px" },
+    { key: "meetingName", label: "Meeting Name", visible: true, width: "90px" },
     {
       key: "meetingDescription",
       label: "Meeting Description",
       visible: true,
+      width: "90px",
     },
-    { key: "meetingDateTime", label: "Meeting TIme", visible: true },
-    { key: "joinerNames", label: "Joiners", visible: true },
-    { key: "meetingStatus", label: "Status", visible: true }, // <-- add this line
+    {
+      key: "meetingDateTime",
+      label: "Meeting TIme",
+      visible: true,
+      width: "90px",
+    },
+    { key: "joinerNames", label: "Joiners", visible: true, width: "90px" },
+    { key: "meetingStatus", label: "Status", visible: true, width: "90px" }, // <-- add this line
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
 
   const onToggleColumn = (key: string) => {

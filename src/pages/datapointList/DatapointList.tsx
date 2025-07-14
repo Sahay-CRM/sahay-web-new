@@ -60,25 +60,46 @@ export default function CompanyTaskList() {
   }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "20px" },
     {
       key: "KPIName",
       label: "KPI Name",
       visible: true,
+      width: "80px",
     },
-    { key: "KPILabel", label: "KPI Description (Tooltip)", visible: true },
-    { key: "validationType", label: "Validation Type", visible: true },
-    { key: "frequencyType", label: "Frequency", visible: true },
-    { key: "coreParameterName", label: "Core Parameter Name", visible: true },
+    {
+      key: "KPILabel",
+      label: "KPI Description (Tooltip)",
+      visible: true,
+      width: "60px",
+    },
+    {
+      key: "validationType",
+      label: "Validation Type",
+      visible: true,
+      width: "90px",
+    },
+    { key: "frequencyType", label: "Frequency", visible: true, width: "60px" },
+    {
+      key: "coreParameterName",
+      label: "Core Parameter Name",
+      visible: true,
+      width: "90px",
+    },
   ]);
 
   // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
 
   // Toggle column visibility

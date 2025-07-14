@@ -74,15 +74,25 @@ const ProjectStatus = () => {
     filter: paginationFilter,
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "projectStatus", label: "Project Status", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "10px" },
+    {
+      key: "projectStatus",
+      label: "Project Status",
+      visible: true,
+      width: "30px",
+    },
   ]);
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
@@ -165,15 +175,25 @@ const CoreParameter = () => {
     filter: paginationFilter,
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "coreParameterName", label: "Core Parameter", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "20px" },
+    {
+      key: "coreParameterName",
+      label: "Core Parameter",
+      visible: true,
+      width: "90px",
+    },
   ]);
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
@@ -274,15 +294,25 @@ const SubParameter = () => {
   });
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "subParameterName", label: "Sub Parameter", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "20px" },
+    {
+      key: "subParameterName",
+      label: "Sub Parameter",
+      visible: true,
+      width: "90px",
+    },
   ]);
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
@@ -380,16 +410,26 @@ const Employees = () => {
     filter: { ...paginationFilter, isDeactivated: false },
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "employeeName", label: "Employee Name", visible: true },
-    { key: "employeeMobile", label: "Mobile", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "20px" },
+    {
+      key: "employeeName",
+      label: "Employee Name",
+      visible: true,
+      width: "90px",
+    },
+    { key: "employeeMobile", label: "Mobile", visible: true, width: "90px" },
   ]);
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>

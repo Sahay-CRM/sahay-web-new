@@ -193,19 +193,34 @@ export default function useAddEmployee() {
     });
 
     const [columnToggleOptions, setColumnToggleOptions] = useState([
-      { key: "srNo", label: "Sr No", visible: true },
-      { key: "KPIName", label: "KPI Name", visible: true },
-      { key: "KPILabel", label: "KPI Description (Tooltip)", visible: true },
-      { key: "coreParameterName", label: "Core Parameter Name", visible: true },
+      { key: "srNo", label: "Sr No", visible: true, width: "10px" },
+      { key: "KPIName", label: "KPI Name", visible: true, width: "90px" },
+      {
+        key: "KPILabel",
+        label: "KPI Description (Tooltip)",
+        visible: true,
+        width: "90px",
+      },
+      {
+        key: "coreParameterName",
+        label: "Core Parameter Name",
+        visible: true,
+        width: "90px",
+      },
     ]);
 
     // Filter visible columns
     const visibleColumns = columnToggleOptions.reduce(
       (acc, col) => {
-        if (col.visible) acc[col.key] = col.label;
+        if (col.visible) {
+          acc[col.key] = {
+            label: col.label,
+            width: col.width,
+          };
+        }
         return acc;
       },
-      {} as Record<string, string>,
+      {} as Record<string, { label: string; width?: string }>,
     );
 
     // Toggle column visibility

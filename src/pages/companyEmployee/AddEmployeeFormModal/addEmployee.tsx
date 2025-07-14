@@ -119,16 +119,26 @@ const DepartmentSelect = () => {
     filter: paginationFilter,
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "departmentName", label: "Department Name", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "20px" },
+    {
+      key: "departmentName",
+      label: "Department Name",
+      visible: true,
+      width: "90px",
+    },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
 
   const onToggleColumn = (key: string) => {
@@ -221,15 +231,25 @@ const Designation = () => {
   });
   // ... rest of Designation logic (column toggles, etc.) ...
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "designationName", label: "Designation Name", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "20px" },
+    {
+      key: "designationName",
+      label: "Designation Name",
+      visible: true,
+      width: "90px",
+    },
   ]);
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
@@ -310,15 +330,25 @@ const ReportingManage = () => {
   });
   // ... rest of ReportingManage logic ...
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "employeeName", label: "Reporting Manager", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "20px" },
+    {
+      key: "employeeName",
+      label: "Reporting Manager",
+      visible: true,
+      width: "90px",
+    },
   ]);
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>

@@ -37,10 +37,13 @@ interface DetailsPermission {
   edit?: boolean;
   delete?: boolean;
 }
-
+interface ColumnDefinition {
+  label: string;
+  width?: string; // optional width property
+}
 interface TableProps<T extends Record<string, unknown>> {
   tableData?: T[];
-  columns?: Partial<Record<keyof T, string>>;
+  columns?: Partial<Record<keyof T, ColumnDefinition>>;
   primaryKey: keyof T;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
@@ -241,7 +244,7 @@ const TableData = <T extends Record<string, unknown>>({
           <TableHeader>
             <TableRow>
               {showCheckboxes && (
-                <TableHead className="w-[40px] pl-6">
+                <TableHead className="w-[20px] pl-6">
                   {/* Checkbox column header */}
                 </TableHead>
               )}
@@ -254,23 +257,35 @@ const TableData = <T extends Record<string, unknown>>({
                   className={`
                     ${
                       clm === "srNo"
-                        ? "w-[40px] pl-6"
+                        ? "w-[10px] pl-6"
                         : index === 1
-                          ? "min-w-[150px] pl-8"
-                          : "min-w-[150px]"
+                          ? "min-w-[10px] pl-1"
+                          : "max-w-[10px]"
                     }
                     ${sortableColumns.includes(clm) ? "cursor-pointer select-none" : ""}
                   `}
+                  // className={`
+                  //   ${sortableColumns.includes(clm) ? "cursor-pointer select-none" : ""}
+                  // `}
+                  style={
+                    columns[clm]?.width
+                      ? {
+                          minWidth: columns[clm]!.width,
+                          maxWidth: columns[clm]!.width,
+                          width: columns[clm]!.width,
+                        }
+                      : undefined
+                  }
                   onClick={() => handleSort(clm)}
                 >
-                  <div className="flex items-center">
-                    {columns[clm]}
+                  <div className="truncate overflow-hidden whitespace-nowrap block max-w-full">
+                    {columns[clm]?.label}
                     {getSortIcon(clm)}
                   </div>
                 </TableHead>
               ))}
               {showActionsColumn && (
-                <TableHead className="w-[100px] sticky right-0 text-left pr-6 bg-primary">
+                <TableHead className="!w-[100px] bg-primary sticky right-0 text-right pr-6 ">
                   Actions
                 </TableHead>
               )}
@@ -287,7 +302,7 @@ const TableData = <T extends Record<string, unknown>>({
                     (showIndexColumn ? 1 : 0) +
                     1
                   }
-                  className="py-6"
+                  className="py-6 w-[40px]"
                 >
                   <div className="flex justify-center items-center h-20">
                     <div className="animate-spin">
@@ -382,13 +397,22 @@ const TableData = <T extends Record<string, unknown>>({
                   {columnKeys.map((clm, index) => (
                     <TableCell
                       key={`${item[primaryKey]}_${clm}`}
-                      className={`whitespace-nowrap ${
+                      className={`whitespace-nowrap truncate overflow-hidden text-ellipsis ${
                         clm === "srNo"
-                          ? "pl-6 pr-4"
+                          ? "pl-6 pr-1"
                           : index === 1
-                            ? "pl-8 pr-4"
-                            : "px-4"
+                            ? "pl-1 pr-1"
+                            : ""
                       }`}
+                      style={
+                        columns[clm]?.width
+                          ? {
+                              minWidth: columns[clm]!.width,
+                              maxWidth: columns[clm]!.width,
+                              width: columns[clm]!.width,
+                            }
+                          : undefined
+                      }
                     >
                       {dropdownColumns[clm] ? (
                         <select
@@ -443,16 +467,29 @@ const TableData = <T extends Record<string, unknown>>({
                           ))}
                         </select>
                       ) : (
-                        String(item[clm] || " - ")
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="block truncate max-w-full cursor-default">
+                              {String(item[clm] ?? " - ")}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="top"
+                            align="center"
+                            className="max-w-xs whitespace-normal"
+                          >
+                            {String(item[clm] ?? " - ")}
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                     </TableCell>
                   ))}
                   {showActionsColumn && (
                     <TableCell
-                      className="text-left sticky right-0 pr-6 bg-white"
+                      className="text-right sticky right-0 pr-6 bg-white"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="flex gap-1 items-center justify-start">
+                      <div className="flex gap-1 items-center justify-end">
                         {isEditDelete &&
                           isActionButton?.(item) &&
                           permission?.Edit && (

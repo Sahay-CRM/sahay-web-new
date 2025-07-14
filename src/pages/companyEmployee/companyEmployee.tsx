@@ -58,24 +58,45 @@ export default function CompanyDesignation() {
   // Column visibility state
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "employeeName", label: "Employee Name", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "20px" },
+    {
+      key: "employeeName",
+      label: "Employee Name",
+      visible: true,
+      width: "90px",
+    },
     {
       key: "employeeEmail",
       label: "Employee Email",
       visible: true,
+      width: "90px",
     },
-    { key: "employeeMobile", label: "Employee Mobile", visible: true },
-    { key: "employeeType", label: "Employee Type", visible: true },
+    {
+      key: "employeeMobile",
+      label: "Employee Mobile",
+      visible: true,
+      width: "90px",
+    },
+    {
+      key: "employeeType",
+      label: "Employee Type",
+      visible: true,
+      width: "90px",
+    },
   ]);
 
   // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
 
   // Toggle column visibility
@@ -94,7 +115,6 @@ export default function CompanyDesignation() {
   if (permission && permission.View === false) {
     return <PageNotAccess />;
   }
-  console.log(employeedata);
 
   return (
     <FormProvider {...methods}>

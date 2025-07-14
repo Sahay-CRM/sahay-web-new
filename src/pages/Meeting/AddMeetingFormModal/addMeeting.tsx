@@ -80,16 +80,26 @@ const MeetingStatus = () => {
   });
 
   const [columnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "meetingStatus", label: "Meeting Status", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "10px" },
+    {
+      key: "meetingStatus",
+      label: "Meeting Status",
+      visible: true,
+      width: "90px",
+    },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
 
   return (
@@ -157,16 +167,26 @@ const MeetingType = () => {
     filter: paginationFilter,
   });
   const [columnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "meetingTypeName", label: "Meeting Type Name", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "10px" },
+    {
+      key: "meetingTypeName",
+      label: "Meeting Type Name",
+      visible: true,
+      width: "90px",
+    },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
 
   return (
@@ -233,17 +253,22 @@ const Joiners = () => {
     filter: { ...paginationFilter, isDeactivated: false },
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "employeeName", label: "Joiners", visible: true },
-    { key: "employeeMobile", label: "Mobile", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "10px" },
+    { key: "employeeName", label: "Joiners", visible: true, width: "90px" },
+    { key: "employeeMobile", label: "Mobile", visible: true, width: "90px" },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
 
   const onToggleColumn = (key: string) => {

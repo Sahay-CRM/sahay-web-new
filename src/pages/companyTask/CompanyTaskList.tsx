@@ -58,24 +58,35 @@ export default function CompanyTaskList() {
   }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "taskName", label: "Task Name", visible: true },
+    { key: "srNo", label: "Sr No", visible: true, width: "10px" },
+    { key: "taskName", label: "Task Name", visible: true, width: "90px" },
     {
       key: "taskDescription",
       label: "Task Description",
       visible: true,
+      width: "90px",
     },
-    { key: "taskDeadline", label: "Task Deadline", visible: true },
-    { key: "assigneeNames", label: "Assignees", visible: true },
-    { key: "taskStatus", label: "Status", visible: true },
+    {
+      key: "taskDeadline",
+      label: "Task Deadline",
+      visible: true,
+      width: "90px",
+    },
+    { key: "assigneeNames", label: "Assignees", visible: true, width: "90px" },
+    { key: "taskStatus", label: "Status", visible: true, width: "90px" },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          width: col.width,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; width?: string }>,
   );
 
   // Toggle column visibility
