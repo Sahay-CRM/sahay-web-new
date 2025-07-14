@@ -198,7 +198,7 @@ export default function CompanyTaskList() {
           <ConfirmationDeleteModal
             title={"Delete KPI"}
             label={"KPI Name :"}
-            modalData={`${modalData?.dataPointLabel}`}
+            modalData={`${modalData?.KPIName}`}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}
