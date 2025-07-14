@@ -51,6 +51,7 @@ export default function CompanyTaskList() {
     isViewModalOpen,
     setIsViewModalOpen,
     viewModalData,
+    onForceSubmit,
   } = useCompanyTaskList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -159,6 +160,7 @@ export default function CompanyTaskList() {
                 index +
                 1,
               validationType: getValidationLabel(item.validationType),
+              frequencyType: item.frequencyType,
             }))}
             columns={visibleColumns}
             primaryKey="kpiId"
@@ -201,6 +203,7 @@ export default function CompanyTaskList() {
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}
             isChildData={isChildData}
+            onForceSubmit={onForceSubmit}
           />
         )}
         <ViewKPIDetailModal

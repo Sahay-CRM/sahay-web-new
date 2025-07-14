@@ -863,29 +863,7 @@ export default function KPITable() {
                 ))}
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {/* Visualized KPIs Section */}
-              {/* {visualizedGroups.length > 0 && (
-                <>
-                  {renderGroupedKpiRows(visualizedGroups)}
-                </>
-              )} */}
-
-              {/* Non-Visualized KPIs Section */}
-              {/* {nonVisualizedGroups.length > 0 && (
-                <>
-                  {visualizedGroups.length > 0 && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={4 + headers.length}
-                        className="bg-gray-100 border-b px-3 py-1"
-                      />
-                    </TableRow>
-                  )}
-                </>
-              )} */}
-              {renderGroupedKpiRows(groupedKpiRows)}
-            </TableBody>
+            <TableBody>{renderGroupedKpiRows(groupedKpiRows)}</TableBody>
           </Table>
         </div>
       </div>{" "}

@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/tooltip";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
+import { useSelector } from "react-redux";
+import { getUserDetail } from "@/features/selectors/auth.selector";
 
 export default function CompanyDesignation() {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -25,6 +27,8 @@ export default function CompanyDesignation() {
   useEffect(() => {
     setBreadcrumbs([{ label: "Company Employee", href: "" }]);
   }, [setBreadcrumbs]);
+
+  const userData = useSelector(getUserDetail);
 
   const {
     employeedata,
@@ -94,7 +98,6 @@ export default function CompanyDesignation() {
   if (permission && permission.View === false) {
     return <PageNotAccess />;
   }
-  console.log(employeedata);
 
   return (
     <FormProvider {...methods}>
@@ -173,7 +176,7 @@ export default function CompanyDesignation() {
               }
             }}
             onDelete={(row) => onDelete(row as unknown as EmployeeData)}
-            canDelete={(row) => !row.isSuperAdmin}
+            canDelete={() => !!userData.isSuperAdmin}
             paginationDetails={mapPaginationDetails(employeedata)}
             isLoading={isLoading}
             setPaginationFilter={setPaginationFilter}

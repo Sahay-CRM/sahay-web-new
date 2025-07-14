@@ -46,30 +46,18 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
       ]}
     >
       <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-700 mb-6">
-        {modalData?.dataPointLabel && (
-          <div>
-            <span className="font-medium text-primary">
-              Data Point Label :{" "}
-            </span>
-            {modalData.dataPointLabel}
-          </div>
-        )}
-        {modalData?.dataPointName && (
-          <div>
-            <span className="font-medium text-primary">Data Point Name : </span>
-            {modalData.dataPointName}
-          </div>
-        )}
-        {modalData?.KPILabel && (
-          <div>
-            <span className="font-medium text-primary">KPI Label : </span>
-            {modalData.KPILabel}
-          </div>
-        )}
         {modalData?.KPIName && (
           <div>
             <span className="font-medium text-primary">KPI Name : </span>
             {modalData.KPIName}
+          </div>
+        )}
+        {modalData?.KPILabel && (
+          <div>
+            <span className="font-medium text-primary">
+              KPI Description (Tooltip) :{" "}
+            </span>
+            {modalData.KPILabel}
           </div>
         )}
         {modalData?.tag && (
