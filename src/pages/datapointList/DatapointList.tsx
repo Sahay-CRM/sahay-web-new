@@ -52,6 +52,7 @@ export default function CompanyTaskList() {
     isViewModalOpen,
     setIsViewModalOpen,
     viewModalData,
+    onForceSubmit,
   } = useCompanyTaskList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -203,6 +204,7 @@ export default function CompanyTaskList() {
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}
             isChildData={isChildData}
+            onForceSubmit={onForceSubmit}
           />
         )}
         <ViewKPIDetailModal

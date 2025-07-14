@@ -108,6 +108,8 @@ const Urls = {
   addCompanyDatapoint: () => `${baseUrl}/company/kpi/create`,
   getKpiById: (id: string) => `${baseUrl}/company/kpi/get/${id}`,
   deleteDatapointMeeting: (id: string) => `${baseUrl}/company/kpi/delete/${id}`,
+  deleteDatapointForce: (id: string) =>
+    `${baseUrl}/company/kpi/delete-force/${id}`, // added
 
   //CoreParameter
   getCoreParameter: () => `${baseUrl}/core-param/get`,

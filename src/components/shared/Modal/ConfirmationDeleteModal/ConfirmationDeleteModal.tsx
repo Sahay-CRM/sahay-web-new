@@ -8,6 +8,7 @@ interface DeleteModalProps {
   modalClose: () => void;
   onSubmit: () => void;
   isChildData?: string | undefined;
+  onForceSubmit?: () => void; // added
 }
 
 const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
@@ -18,6 +19,7 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
   modalClose,
   onSubmit,
   isChildData,
+  onForceSubmit, // added
 }) => {
   return (
     <div>
@@ -36,6 +38,17 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
             buttonCss: "py-1.5 px-5",
             btnClick: onSubmit,
           },
+          // Add Force delete button if isChildData exists
+          ...(isChildData
+            ? [
+                {
+                  btnText: "Force delete",
+                  buttonCss:
+                    "py-1.5 px-5 bg-red-600 text-white hover:bg-red-400",
+                  btnClick: onForceSubmit ? onForceSubmit : onSubmit, // use onForceSubmit if provided
+                },
+              ]
+            : []),
         ]}
       >
         <div>
