@@ -113,7 +113,7 @@ export default function KPITable() {
   const [tempValues, setTempValues] = useState<{ [key: string]: string }>({});
   const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
     {},
-  ); // Custom navigation interceptor for drawer/sidebar navigation
+  );
   useEffect(() => {
     // Store the original navigate function to restore later
     const originalPushState = history.pushState;
@@ -341,24 +341,20 @@ export default function KPITable() {
       }
       return (
         <TableRow key={kpi.kpiId} className="border-b">
-          <TableCell
-            className={clsx(
-              "px-3 py-2 w-[60px] bg-gray-100 sticky left-0 z-10",
-            )}
-          >
-            <div>
-              <table>
-                <tbody>
-                  <tr>
-                    <td className="bg-transparent">
+          <TableCell className={clsx("p-0 sticky left-0 z-10")}>
+            <div className="w-[330px] bg-gray-100 overflow-hidden border-r border-gray-300 shadow-xl shadow-gray-200/80">
+              <table className="p-0">
+                <tbody className="p-0">
+                  <tr className="h-14 ">
+                    <td className="bg-transparent px-2 w-[40px] overflow-hidden h-full p-0 border-r border-gray-300">
                       <Avatar
-                        className={`h-8 w-8 ${getColorFromName(kpi?.employeeName)}`}
+                        className={`h-6 w-6 ${getColorFromName(kpi?.employeeName)}`}
                       >
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <AvatarFallback
-                                className={`${getColorFromName(kpi?.employeeName)} font-bold`}
+                                className={`${getColorFromName(kpi?.employeeName)} font-semibold`}
                               >
                                 {(() => {
                                   if (!kpi?.employeeName) return "";
@@ -379,7 +375,7 @@ export default function KPITable() {
                         </TooltipProvider>
                       </Avatar>
                     </td>
-                    <td className="w-[100px] min-w-[100px]">
+                    <td className="w-[120px] min-w-[120px] max-w-[120px] overflow-hidden border-r border-gray-300">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -395,12 +391,27 @@ export default function KPITable() {
                     </td>
                     <td
                       className={clsx(
-                        "px-3 py-2 w-[150px] break-all overflow-hidden bg-gray-100 sticky left-0 z-10",
+                        "p-0 w-[80px] min-w-[80px] max-w-[80px] overflow-hidden break-all border-r border-gray-300 sticky left-0 z-10",
                       )}
                     >
-                      {kpi.tag}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-md cursor-default break-words whitespace-pre-line overflow-hidden m-0 p-0">
+                              {kpi?.tag}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <span>{kpi?.tag}</span>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </td>
-                    <td className="px-3 py-2 w-[80px] bg-gray-100 sticky left-[210px] break-words z-10 pl-0 ml-2">
+                    <td
+                      className={clsx(
+                        "p-0 pl-3 w-[80px] min-w-[80px] max-w-[80px] overflow-hidden break-all sticky left-0 z-10",
+                      )}
+                    >
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -428,8 +439,6 @@ export default function KPITable() {
               </table>
             </div>
           </TableCell>
-
-          {/* <TableCell className="w-[60px] bg-gray-100 sticky left-[320px] z-10 text-center"></TableCell> */}
           {headers.map((_, colIdx) => {
             const cell = dataRow?.[colIdx];
             const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
@@ -816,28 +825,27 @@ export default function KPITable() {
           <Table className="min-w-max text-sm text-center">
             <TableHeader>
               <TableRow className="h-[50px]">
-                <TableHead
-                  className={clsx("bg-primary w-[60px] sticky left-0 z-20")}
-                >
-                  <div>
-                    <table className="bg-transparent border-0">
+                <TableHead className={clsx("sticky left-0 z-20 bg-primary")}>
+                  <div className=" w-[300px]">
+                    <table className="bg-transparent border-0 w-full">
                       <thead>
                         <tr className="h-[50px]">
+                          <td className="w-[40] min-w-[40]" />
                           <td
                             className={clsx(
-                              "px-3 py-2 bg-transparent sticky left-[30px] z-20 text-white w-[120px] text-base text-center",
+                              "px-3 py-2 bg-transparent sticky left-[40px] z-20 text-white w-[120px] min-w-[120px] max-w-[120px] overflow-hidden text-base text-center",
                             )}
                           >
                             KPI
                           </td>
                           <td
                             className={clsx(
-                              "px-3 py-2 bg-transparent sticky left-[60px] z-20 text-white text-base w-[120px] text-center",
+                              "px-3 py-2 bg-transparent sticky z-20 text-white text-base w-[80px] text-center",
                             )}
                           >
                             Tag
                           </td>
-                          <td className="px-3 py-2 w-[80px] bg-primary sticky left-[210px] z-20 text-white text-center">
+                          <td className="px-3 py-2 w-[80px] sticky left-[210px] z-20 text-white text-center">
                             Goal
                           </td>
                         </tr>
@@ -863,7 +871,29 @@ export default function KPITable() {
                 ))}
               </TableRow>
             </TableHeader>
-            <TableBody>{renderGroupedKpiRows(groupedKpiRows)}</TableBody>
+            <TableBody>
+              {/* Visualized KPIs Section */}
+              {/* {visualizedGroups.length > 0 && (
+                <>
+                  {renderGroupedKpiRows(visualizedGroups)}
+                </>
+              )} */}
+
+              {/* Non-Visualized KPIs Section */}
+              {/* {nonVisualizedGroups.length > 0 && (
+                <>
+                  {visualizedGroups.length > 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4 + headers.length}
+                        className="bg-gray-100 border-b px-3 py-1"
+                      />
+                    </TableRow>
+                  )}
+                </>
+              )} */}
+              {renderGroupedKpiRows(groupedKpiRows)}
+            </TableBody>
           </Table>
         </div>
       </div>{" "}
