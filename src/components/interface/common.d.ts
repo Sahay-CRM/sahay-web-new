@@ -281,7 +281,7 @@ interface CompanyMeetingDataProps {
   meetingTypeId: string;
   meetingStatusId: string;
   companyMeetingId?: string;
-  joiners?: string[];
+  joiners?: string[] | Joiners[];
   meetingStatus?: CompanyMeetingStatusDataProps;
   meetingType?: CompanyMeetingTypeDataProps;
   files?: [
@@ -322,22 +322,31 @@ interface CompanyMeetingStatusDataProps {
 interface CompanyMeetingTypeDataProps {
   meetingTypeId: string;
   meetingTypeName: string;
+  parentType?: string;
 }
 
-interface CompanyProjectDataProps {
-  projectId?: string;
-  projectName?: string;
-  projectDescription?: string;
-  projectActualEndDate?: string | null;
-  projectDeadline?: string;
+interface CompanyMeetingDataProps {
+  meetingId?: string;
+  meetingName?: string;
+  meetingDescription?: string;
+  meetingDateTime?: string;
+  meetingTypeId?: string;
+  parentType?: string;
+  meetingStatusId?: string;
+  companyMeetingId?: string;
+  joiners?: string[] | Joiners[];
+  meetingStatus?: CompanyMeetingStatusDataProps;
+  meetingType?: CompanyMeetingTypeDataProps;
+  files?: [
+    {
+      fileId: string;
+      fileName: string;
+    },
+  ];
+  teamLeaders?: string[];
   employeeId?: string;
-  ProjectParameters?: ProjectParameters;
-  ProjectEmployees?: Employee[];
-  ProjectTasks?: ProjectTask[];
-  createdBy?: CreatedBy;
-  projectStatusId: string;
-  projectStatus?: ProjectStatusRes;
-  otherProjectEmployees?: string[];
+  attendanceMark?: boolean;
+  detailMeetingStatus?: string;
 }
 
 interface ProjectParameters {
