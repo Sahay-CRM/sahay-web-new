@@ -1,4 +1,6 @@
+import { useSelector } from "react-redux";
 import ModalData from "../ModalData";
+import { getUserDetail } from "@/features/selectors/auth.selector";
 
 interface DeleteModalProps {
   modalData: string;
@@ -21,6 +23,7 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
   isChildData,
   onForceSubmit, // added
 }) => {
+  const userData = useSelector(getUserDetail);
   return (
     <div>
       <ModalData
@@ -39,7 +42,7 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
             btnClick: onSubmit,
           },
           // Add Force delete button if isChildData exists
-          ...(isChildData
+          ...(isChildData && userData.isSuperAdmin
             ? [
                 {
                   btnText: "Force delete",

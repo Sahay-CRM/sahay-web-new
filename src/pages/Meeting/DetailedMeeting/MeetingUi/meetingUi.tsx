@@ -157,7 +157,7 @@ export default function MeetingUI({
   //   );
   // };
 
-  const handleTimeSpent = (tab: string, seconds: number) => {
+  const handleTimeSpent = (_tab: string, seconds: number) => {
     // This function is no longer needed as per-tab timer logic is removed.
     // Keeping it for now as it might be used elsewhere or for consistency.
     // If it's not directly used, it can be removed.
