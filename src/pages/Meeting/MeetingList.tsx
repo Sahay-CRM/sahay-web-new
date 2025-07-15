@@ -151,7 +151,7 @@ export default function MeetingList() {
               onClick={handleDetailToggle}
               className="py-2 w-fit"
             >
-              {showDetail ? "Show Detail" : "Show All Other"}
+              {showDetail ? "Show Other Meetings" : "Show Detail Meetings"}
             </Button>
             <Button
               variant={showOverdue ? "destructive" : "outline"}
@@ -234,7 +234,7 @@ export default function MeetingList() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="py-1 px-3 cursor-pointer"
+                        className="py-1 px-3 w-[150px] cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(
@@ -242,7 +242,7 @@ export default function MeetingList() {
                           );
                         }}
                       >
-                        Detailed Meeting
+                        Meeting Details
                       </Button>
                     </div>
                   ) : (
@@ -251,7 +251,7 @@ export default function MeetingList() {
                         <Button
                           variant="destructive"
                           size="sm"
-                          className="py-1 px-3 cursor-pointer"
+                          className="py-1 w-[150px] px-3 cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(
@@ -267,7 +267,7 @@ export default function MeetingList() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="py-1 px-3 cursor-pointer"
+                              className="py-1 w-[150px] px-3 cursor-pointer"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate(
@@ -275,13 +275,13 @@ export default function MeetingList() {
                                 );
                               }}
                             >
-                              Meeting Not Started
+                              Not Started
                             </Button>
                           ) : (
                             <Button
                               variant="outline"
                               size="sm"
-                              className="py-1 px-3 cursor-pointer"
+                              className="py-1 w-[150px] px-3 cursor-pointer"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate(

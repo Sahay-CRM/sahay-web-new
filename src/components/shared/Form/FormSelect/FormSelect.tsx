@@ -90,7 +90,7 @@ export default function FormSelect({
   return (
     <div className={className}>
       {label && (
-        <FormLabel className="mb-2" htmlFor={id}>
+        <FormLabel className="mb-4" htmlFor={id}>
           {label}{" "}
           {isMandatory && <span className="text-red-500 text-[20px]">*</span>}
         </FormLabel>

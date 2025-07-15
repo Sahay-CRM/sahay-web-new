@@ -5,7 +5,7 @@ import { FormProvider, useFormContext, Controller } from "react-hook-form"; // A
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { useEffect, useState, useRef, ChangeEvent } from "react"; // Added useState, useRef, ChangeEvent
+import { useEffect, useState, useRef, ChangeEvent, useMemo } from "react"; // Added useState, useRef, ChangeEvent
 
 // Imports for components used within step components
 import { Card } from "@/components/ui/card";
@@ -21,9 +21,15 @@ import {
 } from "@/components/ui/tooltip";
 
 import { getEmployee } from "@/features/api/companyEmployee";
-import { useGetCompanyMeetingStatus } from "@/features/api/companyMeeting";
+// import { useGetCompanyMeetingStatus } from "@/features/api/companyMeeting";
 import { getMeetingType } from "@/features/api/meetingType";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import FormSelect from "@/components/shared/Form/FormSelect";
+import { useDdMeetingStatus } from "@/features/api/meetingStatus";
+
+interface MeetingInfoProps {
+  isUpdateMeeting: boolean;
+}
 
 const MeetingType = () => {
   const {
@@ -94,6 +100,7 @@ const MeetingType = () => {
             setPaginationFilter={setPaginationFilter}
             onCheckbox={() => true}
             isActionButton={() => false}
+            moduleKey="type"
           />
         )}
       />
@@ -101,12 +108,46 @@ const MeetingType = () => {
   );
 };
 
-// --- MeetingInfo Component Definition ---
-const MeetingInfo = () => {
+const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
   const {
     register,
     formState: { errors },
+    control,
+    watch,
+    setValue,
+    getValues,
   } = useFormContext();
+  console.log(getValues());
+
+  const meetingType = watch("meetingTypeId");
+
+  const { data: meetingStatusData } = useDdMeetingStatus();
+
+  const meetingStatusOptions = useMemo(() => {
+    return (
+      meetingStatusData?.map((status) => ({
+        label: status.meetingStatus,
+        value: status.meetingStatusId,
+        order: status.meetingStatusOrder,
+      })) || []
+    );
+  }, [meetingStatusData]);
+
+  const shouldHideStatus =
+    !isUpdateMeeting && meetingType?.parentType === "DETAIL";
+
+  useEffect(() => {
+    if (shouldHideStatus && meetingStatusOptions.length > 0) {
+      const defaultStatus = meetingStatusOptions.find((s) => s.order === 1);
+      if (defaultStatus) {
+        setValue("meetingStatusId", defaultStatus.value, {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+      }
+    }
+  }, [shouldHideStatus, meetingStatusOptions, setValue]);
+
   return (
     <div className="grid grid-cols-2 gap-4">
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
@@ -134,95 +175,33 @@ const MeetingInfo = () => {
           error={errors.meetingDateTime}
           isMandatory
         />
+
+        {!shouldHideStatus && (
+          <Controller
+            name="meetingStatusId"
+            control={control}
+            rules={{ required: "Meeting Status is required" }}
+            render={({ field, fieldState }) => (
+              <FormSelect
+                {...field}
+                label="Meeting Status"
+                options={meetingStatusOptions}
+                error={fieldState.error}
+                isMandatory
+              />
+            )}
+          />
+        )}
       </Card>
     </div>
   );
 };
 
-// --- MeetingStatus Component Definition ---
-const MeetingStatus = () => {
-  const {
-    control,
-    formState: { errors },
-  } = useFormContext();
-  const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-    currentPage: 1,
-    pageSize: 25,
-    search: "",
-  });
-
-  const { data: meeetingStatusData } = useGetCompanyMeetingStatus({
-    filter: paginationFilter,
-  });
-
-  const [columnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "meetingStatus", label: "Meeting Status", visible: true },
-  ]);
-
-  const visibleColumns = columnToggleOptions.reduce(
-    (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
-
-  return (
-    <div>
-      <div className="mb-2">
-        <SearchInput
-          placeholder="Search Status..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-80"
-        />
-      </div>
-      {errors.meetingStatusId && (
-        <p className="text-red-500 text-sm mb-2">
-          {typeof errors.meetingStatusId?.message === "string"
-            ? errors.meetingStatusId.message
-            : ""}
-        </p>
-      )}
-      <Controller
-        name="meetingStatusId"
-        control={control}
-        rules={{ required: "Please select a meeting status" }}
-        render={({ field }) => (
-          <TableData
-            tableData={
-              meeetingStatusData?.data?.map((item, index) => ({
-                ...item,
-                srNo:
-                  (meeetingStatusData.currentPage - 1) *
-                    meeetingStatusData.pageSize +
-                  index +
-                  1,
-              })) || []
-            }
-            columns={visibleColumns}
-            primaryKey="meetingStatusId"
-            multiSelect={false}
-            onCheckbox={() => true}
-            selectedValue={field.value}
-            handleChange={field.onChange}
-            paginationDetails={mapPaginationDetails(meeetingStatusData)}
-            setPaginationFilter={setPaginationFilter}
-            isActionButton={() => false}
-          />
-        )}
-      />
-    </div>
-  );
-};
-
-// --- Joiners Component Definition ---
 const Joiners = () => {
-  const {
-    control,
-    formState: { errors },
-  } = useFormContext();
+  const { control, watch } = useFormContext();
+
+  const meetingType = watch("meetingTypeId");
+
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 25,
@@ -284,69 +263,88 @@ const Joiners = () => {
           </TooltipProvider>
         )}
       </div>
-      {errors.employeeId && (
-        <p className="text-red-500 text-sm mb-2">
-          {typeof errors.employeeId?.message === "string"
-            ? errors.employeeId.message
-            : ""}
-        </p>
-      )}
       <Controller
         name="employeeId"
         control={control}
-        render={({ field }) => {
+        rules={{
+          validate: (value) => {
+            if (!value || value.length === 0) {
+              return "Please select at least one joiner";
+            }
+            const hasTeamLeader = value.some(
+              (emp: EmployeeDetails) => emp.isTeamLeader,
+            );
+            if (!hasTeamLeader) {
+              return "At least one joiner must be marked as Team Leader";
+            }
+            return true;
+          },
+        }}
+        render={({ field, fieldState }) => {
           return (
-            <TableData
-              tableData={employeedata?.data.map((item, index) => {
-                // Merge isTeamLeader from selected employees if present
-                const selected = (field.value || []).find(
-                  (emp: EmployeeDetails) => emp.employeeId === item.employeeId,
-                );
-                return {
-                  ...item,
-                  srNo:
-                    (employeedata.currentPage - 1) * employeedata.pageSize +
-                    index +
-                    1,
-                  isTeamLeader: selected?.isTeamLeader || false,
-                };
-              })}
-              columns={visibleColumns}
-              primaryKey="employeeId"
-              paginationDetails={mapPaginationDetails(employeedata)}
-              setPaginationFilter={setPaginationFilter}
-              multiSelect={true}
-              selectedValue={field.value || []}
-              handleChange={(selectedItems) => field.onChange(selectedItems)}
-              customActions={(row: EmployeeDetails) => {
-                const isSelected = (field.value || []).some(
-                  (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
-                );
-                if (!isSelected) return null;
-                const selectedEmp = (field.value || []).find(
-                  (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
-                );
-                const isTeamLeader = selectedEmp?.isTeamLeader;
+            <>
+              {/* Show error above the table if validation fails (from fieldState) */}
+              {fieldState.error && (
+                <p className="text-red-500 text-sm mb-2">
+                  {fieldState.error.message}
+                </p>
+              )}
+              <TableData
+                tableData={employeedata?.data.map((item, index) => {
+                  const selected = (field.value || []).find(
+                    (emp: EmployeeDetails) =>
+                      emp.employeeId === item.employeeId,
+                  );
+                  return {
+                    ...item,
+                    srNo:
+                      (employeedata.currentPage - 1) * employeedata.pageSize +
+                      index +
+                      1,
+                    isTeamLeader: selected?.isTeamLeader || false,
+                  };
+                })}
+                columns={visibleColumns}
+                primaryKey="employeeId"
+                paginationDetails={mapPaginationDetails(employeedata)}
+                setPaginationFilter={setPaginationFilter}
+                multiSelect={true}
+                isEditDelete={false}
+                moduleKey="emp"
+                isActionButton={() => false}
+                showActionsColumn={meetingType?.parentType === "DETAIL"}
+                selectedValue={field.value || []}
+                handleChange={(selectedItems) => field.onChange(selectedItems)}
+                customActions={(row: EmployeeDetails) => {
+                  const isSelected = (field.value || []).some(
+                    (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
+                  );
+                  if (!isSelected) return null;
+                  const selectedEmp = (field.value || []).find(
+                    (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
+                  );
+                  const isTeamLeader = selectedEmp?.isTeamLeader;
 
-                return (
-                  <Button
-                    variant={isTeamLeader ? "secondary" : "outline"}
-                    className=" px-3 text-[13px]"
-                    onClick={() => {
-                      const updated = (field.value || []).map(
-                        (emp: EmployeeDetails) =>
-                          emp.employeeId === row.employeeId
-                            ? { ...emp, isTeamLeader: !emp.isTeamLeader }
-                            : emp,
-                      );
-                      field.onChange(updated);
-                    }}
-                  >
-                    {isTeamLeader ? "Remove" : "Set Team Leader"}
-                  </Button>
-                );
-              }}
-            />
+                  return (
+                    <Button
+                      variant={isTeamLeader ? "secondary" : "outline"}
+                      className=" px-3 text-[12px]"
+                      onClick={() => {
+                        const updated = (field.value || []).map(
+                          (emp: EmployeeDetails) =>
+                            emp.employeeId === row.employeeId
+                              ? { ...emp, isTeamLeader: !emp.isTeamLeader }
+                              : emp,
+                        );
+                        field.onChange(updated);
+                      }}
+                    >
+                      {isTeamLeader ? "Remove" : "Set Team Leader"}
+                    </Button>
+                  );
+                }}
+              />
+            </>
           );
         }}
       />
@@ -516,8 +514,8 @@ const AddMeeting = () => {
 
   const steps = [
     <MeetingType key="meetingType" />,
-    <MeetingInfo key="meetingInfo" />,
-    <MeetingStatus key="meetingStatus" />,
+    <MeetingInfo isUpdateMeeting={companyMeetingId ? true : false} />,
+    // <MeetingStatus key="meetingStatus" />,
     <Joiners key="joiners" />,
     <UploadDoc key="uploadDoc" />,
   ];
@@ -535,7 +533,6 @@ const AddMeeting = () => {
   const stepNames = [
     "Meeting Type",
     "Meeting Info",
-    "Meeting Status",
     "Joiners",
     "Upload Document",
   ];

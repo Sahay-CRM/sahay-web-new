@@ -47,6 +47,7 @@ const Urls = {
     `${baseUrl}/company/project/delete/${id}`,
   getCompanyProjectById: (id: string) => `${baseUrl}/company/project/get/${id}`,
   getAllCompanyProjectByPage: () => `${baseUrl}/company/project/get`,
+
   getAllCompanyProjectDropdown: () => `${baseUrl}/company/project/get-all`,
   getAllCorParameter: () => `${baseUrl}/core-param/get`,
   getAllSubParameter: () => `${baseUrl}/sub-param/get`,

@@ -70,7 +70,8 @@ export default function useAddMeeting() {
       meetingDescription: data?.meetingDescription,
       meetingDateTime: data?.meetingDateTime,
       meetingTypeId: data?.meetingTypeId?.meetingTypeId,
-      meetingStatusId: data?.meetingStatusId?.meetingStatusId,
+      meetingStatusId:
+        data?.meetingStatusId?.meetingStatusId || data?.meetingStatusId,
       joiners: data?.employeeId?.map(
         (ele: { employeeId: string }) => ele?.employeeId,
       ),

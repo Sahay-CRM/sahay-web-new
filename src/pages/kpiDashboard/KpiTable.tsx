@@ -113,10 +113,7 @@ export default function KPITable() {
   const [tempValues, setTempValues] = useState<{ [key: string]: string }>({});
   const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
     {},
-  ); // Custom navigation interceptor for drawer/sidebar navigation
-
-  console.log(tempValues);
-
+  );
   useEffect(() => {
     // Store the original navigate function to restore later
     const originalPushState = history.pushState;
@@ -479,8 +476,6 @@ export default function KPITable() {
                       onChange={
                         canInput
                           ? (val) => {
-                              console.log(val);
-
                               setInputValues((prev) => ({
                                 ...prev,
                                 [key]: Array.isArray(val)
@@ -538,8 +533,6 @@ export default function KPITable() {
                           canInput
                             ? (e) => {
                                 const val = e.target.value;
-                                console.log(val, "val");
-
                                 const isValidNumber =
                                   /^(\d+(\.\d*)?|\.\d*)?$/.test(val) ||
                                   val === "";
@@ -832,9 +825,9 @@ export default function KPITable() {
           <Table className="min-w-max text-sm text-center">
             <TableHeader>
               <TableRow className="h-[50px]">
-                <TableHead className={clsx("sticky left-0 z-20")}>
-                  <div className="bg-primary">
-                    <table className="bg-transparent border-0">
+                <TableHead className={clsx("sticky left-0 z-20 bg-primary")}>
+                  <div className=" w-[300px]">
+                    <table className="bg-transparent border-0 w-full">
                       <thead>
                         <tr className="h-[50px]">
                           <td className="w-[40] min-w-[40]" />
@@ -852,7 +845,7 @@ export default function KPITable() {
                           >
                             Tag
                           </td>
-                          <td className="px-3 py-2 w-[80px] bg-primary sticky left-[210px] z-20 text-white text-center">
+                          <td className="px-3 py-2 w-[80px] sticky left-[210px] z-20 text-white text-center">
                             Goal
                           </td>
                         </tr>

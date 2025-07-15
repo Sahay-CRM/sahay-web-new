@@ -88,6 +88,7 @@ interface TableProps<T extends Record<string, unknown>> {
   showActiveToggle?: boolean; // Add this line
   onToggleActive?: (item: T) => void; // Add this line
   otherButton?: ExtraButton[];
+  showActionsColumn?: boolean;
 }
 
 interface ExtraButton {
@@ -130,6 +131,7 @@ const TableData = <T extends Record<string, unknown>>({
   sortableColumns = [],
   showActiveToggle = false,
   onToggleActive,
+  showActionsColumn = true,
   // otherButton = [],
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
@@ -139,12 +141,6 @@ const TableData = <T extends Record<string, unknown>>({
     (typeof handleChange === "function" && typeof onCheckbox === "function");
 
   const permission = useSelector(getUserPermission)?.[moduleKey];
-
-  // Determine if the Actions column should be shown
-  const showActionsColumn =
-    typeof isActionButton === "function"
-      ? tableData.some((item) => isActionButton(item))
-      : true;
 
   const handleCheckboxChange = (item: T, isChecked: boolean) => {
     const selectedItems = Array.isArray(selectedValue) ? selectedValue : [];
