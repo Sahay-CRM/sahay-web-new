@@ -63,7 +63,7 @@ const UserLog = lazy(() => import("../pages/UserLog"));
 const AllNotifications = lazy(
   () => import("../pages/notification/AllNotifications"),
 );
-const DetailMeeting = lazy(() => import("../pages/Meeting/DetailedMeeting"));
+const DetailMeeting = lazy(() => import("../pages/Meeting/MeetingDesc"));
 
 export default function EmployeeRoutes() {
   return (

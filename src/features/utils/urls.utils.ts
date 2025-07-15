@@ -151,6 +151,9 @@ const Urls = {
   detailMeetingCheckStatus: (id: string) =>
     `${baseUrl}/company/detail-meeting/start/${id}`,
 
+  updateDetailMeetingCheckStatus: (id: string) =>
+    `${baseUrl}/company/detail-meeting/update/${id}`,
+
   endMeeting: (id: string) => `${baseUrl}/company/detail-meeting/end/${id}`,
 
   getUserFireNotification: () =>
@@ -198,6 +201,7 @@ const Urls = {
 
   timeUpdateByMeeting: (id: string) =>
     `${baseUrl}/company/detail-meeting/update/${id}`,
+
   getTimeByMeeting: (id: string) =>
     `${baseUrl}/company/detail-meeting/get/${id}`,
 

@@ -35,6 +35,7 @@ interface FormSelectProps {
   isMulti?: boolean;
   isMandatory?: boolean;
   isSearchable?: boolean;
+  triggerClassName?: string;
 }
 
 export default function FormSelect({
@@ -50,6 +51,7 @@ export default function FormSelect({
   isMulti = false,
   isMandatory = false,
   isSearchable = false,
+  triggerClassName = "",
 }: FormSelectProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
@@ -103,7 +105,10 @@ export default function FormSelect({
           disabled={disabled}
         >
           <FormControl>
-            <SelectTrigger className="w-full">
+            <SelectTrigger
+              className={`w-full mb-1 py-5 custom-select-trigger text-black ${triggerClassName}`}
+              id={id}
+            >
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
           </FormControl>

@@ -342,11 +342,11 @@ export default function KPITable() {
       return (
         <TableRow key={kpi.kpiId} className="border-b">
           <TableCell className={clsx("p-0 sticky left-0 z-10")}>
-            <div className="w-[330px] bg-gray-100 overflow-hidden border-r border-gray-300 shadow-xl shadow-gray-200/80">
+            <div className="w-[470px] bg-gray-100 overflow-hidden border-r border-gray-300 shadow-xl shadow-gray-200/80">
               <table className="p-0">
                 <tbody className="p-0">
                   <tr className="h-14 ">
-                    <td className="bg-transparent px-2 w-[40px] overflow-hidden h-full p-0 border-r border-gray-300">
+                    <td className="bg-transparent px-3 w-[40px] overflow-hidden h-full p-0 border-r border-gray-300">
                       <Avatar
                         className={`h-6 w-6 ${getColorFromName(kpi?.employeeName)}`}
                       >
@@ -370,12 +370,12 @@ export default function KPITable() {
                                 })()}
                               </AvatarFallback>
                             </TooltipTrigger>
-                            <TooltipContent>{kpi?.employeeName}</TooltipContent>
+                            {/* <TooltipContent>{kpi?.employeeName}</TooltipContent> */}
                           </Tooltip>
                         </TooltipProvider>
                       </Avatar>
                     </td>
-                    <td className="w-[120px] min-w-[120px] max-w-[120px] overflow-hidden border-r border-gray-300">
+                    <td className="w-[200px] min-w-[200px] max-w-[200px] text-left px-3 overflow-hidden border-r border-gray-300">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -391,7 +391,7 @@ export default function KPITable() {
                     </td>
                     <td
                       className={clsx(
-                        "p-0 w-[80px] min-w-[80px] max-w-[80px] overflow-hidden break-all border-r border-gray-300 sticky left-0 z-10",
+                        "p-0 w-[120px] min-w-[120px] max-w-[120px]  text-left px-3 overflow-hidden break-all border-r border-gray-300 sticky left-0 z-10",
                       )}
                     >
                       <TooltipProvider>
@@ -401,21 +401,21 @@ export default function KPITable() {
                               {kpi?.tag}
                             </span>
                           </TooltipTrigger>
-                          <TooltipContent>
+                          {/* <TooltipContent>
                             <span>{kpi?.tag}</span>
-                          </TooltipContent>
+                          </TooltipContent> */}
                         </Tooltip>
                       </TooltipProvider>
                     </td>
                     <td
                       className={clsx(
-                        "p-0 pl-3 w-[80px] min-w-[80px] max-w-[80px] overflow-hidden break-all sticky left-0 z-10",
+                        "px-3 w-[100px] min-w-[100px] max-w-[100px] text-left overflow-hidden break-all sticky left-0 z-10",
                       )}
                     >
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="truncate max-w-[100px] inline-block cursor-default break-words w-full">
+                            <span className=" truncate max-w-[82px] inline-block cursor-default break-words w-full">
                               {getFormattedValue(
                                 kpi.validationType,
                                 kpi?.value1,
@@ -460,10 +460,10 @@ export default function KPITable() {
               ];
               const isValid = inputVal === String(value1);
               return (
-                <TableCell key={colIdx} className="px-3 py-2">
+                <TableCell key={colIdx} className="py-0 px-1">
                   <div
                     className={clsx(
-                      "rounded-sm text-sm w-[100px] h-[40px]",
+                      "rounded-sm text-sm w-[80px] h-[42px]",
                       inputVal !== "" &&
                         (isValid
                           ? "bg-green-100 border border-green-500"
@@ -480,13 +480,13 @@ export default function KPITable() {
                                 ...prev,
                                 [key]: Array.isArray(val)
                                   ? val.join(", ")
-                                  : val,
+                                  : String(val), // ensure string
                               }));
                               setTempValues((prev) => ({
                                 ...prev,
                                 [key]: Array.isArray(val)
                                   ? val.join(", ")
-                                  : val,
+                                  : String(val), // ensure string
                               }));
                             }
                           : () => {}
@@ -494,13 +494,14 @@ export default function KPITable() {
                       options={selectOptions}
                       placeholder="Select"
                       disabled={!canInput}
+                      triggerClassName="text-sm  px-1  text-center justify-center"
                     />
                   </div>
                 </TableCell>
               );
             }
             return (
-              <TableCell key={colIdx} className="px-3 py-2">
+              <TableCell key={colIdx} className="py-0 px-0">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -550,7 +551,7 @@ export default function KPITable() {
                             : undefined
                         }
                         className={clsx(
-                          "border p-2 rounded-sm text-center text-sm w-[100px] h-[40px]",
+                          "border p-2 rounded-sm text-center text-sm w-[80px] h-[42px]",
                           inputVal !== "" &&
                             validationType &&
                             (isValidInput(
@@ -826,26 +827,28 @@ export default function KPITable() {
             <TableHeader>
               <TableRow className="h-[50px]">
                 <TableHead className={clsx("sticky left-0 z-20 bg-primary")}>
-                  <div className=" w-[300px]">
+                  <div className=" w-[450px]">
                     <table className="bg-transparent border-0 w-full">
                       <thead>
                         <tr className="h-[50px]">
-                          <td className="w-[40] min-w-[40]" />
+                          <td className="w-[40px] py-2  bg-transparent sticky min-w-[40px] text-left  overflow-hidden text-base text-white">
+                            Who
+                          </td>
                           <td
                             className={clsx(
-                              "px-3 py-2 bg-transparent sticky left-[40px] z-20 text-white w-[120px] min-w-[120px] max-w-[120px] overflow-hidden text-base text-center",
+                              " py-2 px-3 bg-transparent sticky left-[40px] z-20 text-white w-[200px] min-w-[200px] max-w-[200px] overflow-hidden text-base text-left",
                             )}
                           >
                             KPI
                           </td>
                           <td
                             className={clsx(
-                              "px-3 py-2 bg-transparent sticky z-20 text-white text-base w-[80px] text-center",
+                              "py-2 px-3 bg-transparent sticky z-20 text-white text-base  w-[120px] min-w-[120px] max-w-[120px] text-left",
                             )}
                           >
                             Tag
                           </td>
-                          <td className="px-3 py-2 w-[80px] sticky left-[210px] z-20 text-white text-center">
+                          <td className=" py-2 px-3 w-[150px] sticky left-[210px] z-20 text-white text-left">
                             Goal
                           </td>
                         </tr>
@@ -857,7 +860,7 @@ export default function KPITable() {
                 {headers.map((header, i) => (
                   <TableHead
                     key={i}
-                    className="px-3 py-2 w-[100px] whitespace-nowrap bg-white text-gray-600"
+                    className="px-3 w-[80px] whitespace-nowrap bg-white text-gray-600"
                   >
                     <div className="flex flex-col items-center leading-tight">
                       <span>{header.label}</span>

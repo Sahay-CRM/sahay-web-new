@@ -10,25 +10,31 @@ interface StartingMeeting {
   message: string;
 }
 
+interface UpdateDetailMeetingProps {
+  meetingId: string;
+  status: string;
+}
+
 type DatePaging = CommonResponse<StartingMeeting>;
 
-export default function useEndMeeting() {
-  const endMeetingMutation = useMutation({
-    mutationKey: ["end-meeting"],
-    mutationFn: async (meetingId: string) => {
+export default function useUpdateDetailMeeting() {
+  const updateDetailMeetingMutation = useMutation({
+    mutationKey: ["update-meeting"],
+    mutationFn: async (data: UpdateDetailMeetingProps) => {
       const { data: resData } = await Api.post<DatePaging>({
-        url: Urls.endMeeting(meetingId),
+        url: Urls.updateDetailMeetingCheckStatus(data.meetingId),
+        data: data,
       });
 
       return resData;
     },
     onSuccess: (res) => {
-      toast.success(res.data.message || "Operation successful");
+      toast.success(res.message || "Meeting Updated");
       queryClient.resetQueries({ queryKey: ["get-meeting-details-timing"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);
     },
   });
-  return endMeetingMutation;
+  return updateDetailMeetingMutation;
 }

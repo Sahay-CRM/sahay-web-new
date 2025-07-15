@@ -35,3 +35,5 @@ export { default as useGetMeetingTiming } from "./useGetMeetingTiming";
 
 export { default as addMeetingNotesMutation } from "./useAddMeetingNotes";
 export { default as useGetMeetingNotes } from "./useGetMeetingNotes";
+
+export { default as updateDetailMeetingMutation } from "./useUpdateDetailMeeting";
