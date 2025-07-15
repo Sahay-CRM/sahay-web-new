@@ -348,13 +348,13 @@ export default function KPITable() {
                   <tr className="h-14 ">
                     <td className="bg-transparent px-3 w-[40px] overflow-hidden h-full p-0 border-r border-gray-300">
                       <Avatar
-                        className={`h-6 w-6 ${getColorFromName(kpi?.employeeName)}`}
+                        className={`h-7 w-7 ${getColorFromName(kpi?.employeeName)}`}
                       >
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <AvatarFallback
-                                className={`${getColorFromName(kpi?.employeeName)} font-semibold`}
+                                className={`${getColorFromName(kpi?.employeeName)} text-[12px] font-medium`}
                               >
                                 {(() => {
                                   if (!kpi?.employeeName) return "";
@@ -391,13 +391,13 @@ export default function KPITable() {
                     </td>
                     <td
                       className={clsx(
-                        "p-0 w-[120px] min-w-[120px] max-w-[120px]  text-left px-3 overflow-hidden break-all border-r border-gray-300 sticky left-0 z-10",
+                        "p-0 w-[120px] min-w-[120px] max-w-[120px]  text-left px-3 overflow-hidden border-r border-gray-300 sticky left-0 z-10",
                       )}
                     >
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="text-md cursor-default break-words whitespace-pre-line overflow-hidden m-0 p-0">
+                            <span className="text-md cursor-default  whitespace-pre-line overflow-hidden m-0 p-0">
                               {kpi?.tag}
                             </span>
                           </TooltipTrigger>
@@ -460,10 +460,10 @@ export default function KPITable() {
               ];
               const isValid = inputVal === String(value1);
               return (
-                <TableCell key={colIdx} className="py-0 px-1">
+                <TableCell key={colIdx} className="py-0 px-0">
                   <div
                     className={clsx(
-                      "rounded-sm text-sm w-[80px] h-[42px]",
+                      "rounded-sm text-sm w-[80px] h-[42px] mx-1",
                       inputVal !== "" &&
                         (isValid
                           ? "bg-green-100 border border-green-500"
@@ -502,81 +502,83 @@ export default function KPITable() {
             }
             return (
               <TableCell key={colIdx} className="py-0 px-0">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <input
-                        type="text"
-                        value={
-                          inputFocused[key]
-                            ? inputVal
-                            : formatCompactNumber(inputVal)
-                        }
-                        onFocus={
-                          canInput
-                            ? () =>
-                                setInputFocused((prev) => ({
-                                  ...prev,
-                                  [key]: true,
-                                }))
-                            : undefined
-                        }
-                        onBlur={
-                          canInput
-                            ? () =>
-                                setInputFocused((prev) => ({
-                                  ...prev,
-                                  [key]: false,
-                                }))
-                            : undefined
-                        }
-                        onChange={
-                          canInput
-                            ? (e) => {
-                                const val = e.target.value;
-                                const isValidNumber =
-                                  /^(\d+(\.\d*)?|\.\d*)?$/.test(val) ||
-                                  val === "";
-                                if (isValidNumber) {
-                                  setInputValues((prev) => ({
+                <div className="mx-1">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <input
+                          type="text"
+                          value={
+                            inputFocused[key]
+                              ? inputVal
+                              : formatCompactNumber(inputVal)
+                          }
+                          onFocus={
+                            canInput
+                              ? () =>
+                                  setInputFocused((prev) => ({
                                     ...prev,
-                                    [key]: val,
+                                    [key]: true,
+                                  }))
+                              : undefined
+                          }
+                          onBlur={
+                            canInput
+                              ? () =>
+                                  setInputFocused((prev) => ({
+                                    ...prev,
+                                    [key]: false,
+                                  }))
+                              : undefined
+                          }
+                          onChange={
+                            canInput
+                              ? (e) => {
+                                  const val = e.target.value;
+                                  const isValidNumber =
+                                    /^(\d+(\.\d*)?|\.\d*)?$/.test(val) ||
+                                    val === "";
+                                  if (isValidNumber) {
+                                    setInputValues((prev) => ({
+                                      ...prev,
+                                      [key]: val,
+                                    }));
+                                  }
+                                  setTempValues((prev) => ({
+                                    ...prev,
+                                    [key]: e?.target.value,
                                   }));
                                 }
-                                setTempValues((prev) => ({
-                                  ...prev,
-                                  [key]: e?.target.value,
-                                }));
-                              }
-                            : undefined
-                        }
-                        className={clsx(
-                          "border p-2 rounded-sm text-center text-sm w-[80px] h-[42px]",
-                          inputVal !== "" &&
-                            validationType &&
-                            (isValidInput(
-                              validationType,
-                              inputVal,
-                              value1 ?? null,
-                              value2 ?? null,
-                            )
-                              ? "bg-green-100 border-green-500"
-                              : "bg-red-100 border-red-500"),
-                          (!canInput || isVisualized) &&
-                            "opacity-60 cursor-not-allowed bg-gray-50",
-                        )}
-                        placeholder=""
-                        disabled={!canInput}
-                        readOnly={!canInput}
-                      />
-                    </TooltipTrigger>
-                    {inputVal && (
-                      <TooltipContent side="top">
-                        <span>{inputVal}</span>
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
+                              : undefined
+                          }
+                          className={clsx(
+                            "border p-2 rounded-sm text-center text-sm w-[80px] h-[42px]",
+                            inputVal !== "" &&
+                              validationType &&
+                              (isValidInput(
+                                validationType,
+                                inputVal,
+                                value1 ?? null,
+                                value2 ?? null,
+                              )
+                                ? "bg-green-100 border-green-500"
+                                : "bg-red-100 border-red-500"),
+                            (!canInput || isVisualized) &&
+                              "opacity-60 cursor-not-allowed bg-gray-50",
+                          )}
+                          placeholder=""
+                          disabled={!canInput}
+                          readOnly={!canInput}
+                        />
+                      </TooltipTrigger>
+                      {inputVal && (
+                        <TooltipContent side="top">
+                          <span>{inputVal}</span>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </TableCell>
             );
           })}
@@ -831,24 +833,24 @@ export default function KPITable() {
                     <table className="bg-transparent border-0 w-full">
                       <thead>
                         <tr className="h-[50px]">
-                          <td className="w-[40px] py-2  bg-transparent sticky min-w-[40px] text-left  overflow-hidden text-base text-white">
+                          <td className="w-[40px] py-2  bg-transparent sticky min-w-[40px] text-left  overflow-hidden text-md text-white">
                             Who
                           </td>
                           <td
                             className={clsx(
-                              " py-2 px-3 bg-transparent sticky left-[40px] z-20 text-white w-[200px] min-w-[200px] max-w-[200px] overflow-hidden text-base text-left",
+                              " py-2 px-3 bg-transparent sticky left-[40px] z-20 text-white w-[200px] min-w-[200px] max-w-[200px] overflow-hidden text-md text-left",
                             )}
                           >
                             KPI
                           </td>
                           <td
                             className={clsx(
-                              "py-2 px-3 bg-transparent sticky z-20 text-white text-base  w-[120px] min-w-[120px] max-w-[120px] text-left",
+                              "py-2 px-3 bg-transparent sticky z-20 text-white text-md  w-[120px] min-w-[120px] max-w-[120px] text-left",
                             )}
                           >
                             Tag
                           </td>
-                          <td className=" py-2 px-3 w-[150px] sticky left-[210px] z-20 text-white text-left">
+                          <td className=" py-2 px-3 w-[150px] sticky left-[210px] text-md z-20 text-white text-left">
                             Goal
                           </td>
                         </tr>
