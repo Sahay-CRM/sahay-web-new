@@ -57,13 +57,13 @@ export default function MeetingList() {
   }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true, width: "10px" },
+    { key: "srNo", label: "Sr No", visible: true, width: "40px" },
     { key: "meetingName", label: "Meeting Name", visible: true, width: "90px" },
     {
       key: "meetingDescription",
       label: "Meeting Description",
       visible: true,
-      width: "90px",
+      width: "120px",
     },
     {
       key: "meetingDateTime",
@@ -71,8 +71,8 @@ export default function MeetingList() {
       visible: true,
       width: "90px",
     },
-    { key: "joinerNames", label: "Joiners", visible: true, width: "90px" },
-    { key: "meetingStatus", label: "Status", visible: true, width: "90px" }, // <-- add this line
+    { key: "joinerNames", label: "Joiners", visible: true, width: "190px" },
+    { key: "meetingStatus", label: "Status", visible: true, width: "130px" },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(

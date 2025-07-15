@@ -285,8 +285,10 @@ const TableData = <T extends Record<string, unknown>>({
                 </TableHead>
               ))}
               {showActionsColumn && (
-                <TableHead className="!w-[100px] bg-primary sticky right-0 text-right pr-6 ">
-                  Actions
+                <TableHead className="!w-[100px] bg-primary sticky right-0 text-right pr-6 z-10">
+                  <div className="truncate overflow-hidden whitespace-nowrap">
+                    Actions
+                  </div>
                 </TableHead>
               )}
             </TableRow>

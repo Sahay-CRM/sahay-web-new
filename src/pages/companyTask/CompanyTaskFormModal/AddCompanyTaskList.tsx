@@ -65,7 +65,7 @@ const ProjectSelectionStep = () => {
               }))}
               isActionButton={() => false}
               columns={{
-                projectName: "Project Name",
+                projectName: { label: "Project Name", width: "800px" },
               }}
               primaryKey="projectId"
               multiSelect={false}
@@ -149,7 +149,7 @@ const MeetingSelectionStep = () => {
               }))}
               isActionButton={() => false}
               columns={{
-                meetingName: "Meeting Name",
+                meetingName: { label: "Meeting Name", width: "800px" },
               }}
               primaryKey="meetingId"
               multiSelect={false}
@@ -360,7 +360,7 @@ const AssignUserStep = () => {
                 }))}
                 isActionButton={() => false}
                 columns={{
-                  employeeName: "User Name",
+                  employeeName: { label: "User Name", width: "800px" },
                 }}
                 primaryKey="employeeId"
                 multiSelect={true}
@@ -464,10 +464,6 @@ export default function AddCompanyTask() {
   return (
     <FormProvider {...methods}>
       <div className="w-full mx-auto p-4">
-        <h2 className="text-xl font-semibold mb-4">
-          {taskId ? "Update Company Task" : "Add Company Task"}
-        </h2>
-
         <StepProgress
           currentStep={step}
           totalSteps={totalSteps} // Use adjusted totalSteps

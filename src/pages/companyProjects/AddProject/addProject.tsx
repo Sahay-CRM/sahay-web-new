@@ -74,12 +74,12 @@ const ProjectStatus = () => {
     filter: paginationFilter,
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true, width: "10px" },
+    { key: "srNo", label: "Sr No", visible: true, width: "50px" },
     {
       key: "projectStatus",
       label: "Project Status",
       visible: true,
-      width: "30px",
+      width: "700px",
     },
   ]);
   const visibleColumns = columnToggleOptions.reduce(
@@ -175,12 +175,12 @@ const CoreParameter = () => {
     filter: paginationFilter,
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true, width: "20px" },
+    { key: "srNo", label: "Sr No", visible: true, width: "50px" },
     {
       key: "coreParameterName",
       label: "Core Parameter",
       visible: true,
-      width: "90px",
+      width: "900px",
     },
   ]);
   const visibleColumns = columnToggleOptions.reduce(
@@ -294,12 +294,12 @@ const SubParameter = () => {
   });
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true, width: "20px" },
+    { key: "srNo", label: "Sr No", visible: true, width: "50px" },
     {
       key: "subParameterName",
       label: "Sub Parameter",
       visible: true,
-      width: "90px",
+      width: "900px",
     },
   ]);
   const visibleColumns = columnToggleOptions.reduce(
@@ -410,14 +410,14 @@ const Employees = () => {
     filter: { ...paginationFilter, isDeactivated: false },
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true, width: "20px" },
+    { key: "srNo", label: "Sr No", visible: true, width: "50px" },
     {
       key: "employeeName",
       label: "Employee Name",
       visible: true,
-      width: "90px",
+      width: "100px",
     },
-    { key: "employeeMobile", label: "Mobile", visible: true, width: "90px" },
+    { key: "employeeMobile", label: "Mobile", visible: true, width: "600px" },
   ]);
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {

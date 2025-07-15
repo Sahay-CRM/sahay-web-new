@@ -80,12 +80,12 @@ const MeetingStatus = () => {
   });
 
   const [columnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true, width: "10px" },
+    { key: "srNo", label: "Sr No", visible: true, width: "50px" },
     {
       key: "meetingStatus",
       label: "Meeting Status",
       visible: true,
-      width: "90px",
+      width: "900px",
     },
   ]);
 
@@ -167,12 +167,12 @@ const MeetingType = () => {
     filter: paginationFilter,
   });
   const [columnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true, width: "10px" },
+    { key: "srNo", label: "Sr No", visible: true, width: "50px" },
     {
       key: "meetingTypeName",
       label: "Meeting Type Name",
       visible: true,
-      width: "90px",
+      width: "900px",
     },
   ]);
 
@@ -253,9 +253,9 @@ const Joiners = () => {
     filter: { ...paginationFilter, isDeactivated: false },
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true, width: "10px" },
-    { key: "employeeName", label: "Joiners", visible: true, width: "90px" },
-    { key: "employeeMobile", label: "Mobile", visible: true, width: "90px" },
+    { key: "srNo", label: "Sr No", visible: true, width: "70px" },
+    { key: "employeeName", label: "Joiners", visible: true, width: "150px" },
+    { key: "employeeMobile", label: "Mobile", visible: true, width: "700px" },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
