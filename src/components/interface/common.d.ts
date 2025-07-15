@@ -325,6 +325,22 @@ interface CompanyMeetingTypeDataProps {
   parentType?: string;
 }
 
+interface CompanyProjectDataProps {
+  projectId?: string;
+  projectName?: string;
+  projectDescription?: string;
+  projectActualEndDate?: string | null;
+  projectDeadline?: string;
+  employeeId?: string;
+  ProjectParameters?: ProjectParameters;
+  ProjectEmployees?: Employee[];
+  ProjectTasks?: ProjectTask[];
+  createdBy?: CreatedBy;
+  projectStatusId: string;
+  projectStatus?: ProjectStatusRes;
+  otherProjectEmployees?: string[];
+}
+
 interface CompanyMeetingDataProps {
   meetingId?: string;
   meetingName?: string;
