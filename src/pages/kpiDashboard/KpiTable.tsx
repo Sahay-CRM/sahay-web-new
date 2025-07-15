@@ -480,13 +480,13 @@ export default function KPITable() {
                                 ...prev,
                                 [key]: Array.isArray(val)
                                   ? val.join(", ")
-                                  : val,
+                                  : String(val), // ensure string
                               }));
                               setTempValues((prev) => ({
                                 ...prev,
                                 [key]: Array.isArray(val)
                                   ? val.join(", ")
-                                  : val,
+                                  : String(val), // ensure string
                               }));
                             }
                           : () => {}
