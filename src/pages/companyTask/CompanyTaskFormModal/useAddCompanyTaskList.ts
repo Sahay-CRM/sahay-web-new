@@ -112,6 +112,7 @@ export const useAddCompanyTask = () => {
   });
   const { data: projectListdata } = useGetCompanyProject({
     filter: paginationFilterProject,
+    enable: !!paginationFilterProject,
   });
   const { data: meetingData } = useGetCompanyMeeting({
     filter: paginationFilterMeeting,
