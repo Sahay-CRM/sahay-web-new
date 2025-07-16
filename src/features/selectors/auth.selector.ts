@@ -15,3 +15,5 @@ export const getKpiData = (store: RootState): KpiData =>
 
 export const getFireBaseToken = (store: RootState): string | null =>
   store.auth.fireBaseToken || null;
+
+export const getMeeting = (store: RootState) => store.meeting;

@@ -5,22 +5,22 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-interface StartingMeeting {
-  tempMeetingId: string;
-  message: string;
-}
+// interface StartingMeeting {
+//   tempMeetingId: string;
+//   message: string;
+// }
 
-interface UpdateDetailMeetingProps {
-  meetingId: string;
-  status: string;
-}
+// interface UpdateDetailMeetingProps {
+//   meetingId: string;
+//   status: string;
+// }
 
-type DatePaging = CommonResponse<StartingMeeting>;
+type DatePaging = CommonResponse<MeetingDetailsTiming>;
 
 export default function useUpdateDetailMeeting() {
   const updateDetailMeetingMutation = useMutation({
     mutationKey: ["update-meeting"],
-    mutationFn: async (data: UpdateDetailMeetingProps) => {
+    mutationFn: async (data: MeetingDetailsTiming) => {
       const { data: resData } = await Api.post<DatePaging>({
         url: Urls.updateDetailMeetingCheckStatus(data.meetingId),
         data: data,

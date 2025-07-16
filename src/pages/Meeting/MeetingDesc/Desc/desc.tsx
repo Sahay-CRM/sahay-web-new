@@ -1,24 +1,24 @@
+import Timer from "../Timer";
 import useDesc from "./useDesc";
 import { Button } from "@/components/ui/button";
 
-export default function Desc({ meetingStatus }: { meetingStatus: string }) {
+interface DescProps {
+  meetingResponse?: MeetingResFire | null;
+  meetingStatus: string;
+}
+
+export default function Desc({ meetingStatus, meetingResponse }: DescProps) {
   const {
     issueData,
     objectiveData,
     totalData,
     currentIndex,
-    setCurrentIndex,
     allItems,
     handleCloseMeetingWithLog,
-  } = useDesc();
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => Math.min(prev + 1, totalData - 1));
-  };
-
-  const handlePrevious = () => {
-    setCurrentIndex((prev) => Math.max(prev - 1, 0));
-  };
+    handleNextWithLog,
+    handlePreviousWithLog,
+    handleJump,
+  } = useDesc({ meetingResponse });
 
   const getCurrentItem = () => {
     const issueLength = issueData?.data?.length ?? 0;
@@ -29,11 +29,32 @@ export default function Desc({ meetingStatus }: { meetingStatus: string }) {
     }
   };
 
-  const currentItem = getCurrentItem();
+  const currentItem = getCurrentItem() as IssueObjective;
+
+  const issueTimers = meetingResponse?.timers.issues;
+  const objectiveTimers = meetingResponse?.timers.objectives;
+
+  let timerData = null;
+  if (currentItem?.detailMeetingAgendaIssueId && issueTimers) {
+    timerData = issueTimers[currentItem.detailMeetingAgendaIssueId];
+  } else if (currentItem?.detailMeetingAgendaObjectiveId && objectiveTimers) {
+    timerData = objectiveTimers[currentItem.detailMeetingAgendaObjectiveId];
+  }
 
   return (
     <div className="">
       <div className="flex flex-wrap items-center gap-4 rounded-xl bg-white px-2 py-2 shadow mb-6">
+        <Timer
+          plannedTime={Number(
+            currentItem?.issuePlannedTime || currentItem?.objectivePlannedTime,
+          )}
+          actualTime={timerData?.actualTime || 0}
+          lastSwitchTimestamp={Number(
+            meetingResponse?.state.lastSwitchTimestamp,
+          )}
+          isEditMode={false}
+          meetingStart={true}
+        />
         <div>
           <span className="text-lg font-bold min-w-[120px] text-primary">
             {allItems[currentIndex]?.label || "-"}
@@ -45,7 +66,7 @@ export default function Desc({ meetingStatus }: { meetingStatus: string }) {
 
         <Button
           variant="outline"
-          onClick={handlePrevious}
+          onClick={handlePreviousWithLog}
           disabled={currentIndex === 0}
           className="mx-1"
         >
@@ -54,7 +75,7 @@ export default function Desc({ meetingStatus }: { meetingStatus: string }) {
 
         <Button
           variant="outline"
-          onClick={handleNext}
+          onClick={handleNextWithLog}
           disabled={currentIndex === totalData - 1}
           className="mx-1"
         >
@@ -68,8 +89,8 @@ export default function Desc({ meetingStatus }: { meetingStatus: string }) {
           <select
             id="jump-to"
             value={currentIndex}
-            onChange={(e) => setCurrentIndex(Number(e.target.value))}
-            className="border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary"
+            onChange={(e) => handleJump(Number(e.target.value))}
+            className="border-b border-black px-2 py-1 focus:outline-none focus:ring-0"
           >
             {allItems.map((item) => (
               <option key={item.index} value={item.index}>

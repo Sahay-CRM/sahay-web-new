@@ -8,6 +8,14 @@ export function isSmallScreen(): boolean {
   return window?.innerWidth < 768;
 }
 
+export function formatTime(ms: number) {
+  const sign = ms < 0 ? "-" : "";
+  ms = Math.abs(ms);
+  const min = Math.floor(ms / 60000);
+  const sec = Math.floor((ms % 60000) / 1000);
+  return `${sign}${min.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+}
+
 export function capitalizeFirstLetter(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }

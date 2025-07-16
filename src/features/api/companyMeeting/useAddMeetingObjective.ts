@@ -10,6 +10,7 @@ interface MeetingAgendaObjective {
   meetingId: string;
   detailMeetingId?: string;
   agendaObjective: string;
+  objectivePlannedTime?: string;
 }
 
 type DatePaging = CommonResponse<MeetingAgendaObjective>;

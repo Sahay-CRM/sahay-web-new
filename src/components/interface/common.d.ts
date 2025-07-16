@@ -1015,15 +1015,43 @@ interface MeetingIssue {
   detailMeetingAgendaIssueId: string;
   detailMeetingId: string;
   agendaIssue: string;
+  issuePlannedTime?: string;
 }
 
 interface MeetingObjective {
   detailMeetingAgendaObjectiveId: string;
   detailMeetingId: string;
   agendaObjective: string;
+  objectivePlannedTime?: string;
+}
+
+interface IssueObjective {
+  agendaIssue?: string;
+  detailMeetingAgendaIssueId?: string;
+  detailMeetingId: string;
+  isResolved?: boolean;
+  issueActualTime?: string | null;
+  issuePlannedTime?: string;
+  sequence?: string | null;
+  agendaObjective?: string;
+  detailMeetingAgendaObjectiveId?: string;
+  objectiveActualTime?: string | null;
+  objectivePlannedTime?: string;
 }
 
 interface MeetingResFire {
+  state: {
+    lastSwitchTimestamp: number;
+    activeTab: string;
+    currentAgendaItemId?: string;
+    status?: string;
+  };
+  timers: {
+    agenda?: { actualTime: number };
+    conclusion?: { actualTime: number };
+    issues?: Record<string, { actualTime: number; updatedAt: number }>;
+    objectives?: Record<string, { actualTime: number; updatedAt: number }>;
+  };
   activeScreen?: string;
   meetingId: string;
   updatedAt: string | number;
@@ -1031,6 +1059,11 @@ interface MeetingResFire {
   conclusion?: { updatedAt: string | number };
   discussion?: { updatedAt: string | number };
   follow?: string;
+}
+
+interface FbIssues {
+  id: string;
+  actualTime: string;
 }
 
 interface HandleTabChangeLocalProps {
