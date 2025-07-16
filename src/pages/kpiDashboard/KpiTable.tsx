@@ -552,7 +552,7 @@ export default function KPITable() {
                               : undefined
                           }
                           className={clsx(
-                            "border p-2 rounded-sm text-center text-sm w-[80px] h-[42px]",
+                            "border p-2 rounded-sm text-center text-sm w-full h-[42px]",
                             inputVal !== "" &&
                               validationType &&
                               (isValidInput(
@@ -832,7 +832,7 @@ export default function KPITable() {
                   <div className=" w-[450px]">
                     <table className="bg-transparent border-0 w-full">
                       <thead>
-                        <tr className="h-[50px]">
+                        <tr className="h-[50px] border-0" style={{ border: 0 }}>
                           <td className="w-[40px] py-2  bg-transparent sticky min-w-[40px] text-left  overflow-hidden text-md text-white">
                             Who
                           </td>
@@ -862,7 +862,7 @@ export default function KPITable() {
                 {headers.map((header, i) => (
                   <TableHead
                     key={i}
-                    className="px-3 w-[80px] whitespace-nowrap bg-white text-gray-600"
+                    className="px-2 w-[80px] whitespace-nowrap bg-white text-gray-600"
                   >
                     <div className="flex flex-col items-center leading-tight">
                       <span>{header.label}</span>
