@@ -6,7 +6,10 @@ export default function useGetUserNotification() {
   const query = useQuery({
     queryKey: ["userNotifications"],
     queryFn: async () => {
-      const { data: resData } = await Api.post<{ data: AppNotification[] }>({
+      const { data: resData } = await Api.post<{
+        data: AppNotification[];
+        totalCount: number;
+      }>({
         url: Urls.getUserFireNotification(),
       });
 

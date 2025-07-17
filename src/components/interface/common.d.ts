@@ -1226,3 +1226,27 @@ interface MeetingNotesRes {
   note: string;
   detailMeetingNoteId: string;
 }
+
+interface IssuesProps {
+  issueId?: string;
+  issueName: string;
+  isResolved?: boolean;
+}
+
+interface UseIssuesFormModalProps {
+  isModalOpen: boolean;
+  modalClose: () => void;
+  modalData?: IssuesProps;
+}
+interface UseObjectiveFormModalProps {
+  isModalOpen: boolean;
+  modalClose: () => void;
+  modalData?: ObjectiveProps;
+}
+
+interface ObjectiveProps {
+  objectiveId?: string;
+  objectiveName: string;
+  isResolved?: boolean;
+  detailMeetingId?: string;
+}

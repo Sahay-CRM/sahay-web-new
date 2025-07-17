@@ -48,7 +48,7 @@ export default function Desc({ meetingStatus, meetingResponse }: DescProps) {
           plannedTime={Number(
             currentItem?.issuePlannedTime || currentItem?.objectivePlannedTime,
           )}
-          actualTime={timerData?.actualTime || 0}
+          actualTime={Number(timerData?.actualTime) * 1000 || 0}
           lastSwitchTimestamp={Number(
             meetingResponse?.state.lastSwitchTimestamp,
           )}

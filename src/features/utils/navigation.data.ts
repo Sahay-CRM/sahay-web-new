@@ -33,6 +33,29 @@ export const companyNavigationData = [
   },
   {
     id: 5,
+    icon: "Heart",
+    label: "Objective",
+    permission: "View",
+    moduleKey: "OBJECTIVE",
+    items: [
+      {
+        id: 1,
+        label: "Issues",
+        link: "/dashboard/issues",
+        permission: "View",
+        moduleKey: "ISSUES",
+      },
+      {
+        id: 2,
+        label: "Objective",
+        link: "/dashboard/objective",
+        permission: "View",
+        moduleKey: "OBJECTIVE",
+      },
+    ],
+  },
+  {
+    id: 6,
     icon: "CheckSquare",
     label: "Company Task List",
     link: "/dashboard/tasks",
@@ -40,7 +63,7 @@ export const companyNavigationData = [
     moduleKey: "TASK",
   },
   {
-    id: 6,
+    id: 7,
     icon: "FolderOpen",
     label: "Company Project List",
     link: "/dashboard/projects",
@@ -48,7 +71,7 @@ export const companyNavigationData = [
     moduleKey: "PROJECT_LIST",
   },
   {
-    id: 7,
+    id: 8,
     icon: "BarChart3",
     label: "KPI List",
     link: "/dashboard/kpi",
@@ -56,7 +79,7 @@ export const companyNavigationData = [
     moduleKey: "DATAPOINT_LIST",
   },
   {
-    id: 8,
+    id: 9,
     icon: "TrendingUp",
     label: "KPI Dashboard",
     link: "/dashboard/kpi-dashboard",
@@ -72,7 +95,7 @@ export const companyNavigationData = [
   //   moduleKey: "HEALTH_SCORE",
   // },
   {
-    id: 9,
+    id: 10,
     icon: "Heart",
     label: "Business Health",
     permission: "View",
@@ -102,7 +125,7 @@ export const companyNavigationData = [
     ],
   },
   {
-    id: 10,
+    id: 11,
     icon: "Shield",
     label: "Role & Permission",
     link: "/dashboard/roles/user-permission",
@@ -110,7 +133,7 @@ export const companyNavigationData = [
     moduleKey: "ROLES_PERMISSION",
   },
   {
-    id: 11,
+    id: 12,
     icon: "Tag",
     label: "Brand",
     link: "/dashboard/brand",
@@ -118,21 +141,21 @@ export const companyNavigationData = [
     moduleKey: "BRAND",
   },
   {
-    id: 12,
+    id: 13,
     icon: "Package",
     label: "Product",
     link: "/dashboard/product",
     permission: "View",
     moduleKey: "PRODUCT",
   },
-  {
-    id: 13,
-    icon: "Logs",
-    label: "User Log",
-    link: "/dashboard/user-log",
-    permission: "View",
-    moduleKey: "USER_LOGS",
-  },
+  // {
+  //   id: 14,
+  //   icon: "Logs",
+  //   label: "User Log",
+  //   link: "/dashboard/user-log",
+  //   permission: "View",
+  //   moduleKey: "USER_LOGS",
+  // },
   // {
   //   id: 15,
   //   icon: "bx bx-cog",

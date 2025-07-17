@@ -50,6 +50,7 @@ import {
   clearNotifications,
   markNotificationRead,
   setNotifications,
+  selectNotificationTotalCount,
 } from "@/features/reducers/notification.reducer";
 import { fireTokenMutation } from "@/features/api";
 import useGetUserNotification from "./useGetUserNotification";
@@ -82,9 +83,8 @@ const DashboardLayout = () => {
   const user = useSelector(getUserDetail);
   const userId = useSelector(getUserId);
   const notifications = useSelector(selectNotifications);
+  const unreadCount = useSelector(selectNotificationTotalCount);
   const isLoggedIn = useSelector(getIsLoading);
-
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const { mutate: foreToken } = fireTokenMutation();
   const { mutate: updateNotification } = updateNotiMutation();
@@ -117,7 +117,12 @@ const DashboardLayout = () => {
 
   useEffect(() => {
     if (notificationData && Array.isArray(notificationData.data)) {
-      dispatch(setNotifications(notificationData.data));
+      dispatch(
+        setNotifications({
+          data: notificationData.data,
+          totalCount: notificationData.totalCount,
+        }),
+      );
     }
   }, [dispatch, notificationData]);
 

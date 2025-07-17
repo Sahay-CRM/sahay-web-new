@@ -216,6 +216,16 @@ const Urls = {
 
   getMeetingNots: (id: string) =>
     `${baseUrl}/company/detail-meeting/note/get/${id}`,
+
+  addIssues: () => `${baseUrl}/company/issues/create`,
+  updateIssues: (id: string) => `${baseUrl}/company/issues/update/${id}`,
+  getIssues: () => `${baseUrl}/company/issues/get`,
+  deleteIssues: (id: string) => `${baseUrl}/company/issues/delete/${id}`,
+
+  addObjective: () => `${baseUrl}/company/objectives/create`,
+  updateObjective: (id: string) => `${baseUrl}/company/objectives/update/${id}`,
+  getObjective: () => `${baseUrl}/company/objectives/get`,
+  deleteObjective: (id: string) => `${baseUrl}/company/objectives/delete/${id}`,
 };
 
 export default Urls;

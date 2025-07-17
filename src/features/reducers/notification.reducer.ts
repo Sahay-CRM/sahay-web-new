@@ -1,8 +1,13 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "@/features/store";
 
-// Change initialState to be an array
-const initialState: AppNotification[] = [];
+const initialState: {
+  notifications: AppNotification[];
+  totalCount: number;
+} = {
+  notifications: [],
+  totalCount: 0,
+};
 
 const notificationSlice = createSlice({
   name: "notification",
@@ -15,25 +20,31 @@ const notificationSlice = createSlice({
       } else if (typeof action.payload.data?.isRead === "string") {
         isRead = action.payload.data.isRead === "true";
       }
-      state.unshift({ ...action.payload, isRead });
+      state.notifications.unshift({ ...action.payload, isRead });
       // Keep only the latest 5 notifications
-      if (state.length > 5) {
-        state.length = 5;
+      if (state.notifications.length > 5) {
+        state.notifications.length = 5;
       }
     },
-    setNotifications: (_state, action: PayloadAction<AppNotification[]>) => {
-      return action.payload;
+    setNotifications: (
+      _state,
+      action: PayloadAction<{ data: AppNotification[]; totalCount: number }>,
+    ) => {
+      return {
+        notifications: action.payload.data.slice(0, 5),
+        totalCount: action.payload.totalCount,
+      };
     },
     markNotificationRead: (state, action: PayloadAction<number>) => {
-      if (state[action.payload]) {
-        state[action.payload].isRead = true;
+      if (state.notifications[action.payload]) {
+        state.notifications[action.payload].isRead = true;
       }
     },
     markAllNotificationsRead: (state) => {
-      state.forEach((n: AppNotification) => (n.isRead = true));
+      state.notifications.forEach((n) => (n.isRead = true));
     },
     clearNotifications: () => {
-      return [];
+      return { notifications: [], totalCount: 0 };
     },
   },
 });
@@ -46,6 +57,9 @@ export const {
   markAllNotificationsRead,
 } = notificationSlice.actions;
 
-export const selectNotifications = (state: RootState) => state.notification;
+export const selectNotifications = (state: RootState) =>
+  state.notification.notifications;
+export const selectNotificationTotalCount = (state: RootState) =>
+  state.notification.totalCount;
 
 export default notificationSlice.reducer;

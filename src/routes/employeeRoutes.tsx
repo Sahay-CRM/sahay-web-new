@@ -65,6 +65,9 @@ const AllNotifications = lazy(
 );
 const DetailMeeting = lazy(() => import("../pages/Meeting/MeetingDesc"));
 
+const Issues = lazy(() => import("../pages/Obj/Issues"));
+const Objective = lazy(() => import("../pages/Obj/Objective"));
+
 export default function EmployeeRoutes() {
   return (
     <Routes>
@@ -87,6 +90,9 @@ export default function EmployeeRoutes() {
         <Route path="meeting/edit/:id" element={<AddCompanyMeeting />} />
 
         <Route path="meeting/detail/:id" Component={DetailMeeting} />
+
+        <Route path="issues" Component={Issues} />
+        <Route path="objective" Component={Objective} />
 
         <Route path="tasks" Component={CompanyTask} />
         <Route path="tasks/add" element={<AddCompanyTaskList />} />
