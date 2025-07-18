@@ -1035,6 +1035,7 @@ interface MeetingObjective {
 interface TimerEntry {
   actualTime: number;
   updatedAt: number | string;
+  activeTab?: string;
 }
 
 interface MeetingResFire {
@@ -1113,27 +1114,16 @@ interface SelectedKpisData {
 }
 
 interface MeetingDetailsTiming {
-  detailMeetingId: string;
+  detailMeetingId?: string;
   meetingId: string;
   agendaTimePlanned?: string;
   agendaTimeActual?: string;
-  // discussionTaskTimePlanned?: string;
-  // discussionTaskTimeActual?: string;
-  // discussionProjectTimePlanned?: string;
-  // discussionProjectTimeActual?: string;
-  // discussionKPITimePlanned?: string;
-  // discussionKPITimeActual?: string;
-  // conclusionTimePlanned?: string;
-  // conclusionTimeActual?: string;
   employeeList?: {
     isTeamLeader?: boolean;
     employeeName: string;
     employeeId: string;
     attendanceMark: boolean | null;
   }[];
-  // employeeId?: string;
-  // attendanceMark?: boolean | null;
-  // updatedAt?: string;
   status?: string; // Added to match backend response
 }
 
@@ -1264,4 +1254,15 @@ interface MeetingAgenda {
   name: string;
   actualTime: string | null;
   plannedTime: string | null;
+}
+
+interface DetailMeetingAgendaIssue {
+  detailMeetingAgendaIssueId: string;
+  issueObjectiveId: string;
+  agendaType: string;
+  detailMeetingId: string;
+  issueObjectiveName: string;
+  isResolved: boolean;
+  actualTime: string | null;
+  plannedTime: string;
 }

@@ -8,7 +8,7 @@ export const meetingSlice = createSlice({
   name: "meeting",
   initialState,
   reducers: {
-    setMeeting: (state, action: PayloadAction<MeetingItem[]>) => {
+    setMeeting: (state, action: PayloadAction<MeetingAgenda[]>) => {
       state.items = action.payload;
     },
     clearMeeting: (state) => {

@@ -174,6 +174,9 @@ const Urls = {
   deleteMeetingAgendaObjective: (id: string) =>
     `${baseUrl}/company/detail-meeting/agenda/objectives/delete/${id}`,
 
+  detailMeetingAgendaIssue: (id: string) =>
+    `${baseUrl}/company/detail-meeting/agenda/objectives/get/${id}`,
+
   // updateMeetingAgenda: (id: string) =>
   //   `${baseUrl}/company/detail-meeting/agenda/objectives/update/${id}`,
   // deleteMeetingAgendaIssue: (id: string) =>

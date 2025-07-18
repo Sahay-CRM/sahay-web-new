@@ -31,8 +31,8 @@ export default function useMeetingDesc() {
   const handleUpdatedRefresh = useCallback(async () => {
     await Promise.all([
       queryClient.resetQueries({ queryKey: ["get-meeting-details-timing"] }),
-      queryClient.resetQueries({ queryKey: ["get-meeting-issue"] }),
-      queryClient.resetQueries({ queryKey: ["get-meeting-objective"] }),
+      // queryClient.resetQueries({ queryKey: ["get-meeting-issue"] }),
+      // queryClient.resetQueries({ queryKey: ["get-meeting-objective"] }),
     ]);
   }, []);
 
@@ -43,6 +43,8 @@ export default function useMeetingDesc() {
     onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
+        console.log(data);
+
         setMeetingResponse(data);
         handleUpdatedRefresh();
       } else {
@@ -96,7 +98,8 @@ export default function useMeetingDesc() {
               activeTab: "DISCUSSION",
               lastSwitchTimestamp: Date.now(),
               status: "DISCUSSION",
-              currentAgendaItemId: agendaList.items[0].id,
+              currentAgendaItemId:
+                agendaList.items[0].detailMeetingAgendaIssueId,
             });
           },
         },

@@ -1,15 +1,19 @@
 import {
   endMeetingMutation,
   useGetDetailMeetingAgenda,
+  useGetDetailMeetingAgendaIssue,
 } from "@/features/api/companyMeeting";
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { getDatabase, ref, update } from "firebase/database";
+import { useCallback, useEffect, useState } from "react";
+import { getDatabase, off, onValue, ref, update } from "firebase/database";
+import { queryClient } from "@/queryClient";
 
 interface DescProps {
   meetingResponse?: MeetingResFire | null;
   detailMeetingId: string | undefined;
 }
+
+type ActiveTab = "tasks" | "projects" | "kpis";
 
 export default function useDesc({
   meetingResponse,
@@ -18,6 +22,8 @@ export default function useDesc({
   const { id: meetingId } = useParams();
   const db = getDatabase();
   const meetStateRef = ref(db, `meetings/${meetingId}/state`);
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const { mutate: endMeet } = endMeetingMutation();
 
@@ -28,23 +34,45 @@ export default function useDesc({
     enable: !!detailMeetingId,
   });
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const { data: detailAgendaData } = useGetDetailMeetingAgendaIssue({
+    filter: {
+      detailMeetingAgendaIssueId: meetingResponse?.state.currentAgendaItemId,
+    },
+    enable: !!meetingResponse?.state.currentAgendaItemId,
+  });
+
+  const currentIndex =
+    allItems?.findIndex(
+      (item) =>
+        item.detailMeetingAgendaIssueId ===
+        meetingResponse?.state.currentAgendaItemId,
+    ) ?? 0;
+
+  const getCurrentItem = () => {
+    const issueLength = allItems?.length ?? 0;
+    if (currentIndex < issueLength) {
+      return allItems?.[currentIndex];
+    }
+  };
+
+  const currentItem = getCurrentItem() as MeetingAgenda;
+
+  const [activeTab, setActiveTab] = useState<ActiveTab>();
 
   useEffect(() => {
     if (
-      allItems &&
-      meetingResponse?.state?.currentAgendaItemId &&
-      allItems.length > 0
+      meetingResponse &&
+      currentItem &&
+      currentItem.detailMeetingAgendaIssueId
     ) {
-      const idx = allItems.findIndex(
-        (item) =>
-          item.detailMeetingAgendaIssueId ===
-          meetingResponse.state.currentAgendaItemId,
-      );
-      if (idx !== -1) setCurrentIndex(idx);
+      const actTab =
+        meetingResponse?.timers.objectives?.[
+          currentItem.detailMeetingAgendaIssueId
+        ];
+
+      setActiveTab(actTab?.activeTab as ActiveTab);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meetingResponse?.state?.currentAgendaItemId]);
+  }, [currentItem, meetingResponse]);
 
   const handleCloseMeetingWithLog = () => {
     if (meetingId) {
@@ -85,7 +113,6 @@ export default function useDesc({
           currentAgendaItemId: nextItem.detailMeetingAgendaIssueId,
         });
       }
-      setCurrentIndex(nextIndex);
     }
   };
 
@@ -123,7 +150,6 @@ export default function useDesc({
           currentAgendaItemId: prevItem.detailMeetingAgendaIssueId,
         });
       }
-      setCurrentIndex(prevIndex);
     }
   };
 
@@ -158,9 +184,60 @@ export default function useDesc({
           currentAgendaItemId: prevItem.detailMeetingAgendaIssueId,
         });
       }
-      setCurrentIndex(index);
     }
   };
+
+  const handleTabChange = (tab: ActiveTab) => {
+    const meetTimersRef = ref(
+      db,
+      `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}`,
+    );
+
+    update(meetTimersRef, {
+      activeTab: tab,
+    });
+
+    setActiveTab(tab);
+  };
+
+  const tasksFireBase = () => {
+    if (meetingResponse?.state.status === "DISCUSSION") {
+      const db = getDatabase();
+      const meetTaskRef = ref(
+        db,
+        `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}/tasks`,
+      );
+      update(meetTaskRef, {
+        updatedAt: Date.now(),
+      });
+    }
+  };
+
+  const handleUpdatedRefresh = useCallback(async () => {
+    await Promise.all([
+      queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] }),
+    ]);
+  }, []);
+
+  useEffect(() => {
+    const db = getDatabase();
+    const meetingRef = ref(
+      db,
+      `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}/tasks`,
+    );
+
+    onValue(meetingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        console.log(data);
+        handleUpdatedRefresh();
+      }
+    });
+
+    return () => {
+      off(meetingRef);
+    };
+  }, [currentItem.detailMeetingAgendaIssueId, handleUpdatedRefresh, meetingId]);
 
   return {
     totalData: allItems?.length ?? 0,
@@ -171,5 +248,12 @@ export default function useDesc({
     handlePreviousWithLog,
     handleJump,
     isLoading,
+    isSidebarCollapsed,
+    currentItem,
+    setIsSidebarCollapsed,
+    detailAgendaData,
+    handleTabChange,
+    activeTab,
+    tasksFireBase,
   };
 }

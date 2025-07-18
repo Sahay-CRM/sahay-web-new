@@ -15,6 +15,8 @@ import Timer from "../Timer";
 import { addUpdateIssues } from "@/features/api/Issues";
 import { addUpdateObjective } from "@/features/api/Objective";
 import { queryClient } from "@/queryClient";
+import { useDispatch } from "react-redux";
+import { setMeeting } from "@/features/reducers/common.reducer";
 
 function IssueModal({
   open,
@@ -91,6 +93,7 @@ export default function Agenda({
   agendaPlannedTime = 0,
   detailMeetingId,
 }: AgendaProps) {
+  const dispatch = useDispatch();
   const [issueInput, setIssueInput] = useState("");
   const [editing, setEditing] = useState<{
     type: "issue" | "objective" | null;
@@ -166,11 +169,13 @@ export default function Agenda({
   // Reset agendaList to backend order on refresh/data change
   useEffect(() => {
     setAgendaList(selectedAgenda || []);
-  }, [selectedAgenda]);
+    if (selectedAgenda) {
+      dispatch(setMeeting(selectedAgenda));
+    }
+  }, [dispatch, selectedAgenda]);
 
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
-    console.log("Dragging item:", agendaList[index]);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLLIElement>) => {

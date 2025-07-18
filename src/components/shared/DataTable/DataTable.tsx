@@ -89,6 +89,7 @@ interface TableProps<T extends Record<string, unknown>> {
   onToggleActive?: (item: T) => void; // Add this line
   otherButton?: ExtraButton[];
   showActionsColumn?: boolean;
+  isEditDeleteShow?: boolean;
 }
 
 interface ExtraButton {
@@ -132,6 +133,7 @@ const TableData = <T extends Record<string, unknown>>({
   showActiveToggle = false,
   onToggleActive,
   showActionsColumn = true,
+  isEditDeleteShow = false,
   // otherButton = [],
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
@@ -473,7 +475,28 @@ const TableData = <T extends Record<string, unknown>>({
                     >
                       <div className="flex gap-1 justify-end items-end">
                         {customActions?.(item)}
-                        {isEditDelete &&
+                        {isEditDeleteShow ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() =>
+                                  !(item as { isDisabled?: boolean })
+                                    .isDisabled && onEdit?.(item)
+                                }
+                                disabled={
+                                  (item as { isDisabled?: boolean }).isDisabled
+                                }
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit</TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          isEditDelete &&
                           isActionButton?.(item) &&
                           permission?.Edit && (
                             <Tooltip>
@@ -496,9 +519,31 @@ const TableData = <T extends Record<string, unknown>>({
                               </TooltipTrigger>
                               <TooltipContent>Edit</TooltipContent>
                             </Tooltip>
-                          )}
+                          )
+                        )}
 
-                        {isEditDelete &&
+                        {isEditDeleteShow ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-red-600"
+                                onClick={() =>
+                                  !(item as { isDisabled?: boolean })
+                                    .isDisabled && onDelete?.(item)
+                                }
+                                disabled={
+                                  (item as { isDisabled?: boolean }).isDisabled
+                                }
+                              >
+                                <Trash className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete</TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          isEditDelete &&
                           isActionButton?.(item) &&
                           permission?.Delete &&
                           (!canDelete || canDelete(item)) && (
@@ -522,7 +567,8 @@ const TableData = <T extends Record<string, unknown>>({
                               </TooltipTrigger>
                               <TooltipContent>Delete</TooltipContent>
                             </Tooltip>
-                          )}
+                          )
+                        )}
 
                         {permission?.Delete &&
                           showActiveToggle &&

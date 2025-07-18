@@ -16,8 +16,8 @@ export default function MeetingDesc() {
     meetingResponse,
     meetingTiming,
   } = useMeetingDesc();
-
   const { setBreadcrumbs } = useBreadcrumbs();
+  console.log(meetingStatus);
 
   useEffect(() => {
     setBreadcrumbs([
@@ -45,6 +45,7 @@ export default function MeetingDesc() {
         meetingStatus={meetingStatus}
         meetingResponse={meetingResponse}
         detailMeetingId={meetingTiming?.detailMeetingId}
+        meetingId={meetingId ?? ""}
       />
     );
   } else if (meetingStatus === "ENDED") {

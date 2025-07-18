@@ -35,3 +35,5 @@ export { default as updateDetailMeetingMutation } from "./useUpdateDetailMeeting
 
 export { default as useGetDetailMeetingObj } from "./useGetDetailMeetingObj";
 export { default as useGetDetailMeetingAgenda } from "./useGetDetailMeetingAgenda";
+
+export { default as useGetDetailMeetingAgendaIssue } from "./useGetDetailMeetingAgendaIssue";
