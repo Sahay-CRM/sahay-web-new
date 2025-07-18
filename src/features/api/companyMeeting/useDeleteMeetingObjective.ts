@@ -7,19 +7,20 @@ import { queryClient } from "@/queryClient";
 export default function useDeleteMeetingObjective() {
   const deleteMeetingObjectiveMutation = useMutation({
     mutationKey: ["delete-meeting-objective"],
-    mutationFn: async (data: string) => {
-      if (!data) {
+    mutationFn: async (detailMeetingAgendaIssueId: string) => {
+      if (!detailMeetingAgendaIssueId) {
         throw new Error("Something Went Wrong");
       }
       const { data: resData } = await Api.delete({
-        url: Urls.deleteMeetingAgendaObjective(data),
+        url: Urls.deleteMeetingAgendaObjective(detailMeetingAgendaIssueId),
       });
       return resData;
     },
     onSuccess: () => {
       toast.success("Meeting Agenda Objective Deleted");
-      queryClient.resetQueries({ queryKey: ["get-meeting-issue"] });
-      queryClient.resetQueries({ queryKey: ["get-meeting-objective"] });
+      queryClient.resetQueries({
+        queryKey: ["get-detail-meeting-agenda-issue-obj"],
+      });
     },
   });
 

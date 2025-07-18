@@ -9,7 +9,6 @@ export default function useGetMeetingTiming(meetingId: string) {
       const { data: resData } = await Api.post<{ data: MeetingDetailsTiming }>({
         url: Urls.getTimeByMeeting(meetingId),
       });
-
       return resData.data;
     },
     enabled: !!meetingId,

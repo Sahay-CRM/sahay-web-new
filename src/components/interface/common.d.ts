@@ -1011,13 +1011,6 @@ interface ChangeLog<T> {
   logTime: string;
 }
 
-interface MeetingIssue {
-  detailMeetingAgendaIssueId: string;
-  detailMeetingId: string;
-  agendaIssue: string;
-  issuePlannedTime?: string;
-}
-
 interface MeetingObjective {
   detailMeetingAgendaObjectiveId: string;
   detailMeetingId: string;
@@ -1025,19 +1018,19 @@ interface MeetingObjective {
   objectivePlannedTime?: string;
 }
 
-interface IssueObjective {
-  agendaIssue?: string;
-  detailMeetingAgendaIssueId?: string;
-  detailMeetingId: string;
-  isResolved?: boolean;
-  issueActualTime?: string | null;
-  issuePlannedTime?: string;
-  sequence?: string | null;
-  agendaObjective?: string;
-  detailMeetingAgendaObjectiveId?: string;
-  objectiveActualTime?: string | null;
-  objectivePlannedTime?: string;
-}
+// interface IssueObjective {
+//   agendaIssue?: string;
+//   detailMeetingAgendaIssueId?: string;
+//   detailMeetingId: string;
+//   isResolved?: boolean;
+//   issueActualTime?: string | null;
+//   issuePlannedTime?: string;
+//   sequence?: string | null;
+//   agendaObjective?: string;
+//   detailMeetingAgendaObjectiveId?: string;
+//   objectiveActualTime?: string | null;
+//   objectivePlannedTime?: string;
+// }
 
 interface MeetingResFire {
   state: {
@@ -1114,26 +1107,27 @@ interface SelectedKpisData {
 }
 
 interface MeetingDetailsTiming {
+  detailMeetingId: string;
   meetingId: string;
   agendaTimePlanned?: string;
   agendaTimeActual?: string;
-  discussionTaskTimePlanned?: string;
-  discussionTaskTimeActual?: string;
-  discussionProjectTimePlanned?: string;
-  discussionProjectTimeActual?: string;
-  discussionKPITimePlanned?: string;
-  discussionKPITimeActual?: string;
-  conclusionTimePlanned?: string;
-  conclusionTimeActual?: string;
+  // discussionTaskTimePlanned?: string;
+  // discussionTaskTimeActual?: string;
+  // discussionProjectTimePlanned?: string;
+  // discussionProjectTimeActual?: string;
+  // discussionKPITimePlanned?: string;
+  // discussionKPITimeActual?: string;
+  // conclusionTimePlanned?: string;
+  // conclusionTimeActual?: string;
   employeeList?: {
     isTeamLeader?: boolean;
     employeeName: string;
     employeeId: string;
     attendanceMark: boolean | null;
   }[];
-  employeeId?: string;
-  attendanceMark?: boolean | null;
-  updatedAt?: string;
+  // employeeId?: string;
+  // attendanceMark?: boolean | null;
+  // updatedAt?: string;
   status?: string; // Added to match backend response
 }
 
@@ -1249,4 +1243,17 @@ interface ObjectiveProps {
   objectiveName: string;
   isResolved?: boolean;
   detailMeetingId?: string;
+}
+
+interface DetailMeetingObjectives {
+  id: string;
+  name: string;
+  type: string;
+}
+
+interface MeetingAgenda {
+  detailMeetingAgendaIssueId?: string;
+  issueObjectiveId: string;
+  agendaType: string;
+  name: string;
 }

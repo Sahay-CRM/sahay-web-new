@@ -1,7 +1,7 @@
 import {
   endMeetingMutation,
-  useGetMeetingIssue,
-  useGetMeetingObjective,
+  // useGetMeetingIssue,
+  // useGetMeetingObjective,
 } from "@/features/api/companyMeeting";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";

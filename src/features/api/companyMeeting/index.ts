@@ -9,12 +9,7 @@ export { default as useDdCompanyMeeting } from "./useDdCompanyMeeting";
 export { default as createMeetingMutation } from "./useCreateDetailMeeting";
 export { default as endMeetingMutation } from "./useEndMeeting";
 export { default as addMeetingAgendaMutation } from "./useAddMeetingAgenda";
-export { default as addAgendaObjectiveMutation } from "./useAddMeetingObjective";
 
-export { default as useGetMeetingIssue } from "./useGetMeetingIssue";
-export { default as useGetMeetingObjective } from "./useGetMeetingObjective";
-
-export { default as deleteMeetingIssueMutation } from "./useDeleteMeetingIssue";
 export { default as deleteMeetingObjectiveMutation } from "./useDeleteMeetingObjective";
 
 export { default as addMeetingTaskDataMutation } from "./useAddMeetingTaskData";
@@ -37,3 +32,6 @@ export { default as addMeetingNotesMutation } from "./useAddMeetingNotes";
 export { default as useGetMeetingNotes } from "./useGetMeetingNotes";
 
 export { default as updateDetailMeetingMutation } from "./useUpdateDetailMeeting";
+
+export { default as useGetDetailMeetingObj } from "./useGetDetailMeetingObj";
+export { default as useGetDetailMeetingAgenda } from "./useGetDetailMeetingAgenda";

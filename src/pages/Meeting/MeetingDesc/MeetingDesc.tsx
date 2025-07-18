@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import useMeetingDesc from "./useMeetingDesc";
-import Desc from "../MeetingDesc/Desc/desc";
+// import Desc from "../MeetingDesc/Desc/desc";
 import Conclusion from "../MeetingDesc/Conclusion/conclusion";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect } from "react";
@@ -35,11 +35,13 @@ export default function MeetingDesc() {
         meetingStatus={meetingStatus}
         meetingResponse={meetingResponse}
         agendaPlannedTime={meetingTiming?.agendaTimePlanned}
+        detailMeetingId={meetingTiming?.detailMeetingId}
       />
     );
   } else if (meetingStatus === "DISCUSSION") {
     content = (
-      <Desc meetingStatus={meetingStatus} meetingResponse={meetingResponse} />
+      <></>
+      // <Desc meetingStatus={meetingStatus} meetingResponse={meetingResponse} />
     );
   } else if (meetingStatus === "ENDED") {
     content = <Conclusion />;

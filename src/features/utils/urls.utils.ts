@@ -162,24 +162,31 @@ const Urls = {
   updateFireNotificationAsRead: () =>
     `${baseUrl}/company/employee/logs/notification-update`,
 
-  addMeetingAgendaIssue: () =>
-    `${baseUrl}/company/detail-meeting/agenda/issue/create`,
-  updateMeetingAgendaIssue: (id: string) =>
-    `${baseUrl}/company/detail-meeting/agenda/issue/update/${id}`,
-  deleteMeetingAgendaIssue: (id: string) =>
-    `${baseUrl}/company/detail-meeting/agenda/issue/delete/${id}`,
+  addMeetingAgenda: () =>
+    `${baseUrl}/company/detail-meeting/agenda/objectives/create`,
 
-  getMeetingAgendaIssue: () =>
-    `${baseUrl}/company/detail-meeting/agenda/issue/get`,
   getMeetingAgendaObjective: () =>
-    `${baseUrl}/company/detail-meeting/agenda/objective/get`,
+    `${baseUrl}/company/detail-meeting/agenda/objectives/get`,
 
-  addMeetingAgendaObjective: () =>
-    `${baseUrl}/company/detail-meeting/agenda/objective/create`,
-  updateMeetingAgendaObjective: (id: string) =>
-    `${baseUrl}/company/detail-meeting/agenda/objective/update/${id}`,
   deleteMeetingAgendaObjective: (id: string) =>
-    `${baseUrl}/company/detail-meeting/agenda/objective/delete/${id}`,
+    `${baseUrl}/company/detail-meeting/agenda/objectives/delete/${id}`,
+
+  // updateMeetingAgenda: (id: string) =>
+  //   `${baseUrl}/company/detail-meeting/agenda/objectives/update/${id}`,
+  // deleteMeetingAgendaIssue: (id: string) =>
+  //   `${baseUrl}/company/detail-meeting/agenda/issue/delete/${id}`,
+
+  // getMeetingAgendaIssue: () =>
+  //   `${baseUrl}/company/detail-meeting/agenda/issue/get`,
+  // getMeetingAgendaObjective: () =>
+  //   `${baseUrl}/company/detail-meeting/agenda/objective/get`,
+
+  // addMeetingAgendaObjective: () =>
+  //   `${baseUrl}/company/detail-meeting/agenda/objective/create`,
+  // updateMeetingAgendaObjective: (id: string) =>
+  //   `${baseUrl}/company/detail-meeting/agenda/objective/update/${id}`,
+  // deleteMeetingAgendaObjective: (id: string) =>
+  //   `${baseUrl}/company/detail-meeting/agenda/objective/delete/${id}`,
 
   addMeetingTaskData: () => `${baseUrl}/company/detail-meeting/task/add`,
   getMeetingTaskData: () => `${baseUrl}/company/detail-meeting/task/get`,
@@ -226,6 +233,9 @@ const Urls = {
   updateObjective: (id: string) => `${baseUrl}/company/objectives/update/${id}`,
   getObjective: () => `${baseUrl}/company/objectives/get`,
   deleteObjective: (id: string) => `${baseUrl}/company/objectives/delete/${id}`,
+
+  getDetailObjectivesIssue: () =>
+    `${baseUrl}/company/detail-meeting/get-objectives`,
 };
 
 export default Urls;
