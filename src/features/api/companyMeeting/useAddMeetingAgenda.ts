@@ -8,8 +8,11 @@ import { toast } from "sonner";
 interface MeetingAgendaIssue {
   detailMeetingId?: string;
   issueObjectiveId?: string;
-  meetingId: string;
-  agendaType: string;
+  meetingId?: string;
+  agendaType?: string;
+  detailMeetingAgendaIssueId?: string;
+  actualTime?: string;
+  plannedTime?: string;
 }
 
 type DatePaging = CommonResponse<MeetingAgendaIssue>;
@@ -18,10 +21,23 @@ export default function useAddMeetingAgenda() {
   const addMeetingAgendaMutation = useMutation({
     mutationKey: ["add-meeting-agenda"],
     mutationFn: async (data: MeetingAgendaIssue) => {
-      const { data: resData } = await Api.post<DatePaging>({
-        url: Urls.addMeetingAgenda(),
+      const isUpdate = Boolean(data?.detailMeetingAgendaIssueId);
+
+      const config = {
+        url: isUpdate
+          ? Urls.updateMeetingAgenda(data.detailMeetingAgendaIssueId!)
+          : Urls.addMeetingAgenda(),
         data: data,
-      });
+      };
+
+      const { data: resData } = isUpdate
+        ? await Api.post<DatePaging>(config)
+        : await Api.post<DatePaging>(config);
+
+      // const { data: resData } = await Api.post<DatePaging>({
+      //   url: Urls.addMeetingAgenda(),
+      //   data: data,
+      // });
 
       return resData;
     },

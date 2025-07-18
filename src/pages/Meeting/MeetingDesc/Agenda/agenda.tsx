@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CircleX, CornerDownLeft, Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import {
   addMeetingAgendaMutation,
-  // addMeetingTimeMutation,
   deleteMeetingObjectiveMutation,
   useGetDetailMeetingAgenda,
   useGetDetailMeetingObj,
@@ -47,15 +46,7 @@ function IssueModal({
         zIndex: 1000,
       }}
     >
-      <div
-        className="bg-white w-96 p-5 rounded-md shadow-2xl border-2"
-        // style={{
-        //   background: "white",
-        //   padding: 24,
-        //   borderRadius: 8,
-        //   minWidth: 300,
-        // }}
-      >
+      <div className="bg-white w-96 p-5 rounded-md shadow-2xl border-2">
         <p>Value: {issue}</p>
         <div className="my-3">
           <RadioGroup value={selectedType} onValueChange={setSelectedType}>
@@ -101,38 +92,39 @@ export default function Agenda({
   detailMeetingId,
 }: AgendaProps) {
   const [issueInput, setIssueInput] = useState("");
-  // const [objectiveInput, setObjectiveInput] = useState("");
   const [editing, setEditing] = useState<{
     type: "issue" | "objective" | null;
     id: string | null;
     value: string;
     plannedMinutes: string;
     plannedSeconds: string;
+    detailMeetingAgendaIssueId: string;
   }>({
     type: null,
     id: null,
     value: "",
     plannedMinutes: "",
     plannedSeconds: "",
+    detailMeetingAgendaIssueId: "",
   });
   const [editingPart, setEditingPart] = useState<"minutes" | "seconds" | null>(
     null,
   );
-
-  // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [modalIssue, setModalIssue] = useState("");
-  // Dropdown state
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
   const startEdit = (
     type: "issue" | "objective",
     id: string,
     value: string,
-    plannedTime: string,
+    plannedTime: string | number | null | undefined,
+    detailMeetingAgendaIssueId: string,
   ) => {
     if (!canEdit) return;
-    const totalSeconds = plannedTime ? parseInt(plannedTime, 10) : 0;
+    const totalSeconds = plannedTime
+      ? parseInt(String(plannedTime), 10) || 0
+      : 0;
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     setEditing({
@@ -141,6 +133,7 @@ export default function Agenda({
       value,
       plannedMinutes: String(minutes),
       plannedSeconds: String(seconds),
+      detailMeetingAgendaIssueId,
     });
   };
   const setEditingValue = (value: string) => {
@@ -153,12 +146,11 @@ export default function Agenda({
       value: "",
       plannedMinutes: "",
       plannedSeconds: "",
+      detailMeetingAgendaIssueId: "",
     });
   };
 
   const { mutate: deleteObjective } = deleteMeetingObjectiveMutation();
-  // const { mutate: updateAgendaTime } = addMeetingTimeMutation();
-
   const { mutate: addIssueAgenda } = addMeetingAgendaMutation();
   const { data: selectedAgenda } = useGetDetailMeetingAgenda({
     filter: {
@@ -166,6 +158,39 @@ export default function Agenda({
     },
     enable: !!detailMeetingId,
   });
+
+  // Local state for drag-and-drop
+  const [agendaList, setAgendaList] = useState(selectedAgenda || []);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  // Reset agendaList to backend order on refresh/data change
+  useEffect(() => {
+    setAgendaList(selectedAgenda || []);
+  }, [selectedAgenda]);
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+    console.log("Dragging item:", agendaList[index]);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLLIElement>) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (index: number) => {
+    if (draggedIndex === null || draggedIndex === index) return;
+    const updatedList = [...agendaList];
+    const [removed] = updatedList.splice(draggedIndex, 1);
+    updatedList.splice(index, 0, removed);
+    setAgendaList(updatedList);
+    setDraggedIndex(null);
+    // Log the new order
+    console.log(
+      "Dropped. New agenda sequence:",
+      updatedList.map((item) => item.name),
+    );
+  };
+
   const { mutate: addIssue } = addUpdateIssues();
   const { mutate: addObjective } = addUpdateObjective();
 
@@ -270,6 +295,29 @@ export default function Agenda({
     });
   };
 
+  const handleUpdateTime = () => {
+    const min = Number(editing.plannedMinutes) || 0;
+    const sec = Number(editing.plannedSeconds) || 0;
+    const totalSeconds = min * 60 + sec;
+    addIssueAgenda(
+      {
+        detailMeetingAgendaIssueId: editing.detailMeetingAgendaIssueId,
+        detailMeetingId: detailMeetingId,
+        issueObjectiveId: String(editing.id),
+        plannedTime: String(totalSeconds),
+        agendaType: String(editing.type),
+      },
+      {
+        onSuccess: () => {
+          queryClient.resetQueries({
+            queryKey: ["get-detail-meeting-agenda-issue-obj"],
+          });
+          cancelEdit(); // Reset edit state after successful update
+        },
+      },
+    );
+  };
+
   const handleModalSubmit = (data: { type: string; value: string }) => {
     if (data.type === "issue") {
       addIssue(
@@ -284,7 +332,6 @@ export default function Agenda({
               meetingId: meetingId,
               agendaType: "issue",
             };
-
             addIssueAgenda(payload, {
               onSuccess: () => {
                 setIssueInput("");
@@ -346,8 +393,6 @@ export default function Agenda({
             meetingResponse?.state.lastSwitchTimestamp,
           )}
           meetingStart={meetingStatus === "STARTED"}
-          // onTimeUpdate={handleTimerUpdate}
-          // defaultTime={Number(agendaPlannedTime)}
         />
       </div>
       <div className="">
@@ -408,13 +453,38 @@ export default function Agenda({
             </div>
           )}
           <div className="mt-2 space-y-2">
-            {selectedAgenda && selectedAgenda.length > 0 ? (
-              <ul className="space-y-2">
-                {selectedAgenda.map((item) => (
+            {agendaList && agendaList.length > 0 ? (
+              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                {agendaList.map((item, idx) => (
                   <li
                     key={item.issueObjectiveId}
-                    className="flex items-center justify-between px-2 border rounded"
+                    draggable
+                    onDragStart={() => handleDragStart(idx)}
+                    onDragOver={handleDragOver}
+                    onDrop={() => handleDrop(idx)}
+                    style={{
+                      opacity: draggedIndex === idx ? 0.5 : 1,
+                      cursor: "move",
+                      background: "#fff",
+                      border: "1px solid #eee",
+                      marginBottom: 4,
+                      padding: 8,
+                      borderRadius: 4,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
                   >
+                    {/* Left side: drag handle + name */}
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <span style={{ marginRight: 8, cursor: "grab" }}>⋮⋮</span>
+                      {editing.type === item.agendaType &&
+                      editing.id === item.issueObjectiveId &&
+                      canEdit ? null : ( // Hide name when editing
+                        <span>{item.name}</span>
+                      )}
+                    </div>
+                    {/* Right side: type, time, edit, delete */}
                     {editing.type === item.agendaType &&
                     editing.id === item.issueObjectiveId &&
                     canEdit ? (
@@ -456,36 +526,27 @@ export default function Agenda({
                                 }));
                               }}
                               onBlur={(e) => {
-                                const val = e.target.value.replace(
-                                  /[^0-9]/g,
-                                  "",
-                                );
-                                const num = Math.max(
-                                  0,
-                                  Math.min(60, Number(val)),
-                                );
+                                let val = e.target.value.replace(/[^0-9]/g, "");
+                                if (val.length > 2) val = val.slice(0, 2);
                                 setEditing((prev) => ({
                                   ...prev,
-                                  plannedMinutes: String(num),
+                                  plannedMinutes: val,
                                 }));
                                 setEditingPart(null);
-                                updateEdit();
+                                // Do NOT call handleUpdateTime here
                               }}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") {
-                                  const val = (
+                                  let val = (
                                     e.target as HTMLInputElement
                                   ).value.replace(/[^0-9]/g, "");
-                                  const num = Math.max(
-                                    0,
-                                    Math.min(60, Number(val)),
-                                  );
+                                  if (val.length > 2) val = val.slice(0, 2);
                                   setEditing((prev) => ({
                                     ...prev,
-                                    plannedMinutes: String(num),
+                                    plannedMinutes: val,
                                   }));
                                   setEditingPart(null);
-                                  updateEdit();
+                                  handleUpdateTime();
                                 }
                               }}
                               style={{
@@ -514,44 +575,44 @@ export default function Agenda({
                               value={editing.plannedSeconds}
                               maxLength={2}
                               onChange={(e) => {
-                                let val = e.target.value.replace(/[^0-9]/g, "");
-                                if (val.length > 2) val = val.slice(0, 2);
-                                setEditing((prev) => ({
-                                  ...prev,
-                                  plannedSeconds: val,
-                                }));
-                              }}
-                              onBlur={(e) => {
-                                const val = e.target.value.replace(
+                                let valSec = e.target.value.replace(
                                   /[^0-9]/g,
                                   "",
                                 );
-                                const num = Math.max(
-                                  0,
-                                  Math.min(59, Number(val)),
-                                );
+                                if (valSec.length > 2)
+                                  valSec = valSec.slice(0, 2);
                                 setEditing((prev) => ({
                                   ...prev,
-                                  plannedSeconds: String(num),
+                                  plannedSeconds: valSec,
+                                }));
+                              }}
+                              onBlur={(e) => {
+                                let valSec = e.target.value.replace(
+                                  /[^0-9]/g,
+                                  "",
+                                );
+                                if (valSec.length > 2)
+                                  valSec = valSec.slice(0, 2);
+                                setEditing((prev) => ({
+                                  ...prev,
+                                  plannedSeconds: valSec,
                                 }));
                                 setEditingPart(null);
-                                updateEdit();
+                                // Do NOT call handleUpdateTime here
                               }}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") {
-                                  const val = (
+                                  let valSec = (
                                     e.target as HTMLInputElement
                                   ).value.replace(/[^0-9]/g, "");
-                                  const num = Math.max(
-                                    0,
-                                    Math.min(59, Number(val)),
-                                  );
+                                  if (valSec.length > 2)
+                                    valSec = valSec.slice(0, 2);
                                   setEditing((prev) => ({
                                     ...prev,
-                                    plannedSeconds: String(num),
+                                    plannedSeconds: valSec,
                                   }));
                                   setEditingPart(null);
-                                  updateEdit();
+                                  handleUpdateTime();
                                 }
                               }}
                               style={{
@@ -583,54 +644,51 @@ export default function Agenda({
                         </Button>
                       </div>
                     ) : (
-                      <>
-                        <span>{item.name} </span>
-                        <div className="flex gap-4 items-center">
-                          <span className="text-sm">({item.agendaType}) </span>
-
-                          <span className="text-xs font-medium">
-                            (
-                            {(() => {
-                              const total =
-                                parseInt(String(item.name), 10) || 0;
-                              const min = Math.floor(total / 60);
-                              const sec = total % 60;
-                              if (min && sec) return `${min}m ${sec}s`;
-                              if (min) return `${min}m`;
-                              if (sec) return `${sec}s`;
-                              return "No time";
-                            })()}
-                            )
-                          </span>
-                          {canEdit && (
-                            <div className="flex gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  startEdit(
-                                    item.agendaType === "objective"
-                                      ? "objective"
-                                      : "issue",
-                                    item.issueObjectiveId,
-                                    item.name,
-                                    item.agendaType || "",
-                                  )
-                                }
-                              >
-                                <Pencil className="h-4 w-4 text-blue-500" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDelete(item)}
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </>
+                      <div className="flex gap-4 items-center">
+                        <span className="text-sm">({item.agendaType}) </span>
+                        <span className="text-xs font-medium">
+                          (
+                          {(() => {
+                            const total =
+                              parseInt(item.plannedTime || "0", 10) || 0;
+                            const min = Math.floor(total / 60);
+                            const sec = total % 60;
+                            if (min && sec) return `${min}m ${sec}s`;
+                            if (min) return `${min}m`;
+                            if (sec) return `${sec}s`;
+                            return "No time";
+                          })()}
+                          )
+                        </span>
+                        {canEdit && (
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                startEdit(
+                                  item.agendaType === "objective"
+                                    ? "objective"
+                                    : "issue",
+                                  item.issueObjectiveId,
+                                  item.name,
+                                  item.plannedTime || "0",
+                                  String(item.detailMeetingAgendaIssueId),
+                                )
+                              }
+                            >
+                              <Pencil className="h-4 w-4 text-blue-500" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(item)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </li>
                 ))}

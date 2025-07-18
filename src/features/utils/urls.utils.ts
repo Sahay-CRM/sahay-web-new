@@ -165,6 +165,9 @@ const Urls = {
   addMeetingAgenda: () =>
     `${baseUrl}/company/detail-meeting/agenda/objectives/create`,
 
+  updateMeetingAgenda: (id: string) =>
+    `${baseUrl}/company/detail-meeting/agenda/objectives/update/${id}`,
+
   getMeetingAgendaObjective: () =>
     `${baseUrl}/company/detail-meeting/agenda/objectives/get`,
 

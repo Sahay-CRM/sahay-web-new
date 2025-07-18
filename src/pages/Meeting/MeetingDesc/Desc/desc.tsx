@@ -1,3 +1,4 @@
+import { SpinnerIcon } from "@/components/shared/Icons";
 import Timer from "../Timer";
 import useDesc from "./useDesc";
 import { Button } from "@/components/ui/button";
@@ -5,12 +6,15 @@ import { Button } from "@/components/ui/button";
 interface DescProps {
   meetingResponse?: MeetingResFire | null;
   meetingStatus: string;
+  detailMeetingId: string | undefined;
 }
 
-export default function Desc({ meetingStatus, meetingResponse }: DescProps) {
+export default function Desc({
+  meetingStatus,
+  meetingResponse,
+  detailMeetingId,
+}: DescProps) {
   const {
-    issueData,
-    objectiveData,
     totalData,
     currentIndex,
     allItems,
@@ -18,37 +22,40 @@ export default function Desc({ meetingStatus, meetingResponse }: DescProps) {
     handleNextWithLog,
     handlePreviousWithLog,
     handleJump,
-  } = useDesc({ meetingResponse });
+    isLoading,
+  } = useDesc({ meetingResponse, detailMeetingId });
 
   const getCurrentItem = () => {
-    const issueLength = issueData?.data?.length ?? 0;
+    const issueLength = allItems?.length ?? 0;
     if (currentIndex < issueLength) {
-      return issueData?.data?.[currentIndex];
-    } else {
-      return objectiveData?.data?.[currentIndex - issueLength];
+      return allItems?.[currentIndex];
     }
   };
 
-  const currentItem = getCurrentItem() as IssueObjective;
+  const currentItem = getCurrentItem() as MeetingAgenda;
 
-  const issueTimers = meetingResponse?.timers.issues;
-  const objectiveTimers = meetingResponse?.timers.objectives;
+  console.log(currentIndex);
 
-  let timerData = null;
-  if (currentItem?.detailMeetingAgendaIssueId && issueTimers) {
-    timerData = issueTimers[currentItem.detailMeetingAgendaIssueId];
-  } else if (currentItem?.detailMeetingAgendaObjectiveId && objectiveTimers) {
-    timerData = objectiveTimers[currentItem.detailMeetingAgendaObjectiveId];
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-20">
+        <div className="animate-spin">
+          <SpinnerIcon />
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="">
       <div className="flex flex-wrap items-center gap-4 rounded-xl bg-white px-2 py-2 shadow mb-6">
         <Timer
-          plannedTime={Number(
-            currentItem?.issuePlannedTime || currentItem?.objectivePlannedTime,
+          plannedTime={Number(currentItem?.plannedTime)}
+          actualTime={Number(
+            meetingResponse?.timers.objectives?.[
+              currentItem.detailMeetingAgendaIssueId ?? 0
+            ].actualTime,
           )}
-          actualTime={Number(timerData?.actualTime) * 1000 || 0}
           lastSwitchTimestamp={Number(
             meetingResponse?.state.lastSwitchTimestamp,
           )}
@@ -57,7 +64,7 @@ export default function Desc({ meetingStatus, meetingResponse }: DescProps) {
         />
         <div>
           <span className="text-lg font-bold min-w-[120px] text-primary">
-            {allItems[currentIndex]?.label || "-"}
+            {(allItems && allItems[currentIndex]?.name) || "-"}
           </span>
           <span className="text-md text-black ml-3 text-center">
             {currentIndex + 1} / {totalData}
@@ -92,11 +99,12 @@ export default function Desc({ meetingStatus, meetingResponse }: DescProps) {
             onChange={(e) => handleJump(Number(e.target.value))}
             className="border-b border-black px-2 py-1 focus:outline-none focus:ring-0"
           >
-            {allItems.map((item) => (
-              <option key={item.index} value={item.index}>
-                {item.label}
-              </option>
-            ))}
+            {allItems &&
+              allItems.map((item, index) => (
+                <option key={index} value={index}>
+                  {item.name}
+                </option>
+              ))}
           </select>
         </div>
 

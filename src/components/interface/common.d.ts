@@ -1032,6 +1032,11 @@ interface MeetingObjective {
 //   objectivePlannedTime?: string;
 // }
 
+interface TimerEntry {
+  actualTime: number;
+  updatedAt: number | string;
+}
+
 interface MeetingResFire {
   state: {
     lastSwitchTimestamp: number;
@@ -1040,10 +1045,11 @@ interface MeetingResFire {
     status?: string;
   };
   timers: {
-    agenda?: { actualTime: number };
-    conclusion?: { actualTime: number };
-    issues?: Record<string, { actualTime: number; updatedAt: number }>;
-    objectives?: Record<string, { actualTime: number; updatedAt: number }>;
+    agenda?: TimerEntry;
+    conclusion?: TimerEntry;
+    objectives?: {
+      [objectiveId: string]: TimerEntry;
+    };
   };
   activeScreen?: string;
   meetingId: string;
@@ -1256,4 +1262,6 @@ interface MeetingAgenda {
   issueObjectiveId: string;
   agendaType: string;
   name: string;
+  actualTime: string | null;
+  plannedTime: string | null;
 }
