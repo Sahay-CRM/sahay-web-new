@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Ellipsis, RefreshCcw } from "lucide-react";
-import { format } from "date-fns";
 import {
   Table,
   TableBody,
@@ -11,11 +12,9 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import clsx from "clsx";
-import useKpiDashboard from "./useKpiDashboard";
 import {
   formatCompactNumber,
   formatTempValuesToPayload,
-  // formatTempValuesToPayload,
   getColorFromName,
   getKpiHeadersFromData,
   isValidInput,
@@ -28,14 +27,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import FormSelect from "@/components/shared/Form/FormSelect";
-import { FormProvider, useForm } from "react-hook-form";
 import Loader from "@/components/shared/Loader/Loader";
 import { FormDatePicker } from "@/components/shared/Form/FormDatePicker/FormDatePicker";
 import { Button } from "@/components/ui/button";
 import TabsSection from "./TabSection";
 
 import WarningDialog from "./WarningModal";
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import KpisSearchDropdown from "./KpiSearchDropdown";
 import {
   addMeetingKpisDataMutation,
@@ -60,7 +57,8 @@ function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
 
 interface KpisProps {
   meetingId: string;
-  // kpisFireBase: () => void;
+  kpisFireBase: () => void;
+  meetingAgendaIssueId: string | undefined;
 }
 
 function formatToThreeDecimals(value: string | number | null | undefined) {
@@ -73,7 +71,11 @@ function formatToThreeDecimals(value: string | number | null | undefined) {
   });
 }
 
-export default function KPITable({ meetingId }: KpisProps) {
+export default function KPITable({
+  meetingId,
+  meetingAgendaIssueId,
+  kpisFireBase,
+}: KpisProps) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -95,8 +97,9 @@ export default function KPITable({ meetingId }: KpisProps) {
   const { data: selectedKpis, isLoading: meetingLoading } =
     useGetMeetingSelectedKpis({
       filter: {
-        meetingId: meetingId,
+        detailMeetingAgendaIssueId: meetingAgendaIssueId,
       },
+      enable: !!meetingAgendaIssueId,
     });
 
   const selectedKpisTyped = useMemo(
@@ -126,39 +129,6 @@ export default function KPITable({ meetingId }: KpisProps) {
   );
 
   const isLoading = !kpiStructure && !meetingLoading;
-
-  // Filtered data for selected period
-  const filteredKpiData = useMemo(() => {
-    return (
-      selectedKpisTyped.filter(
-        (item: FrequencyData) => item.frequencyType == selectedPeriod,
-      ) ?? []
-    );
-  }, [selectedKpisTyped, selectedPeriod]);
-
-  // Table headers from first kpi's dataArray
-  const kpiHeaders = useMemo(() => {
-    const firstKpi = filteredKpiData[0]?.kpis?.[0] as
-      | SelectedKpisData
-      | undefined;
-    if (!firstKpi || !Array.isArray(firstKpi.dataArray)) return [];
-    return firstKpi.dataArray.map((cell: KpiDataCell) => {
-      const start = cell.startDate ? new Date(cell.startDate) : null;
-      const end = cell.endDate ? new Date(cell.endDate) : null;
-      if (selectedPeriod === "DAILY") {
-        return {
-          label: start ? format(start, "dd MMM") : "",
-          year: start ? format(start, "yyyy") : "",
-        };
-      } else {
-        return {
-          label: start ? format(start, "dd MMM") : "",
-          year: end ? format(end, "dd MMM") : "",
-        };
-      }
-    });
-  }, [filteredKpiData, selectedPeriod]);
-
   // Prepare input values for each cell - moved here so tempValues is available earlier
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
   const [tempValues, setTempValues] = useState<{ [key: string]: string }>({});
@@ -288,36 +258,60 @@ export default function KPITable({ meetingId }: KpisProps) {
     };
   }, [tempValues, location.pathname]);
 
+  const headers = useMemo(() => {
+    // Find the group for the selected period
+    const periodGroup = selectedKpisTyped.find(
+      (item) => item.frequencyType === selectedPeriod,
+    );
+    if (!periodGroup || !periodGroup.kpis || !periodGroup.kpis.length) {
+      return [];
+    }
+    // Collect all dataArrays from all KPIs in all core parameter groups
+    const allDataArrays = periodGroup.kpis.flatMap(
+      (coreParam: KPICoreParameter) =>
+        (coreParam.kpis || []).flatMap(
+          (kpi: KpiAllList) => kpi.dataArray || [],
+        ),
+    );
+    if (!allDataArrays.length) {
+      return [];
+    }
+    return getKpiHeadersFromData([allDataArrays], selectedPeriod);
+  }, [selectedKpisTyped, selectedPeriod]);
+
+  // --- GROUPED KPI ROWS ---
   const filteredData = useMemo(() => {
     return (
-      kpiStructure?.data?.filter(
-        (item) => item.frequencyType == selectedPeriod,
+      selectedKpisTyped.filter(
+        (item) => item.frequencyType === selectedPeriod,
       ) ?? []
     );
-  }, [kpiStructure, selectedPeriod]);
+  }, [selectedKpisTyped, selectedPeriod]);
 
   const groupedKpiRows = useMemo(() => {
-    if (!filteredData.length || !filteredData[0].kpis) return [];
-
+    if (!filteredData.length || !filteredData[0].kpis)
+      return [] as {
+        coreParameter: { coreParameterId: string; coreParameterName: string };
+        kpis: KpiAllList[];
+        dataArray: KpiDataCell[];
+      }[];
     const groups: {
       coreParameter: { coreParameterId: string; coreParameterName: string };
-      kpis: { kpi: Kpi }[];
+      kpis: KpiAllList[];
+      dataArray: KpiDataCell[];
     }[] = [];
-
-    // Use the new CoreParameterGroup interface for type safety
-    (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
+    filteredData[0].kpis.forEach((coreParam: KPICoreParameter) => {
       if (coreParam.kpis && Array.isArray(coreParam.kpis)) {
-        const kpiRows = coreParam.kpis.map((kpi: Kpi) => ({ kpi }));
         groups.push({
           coreParameter: {
             coreParameterId: coreParam.coreParameterId,
             coreParameterName: coreParam.coreParameterName,
           },
-          kpis: kpiRows,
+          kpis: coreParam.kpis,
+          dataArray: coreParam.dataArray,
         });
       }
     });
-
     return groups;
   }, [filteredData]);
 
@@ -334,16 +328,6 @@ export default function KPITable({ meetingId }: KpisProps) {
       setSelectedPeriod(kpiStructure.data[0].frequencyType);
     }
   }, [kpiStructure, selectedPeriod]);
-
-  const { kpiData } = useKpiDashboard({
-    selectedPeriod,
-    selectedDate,
-  });
-
-  // Check if there are no KPIs available using totalCount
-  // const hasNoKpis = useMemo(() => {
-  //   return !kpiStructure?.totalCount || kpiStructure.totalCount === 0;
-  // }, [kpiStructure]);
 
   // Warn on page refresh, reload, or close if there are unsaved changes
   useEffect(() => {
@@ -363,9 +347,9 @@ export default function KPITable({ meetingId }: KpisProps) {
   const { mutate: addUpdateKpiData } = addUpdateKpi();
 
   useEffect(() => {
-    if (isKpiDataCellArrayArray(kpiData?.data)) {
+    if (isKpiDataCellArrayArray(selectedKpisTyped)) {
       const initialValues: { [key: string]: string } = {};
-      kpiData.data.forEach((row: KpiDataCell[], rowIndex: number) => {
+      selectedKpisTyped.forEach((row: KpiDataCell[], rowIndex: number) => {
         row.forEach((cell: KpiDataCell, colIndex: number) => {
           initialValues[`${rowIndex}-${colIndex}`] =
             cell?.data?.toString() ?? "";
@@ -374,53 +358,50 @@ export default function KPITable({ meetingId }: KpisProps) {
       setInputValues(initialValues);
       setTempValues({});
     }
-  }, [kpiData]);
+  }, [selectedKpisTyped]);
 
   const methods = useForm();
 
-  // const [menuOpen, setMenuOpen] = useState<{ [kpiId: string]: boolean }>({});
-
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedKpi, setSelectedKpi] = useState<Kpi | null>(null);
+  const [selectedKpi, setSelectedKpi] = useState<KpiAllList | null>(null);
 
-  const renderKpiRows = (rows: { kpi: Kpi }[]) => {
+  const renderKpiRows = (
+    rows: { kpi: KpiAllList; dataArray: KpiDataCell[] }[],
+  ) => {
     const visualizedRows = rows.filter((row) => row.kpi.isVisualized);
     const nonVisualizedRows = rows.filter((row) => !row.kpi.isVisualized);
 
-    const renderRow = (row: { kpi: Kpi }) => {
-      const { kpi } = row;
-      let dataRow: KpiDataCell[] | undefined = undefined;
-      if (isKpiDataCellArrayArray(kpiData?.data)) {
-        dataRow = isKpiDataCellArrayArray(kpiData?.data)
-          ? (kpiData.data as KpiDataCell[][]).find(
-              (cells) =>
-                Array.isArray(cells) &&
-                cells.length > 0 &&
-                cells[0].kpiId === kpi.kpiId,
-            )
-          : undefined;
-      }
+    const renderRow = (row: { kpi: KpiAllList; dataArray: KpiDataCell[] }) => {
+      const { kpi, dataArray } = row;
+
       return (
         <TableRow key={kpi.kpiId} className="border-b">
-          <TableCell
-            className={clsx(
-              "px-3 py-2 w-[60px] bg-gray-100 sticky left-0 z-10",
-            )}
-          >
-            <div>
-              <table>
-                <tbody>
-                  <tr>
-                    <td className="bg-transparent">
+          <TableCell className={clsx("p-0 sticky left-0 z-10")}>
+            <div className="w-[470px] bg-gray-100 overflow-hidden border-r border-gray-300 shadow-xl shadow-gray-200/80">
+              <table className="p-0">
+                <tbody className="p-0">
+                  <tr className="h-14 ">
+                    <td className="bg-transparent mt-2 w-[60px] flex items-center justify-between overflow-hidden h-full p-0 border-r border-gray-300">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedKpi(kpi);
+                          setDrawerOpen(true);
+                        }}
+                        className="w-5"
+                      >
+                        <Ellipsis size={18} className="rotate-90" />
+                      </Button>
                       <Avatar
-                        className={`h-8 w-8 ${getColorFromName(kpi?.employeeName)}`}
+                        className={`h-6 w-6 mr-2 ${getColorFromName(kpi?.employeeName)}`}
                       >
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <AvatarFallback
-                                className={`${getColorFromName(kpi?.employeeName)} font-bold`}
+                                className={`${getColorFromName(kpi?.employeeName)} font-semibold`}
                               >
                                 {(() => {
                                   if (!kpi?.employeeName) return "";
@@ -436,50 +417,52 @@ export default function KPITable({ meetingId }: KpisProps) {
                                 })()}
                               </AvatarFallback>
                             </TooltipTrigger>
-                            <TooltipContent>{kpi?.employeeName}</TooltipContent>
+                            {/* <TooltipContent>{kpi?.employeeName}</TooltipContent> */}
                           </Tooltip>
                         </TooltipProvider>
                       </Avatar>
                     </td>
-                    <td className="w-[100px] min-w-[100px]">
-                      <div className="flex items-center gap-2 w-full ml-2">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="text-md cursor-default break-words whitespace-pre-line overflow-hidden m-0 p-0">
-                                {kpi?.kpiName}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <span>{kpi?.kpiLabel}</span>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => {
-                            setSelectedKpi(kpi);
-                            setDrawerOpen(true);
-                          }}
-                          className="ml-2 w-5"
-                        >
-                          <Ellipsis size={18} className="rotate-90" />
-                        </Button>
-                      </div>
-                    </td>
-                    <td
-                      className={clsx(
-                        "px-3 py-2 w-[150px] break-all overflow-hidden bg-gray-100 sticky left-0 z-10",
-                      )}
-                    >
-                      {kpi.tag}
-                    </td>
-                    <td className="px-3 py-2 w-[80px] bg-gray-100 sticky left-[210px] break-words z-10 pl-0 ml-2">
+                    <td className="w-[150px] min-w-[150px] max-w-[150px] text-left px-3 overflow-hidden border-r border-gray-300">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="truncate max-w-[100px] inline-block cursor-default break-words w-full">
+                            <span className="text-md cursor-default break-words whitespace-pre-line overflow-hidden m-0 p-0">
+                              {kpi?.kpiName}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <span>{kpi?.kpiLabel}</span>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </td>
+                    <td
+                      className={clsx(
+                        "p-0 w-[120px] min-w-[120px] max-w-[120px]  text-left px-3 overflow-hidden break-all border-r border-gray-300 sticky left-0 z-10",
+                      )}
+                    >
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-md cursor-default break-words whitespace-pre-line overflow-hidden m-0 p-0">
+                              {kpi?.tag}
+                            </span>
+                          </TooltipTrigger>
+                          {/* <TooltipContent>
+                            <span>{kpi?.tag}</span>
+                          </TooltipContent> */}
+                        </Tooltip>
+                      </TooltipProvider>
+                    </td>
+                    <td
+                      className={clsx(
+                        "px-3 w-[100px] min-w-[100px] max-w-[100px] text-left overflow-hidden break-all sticky left-0 z-10",
+                      )}
+                    >
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className=" truncate max-w-[82px] inline-block cursor-default break-words w-full">
                               {getFormattedValue(
                                 kpi.validationType,
                                 kpi?.value1,
@@ -503,21 +486,23 @@ export default function KPITable({ meetingId }: KpisProps) {
               </table>
             </div>
           </TableCell>
-
-          {/* <TableCell className="w-[60px] bg-gray-100 sticky left-[320px] z-10 text-center"></TableCell> */}
-          {headers.map((_, colIdx) => {
-            const cell = dataRow?.[colIdx];
+          {headers.map((header, colIdx) => {
+            // Find the data cell for this kpi and this date
+            let cell = null;
+            if (dataArray && Array.isArray(dataArray)) {
+              cell = dataArray[colIdx] || null;
+            }
             const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
-            const validationType = cell?.validationType;
-            const value1 = cell?.value1;
-            const value2 = cell?.value2;
+            const validationType = kpi?.validationType;
+            const value1 = kpi?.value1;
+            const value2 = kpi?.value2;
             const inputVal = inputValues[key] ?? cell?.data?.toString() ?? "";
             const isVisualized = kpi?.isVisualized;
-
             // Permission logic
-            const canAdd = !cell?.data;
-            const canEdit = !!cell?.data;
+            const canAdd = true;
+            const canEdit = true;
             const canInput = !isVisualized && (canAdd || canEdit);
+            // console.log(colIdx);
 
             if (validationType == "YES_NO") {
               const selectOptions = [
@@ -526,10 +511,10 @@ export default function KPITable({ meetingId }: KpisProps) {
               ];
               const isValid = inputVal === String(value1);
               return (
-                <TableCell key={colIdx} className="px-3 py-2">
+                <TableCell key={colIdx} className="py-0 px-1">
                   <div
                     className={clsx(
-                      "rounded-sm text-sm w-[100px] h-[40px]",
+                      "rounded-sm text-sm w-[80px] h-[42px]",
                       inputVal !== "" &&
                         (isValid
                           ? "bg-green-100 border border-green-500"
@@ -546,13 +531,13 @@ export default function KPITable({ meetingId }: KpisProps) {
                                 ...prev,
                                 [key]: Array.isArray(val)
                                   ? val.join(", ")
-                                  : val,
+                                  : String(val), // ensure string
                               }));
                               setTempValues((prev) => ({
                                 ...prev,
                                 [key]: Array.isArray(val)
                                   ? val.join(", ")
-                                  : val,
+                                  : String(val), // ensure string
                               }));
                             }
                           : () => {}
@@ -560,13 +545,14 @@ export default function KPITable({ meetingId }: KpisProps) {
                       options={selectOptions}
                       placeholder="Select"
                       disabled={!canInput}
+                      triggerClassName="text-sm  px-1  text-center justify-center"
                     />
                   </div>
                 </TableCell>
               );
             }
             return (
-              <TableCell key={colIdx} className="px-3 py-2">
+              <TableCell key={colIdx} className="py-0 px-0">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -616,7 +602,7 @@ export default function KPITable({ meetingId }: KpisProps) {
                             : undefined
                         }
                         className={clsx(
-                          "border p-2 rounded-sm text-center text-sm w-[100px] h-[40px]",
+                          "border p-2 rounded-sm text-center text-sm w-[80px] h-[42px]",
                           inputVal !== "" &&
                             validationType &&
                             (isValidInput(
@@ -665,10 +651,10 @@ export default function KPITable({ meetingId }: KpisProps) {
     );
   };
 
-  const headers = getKpiHeadersFromData(
-    isKpiDataCellArrayArray(kpiData?.data) ? kpiData.data : [],
-    selectedPeriod,
-  );
+  // REMOVE: const headers = getKpiHeadersFromData(
+  // REMOVE:   isKpiDataCellArrayArray(kpiData?.data) ? kpiData.data : [],
+  // REMOVE:   selectedPeriod
+  // REMOVE: );
 
   const renderCoreParameterHeader = (coreParameter: {
     coreParameterId: string;
@@ -691,17 +677,17 @@ export default function KPITable({ meetingId }: KpisProps) {
   const renderGroupedKpiRows = (
     groups: {
       coreParameter: { coreParameterId: string; coreParameterName: string };
-      kpis: { kpi: Kpi }[];
+      kpis: KpiAllList[];
+      dataArray?: KpiDataCell[];
     }[],
   ) => {
     return groups.map((group, groupIndex) => {
-      // console.log(group);
-
       return (
         <React.Fragment key={group.coreParameter.coreParameterId}>
           {renderCoreParameterHeader(group.coreParameter)}
-          {renderKpiRows(group.kpis)}
-
+          {renderKpiRows(
+            group.kpis.map((kpi) => ({ kpi, dataArray: kpi.dataArray ?? [] })),
+          )}
           {groupIndex < groups.length - 1 && (
             <TableRow>
               <TableCell
@@ -751,7 +737,9 @@ export default function KPITable({ meetingId }: KpisProps) {
     // console.log(formatTempValuesToPayload(tempValues));
     addUpdateKpiData(formatTempValuesToPayload(tempValues), {
       onSuccess: () => {
-        // kpisFireBase();
+        // queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] });
+        // queryClient.resetQueries({ queryKey: ["get-kpi-dashboard-data"] });
+        kpisFireBase();
       },
     });
   };
@@ -847,18 +835,19 @@ export default function KPITable({ meetingId }: KpisProps) {
     const payload = {
       meetingId: meetingId,
       kpiIds: tasks.map((item) => item.kpiId),
+      detailMeetingAgendaIssueId: meetingAgendaIssueId,
     };
     addKpiList(payload, {
       onSuccess: () => {
         queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] });
-        // kpisFireBase();
+        kpisFireBase();
       },
     });
   };
 
   return (
     <FormProvider {...methods}>
-      <div>
+      <div className="ml-6">
         <KpisSearchDropdown
           onAdd={handleAddKpis}
           minSearchLength={2}
@@ -908,28 +897,29 @@ export default function KPITable({ meetingId }: KpisProps) {
           <Table className="min-w-max text-sm text-center">
             <TableHeader>
               <TableRow className="h-[50px]">
-                <TableHead
-                  className={clsx("bg-primary w-[60px] sticky left-0 z-20")}
-                >
-                  <div>
-                    <table className="bg-transparent border-0">
+                <TableHead className={clsx("sticky left-0 z-20 bg-primary")}>
+                  <div className=" w-[450px]">
+                    <table className="bg-transparent border-0 w-full">
                       <thead>
                         <tr className="h-[50px]">
+                          <td className="w-[40px] py-2  bg-transparent sticky min-w-[40px] text-left  overflow-hidden text-base text-white">
+                            Who
+                          </td>
                           <td
                             className={clsx(
-                              "px-3 py-2 bg-transparent sticky left-[30px] z-20 text-white w-[120px] text-base text-center",
+                              " py-2 px-3 bg-transparent sticky left-[40px] z-20 text-white w-[200px] min-w-[200px] max-w-[200px] overflow-hidden text-base text-left",
                             )}
                           >
                             KPI
                           </td>
                           <td
                             className={clsx(
-                              "px-3 py-2 bg-transparent sticky left-[60px] z-20 text-white text-base w-[120px] text-center",
+                              "py-2 px-3 bg-transparent sticky z-20 text-white text-base  w-[120px] min-w-[120px] max-w-[120px] text-left",
                             )}
                           >
                             Tag
                           </td>
-                          <td className="px-3 py-2 w-[80px] bg-primary sticky left-[210px] z-20 text-white text-center">
+                          <td className=" py-2 px-3 w-[150px] sticky left-[210px] z-20 text-white text-left">
                             Goal
                           </td>
                         </tr>
@@ -937,23 +927,22 @@ export default function KPITable({ meetingId }: KpisProps) {
                     </table>
                   </div>
                 </TableHead>
-                {kpiHeaders.map(
-                  (header: { label: string; year: string }, i: number) => (
-                    <TableHead
-                      key={i}
-                      className="px-3 py-2 w-[100px] whitespace-nowrap bg-white text-gray-600"
-                    >
-                      <div className="flex flex-col items-center leading-tight">
-                        <span>{header.label}</span>
-                        {header.year && (
-                          <span className="text-xs text-muted-foreground">
-                            {header.year}
-                          </span>
-                        )}
-                      </div>
-                    </TableHead>
-                  ),
-                )}
+                {/* <TableHead className="w-[60px] bg-primary sticky left-[320px] z-20" /> */}
+                {headers.map((header, i) => (
+                  <TableHead
+                    key={i}
+                    className="px-3 w-[80px] whitespace-nowrap bg-white text-gray-600"
+                  >
+                    <div className="flex flex-col items-center leading-tight">
+                      <span>{header.label}</span>
+                      {header.year && (
+                        <span className="text-xs text-muted-foreground">
+                          {header.year}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>{renderGroupedKpiRows(groupedKpiRows)}</TableBody>

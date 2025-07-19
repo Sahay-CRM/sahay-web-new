@@ -1,14 +1,17 @@
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
-interface MeetingProjectRes {
-  detailMeetingProjectId: string;
-  detailMeetingId: string;
-  projectId: string;
-}
-type DatePaging = BaseResponse<MeetingProjectRes>;
+// interface MeetingProjectRes {
+//   detailMeetingProjectId: string;
+//   detailMeetingId: string;
+//   projectId: string;
+// }
+type DatePaging = BaseResponse<CompanyProjectDataProps>;
 
-export default function useGetMeetingProject({ filter }: FilterDataProps) {
+export default function useGetMeetingProject({
+  filter,
+  enable,
+}: FilterDataProps) {
   const query = useQuery({
     queryKey: ["get-meeting-Project-res", filter],
     queryFn: async () => {
@@ -21,6 +24,7 @@ export default function useGetMeetingProject({ filter }: FilterDataProps) {
 
       return resData.data;
     },
+    enabled: !!enable,
   });
   return query;
 }

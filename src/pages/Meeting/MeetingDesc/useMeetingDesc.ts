@@ -1,7 +1,6 @@
 import {
   createMeetingMutation,
   updateDetailMeetingMutation,
-  useGetCompanyMeetingById,
   useGetMeetingTiming,
 } from "@/features/api/companyMeeting";
 import { getMeeting } from "@/features/selectors/auth.selector";
@@ -26,27 +25,23 @@ export default function useMeetingDesc() {
   const { mutate: createMeet } = createMeetingMutation();
 
   const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
-  const { data: meetingData } = useGetCompanyMeetingById(meetingId ?? "");
 
   const handleUpdatedRefresh = useCallback(async () => {
     await Promise.all([
-      queryClient.resetQueries({ queryKey: ["get-meeting-details-timing"] }),
-      // queryClient.resetQueries({ queryKey: ["get-meeting-issue"] }),
-      // queryClient.resetQueries({ queryKey: ["get-meeting-objective"] }),
+      queryClient.invalidateQueries({
+        queryKey: ["get-meeting-details-timing"],
+      }),
     ]);
   }, []);
 
+  const db = getDatabase();
   useEffect(() => {
-    const db = getDatabase();
     const meetingRef = ref(db, `meetings/${meetingId}`);
 
     onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        console.log(data);
-
         setMeetingResponse(data);
-        handleUpdatedRefresh();
       } else {
         setMeetingResponse(null);
       }
@@ -55,7 +50,21 @@ export default function useMeetingDesc() {
     return () => {
       off(meetingRef);
     };
-  }, [handleUpdatedRefresh, meetingId]);
+  }, [db, handleUpdatedRefresh, meetingId]);
+
+  useEffect(() => {
+    const meetingRef = ref(db, `meetings/${meetingId}/state/activeTab`);
+
+    onValue(meetingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        handleUpdatedRefresh();
+      }
+    });
+
+    return () => {
+      off(meetingRef);
+    };
+  }, [db, handleUpdatedRefresh, meetingId]);
 
   // Accept callbacks for onStart and onEnd
   const handleStartMeeting = () => {
@@ -86,6 +95,7 @@ export default function useMeetingDesc() {
     if (meetingId) {
       const db = getDatabase();
       const meetStateRef = ref(db, `meetings/${meetingId}/state`);
+      const meetAgendaRef = ref(db, `meetings/${meetingId}/timers/agenda`);
       updateDetailMeeting(
         {
           meetingId: meetingId,
@@ -101,6 +111,9 @@ export default function useMeetingDesc() {
               currentAgendaItemId:
                 agendaList.items[0].detailMeetingAgendaIssueId,
             });
+            update(meetAgendaRef, {
+              actualTime: String(totalAgendaTime),
+            });
           },
         },
       );
@@ -113,7 +126,6 @@ export default function useMeetingDesc() {
     setIsMeetingStart,
     meetingStatus: meetingTiming?.status,
     handleDesc,
-    meetingData,
     meetingId,
     meetingResponse,
     meetingTiming,

@@ -11,21 +11,20 @@ export default function MeetingDesc() {
     handleStartMeeting,
     handleDesc,
     meetingStatus,
-    meetingData,
+    // meetingData,
     meetingId,
     meetingResponse,
     meetingTiming,
   } = useMeetingDesc();
   const { setBreadcrumbs } = useBreadcrumbs();
-  console.log(meetingStatus);
 
   useEffect(() => {
     setBreadcrumbs([
       { label: "Meeting", href: "/dashboard/meeting" },
       { label: "Meeting Detail", href: "" },
-      { label: `${meetingData?.data.meetingName}`, href: "" },
+      { label: `${meetingTiming?.meetingName}`, href: "" },
     ]);
-  }, [meetingData?.data.meetingName, setBreadcrumbs]);
+  }, [meetingTiming?.meetingName, setBreadcrumbs]);
 
   let content = null;
   if (meetingStatus === "NOT_STARTED" || meetingStatus === "STARTED") {
@@ -40,7 +39,6 @@ export default function MeetingDesc() {
     );
   } else if (meetingStatus === "DISCUSSION") {
     content = (
-      // <></>
       <Desc
         meetingStatus={meetingStatus}
         meetingResponse={meetingResponse}
@@ -48,8 +46,13 @@ export default function MeetingDesc() {
         meetingId={meetingId ?? ""}
       />
     );
-  } else if (meetingStatus === "ENDED") {
-    content = <Conclusion />;
+  } else if (meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") {
+    content = (
+      <Conclusion
+        meetingStatus={meetingStatus}
+        meetingResponse={meetingResponse}
+      />
+    );
   }
 
   return (

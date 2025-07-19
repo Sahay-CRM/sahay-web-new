@@ -14,64 +14,55 @@ import ProjectSearchDropdown from "./ProjectSearchDropdown";
 import {
   useAddUpdateCompanyProject,
   useGetAllProjectStatus,
-  useGetCompanyProject,
 } from "@/features/api/companyProject";
 import {
   addMeetingProjectDataMutation,
   deleteMeetingProjectMutation,
   useGetMeetingProject,
 } from "@/features/api/companyMeeting";
-import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import { queryClient } from "@/queryClient";
 
 interface ProjectProps {
   meetingId: string;
-  // projectFireBase: () => void;
+  projectsFireBase: () => void;
+  meetingAgendaIssueId: string | undefined;
 }
 
-export default function Projects({ meetingId }: ProjectProps) {
-  const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-    currentPage: 1,
-    pageSize: 25,
-    search: "",
-  });
-
+export default function Projects({
+  meetingId,
+  projectsFireBase,
+  meetingAgendaIssueId,
+}: ProjectProps) {
   const { mutate: addMeetingProject } = addMeetingProjectDataMutation();
   const { mutate: deleteProjectById } = deleteMeetingProjectMutation();
 
-  const { data: meetProject } = useGetMeetingProject({
+  const { data: selectedProjects } = useGetMeetingProject({
     filter: {
-      meetingId: meetingId,
+      detailMeetingAgendaIssueId: meetingAgendaIssueId,
     },
+    enable: !!meetingAgendaIssueId,
   });
 
   const { mutate: addProject } = useAddUpdateCompanyProject();
 
-  const stopApi = meetProject?.map((item) => item.projectId) ?? [];
-
-  const { data: selectedProjects } = useGetCompanyProject({
-    filter: {
-      ...paginationFilter,
-      projectIds: stopApi,
-    },
-    enable: Array.isArray(stopApi) && stopApi.length > 0,
-  });
-
   const { data: projectStatusList } = useGetAllProjectStatus();
 
   const handleAdd = (data: IProjectFormData[]) => {
-    const payload = {
-      meetingId: meetingId,
-      projectIds: data
-        .map((item) => item.projectId)
-        .filter((id): id is string => typeof id === "string"),
-    };
-    addMeetingProject(payload, {
-      onSuccess: () => {
-        queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
-        // projectFireBase();
-      },
-    });
+    if (meetingAgendaIssueId) {
+      const payload = {
+        meetingId: meetingId,
+        detailMeetingAgendaIssueId: meetingAgendaIssueId,
+        projectIds: data
+          .map((item) => item.projectId)
+          .filter((id): id is string => typeof id === "string"),
+      };
+      addMeetingProject(payload, {
+        onSuccess: () => {
+          queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
+          projectsFireBase();
+        },
+      });
+    }
   };
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -109,7 +100,12 @@ export default function Projects({ meetingId }: ProjectProps) {
       projectStatusId: data,
       projectId: row?.projectId,
     };
-    addProject(payload);
+    addProject(payload, {
+      onSuccess: () => {
+        projectsFireBase();
+        queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
+      },
+    });
   };
 
   const conformDelete = useCallback(
@@ -121,7 +117,7 @@ export default function Projects({ meetingId }: ProjectProps) {
         };
         deleteProjectById(payload, {
           onSuccess: () => {
-            // projectFireBase();
+            projectsFireBase();
             queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
           },
           onError: (error: Error) => {
@@ -137,7 +133,7 @@ export default function Projects({ meetingId }: ProjectProps) {
         });
       }
     },
-    [deleteProjectById, meetingId],
+    [deleteProjectById, meetingId, projectsFireBase],
   );
 
   return (
@@ -173,8 +169,11 @@ export default function Projects({ meetingId }: ProjectProps) {
       </div>
       <TableData
         tableData={
-          selectedProjects?.data?.map((item) => ({
+          selectedProjects?.map((item) => ({
             ...item,
+            projectDeadline: item.projectDeadline
+              ? new Date(item.projectDeadline).toISOString().split("T")[0]
+              : "",
             status: item.projectStatusId,
           })) ?? []
         }
@@ -191,8 +190,6 @@ export default function Projects({ meetingId }: ProjectProps) {
         }}
         // viewButton={true}
         permissionKey="users"
-        paginationDetails={mapPaginationDetails(selectedProjects)}
-        setPaginationFilter={setPaginationFilter}
         dropdownColumns={{
           projectStatus: {
             options: (projectStatusList?.data ?? []).map((opt) => ({

@@ -4,7 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 
 type DatePaging = CommonResponse<SelectedKpisData>;
 
-export default function useGetMeetingSelectedKpis({ filter }: FilterDataProps) {
+export default function useGetMeetingSelectedKpis({
+  filter,
+  enable,
+}: FilterDataProps) {
   const query = useQuery({
     queryKey: ["get-meeting-kpis-res", filter],
     queryFn: async () => {
@@ -17,6 +20,7 @@ export default function useGetMeetingSelectedKpis({ filter }: FilterDataProps) {
 
       return resData.data;
     },
+    enabled: !!enable,
   });
   return query;
 }

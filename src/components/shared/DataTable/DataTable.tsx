@@ -10,6 +10,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import {
   Pencil,
   Trash,
   ChevronUp,
@@ -30,17 +36,21 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
-import { isColorDark } from "@/features/utils/color.utils";
 
 interface DetailsPermission {
   view: boolean;
   edit?: boolean;
   delete?: boolean;
 }
+interface ColumnDefinition {
+  label: string;
+  width?: string; // optional width property
+}
 
 interface TableProps<T extends Record<string, unknown>> {
   tableData?: T[];
-  columns?: Partial<Record<keyof T, string>>;
+  columns?: Partial<Record<keyof T, ColumnDefinition>>;
+
   primaryKey: keyof T;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
@@ -61,7 +71,8 @@ interface TableProps<T extends Record<string, unknown>> {
   additionalButton?: ((item: T) => boolean) | React.ReactNode;
   viewButton?: React.ReactNode;
   onAdditionButton?: (item: T) => void;
-  isEditDelete?: boolean;
+  isEditDelete?: (item: T) => boolean;
+
   onViewButton?: (item: T) => void;
   permissionKey?: string | undefined;
   detailPageLink?: string;
@@ -80,26 +91,16 @@ interface TableProps<T extends Record<string, unknown>> {
   dropdownColumns?: Record<
     string,
     {
-      options: { label: string; value: string; color?: string }[];
+      options: { label: string; value: string }[];
       onChange: (item: T, value: string) => void;
     }
   >;
   sortableColumns?: string[];
-  showActiveToggle?: boolean; // Add this line
-  onToggleActive?: (item: T) => void; // Add this line
-  otherButton?: ExtraButton[];
-  showActionsColumn?: boolean;
+  onToggleActive?: (item: T) => void;
+  showActiveToggle?: boolean;
+  activeToggleKey?: string;
   isEditDeleteShow?: boolean;
-}
-
-interface ExtraButton {
-  buttonText?: string;
-  buttonClick?: (
-    event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-  ) => void;
-  buttonVariant?: string;
-  buttonCss: string;
-  btnDisable?: string;
+  showActionsColumn?: boolean;
 }
 
 const TableData = <T extends Record<string, unknown>>({
@@ -126,21 +127,20 @@ const TableData = <T extends Record<string, unknown>>({
   selectedValue = [],
   handleChange,
   onCheckbox,
-  isEditDelete = true,
+  isEditDelete,
   moduleKey = "",
   dropdownColumns = {},
   sortableColumns = [],
-  showActiveToggle = false,
   onToggleActive,
+  showActiveToggle = false,
+  activeToggleKey,
+  isEditDeleteShow = true,
   showActionsColumn = true,
-  isEditDeleteShow = false,
-  // otherButton = [],
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
-  // Only show checkboxes if explicitly enabled with multiSelect OR if both handleChange and onCheckbox are provided
+  // Only show checkboxes if explicitly enabled with multiSelect OR if both selectedValue and handleChange are provided
   const showCheckboxes =
-    multiSelect ||
-    (typeof handleChange === "function" && typeof onCheckbox === "function");
+    multiSelect || (!!selectedValue && !!handleChange && !!onCheckbox);
 
   const permission = useSelector(getUserPermission)?.[moduleKey];
 
@@ -241,68 +241,43 @@ const TableData = <T extends Record<string, unknown>>({
   };
 
   const getActiveState = (item: T) => {
-    return (item as { isDeactivated?: boolean }).isDeactivated;
+    return activeToggleKey ? item[activeToggleKey] : undefined;
   };
 
   return (
     <Card className="w-full p-2 mb-5">
       <div className="overflow-x-auto">
-        <Table className="min-w-full table-fixed border">
-          <TableHeader className="bg-primary">
-            <TableRow>
+        <Table className="w-full">
+          <TableHeader>
+            <TableRow className="justify-between">
               {showCheckboxes && (
-                <TableHead className="w-[40px] sticky left-0 z-20 bg-primary pl-6">
-                  {/* Checkbox Header */}
+                <TableHead className="w-[40px] pl-6">
+                  {/* Checkbox column header */}
                 </TableHead>
               )}
 
-              {showIndexColumn && (
-                <TableHead className="w-[80px] sticky left-[40px] z-20 bg-primary text-center">
-                  #
-                </TableHead>
-              )}
+              {showIndexColumn && <TableHead className="w-[80px]">#</TableHead>}
 
-              {columnKeys.map((clm, index) => (
+              {Object.keys(columns).map((clm, index) => (
                 <TableHead
                   key={clm + index}
                   className={`
-                truncate text-left px-4
-                ${clm === "srNo" ? "w-[80px]" : ""}
-                ${sortableColumns.includes(clm) ? "cursor-pointer select-none" : ""}
-              `}
+                    ${sortableColumns.includes(clm) ? "cursor-pointer select-none" : ""}
+                  `}
                   onClick={() => handleSort(clm)}
                 >
-                  {clm === "srNo" ? (
-                    <div className="flex items-center gap-1 truncate">
-                      <div className="truncate whitespace-nowrap">
-                        {columns[clm]}
-                      </div>
-                      {getSortIcon(clm)}
-                    </div>
-                  ) : (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="flex items-center gap-1 truncate">
-                          <div className="truncate whitespace-nowrap">
-                            {columns[clm]}
-                          </div>
-                          {getSortIcon(clm)}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>{columns[clm]}</TooltipContent>
-                    </Tooltip>
-                  )}
+                  <div className="flex items-center">
+                    <span className="truncate overflow-hidden whitespace-nowrap block max-w-full">
+                      {typeof columns[clm] === "string" ? columns[clm] : ""}
+                    </span>
+
+                    {getSortIcon(clm)}
+                  </div>
                 </TableHead>
               ))}
-
-              {showActionsColumn && (
-                <TableHead
-                  style={{ width: "fit-content" }}
-                  className=" sticky right-0 z-20 text-right bg-primary pr-2"
-                >
-                  Actions
-                </TableHead>
-              )}
+              <TableHead className="w-[120px] sticky right-0 text-left pr-3">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
 
@@ -329,27 +304,23 @@ const TableData = <T extends Record<string, unknown>>({
               tableData.map((item, index) => (
                 <TableRow
                   key={item[primaryKey] as React.Key}
-                  className={`${
-                    (item as { isDisabled?: boolean }).isDisabled
-                      ? "bg-gray-200 opacity-60 pointer-events-none select-none"
-                      : index % 2 === 0
-                        ? "bg-gray-25"
-                        : "bg-white"
-                  } hover:bg-gray-100`}
-                  onClick={() =>
-                    !(item as { isDisabled?: boolean }).isDisabled &&
-                    handleRowClickOrCheckbox(item)
-                  }
+                  className={`
+                    ${onRowClick || showCheckboxes ? "cursor-pointer" : ""}
+                    ${onRowClick ? "hover:bg-gray-100" : showCheckboxes ? "hover:bg-gray-100" : "hover:bg-gray-50"}
+                    ${index % 2 === 0 ? "bg-gray-25" : "bg-white"}
+                    ${(item as { isDeactivated?: boolean }).isDeactivated ? "bg-gray-200 hover:bg-gray-300" : ""}
+                  `}
+                  onClick={() => handleRowClickOrCheckbox(item)}
                 >
                   {showCheckboxes && (
                     <TableCell
-                      className="sticky left-0 z-10 bg-white pl-6"
+                      className="text-center p-0 whitespace-nowrap pl-6"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <FormCheckbox
                         id={`${String(item[primaryKey])}-checkbox`}
-                        className="w-[19px] aspect-square"
-                        containerClass="p-2"
+                        className="w-[19px] aspect-square tb:w-[18px]"
+                        containerClass="p-2 tb:p-3 mt-0 tb:mt-0"
                         onChange={(e) =>
                           handleCheckboxChange(item, e.target.checked)
                         }
@@ -358,7 +329,8 @@ const TableData = <T extends Record<string, unknown>>({
                             ? Array.isArray(selectedValue) &&
                               selectedValue.some((selected) => {
                                 const selectedId =
-                                  typeof selected === "object"
+                                  typeof selected === "object" &&
+                                  selected !== null
                                     ? selected[primaryKey]
                                     : selected;
                                 return selectedId === item[primaryKey];
@@ -366,14 +338,13 @@ const TableData = <T extends Record<string, unknown>>({
                             : (selectedValue as T)?.[primaryKey] ===
                               item[primaryKey]
                         }
-                        disabled={(item as { isDisabled?: boolean }).isDisabled}
                       />
                     </TableCell>
                   )}
 
                   {showIndexColumn && (
                     <TableCell
-                      className="sticky left-[40px] z-10 bg-white text-center"
+                      className="text-center p-0"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex flex-col items-center gap-0">
@@ -399,75 +370,79 @@ const TableData = <T extends Record<string, unknown>>({
                     </TableCell>
                   )}
 
-                  {columnKeys.map((clm) => (
+                  {columnKeys.map((clm, index) => (
                     <TableCell
                       key={`${item[primaryKey]}_${clm}`}
-                      className="truncate whitespace-nowrap px-4"
+                      className={`whitespace-nowrap truncate overflow-hidden text-ellipsis ${
+                        clm === "srNo"
+                          ? "pl-6 pr-1"
+                          : index === 1
+                            ? "pl-1 pr-4"
+                            : "px-4"
+                      }`}
+                      // Removed width styling for dynamic columns
                     >
                       {dropdownColumns[clm] ? (
-                        <select
-                          className="border rounded px-2 py-1 min-w-[100px]"
-                          style={{
-                            backgroundColor:
-                              dropdownColumns[clm].options.find(
-                                (option) => option.label === item[clm],
-                              )?.color || undefined,
-                            color: (() => {
-                              const bg = dropdownColumns[clm].options.find(
-                                (option) => option.label === item[clm],
-                              )?.color;
-                              return bg
-                                ? isColorDark(bg)
-                                  ? "#fff"
-                                  : "#000"
-                                : undefined;
-                            })(),
-                          }}
-                          value={item[clm] as string}
-                          onChange={(e) =>
-                            dropdownColumns[clm].onChange(item, e.target.value)
-                          }
-                          onClick={(e) => e.stopPropagation()}
-                          disabled={
-                            (item as { isDisabled?: boolean }).isDisabled
-                          }
-                        >
-                          <option value="" disabled>
-                            Select
-                          </option>
-                          {dropdownColumns[clm].options.map((option) => (
-                            <option
-                              key={option.value}
-                              value={option.value}
-                              className="text-black"
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 min-w-[100px] justify-between"
                             >
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
+                              {String(item[clm] || "Select")}
+                              <ChevronDown className="w-4 h-4 ml-2" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            {dropdownColumns[clm].options.map((option) => (
+                              <DropdownMenuItem
+                                key={option.value}
+                                onClick={() =>
+                                  dropdownColumns[clm].onChange(
+                                    item,
+                                    option.value,
+                                  )
+                                }
+                              >
+                                {option.label}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       ) : (
-                        <>
-                          {clm === "srNo" ? (
-                            <div className="truncate">
-                              {String(item[clm] ?? " - ")}
-                            </div>
-                          ) : (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="truncate">
-                                  {String(item[clm] ?? " - ")}
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {String(item[clm] ?? " - ")}
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="block truncate max-w-full cursor-default">
+                              {typeof item[clm] === "object" &&
+                              item[clm] !== null
+                                ? "label" in item[clm]
+                                  ? String(
+                                      (item[clm] as { label?: string }).label ??
+                                        " - ",
+                                    )
+                                  : JSON.stringify(item[clm])
+                                : String(item[clm] ?? " - ")}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="top"
+                            align="center"
+                            className="max-w-xs whitespace-normal"
+                          >
+                            {typeof item[clm] === "object" && item[clm] !== null
+                              ? "label" in item[clm]
+                                ? String(
+                                    (item[clm] as { label?: string }).label ??
+                                      " - ",
+                                  )
+                                : JSON.stringify(item[clm])
+                              : String(item[clm] ?? " - ")}
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                     </TableCell>
                   ))}
-
                   {showActionsColumn && (
                     <TableCell
                       className="sticky right-0 z-10 bg-white text-right pr-2"

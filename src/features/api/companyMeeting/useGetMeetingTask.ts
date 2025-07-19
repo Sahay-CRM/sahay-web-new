@@ -1,14 +1,10 @@
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
-interface MeetingTaskRes {
-  detailMeetingTaskId: string;
-  detailMeetingId: string;
-  taskId: string;
-}
-type DatePaging = BaseResponse<MeetingTaskRes>;
 
-export default function useGetMeetingTask({ filter }: FilterDataProps) {
+type DatePaging = BaseResponse<TaskGetPaging>;
+
+export default function useGetMeetingTask({ filter, enable }: FilterDataProps) {
   const query = useQuery({
     queryKey: ["get-meeting-tasks-res", filter],
     queryFn: async () => {
@@ -21,6 +17,7 @@ export default function useGetMeetingTask({ filter }: FilterDataProps) {
 
       return resData.data;
     },
+    enabled: !!enable,
   });
   return query;
 }

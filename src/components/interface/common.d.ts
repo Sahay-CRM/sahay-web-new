@@ -104,6 +104,7 @@ interface CompanyTaskData {
 interface CoreParameter {
   coreParameterId: string;
   departmentId: string;
+  departmentName: string;
   coreParameterName: string;
   createdBy: string;
   updatedBy: string;
@@ -351,6 +352,8 @@ interface CompanyProjectDataProps {
   projectStatusId: string;
   projectStatus?: ProjectStatusRes;
   otherProjectEmployees?: string[];
+  detailMeetingProjectId?: string;
+  detailMeetingId?: string;
 }
 
 interface ProjectParameters {
@@ -358,10 +361,10 @@ interface ProjectParameters {
   subParameters: SubParameter[];
 }
 
-interface CoreParameter {
-  coreParameterId: string;
-  coreParameterName: string;
-}
+// interface CoreParameter {
+//   coreParameterId: string;
+//   coreParameterName: string;
+// }
 
 interface SubParameter {
   projectSubParameterId: string;
@@ -388,12 +391,12 @@ interface SubParameter {
   coreParameter: CoreParameter;
 }
 
-interface CoreParameter {
-  coreParameterId: string;
-  coreParameterName: string;
-  departmentId: string;
-  departmentName: string;
-}
+// interface CoreParameter {
+//   coreParameterId: string;
+//   coreParameterName: string;
+//   departmentId: string;
+//   departmentName: string;
+// }
 
 interface DesignationDataProps {
   designationId: string;
@@ -598,6 +601,7 @@ interface TaskGetPaging {
   taskDeadline?: string;
   TaskCommentMaster?: TaskComment[];
   TaskEmployeeJunction?: TaskEmployee[];
+  assignUsers: Employee[];
   TaskMeetingJunction?: TaskMeeting[];
   companyAdminName?: string;
   companyAdminEmail?: string;
@@ -606,6 +610,8 @@ interface TaskGetPaging {
   taskDeadline?: string;
   taskStartDate?: string;
   color?: string;
+  detailMeetingTaskId?: string;
+  detailMeetingId?: string;
 }
 
 interface TaskProject {
@@ -986,7 +992,7 @@ interface HealthScoreResponse {
 }
 
 interface KpiDataCell {
-  kpiId: string;
+  kpiId?: string;
   validationType: string;
   startDate: string;
   endDate: string;
@@ -1075,8 +1081,10 @@ interface KpiAllList {
   dataPointLabel?: string;
   KPIMasterId?: string;
   kpiId: string;
-  KPIName: string;
-  KPILabel: string;
+  KPIName?: string;
+  kpiName?: string;
+  KPILabel?: string;
+  kpiLabel?: string;
   validationType: string;
   frequencyType: string;
   selectedType?: string | null;
@@ -1097,20 +1105,17 @@ interface KpiAllList {
   isVisualized: boolean;
 }
 
-interface SelectedKpisData {
-  kpiId: string;
-  kpiName: string;
-  kpiLabel: string;
-  frequencyType: string;
-  tag?: string | null;
-  unit: string;
-  validationType: string;
-  employeeName: string;
-  isVisualized: boolean;
-  value1: string;
-  value2?: string | null;
-  photo?: string | null;
+interface KPICoreParameter {
+  coreParameterId: string;
+  coreParameterName: string;
+  kpis: KpiAllList[];
   dataArray: KpiDataCell[];
+}
+
+interface SelectedKpisData {
+  frequencyType: string;
+  kpis: KPICoreParameter[];
+  count: number;
 }
 
 interface MeetingDetailsTiming {
@@ -1124,7 +1129,8 @@ interface MeetingDetailsTiming {
     employeeId: string;
     attendanceMark: boolean | null;
   }[];
-  status?: string; // Added to match backend response
+  status?: string;
+  meetingName?: string;
 }
 
 interface ConclusionResponse {

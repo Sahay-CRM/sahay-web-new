@@ -30,7 +30,7 @@ export default function Desc({
     totalData,
     currentIndex,
     allItems,
-    handleCloseMeetingWithLog,
+    handleConclusionMeeting,
     handleNextWithLog,
     handlePreviousWithLog,
     handleJump,
@@ -42,6 +42,8 @@ export default function Desc({
     handleTabChange,
     activeTab,
     tasksFireBase,
+    projectsFireBase,
+    kpisFireBase,
   } = useDesc({ meetingResponse, detailMeetingId });
 
   if (isLoading && meetingResponse) {
@@ -53,7 +55,10 @@ export default function Desc({
       </div>
     );
   }
-  // console.log(allItems);
+
+  if (!currentItem) {
+    return <div>No agenda item selected.</div>;
+  }
 
   return (
     <div className="flex">
@@ -123,9 +128,9 @@ export default function Desc({
                 <Button
                   variant="destructive"
                   className="ml-5"
-                  onClick={handleCloseMeetingWithLog}
+                  onClick={handleConclusionMeeting}
                 >
-                  End Meeting
+                  Conclusion Meeting
                 </Button>
               )}
             </div>
@@ -177,11 +182,16 @@ export default function Desc({
                     </div>
                   </nav>
                 </div>
-                <div className="relative flex-1 w-full p-6 bg-white rounded-2xl shadow-lg border">
+                <div
+                  // className="relative flex-1 w-full p-6 bg-white rounded-2xl shadow-lg border"
+                  className={`transition-all relative flex-1 duration-300 bg-white shadow-lg border rounded-xl
+          ${isSidebarCollapsed ? "w-12" : "w-64"} 
+          min-h-[200px] items-center`}
+                >
                   <Button
                     variant="ghost"
                     size="icon"
-                    className=" z-10 rounded-full w-9 h-9 bg-white border shadow-sm absolute -left-4 -top-4"
+                    className=" z-50 rounded-full w-9 h-9 bg-white border shadow-sm absolute -left-4 -top-4"
                     onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                   >
                     {isSidebarCollapsed ? (
@@ -195,38 +205,35 @@ export default function Desc({
                       <Tasks
                         meetingId={meetingId}
                         tasksFireBase={tasksFireBase}
+                        meetingAgendaIssueId={
+                          currentItem.detailMeetingAgendaIssueId
+                        }
                       />
                     </div>
                   )}
                   {activeTab === "projects" && (
                     <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <CheckSquare className="text-primary" />
-                          <h2 className="text-2xl font-bold text-primary">
-                            Projects
-                          </h2>
-                        </div>
-                        {/* Add search/filter controls here if needed */}
-                      </div>
                       <div className="overflow-x-auto">
-                        <Projects meetingId={meetingId} />
+                        <Projects
+                          meetingId={meetingId}
+                          projectsFireBase={projectsFireBase}
+                          meetingAgendaIssueId={
+                            currentItem.detailMeetingAgendaIssueId
+                          }
+                        />
                       </div>
                     </div>
                   )}
                   {activeTab === "kpis" && (
                     <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <BarChart2 className="text-primary" />
-                          <h2 className="text-2xl font-bold text-primary">
-                            KPIs
-                          </h2>
-                        </div>
-                        {/* Add search/filter controls here if needed */}
-                      </div>
                       <div className="overflow-x-auto">
-                        <KPITable meetingId={meetingId} />
+                        <KPITable
+                          meetingId={meetingId}
+                          kpisFireBase={kpisFireBase}
+                          meetingAgendaIssueId={
+                            currentItem.detailMeetingAgendaIssueId
+                          }
+                        />
                       </div>
                     </div>
                   )}

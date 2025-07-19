@@ -1,5 +1,5 @@
 import {
-  endMeetingMutation,
+  updateDetailMeetingMutation,
   useGetDetailMeetingAgenda,
   useGetDetailMeetingAgendaIssue,
 } from "@/features/api/companyMeeting";
@@ -25,7 +25,7 @@ export default function useDesc({
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const { mutate: endMeet } = endMeetingMutation();
+  const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
 
   const { data: allItems, isLoading } = useGetDetailMeetingAgenda({
     filter: {
@@ -50,9 +50,10 @@ export default function useDesc({
 
   const getCurrentItem = () => {
     const issueLength = allItems?.length ?? 0;
-    if (currentIndex < issueLength) {
+    if (currentIndex >= 0 && currentIndex < issueLength) {
       return allItems?.[currentIndex];
     }
+    return undefined;
   };
 
   const currentItem = getCurrentItem() as MeetingAgenda;
@@ -74,9 +75,25 @@ export default function useDesc({
     }
   }, [currentItem, meetingResponse]);
 
-  const handleCloseMeetingWithLog = () => {
+  const handleConclusionMeeting = () => {
     if (meetingId) {
-      endMeet(meetingId);
+      const db = getDatabase();
+      const meetStateRef = ref(db, `meetings/${meetingId}/state`);
+      updateDetailMeeting(
+        {
+          meetingId: meetingId,
+          status: "CONCLUSION",
+        },
+        {
+          onSuccess: () => {
+            update(meetStateRef, {
+              activeTab: "CONCLUSION",
+              lastSwitchTimestamp: Date.now(),
+              status: "CONCLUSION",
+            });
+          },
+        },
+      );
     }
   };
 
@@ -201,7 +218,10 @@ export default function useDesc({
   };
 
   const tasksFireBase = () => {
-    if (meetingResponse?.state.status === "DISCUSSION") {
+    if (
+      meetingResponse?.state.status === "DISCUSSION" &&
+      currentItem?.detailMeetingAgendaIssueId
+    ) {
       const db = getDatabase();
       const meetTaskRef = ref(
         db,
@@ -213,37 +233,95 @@ export default function useDesc({
     }
   };
 
-  const handleUpdatedRefresh = useCallback(async () => {
-    await Promise.all([
-      queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] }),
-    ]);
+  const projectsFireBase = () => {
+    if (
+      meetingResponse?.state.status === "DISCUSSION" &&
+      currentItem?.detailMeetingAgendaIssueId
+    ) {
+      const db = getDatabase();
+      const meetTaskRef = ref(
+        db,
+        `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}/projects`,
+      );
+      update(meetTaskRef, {
+        updatedAt: Date.now(),
+      });
+    }
+  };
+
+  const kpisFireBase = () => {
+    if (
+      meetingResponse?.state.status === "DISCUSSION" &&
+      currentItem?.detailMeetingAgendaIssueId
+    ) {
+      const db = getDatabase();
+      const meetTaskRef = ref(
+        db,
+        `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}/kpis`,
+      );
+      update(meetTaskRef, {
+        updatedAt: Date.now(),
+      });
+    }
+  };
+
+  const handleUpdatedRefresh = useCallback(async (type: string) => {
+    const queryMap: Record<string, string[] | undefined> = {
+      tasks: ["get-meeting-tasks-res"],
+      projects: ["get-meeting-Project-res"],
+      kpis: [
+        "get-meeting-kpis-res",
+        "get-kpi-dashboard-data",
+        // "get-kpi-dashboard-structure",
+      ],
+    };
+
+    const queryKeys = queryMap[type];
+
+    if (queryKeys?.length) {
+      await Promise.all(
+        queryKeys.map((key) => queryClient.resetQueries({ queryKey: [key] })),
+      );
+    }
   }, []);
 
   useEffect(() => {
-    const db = getDatabase();
-    const meetingRef = ref(
-      db,
-      `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}/tasks`,
-    );
+    if (!currentItem?.detailMeetingAgendaIssueId) return;
 
-    onValue(meetingRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        console.log(data);
-        handleUpdatedRefresh();
-      }
-    });
+    const db = getDatabase();
+    const paths = ["tasks", "projects", "kpis"] as const;
+
+    const listeners: { type: string; ref: ReturnType<typeof ref> }[] =
+      paths.map((type) => {
+        const dataRef = ref(
+          db,
+          `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}/${type}`,
+        );
+
+        onValue(dataRef, (snapshot) => {
+          if (snapshot.exists()) {
+            handleUpdatedRefresh(type);
+          }
+        });
+
+        // onValue(dataRef, callback);
+        return { type, ref: dataRef };
+      });
 
     return () => {
-      off(meetingRef);
+      listeners.forEach(({ ref }) => off(ref));
     };
-  }, [currentItem.detailMeetingAgendaIssueId, handleUpdatedRefresh, meetingId]);
+  }, [
+    currentItem?.detailMeetingAgendaIssueId,
+    handleUpdatedRefresh,
+    meetingId,
+  ]);
 
   return {
     totalData: allItems?.length ?? 0,
     currentIndex,
     allItems,
-    handleCloseMeetingWithLog,
+    handleConclusionMeeting,
     handleNextWithLog,
     handlePreviousWithLog,
     handleJump,
@@ -255,5 +333,7 @@ export default function useDesc({
     handleTabChange,
     activeTab,
     tasksFireBase,
+    projectsFireBase,
+    kpisFireBase,
   };
 }

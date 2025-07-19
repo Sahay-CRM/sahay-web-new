@@ -1,4 +1,6 @@
 import { useCallback, useState } from "react";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
@@ -8,10 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  useGetAllTaskStatus,
-  useGetCompanyTask,
-} from "@/features/api/companyTask";
+import { useGetAllTaskStatus } from "@/features/api/companyTask";
 
 import TaskSearchDropdown from "./TaskSearchDropdown";
 import {
@@ -19,24 +18,20 @@ import {
   deleteMeetingTaskMutation,
   useGetMeetingTask,
 } from "@/features/api/companyMeeting";
-import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
-import { AxiosError } from "axios";
-import { toast } from "sonner";
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
 import { queryClient } from "@/queryClient";
 
 interface TasksProps {
   meetingId: string;
   tasksFireBase: () => void;
+  meetingAgendaIssueId: string | undefined;
 }
 
-export default function Tasks({ meetingId, tasksFireBase }: TasksProps) {
-  const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-    currentPage: 1,
-    pageSize: 25,
-    search: "",
-  });
-
+export default function Tasks({
+  meetingId,
+  tasksFireBase,
+  meetingAgendaIssueId,
+}: TasksProps) {
   const { data: taskStatus } = useGetAllTaskStatus({
     filter: {},
   });
@@ -45,34 +40,28 @@ export default function Tasks({ meetingId, tasksFireBase }: TasksProps) {
   const { mutate: addMeetingTask } = addMeetingTaskDataMutation();
   const { mutate: deleteTaskById } = deleteMeetingTaskMutation();
 
-  const { data: meetTask } = useGetMeetingTask({
+  const { data: selectedTask } = useGetMeetingTask({
     filter: {
-      meetingId: meetingId,
+      detailMeetingAgendaIssueId: meetingAgendaIssueId,
     },
-  });
-
-  const stopTaskApi = meetTask?.map((item) => item.taskId) ?? [];
-
-  const { data: selectedTask } = useGetCompanyTask({
-    filter: {
-      ...paginationFilter,
-      taskIds: stopTaskApi,
-    },
-    enable: Array.isArray(stopTaskApi) && stopTaskApi.length > 0,
+    enable: !!meetingAgendaIssueId,
   });
 
   const handleAddTasks = (tasks: TaskGetPaging[]) => {
-    const payload = {
-      meetingId: meetingId,
-      taskIds: tasks.map((item) => item.taskId),
-    };
-    addMeetingTask(payload, {
-      onSuccess: () => {
-        queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
-        tasksFireBase();
-        // setSelectedTask(tasks);
-      },
-    });
+    if (meetingAgendaIssueId) {
+      const payload = {
+        meetingId: meetingId,
+        taskIds: tasks.map((item) => item.taskId),
+        detailMeetingAgendaIssueId: meetingAgendaIssueId,
+      };
+      addMeetingTask(payload, {
+        onSuccess: () => {
+          queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
+          tasksFireBase();
+          // setSelectedTask(tasks);
+        },
+      });
+    }
   };
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -111,7 +100,12 @@ export default function Tasks({ meetingId, tasksFireBase }: TasksProps) {
       taskStatusId: data,
       taskId: row?.taskId,
     };
-    updateCompanyTask(payload);
+    updateCompanyTask(payload, {
+      onSuccess: () => {
+        queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
+        tasksFireBase();
+      },
+    });
   };
 
   const conformDelete = useCallback(
@@ -174,9 +168,18 @@ export default function Tasks({ meetingId, tasksFireBase }: TasksProps) {
         </div>
       </div>
       <TableData
-        tableData={(selectedTask?.data ?? []).map((task) => ({
+        tableData={(selectedTask ?? []).map((task) => ({
           ...task,
           status: task.taskStatusId,
+          assigneeNames: task.assignUsers
+            ? task.assignUsers
+                .map((j) => j.employeeName)
+                .filter(Boolean)
+                .join(", ")
+            : "",
+          taskDeadline: task.taskDeadline
+            ? new Date(task.taskDeadline).toISOString().split("T")[0]
+            : "",
         }))}
         columns={visibleColumns}
         primaryKey="taskId"
@@ -186,14 +189,13 @@ export default function Tasks({ meetingId, tasksFireBase }: TasksProps) {
         // }}
         showIndexColumn={false}
         isActionButton={() => true}
-        isEditDelete={true}
+        isEditDelete={() => true}
         // viewButton={true}
         permissionKey="users"
-        paginationDetails={mapPaginationDetails(selectedTask)}
-        setPaginationFilter={setPaginationFilter}
         onDelete={(row) => {
           conformDelete(row as unknown as TaskGetPaging);
         }}
+        showActionsColumn={true}
         isEditDeleteShow={true}
         dropdownColumns={{
           taskStatus: {
