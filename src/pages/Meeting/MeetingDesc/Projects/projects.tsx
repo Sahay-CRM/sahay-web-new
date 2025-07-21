@@ -21,37 +21,47 @@ import {
   useGetMeetingProject,
 } from "@/features/api/companyMeeting";
 import { queryClient } from "@/queryClient";
+import ProjectDrawer from "./projectDrawer";
 
 interface ProjectProps {
   meetingId: string;
   projectsFireBase: () => void;
   meetingAgendaIssueId: string | undefined;
+  detailMeetingId: string | undefined;
 }
 
 export default function Projects({
   meetingId,
   projectsFireBase,
   meetingAgendaIssueId,
+  detailMeetingId,
 }: ProjectProps) {
   const { mutate: addMeetingProject } = addMeetingProjectDataMutation();
   const { mutate: deleteProjectById } = deleteMeetingProjectMutation();
 
   const { data: selectedProjects } = useGetMeetingProject({
     filter: {
+      detailMeetingId: detailMeetingId,
       detailMeetingAgendaIssueId: meetingAgendaIssueId,
     },
-    enable: !!meetingAgendaIssueId,
+    enable: !!detailMeetingId && !!meetingAgendaIssueId,
   });
 
   const { mutate: addProject } = useAddUpdateCompanyProject();
 
   const { data: projectStatusList } = useGetAllProjectStatus();
 
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selected, setSelected] = useState<CompanyProjectDataProps | null>(
+    null,
+  );
+
   const handleAdd = (data: IProjectFormData[]) => {
-    if (meetingAgendaIssueId) {
+    if (meetingAgendaIssueId && detailMeetingId) {
       const payload = {
         meetingId: meetingId,
         detailMeetingAgendaIssueId: meetingAgendaIssueId,
+        detailMeetingId: detailMeetingId,
         projectIds: data
           .map((item) => item.projectId)
           .filter((id): id is string => typeof id === "string"),
@@ -137,7 +147,7 @@ export default function Projects({
   );
 
   return (
-    <div>
+    <div className="p-4">
       <div className="flex gap-5 justify-between mb-5">
         <div>
           <ProjectSearchDropdown
@@ -188,6 +198,12 @@ export default function Projects({
         onDelete={(row) => {
           conformDelete(row as unknown as IProjectFormData);
         }}
+        onRowClick={(row) => {
+          if (row) {
+            setSelected(row);
+            setDrawerOpen(true);
+          }
+        }}
         // viewButton={true}
         permissionKey="users"
         dropdownColumns={{
@@ -205,6 +221,14 @@ export default function Projects({
         // }}
         sortableColumns={["projectName", "projectDeadline"]}
       />
+
+      {drawerOpen && (
+        <ProjectDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          projectData={selected}
+        />
+      )}
     </div>
   );
 }

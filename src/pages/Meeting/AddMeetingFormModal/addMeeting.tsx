@@ -115,9 +115,7 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
     control,
     watch,
     setValue,
-    getValues,
   } = useFormContext();
-  console.log(getValues());
 
   const meetingType = watch("meetingTypeId");
 
@@ -309,7 +307,7 @@ const Joiners = () => {
                 paginationDetails={mapPaginationDetails(employeedata)}
                 setPaginationFilter={setPaginationFilter}
                 multiSelect={true}
-                isEditDelete={false}
+                isEditDelete={() => false}
                 moduleKey="emp"
                 isActionButton={() => false}
                 showActionsColumn={meetingType?.parentType === "DETAIL"}

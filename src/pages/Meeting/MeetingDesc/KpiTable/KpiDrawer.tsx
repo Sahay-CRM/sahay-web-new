@@ -2,16 +2,17 @@ import {
   useAddUpdateDatapoint,
   useGetDatapointById,
 } from "@/features/api/companyDatapoint";
-import { useGetCoreParameterDropdown } from "@/features/api/Business";
 import React, { useRef, useEffect, useState } from "react";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { queryClient } from "@/queryClient";
+import { deleteMeetingKpisMutation } from "@/features/api/companyMeeting";
 
 interface KpiDrawerProps {
   open: boolean;
   onClose: () => void;
   kpiId?: string;
+  meetingId: string;
 }
 
 const frequenceOptions = [
@@ -33,19 +34,35 @@ const validationOptions = [
   { value: "YES_NO", label: "Yes/No" },
 ];
 
-const KpiDrawer: React.FC<KpiDrawerProps> = ({ open, onClose, kpiId }) => {
+const KpiDrawer: React.FC<KpiDrawerProps> = ({
+  open,
+  onClose,
+  kpiId,
+  meetingId,
+}) => {
   const drawerRef = useRef<HTMLDivElement>(null);
   const { data: kpiData } = useGetDatapointById(kpiId || "");
-  const { data: corePara } = useGetCoreParameterDropdown();
 
   const { mutate: addDatapoint } = useAddUpdateDatapoint();
+  const { mutate: deleteKpi } = deleteMeetingKpisMutation();
 
-  const coreParameterOption = corePara
-    ? corePara.data.map((status) => ({
-        label: status.coreParameterName,
-        value: status.coreParameterId,
-      }))
-    : [];
+  // You need to provide meetingId here. Replace 'yourMeetingId' with the actual meetingId from props or context.
+  const handleDeleteKpi = () => {
+    if (kpiId && meetingId) {
+      deleteKpi(
+        {
+          kpiId: kpiId,
+          meetingId: meetingId,
+        },
+        {
+          onSuccess: () => {
+            queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] });
+            onClose();
+          },
+        },
+      );
+    }
+  };
 
   const onSubmit = (data: KPIFormData) => {
     const payload = {
@@ -82,12 +99,27 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({ open, onClose, kpiId }) => {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      // If click is inside the drawer, do nothing
       if (
         drawerRef.current &&
-        !drawerRef.current.contains(event.target as Node)
+        drawerRef.current.contains(event.target as Node)
       ) {
-        onClose();
+        return;
       }
+      // If click is inside a select or popover menu, do nothing
+      if (
+        (event.target as HTMLElement).closest('[data-slot="select-content"]') ||
+        (event.target as HTMLElement).closest(
+          '[data-slot="popover-content"]',
+        ) ||
+        (event.target as HTMLElement).closest(
+          "[data-radix-popper-content-wrapper]",
+        )
+      ) {
+        return;
+      }
+      // Otherwise, close the drawer
+      onClose();
     }
     if (open) {
       document.addEventListener("mousedown", handleClickOutside);
@@ -110,7 +142,6 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({ open, onClose, kpiId }) => {
     return frequenceOptions.slice(frequencyIndex + 1);
   };
 
-  // Handle input/select change
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChange = (key: string, value: any) => {
     if (!editableData) return;
@@ -121,9 +152,8 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({ open, onClose, kpiId }) => {
     <>
       {/* Overlay */}
       {open && (
-        <div className="fixed inset-0 backdrop-blur-sm z-40 transition-opacity" />
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/30 z-50 transition-opacity" />
       )}
-      {/* Drawer */}
       <div
         ref={drawerRef}
         className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out
@@ -133,7 +163,9 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({ open, onClose, kpiId }) => {
       >
         <div className="h-[calc(100vh-30px)] overflow-scroll">
           <div className="flex justify-between items-center p-4 border-b">
-            <h2 className="text-lg font-semibold">KPI Drawer</h2>
+            <h2 className="text-lg font-semibold">
+              {kpiData?.KPIMaster?.KPIName}
+            </h2>
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700"
@@ -143,22 +175,12 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({ open, onClose, kpiId }) => {
           </div>
           {editableData && (
             <div className="p-4 space-y-4">
-              <FormInputField
-                label="KPI Name"
-                value={editableData.dataPointName || ""}
-                disabled
-              />
-              <FormSelect
-                label="Core Parameter"
-                value={editableData.coreParameterId || ""}
-                onChange={(val) => handleChange("coreParameterId", val)}
-                options={coreParameterOption}
-              />
               <FormSelect
                 label="Frequency"
                 value={editableData.frequencyType || ""}
                 onChange={(val) => handleChange("frequencyType", val)}
                 options={frequenceOptions}
+                disabled
               />
               <FormInputField
                 label="Tag"
@@ -179,11 +201,13 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({ open, onClose, kpiId }) => {
               <FormInputField
                 label="Value 1"
                 value={editableData.value1 || ""}
+                type="number"
                 onChange={(e) => handleChange("value1", e.target.value)}
               />
               {editableData.validationType === "EQUAL_TO" && (
                 <FormInputField
                   label="Value 2"
+                  type="number"
                   value={editableData.value2 || ""}
                   onChange={(e) => handleChange("value2", e.target.value)}
                 />
@@ -198,10 +222,16 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({ open, onClose, kpiId }) => {
                 />
               )}
               <button
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80"
                 onClick={() => onSubmit(editableData)}
               >
                 Submit
+              </button>
+              <button
+                className="bg-red-500 ml-5 text-white px-4 py-2 rounded hover:bg-red-700"
+                onClick={handleDeleteKpi}
+              >
+                Delete From Meeting
               </button>
             </div>
           )}

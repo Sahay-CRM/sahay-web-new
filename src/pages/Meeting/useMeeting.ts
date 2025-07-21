@@ -251,15 +251,14 @@ export default function useAdminUser() {
 
   const handleOverdueToggle = () => {
     const newOverdueState = !showOverdue;
-    // Reset date range when toggling overdue
     if (newOverdueState) {
       setTaskDateRange({
-        taskStartDate: new Date(),
-        taskDeadline: new Date(),
+        taskStartDate: before14,
+        taskDeadline: after14,
       });
       setAppliedDateRange({
-        taskStartDate: new Date(),
-        taskDeadline: new Date(),
+        taskStartDate: before14,
+        taskDeadline: after14,
       });
     }
 

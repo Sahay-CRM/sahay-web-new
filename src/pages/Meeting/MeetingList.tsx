@@ -113,7 +113,7 @@ export default function MeetingList() {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
           <div>
             <SearchInput
               placeholder="Search..."
@@ -122,7 +122,7 @@ export default function MeetingList() {
               className="w-80"
             />
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             <div className="z-10 relative flex items-center gap-2">
               {!showOverdue && (
                 <DateRangePicker

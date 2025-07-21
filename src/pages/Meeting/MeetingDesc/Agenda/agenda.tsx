@@ -84,6 +84,9 @@ interface AgendaProps {
   meetingResponse?: MeetingResFire | null;
   agendaPlannedTime: number | string | undefined;
   detailMeetingId: string | undefined;
+  handleStartMeeting: () => void;
+  handleDesc: () => void;
+  joiners: Joiners[];
 }
 
 export default function Agenda({
@@ -92,6 +95,9 @@ export default function Agenda({
   meetingResponse,
   agendaPlannedTime = 0,
   detailMeetingId,
+  handleStartMeeting,
+  handleDesc,
+  joiners,
 }: AgendaProps) {
   const dispatch = useDispatch();
   const [issueInput, setIssueInput] = useState("");
@@ -389,20 +395,40 @@ export default function Agenda({
         defaultType=""
         onSubmit={handleModalSubmit}
       />
-      <div className="flex gap-5 items-center">
-        <h2 className="text-lg">Agenda</h2>
-        <Timer
-          plannedTime={Number(agendaPlannedTime)}
-          actualTime={0}
-          lastSwitchTimestamp={Number(
-            meetingResponse?.state.lastSwitchTimestamp,
-          )}
-          meetingStart={meetingStatus === "STARTED"}
-        />
+      <div className="flex justify-between gap-4 items-center">
+        <div className=" flex gap-4 ">
+          <h2 className="text-2xl font-semibold">Agenda</h2>
+          <Timer
+            plannedTime={Number(agendaPlannedTime)}
+            actualTime={0}
+            lastSwitchTimestamp={Number(
+              meetingResponse?.state.lastSwitchTimestamp,
+            )}
+            meetingStart={meetingStatus === "STARTED"}
+            className="text-2xl font-medium text-primary"
+          />
+        </div>
+        {meetingStatus === "NOT_STARTED" && (
+          <Button
+            variant="outline"
+            className="bg-primary text-white cursor-pointer"
+            onClick={handleStartMeeting}
+          >
+            Start Meeting
+          </Button>
+        )}
+        {meetingStatus && meetingStatus === "STARTED" && (
+          <Button
+            variant="outline"
+            className="cursor-pointer bg-primary text-white"
+            onClick={handleDesc}
+          >
+            Start Discussion
+          </Button>
+        )}
       </div>
-      <div className="">
-        <div className="px-4">
-          <h4 className="font-medium">Issues</h4>
+      <div className="flex gap-4">
+        <div className="px-4 w-full">
           {canEdit && (
             <div className="flex gap-2 relative">
               <Input
@@ -411,7 +437,7 @@ export default function Agenda({
                   setIssueInput(e.target.value);
                   setDropdownVisible(true);
                 }}
-                placeholder="Enter an issue"
+                placeholder="Add or Create Agenda"
                 onFocus={() => setDropdownVisible(true)}
                 onBlur={() => setTimeout(() => setDropdownVisible(false), 150)}
                 onKeyDown={(e) => {
@@ -702,6 +728,11 @@ export default function Agenda({
               <p className="text-gray-500 text-sm">No issues added</p>
             )}
           </div>
+        </div>
+        <div className="border w-[200px]">
+          {joiners.map((item) => (
+            <div key={item.employeeId}>{item.employeeName}</div>
+          ))}
         </div>
       </div>
     </div>

@@ -501,7 +501,7 @@ export default function KPITable() {
               );
             }
             return (
-              <TableCell key={colIdx} className="py-0 px-0">
+              <TableCell key={colIdx} className="py-0 px-1">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -825,12 +825,12 @@ export default function KPITable() {
         <div className="overflow-x-auto w-full scroll-thin">
           <Table className="min-w-max text-sm text-center">
             <TableHeader>
-              <TableRow className="h-[50px]">
+              <TableRow className="h-[50px] ">
                 <TableHead className={clsx("sticky left-0 z-20 bg-primary")}>
-                  <div className=" w-[450px]">
-                    <table className="bg-transparent border-0 w-full">
+                  <div className=" w-[450px] ">
+                    <table className="bg-transparent  w-full">
                       <thead>
-                        <tr className="h-[50px]">
+                        <tr className="h-[50px] border-0" style={{ border: 0 }}>
                           <td className="w-[40px] py-2  bg-transparent sticky min-w-[40px] text-left  overflow-hidden text-base text-white">
                             Who
                           </td>
@@ -860,7 +860,7 @@ export default function KPITable() {
                 {headers.map((header, i) => (
                   <TableHead
                     key={i}
-                    className="px-3 w-[80px] whitespace-nowrap bg-white text-gray-600"
+                    className="px-1 w-[80px] whitespace-nowrap bg-white text-gray-600"
                   >
                     <div className="flex flex-col items-center leading-tight">
                       <span>{header.label}</span>

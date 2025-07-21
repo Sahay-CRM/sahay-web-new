@@ -12,6 +12,7 @@ interface TimerProps {
   onTimeUpdate?: (newTime: number) => void;
   // defaultTime?: number;
   isEditMode?: boolean;
+  className?: string;
 }
 
 export default function Timer({
@@ -22,10 +23,8 @@ export default function Timer({
   onTimeUpdate,
   // defaultTime,
   isEditMode = false,
+  className,
 }: TimerProps) {
-  // const initialTime =
-  //   !meetingStart && defaultTime !== undefined ? defaultTime : plannedTime;
-
   const [displayTime, setDisplayTime] = useState(plannedTime - actualTime);
   const [editMode, setEditMode] = useState(isEditMode);
   const [editMinutes, setEditMinutes] = useState(
@@ -106,7 +105,10 @@ export default function Timer({
           </>
         ) : (
           <>
-            <span style={{ color: displayTime < 0 ? "red" : undefined }}>
+            <span
+              style={{ color: displayTime < 0 ? "red" : undefined }}
+              className={className}
+            >
               {`${editMinutes.padStart(2, "0")}:${editSeconds.padStart(2, "0")}`}
             </span>
             <Button
@@ -125,7 +127,10 @@ export default function Timer({
   }
 
   return (
-    <span style={{ color: displayTime < 0 ? "red" : undefined }}>
+    <span
+      style={{ color: displayTime < 0 ? "red" : undefined }}
+      className={className}
+    >
       {formatTime(displayTime)}
     </span>
   );

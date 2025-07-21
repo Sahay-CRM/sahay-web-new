@@ -7,7 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 interface MeetingTaskAdd {
-  meetingId: string;
+  detailMeetingId: string;
   taskIds: string[];
   detailMeetingAgendaIssueId: string;
 }

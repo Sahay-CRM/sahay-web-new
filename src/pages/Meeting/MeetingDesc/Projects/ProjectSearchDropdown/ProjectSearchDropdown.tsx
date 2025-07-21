@@ -71,7 +71,7 @@ export default function ProjectSearchDropdown({
         </span>
         <Input
           type="text"
-          placeholder="Search..."
+          placeholder="Add or Create Project"
           value={searchValue}
           onChange={(e) => {
             setSearchValue(e.target.value);

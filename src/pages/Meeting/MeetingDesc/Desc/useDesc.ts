@@ -280,7 +280,7 @@ export default function useDesc({
 
     if (queryKeys?.length) {
       await Promise.all(
-        queryKeys.map((key) => queryClient.resetQueries({ queryKey: [key] })),
+        queryKeys.map((key) => queryClient.prefetchQuery({ queryKey: [key] })),
       );
     }
   }, []);
