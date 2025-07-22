@@ -27,4 +27,15 @@ interface CustomError {
 
 interface RootState {
   auth: AuthState;
+  meeting: MeetingState;
+}
+
+// interface MeetingItem {
+//   id: string;
+//   label: string;
+//   index: number | string;
+// }
+
+interface MeetingState {
+  items: MeetingAgenda[];
 }

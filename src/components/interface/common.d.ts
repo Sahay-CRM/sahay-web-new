@@ -104,6 +104,7 @@ interface CompanyTaskData {
 interface CoreParameter {
   coreParameterId: string;
   departmentId: string;
+  departmentName: string;
   coreParameterName: string;
   createdBy: string;
   updatedBy: string;
@@ -275,13 +276,14 @@ interface ImportantDatesDataProps {
 
 interface CompanyMeetingDataProps {
   meetingId?: string;
-  meetingName: string;
-  meetingDescription: string;
-  meetingDateTime: string;
-  meetingTypeId: string;
-  meetingStatusId: string;
+  meetingName?: string;
+  meetingDescription?: string;
+  meetingDateTime?: string;
+  meetingTypeId?: string;
+  parentType?: string;
+  meetingStatusId?: string;
   companyMeetingId?: string;
-  joiners?: string[];
+  joiners?: string[] | Joiners[];
   meetingStatus?: CompanyMeetingStatusDataProps;
   meetingType?: CompanyMeetingTypeDataProps;
   files?: [
@@ -290,6 +292,17 @@ interface CompanyMeetingDataProps {
       fileName: string;
     },
   ];
+  teamLeaders?: string[];
+  employeeId?: string;
+  attendanceMark?: boolean;
+  detailMeetingStatus?: string;
+}
+
+interface Joiners {
+  employeeId: string;
+  employeeName: string;
+  isTeamLeader?: boolean;
+  photo?: string;
 }
 
 interface CompanyDatapointDataProps {
@@ -322,6 +335,7 @@ interface CompanyMeetingStatusDataProps {
 interface CompanyMeetingTypeDataProps {
   meetingTypeId: string;
   meetingTypeName: string;
+  parentType?: string;
 }
 
 interface CompanyProjectDataProps {
@@ -338,6 +352,8 @@ interface CompanyProjectDataProps {
   projectStatusId: string;
   projectStatus?: ProjectStatusRes;
   otherProjectEmployees?: string[];
+  detailMeetingProjectId?: string;
+  detailMeetingId?: string;
 }
 
 interface ProjectParameters {
@@ -345,10 +361,10 @@ interface ProjectParameters {
   subParameters: SubParameter[];
 }
 
-interface CoreParameter {
-  coreParameterId: string;
-  coreParameterName: string;
-}
+// interface CoreParameter {
+//   coreParameterId: string;
+//   coreParameterName: string;
+// }
 
 interface SubParameter {
   projectSubParameterId: string;
@@ -375,12 +391,12 @@ interface SubParameter {
   coreParameter: CoreParameter;
 }
 
-interface CoreParameter {
-  coreParameterId: string;
-  coreParameterName: string;
-  departmentId: string;
-  departmentName: string;
-}
+// interface CoreParameter {
+//   coreParameterId: string;
+//   coreParameterName: string;
+//   departmentId: string;
+//   departmentName: string;
+// }
 
 interface DesignationDataProps {
   designationId: string;
@@ -467,6 +483,7 @@ interface EmployeeDetails {
   companyAdminName: string;
   reportingManager: null;
   isDeactivated?: boolean;
+  isTeamLeader?: boolean;
 }
 
 interface EmployeeCompany {
@@ -584,6 +601,7 @@ interface TaskGetPaging {
   taskDeadline?: string;
   TaskCommentMaster?: TaskComment[];
   TaskEmployeeJunction?: TaskEmployee[];
+  assignUsers: Employee[];
   TaskMeetingJunction?: TaskMeeting[];
   companyAdminName?: string;
   companyAdminEmail?: string;
@@ -592,6 +610,8 @@ interface TaskGetPaging {
   taskDeadline?: string;
   taskStartDate?: string;
   color?: string;
+  detailMeetingTaskId?: string;
+  detailMeetingId?: string;
 }
 
 interface TaskProject {
@@ -972,7 +992,7 @@ interface HealthScoreResponse {
 }
 
 interface KpiDataCell {
-  kpiId: string;
+  kpiId?: string;
   validationType: string;
   startDate: string;
   endDate: string;
@@ -995,4 +1015,260 @@ interface ChangeLog<T> {
   newValue: T;
   logType: string;
   logTime: string;
+}
+
+interface MeetingObjective {
+  detailMeetingAgendaObjectiveId: string;
+  detailMeetingId: string;
+  agendaObjective: string;
+  objectivePlannedTime?: string;
+}
+
+// interface IssueObjective {
+//   agendaIssue?: string;
+//   detailMeetingAgendaIssueId?: string;
+//   detailMeetingId: string;
+//   isResolved?: boolean;
+//   issueActualTime?: string | null;
+//   issuePlannedTime?: string;
+//   sequence?: string | null;
+//   agendaObjective?: string;
+//   detailMeetingAgendaObjectiveId?: string;
+//   objectiveActualTime?: string | null;
+//   objectivePlannedTime?: string;
+// }
+
+interface TimerEntry {
+  actualTime: number;
+  updatedAt: number | string;
+  activeTab?: string;
+}
+
+interface MeetingResFire {
+  state: {
+    lastSwitchTimestamp: number;
+    activeTab: string;
+    currentAgendaItemId?: string;
+    status?: string;
+  };
+  timers: {
+    agenda?: TimerEntry;
+    conclusion?: TimerEntry;
+    objectives?: {
+      [objectiveId: string]: TimerEntry;
+    };
+  };
+  activeScreen?: string;
+  meetingId: string;
+  updatedAt: string | number;
+  agenda?: { updatedAt: string | number };
+  conclusion?: { updatedAt: string | number };
+  discussion?: { updatedAt: string | number };
+  follow?: string;
+}
+
+interface FbIssues {
+  id: string;
+  actualTime: string;
+}
+
+interface HandleTabChangeLocalProps {
+  (tab: string): void;
+}
+
+interface KpiAllList {
+  dataPointName?: string;
+  dataPointLabel?: string;
+  KPIMasterId?: string;
+  kpiId: string;
+  KPIName?: string;
+  kpiName?: string;
+  KPILabel?: string;
+  kpiLabel?: string;
+  validationType: string;
+  frequencyType: string;
+  selectedType?: string | null;
+  coreParameterId?: string;
+  employeeName?: string;
+  dataPointEmployeeJunction?: {
+    dataPointEmpId: string;
+    employeeId: string;
+    value1: string;
+    value2: string;
+    employeeName: string;
+  }[];
+  dataArray?: KpiDataCell[];
+  tag?: string | null;
+  value1: string;
+  value2?: string | null;
+  unit?: string;
+  isVisualized: boolean;
+}
+
+interface KPICoreParameter {
+  coreParameterId: string;
+  coreParameterName: string;
+  kpis: KpiAllList[];
+  dataArray: KpiDataCell[];
+}
+
+interface SelectedKpisData {
+  frequencyType: string;
+  kpis: KPICoreParameter[];
+  count: number;
+}
+
+interface MeetingDetailsTiming {
+  detailMeetingId?: string;
+  meetingId: string;
+  agendaTimePlanned?: string;
+  agendaTimeActual?: string;
+  employeeList?: {
+    isTeamLeader?: boolean;
+    employeeName: string;
+    employeeId: string;
+    attendanceMark: boolean | null;
+  }[];
+  status?: string;
+  meetingName?: string;
+}
+
+interface ConclusionResponse {
+  success: boolean;
+  status: number;
+  message: string;
+  data: {
+    agenda: {
+      issue: string[];
+      objective: string[];
+    };
+    discussion: {
+      taskUpdate: {
+        oldValues: {
+          taskName: string;
+          taskDescription: string;
+          taskDeadline: string;
+          taskType: string;
+          taskStatus: string;
+          project: string;
+          meeting: string;
+          subParameters: string;
+          taskEmployees: string;
+        };
+        newValues: {
+          taskName: string;
+          taskDescription: string;
+          taskDeadline: string;
+          taskType: string;
+          taskStatus: string;
+          project: string;
+          meeting: string;
+          subParameters: string;
+          taskEmployees: string;
+        };
+      }[];
+      projectUpdate: {
+        oldValues: {
+          projectName: string;
+          projectDescription: string;
+          projectDeadline: string;
+          projectStatus: string;
+          subParameters: string;
+          projectEmployees: string;
+        };
+        newValues: {
+          projectName: string;
+          projectDescription: string;
+          projectDeadline: string;
+          projectStatus: string;
+          subParameters: string;
+          projectEmployees: string;
+        };
+      }[];
+      kpiUpdate: {
+        oldValues: {
+          kpiName: string;
+          kpiFrequency: string;
+          kpiValidationType: string;
+          kpiVisualFrequencyTypes: string | null;
+          kpiUnit: string;
+          coreParameter: string;
+          value1: string;
+          value2: string;
+        };
+        newValues: {
+          kpiName: string;
+          kpiFrequency: string;
+          kpiValidationType: string;
+          kpiVisualFrequencyTypes: string | null;
+          kpiUnit: string;
+          coreParameter: string;
+          value1: string;
+          value2: string;
+        };
+        recData?: {
+          kpiId: string;
+          startDate: string;
+          endDate: string;
+          data: string;
+        }[];
+      }[];
+    };
+  };
+}
+
+interface MeetingNotesRes {
+  employeeId: string;
+  note: string;
+  detailMeetingNoteId: string;
+}
+
+interface IssuesProps {
+  issueId?: string;
+  issueName: string;
+  isResolved?: boolean;
+}
+
+interface UseIssuesFormModalProps {
+  isModalOpen: boolean;
+  modalClose: () => void;
+  modalData?: IssuesProps;
+}
+interface UseObjectiveFormModalProps {
+  isModalOpen: boolean;
+  modalClose: () => void;
+  modalData?: ObjectiveProps;
+}
+
+interface ObjectiveProps {
+  objectiveId?: string;
+  objectiveName: string;
+  isResolved?: boolean;
+  detailMeetingId?: string;
+}
+
+interface DetailMeetingObjectives {
+  id: string;
+  name: string;
+  type: string;
+}
+
+interface MeetingAgenda {
+  detailMeetingAgendaIssueId?: string;
+  issueObjectiveId: string;
+  agendaType: string;
+  name: string;
+  actualTime: string | null;
+  plannedTime: string | null;
+}
+
+interface DetailMeetingAgendaIssue {
+  detailMeetingAgendaIssueId: string;
+  issueObjectiveId: string;
+  agendaType: string;
+  detailMeetingId: string;
+  issueObjectiveName: string;
+  isResolved: boolean;
+  actualTime: string | null;
+  plannedTime: string;
 }

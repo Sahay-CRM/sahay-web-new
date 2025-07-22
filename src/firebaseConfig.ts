@@ -8,6 +8,7 @@ import {
 } from "firebase/messaging";
 import { addNotification } from "./features/reducers/notification.reducer";
 import store from "./features/store";
+import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyApKwRS0eZK2Dkjwb7gTpbuLvQ5Yf2EzT4",
@@ -58,9 +59,11 @@ export const onFirebaseMessageListener = () => {
       addNotification({ title: title || "", body: body || "", data }),
     );
     import("sonner").then(({ toast }) => {
-      toast.success(body || "You have a new notification!", {
-        description: title,
+      toast.success(title || "You have a new notification!", {
+        description: body,
       });
     });
   });
 };
+
+export const database = getDatabase(app);

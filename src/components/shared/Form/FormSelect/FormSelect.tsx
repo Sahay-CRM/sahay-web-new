@@ -92,7 +92,7 @@ export default function FormSelect({
   return (
     <div className={className}>
       {label && (
-        <FormLabel className="mb-2" htmlFor={id}>
+        <FormLabel className="mb-4" htmlFor={id}>
           {label}{" "}
           {isMandatory && <span className="text-red-500 text-[20px]">*</span>}
         </FormLabel>
@@ -114,15 +114,11 @@ export default function FormSelect({
               className={`w-full mb-1 py-5 custom-select-trigger text-black ${triggerClassName}`}
               id={id}
             >
-              {isMulti ? (
-                <div className="w-full text-left">{displayValue()}</div>
-              ) : (
-                <SelectValue placeholder={placeholder} />
-              )}
+              <SelectValue placeholder={placeholder} />
             </SelectTrigger>
           </FormControl>
 
-          <SelectContent className="w-full max-h-60 overflow-auto">
+          <SelectContent className="w-full max-h-60 overflow-auto ">
             {isSearchable && (
               <div className="p-2">
                 <Input
@@ -148,14 +144,14 @@ export default function FormSelect({
             <button
               type="button"
               disabled={disabled}
-              className="w-full border rounded-md px-3 py-1.5 text-left"
+              className="w-full border rounded-md px-3 text-left text-sm mt-2 py-2"
             >
               {displayValue()}
             </button>
           </PopoverTrigger>
           {/* <PopoverContent className="w-full p-2"> */}
           <PopoverContent
-            className="p-2"
+            className="p-2 text-sm"
             style={{ width: "var(--radix-popover-trigger-width)" }}
           >
             {isSearchable && (

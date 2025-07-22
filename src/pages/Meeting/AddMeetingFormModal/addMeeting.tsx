@@ -5,7 +5,7 @@ import { FormProvider, useFormContext, Controller } from "react-hook-form"; // A
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { useEffect, useState, useRef, ChangeEvent } from "react"; // Added useState, useRef, ChangeEvent
+import { useEffect, useState, useRef, ChangeEvent, useMemo } from "react"; // Added useState, useRef, ChangeEvent
 
 // Imports for components used within step components
 import { Card } from "@/components/ui/card";
@@ -21,127 +21,16 @@ import {
 } from "@/components/ui/tooltip";
 
 import { getEmployee } from "@/features/api/companyEmployee";
-import { useGetCompanyMeetingStatus } from "@/features/api/companyMeeting";
+// import { useGetCompanyMeetingStatus } from "@/features/api/companyMeeting";
 import { getMeetingType } from "@/features/api/meetingType";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import FormSelect from "@/components/shared/Form/FormSelect";
+import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 
-// --- MeetingInfo Component Definition ---
-const MeetingInfo = () => {
-  const {
-    register,
-    formState: { errors },
-  } = useFormContext();
-  return (
-    <div className="grid grid-cols-2 gap-4">
-      <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
-        <FormInputField
-          label="Meeting Name"
-          {...register("meetingName", { required: "Name is required" })}
-          error={errors.meetingName}
-          isMandatory
-        />
-        <FormInputField
-          label="Meeting Description"
-          {...register("meetingDescription", {
-            required: "Description is required",
-          })}
-          error={errors.meetingDescription}
-          isMandatory
-        />
-        <FormInputField
-          id="meetingDateTime"
-          type="date"
-          label="Meeting Date & Time"
-          {...register("meetingDateTime", {
-            required: "Date & Time is required",
-          })}
-          error={errors.meetingDateTime}
-          isMandatory
-        />
-      </Card>
-    </div>
-  );
-};
+interface MeetingInfoProps {
+  isUpdateMeeting: boolean;
+}
 
-// --- MeetingStatus Component Definition ---
-const MeetingStatus = () => {
-  const {
-    control,
-    formState: { errors },
-  } = useFormContext();
-  const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-    currentPage: 1,
-    pageSize: 25,
-    search: "",
-  });
-
-  const { data: meeetingStatusData } = useGetCompanyMeetingStatus({
-    filter: paginationFilter,
-  });
-
-  const [columnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "meetingStatus", label: "Meeting Status", visible: true },
-  ]);
-
-  const visibleColumns = columnToggleOptions.reduce(
-    (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
-
-  return (
-    <div>
-      <div className="mb-2">
-        <SearchInput
-          placeholder="Search Status..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-80"
-        />
-      </div>
-      {errors.meetingStatusId && (
-        <p className="text-red-500 text-sm mb-2">
-          {typeof errors.meetingStatusId?.message === "string"
-            ? errors.meetingStatusId.message
-            : ""}
-        </p>
-      )}
-      <Controller
-        name="meetingStatusId"
-        control={control}
-        rules={{ required: "Please select a meeting status" }}
-        render={({ field }) => (
-          <TableData
-            tableData={
-              meeetingStatusData?.data?.map((item, index) => ({
-                ...item,
-                srNo:
-                  (meeetingStatusData.currentPage - 1) *
-                    meeetingStatusData.pageSize +
-                  index +
-                  1,
-              })) || []
-            }
-            columns={visibleColumns}
-            primaryKey="meetingStatusId"
-            multiSelect={false}
-            onCheckbox={() => true}
-            selectedValue={field.value}
-            handleChange={field.onChange}
-            paginationDetails={mapPaginationDetails(meeetingStatusData)}
-            setPaginationFilter={setPaginationFilter}
-            isActionButton={() => false}
-          />
-        )}
-      />
-    </div>
-  );
-};
-
-// --- MeetingType Component Definition ---
 const MeetingType = () => {
   const {
     control,
@@ -159,6 +48,7 @@ const MeetingType = () => {
   const [columnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "meetingTypeName", label: "Meeting Type Name", visible: true },
+    { key: "parentType", label: "Parent Type", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -210,6 +100,7 @@ const MeetingType = () => {
             setPaginationFilter={setPaginationFilter}
             onCheckbox={() => true}
             isActionButton={() => false}
+            moduleKey="type"
           />
         )}
       />
@@ -217,12 +108,100 @@ const MeetingType = () => {
   );
 };
 
-// --- Joiners Component Definition ---
-const Joiners = () => {
+const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
   const {
-    control,
+    register,
     formState: { errors },
+    control,
+    watch,
+    setValue,
+    getValues,
   } = useFormContext();
+  console.log(getValues());
+
+  const meetingType = watch("meetingTypeId");
+
+  const { data: meetingStatusData } = useDdMeetingStatus();
+
+  const meetingStatusOptions = useMemo(() => {
+    return (
+      meetingStatusData?.map((status) => ({
+        label: status.meetingStatus,
+        value: status.meetingStatusId,
+        order: status.meetingStatusOrder,
+      })) || []
+    );
+  }, [meetingStatusData]);
+
+  const shouldHideStatus =
+    !isUpdateMeeting && meetingType?.parentType === "DETAIL";
+
+  useEffect(() => {
+    if (shouldHideStatus && meetingStatusOptions.length > 0) {
+      const defaultStatus = meetingStatusOptions.find((s) => s.order === 1);
+      if (defaultStatus) {
+        setValue("meetingStatusId", defaultStatus.value, {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+      }
+    }
+  }, [shouldHideStatus, meetingStatusOptions, setValue]);
+
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
+        <FormInputField
+          label="Meeting Name"
+          {...register("meetingName", { required: "Name is required" })}
+          error={errors.meetingName}
+          isMandatory
+        />
+        <FormInputField
+          label="Meeting Description"
+          {...register("meetingDescription", {
+            required: "Description is required",
+          })}
+          error={errors.meetingDescription}
+          isMandatory
+        />
+        <FormInputField
+          id="meetingDateTime"
+          type="date"
+          label="Meeting Date & Time"
+          {...register("meetingDateTime", {
+            required: "Date & Time is required",
+          })}
+          error={errors.meetingDateTime}
+          isMandatory
+        />
+
+        {!shouldHideStatus && (
+          <Controller
+            name="meetingStatusId"
+            control={control}
+            rules={{ required: "Meeting Status is required" }}
+            render={({ field, fieldState }) => (
+              <FormSelect
+                {...field}
+                label="Meeting Status"
+                options={meetingStatusOptions}
+                error={fieldState.error}
+                isMandatory
+              />
+            )}
+          />
+        )}
+      </Card>
+    </div>
+  );
+};
+
+const Joiners = () => {
+  const { control, watch } = useFormContext();
+
+  const meetingType = watch("meetingTypeId");
+
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 25,
@@ -284,37 +263,90 @@ const Joiners = () => {
           </TooltipProvider>
         )}
       </div>
-      {errors.employeeId && (
-        <p className="text-red-500 text-sm mb-2">
-          {typeof errors.employeeId?.message === "string"
-            ? errors.employeeId.message
-            : ""}
-        </p>
-      )}
       <Controller
-        name="employeeId" // This should be an array of selected employee objects
+        name="employeeId"
         control={control}
-        // rules={{ required: "Please select at least one joiner" }} // Optional: add validation
-        render={({ field }) => (
-          <TableData
-            tableData={employeedata?.data.map((item, index) => ({
-              ...item,
-              srNo:
-                (employeedata.currentPage - 1) * employeedata.pageSize +
-                index +
-                1,
-            }))}
-            columns={visibleColumns}
-            primaryKey="employeeId" // Key used to identify unique rows
-            paginationDetails={mapPaginationDetails(employeedata)}
-            setPaginationFilter={setPaginationFilter}
-            multiSelect={true}
-            selectedValue={field.value || []} // Ensure field.value is an array
-            handleChange={(selectedItems) => field.onChange(selectedItems)} // Pass array of selected items
-            isActionButton={() => false}
-            onCheckbox={() => true}
-          />
-        )}
+        rules={{
+          validate: (value) => {
+            if (!value || value.length === 0) {
+              return "Please select at least one joiner";
+            }
+            const hasTeamLeader = value.some(
+              (emp: EmployeeDetails) => emp.isTeamLeader,
+            );
+            if (!hasTeamLeader) {
+              return "At least one joiner must be marked as Team Leader";
+            }
+            return true;
+          },
+        }}
+        render={({ field, fieldState }) => {
+          return (
+            <>
+              {/* Show error above the table if validation fails (from fieldState) */}
+              {fieldState.error && (
+                <p className="text-red-500 text-sm mb-2">
+                  {fieldState.error.message}
+                </p>
+              )}
+              <TableData
+                tableData={employeedata?.data.map((item, index) => {
+                  const selected = (field.value || []).find(
+                    (emp: EmployeeDetails) =>
+                      emp.employeeId === item.employeeId,
+                  );
+                  return {
+                    ...item,
+                    srNo:
+                      (employeedata.currentPage - 1) * employeedata.pageSize +
+                      index +
+                      1,
+                    isTeamLeader: selected?.isTeamLeader || false,
+                  };
+                })}
+                columns={visibleColumns}
+                primaryKey="employeeId"
+                paginationDetails={mapPaginationDetails(employeedata)}
+                setPaginationFilter={setPaginationFilter}
+                multiSelect={true}
+                isEditDelete={false}
+                moduleKey="emp"
+                isActionButton={() => false}
+                showActionsColumn={meetingType?.parentType === "DETAIL"}
+                selectedValue={field.value || []}
+                handleChange={(selectedItems) => field.onChange(selectedItems)}
+                customActions={(row: EmployeeDetails) => {
+                  const isSelected = (field.value || []).some(
+                    (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
+                  );
+                  if (!isSelected) return null;
+                  const selectedEmp = (field.value || []).find(
+                    (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
+                  );
+                  const isTeamLeader = selectedEmp?.isTeamLeader;
+
+                  return (
+                    <Button
+                      variant={isTeamLeader ? "secondary" : "outline"}
+                      className=" px-3 text-[12px]"
+                      onClick={() => {
+                        const updated = (field.value || []).map(
+                          (emp: EmployeeDetails) =>
+                            emp.employeeId === row.employeeId
+                              ? { ...emp, isTeamLeader: !emp.isTeamLeader }
+                              : emp,
+                        );
+                        field.onChange(updated);
+                      }}
+                    >
+                      {isTeamLeader ? "Remove" : "Set Team Leader"}
+                    </Button>
+                  );
+                }}
+              />
+            </>
+          );
+        }}
       />
     </div>
   );
@@ -481,9 +513,9 @@ const AddMeeting = () => {
   }, [companyMeetingId, meetingApiData?.data?.meetingName, setBreadcrumbs]);
 
   const steps = [
-    <MeetingInfo key="meetingInfo" />,
-    <MeetingStatus key="meetingStatus" />,
     <MeetingType key="meetingType" />,
+    <MeetingInfo isUpdateMeeting={companyMeetingId ? true : false} />,
+    // <MeetingStatus key="meetingStatus" />,
     <Joiners key="joiners" />,
     <UploadDoc key="uploadDoc" />,
   ];
@@ -499,9 +531,8 @@ const AddMeeting = () => {
   } = useStepForm(steps, trigger);
 
   const stepNames = [
-    "Meeting Info",
-    "Meeting Status",
     "Meeting Type",
+    "Meeting Info",
     "Joiners",
     "Upload Document",
   ];

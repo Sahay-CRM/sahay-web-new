@@ -20,7 +20,6 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
-import FormSelect from "@/components/shared/Form/FormSelect";
 
 export default function CompanyDesignation() {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -30,11 +29,6 @@ export default function CompanyDesignation() {
   }, [setBreadcrumbs]);
 
   const userData = useSelector(getUserDetail);
-
-  const statusOptions = [
-    { label: "Active", value: false },
-    { label: "Inactive", value: true },
-  ];
 
   const {
     employeedata,
@@ -54,8 +48,8 @@ export default function CompanyDesignation() {
     handleRowsModalOpen,
     viewModalData,
     handleInactive,
-    onStatusChange,
-    currentStatus,
+    // onStatusChange,
+    // currentStatus,
   } = useCompanyEmployee();
 
   //   const { setBreadcrumbs } = useBreadcrumbs();
@@ -115,13 +109,13 @@ export default function CompanyDesignation() {
             Employee List
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-5">
-            <FormSelect
+            {/* <FormSelect
               id="dataUserSelect"
               options={statusOptions}
               onChange={(e) => onStatusChange(Boolean(e))}
               className="rounded-md py-2 focus-visible:ring-0"
               value={currentStatus}
-            />
+            /> */}
             {permission.Add && (
               <Link to="/dashboard/employees/add">
                 <Button className="py-2 w-fit">Add Employee</Button>
