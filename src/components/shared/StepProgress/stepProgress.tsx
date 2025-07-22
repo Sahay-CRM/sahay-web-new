@@ -65,12 +65,17 @@ const StepProgress: React.FC<StepProgressProps> = ({
 
   return (
     <div className="w-full pr-6 pl-3 py-0">
-      <div className=" items-center">
-        {header && (
-          <div className="w-full  text-lg mr-2 font-semibold text-[#2e3090]">
-            {header}
-          </div>
-        )}
+      <div className="items-center">
+        {/* Fixed Height Header Container */}
+        <div className="w-full h-6 flex items-center mb-1">
+          {header && (
+            <div className="text-lg mr-2 font-semibold text-[#2e3090] truncate">
+              {header}
+            </div>
+          )}
+        </div>
+
+        {/* Steps Section */}
         <div className="w-full mt-3">
           <div className="flex justify-between">
             {[...Array(totalSteps)].map((_, index) => renderStep(index + 1))}
