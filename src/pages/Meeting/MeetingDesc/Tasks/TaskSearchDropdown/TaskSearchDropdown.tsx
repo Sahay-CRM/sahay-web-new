@@ -74,7 +74,7 @@ const TaskSearchDropdown: React.FC<TaskSearchDropdownProps> = ({
         </span>
         <Input
           type="text"
-          placeholder="Search tasks..."
+          placeholder="Add or Create Task"
           value={searchValue}
           onChange={(e) => {
             setSearchValue(e.target.value);

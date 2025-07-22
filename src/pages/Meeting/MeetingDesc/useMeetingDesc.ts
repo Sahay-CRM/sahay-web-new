@@ -96,11 +96,12 @@ export default function useMeetingDesc() {
       const db = getDatabase();
       const meetStateRef = ref(db, `meetings/${meetingId}/state`);
       const meetAgendaRef = ref(db, `meetings/${meetingId}/timers/agenda`);
+
       updateDetailMeeting(
         {
           meetingId: meetingId,
           status: "DISCUSSION",
-          agendaTimeActual: String(totalAgendaTime / 1000),
+          agendaTimeActual: String(totalAgendaTime / 1000), // in seconds
         },
         {
           onSuccess: () => {

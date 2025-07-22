@@ -95,13 +95,20 @@ const ProjectStatus = () => {
 
   return (
     <div>
-      <div className="mt-1 flex items-center justify-between mb-2">
+      <div className="flex items-center mb-4 gap-2">
         <SearchInput
           placeholder="Search Status..."
           searchValue={paginationFilter?.search || ""}
           setPaginationFilter={setPaginationFilter}
           className="w-96"
         />
+        {errors?.projectStatusId && (
+          <div className="mb-1">
+            <span className="text-red-600 text-sm">
+              {String(errors?.projectStatusId?.message || "")}
+            </span>
+          </div>
+        )}
         {canToggleColumns && (
           <div className="ml-4">
             <DropdownSearchMenu
@@ -117,13 +124,6 @@ const ProjectStatus = () => {
         rules={{ required: "Please select a project status" }}
         render={({ field }) => (
           <>
-            {errors?.projectStatusId && (
-              <div className="mb-1">
-                <span className="text-red-600 text-sm">
-                  {String(errors?.projectStatusId?.message || "")}
-                </span>
-              </div>
-            )}
             <TableData
               tableData={projectStatusData?.data.map((item, index) => ({
                 ...item,
@@ -186,13 +186,20 @@ const CoreParameter = () => {
 
   return (
     <div>
-      <div className="mt-1 flex items-center justify-between mb-2">
+      <div className="flex items-center mb-4 gap-2">
         <SearchInput
           placeholder="Search Business Function..."
           searchValue={paginationFilter?.search || ""}
           setPaginationFilter={setPaginationFilter}
           className="w-96"
         />
+        {errors?.coreParameterId && (
+          <div className="mb-1">
+            <span className="text-red-600 text-sm">
+              {String(errors?.coreParameterId?.message || "")}
+            </span>
+          </div>
+        )}
         {canToggleColumns && (
           <div className="ml-4">
             <DropdownSearchMenu
@@ -208,13 +215,6 @@ const CoreParameter = () => {
         // rules={{ required: "Please select a Business Function" }}
         render={({ field }) => (
           <>
-            {errors?.coreParameterId && (
-              <div className="mb-1">
-                <span className="text-red-600 text-sm">
-                  {String(errors?.coreParameterId?.message || "")}
-                </span>
-              </div>
-            )}
             <TableData
               tableData={coreParameterData?.data.map((item, index) => ({
                 ...item,
@@ -303,13 +303,20 @@ const SubParameter = () => {
 
   return (
     <div>
-      <div className="mt-1 flex items-center justify-between mb-2">
+      <div className="flex items-center mb-4 gap-2">
         <SearchInput
           placeholder="Search..."
           searchValue={paginationFilter?.search || ""}
           setPaginationFilter={setPaginationFilter}
           className="w-96"
         />
+        {errors?.subParameterId && (
+          <div className="mb-1">
+            <span className="text-red-600 text-sm">
+              {String(errors?.subParameterId?.message || "")}
+            </span>
+          </div>
+        )}
         {canToggleColumns && (
           <div className="ml-4">
             <DropdownSearchMenu
@@ -324,13 +331,6 @@ const SubParameter = () => {
         control={control}
         render={({ field }) => (
           <>
-            {errors?.subParameterId && (
-              <div className="mb-1">
-                <span className="text-red-600 text-sm">
-                  {String(errors?.subParameterId?.message || "")}
-                </span>
-              </div>
-            )}
             <TableData
               tableData={subParameterData?.data.map((item, index) => ({
                 ...item,
@@ -532,36 +532,43 @@ const AddProject = () => {
   return (
     <FormProvider {...methods}>
       <div>
-        <StepProgress
-          currentStep={currentStep}
-          stepNames={stepNames}
-          totalSteps={totalSteps}
-          header={companyProjectId ? projectApiData?.data.projectName : null}
-        />
-
-        <div className="flex justify-end gap-5 mb-5 ">
-          <Button
-            onClick={back}
-            disabled={isFirstStep || isPending}
-            className="w-fit"
-            type="button"
-          >
-            Previous
-          </Button>
-          <Button
-            onClick={isLastStep ? onFinish : next}
-            className="w-fit"
-            disabled={isPending}
-            isLoading={isPending}
-            type="button"
-          >
-            {isLastStep ? "Finish" : "Next"}
-          </Button>
-          {companyProjectId && !isLastStep && (
-            <Button onClick={onFinish} className="w-fit">
-              Submit
+        <div className="flex items-center gap-5 mb-5">
+          <StepProgress
+            currentStep={currentStep}
+            stepNames={stepNames}
+            totalSteps={totalSteps}
+            header={companyProjectId ? projectApiData?.data.projectName : null}
+          />
+          <div className="flex mt-9 items-center gap-3">
+            <Button
+              onClick={back}
+              disabled={isFirstStep || isPending}
+              className="w-fit"
+              type="button"
+            >
+              Previous
             </Button>
-          )}
+            <Button
+              onClick={next}
+              className="w-fit"
+              disabled={isLastStep || isPending}
+              isLoading={isPending}
+            >
+              Next
+            </Button>
+
+            {/* Finish button always visible on last step */}
+            {isLastStep && (
+              <Button onClick={onFinish} className="w-fit" disabled={isPending}>
+                Finish
+              </Button>
+            )}
+            {companyProjectId && !isLastStep && (
+              <Button onClick={onFinish} className="w-fit">
+                Submit
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="step-content w-full">{stepContent}</div>

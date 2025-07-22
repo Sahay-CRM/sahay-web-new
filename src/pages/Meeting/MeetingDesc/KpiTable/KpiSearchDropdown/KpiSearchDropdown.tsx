@@ -63,14 +63,14 @@ const KpisSearchDropdown: React.FC<KpisSearchDropdownProps> = ({
   };
 
   return (
-    <div className="relative w-80 z-50 mb-3" ref={inputRef}>
+    <div className="relative w-80 z-30 mb-3" ref={inputRef}>
       <div className="relative h-10 w-full max-w-sm">
         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4">
           <SearchIcon />
         </span>
         <Input
           type="text"
-          placeholder="Search tasks..."
+          placeholder="Add or Create KPI"
           value={searchValue}
           onChange={(e) => {
             setSearchValue(e.target.value);

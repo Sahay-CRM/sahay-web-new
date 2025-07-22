@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import { Ellipsis, RefreshCcw } from "lucide-react";
+import { RefreshCcw } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -59,6 +59,7 @@ interface KpisProps {
   meetingId: string;
   kpisFireBase: () => void;
   meetingAgendaIssueId: string | undefined;
+  detailMeetingId: string | undefined;
 }
 
 function formatToThreeDecimals(value: string | number | null | undefined) {
@@ -75,6 +76,7 @@ export default function KPITable({
   meetingId,
   meetingAgendaIssueId,
   kpisFireBase,
+  detailMeetingId,
 }: KpisProps) {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -98,8 +100,9 @@ export default function KPITable({
     useGetMeetingSelectedKpis({
       filter: {
         detailMeetingAgendaIssueId: meetingAgendaIssueId,
+        detailMeetingId: detailMeetingId,
       },
-      enable: !!meetingAgendaIssueId,
+      enable: !!meetingAgendaIssueId || !!detailMeetingId,
     });
 
   const selectedKpisTyped = useMemo(
@@ -378,51 +381,44 @@ export default function KPITable({
       return (
         <TableRow key={kpi.kpiId} className="border-b">
           <TableCell className={clsx("p-0 sticky left-0 z-10")}>
-            <div className="w-[470px] bg-gray-100 overflow-hidden border-r border-gray-300 shadow-xl shadow-gray-200/80">
+            <div className="w-[400px] bg-gray-100 overflow-hidden border-r border-gray-300 shadow-xl shadow-gray-200/80">
               <table className="p-0">
                 <tbody className="p-0">
-                  <tr className="h-14 ">
-                    <td className="bg-transparent px-1 w-[40px] overflow-hidden h-full p-0 border-r border-gray-300">
-                      <div className="flex items-center justify-between w-full h-full px-1">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => {
-                            setSelectedKpi(kpi);
-                            setDrawerOpen(true);
-                          }}
-                          className="w-5"
-                        >
-                          <Ellipsis size={18} className="rotate-90" />
-                        </Button>
-                        <Avatar
-                          className={`h-6 w-6 mr-2 ${getColorFromName(kpi?.employeeName)}`}
-                        >
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <AvatarFallback
-                                  className={`${getColorFromName(kpi?.employeeName)} font-semibold`}
-                                >
-                                  {(() => {
-                                    if (!kpi?.employeeName) return "";
-                                    const names = kpi.employeeName.split(" ");
-                                    const firstInitial = names[0]?.[0] ?? "";
-                                    const lastInitial =
-                                      names.length > 1
-                                        ? names[names.length - 1][0]
-                                        : "";
-                                    return (
-                                      firstInitial + lastInitial
-                                    ).toUpperCase();
-                                  })()}
-                                </AvatarFallback>
-                              </TooltipTrigger>
-                              {/* <TooltipContent>{kpi?.employeeName}</TooltipContent> */}
-                            </Tooltip>
-                          </TooltipProvider>
-                        </Avatar>
-                      </div>
+                  <tr
+                    className="h-14 cursor-pointer"
+                    onClick={() => {
+                      setSelectedKpi(kpi);
+                      setDrawerOpen(true);
+                    }}
+                  >
+                    <td className="bg-transparent mt-2 w-[40px] overflow-hidden p-0 border-r border-gray-300">
+                      <Avatar
+                        className={`h-6 w-6 m-auto ${getColorFromName(kpi?.employeeName)}`}
+                      >
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <AvatarFallback
+                                className={`${getColorFromName(kpi?.employeeName)} font-semibold`}
+                              >
+                                {(() => {
+                                  if (!kpi?.employeeName) return "";
+                                  const names = kpi.employeeName.split(" ");
+                                  const firstInitial = names[0]?.[0] ?? "";
+                                  const lastInitial =
+                                    names.length > 1
+                                      ? names[names.length - 1][0]
+                                      : "";
+                                  return (
+                                    firstInitial + lastInitial
+                                  ).toUpperCase();
+                                })()}
+                              </AvatarFallback>
+                            </TooltipTrigger>
+                            {/* <TooltipContent>{kpi?.employeeName}</TooltipContent> */}
+                          </Tooltip>
+                        </TooltipProvider>
+                      </Avatar>
                     </td>
                     <td className="w-[150px] min-w-[150px] max-w-[150px] text-left px-3 overflow-hidden border-r border-gray-300">
                       <TooltipProvider>
@@ -488,7 +484,7 @@ export default function KPITable({
               </table>
             </div>
           </TableCell>
-          {headers.map((header, colIdx) => {
+          {headers.map((_, colIdx) => {
             // Find the data cell for this kpi and this date
             let cell = null;
             if (dataArray && Array.isArray(dataArray)) {
@@ -838,6 +834,7 @@ export default function KPITable({
       meetingId: meetingId,
       kpiIds: tasks.map((item) => item.kpiId),
       detailMeetingAgendaIssueId: meetingAgendaIssueId,
+      detailMeetingId: detailMeetingId,
     };
     addKpiList(payload, {
       onSuccess: () => {
@@ -849,7 +846,7 @@ export default function KPITable({
 
   return (
     <FormProvider {...methods}>
-      <div className="ml-6">
+      <div>
         <KpisSearchDropdown
           onAdd={handleAddKpis}
           minSearchLength={2}
@@ -900,11 +897,11 @@ export default function KPITable({
             <TableHeader>
               <TableRow className="h-[50px]">
                 <TableHead className={clsx("sticky left-0 z-20 bg-primary")}>
-                  <div className=" w-[450px]">
+                  <div className=" w-[370px]">
                     <table className="bg-transparent border-0 w-full">
                       <thead>
                         <tr className="h-[50px]" style={{ border: 0 }}>
-                          <td className="w-[50px] py-2  bg-transparent sticky min-w-[50px] text-left  overflow-hidden text-base text-white">
+                          <td className="w-[40px] py-2  bg-transparent sticky min-w-[40px] text-left  overflow-hidden text-base text-white">
                             Who
                           </td>
                           <td
@@ -961,6 +958,7 @@ export default function KPITable({
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         kpiId={selectedKpi?.kpiId}
+        meetingId={meetingId}
       />
     </FormProvider>
   );

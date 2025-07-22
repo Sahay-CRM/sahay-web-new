@@ -36,21 +36,18 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
+import { isColorDark } from "@/features/utils/color.utils";
+import { TableTooltip } from "./tableTooltip";
 
 interface DetailsPermission {
   view: boolean;
   edit?: boolean;
   delete?: boolean;
 }
-interface ColumnDefinition {
-  label: string;
-  width?: string; // optional width property
-}
 
 interface TableProps<T extends Record<string, unknown>> {
   tableData?: T[];
-  columns?: Partial<Record<keyof T, ColumnDefinition>>;
-
+  columns?: Partial<Record<keyof T, string>>;
   primaryKey: keyof T;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
@@ -91,7 +88,7 @@ interface TableProps<T extends Record<string, unknown>> {
   dropdownColumns?: Record<
     string,
     {
-      options: { label: string; value: string }[];
+      options: { label: string; value: string; color?: string }[];
       onChange: (item: T, value: string) => void;
     }
   >;
@@ -245,216 +242,257 @@ const TableData = <T extends Record<string, unknown>>({
   };
 
   return (
-    <>
-      <Card className="w-full p-2 mb-5">
-        <div className="overflow-x-auto max-h-[500px]">
-          <Table className="w-full">
-            <TableHeader>
-              <TableRow className="justify-between">
-                {showCheckboxes && (
-                  <TableHead className="w-[40px] pl-6">
-                    {/* Checkbox column header */}
-                  </TableHead>
-                )}
+    <Card className="w-full p-2 mb-5">
+      <div className="overflow-x-auto">
+        <Table className="min-w-full table-fixed border">
+          <TableHeader className="bg-primary">
+            <TableRow>
+              {showCheckboxes && (
+                <TableHead className="w-[40px] sticky left-0 z-20 bg-primary pl-6">
+                  {/* Checkbox Header */}
+                </TableHead>
+              )}
 
-                {showIndexColumn && (
-                  <TableHead className="w-[80px]">#</TableHead>
-                )}
+              {showIndexColumn && (
+                <TableHead className="w-[80px] sticky left-[40px] z-20 bg-primary text-center">
+                  #
+                </TableHead>
+              )}
 
-                {Object.keys(columns).map((clm, index) => (
-                  <TableHead
-                    key={clm + index}
-                    className={`
-                    ${sortableColumns.includes(clm) ? "cursor-pointer select-none" : ""}
-                  `}
-                    onClick={() => handleSort(clm)}
-                  >
-                    <div className="flex items-center">
-                      <span className="truncate overflow-hidden whitespace-nowrap block max-w-full">
-                        {typeof columns[clm] === "string" ? columns[clm] : ""}
-                      </span>
+              {columnKeys.map((clm, index) => (
+                <TableHead
+                  key={clm + index}
+                  className={`
+                truncate text-left px-4
+                ${clm === "srNo" ? "w-[80px]" : ""}
+                ${sortableColumns.includes(clm) ? "cursor-pointer select-none" : ""}
+              `}
+                  onClick={() => handleSort(clm)}
+                >
+                  <div className="flex items-center gap-1 truncate">
+                    <TableTooltip text={String(columns[clm] ?? " - ")} />
+                    {getSortIcon(clm)}
+                  </div>
+                </TableHead>
+              ))}
 
-                      {getSortIcon(clm)}
-                    </div>
-                  </TableHead>
-                ))}
-                <TableHead className="w-[120px] sticky right-0 text-left pr-3">
+              {showActionsColumn && (
+                <TableHead
+                  style={{ width: "fit-content" }}
+                  className=" sticky right-0 z-20 text-right bg-primary pr-2"
+                >
                   Actions
                 </TableHead>
-              </TableRow>
-            </TableHeader>
+              )}
+            </TableRow>
+          </TableHeader>
 
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={
-                      columnKeys.length +
-                      (showCheckboxes ? 1 : 0) +
-                      (showIndexColumn ? 1 : 0) +
-                      1
-                    }
-                    className="py-6"
-                  >
-                    <div className="flex justify-center items-center h-20">
-                      <div className="animate-spin">
-                        <SpinnerIcon />
-                      </div>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={
+                    columnKeys.length +
+                    (showCheckboxes ? 1 : 0) +
+                    (showIndexColumn ? 1 : 0) +
+                    1
+                  }
+                  className="py-6"
+                >
+                  <div className="flex justify-center items-center h-20">
+                    <div className="animate-spin">
+                      <SpinnerIcon />
                     </div>
-                  </TableCell>
-                </TableRow>
-              ) : tableData.length ? (
-                tableData.map((item, index) => (
-                  <TableRow
-                    key={item[primaryKey] as React.Key}
-                    className={`
-                    ${onRowClick || showCheckboxes ? "cursor-pointer" : ""}
-                    ${onRowClick ? "hover:bg-gray-100" : showCheckboxes ? "hover:bg-gray-100" : "hover:bg-gray-50"}
-                    ${index % 2 === 0 ? "bg-gray-25" : "bg-white"}
-                    ${(item as { isDeactivated?: boolean }).isDeactivated ? "bg-gray-200 hover:bg-gray-300" : ""}
-                  `}
-                    onClick={() => handleRowClickOrCheckbox(item)}
-                  >
-                    {showCheckboxes && (
-                      <TableCell
-                        className="text-center p-0 whitespace-nowrap pl-6"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <FormCheckbox
-                          id={`${String(item[primaryKey])}-checkbox`}
-                          className="w-[19px] aspect-square tb:w-[18px]"
-                          containerClass="p-2 tb:p-3 mt-0 tb:mt-0"
-                          onChange={(e) =>
-                            handleCheckboxChange(item, e.target.checked)
-                          }
-                          checked={
-                            multiSelect
-                              ? Array.isArray(selectedValue) &&
-                                selectedValue.some((selected) => {
-                                  const selectedId =
-                                    typeof selected === "object" &&
-                                    selected !== null
-                                      ? selected[primaryKey]
-                                      : selected;
-                                  return selectedId === item[primaryKey];
-                                })
-                              : (selectedValue as T)?.[primaryKey] ===
-                                item[primaryKey]
-                          }
-                        />
-                      </TableCell>
-                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : tableData.length ? (
+              tableData.map((item, index) => (
+                <TableRow
+                  key={item[primaryKey] as React.Key}
+                  className={`${
+                    (item as { isDisabled?: boolean }).isDisabled
+                      ? "bg-gray-200 opacity-60 pointer-events-none select-none"
+                      : index % 2 === 0
+                        ? "bg-gray-25"
+                        : "bg-white"
+                  } hover:bg-gray-100`}
+                  onClick={() =>
+                    !(item as { isDisabled?: boolean }).isDisabled &&
+                    handleRowClickOrCheckbox(item)
+                  }
+                >
+                  {showCheckboxes && (
+                    <TableCell
+                      className="sticky left-0 z-10  bg-inherit text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <FormCheckbox
+                        id={`${String(item[primaryKey])}-checkbox`}
+                        className="w-[16px] h-[16px]"
+                        containerClass="p-0 ml-1"
+                        onChange={(e) =>
+                          handleCheckboxChange(item, e.target.checked)
+                        }
+                        checked={
+                          multiSelect
+                            ? Array.isArray(selectedValue) &&
+                              selectedValue.some((selected) => {
+                                const selectedId =
+                                  typeof selected === "object"
+                                    ? selected[primaryKey]
+                                    : selected;
+                                return selectedId === item[primaryKey];
+                              })
+                            : (selectedValue as T)?.[primaryKey] ===
+                              item[primaryKey]
+                        }
+                        disabled={(item as { isDisabled?: boolean }).isDisabled}
+                      />
+                    </TableCell>
+                  )}
 
-                    {showIndexColumn && (
-                      <TableCell
-                        className="text-center p-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="flex flex-col items-center gap-0">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-5 w-5"
-                            onClick={() => onMoveRowUp?.(index)}
-                            disabled={index === 0}
-                          >
-                            <ChevronUp className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-5 w-5"
-                            onClick={() => onMoveRowDown?.(index)}
-                            disabled={index === tableData.length - 1}
-                          >
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    )}
+                  {showIndexColumn && (
+                    <TableCell
+                      className="sticky left-[40px] z-10 bg-white text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex flex-col items-center gap-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5"
+                          onClick={() => onMoveRowUp?.(index)}
+                          disabled={index === 0}
+                        >
+                          <ChevronUp className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5"
+                          onClick={() => onMoveRowDown?.(index)}
+                          disabled={index === tableData.length - 1}
+                        >
+                          <ChevronDown className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
 
-                    {columnKeys.map((clm, index) => (
-                      <TableCell
-                        key={`${item[primaryKey]}_${clm}`}
-                        className={`whitespace-nowrap truncate overflow-hidden text-ellipsis ${
-                          clm === "srNo"
-                            ? "pl-6 pr-1"
-                            : index === 1
-                              ? "pl-1 pr-4"
-                              : "px-4"
-                        }`}
-                        // Removed width styling for dynamic columns
-                      >
-                        {dropdownColumns[clm] ? (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                  {columnKeys.map((clm) => (
+                    <TableCell
+                      key={`${item[primaryKey]}_${clm}`}
+                      className={
+                        dropdownColumns[clm]
+                          ? "whitespace-nowrap px-4"
+                          : "truncate whitespace-nowrap px-4"
+                      }
+                      onClick={
+                        dropdownColumns[clm]
+                          ? (e) => e.stopPropagation()
+                          : undefined
+                      }
+                    >
+                      {dropdownColumns[clm] ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 min-w-[100px] justify-between"
+                              style={{
+                                backgroundColor:
+                                  dropdownColumns[clm].options.find(
+                                    (option) => option.label === item[clm],
+                                  )?.color || undefined,
+                                color: (() => {
+                                  const bg = dropdownColumns[clm].options.find(
+                                    (option) => option.label === item[clm],
+                                  )?.color;
+                                  return bg
+                                    ? isColorDark(bg)
+                                      ? "#fff"
+                                      : "#000"
+                                    : undefined;
+                                })(),
+                              }}
+                            >
+                              {String(item[clm] || "Select")}
+                              <ChevronDown className="w-4 h-4 ml-2" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            {dropdownColumns[clm].options.map((option) => (
+                              <DropdownMenuItem
+                                key={option.value}
+                                onClick={() =>
+                                  dropdownColumns[clm].onChange(
+                                    item,
+                                    option.value,
+                                  )
+                                }
+                              >
+                                {option.label}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        <>
+                          {/* {clm === "srNo" ? (
+                            <div className="truncate">
+                              {String(item[clm] ?? " - ")}
+                            </div>
+                          ) : (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="truncate">
+                                  {String(item[clm] ?? " - ")}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {String(item[clm] ?? " - ")}
+                              </TooltipContent>
+                            </Tooltip>
+                          )} */}
+                          <TableTooltip text={String(item[clm] ?? " - ")} />
+                        </>
+                      )}
+                    </TableCell>
+                  ))}
+
+                  {showActionsColumn && (
+                    <TableCell
+                      className="sticky right-0 z-10 bg-white text-right pr-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex gap-1 justify-end items-end">
+                        {customActions?.(item)}
+                        {isEditDeleteShow ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 min-w-[100px] justify-between"
+                                className="h-8 w-8 p-0"
+                                onClick={() =>
+                                  !(item as { isDisabled?: boolean })
+                                    .isDisabled && onEdit?.(item)
+                                }
+                                disabled={
+                                  (item as { isDisabled?: boolean }).isDisabled
+                                }
                               >
-                                {String(item[clm] || "Select")}
-                                <ChevronDown className="w-4 h-4 ml-2" />
+                                <Pencil className="w-4 h-4" />
                               </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start">
-                              {dropdownColumns[clm].options.map((option) => (
-                                <DropdownMenuItem
-                                  key={option.value}
-                                  onClick={() =>
-                                    dropdownColumns[clm].onChange(
-                                      item,
-                                      option.value,
-                                    )
-                                  }
-                                >
-                                  {option.label}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        ) : (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="block truncate max-w-full cursor-default">
-                                {typeof item[clm] === "object" &&
-                                item[clm] !== null
-                                  ? "label" in item[clm]
-                                    ? String(
-                                        (item[clm] as { label?: string })
-                                          .label ?? " - ",
-                                      )
-                                    : JSON.stringify(item[clm])
-                                  : String(item[clm] ?? " - ")}
-                              </span>
                             </TooltipTrigger>
-                            <TooltipContent
-                              side="top"
-                              align="center"
-                              className="max-w-xs whitespace-normal"
-                            >
-                              {typeof item[clm] === "object" &&
-                              item[clm] !== null
-                                ? "label" in item[clm]
-                                  ? String(
-                                      (item[clm] as { label?: string }).label ??
-                                        " - ",
-                                    )
-                                  : JSON.stringify(item[clm])
-                                : String(item[clm] ?? " - ")}
-                            </TooltipContent>
+                            <TooltipContent>Edit</TooltipContent>
                           </Tooltip>
-                        )}
-                      </TableCell>
-                    ))}
-                    {showActionsColumn && (
-                      <TableCell
-                        className="sticky right-0 z-10 bg-white text-right pr-2"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="flex gap-1 justify-end items-end">
-                          {customActions?.(item)}
-                          {isEditDeleteShow ? (
+                        ) : (
+                          isEditDelete &&
+                          isActionButton?.(item) &&
+                          permission?.Edit && (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
@@ -475,34 +513,34 @@ const TableData = <T extends Record<string, unknown>>({
                               </TooltipTrigger>
                               <TooltipContent>Edit</TooltipContent>
                             </Tooltip>
-                          ) : (
-                            isEditDelete &&
-                            isActionButton?.(item) &&
-                            permission?.Edit && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 w-8 p-0"
-                                    onClick={() =>
-                                      !(item as { isDisabled?: boolean })
-                                        .isDisabled && onEdit?.(item)
-                                    }
-                                    disabled={
-                                      (item as { isDisabled?: boolean })
-                                        .isDisabled
-                                    }
-                                  >
-                                    <Pencil className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Edit</TooltipContent>
-                              </Tooltip>
-                            )
-                          )}
+                          )
+                        )}
 
-                          {isEditDeleteShow ? (
+                        {isEditDeleteShow ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-red-600"
+                                onClick={() =>
+                                  !(item as { isDisabled?: boolean })
+                                    .isDisabled && onDelete?.(item)
+                                }
+                                disabled={
+                                  (item as { isDisabled?: boolean }).isDisabled
+                                }
+                              >
+                                <Trash className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete</TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          isEditDelete &&
+                          isActionButton?.(item) &&
+                          permission?.Delete &&
+                          (!canDelete || canDelete(item)) && (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
@@ -523,172 +561,143 @@ const TableData = <T extends Record<string, unknown>>({
                               </TooltipTrigger>
                               <TooltipContent>Delete</TooltipContent>
                             </Tooltip>
-                          ) : (
-                            isEditDelete &&
-                            isActionButton?.(item) &&
-                            permission?.Delete &&
-                            (!canDelete || canDelete(item)) && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 w-8 p-0 text-red-600"
-                                    onClick={() =>
-                                      !(item as { isDisabled?: boolean })
-                                        .isDisabled && onDelete?.(item)
-                                    }
-                                    disabled={
-                                      (item as { isDisabled?: boolean })
-                                        .isDisabled
-                                    }
-                                  >
-                                    <Trash className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Delete</TooltipContent>
-                              </Tooltip>
-                            )
-                          )}
-
-                          {permission?.Delete &&
-                            showActiveToggle &&
-                            isActionButton?.(item) &&
-                            (!canDelete || canDelete(item)) && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    size="sm"
-                                    className={`h-8 w-auto px-2 ${
-                                      getActiveState(item)
-                                        ? "bg-primary hover:bg-primary"
-                                        : "bg-red-700/80 hover:bg-red-700"
-                                    }`}
-                                    onClick={() =>
-                                      !(item as { isDisabled?: boolean })
-                                        .isDisabled && onToggleActive?.(item)
-                                    }
-                                    disabled={
-                                      (item as { isDisabled?: boolean })
-                                        .isDisabled
-                                    }
-                                  >
-                                    {getActiveState(item)
-                                      ? "Active"
-                                      : "Inactive"}
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {getActiveState(item)
-                                    ? "Set Inactive"
-                                    : "Set Active"}
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
-
-                          {typeof additionalButton === "function"
-                            ? additionalButton(item) &&
-                              permission?.Edit && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-8 w-8 p-0"
-                                      onClick={() =>
-                                        !(item as { isDisabled?: boolean })
-                                          .isDisabled && onAdditionButton(item)
-                                      }
-                                      disabled={
-                                        (item as { isDisabled?: boolean })
-                                          .isDisabled
-                                      }
-                                    >
-                                      <KeyRound className="w-4 h-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Permission</TooltipContent>
-                                </Tooltip>
-                              )
-                            : additionalButton &&
-                              permission?.Edit && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-8 w-8 p-0"
-                                      onClick={() =>
-                                        !(item as { isDisabled?: boolean })
-                                          .isDisabled && onAdditionButton(item)
-                                      }
-                                      disabled={
-                                        (item as { isDisabled?: boolean })
-                                          .isDisabled
-                                      }
-                                    >
-                                      <KeyRound className="w-4 h-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Permission</TooltipContent>
-                                </Tooltip>
-                              )}
-
-                          {viewButton && (
+                          )
+                        )}
+                        {permission?.Delete &&
+                          showActiveToggle &&
+                          isActionButton?.(item) &&
+                          (!canDelete || canDelete(item)) && (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
-                                  variant="outline"
                                   size="sm"
-                                  className="h-8 w-8 p-0"
+                                  className={`h-8 w-auto px-2 ${
+                                    getActiveState(item)
+                                      ? "bg-primary hover:bg-primary"
+                                      : "bg-red-700/80 hover:bg-red-700"
+                                  }`}
                                   onClick={() =>
                                     !(item as { isDisabled?: boolean })
-                                      .isDisabled && onViewButton(item)
+                                      .isDisabled && onToggleActive?.(item)
                                   }
                                   disabled={
                                     (item as { isDisabled?: boolean })
                                       .isDisabled
                                   }
                                 >
-                                  <EyeIcon className="w-4 h-4" />
+                                  {getActiveState(item) ? "Active" : "Inactive"}
                                 </Button>
                               </TooltipTrigger>
-                              <TooltipContent>View</TooltipContent>
+                              <TooltipContent>
+                                {getActiveState(item)
+                                  ? "Set Inactive"
+                                  : "Set Active"}
+                              </TooltipContent>
                             </Tooltip>
                           )}
-                        </div>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={
-                      columnKeys.length +
-                      (showCheckboxes ? 1 : 0) +
-                      (showIndexColumn ? 1 : 0) +
-                      1
-                    }
-                    className="text-center"
-                  >
-                    No Data Available
-                  </TableCell>
+
+                        {typeof additionalButton === "function"
+                          ? additionalButton(item) &&
+                            permission?.Edit && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    onClick={() =>
+                                      !(item as { isDisabled?: boolean })
+                                        .isDisabled && onAdditionButton(item)
+                                    }
+                                    disabled={
+                                      (item as { isDisabled?: boolean })
+                                        .isDisabled
+                                    }
+                                  >
+                                    <KeyRound className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Permission</TooltipContent>
+                              </Tooltip>
+                            )
+                          : additionalButton &&
+                            permission?.Edit && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    onClick={() =>
+                                      !(item as { isDisabled?: boolean })
+                                        .isDisabled && onAdditionButton(item)
+                                    }
+                                    disabled={
+                                      (item as { isDisabled?: boolean })
+                                        .isDisabled
+                                    }
+                                  >
+                                    <KeyRound className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Permission</TooltipContent>
+                              </Tooltip>
+                            )}
+
+                        {viewButton && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() =>
+                                  !(item as { isDisabled?: boolean })
+                                    .isDisabled && onViewButton(item)
+                                }
+                                disabled={
+                                  (item as { isDisabled?: boolean }).isDisabled
+                                }
+                              >
+                                <EyeIcon className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>View</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={
+                    columnKeys.length +
+                    (showCheckboxes ? 1 : 0) +
+                    (showIndexColumn ? 1 : 0) +
+                    1
+                  }
+                  className="text-center"
+                >
+                  No Data Available
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {paginationDetails && (
+        <div className="pt-4">
+          <Pagination
+            paginationDetails={paginationDetails}
+            setPaginationFilter={setPaginationFilter}
+          />
         </div>
-        {paginationDetails && (
-          <div className="pt-4">
-            <Pagination
-              paginationDetails={paginationDetails}
-              setPaginationFilter={setPaginationFilter}
-            />
-          </div>
-        )}
-      </Card>
-    </>
+      )}
+    </Card>
   );
 };
 

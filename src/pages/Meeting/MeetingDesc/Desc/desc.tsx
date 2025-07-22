@@ -68,6 +68,16 @@ export default function Desc({
         <div className="">
           <div className="flex items-center gap-4 rounded-xl bg-white px-2 py-2 shadow mb-6">
             <div className="w-1/2 flex items-center gap-4">
+              <div>
+                <span className="text-lg font-bold min-w-[120px] text-primary">
+                  {(allItems && allItems[currentIndex]?.name) || "-"}
+                </span>
+                <span className="text-md text-black ml-3 text-center">
+                  ({currentIndex + 1} / {totalData})
+                </span>
+              </div>
+            </div>
+            <div className="w-1/2 flex justify-end">
               <Timer
                 plannedTime={Number(currentItem?.plannedTime)}
                 actualTime={Number(
@@ -80,17 +90,8 @@ export default function Desc({
                 )}
                 isEditMode={false}
                 meetingStart={true}
+                className="text-2xl font-medium text-primary mr-2"
               />
-              <div>
-                <span className="text-lg font-bold min-w-[120px] text-primary">
-                  {(allItems && allItems[currentIndex]?.name) || "-"}
-                </span>
-                <span className="text-md text-black ml-3 text-center">
-                  {currentIndex + 1} / {totalData}
-                </span>
-              </div>
-            </div>
-            <div className="w-1/2 flex justify-end">
               <Button
                 variant="outline"
                 onClick={handlePreviousWithLog}
@@ -126,11 +127,11 @@ export default function Desc({
               </div>
               {meetingStatus === "DISCUSSION" && (
                 <Button
-                  variant="destructive"
-                  className="ml-5"
+                  variant="outline"
+                  className="ml-5 bg-primary text-white"
                   onClick={handleConclusionMeeting}
                 >
-                  Conclusion Meeting
+                  Conclusion
                 </Button>
               )}
             </div>
@@ -203,36 +204,38 @@ export default function Desc({
                   {activeTab === "tasks" && (
                     <div className="overflow-x-auto">
                       <Tasks
-                        meetingId={meetingId}
                         tasksFireBase={tasksFireBase}
                         meetingAgendaIssueId={
                           currentItem.detailMeetingAgendaIssueId
                         }
+                        detailMeetingId={detailMeetingId}
                       />
                     </div>
                   )}
                   {activeTab === "projects" && (
                     <div>
-                      <div className="overflow-x-auto">
+                      <div className="overflow-x-auto ">
                         <Projects
                           meetingId={meetingId}
                           projectsFireBase={projectsFireBase}
                           meetingAgendaIssueId={
                             currentItem.detailMeetingAgendaIssueId
                           }
+                          detailMeetingId={detailMeetingId}
                         />
                       </div>
                     </div>
                   )}
                   {activeTab === "kpis" && (
                     <div>
-                      <div className="overflow-x-auto">
+                      <div className="overflow-x-auto p-4">
                         <KPITable
                           meetingId={meetingId}
                           kpisFireBase={kpisFireBase}
                           meetingAgendaIssueId={
                             currentItem.detailMeetingAgendaIssueId
                           }
+                          detailMeetingId={detailMeetingId}
                         />
                       </div>
                     </div>

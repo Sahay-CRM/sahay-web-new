@@ -29,32 +29,36 @@ const ProjectSelectionStep = () => {
 
   return (
     <Card className="px-4 py-4">
-      <div className="flex items-center space-x-5 tb:space-x-7 mb-2">
-        <SearchInput
-          placeholder="Search Projects..."
-          searchValue={paginationFilterProject?.search || ""}
-          setPaginationFilter={setPaginationFilterProject}
-          className="w-96"
-        />
+      <div className="flex items-center justify-between mb-2">
+        {/* Left Section: Search + Error */}
+        <div className="flex  flex-row">
+          <SearchInput
+            placeholder="Search Projects..."
+            searchValue={paginationFilterProject?.search || ""}
+            setPaginationFilter={setPaginationFilterProject}
+            className="w-96"
+          />
+          {errors?.project && (
+            <span className="text-red-600  ml-2 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] mt-1">
+              {String(errors?.project?.message || "")}
+            </span>
+          )}
+        </div>
+
+        {/* Right Section: Button */}
         {permission.PROJECT_LIST.Add && (
           <Link to="/dashboard/projects/add?from=task">
             <Button className="py-2 w-fit">Add Company Project</Button>
           </Link>
         )}
       </div>
+
       <Controller
         name="project"
         control={control}
         rules={{ required: "Please select a Company Project" }}
         render={({ field }) => (
           <>
-            {errors?.project && (
-              <div className="mt-2">
-                <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                  {String(errors?.project?.message || "")}
-                </span>
-              </div>
-            )}
             <TableData
               tableData={projectListdata?.data?.map((item, index) => ({
                 ...item,
@@ -113,32 +117,36 @@ const MeetingSelectionStep = () => {
 
   return (
     <Card className="px-4 py-4">
-      <div className="flex items-center space-x-5 tb:space-x-7">
-        <SearchInput
-          placeholder="Search Meetings..."
-          searchValue={paginationFilterMeeting?.search || ""}
-          setPaginationFilter={setPaginationFilterMeeting}
-          className="w-96"
-        />
+      <div className="flex items-center justify-between mb-2">
+        {/* Left Section: Search + Error */}
+        <div className="flex  flex-row">
+          <SearchInput
+            placeholder="Search Meetings..."
+            searchValue={paginationFilterMeeting?.search || ""}
+            setPaginationFilter={setPaginationFilterMeeting}
+            className="w-96"
+          />{" "}
+          {errors?.meeting && (
+            <div className="mt-2">
+              <span className="text-red-600 ml-2 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                {String(errors?.meeting?.message || "This field is required")}
+              </span>
+            </div>
+          )}
+        </div>
         {permission.MEETING_LIST?.Add && (
           <Link to="/dashboard/meeting/add?from=task">
             <Button className="py-2 w-fit">Add Meeting</Button>
           </Link>
         )}
       </div>
+
       <Controller
         name="meeting"
         control={control}
         rules={{ required: "Please select a meeting" }}
         render={({ field }) => (
           <>
-            {errors?.meeting && (
-              <div className="mt-2">
-                <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                  {String(errors?.meeting?.message || "This field is required")}
-                </span>
-              </div>
-            )}
             <TableData
               tableData={meetingData?.data?.map((item, index) => ({
                 ...item,
@@ -320,13 +328,25 @@ const AssignUserStep = () => {
 
   return (
     <Card className="px-4 py-4">
-      <div>
-        <SearchInput
-          placeholder="Search Users..."
-          searchValue={paginationFilterEmployee?.search || ""}
-          setPaginationFilter={setPaginationFilterEmployee}
-          className="w-96"
-        />
+      <div className="flex items-center justify-between mb-2">
+        {/* Left Section: Search + Error */}
+        <div className="flex  flex-row">
+          <SearchInput
+            placeholder="Search Users..."
+            searchValue={paginationFilterEmployee?.search || ""}
+            setPaginationFilter={setPaginationFilterEmployee}
+            className="w-96"
+          />
+          {errors?.assignUser && (
+            <div className="mt-2">
+              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                {String(
+                  errors?.assignUser?.message || "This field is required",
+                )}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
       <Controller
         name="assignUser"
@@ -341,15 +361,6 @@ const AssignUserStep = () => {
               : [];
           return (
             <>
-              {errors?.assignUser && (
-                <div className="mt-2">
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(
-                      errors?.assignUser?.message || "This field is required",
-                    )}
-                  </span>
-                </div>
-              )}
               <TableData
                 tableData={employeedata?.data?.map((item, index) => ({
                   ...item,

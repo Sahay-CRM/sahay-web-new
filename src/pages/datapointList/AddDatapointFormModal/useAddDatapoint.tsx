@@ -224,15 +224,23 @@ export default function useAddEmployee() {
 
     return (
       <div>
-        <div className=" mt-1 flex items-center justify-end">
-          <div>
+        <div className="mt-1 flex items-center justify-between">
+          <div className="flex items-center mb-4 gap-2">
             <SearchInput
               placeholder="Search..."
               searchValue={paginationFilter?.search || ""}
               setPaginationFilter={setPaginationFilter}
               className="w-80"
             />
+
+            {/* Show error message next to Search Box */}
+            {errors?.KPIMasterId && (
+              <span className="text-red-600 whitespace-nowrap  text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                {String(errors?.KPIMasterId?.message || "")}
+              </span>
+            )}
           </div>
+
           {canToggleColumns && (
             <TooltipProvider>
               <Tooltip>
@@ -259,13 +267,6 @@ export default function useAddEmployee() {
           rules={{ required: "Please select a Kpi" }}
           render={({ field }) => (
             <>
-              <div className="mb-4">
-                {errors?.KPIMasterId && (
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors?.KPIMasterId?.message || "")}
-                  </span>
-                )}
-              </div>
               <TableData
                 {...field}
                 tableData={kpidata?.data.map((item, index) => ({

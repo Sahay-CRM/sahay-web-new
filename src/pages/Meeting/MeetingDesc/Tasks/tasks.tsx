@@ -20,17 +20,18 @@ import {
 } from "@/features/api/companyMeeting";
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
 import { queryClient } from "@/queryClient";
+import TaskDrawer from "./taskDrawer";
 
 interface TasksProps {
-  meetingId: string;
   tasksFireBase: () => void;
-  meetingAgendaIssueId: string | undefined;
+  meetingAgendaIssueId?: string | undefined;
+  detailMeetingId: string | undefined;
 }
 
 export default function Tasks({
-  meetingId,
   tasksFireBase,
   meetingAgendaIssueId,
+  detailMeetingId,
 }: TasksProps) {
   const { data: taskStatus } = useGetAllTaskStatus({
     filter: {},
@@ -40,17 +41,21 @@ export default function Tasks({
   const { mutate: addMeetingTask } = addMeetingTaskDataMutation();
   const { mutate: deleteTaskById } = deleteMeetingTaskMutation();
 
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selected, setSelected] = useState<TaskGetPaging | null>(null);
+
   const { data: selectedTask } = useGetMeetingTask({
     filter: {
+      detailMeetingId: detailMeetingId,
       detailMeetingAgendaIssueId: meetingAgendaIssueId,
     },
-    enable: !!meetingAgendaIssueId,
+    enable: !!detailMeetingId && !!meetingAgendaIssueId,
   });
 
   const handleAddTasks = (tasks: TaskGetPaging[]) => {
-    if (meetingAgendaIssueId) {
+    if (meetingAgendaIssueId && detailMeetingId) {
       const payload = {
-        meetingId: meetingId,
+        detailMeetingId: detailMeetingId,
         taskIds: tasks.map((item) => item.taskId),
         detailMeetingAgendaIssueId: meetingAgendaIssueId,
       };
@@ -111,11 +116,11 @@ export default function Tasks({
   const conformDelete = useCallback(
     async (data: TaskGetPaging) => {
       if (data && data.taskId) {
-        const payload = {
-          taskId: data.taskId,
-          meetingId: meetingId,
-        };
-        deleteTaskById(payload, {
+        // const payload = {
+        //   taskId: data.taskId,
+        //   meetingId: meetingId,
+        // };
+        deleteTaskById(data.taskId, {
           onSuccess: () => {
             queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
             tasksFireBase();
@@ -133,11 +138,11 @@ export default function Tasks({
         });
       }
     },
-    [deleteTaskById, meetingId, tasksFireBase],
+    [deleteTaskById, tasksFireBase],
   );
 
   return (
-    <div>
+    <div className="p-4">
       <div className="flex gap-5 justify-between mb-5">
         <div>
           <TaskSearchDropdown
@@ -187,6 +192,12 @@ export default function Tasks({
         // onViewButton={(row) => {
         //   navigate(`/dashboard/tasks/view/${row.taskId}`);
         // }}
+        onRowClick={(row) => {
+          if (row) {
+            setSelected(row);
+            setDrawerOpen(true);
+          }
+        }}
         showIndexColumn={false}
         isActionButton={() => true}
         isEditDelete={() => true}
@@ -213,6 +224,13 @@ export default function Tasks({
 
         sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
       />
+      {drawerOpen && (
+        <TaskDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          taskData={selected}
+        />
+      )}
     </div>
   );
 }

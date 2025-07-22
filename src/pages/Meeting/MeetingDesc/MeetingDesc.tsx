@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import useMeetingDesc from "./useMeetingDesc";
 import Desc from "../MeetingDesc/Desc/desc";
 import Conclusion from "../MeetingDesc/Conclusion/conclusion";
@@ -35,6 +34,9 @@ export default function MeetingDesc() {
         meetingResponse={meetingResponse}
         agendaPlannedTime={meetingTiming?.agendaTimePlanned}
         detailMeetingId={meetingTiming?.detailMeetingId}
+        handleStartMeeting={handleStartMeeting}
+        handleDesc={handleDesc}
+        joiners={meetingTiming?.employeeList ?? []}
       />
     );
   } else if (meetingStatus === "DISCUSSION") {
@@ -57,29 +59,7 @@ export default function MeetingDesc() {
 
   return (
     <div>
-      <div className="mb-4 flex gap-2">
-        {/* Show Start/End Meeting button except on conclusion */}
-        {meetingStatus === "NOT_STARTED" && (
-          <Button
-            variant="outline"
-            className="bg-primary text-white cursor-pointer"
-            onClick={handleStartMeeting}
-          >
-            Start Meeting
-          </Button>
-        )}
-        {/* Show Desc button only after meeting started and not on conclusion */}
-        {meetingStatus && meetingStatus === "STARTED" && (
-          <Button
-            variant="outline"
-            className="cursor-pointer"
-            onClick={handleDesc}
-          >
-            Desc
-          </Button>
-        )}
-        {/* Show Agenda button if in desc and meeting started */}
-      </div>
+      <div className="mb-4 flex gap-2 justify-end"></div>
       <div>{content}</div>
     </div>
   );

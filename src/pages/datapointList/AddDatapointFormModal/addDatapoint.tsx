@@ -61,7 +61,10 @@ const AddDatapoint = () => {
   return (
     <FormProvider {...methods}>
       <div>
-        <div className="">
+        <div className=""></div>
+
+        {/* Navigation Buttons */}
+        <div className="flex items-center gap-5 mb-5">
           <StepProgress
             currentStep={currentStep}
             stepNames={stepNames}
@@ -70,27 +73,36 @@ const AddDatapoint = () => {
               companykpimasterId ? datapointApiData?.KPIMaster?.KPIName : null
             }
           />
-        </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-end gap-5 mb-5 ">
-          <Button onClick={back} disabled={isFirstStep} className="w-fit">
-            Previous
-          </Button>
-          <Button
-            onClick={isLastStep ? onFinish : next}
-            className="w-fit"
-            disabled={isPending}
-            isLoading={isPending}
-          >
-            {isLastStep ? "Finish" : "Next"}
-          </Button>
-
-          {companykpimasterId && !isLastStep && (
-            <Button onClick={onFinish} className="w-fit">
-              Submit
+          {/* Button Group */}
+          <div className="flex mt-9 items-center gap-3">
+            <Button onClick={back} disabled={isFirstStep} className="w-fit">
+              Previous
             </Button>
-          )}
+
+            {/* Next button stays visible but is disabled on last step */}
+            <Button
+              onClick={next}
+              className="w-fit"
+              disabled={isLastStep || isPending}
+              isLoading={isPending}
+            >
+              Next
+            </Button>
+
+            {/* Finish button always visible on last step */}
+            {isLastStep && (
+              <Button onClick={onFinish} className="w-fit" disabled={isPending}>
+                Finish
+              </Button>
+            )}
+
+            {companykpimasterId && !isLastStep && (
+              <Button onClick={onFinish} className="w-fit">
+                Submit
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Step Content */}

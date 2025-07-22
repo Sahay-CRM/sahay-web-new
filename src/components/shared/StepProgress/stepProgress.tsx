@@ -47,7 +47,7 @@ const StepProgress: React.FC<StepProgressProps> = ({
             }`}
           >
             {isCompleted ? (
-              <span className="block w-8">
+              <span className="block w-5">
                 <CheckMarkIcon />
               </span>
             ) : (
@@ -64,15 +64,14 @@ const StepProgress: React.FC<StepProgressProps> = ({
   };
 
   return (
-    <div className="w-full pr-6 pl-3 py-2">
-      <div className="flex items-center">
+    <div className="w-full pr-6 pl-3 py-0">
+      <div className=" items-center">
         {header && (
-          <div className="text-lg mr-2 min-w-fit font-semibold text-[#2e3090]">
+          <div className="w-full  text-lg mr-2 font-semibold text-[#2e3090]">
             {header}
           </div>
         )}
-
-        <div className="w-full">
+        <div className="w-full mt-3">
           <div className="flex justify-between">
             {[...Array(totalSteps)].map((_, index) => renderStep(index + 1))}
           </div>
