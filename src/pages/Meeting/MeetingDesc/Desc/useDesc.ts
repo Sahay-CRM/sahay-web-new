@@ -1,4 +1,5 @@
 import {
+  editAgendaTimingMeetingMutation,
   updateDetailMeetingMutation,
   useGetDetailMeetingAgenda,
   useGetDetailMeetingAgendaIssue,
@@ -26,6 +27,8 @@ export default function useDesc({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
+  const { mutate: editMeetingAgendaTIming, isPending } =
+    editAgendaTimingMeetingMutation();
 
   const { data: allItems, isLoading } = useGetDetailMeetingAgenda({
     filter: {
@@ -79,6 +82,28 @@ export default function useDesc({
     if (meetingId) {
       const db = getDatabase();
       const meetStateRef = ref(db, `meetings/${meetingId}/state`);
+
+      const now = Date.now();
+      const elapsed = now - Number(meetingResponse?.state.lastSwitchTimestamp);
+
+      if (currentItem && currentItem.detailMeetingAgendaIssueId) {
+        const objectiveActualTime =
+          meetingResponse?.timers.objectives?.[
+            currentItem.detailMeetingAgendaIssueId
+          ].actualTime;
+        const time = (objectiveActualTime ?? 0) + elapsed;
+
+        const meetTimersRef = ref(
+          db,
+          `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}`,
+        );
+
+        update(meetTimersRef, {
+          actualTime: time,
+          updatedAt: Date.now(),
+        });
+      }
+
       updateDetailMeeting(
         {
           meetingId: meetingId,
@@ -86,11 +111,20 @@ export default function useDesc({
         },
         {
           onSuccess: () => {
-            update(meetStateRef, {
-              activeTab: "CONCLUSION",
-              lastSwitchTimestamp: Date.now(),
-              status: "CONCLUSION",
-            });
+            editMeetingAgendaTIming(
+              {
+                meetingId: meetingId,
+              },
+              {
+                onSuccess: () => {
+                  update(meetStateRef, {
+                    activeTab: "CONCLUSION",
+                    lastSwitchTimestamp: Date.now(),
+                    status: "CONCLUSION",
+                  });
+                },
+              },
+            );
           },
         },
       );
@@ -335,5 +369,6 @@ export default function useDesc({
     tasksFireBase,
     projectsFireBase,
     kpisFireBase,
+    isPending,
   };
 }

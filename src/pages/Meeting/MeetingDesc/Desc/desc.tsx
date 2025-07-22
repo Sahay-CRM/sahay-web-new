@@ -44,6 +44,7 @@ export default function Desc({
     tasksFireBase,
     projectsFireBase,
     kpisFireBase,
+    isPending,
   } = useDesc({ meetingResponse, detailMeetingId });
 
   if (isLoading && meetingResponse) {
@@ -130,6 +131,7 @@ export default function Desc({
                   variant="outline"
                   className="ml-5 bg-primary text-white"
                   onClick={handleConclusionMeeting}
+                  disabled={isPending}
                 >
                   Conclusion
                 </Button>
@@ -140,7 +142,7 @@ export default function Desc({
           <div className="w-full">
             {detailAgendaData ? (
               <div
-                className={`flex h-[calc(100vh-150px)] ${isSidebarCollapsed ? "gap-3" : "gap-8"}  w-full relative`}
+                className={`flex h-[calc(100vh-230px)] ${isSidebarCollapsed ? "gap-3" : "gap-8"}  w-full relative`}
               >
                 <div
                   className={`transition-all duration-300 bg-white shadow rounded-xl

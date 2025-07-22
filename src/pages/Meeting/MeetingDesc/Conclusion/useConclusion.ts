@@ -1,17 +1,38 @@
 import { endMeetingMutation } from "@/features/api/companyMeeting";
 import useGetMeetingConclusion from "@/features/api/companyMeeting/useGetMeetingConclusion";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 
 export default function useConclusion() {
   const { id: meetingId } = useParams();
-  const { mutate: endMeet } = endMeetingMutation();
-  const { data: conclusionData } = useGetMeetingConclusion(meetingId ?? "");
+  const [selectedAgenda, setSelectedAgenda] = useState(0);
 
+  const { mutate: endMeet, isPending } = endMeetingMutation();
+  const { data: conclusionData, isLoading } = useGetMeetingConclusion(
+    meetingId ?? "",
+  );
   const handleCloseMeetingWithLog = () => {
     if (meetingId) {
       endMeet(meetingId);
     }
   };
 
-  return { handleCloseMeetingWithLog, conclusionData };
+  const hasChanges = (item: AgendaResConclusion | undefined) => {
+    if (!item) return;
+    return (
+      item.discussion.taskUpdate.length > 0 ||
+      item.discussion.projectUpdate.length > 0 ||
+      item.discussion.kpiUpdate.length > 0
+    );
+  };
+
+  return {
+    handleCloseMeetingWithLog,
+    conclusionData,
+    isPending,
+    isLoading,
+    setSelectedAgenda,
+    selectedAgenda,
+    hasChanges,
+  };
 }

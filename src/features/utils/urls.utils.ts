@@ -212,9 +212,6 @@ const Urls = {
     `${baseUrl}/company/detail-meeting/kpi/remove/${id}`,
   allKpiList: () => `${baseUrl}/company/kpi/get-detail-meeting`,
 
-  timeUpdateByMeeting: (id: string) =>
-    `${baseUrl}/company/detail-meeting/update/${id}`,
-
   getTimeByMeeting: (id: string) =>
     `${baseUrl}/company/detail-meeting/get/${id}`,
 
@@ -242,6 +239,9 @@ const Urls = {
 
   getDetailObjectivesIssue: () =>
     `${baseUrl}/company/detail-meeting/get-objectives`,
+
+  updateDetailObjectivesIssue: () =>
+    `${baseUrl}/company/detail-meeting/agenda/update`,
 };
 
 export default Urls;

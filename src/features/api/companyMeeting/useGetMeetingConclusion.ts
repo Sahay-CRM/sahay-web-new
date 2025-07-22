@@ -6,11 +6,11 @@ export default function useGetMeetingConclusion(meetingId: string) {
   const query = useQuery({
     queryKey: ["get-meeting-conclusion-res", meetingId],
     queryFn: async () => {
-      const { data: resData } = await Api.post<{ data: MeetingConclusionData }>(
-        {
-          url: Urls.getConclusionByMeeting(meetingId),
-        },
-      );
+      const { data: resData } = await Api.post<{
+        data: MeetingConclusionData;
+      }>({
+        url: Urls.getConclusionByMeeting(meetingId),
+      });
 
       return resData.data;
     },

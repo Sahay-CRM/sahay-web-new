@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CircleX, CornerDownLeft, Pencil, Trash2 } from "lucide-react";
+import { CircleX, CornerDownLeft, Crown, Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import {
   addMeetingAgendaMutation,
+  addUpdateCompanyMeetingMutation,
   deleteMeetingObjectiveMutation,
   useGetDetailMeetingAgenda,
   useGetDetailMeetingObj,
@@ -17,6 +18,14 @@ import { addUpdateObjective } from "@/features/api/Objective";
 import { queryClient } from "@/queryClient";
 import { useDispatch } from "react-redux";
 import { setMeeting } from "@/features/reducers/common.reducer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import userProfile from "@/assets/userDummy.jpg";
 
 function IssueModal({
   open,
@@ -87,6 +96,7 @@ interface AgendaProps {
   handleStartMeeting: () => void;
   handleDesc: () => void;
   joiners: Joiners[];
+  meetingStart: boolean;
 }
 
 export default function Agenda({
@@ -98,6 +108,7 @@ export default function Agenda({
   handleStartMeeting,
   handleDesc,
   joiners,
+  // meetingStart,
 }: AgendaProps) {
   const dispatch = useDispatch();
   const [issueInput, setIssueInput] = useState("");
@@ -122,6 +133,8 @@ export default function Agenda({
   const [modalOpen, setModalOpen] = useState(false);
   const [modalIssue, setModalIssue] = useState("");
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const startEdit = (
     type: "issue" | "objective",
@@ -145,9 +158,11 @@ export default function Agenda({
       detailMeetingAgendaIssueId,
     });
   };
+
   const setEditingValue = (value: string) => {
     setEditing((prev) => ({ ...prev, value }));
   };
+
   const cancelEdit = () => {
     setEditing({
       type: null,
@@ -167,12 +182,10 @@ export default function Agenda({
     },
     enable: !!detailMeetingId,
   });
+  const { mutate: updateMeetingTeamLeader } = addUpdateCompanyMeetingMutation();
 
-  // Local state for drag-and-drop
   const [agendaList, setAgendaList] = useState(selectedAgenda || []);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
-  // Reset agendaList to backend order on refresh/data change
   useEffect(() => {
     setAgendaList(selectedAgenda || []);
     if (selectedAgenda) {
@@ -182,24 +195,38 @@ export default function Agenda({
 
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
+    setHoveredIndex(null);
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLLIElement>) => {
+  const handleDragOver = (e: React.DragEvent<HTMLLIElement>, index: number) => {
     e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setHoveredIndex(index);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setHoveredIndex(null);
+    setDraggedIndex(null);
   };
 
   const handleDrop = (index: number) => {
     if (draggedIndex === null || draggedIndex === index) return;
+
     const updatedList = [...agendaList];
     const [removed] = updatedList.splice(draggedIndex, 1);
     updatedList.splice(index, 0, removed);
+
     setAgendaList(updatedList);
     setDraggedIndex(null);
-    // Log the new order
-    console.log(
-      "Dropped. New agenda sequence:",
-      updatedList.map((item) => item.name),
-    );
+    setHoveredIndex(null);
+
+    const payload = {
+      detailMeetingAgendaIssueId: removed.detailMeetingAgendaIssueId,
+      detailMeetingId: detailMeetingId,
+      sequence: index + 1,
+    };
+    addIssueAgenda(payload);
   };
 
   const { mutate: addIssue } = addUpdateIssues();
@@ -219,16 +246,6 @@ export default function Agenda({
       item.name.toLowerCase().includes(issueInput.toLowerCase()) &&
       issueInput.trim() !== "",
   );
-
-  // const agendaFireBase = (id: string) => {
-  //   if (meetingStatus) {
-  //     const db = getDatabase();
-  //     const meetRef = ref(db, `meetings/${meetingId}/timers/issues/${id}`);
-  //     update(meetRef, {
-  //       updatedAt: Date.now(),
-  //     });
-  //   }
-  // };
 
   const handleAddIssue = () => {
     setModalIssue(issueInput);
@@ -279,13 +296,6 @@ export default function Agenda({
 
   const canEdit = true;
 
-  // const handleTimerUpdate = (newTime: number) => {
-  //   updateAgendaTime({
-  //     meetingId: meetingId,
-  //     agendaTimePlanned: String(newTime),
-  //   });
-  // };
-
   const searchOptions = (issueData?.data ?? []).map((item) => ({
     name: item.name,
     id: item.id,
@@ -323,7 +333,7 @@ export default function Agenda({
           queryClient.resetQueries({
             queryKey: ["get-detail-meeting-agenda-issue-obj"],
           });
-          cancelEdit(); // Reset edit state after successful update
+          cancelEdit();
         },
       },
     );
@@ -386,8 +396,31 @@ export default function Agenda({
     }
   };
 
+  const handleAddTeamLeader = (data: Joiners) => {
+    const teamLeader = (joiners as Joiners[])
+      ?.filter((da) => da.isTeamLeader)
+      .map((item) => item.employeeId);
+
+    let updatedTeamLeaders: string[];
+    if (teamLeader?.includes(data.employeeId)) {
+      updatedTeamLeaders = teamLeader.filter((id) => id !== data.employeeId);
+    } else {
+      updatedTeamLeaders = [...(teamLeader || []), data.employeeId];
+    }
+
+    const payload = {
+      companyMeetingId: meetingId,
+      teamLeaders: updatedTeamLeaders,
+    };
+    updateMeetingTeamLeader(payload, {
+      onSuccess: () => {
+        queryClient.resetQueries({ queryKey: ["get-meeting-details-timing"] });
+      },
+    });
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" onDragEnd={handleDragEnd}>
       <IssueModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -491,31 +524,49 @@ export default function Agenda({
                     key={item.issueObjectiveId}
                     draggable
                     onDragStart={() => handleDragStart(idx)}
-                    onDragOver={handleDragOver}
+                    onDragOver={(e) => handleDragOver(e, idx)}
                     onDrop={() => handleDrop(idx)}
                     style={{
                       opacity: draggedIndex === idx ? 0.5 : 1,
                       cursor: "move",
                       background: "#fff",
-                      border: "1px solid #eee",
+                      border:
+                        hoveredIndex === idx
+                          ? "2px dashed #3b82f6"
+                          : "1px solid #eee",
                       marginBottom: 4,
                       padding: 8,
                       borderRadius: 4,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
+                      position: "relative",
+                      transition: "border 0.2s ease",
                     }}
                   >
-                    {/* Left side: drag handle + name */}
+                    {hoveredIndex === idx && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: -8,
+                          left: 0,
+                          right: 0,
+                          height: 2,
+                          background: "#3b82f6",
+                          zIndex: 1,
+                        }}
+                      />
+                    )}
+
                     <div style={{ display: "flex", alignItems: "center" }}>
                       <span style={{ marginRight: 8, cursor: "grab" }}>⋮⋮</span>
                       {editing.type === item.agendaType &&
                       editing.id === item.issueObjectiveId &&
-                      canEdit ? null : ( // Hide name when editing
+                      canEdit ? null : (
                         <span>{item.name}</span>
                       )}
                     </div>
-                    {/* Right side: type, time, edit, delete */}
+
                     {editing.type === item.agendaType &&
                     editing.id === item.issueObjectiveId &&
                     canEdit ? (
@@ -564,7 +615,6 @@ export default function Agenda({
                                   plannedMinutes: val,
                                 }));
                                 setEditingPart(null);
-                                // Do NOT call handleUpdateTime here
                               }}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") {
@@ -629,7 +679,6 @@ export default function Agenda({
                                   plannedSeconds: valSec,
                                 }));
                                 setEditingPart(null);
-                                // Do NOT call handleUpdateTime here
                               }}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") {
@@ -730,9 +779,116 @@ export default function Agenda({
           </div>
         </div>
         <div className="border w-[200px]">
-          {joiners.map((item) => (
-            <div key={item.employeeId}>{item.employeeName}</div>
-          ))}
+          {/* <div className="grid grid-cols-4 gap-2 ">
+            {joiners.map((item, index) => (
+              <div key={index + item.employeeId} className="relative">
+                {item.isTeamLeader && (
+                  <span className="absolute -top-0 right-1 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                    <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
+                  </span>
+                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild disabled={meetingStart}>
+                    <Avatar className={`h-8 mt-2 w-8 relative cursor-pointer`}>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <AvatarFallback className="font-bold">
+                              <img
+                                src={userProfile}
+                                alt="profile"
+                                className={`w-full rounded-full object-cover outline-2 outline-blue-400 bg-black `}
+                              />
+                            </AvatarFallback>
+                          </TooltipTrigger>
+                          <TooltipContent>{item.employeeName}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </Avatar>
+                  </DropdownMenuTrigger>
+                  {meetingStart && (
+                    <>
+                      {item.attendanceMark ? (
+                        <DropdownMenuContent>
+                          {item.isTeamLeader && (
+                            <DropdownMenuItem
+                              onClick={() => handleAddTeamLeader(item)}
+                              className="border mb-2"
+                            >
+                              {item.isTeamLeader
+                                ? "Remove TeamLeader"
+                                : "Add TeamLeader"}
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem className="border mb-2">
+                            Check Out
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      ) : (
+                        <DropdownMenuContent>
+                          <DropdownMenuItem className="border">
+                            Check In
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      )}
+                    </>
+                  )}
+                </DropdownMenu>
+              </div>
+            ))}
+          </div> */}
+          <div className="grid grid-cols-4 gap-2">
+            {joiners.map((item, index) => (
+              <div key={index + item.employeeId} className="relative">
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="w-full">
+                    <div className="relative">
+                      <img
+                        src={userProfile}
+                        alt="profile"
+                        className={`w-full rounded-full object-cover outline-2 outline-blue-400 bg-black`}
+                      />
+                      {item.isTeamLeader && (
+                        <span className="absolute -top-0 right-1 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                          <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
+                        </span>
+                      )}
+                    </div>
+                  </DropdownMenuTrigger>
+
+                  {item.attendanceMark ? (
+                    <DropdownMenuContent>
+                      {item.isTeamLeader && (
+                        <DropdownMenuItem
+                          onClick={() => handleAddTeamLeader(item)}
+                          className="border mb-2"
+                        >
+                          {item.isTeamLeader
+                            ? "Remove TeamLeader"
+                            : "Add TeamLeader"}
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem
+                        // onClick={() => handleCheckOut(item.employeeId)}
+                        className="border mb-2"
+                      >
+                        Check Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  ) : (
+                    <DropdownMenuContent>
+                      <DropdownMenuItem
+                        // onClick={() => handleCheckIn(item.employeeId)}
+                        className="border"
+                      >
+                        Check In
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  )}
+                </DropdownMenu>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

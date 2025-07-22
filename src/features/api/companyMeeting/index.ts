@@ -25,7 +25,6 @@ export { default as deleteMeetingKpisMutation } from "./useDeleteMeetingKpis";
 export { default as useGetMeetingKpis } from "./useGetMeetingKpis";
 export { default as useGetMeetingSelectedKpis } from "./useGetMeetingSelectedKpis";
 
-export { default as addMeetingTimeMutation } from "./useUpdateMeetingTime";
 export { default as useGetMeetingTiming } from "./useGetMeetingTiming";
 
 export { default as addMeetingNotesMutation } from "./useAddMeetingNotes";
@@ -37,3 +36,4 @@ export { default as useGetDetailMeetingObj } from "./useGetDetailMeetingObj";
 export { default as useGetDetailMeetingAgenda } from "./useGetDetailMeetingAgenda";
 
 export { default as useGetDetailMeetingAgendaIssue } from "./useGetDetailMeetingAgendaIssue";
+export { default as editAgendaTimingMeetingMutation } from "./useUpdateAgendaMeeting";
