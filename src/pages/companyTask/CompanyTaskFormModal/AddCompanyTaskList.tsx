@@ -1,20 +1,18 @@
-import { Controller, FormProvider, useFormContext } from "react-hook-form"; // Added useFormContext
+import { Controller, FormProvider, useFormContext } from "react-hook-form";
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-// import StepProgress from "@/components/shared/StepFom/StepForm"; // Ensure this is the correct StepProgress component
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
-import { useAddCompanyTask } from "./useAddCompanyTaskList"; // Renamed import
+import { useAddCompanyTask } from "./useAddCompanyTaskList";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
 import SearchInput from "@/components/shared/SearchInput";
 
-// --- Step 1: Project Selection ---
 const ProjectSelectionStep = () => {
   const {
     control,
@@ -25,17 +23,27 @@ const ProjectSelectionStep = () => {
     setPaginationFilterProject,
     permission,
     paginationFilterProject,
-  } = useAddCompanyTask(); // Assuming hook can be called here for specific data or passed as props
+    projectLoading,
+  } = useAddCompanyTask();
 
   return (
-    <Card className="px-4 py-4">
-      <div className="flex items-center space-x-5 tb:space-x-7 mb-2">
-        <SearchInput
-          placeholder="Search Projects..."
-          searchValue={paginationFilterProject?.search || ""}
-          setPaginationFilter={setPaginationFilterProject}
-          className="w-96"
-        />
+    <div className="p-0">
+      <div className="flex items-center space-x-5 tb:space-x-7 mb-2 justify-between">
+        <div className="flex gap-4">
+          <SearchInput
+            placeholder="Search Projects..."
+            searchValue={paginationFilterProject?.search || ""}
+            setPaginationFilter={setPaginationFilterProject}
+            className="w-96"
+          />
+          {errors?.project && (
+            <div className="mt-2">
+              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                {String(errors?.project?.message || "")}
+              </span>
+            </div>
+          )}
+        </div>
         {permission.PROJECT_LIST.Add && (
           <Link to="/dashboard/projects/add?from=task">
             <Button className="py-2 w-fit">Add Company Project</Button>
@@ -47,58 +55,50 @@ const ProjectSelectionStep = () => {
         control={control}
         rules={{ required: "Please select a Company Project" }}
         render={({ field }) => (
-          <>
-            {errors?.project && (
-              <div className="mt-2">
-                <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                  {String(errors?.project?.message || "")}
-                </span>
-              </div>
-            )}
-            <TableData
-              tableData={projectListdata?.data?.map((item, index) => ({
-                ...item,
-                srNo:
-                  (projectListdata.currentPage - 1) * projectListdata.pageSize +
-                  index +
-                  1,
-              }))}
-              isActionButton={() => false}
-              columns={{
-                projectName: "Project Name",
-              }}
-              primaryKey="projectId"
-              multiSelect={false}
-              selectedValue={
-                field.value
-                  ? (projectListdata?.data?.find(
-                      (item) => item.projectId === field.value,
-                    ) as Record<string, unknown> | undefined)
-                  : undefined
+          <TableData
+            tableData={projectListdata?.data?.map((item, index) => ({
+              ...item,
+              srNo:
+                (projectListdata.currentPage - 1) * projectListdata.pageSize +
+                index +
+                1,
+            }))}
+            isActionButton={() => false}
+            columns={{
+              projectName: "Project Name",
+            }}
+            isLoading={projectLoading}
+            primaryKey="projectId"
+            multiSelect={false}
+            selectedValue={
+              field.value
+                ? (projectListdata?.data?.find(
+                    (item) => item.projectId === field.value,
+                  ) as Record<string, unknown> | undefined)
+                : undefined
+            }
+            handleChange={(selected) => {
+              if (
+                selected &&
+                typeof selected === "object" &&
+                "projectId" in selected
+              ) {
+                field.onChange(selected.projectId);
+              } else {
+                field.onChange("");
               }
-              handleChange={(selected) => {
-                if (
-                  selected &&
-                  typeof selected === "object" &&
-                  "projectId" in selected
-                ) {
-                  field.onChange(selected.projectId);
-                } else {
-                  field.onChange("");
-                }
-              }}
-              onCheckbox={() => true}
-              paginationDetails={projectListdata as PaginationFilter}
-              setPaginationFilter={setPaginationFilterProject}
-            />
-          </>
+            }}
+            onCheckbox={() => true}
+            paginationDetails={projectListdata as PaginationFilter}
+            setPaginationFilter={setPaginationFilterProject}
+            showActionsColumn={false}
+          />
         )}
       />
-    </Card>
+    </div>
   );
 };
 
-// --- Step 2: Meeting Selection ---
 const MeetingSelectionStep = () => {
   const {
     control,
@@ -109,17 +109,27 @@ const MeetingSelectionStep = () => {
     setPaginationFilterMeeting,
     permission,
     paginationFilterMeeting,
-  } = useAddCompanyTask(); // Assuming hook can be called here
+    meetingLoading,
+  } = useAddCompanyTask();
 
   return (
-    <Card className="px-4 py-4">
-      <div className="flex items-center space-x-5 tb:space-x-7">
-        <SearchInput
-          placeholder="Search Meetings..."
-          searchValue={paginationFilterMeeting?.search || ""}
-          setPaginationFilter={setPaginationFilterMeeting}
-          className="w-96"
-        />
+    <div className="px-4 py-4">
+      <div className=" mt-1 mb-4 flex items-center justify-between">
+        <div className="flex items-center w-full">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilterMeeting?.search || ""}
+            setPaginationFilter={setPaginationFilterMeeting}
+            className="w-80"
+          />
+          {errors?.meeting && (
+            <div className="mt-2">
+              <span className="text-red-600 w-fit text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                {String(errors?.meeting?.message || "This field is required")}
+              </span>
+            </div>
+          )}
+        </div>
         {permission.MEETING_LIST?.Add && (
           <Link to="/dashboard/meeting/add?from=task">
             <Button className="py-2 w-fit">Add Meeting</Button>
@@ -131,67 +141,59 @@ const MeetingSelectionStep = () => {
         control={control}
         rules={{ required: "Please select a meeting" }}
         render={({ field }) => (
-          <>
-            {errors?.meeting && (
-              <div className="mt-2">
-                <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                  {String(errors?.meeting?.message || "This field is required")}
-                </span>
-              </div>
-            )}
-            <TableData
-              tableData={meetingData?.data?.map((item, index) => ({
-                ...item,
-                srNo:
-                  (meetingData.currentPage - 1) * meetingData.pageSize +
-                  index +
-                  1,
-              }))}
-              isActionButton={() => false}
-              columns={{
-                meetingName: "Meeting Name",
-              }}
-              primaryKey="meetingId"
-              multiSelect={false}
-              selectedValue={
-                field.value
-                  ? (meetingData?.data?.find(
-                      (item) => item.meetingId === field.value,
-                    ) as Record<string, unknown> | undefined)
-                  : undefined
+          <TableData
+            tableData={meetingData?.data?.map((item, index) => ({
+              ...item,
+              srNo:
+                (meetingData.currentPage - 1) * meetingData.pageSize +
+                index +
+                1,
+            }))}
+            isActionButton={() => false}
+            columns={{
+              meetingName: "Meeting Name",
+            }}
+            primaryKey="meetingId"
+            multiSelect={false}
+            selectedValue={
+              field.value
+                ? (meetingData?.data?.find(
+                    (item) => item.meetingId === field.value,
+                  ) as Record<string, unknown> | undefined)
+                : undefined
+            }
+            handleChange={(selected) => {
+              if (
+                selected &&
+                typeof selected === "object" &&
+                "meetingId" in selected
+              ) {
+                field.onChange(selected.meetingId);
+              } else {
+                field.onChange("");
               }
-              handleChange={(selected) => {
-                if (
-                  selected &&
-                  typeof selected === "object" &&
-                  "meetingId" in selected
-                ) {
-                  field.onChange(selected.meetingId);
-                } else {
-                  field.onChange("");
-                }
-              }}
-              onCheckbox={() => true}
-              paginationDetails={meetingData as PaginationFilter}
-              setPaginationFilter={setPaginationFilterMeeting}
-            />
-          </>
+            }}
+            onCheckbox={() => true}
+            paginationDetails={meetingData as PaginationFilter}
+            setPaginationFilter={setPaginationFilterMeeting}
+            showActionsColumn={false}
+            isLoading={meetingLoading}
+          />
         )}
       />
-    </Card>
+    </div>
   );
 };
 
-// --- Step 3: Task Basic Info ---
 const TaskDetailsStep = () => {
   const {
     register,
     control,
     formState: { errors },
-    watch: watchForm, // Renamed to avoid conflict with hook's watch if any
+    watch: watchForm,
   } = useFormContext();
   const { repetitionOptions, taskStatusOptions, taskTypeOptions } =
-    useAddCompanyTask(); // Assuming hook can be called here
+    useAddCompanyTask();
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -225,7 +227,7 @@ const TaskDetailsStep = () => {
         <div className="space-y-4">
           <Controller
             control={control}
-            name="repetition"
+            name="repeatType"
             render={({ field }) => (
               <FormSelect
                 label="Repetition"
@@ -233,7 +235,7 @@ const TaskDetailsStep = () => {
                 placeholder="Select Repetition"
                 value={field.value}
                 onChange={field.onChange}
-                error={errors.repetition}
+                error={errors.repeatType}
               />
             )}
           />
@@ -306,7 +308,6 @@ const TaskDetailsStep = () => {
   );
 };
 
-// --- Step 4: Assign User ---
 const AssignUserStep = () => {
   const {
     control,
@@ -316,17 +317,25 @@ const AssignUserStep = () => {
     employeedata,
     setPaginationFilterEmployee,
     paginationFilterEmployee,
+    employeeLoading,
   } = useAddCompanyTask(); // Assuming hook can be called here
 
   return (
-    <Card className="px-4 py-4">
-      <div>
+    <div className="px-4 py-4">
+      <div className=" mt-1 mb-4 flex items-center w-full">
         <SearchInput
-          placeholder="Search Users..."
+          placeholder="Search..."
           searchValue={paginationFilterEmployee?.search || ""}
           setPaginationFilter={setPaginationFilterEmployee}
-          className="w-96"
+          className="w-80"
         />
+        {errors?.assignUser && (
+          <div className="mt-2">
+            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+              {String(errors?.assignUser?.message || "This field is required")}
+            </span>
+          </div>
+        )}
       </div>
       <Controller
         name="assignUser"
@@ -341,15 +350,6 @@ const AssignUserStep = () => {
               : [];
           return (
             <>
-              {errors?.assignUser && (
-                <div className="mt-2">
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(
-                      errors?.assignUser?.message || "This field is required",
-                    )}
-                  </span>
-                </div>
-              )}
               <TableData
                 tableData={employeedata?.data?.map((item, index) => ({
                   ...item,
@@ -376,16 +376,17 @@ const AssignUserStep = () => {
                 onCheckbox={() => true}
                 paginationDetails={employeedata as PaginationFilter}
                 setPaginationFilter={setPaginationFilterEmployee}
+                showActionsColumn={false}
+                isLoading={employeeLoading}
               />
             </>
           );
         }}
       />
-    </Card>
+    </div>
   );
 };
 
-// --- Step 5: Comment (Optional) ---
 const CommentStep = () => {
   const {
     register,
@@ -458,46 +459,26 @@ export default function AddCompanyTask() {
         return null;
     }
   };
-  // Adjust total steps based on whether it's edit mode (taskId exists)
+
   const totalSteps = taskId ? 4 : 5;
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full mx-auto p-4">
+      <div className="w-full mx-auto px-4">
         <StepProgress
           currentStep={step}
           totalSteps={totalSteps} // Use adjusted totalSteps
           stepNames={stepNamesArray}
           header={taskId ? taskDataById?.data.taskName : null}
+          back={prevStep}
+          // isFirstStep={isFirstStep}
+          next={nextStep}
+          // isLastStep={isLastStep}
+          isPending={isPending}
+          onFinish={handleSubmit(onSubmit)}
+          isUpdate={!!taskId}
         />
 
-        <div className="flex items-end justify-end gap-2 mt-2 mb-4">
-          {step > 1 && (
-            <Button onClick={prevStep} type="button" disabled={isPending}>
-              Back
-            </Button>
-          )}
-          {step < totalSteps ? ( // Use adjusted totalSteps
-            <Button onClick={nextStep} type="button" disabled={isPending}>
-              Next
-            </Button>
-          ) : (
-            <Button
-              onClick={handleSubmit(onSubmit)}
-              disabled={isPending}
-              isLoading={isPending}
-              type="submit"
-            >
-              {taskId ? "Update" : "Submit"}
-            </Button>
-          )}
-          {taskId && step < totalSteps && (
-            <Button onClick={handleSubmit(onSubmit)} className="w-fit">
-              Submit
-            </Button>
-          )}
-        </div>
-        {/* Render current step component */}
         {renderStepContent()}
       </div>
     </FormProvider>

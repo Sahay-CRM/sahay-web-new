@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import AddDatapointModal from "./addDatapointModal";
 import useAddDatapoint from "./useAddDatapoint";
 import { FormProvider, useForm } from "react-hook-form";
@@ -27,7 +26,6 @@ const AddDatapoint = () => {
 
   const methods = useForm({ mode: "onChange" });
 
-  // Build steps array based on companykpimasterId and datapointApiData?.coreParameterId
   let steps = [];
   let stepNames = [];
 
@@ -38,7 +36,6 @@ const AddDatapoint = () => {
     steps.push(<AssignUser />);
     stepNames.push("Assign User");
   } else {
-    // Show all steps
     steps = [<Kpi />, <Details />, <AssignUser />];
     stepNames = ["KPI", "Details", "Assign User", "Goal Value"];
   }
@@ -53,7 +50,6 @@ const AddDatapoint = () => {
     isLastStep,
   } = useStepForm(steps, trigger);
 
-  // Show loader while API data is being fetched
   if (isLoading) {
     return <Loader />;
   }
@@ -61,7 +57,7 @@ const AddDatapoint = () => {
   return (
     <FormProvider {...methods}>
       <div>
-        <div className="">
+        <div className="flex items-center gap-5 mb-3">
           <StepProgress
             currentStep={currentStep}
             stepNames={stepNames}
@@ -69,34 +65,18 @@ const AddDatapoint = () => {
             header={
               companykpimasterId ? datapointApiData?.KPIMaster?.KPIName : null
             }
+            back={back}
+            isFirstStep={isFirstStep}
+            next={next}
+            isLastStep={isLastStep}
+            isPending={isPending}
+            onFinish={onFinish}
+            isUpdate={!!companykpimasterId}
           />
         </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-end gap-5 mb-5 ">
-          <Button onClick={back} disabled={isFirstStep} className="w-fit">
-            Previous
-          </Button>
-          <Button
-            onClick={isLastStep ? onFinish : next}
-            className="w-fit"
-            disabled={isPending}
-            isLoading={isPending}
-          >
-            {isLastStep ? "Finish" : "Next"}
-          </Button>
-
-          {companykpimasterId && !isLastStep && (
-            <Button onClick={onFinish} className="w-fit">
-              Submit
-            </Button>
-          )}
-        </div>
-
-        {/* Step Content */}
         <div className="step-content w-full">{stepContent}</div>
 
-        {/* Modal Component */}
         {isModalOpen && (
           <AddDatapointModal
             modalData={KpiPreview}

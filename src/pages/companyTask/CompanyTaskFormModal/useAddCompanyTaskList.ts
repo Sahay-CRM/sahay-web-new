@@ -1,4 +1,3 @@
-// hooks/useAddCompanyTaskList.ts
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { useGetCompanyProject } from "@/features/api/companyProject";
@@ -15,17 +14,17 @@ import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 
 interface FormValues {
-  taskId?: string; // <-- make it optional
+  taskId?: string;
   project: string;
   taskName: string;
   taskDescription: string;
   taskStartDate: Date | null;
   taskDeadline: Date | null;
-  repetition: string;
+  repeatType: string;
   taskStatusId?: string;
   taskTypeId?: string;
-  meeting?: string; // <-- add this line for meeting field
-  assignUser: string[]; // always an array of employeeIds
+  meeting?: string;
+  assignUser: string[];
   comment?: string;
 }
 
@@ -39,27 +38,26 @@ export const useAddCompanyTask = () => {
 
   const methods = useForm<FormValues>({
     defaultValues: {
-      taskId: "", // <-- add this
+      taskId: "",
       project: "",
       taskName: "",
       taskDescription: "",
       taskStartDate: null,
       taskDeadline: null,
-      repetition: "none", // Default to "No Repetition"
+      repeatType: "none",
       taskStatusId: "",
       taskTypeId: "",
-      assignUser: [], // always an array
+      assignUser: [],
       comment: "",
     },
     mode: "onChange",
   });
   const { reset } = methods;
 
-  // Set form values when editing (taskId present and data loaded)
   useEffect(() => {
     if (taskId && taskDataById?.data) {
       reset({
-        taskId: taskDataById.data.taskId || "", // <-- add this
+        taskId: taskDataById.data.taskId || "",
         project: taskDataById.data?.projectId || "",
         meeting: taskDataById.data?.meetingId || "",
         taskName: taskDataById.data.taskName || "",
@@ -70,7 +68,7 @@ export const useAddCompanyTask = () => {
         taskDeadline: taskDataById.data.taskDeadline
           ? new Date(taskDataById.data.taskDeadline)
           : null,
-        repetition: "", // or map if available
+        repeatType: taskDataById.data.repeatType?.toLocaleLowerCase(),
         taskStatusId: taskDataById.data.taskStatusId || "",
         taskTypeId: taskDataById.data.taskTypeId || "",
         assignUser: taskDataById.data.assignUsers
@@ -101,22 +99,24 @@ export const useAddCompanyTask = () => {
       search: "",
     });
 
-  //const { data: projectList } = useGetCompanyProjectAll();
-  const { data: taskStatus } = useGetAllTaskStatus({
+  const { data: taskStatus, isLoading: statusLoading } = useGetAllTaskStatus({
     filter: {},
   });
-  const { data: taskTypeData } = useDdTaskType();
+  const { data: taskTypeData, isLoading: typeLoading } = useDdTaskType();
 
-  const { data: employeedata } = getEmployee({
+  const { data: employeedata, isLoading: employeeLoading } = getEmployee({
     filter: { ...paginationFilterEmployee, isDeactivated: false },
   });
-  const { data: projectListdata } = useGetCompanyProject({
-    filter: paginationFilterProject,
-    enable: !!paginationFilterProject,
-  });
-  const { data: meetingData } = useGetCompanyMeeting({
-    filter: paginationFilterMeeting,
-  });
+  const { data: projectListdata, isLoading: projectLoading } =
+    useGetCompanyProject({
+      filter: paginationFilterProject,
+      enable: !!paginationFilterProject,
+    });
+  const { data: meetingData, isLoading: meetingLoading } = useGetCompanyMeeting(
+    {
+      filter: paginationFilterMeeting,
+    },
+  );
 
   const taskStatusOptions = taskStatus
     ? taskStatus.data.map((status) => ({
@@ -162,7 +162,7 @@ export const useAddCompanyTask = () => {
             "taskStatusId",
             "taskTypeId",
           ],
-          optional: ["taskStartDate", "repetition"],
+          optional: ["taskStartDate", "repeatType"],
         },
         // Adjusted step numbers to be contiguous for array indexing if needed,
         // but direct object key access is fine.
@@ -180,7 +180,7 @@ export const useAddCompanyTask = () => {
             "taskStatusId",
             "taskTypeId",
           ],
-          optional: ["taskStartDate", "repetition"],
+          optional: ["taskStartDate", "repeatType"],
         },
         4: { required: ["assignUser"], optional: [] }, // Was 7
         5: { required: [], optional: ["comment"] }, // Was 8
@@ -214,7 +214,6 @@ export const useAddCompanyTask = () => {
   };
 
   const onSubmit = async (data: FormValues) => {
-    // assignUser is always string[]
     const assigneeIds = data.assignUser;
 
     const payload = data.taskId
@@ -232,6 +231,7 @@ export const useAddCompanyTask = () => {
           employeeIds: assigneeIds,
           projectId: data.project,
           meetingId: data.meeting,
+          repeatType: data.repeatType.toUpperCase(),
         }
       : {
           taskName: data.taskName,
@@ -246,6 +246,7 @@ export const useAddCompanyTask = () => {
           employeeIds: assigneeIds,
           projectId: data.project,
           meetingId: data.meeting,
+          repeatType: data.repeatType.toUpperCase(),
         };
 
     addUpdateTask(payload, {
@@ -253,7 +254,6 @@ export const useAddCompanyTask = () => {
         navigate("/dashboard/tasks");
       },
     });
-    // handle payload
   };
 
   return {
@@ -279,5 +279,10 @@ export const useAddCompanyTask = () => {
     paginationFilterMeeting,
     isPending,
     taskDataById,
+    projectLoading,
+    statusLoading,
+    typeLoading,
+    employeeLoading,
+    meetingLoading,
   };
 };

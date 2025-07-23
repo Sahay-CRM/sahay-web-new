@@ -231,6 +231,7 @@ export default function CompanyTaskList() {
               handleRowsModalOpen(row);
             }}
             sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
+            actionColumnWidth="w-[150px]"
           />
         </div>
 

@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/tooltip";
 import { isColorDark } from "@/features/utils/color.utils";
 import { TableTooltip } from "./tableTooltip";
+import { twMerge } from "tailwind-merge";
 
 interface DetailsPermission {
   view: boolean;
@@ -98,6 +99,7 @@ interface TableProps<T extends Record<string, unknown>> {
   activeToggleKey?: string;
   isEditDeleteShow?: boolean;
   showActionsColumn?: boolean;
+  actionColumnWidth?: string;
 }
 
 const TableData = <T extends Record<string, unknown>>({
@@ -133,6 +135,7 @@ const TableData = <T extends Record<string, unknown>>({
   activeToggleKey,
   isEditDeleteShow = true,
   showActionsColumn = true,
+  actionColumnWidth,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   // Only show checkboxes if explicitly enabled with multiSelect OR if both selectedValue and handleChange are provided
@@ -242,13 +245,13 @@ const TableData = <T extends Record<string, unknown>>({
   };
 
   return (
-    <Card className="w-full p-2 mb-5">
-      <div className="overflow-x-auto">
-        <Table className="min-w-full table-fixed border">
-          <TableHeader className="bg-primary">
+    <Card className="p-0 gap-0">
+      <div className="flex h-[calc(100vh-355px)] flex-col overflow-hidden">
+        <Table className="min-w-full h-full table-fixed">
+          <TableHeader className="sticky top-0 z-10 bg-primary shadow-sm">
             <TableRow>
               {showCheckboxes && (
-                <TableHead className="w-[40px] sticky left-0 z-20 bg-primary pl-6">
+                <TableHead className="w-[40px] sticky left-0 z-40 bg-primary pl-6">
                   {/* Checkbox Header */}
                 </TableHead>
               )}
@@ -278,8 +281,7 @@ const TableData = <T extends Record<string, unknown>>({
 
               {showActionsColumn && (
                 <TableHead
-                  style={{ width: "fit-content" }}
-                  className=" sticky right-0 z-20 text-right bg-primary pr-2"
+                  className={`w-fit sticky right-0 z-50 text-right bg-primary pr-2 ${actionColumnWidth}`}
                 >
                   Actions
                 </TableHead>
@@ -297,7 +299,7 @@ const TableData = <T extends Record<string, unknown>>({
                     (showIndexColumn ? 1 : 0) +
                     1
                   }
-                  className="py-6"
+                  className="py-6 w-full"
                 >
                   <div className="flex justify-center items-center h-20">
                     <div className="animate-spin">
@@ -324,13 +326,13 @@ const TableData = <T extends Record<string, unknown>>({
                 >
                   {showCheckboxes && (
                     <TableCell
-                      className="sticky left-0 z-10 bg-white pl-6"
+                      className="sticky left-0  bg-inherit text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <FormCheckbox
                         id={`${String(item[primaryKey])}-checkbox`}
-                        className="w-[19px] aspect-square"
-                        containerClass="p-2"
+                        className="w-[16px] h-[16px]"
+                        containerClass="p-0 ml-1"
                         onChange={(e) =>
                           handleCheckboxChange(item, e.target.checked)
                         }
@@ -354,7 +356,7 @@ const TableData = <T extends Record<string, unknown>>({
 
                   {showIndexColumn && (
                     <TableCell
-                      className="sticky left-[40px] z-10 bg-white text-center"
+                      className="sticky left-[40px] bg-white text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex flex-col items-center gap-0">
@@ -464,7 +466,10 @@ const TableData = <T extends Record<string, unknown>>({
 
                   {showActionsColumn && (
                     <TableCell
-                      className="sticky right-0 z-10 bg-white text-right pr-2"
+                      className={twMerge(
+                        "sticky w-fit right-0 bg-white text-right pr-2",
+                        actionColumnWidth,
+                      )}
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex gap-1 justify-end items-end">

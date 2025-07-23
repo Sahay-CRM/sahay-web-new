@@ -1,26 +1,23 @@
 import StepProgress from "../../../components/shared/StepProgress";
 import useStepForm from "../../../components/shared/StepProgress/useStepForm";
-import { Button } from "@/components/ui/button";
 import AddEmployeeModal from "./addEmployeeModal";
 import useAddEmployee from "./useAddEmployee";
-import { FormProvider, useFormContext, Controller } from "react-hook-form"; // Updated imports
+import { FormProvider, useFormContext, Controller } from "react-hook-form";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { useEffect, useState } from "react"; // Added useState
+import { useEffect, useState } from "react";
 
-// Imports for components used within step components
 import { Card } from "@/components/ui/card";
 import FormImage from "@/components/shared/Form/FormImage/FormImage";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import FormSelect from "@/components/shared/Form/FormSelect";
 
-// Imports for other step components (example)
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import { getDepartmentList } from "@/features/api/department";
 import useGetDesignation from "@/features/api/designation/useGetDesignation";
 import { getEmployee } from "@/features/api/companyEmployee";
+import SearchInput from "@/components/shared/SearchInput";
 
-// --- EmployeeStatus Component Definition ---
 const EmployeeStatus = () => {
   const {
     register,
@@ -114,7 +111,7 @@ const DepartmentSelect = () => {
     search: "",
   });
 
-  const { data: departmentData } = getDepartmentList({
+  const { data: departmentData, isLoading } = getDepartmentList({
     // API call directly in component
     filter: paginationFilter,
   });
@@ -143,14 +140,34 @@ const DepartmentSelect = () => {
   return (
     <div>
       <div className=" mt-1 flex items-center justify-between">
-        {canToggleColumns && (
-          <div className="ml-4 ">
-            <DropdownSearchMenu
-              columns={columnToggleOptions}
-              onToggleColumn={onToggleColumn}
+        <div className="mb-4">
+          {formErrors?.department && (
+            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+              {/* Adjust error message access based on actual error object structure */}
+              {String(
+                formErrors.department?.message ||
+                  formErrors.departmentId?.message ||
+                  "",
+              )}
+            </span>
+          )}
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
             />
+            {canToggleColumns && (
+              <div className="ml-4 ">
+                <DropdownSearchMenu
+                  columns={columnToggleOptions}
+                  onToggleColumn={onToggleColumn}
+                />
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
       <Controller
         name="department" // Ensure this name matches what's expected in useAddEmployee's reset/payload
@@ -158,18 +175,6 @@ const DepartmentSelect = () => {
         rules={{ required: "Please select a Department" }}
         render={({ field }) => (
           <>
-            <div className="mb-4">
-              {formErrors?.department && ( // Use formErrors.department (or formErrors.departmentId if that's the field name)
-                <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                  {/* Adjust error message access based on actual error object structure */}
-                  {String(
-                    formErrors.department?.message ||
-                      formErrors.departmentId?.message ||
-                      "",
-                  )}
-                </span>
-              )}
-            </div>
             <TableData
               {...field}
               tableData={departmentData?.data.map((item, index) => ({
@@ -188,6 +193,8 @@ const DepartmentSelect = () => {
               selectedValue={field.value}
               handleChange={field.onChange}
               onCheckbox={() => true}
+              isLoading={isLoading}
+              showActionsColumn={false}
             />
           </>
         )}
@@ -196,16 +203,13 @@ const DepartmentSelect = () => {
   );
 };
 
-// --- Designation Component Definition (Placeholder - Needs Full Refactor) ---
 const Designation = () => {
   const {
     control,
     watch,
     formState: { errors: formErrors },
   } = useFormContext();
-  const departmentField = watch("department") as {
-    departmentId?: string;
-  } | null; // Watch for departmentId
+  const departmentId = watch("department")?.departmentId.trim();
 
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
@@ -213,13 +217,13 @@ const Designation = () => {
     search: "",
   });
 
-  const { data: designationData } = useGetDesignation({
+  const { data: designationData, isLoading } = useGetDesignation({
     filter: {
       ...paginationFilter,
-      departmentId: departmentField?.departmentId || "", // Use watched departmentId
+      departmentId: departmentId,
     },
+    enable: !!departmentId,
   });
-  // ... rest of Designation logic (column toggles, etc.) ...
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "designationName", label: "Designation Name", visible: true },
@@ -239,6 +243,7 @@ const Designation = () => {
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
+  console.log(designationData);
 
   return (
     <div>
@@ -287,6 +292,8 @@ const Designation = () => {
               multiSelect={false}
               selectedValue={field.value}
               handleChange={field.onChange}
+              isLoading={isLoading}
+              showActionsColumn={false}
             />
           </>
         )}
@@ -295,7 +302,6 @@ const Designation = () => {
   );
 };
 
-// --- ReportingManage Component Definition (Placeholder - Needs Full Refactor) ---
 const ReportingManage = () => {
   const { control } = useFormContext();
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
@@ -304,11 +310,9 @@ const ReportingManage = () => {
     search: "",
   });
 
-  const { data: employeedata } = getEmployee({
-    // API call
+  const { data: employeedata, isLoading } = getEmployee({
     filter: paginationFilter,
   });
-  // ... rest of ReportingManage logic ...
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "employeeName", label: "Reporting Manager", visible: true },
@@ -342,39 +346,38 @@ const ReportingManage = () => {
         )}
       </div>
       <Controller
-        name="employee" // This is for the reporting manager selection
+        name="employee"
         control={control}
         rules={{ required: "Please select a report manager" }}
         render={({ field }) => (
-          <>
-            {/* Error display for reporting manager if needed */}
-            <TableData
-              {...field}
-              tableData={employeedata?.data.map((item, index) => ({
-                ...item,
-                srNo:
-                  (employeedata.currentPage - 1) * employeedata.pageSize +
-                  index +
-                  1,
-              }))}
-              isActionButton={() => false}
-              columns={visibleColumns}
-              primaryKey="employeeId"
-              paginationDetails={employeedata as PaginationFilter}
-              setPaginationFilter={setPaginationFilter}
-              selectedValue={field.value}
-              onCheckbox={() => true}
-              handleChange={(val) => {
-                if (!val || (Array.isArray(val) && val.length === 0)) {
-                  field.onChange(undefined);
-                } else if (Array.isArray(val)) {
-                  field.onChange(val[0]);
-                } else {
-                  field.onChange(val);
-                }
-              }}
-            />
-          </>
+          <TableData
+            {...field}
+            tableData={employeedata?.data.map((item, index) => ({
+              ...item,
+              srNo:
+                (employeedata.currentPage - 1) * employeedata.pageSize +
+                index +
+                1,
+            }))}
+            isActionButton={() => false}
+            columns={visibleColumns}
+            primaryKey="employeeId"
+            paginationDetails={employeedata as PaginationFilter}
+            setPaginationFilter={setPaginationFilter}
+            selectedValue={field.value}
+            onCheckbox={() => true}
+            handleChange={(val) => {
+              if (!val || (Array.isArray(val) && val.length === 0)) {
+                field.onChange(undefined);
+              } else if (Array.isArray(val)) {
+                field.onChange(val[0]);
+              } else {
+                field.onChange(val);
+              }
+            }}
+            isLoading={isLoading}
+            showActionsColumn={false}
+          />
         )}
       />
     </div>
@@ -387,13 +390,13 @@ const AddEmployee = () => {
     isModalOpen,
     handleClose,
     onSubmit,
-    trigger, // Kept, as it's used by useStepForm
+    trigger,
     employeePreview,
     showNextStep,
     companyEmployeeId,
     isPending,
     employeeApiData,
-    methods, // This is the methods object from useForm in useAddEmployee
+    methods,
   } = useAddEmployee();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -439,7 +442,7 @@ const AddEmployee = () => {
     currentStep,
     isFirstStep,
     isLastStep,
-  } = useStepForm(steps, trigger); // trigger from useAddEmployee is correct
+  } = useStepForm(steps, trigger);
 
   const stepNames = [
     "Basic Info",
@@ -450,8 +453,6 @@ const AddEmployee = () => {
 
   return (
     <FormProvider {...methods}>
-      {" "}
-      {/* Pass methods from useAddEmployee to FormProvider */}
       <div>
         <StepProgress
           currentStep={currentStep}
@@ -460,9 +461,16 @@ const AddEmployee = () => {
           header={
             companyEmployeeId ? employeeApiData?.data?.employeeName : null
           }
+          back={back}
+          isFirstStep={isFirstStep}
+          next={next}
+          isLastStep={isLastStep}
+          isPending={isPending}
+          onFinish={onFinish}
+          isUpdate={!!companyEmployeeId}
         />
 
-        <div className="flex justify-end gap-5 mb-5 ">
+        {/* <div className="flex justify-end gap-5 mb-5 ">
           <Button
             onClick={back}
             disabled={isFirstStep || isPending}
@@ -486,13 +494,13 @@ const AddEmployee = () => {
               Submit
             </Button>
           )}
-        </div>
+        </div> */}
 
         <div className="step-content w-full">{stepContent}</div>
 
         {isModalOpen && (
           <AddEmployeeModal
-            modalData={employeePreview as EmployeeData} // Ensure EmployeeData type is available/imported
+            modalData={employeePreview as EmployeeData}
             isModalOpen={isModalOpen}
             modalClose={handleClose}
             onSubmit={onSubmit}

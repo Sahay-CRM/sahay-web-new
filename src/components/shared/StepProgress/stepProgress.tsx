@@ -1,4 +1,5 @@
 import { CheckMarkIcon } from "@/components/shared/Icons";
+import { Button } from "@/components/ui/button";
 import React from "react";
 
 interface StepProgressProps {
@@ -7,6 +8,13 @@ interface StepProgressProps {
   totalSteps: number;
   isLoading?: boolean;
   header?: React.ReactNode; // NEW optional prop
+  back?: () => void;
+  next?: () => void;
+  onFinish?: () => void;
+  isFirstStep?: boolean;
+  isLastStep?: boolean;
+  isPending?: boolean;
+  isUpdate?: boolean;
 }
 
 const StepProgress: React.FC<StepProgressProps> = ({
@@ -15,6 +23,13 @@ const StepProgress: React.FC<StepProgressProps> = ({
   isLoading = false,
   totalSteps,
   header,
+  back,
+  isFirstStep,
+  next,
+  isLastStep,
+  isPending,
+  onFinish,
+  isUpdate,
 }) => {
   const renderStep = (step: number) => {
     const isCompleted = step < currentStep;
@@ -47,7 +62,7 @@ const StepProgress: React.FC<StepProgressProps> = ({
             }`}
           >
             {isCompleted ? (
-              <span className="block w-8">
+              <span className="block w-5">
                 <CheckMarkIcon />
               </span>
             ) : (
@@ -64,17 +79,47 @@ const StepProgress: React.FC<StepProgressProps> = ({
   };
 
   return (
-    <div className="w-full pr-6 pl-3 py-2">
-      <div className="flex items-center">
+    <div className="w-full pl-3 py-0 mb-4">
+      <div className="items-center">
         {header && (
-          <div className="text-lg mr-2 min-w-fit font-semibold text-[#2e3090]">
+          <div className="text-lg mr-2 mb-4 font-semibold text-[#2e3090] truncate w-full h-6 flex items-center">
             {header}
           </div>
         )}
 
-        <div className="w-full">
-          <div className="flex justify-between">
-            {[...Array(totalSteps)].map((_, index) => renderStep(index + 1))}
+        {/* Steps Section */}
+        <div className="w-full flex items-center gap-5">
+          <div className="w-full mt-0">
+            <div className="flex justify-between">
+              {[...Array(totalSteps)].map((_, index) => renderStep(index + 1))}
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button onClick={back} disabled={isFirstStep} className="w-fit">
+              Previous
+            </Button>
+
+            <Button
+              onClick={next}
+              className="w-fit"
+              disabled={isLastStep || isPending}
+              isLoading={isPending}
+            >
+              Next
+            </Button>
+
+            {/* Finish button always visible on last step */}
+            {/* {isLastStep && (
+              <Button onClick={onFinish} className="w-fit" disabled={isPending}>
+                Finish
+              </Button>
+            )} */}
+
+            {(isUpdate || isLastStep) && (
+              <Button onClick={onFinish} className="w-fit" disabled={isPending}>
+                Submit
+              </Button>
+            )}
           </div>
         </div>
       </div>

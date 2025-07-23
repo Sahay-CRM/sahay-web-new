@@ -702,6 +702,7 @@ interface Task {
   meetings: Meeting[];
   comments: TaskComment[];
   createdBy: CreatedBy;
+  repeatType?: string;
 }
 
 interface ProjectTask {

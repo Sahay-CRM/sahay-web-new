@@ -126,7 +126,8 @@ export default function MeetingList() {
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
             permissionKey="users"
-            isActionButton={() => true}
+            isActionButton={() => false}
+            isEditDeleteShow={false}
             localStorageId="UserPermissionList"
             moduleKey="ROLES_PERMISSION"
             additionalButton={(item) => !item.isSuperAdmin}

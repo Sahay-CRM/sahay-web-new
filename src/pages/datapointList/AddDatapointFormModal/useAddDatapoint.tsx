@@ -187,7 +187,7 @@ export default function useAddEmployee() {
       pageSize: 25,
       search: "",
     });
-    const { data: kpidata } = useGetKpiNonSel({
+    const { data: kpidata, isLoading } = useGetKpiNonSel({
       filter: paginationFilter,
     });
 
@@ -224,33 +224,40 @@ export default function useAddEmployee() {
 
     return (
       <div>
-        <div className=" mt-1 flex items-center justify-end">
-          <div>
+        <div className=" mt-1 mb-4 flex items-center justify-between">
+          <div className="mr-4">
+            {errors?.KPIMasterId && (
+              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                {String(errors?.KPIMasterId?.message || "")}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center">
             <SearchInput
               placeholder="Search..."
               searchValue={paginationFilter?.search || ""}
               setPaginationFilter={setPaginationFilter}
               className="w-80"
             />
+            {canToggleColumns && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="ml-3">
+                      <DropdownSearchMenu
+                        columns={columnToggleOptions}
+                        onToggleColumn={onToggleColumn}
+                        columnIcon={true}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs text-white">Toggle Visible Columns</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
-          {canToggleColumns && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div>
-                    <DropdownSearchMenu
-                      columns={columnToggleOptions}
-                      onToggleColumn={onToggleColumn}
-                      columnIcon={true}
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs text-white">Toggle Visible Columns</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
         </div>
 
         <Controller
@@ -258,32 +265,24 @@ export default function useAddEmployee() {
           control={control}
           rules={{ required: "Please select a Kpi" }}
           render={({ field }) => (
-            <>
-              <div className="mb-4">
-                {errors?.KPIMasterId && (
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors?.KPIMasterId?.message || "")}
-                  </span>
-                )}
-              </div>
-              <TableData
-                {...field}
-                tableData={kpidata?.data.map((item, index) => ({
-                  ...item,
-                  srNo:
-                    (kpidata.currentPage - 1) * kpidata.pageSize + index + 1,
-                }))}
-                isActionButton={() => false}
-                columns={visibleColumns}
-                primaryKey="KPIMasterId"
-                paginationDetails={kpidata as PaginationFilter}
-                setPaginationFilter={setPaginationFilter}
-                multiSelect={false}
-                selectedValue={field.value}
-                handleChange={field.onChange}
-                onCheckbox={() => true}
-              />
-            </>
+            <TableData
+              {...field}
+              tableData={kpidata?.data.map((item, index) => ({
+                ...item,
+                srNo: (kpidata.currentPage - 1) * kpidata.pageSize + index + 1,
+              }))}
+              isActionButton={() => false}
+              columns={visibleColumns}
+              primaryKey="KPIMasterId"
+              paginationDetails={kpidata as PaginationFilter}
+              setPaginationFilter={setPaginationFilter}
+              multiSelect={false}
+              selectedValue={field.value}
+              handleChange={field.onChange}
+              onCheckbox={() => true}
+              showActionsColumn={false}
+              isLoading={isLoading}
+            />
           )}
         />
       </div>

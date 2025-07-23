@@ -188,6 +188,7 @@ export default function CompanyProject() {
                 onChange: (row, value) => handleStatusChange(value, row),
               },
             }}
+            actionColumnWidth="w-[130px] overflow-hidden "
             onRowClick={(row) => {
               handleRowsModalOpen(row as unknown as IProjectFormData);
             }}

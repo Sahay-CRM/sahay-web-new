@@ -68,6 +68,11 @@ export default function CompanyTaskList() {
       label: "KPI Name",
       visible: true,
     },
+    {
+      key: "tag",
+      label: "KPI Tag",
+      visible: true,
+    },
     { key: "KPILabel", label: "KPI Description (Tooltip)", visible: true },
     { key: "validationType", label: "Validation Type", visible: true },
     { key: "frequencyType", label: "Frequency", visible: true },
@@ -151,7 +156,7 @@ export default function CompanyTaskList() {
           </div>
         </div>
 
-        <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
+        <div className="bg-white">
           <TableData
             key={datpointData?.currentPage}
             tableData={datpointData?.data.map((item, index) => ({
@@ -191,6 +196,7 @@ export default function CompanyTaskList() {
               "validationType",
               "frequencyType",
             ]}
+            actionColumnWidth="w-[100px] overflow-hidden "
           />
         </div>
 

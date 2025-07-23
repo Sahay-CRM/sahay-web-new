@@ -13,12 +13,6 @@ import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 import { getEmployee } from "@/features/api/companyEmployee";
 // import { useGetCompanyMeetingStatus } from "@/features/api/companyMeeting";
@@ -42,7 +36,7 @@ const MeetingType = () => {
     search: "",
   });
 
-  const { data: meetingTypeData } = getMeetingType({
+  const { data: meetingTypeData, isLoading } = getMeetingType({
     filter: paginationFilter,
   });
   const [columnToggleOptions] = useState([
@@ -61,21 +55,21 @@ const MeetingType = () => {
 
   return (
     <div>
-      <div className="mb-2">
+      <div className="flex gap-2 w-full mb-2 items-center">
         <SearchInput
           placeholder="Search Type..."
           searchValue={paginationFilter?.search || ""}
           setPaginationFilter={setPaginationFilter}
           className="w-80"
         />
+        {errors.meetingTypeId && (
+          <p className="text-red-500 text-sm">
+            {typeof errors.meetingTypeId?.message === "string"
+              ? errors.meetingTypeId.message
+              : ""}
+          </p>
+        )}
       </div>
-      {errors.meetingTypeId && (
-        <p className="text-red-500 text-sm mb-2">
-          {typeof errors.meetingTypeId?.message === "string"
-            ? errors.meetingTypeId.message
-            : ""}
-        </p>
-      )}
       <Controller
         name="meetingTypeId"
         control={control}
@@ -101,6 +95,8 @@ const MeetingType = () => {
             onCheckbox={() => true}
             isActionButton={() => false}
             moduleKey="type"
+            showActionsColumn={false}
+            isLoading={isLoading}
           />
         )}
       />
@@ -196,9 +192,10 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
 };
 
 const Joiners = () => {
-  const { control, watch } = useFormContext();
-
-  const meetingType = watch("meetingTypeId");
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext();
 
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
@@ -206,7 +203,7 @@ const Joiners = () => {
     search: "",
   });
 
-  const { data: employeedata } = getEmployee({
+  const { data: employeedata, isLoading } = getEmployee({
     filter: { ...paginationFilter, isDeactivated: false },
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -234,31 +231,30 @@ const Joiners = () => {
 
   return (
     <div>
-      <div className="mt-1 mb-2 flex items-center justify-between">
-        <div>
+      <div className=" mt-1 mb-4 flex items-center justify-between">
+        <div className="flex items-center w-full">
           <SearchInput
-            placeholder="Search Joiners..."
+            placeholder="Search..."
             searchValue={paginationFilter?.search || ""}
             setPaginationFilter={setPaginationFilter}
             className="w-80"
           />
+          {errors?.employeeId && (
+            <div className="mb-1">
+              <span className="text-red-600 text-sm">
+                {String(errors?.employeeId?.message || "")}
+              </span>
+            </div>
+          )}
         </div>
         {canToggleColumns && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="ml-4">
-                  <DropdownSearchMenu
-                    columns={columnToggleOptions}
-                    onToggleColumn={onToggleColumn}
-                  />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs text-white">Toggle Visible Columns</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <div className="ml-3">
+            <DropdownSearchMenu
+              columns={columnToggleOptions}
+              onToggleColumn={onToggleColumn}
+              columnIcon={true}
+            />
+          </div>
         )}
       </div>
       <Controller
@@ -278,71 +274,64 @@ const Joiners = () => {
             return true;
           },
         }}
-        render={({ field, fieldState }) => {
+        render={({ field }) => {
           return (
-            <>
-              {/* Show error above the table if validation fails (from fieldState) */}
-              {fieldState.error && (
-                <p className="text-red-500 text-sm mb-2">
-                  {fieldState.error.message}
-                </p>
-              )}
-              <TableData
-                tableData={employeedata?.data.map((item, index) => {
-                  const selected = (field.value || []).find(
-                    (emp: EmployeeDetails) =>
-                      emp.employeeId === item.employeeId,
-                  );
-                  return {
-                    ...item,
-                    srNo:
-                      (employeedata.currentPage - 1) * employeedata.pageSize +
-                      index +
-                      1,
-                    isTeamLeader: selected?.isTeamLeader || false,
-                  };
-                })}
-                columns={visibleColumns}
-                primaryKey="employeeId"
-                paginationDetails={mapPaginationDetails(employeedata)}
-                setPaginationFilter={setPaginationFilter}
-                multiSelect={true}
-                isEditDelete={() => false}
-                moduleKey="emp"
-                isActionButton={() => false}
-                showActionsColumn={meetingType?.parentType === "DETAIL"}
-                selectedValue={field.value || []}
-                handleChange={(selectedItems) => field.onChange(selectedItems)}
-                customActions={(row: EmployeeDetails) => {
-                  const isSelected = (field.value || []).some(
-                    (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
-                  );
-                  if (!isSelected) return null;
-                  const selectedEmp = (field.value || []).find(
-                    (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
-                  );
-                  const isTeamLeader = selectedEmp?.isTeamLeader;
+            <TableData
+              tableData={employeedata?.data.map((item, index) => {
+                const selected = (field.value || []).find(
+                  (emp: EmployeeDetails) => emp.employeeId === item.employeeId,
+                );
+                return {
+                  ...item,
+                  srNo:
+                    (employeedata.currentPage - 1) * employeedata.pageSize +
+                    index +
+                    1,
+                  isTeamLeader: selected?.isTeamLeader || false,
+                };
+              })}
+              columns={visibleColumns}
+              primaryKey="employeeId"
+              paginationDetails={mapPaginationDetails(employeedata)}
+              setPaginationFilter={setPaginationFilter}
+              multiSelect={true}
+              isEditDelete={() => false}
+              moduleKey="emp"
+              isActionButton={() => false}
+              // showActionsColumn={meetingType?.parentType === "DETAIL"}
+              selectedValue={field.value || []}
+              handleChange={(selectedItems) => field.onChange(selectedItems)}
+              customActions={(row: EmployeeDetails) => {
+                const isSelected = (field.value || []).some(
+                  (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
+                );
+                if (!isSelected) return null;
+                const selectedEmp = (field.value || []).find(
+                  (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
+                );
+                const isTeamLeader = selectedEmp?.isTeamLeader;
 
-                  return (
-                    <Button
-                      variant={isTeamLeader ? "secondary" : "outline"}
-                      className=" px-3 text-[12px]"
-                      onClick={() => {
-                        const updated = (field.value || []).map(
-                          (emp: EmployeeDetails) =>
-                            emp.employeeId === row.employeeId
-                              ? { ...emp, isTeamLeader: !emp.isTeamLeader }
-                              : emp,
-                        );
-                        field.onChange(updated);
-                      }}
-                    >
-                      {isTeamLeader ? "Remove" : "Set Team Leader"}
-                    </Button>
-                  );
-                }}
-              />
-            </>
+                return (
+                  <Button
+                    variant={isTeamLeader ? "secondary" : "outline"}
+                    className=" px-3 text-[12px]"
+                    onClick={() => {
+                      const updated = (field.value || []).map(
+                        (emp: EmployeeDetails) =>
+                          emp.employeeId === row.employeeId
+                            ? { ...emp, isTeamLeader: !emp.isTeamLeader }
+                            : emp,
+                      );
+                      field.onChange(updated);
+                    }}
+                  >
+                    {isTeamLeader ? "Remove" : "Set Team Leader"}
+                  </Button>
+                );
+              }}
+              showActionsColumn={false}
+              isLoading={isLoading}
+            />
           );
         }}
       />
@@ -404,9 +393,6 @@ const UploadDoc = () => {
       (_, idx) => idx !== indexToRemove,
     );
     setDisplayFiles(newDisplayFiles);
-    // Update the meetingDocuments in the form state by filtering out the removed file
-    // This is important if the removed file was a new `File` object not yet having a `fileId`
-    // More directly, after updating displayFiles:
     setValue("meetingDocuments", newDisplayFiles);
   };
 
@@ -543,32 +529,14 @@ const AddMeeting = () => {
           stepNames={stepNames}
           totalSteps={totalSteps}
           header={companyMeetingId ? meetingApiData?.data?.meetingName : null}
+          back={back}
+          isFirstStep={isFirstStep}
+          next={next}
+          isLastStep={isLastStep}
+          isPending={isPending}
+          onFinish={onFinish}
+          isUpdate={!!companyMeetingId}
         />
-
-        <div className="flex justify-end gap-5 mb-5 ">
-          <Button
-            onClick={back}
-            disabled={isFirstStep || isPending}
-            className="w-fit"
-            type="button"
-          >
-            Previous
-          </Button>
-          <Button
-            onClick={isLastStep ? onFinish : next}
-            className="w-fit"
-            disabled={isPending}
-            isLoading={isPending}
-            type="button"
-          >
-            {isLastStep ? "Finish" : "Next"}
-          </Button>
-          {companyMeetingId && !isLastStep && (
-            <Button onClick={onFinish} className="w-fit">
-              Submit
-            </Button>
-          )}
-        </div>
 
         <div className="step-content w-full">{stepContent}</div>
 
