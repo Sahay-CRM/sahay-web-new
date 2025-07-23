@@ -95,20 +95,22 @@ const ProjectStatus = () => {
 
   return (
     <div>
-      <div className="flex items-center mb-4 gap-2">
-        <SearchInput
-          placeholder="Search Status..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-96"
-        />
-        {errors?.projectStatusId && (
-          <div className="mb-1">
-            <span className="text-red-600 text-sm">
-              {String(errors?.projectStatusId?.message || "")}
-            </span>
-          </div>
-        )}
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <div className="flex items-center  gap-2">
+          <SearchInput
+            placeholder="Search Status..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-96"
+          />
+          {errors?.projectStatusId && (
+            <div className="mb-1">
+              <span className="text-red-600 whitespace-nowrap  text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                {String(errors?.projectStatusId?.message || "")}
+              </span>
+            </div>
+          )}
+        </div>
         {canToggleColumns && (
           <div className="ml-4">
             <DropdownSearchMenu
@@ -186,20 +188,22 @@ const CoreParameter = () => {
 
   return (
     <div>
-      <div className="flex items-center mb-4 gap-2">
-        <SearchInput
-          placeholder="Search Business Function..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-96"
-        />
-        {errors?.coreParameterId && (
-          <div className="mb-1">
-            <span className="text-red-600 text-sm">
-              {String(errors?.coreParameterId?.message || "")}
-            </span>
-          </div>
-        )}
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <div className="flex items-center  gap-2">
+          <SearchInput
+            placeholder="Search Business Function..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-96"
+          />
+          {errors?.coreParameterId && (
+            <div className="mb-1">
+              <span className="text-red-600 whitespace-nowrap  text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                {String(errors?.coreParameterId?.message || "")}
+              </span>
+            </div>
+          )}
+        </div>
         {canToggleColumns && (
           <div className="ml-4">
             <DropdownSearchMenu
@@ -303,20 +307,22 @@ const SubParameter = () => {
 
   return (
     <div>
-      <div className="flex items-center mb-4 gap-2">
-        <SearchInput
-          placeholder="Search..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-96"
-        />
-        {errors?.subParameterId && (
-          <div className="mb-1">
-            <span className="text-red-600 text-sm">
-              {String(errors?.subParameterId?.message || "")}
-            </span>
-          </div>
-        )}
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <div className="flex items-center  gap-2">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-96"
+          />
+          {errors?.subParameterId && (
+            <div className="mb-1">
+              <span className="text-red-600 whitespace-nowrap  text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                {String(errors?.subParameterId?.message || "")}
+              </span>
+            </div>
+          )}
+        </div>
         {canToggleColumns && (
           <div className="ml-4">
             <DropdownSearchMenu
@@ -401,15 +407,25 @@ const Employees = () => {
 
   return (
     <div>
-      <div className="mt-1 flex items-center justify-between mb-2">
-        <SearchInput
-          placeholder="Search Employees..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-96"
-        />
+      <div className="flex items-center justify-between mb-4 gap-2">
+        {/* Left Section: Search + Error */}
+        <div className="flex items-center  gap-2">
+          <SearchInput
+            placeholder="Search Employees..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-96"
+          />
+          {errors?.employeeId && (
+            <span className="text-red-600 whitespace-nowrap  text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+              {String(errors?.employeeId?.message || "")}
+            </span>
+          )}
+        </div>
+
+        {/* Right Section: Column Toggle */}
         {canToggleColumns && (
-          <div className="ml-4">
+          <div>
             <DropdownSearchMenu
               columns={columnToggleOptions}
               onToggleColumn={onToggleColumn}
@@ -417,19 +433,13 @@ const Employees = () => {
           </div>
         )}
       </div>
+
       <Controller
         name="employeeId" // This should store an array of employee IDs
         control={control}
         rules={{ required: "Please select at least one employee" }}
         render={({ field }) => (
           <>
-            {errors?.employeeId && (
-              <div className="mb-1">
-                <span className="text-red-600 text-sm">
-                  {String(errors?.employeeId?.message || "")}
-                </span>
-              </div>
-            )}
             <TableData
               tableData={employeeData?.data.map((item, index) => ({
                 ...item,

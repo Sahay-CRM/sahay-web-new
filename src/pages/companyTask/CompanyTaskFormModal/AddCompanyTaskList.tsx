@@ -339,7 +339,7 @@ const AssignUserStep = () => {
           />
           {errors?.assignUser && (
             <div className="mt-2">
-              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+              <span className="text-red-600 ml-2 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
                 {String(
                   errors?.assignUser?.message || "This field is required",
                 )}
@@ -475,39 +475,49 @@ export default function AddCompanyTask() {
   return (
     <FormProvider {...methods}>
       <div className="w-full mx-auto p-4">
-        <StepProgress
-          currentStep={step}
-          totalSteps={totalSteps} // Use adjusted totalSteps
-          stepNames={stepNamesArray}
-          header={taskId ? taskDataById?.data.taskName : null}
-        />
+        {/* Flex row: StepProgress (left) and Buttons (right) */}
+        <div className="flex items-center justify-between mb-6">
+          <StepProgress
+            currentStep={step}
+            totalSteps={totalSteps}
+            stepNames={stepNamesArray}
+            header={taskId ? taskDataById?.data.taskName : null}
+          />
 
-        <div className="flex items-end justify-end gap-2 mt-2 mb-4">
-          {step > 1 && (
-            <Button onClick={prevStep} type="button" disabled={isPending}>
+          {/* Buttons */}
+          <div className="flex  mt-6 items-center gap-2">
+            <Button
+              onClick={prevStep}
+              type="button"
+              disabled={isPending || step === 1}
+            >
               Back
             </Button>
-          )}
-          {step < totalSteps ? ( // Use adjusted totalSteps
-            <Button onClick={nextStep} type="button" disabled={isPending}>
+            <Button
+              onClick={nextStep}
+              type="button"
+              disabled={isPending || step === totalSteps}
+            >
               Next
             </Button>
-          ) : (
-            <Button
-              onClick={handleSubmit(onSubmit)}
-              disabled={isPending}
-              isLoading={isPending}
-              type="submit"
-            >
-              {taskId ? "Update" : "Submit"}
-            </Button>
-          )}
-          {taskId && step < totalSteps && (
-            <Button onClick={handleSubmit(onSubmit)} className="w-fit">
-              Submit
-            </Button>
-          )}
+            {step === totalSteps && (
+              <Button
+                onClick={handleSubmit(onSubmit)}
+                disabled={isPending}
+                isLoading={isPending}
+                type="submit"
+              >
+                {taskId ? "Update" : "Submit"}
+              </Button>
+            )}
+            {taskId && step < totalSteps && (
+              <Button onClick={handleSubmit(onSubmit)} className="w-fit">
+                Submit
+              </Button>
+            )}
+          </div>
         </div>
+
         {/* Render current step component */}
         {renderStepContent()}
       </div>

@@ -142,15 +142,26 @@ const DepartmentSelect = () => {
 
   return (
     <div>
-      <div className=" mt-1 flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <div className="flex items-center  gap-2">
+          {formErrors?.department && (
+            <span className="text-red-600 text-sm before:content-['*']">
+              {String(
+                formErrors.department?.message ||
+                  formErrors.departmentId?.message ||
+                  "",
+              )}
+            </span>
+          )}
+        </div>
+
         {canToggleColumns && (
-          <div className="ml-4 ">
-            <DropdownSearchMenu
-              columns={columnToggleOptions}
-              onToggleColumn={onToggleColumn}
-            />
-          </div>
+          <DropdownSearchMenu
+            columns={columnToggleOptions}
+            onToggleColumn={onToggleColumn}
+          />
         )}
+        {/* Right Section (Error) */}
       </div>
       <Controller
         name="department" // Ensure this name matches what's expected in useAddEmployee's reset/payload
@@ -158,18 +169,6 @@ const DepartmentSelect = () => {
         rules={{ required: "Please select a Department" }}
         render={({ field }) => (
           <>
-            <div className="mb-4">
-              {formErrors?.department && ( // Use formErrors.department (or formErrors.departmentId if that's the field name)
-                <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                  {/* Adjust error message access based on actual error object structure */}
-                  {String(
-                    formErrors.department?.message ||
-                      formErrors.departmentId?.message ||
-                      "",
-                  )}
-                </span>
-              )}
-            </div>
             <TableData
               {...field}
               tableData={departmentData?.data.map((item, index) => ({
@@ -242,7 +241,19 @@ const Designation = () => {
 
   return (
     <div>
-      <div className=" mt-1 flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <div className="flex items-center  gap-2">
+          {formErrors?.designation && (
+            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+              {String(
+                formErrors.designation?.message ||
+                  formErrors.designationId?.message ||
+                  "",
+              )}
+            </span>
+          )}
+        </div>
+
         {canToggleColumns && (
           <div className="ml-4 ">
             <DropdownSearchMenu
@@ -251,6 +262,7 @@ const Designation = () => {
             />
           </div>
         )}
+        {/* Right Section (Error) */}
       </div>
       <Controller
         name="designation"
@@ -258,17 +270,7 @@ const Designation = () => {
         rules={{ required: "Please select a Designation" }}
         render={({ field }) => (
           <>
-            <div className="mb-4">
-              {formErrors?.designation && (
-                <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                  {String(
-                    formErrors.designation?.message ||
-                      formErrors.designationId?.message ||
-                      "",
-                  )}
-                </span>
-              )}
-            </div>
+            <div className="mb-4"></div>
             <TableData
               {...field}
               tableData={designationData?.data.map((item, index) => ({
@@ -331,7 +333,9 @@ const ReportingManage = () => {
 
   return (
     <div>
-      <div className=" mt-1 flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <div className="flex items-center  gap-2"></div>
+
         {canToggleColumns && (
           <div className="ml-4 ">
             <DropdownSearchMenu
@@ -341,6 +345,7 @@ const ReportingManage = () => {
           </div>
         )}
       </div>
+
       <Controller
         name="employee" // This is for the reporting manager selection
         control={control}
@@ -450,42 +455,48 @@ const AddEmployee = () => {
 
   return (
     <FormProvider {...methods}>
-      {" "}
-      {/* Pass methods from useAddEmployee to FormProvider */}
       <div>
-        <StepProgress
-          currentStep={currentStep}
-          stepNames={stepNames}
-          totalSteps={totalSteps}
-          header={
-            companyEmployeeId ? employeeApiData?.data?.employeeName : null
-          }
-        />
+        <div className="flex items-center gap-5 mb-5">
+          <StepProgress
+            currentStep={currentStep}
+            stepNames={stepNames}
+            totalSteps={totalSteps}
+            header={
+              companyEmployeeId ? employeeApiData?.data?.employeeName : null
+            }
+          />
 
-        <div className="flex justify-end gap-5 mb-5 ">
-          <Button
-            onClick={back}
-            disabled={isFirstStep || isPending}
-            className="w-fit"
-            type="button"
-          >
-            Previous
-          </Button>
-          <Button
-            onClick={isLastStep ? onFinish : next}
-            className="w-fit"
-            isLoading={isPending}
-            type="button"
-            disabled={isPending}
-          >
-            {isLastStep ? "Finish" : "Next"}
-          </Button>
-
-          {companyEmployeeId && !isLastStep && (
-            <Button onClick={onFinish} className="w-fit">
-              Submit
+          <div className="flex mt-9 items-center gap-3">
+            <Button
+              onClick={back}
+              disabled={isFirstStep || isPending}
+              className="w-fit"
+              type="button"
+            >
+              Previous
             </Button>
-          )}
+            <Button
+              onClick={next}
+              className="w-fit"
+              disabled={isLastStep || isPending}
+              isLoading={isPending}
+            >
+              Next
+            </Button>
+
+            {/* Finish button always visible on last step */}
+            {isLastStep && (
+              <Button onClick={onFinish} className="w-fit" disabled={isPending}>
+                Finish
+              </Button>
+            )}
+
+            {companyEmployeeId && !isLastStep && (
+              <Button onClick={onFinish} className="w-fit">
+                Submit
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="step-content w-full">{stepContent}</div>

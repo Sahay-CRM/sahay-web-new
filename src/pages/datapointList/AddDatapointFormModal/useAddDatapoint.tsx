@@ -444,7 +444,7 @@ export default function useAddEmployee() {
 
     return (
       <div>
-        <div className="w-fit min-w-96">
+        <div className=" w-1/2">
           <Controller
             control={control}
             name="employeeId"
@@ -465,7 +465,7 @@ export default function useAddEmployee() {
             )}
           />
         </div>
-        <div className="mt-5">
+        <div className="mt-5 w-1/2">
           {employee && (
             <div>
               <div key={employee} className="flex flex-col gap-2">

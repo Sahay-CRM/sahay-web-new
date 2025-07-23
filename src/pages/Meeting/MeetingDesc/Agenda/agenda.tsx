@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { CircleX, CornerDownLeft, Pencil, Trash2 } from "lucide-react";
+import {
+  CirclePlay,
+  CircleX,
+  CornerDownLeft,
+  SquarePen,
+  Trash2,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +21,10 @@ import Timer from "../Timer";
 import { addUpdateIssues } from "@/features/api/Issues";
 import { addUpdateObjective } from "@/features/api/Objective";
 import { queryClient } from "@/queryClient";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setMeeting } from "@/features/reducers/common.reducer";
+import { getUserId } from "@/features/selectors/auth.selector";
+import MeetingDrawer from "./MeetingDrawer";
 
 function IssueModal({
   open,
@@ -79,6 +87,7 @@ function IssueModal({
 }
 
 interface AgendaProps {
+  meetingName: string;
   meetingId: string;
   meetingStatus?: string;
   meetingResponse?: MeetingResFire | null;
@@ -90,6 +99,7 @@ interface AgendaProps {
 }
 
 export default function Agenda({
+  meetingName,
   meetingId,
   meetingStatus,
   meetingResponse,
@@ -122,6 +132,7 @@ export default function Agenda({
   const [modalOpen, setModalOpen] = useState(false);
   const [modalIssue, setModalIssue] = useState("");
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const userId = useSelector(getUserId);
 
   const startEdit = (
     type: "issue" | "objective",
@@ -278,6 +289,7 @@ export default function Agenda({
   };
 
   const canEdit = true;
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // const handleTimerUpdate = (newTime: number) => {
   //   updateAgendaTime({
@@ -395,49 +407,67 @@ export default function Agenda({
         defaultType=""
         onSubmit={handleModalSubmit}
       />
-      <div className="flex justify-between gap-4 items-center">
-        <div className=" flex gap-4 ">
-          <h2 className="text-2xl font-semibold">Agenda</h2>
-          <Timer
-            plannedTime={Number(agendaPlannedTime)}
-            actualTime={0}
-            lastSwitchTimestamp={Number(
-              meetingResponse?.state.lastSwitchTimestamp,
-            )}
-            meetingStart={meetingStatus === "STARTED"}
-            className="text-2xl font-medium text-primary"
-          />
+      <div className="flex flex-col md:flex-row justify-between gap-4 items-center w-full">
+        {/* Left Section */}
+        <div className="w-full md:max-w-[1373px] flex h-[40px] border border-gray-300 rounded-[10px] items-center px-4">
+          <div className="flex-1 text-primary ml-3 font-semibold truncate">
+            {meetingName}
+          </div>
+
+          <div className="hidden md:block md:w-[300px] text-primary font-semibold truncate ml-4">
+            Meeting Agenda
+          </div>
         </div>
-        {meetingStatus === "NOT_STARTED" && (
-          <Button
-            variant="outline"
-            className="bg-primary text-white cursor-pointer"
-            onClick={handleStartMeeting}
-          >
-            Start Meeting
-          </Button>
-        )}
-        {meetingStatus && meetingStatus === "STARTED" && (
-          <Button
-            variant="outline"
-            className="cursor-pointer bg-primary text-white"
-            onClick={handleDesc}
-          >
-            Start Discussion
-          </Button>
-        )}
+
+        {/* Right side - Buttons & Timer */}
+        <div className="flex flex-wrap md:flex-nowrap items-center gap-3 w-full md:w-auto">
+          {meetingStatus === "NOT_STARTED" && (
+            <Button
+              variant="outline"
+              className="w-full sm:w-[200px] h-[40px] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
+              onClick={handleStartMeeting}
+            >
+              <CirclePlay className="w-6 h-6" />
+              Start Meeting
+            </Button>
+          )}
+
+          {meetingStatus === "STARTED" && (
+            <Button
+              variant="outline"
+              className="w-full sm:w-[200px] h-[40px] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
+              onClick={handleDesc}
+            >
+              Start Discussion
+            </Button>
+          )}
+
+          {/* Timer */}
+          <div className="w-full sm:w-[200px] h-[40px] border border-gray-300 rounded-[10px] flex items-center justify-center">
+            <Timer
+              plannedTime={Number(agendaPlannedTime)}
+              actualTime={0}
+              lastSwitchTimestamp={Number(
+                meetingResponse?.state.lastSwitchTimestamp,
+              )}
+              meetingStart={meetingStatus === "STARTED"}
+              className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
+            />
+          </div>
+        </div>
       </div>
+
       <div className="flex gap-4">
         <div className="px-4 w-full">
           {canEdit && (
-            <div className="flex gap-2 relative">
+            <div className="flex gap-2 relative w-full max-w-[1000px]">
               <Input
                 value={issueInput}
                 onChange={(e) => {
                   setIssueInput(e.target.value);
                   setDropdownVisible(true);
                 }}
-                placeholder="Add or Create Agenda"
+                placeholder="Add or Create Agenda (Issue or Objective)"
                 onFocus={() => setDropdownVisible(true)}
                 onBlur={() => setTimeout(() => setDropdownVisible(false), 150)}
                 onKeyDown={(e) => {
@@ -445,10 +475,15 @@ export default function Agenda({
                     handleAddIssue();
                   }
                 }}
+                className="w-full h-[45px] sm:h-[50px] border-0 border-b-2 border-gray-300 rounded-none pr-10 text-sm sm:text-base"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
-                <CornerDownLeft className="text-gray-400 w-4" />
+
+              {/* Icon inside input */}
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                <CornerDownLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </span>
+
+              {/* Dropdown */}
               {dropdownVisible && filteredIssues.length > 0 && (
                 <ul
                   style={{
@@ -471,7 +506,11 @@ export default function Agenda({
                   {searchOptions.map((item) => (
                     <li
                       key={item.id}
-                      style={{ padding: "8px 12px", cursor: "pointer" }}
+                      style={{
+                        padding: "8px 12px",
+                        cursor: "pointer",
+                        fontSize: "14px",
+                      }}
                       onMouseDown={() => {
                         handleUpdateSelectedObjective(item);
                       }}
@@ -504,6 +543,8 @@ export default function Agenda({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
+                      width: "1000px", // Set width
+                      height: "45px",
                     }}
                   >
                     {/* Left side: drag handle + name */}
@@ -676,18 +717,24 @@ export default function Agenda({
                       </div>
                     ) : (
                       <div className="flex gap-4 items-center">
-                        <span className="text-sm">({item.agendaType}) </span>
-                        <span className="text-xs font-medium">
+                        <span className="w-[90px] h-[30px] flex items-center justify-center bg-gray-200 text-sm rounded-[15px]">
+                          {item.agendaType}
+                        </span>
+
+                        <span className=" w-[60px]  h-[30px] flex items-center justify-center  text-sm rounded-[15px]">
                           (
                           {(() => {
                             const total =
                               parseInt(item.plannedTime || "0", 10) || 0;
-                            const min = Math.floor(total / 60);
-                            const sec = total % 60;
-                            if (min && sec) return `${min}m ${sec}s`;
-                            if (min) return `${min}m`;
-                            if (sec) return `${sec}s`;
-                            return "No time";
+
+                            const min = Math.floor(total / 60)
+                              .toString()
+                              .padStart(2, "0");
+                            const sec = (total % 60)
+                              .toString()
+                              .padStart(2, "0");
+
+                            return `${min}:${sec}`;
                           })()}
                           )
                         </span>
@@ -708,7 +755,7 @@ export default function Agenda({
                                 )
                               }
                             >
-                              <Pencil className="h-4 w-4 text-blue-500" />
+                              <SquarePen className="h-4 w-4 text-blue-500" />
                             </Button>
                             <Button
                               variant="ghost"
@@ -729,11 +776,14 @@ export default function Agenda({
             )}
           </div>
         </div>
-        <div className="border w-[200px]">
-          {joiners.map((item) => (
-            <div key={item.employeeId}>{item.employeeName}</div>
-          ))}
-        </div>
+        <MeetingDrawer
+          joiners={joiners}
+          meetingId={meetingId}
+          employeeId={userId}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          detailMeetingId={detailMeetingId}
+        />
       </div>
     </div>
   );

@@ -61,21 +61,24 @@ const MeetingType = () => {
 
   return (
     <div>
-      <div className="mb-2">
-        <SearchInput
-          placeholder="Search Type..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-80"
-        />
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <div className="flex items-center  gap-2">
+          <SearchInput
+            placeholder="Search Type..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
+          />
+          {errors.meetingTypeId && (
+            <p className="text-red-600 whitespace-nowrap  text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+              {typeof errors.meetingTypeId?.message === "string"
+                ? errors.meetingTypeId.message
+                : ""}
+            </p>
+          )}
+        </div>
       </div>
-      {errors.meetingTypeId && (
-        <p className="text-red-500 text-sm mb-2">
-          {typeof errors.meetingTypeId?.message === "string"
-            ? errors.meetingTypeId.message
-            : ""}
-        </p>
-      )}
+
       <Controller
         name="meetingTypeId"
         control={control}
@@ -196,7 +199,11 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
 };
 
 const Joiners = () => {
-  const { control, watch } = useFormContext();
+  const {
+    control,
+    watch,
+    formState: { errors },
+  } = useFormContext();
 
   const meetingType = watch("meetingTypeId");
 
@@ -234,15 +241,24 @@ const Joiners = () => {
 
   return (
     <div>
+      {/* Top bar: Search (left) + Error (next) + Toggle (right) */}
       <div className="mt-1 mb-2 flex items-center justify-between">
-        <div>
+        {/* Left side: Search + Error */}
+        <div className="flex items-center gap-2">
           <SearchInput
             placeholder="Search Joiners..."
             searchValue={paginationFilter?.search || ""}
             setPaginationFilter={setPaginationFilter}
             className="w-80"
           />
+          {errors?.employeeId && (
+            <p className="text-red-600 whitespace-nowrap  text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+              {String(errors.employeeId?.message || "")}
+            </p>
+          )}
         </div>
+
+        {/* Right side: Toggle Dropdown */}
         {canToggleColumns && (
           <TooltipProvider>
             <Tooltip>
@@ -261,6 +277,8 @@ const Joiners = () => {
           </TooltipProvider>
         )}
       </div>
+
+      {/* Table Section */}
       <Controller
         name="employeeId"
         control={control}
@@ -278,73 +296,64 @@ const Joiners = () => {
             return true;
           },
         }}
-        render={({ field, fieldState }) => {
-          return (
-            <>
-              {/* Show error above the table if validation fails (from fieldState) */}
-              {fieldState.error && (
-                <p className="text-red-500 text-sm mb-2">
-                  {fieldState.error.message}
-                </p>
-              )}
-              <TableData
-                tableData={employeedata?.data.map((item, index) => {
-                  const selected = (field.value || []).find(
-                    (emp: EmployeeDetails) =>
-                      emp.employeeId === item.employeeId,
-                  );
-                  return {
-                    ...item,
-                    srNo:
-                      (employeedata.currentPage - 1) * employeedata.pageSize +
-                      index +
-                      1,
-                    isTeamLeader: selected?.isTeamLeader || false,
-                  };
-                })}
-                columns={visibleColumns}
-                primaryKey="employeeId"
-                paginationDetails={mapPaginationDetails(employeedata)}
-                setPaginationFilter={setPaginationFilter}
-                multiSelect={true}
-                isEditDelete={() => false}
-                moduleKey="emp"
-                isActionButton={() => false}
-                showActionsColumn={meetingType?.parentType === "DETAIL"}
-                selectedValue={field.value || []}
-                handleChange={(selectedItems) => field.onChange(selectedItems)}
-                customActions={(row: EmployeeDetails) => {
-                  const isSelected = (field.value || []).some(
-                    (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
-                  );
-                  if (!isSelected) return null;
-                  const selectedEmp = (field.value || []).find(
-                    (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
-                  );
-                  const isTeamLeader = selectedEmp?.isTeamLeader;
+        render={({ field }) => (
+          <>
+            <TableData
+              tableData={employeedata?.data.map((item, index) => {
+                const selected = (field.value || []).find(
+                  (emp: EmployeeDetails) => emp.employeeId === item.employeeId,
+                );
+                return {
+                  ...item,
+                  srNo:
+                    (employeedata.currentPage - 1) * employeedata.pageSize +
+                    index +
+                    1,
+                  isTeamLeader: selected?.isTeamLeader || false,
+                };
+              })}
+              columns={visibleColumns}
+              primaryKey="employeeId"
+              paginationDetails={mapPaginationDetails(employeedata)}
+              setPaginationFilter={setPaginationFilter}
+              multiSelect={true}
+              isEditDelete={() => false}
+              moduleKey="emp"
+              isActionButton={() => false}
+              showActionsColumn={meetingType?.parentType === "DETAIL"}
+              selectedValue={field.value || []}
+              handleChange={(selectedItems) => field.onChange(selectedItems)}
+              customActions={(row: EmployeeDetails) => {
+                const isSelected = (field.value || []).some(
+                  (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
+                );
+                if (!isSelected) return null;
+                const selectedEmp = (field.value || []).find(
+                  (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
+                );
+                const isTeamLeader = selectedEmp?.isTeamLeader;
 
-                  return (
-                    <Button
-                      variant={isTeamLeader ? "secondary" : "outline"}
-                      className=" px-3 text-[12px]"
-                      onClick={() => {
-                        const updated = (field.value || []).map(
-                          (emp: EmployeeDetails) =>
-                            emp.employeeId === row.employeeId
-                              ? { ...emp, isTeamLeader: !emp.isTeamLeader }
-                              : emp,
-                        );
-                        field.onChange(updated);
-                      }}
-                    >
-                      {isTeamLeader ? "Remove" : "Set Team Leader"}
-                    </Button>
-                  );
-                }}
-              />
-            </>
-          );
-        }}
+                return (
+                  <Button
+                    variant={isTeamLeader ? "secondary" : "outline"}
+                    className="px-3 text-[12px]"
+                    onClick={() => {
+                      const updated = (field.value || []).map(
+                        (emp: EmployeeDetails) =>
+                          emp.employeeId === row.employeeId
+                            ? { ...emp, isTeamLeader: !emp.isTeamLeader }
+                            : emp,
+                      );
+                      field.onChange(updated);
+                    }}
+                  >
+                    {isTeamLeader ? "Remove" : "Set Team Leader"}
+                  </Button>
+                );
+              }}
+            />
+          </>
+        )}
       />
     </div>
   );
@@ -538,36 +547,45 @@ const AddMeeting = () => {
   return (
     <FormProvider {...methods}>
       <div>
-        <StepProgress
-          currentStep={currentStep}
-          stepNames={stepNames}
-          totalSteps={totalSteps}
-          header={companyMeetingId ? meetingApiData?.data?.meetingName : null}
-        />
+        <div className="flex items-center gap-5 mb-5">
+          <StepProgress
+            currentStep={currentStep}
+            stepNames={stepNames}
+            totalSteps={totalSteps}
+            header={companyMeetingId ? meetingApiData?.data?.meetingName : null}
+          />
 
-        <div className="flex justify-end gap-5 mb-5 ">
-          <Button
-            onClick={back}
-            disabled={isFirstStep || isPending}
-            className="w-fit"
-            type="button"
-          >
-            Previous
-          </Button>
-          <Button
-            onClick={isLastStep ? onFinish : next}
-            className="w-fit"
-            disabled={isPending}
-            isLoading={isPending}
-            type="button"
-          >
-            {isLastStep ? "Finish" : "Next"}
-          </Button>
-          {companyMeetingId && !isLastStep && (
-            <Button onClick={onFinish} className="w-fit">
-              Submit
+          <div className="flex mt-9 items-center gap-3">
+            <Button
+              onClick={back}
+              disabled={isFirstStep || isPending}
+              className="w-fit"
+              type="button"
+            >
+              Previous
             </Button>
-          )}
+            <Button
+              onClick={next}
+              className="w-fit"
+              disabled={isLastStep || isPending}
+              isLoading={isPending}
+            >
+              Next
+            </Button>
+
+            {/* Finish button always visible on last step */}
+            {isLastStep && (
+              <Button onClick={onFinish} className="w-fit" disabled={isPending}>
+                Finish
+              </Button>
+            )}
+
+            {companyMeetingId && !isLastStep && (
+              <Button onClick={onFinish} className="w-fit">
+                Submit
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="step-content w-full">{stepContent}</div>

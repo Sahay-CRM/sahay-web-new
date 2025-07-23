@@ -31,7 +31,7 @@ const Urls = {
   getAllMeetingType: () => `${baseUrl}/meeting-type/get`,
 
   getAllCompanyMeeting: () => `${baseUrl}/company/meeting/get-all`,
-  addCompanyMeeting: () => `${baseUrl}/company/meeting/create`,
+  addCompanyMeeting: () => `${baseUrl}/company/detail-meeting/note/create`,
   updateCompanyMeeting: (id: string) =>
     `${baseUrl}/company/meeting/update/${id}`,
   deleteCompanyMeeting: (id: string) =>

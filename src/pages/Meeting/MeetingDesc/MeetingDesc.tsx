@@ -29,6 +29,7 @@ export default function MeetingDesc() {
   if (meetingStatus === "NOT_STARTED" || meetingStatus === "STARTED") {
     content = (
       <Agenda
+        meetingName={meetingTiming?.meetingName ?? ""}
         meetingId={meetingId ?? ""}
         meetingStatus={meetingStatus}
         meetingResponse={meetingResponse}

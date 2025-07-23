@@ -11,6 +11,7 @@ interface MeetingNoteAdd {
   employeeId: string;
   note: string;
   detailMeetingNoteId?: string;
+  detailMeetingId?: string;
 }
 
 type DatePaging = CommonResponse<MeetingNotesRes>;
