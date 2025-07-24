@@ -93,6 +93,7 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
         value2: kpiData.value2,
         visualFrequencyTypes: kpiData.visualFrequencyTypes,
         employeeId: kpiData.employeeId || "",
+        visualFrequencyAggregate: "",
       });
     }
   }, [kpiData]);

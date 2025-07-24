@@ -139,7 +139,7 @@ export default function FormSelect({
             <button
               type="button"
               disabled={disabled}
-              className="w-full border rounded-md px-3 text-left text-sm mt-2 py-2"
+              className="w-full border rounded-md px-3 text-left text-sm py-2"
             >
               {displayValue()}
             </button>

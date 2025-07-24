@@ -52,6 +52,7 @@ export default function useAdminUser() {
       value1: "",
       value2: "",
       tag: "",
+      visualFrequencyAggregate: "",
     });
     setIsUserModalOpen(true);
   };
@@ -80,6 +81,7 @@ export default function useAdminUser() {
       value1: "",
       value2: "",
       tag: "",
+      visualFrequencyAggregate: "",
     }); // Clear modal data
     setIsUserModalOpen(false);
     setIsDeleteModalOpen(false);

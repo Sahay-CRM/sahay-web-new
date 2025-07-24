@@ -610,11 +610,11 @@ export default function UpdatedKpiTable() {
           <div ref={rightScrollRef} className="max-h-[70vh] overflow-y-auto">
             <table className="min-w-max border-collapse text-sm table-fixed">
               <thead className="sticky top-0 z-10 bg-white">
-                <tr>
+                <tr className="">
                   {headers.map((header, idx) => (
                     <th
                       key={idx}
-                      className="border p-2 min-w-[80px] font-semibold text-gray text-center h-[42px]"
+                      className="border p-2 min-w-[80px] font-semibold text-gray text-center h-[43px]"
                     >
                       <div className="flex flex-col items-center leading-tight">
                         <span>{header.label}</span>
@@ -631,12 +631,12 @@ export default function UpdatedKpiTable() {
               <tbody>
                 {groupedKpiRows.map((group) => (
                   <React.Fragment key={group.coreParameter.coreParameterId}>
-                    <tr className="sticky top-[50px] bg-blue-50 z-0">
+                    <tr className="sticky h-[39px] top-[51px] bg-blue-50 z-0">
                       <td
                         colSpan={headers.length}
-                        className="p-2 text-blue-50 border font-bold"
+                        className="p-2  border text-black font-bold"
                       >
-                        {group.coreParameter.coreParameterName}
+                        {/* {group.coreParameter.coreParameterName} */}
                       </td>
                     </tr>
                     {group.kpis.map(({ kpi }) => {
@@ -800,7 +800,9 @@ export default function UpdatedKpiTable() {
                                       !isNaN(Number(inputVal)) && (
                                         <TooltipContent>
                                           <span>
-                                            {Number(inputVal).toFixed(4)}
+                                            {parseFloat(inputVal)
+                                              .toFixed(4)
+                                              .replace(/\.?0+$/, "")}
                                           </span>
                                         </TooltipContent>
                                       )}

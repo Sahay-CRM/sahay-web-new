@@ -96,10 +96,6 @@ const EmployeeStatus = () => {
   );
 };
 
-// --- DepartmentSelect Component Definition (Refactored) ---
-// This component would also use useFormContext and manage its own state/data fetching.
-// The data fetching (getDepartmentList) and state (paginationFilter, columnToggleOptions)
-// previously in useAddEmployee would move here.
 const DepartmentSelect = () => {
   const {
     control,
@@ -141,16 +137,6 @@ const DepartmentSelect = () => {
     <div>
       <div className=" mt-1 flex items-center justify-between">
         <div className="mb-4">
-          {formErrors?.department && (
-            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-              {/* Adjust error message access based on actual error object structure */}
-              {String(
-                formErrors.department?.message ||
-                  formErrors.departmentId?.message ||
-                  "",
-              )}
-            </span>
-          )}
           <div>
             <SearchInput
               placeholder="Search..."
@@ -158,6 +144,16 @@ const DepartmentSelect = () => {
               setPaginationFilter={setPaginationFilter}
               className="w-80"
             />
+            {formErrors?.department && (
+              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                {/* Adjust error message access based on actual error object structure */}
+                {String(
+                  formErrors.department?.message ||
+                    formErrors.departmentId?.message ||
+                    "",
+                )}
+              </span>
+            )}
             {canToggleColumns && (
               <div className="ml-4 ">
                 <DropdownSearchMenu

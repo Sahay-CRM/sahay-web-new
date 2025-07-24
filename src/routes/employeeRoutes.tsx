@@ -67,6 +67,7 @@ const DetailMeeting = lazy(() => import("../pages/Meeting/MeetingDesc"));
 
 const Issues = lazy(() => import("../pages/Obj/Issues"));
 const Objective = lazy(() => import("../pages/Obj/Objective"));
+const GroupKpis = lazy(() => import("../pages/datapointList/GroupKpis"));
 
 export default function EmployeeRoutes() {
   return (
@@ -106,6 +107,7 @@ export default function EmployeeRoutes() {
         <Route path="kpi" Component={DatapointList} />
         <Route path="kpi/add" element={<AddCompanyDatapoint />} />
         <Route path="kpi/edit/:id" element={<AddCompanyDatapoint />} />
+        <Route path="kpi/group-kpis" element={<GroupKpis />} />
 
         <Route path="datapoint" Component={DatapointList} />
         <Route path="kpi-dashboard" Component={KPIDashboard} />

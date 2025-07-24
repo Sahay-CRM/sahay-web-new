@@ -831,6 +831,7 @@ interface DataPointEmployee {
 // }
 
 interface KPIFormData {
+  srNo?: number;
   kpiId?: string;
   dataPointName?: string;
   dataPointLabel?: string;
@@ -848,6 +849,7 @@ interface KPIFormData {
   coreParameter?: {
     coreParameterId: string;
   };
+  coreParameterName?: string;
   visualFrequencyTypes: string;
   employeeId: string;
   value1: string;
@@ -856,6 +858,7 @@ interface KPIFormData {
   coreParameterId?: string;
   hasData?: boolean;
   employeeName?: string;
+  visualFrequencyAggregate: string | null;
 }
 
 interface KPIFormDataProp {
@@ -1105,11 +1108,14 @@ interface KpiAllList {
     employeeName: string;
   }[];
   dataArray?: KpiDataCell[];
-  tag?: string | null;
   value1: string;
-  value2?: string | null;
-  unit?: string;
+  value2: string;
+  tag: string;
+  unit: string;
   isVisualized: boolean;
+  visualFrequencyAggregate: string | null;
+  visualFrequencyTypes: string;
+  employeeId: string;
 }
 
 interface KPICoreParameter {
@@ -1128,10 +1134,13 @@ interface SelectedKpisData {
 interface MeetingDetailsTiming {
   detailMeetingId?: string;
   meetingId: string;
+  employeeId?: string;
+  attendanceMark?: boolean;
   agendaTimePlanned?: string;
   agendaTimeActual?: string;
   employeeList?: Joiners[];
   status?: string;
+  updatedAt?: string;
   meetingName?: string;
 }
 
@@ -1139,6 +1148,7 @@ interface MeetingNotesRes {
   employeeId: string;
   note: string;
   detailMeetingNoteId: string;
+  createdAt: string;
 }
 
 interface IssuesProps {
@@ -1189,4 +1199,25 @@ interface DetailMeetingAgendaIssue {
   isResolved: boolean;
   actualTime: string | null;
   plannedTime: string;
+}
+
+interface GroupKpisProps {
+  selectedKpisIds?: string[];
+  selectedKpiData: KPIFormData[];
+  isModalOpen: boolean;
+  modalClose: () => void;
+}
+
+interface KpiMergeRes {
+  kpiMergeId: string;
+  kpiIds: string;
+  kpiMergeName: string;
+  tag: string;
+  companyId: string;
+  value1: string;
+  value2: string;
+  validationType: string;
+  visualFrequencyTypes: string;
+  visualFrequencyAggregate: string;
+  isDelete: boolean;
 }

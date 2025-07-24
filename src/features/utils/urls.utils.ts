@@ -242,6 +242,15 @@ const Urls = {
 
   updateDetailObjectivesIssue: () =>
     `${baseUrl}/company/detail-meeting/agenda/update`,
+
+  createKPIMerge: () => `${baseUrl}/company/kpi-merge/create`,
+  updateKPIMerge: (id: string) => `${baseUrl}/company/kpi-merge/update/${id}`,
+
+  deleteCompanyMeetingNote: (id: string) =>
+    `${baseUrl}/company/detail-meeting/note/delete/${id}`,
+
+  timeUpdateByMeeting: (id: string) =>
+    `${baseUrl}/company/detail-meeting/update/${id}`,
 };
 
 export default Urls;

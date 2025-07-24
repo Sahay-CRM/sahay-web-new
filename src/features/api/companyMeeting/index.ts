@@ -37,3 +37,6 @@ export { default as useGetDetailMeetingAgenda } from "./useGetDetailMeetingAgend
 
 export { default as useGetDetailMeetingAgendaIssue } from "./useGetDetailMeetingAgendaIssue";
 export { default as editAgendaTimingMeetingMutation } from "./useUpdateAgendaMeeting";
+
+export { default as deleteCompanyMeetingMutation } from "./useDeleteCompanyMeetingNote";
+export { default as addMeetingTimeMutation } from "./useUpdateMeetingTime";

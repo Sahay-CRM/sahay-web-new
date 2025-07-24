@@ -96,6 +96,15 @@ export default function CompanyTaskList() {
     return <PageNotAccess />;
   }
 
+  const formatLocalDate = (isoDate?: string): string => {
+    if (!isoDate) return "";
+
+    const date = new Date(isoDate);
+
+    // Format as YYYY-MM-DD in local time zone
+    return date.toLocaleDateString("en-CA"); // en-CA gives "yyyy-mm-dd"
+  };
+
   return (
     <FormProvider {...methods}>
       <div className="w-full  overflow-x-auto">
@@ -182,9 +191,7 @@ export default function CompanyTaskList() {
                   index +
                   1,
                 status: item.taskStatusId,
-                taskDeadline: item.taskDeadline
-                  ? new Date(item.taskDeadline).toISOString().split("T")[0]
-                  : "",
+                taskDeadline: formatLocalDate(item.taskDeadline),
                 assigneeNames: item.TaskEmployeeJunction
                   ? item.TaskEmployeeJunction.map(
                       (j) => j.Employee?.employeeName,

@@ -6,7 +6,6 @@ import {
 } from "@/features/api/companyMeeting";
 import { docUploadMutation } from "@/features/api/file";
 import { queryClient } from "@/queryClient";
-import { format, parseISO } from "date-fns";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 
@@ -37,8 +36,8 @@ export default function useAddMeeting() {
         meetingName: data.meetingName || "",
         meetingDescription: data.meetingDescription || "",
         meetingDateTime: data.meetingDateTime
-          ? format(parseISO(data.meetingDateTime), "yyyy-MM-dd")
-          : "",
+          ? new Date(data.meetingDateTime).toISOString()
+          : null,
         meetingStatusId: data.meetingStatus || undefined,
         meetingTypeId: data.meetingType || undefined,
         employeeId: data.joiners,
@@ -68,7 +67,10 @@ export default function useAddMeeting() {
     const payload = {
       meetingName: data?.meetingName,
       meetingDescription: data?.meetingDescription,
-      meetingDateTime: data?.meetingDateTime,
+      meetingDateTime:
+        data.meetingDateTime instanceof Date
+          ? data.meetingDateTime.toISOString()
+          : data.meetingDateTime,
       meetingTypeId: data?.meetingTypeId?.meetingTypeId,
       meetingStatusId:
         data?.meetingStatusId?.meetingStatusId || data?.meetingStatusId,

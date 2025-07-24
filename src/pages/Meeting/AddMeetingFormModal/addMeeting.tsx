@@ -20,6 +20,7 @@ import { getMeetingType } from "@/features/api/meetingType";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
+import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 
 interface MeetingInfoProps {
   isUpdateMeeting: boolean;
@@ -159,15 +160,24 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
           error={errors.meetingDescription}
           isMandatory
         />
-        <FormInputField
-          id="meetingDateTime"
-          type="date"
-          label="Meeting Date & Time"
-          {...register("meetingDateTime", {
-            required: "Date & Time is required",
-          })}
-          error={errors.meetingDateTime}
-          isMandatory
+        <Controller
+          control={control}
+          name="meetingDateTime"
+          rules={{ required: "Date & Time is required" }}
+          render={({ field }) => {
+            const localDate = field.value ? new Date(field.value) : null;
+
+            return (
+              <FormDateTimePicker
+                label="Meeting Date & Time"
+                value={localDate}
+                onChange={(date) => {
+                  field.onChange(date?.toISOString());
+                }}
+                error={errors.meetingDateTime}
+              />
+            );
+          }}
         />
 
         {!shouldHideStatus && (
@@ -329,7 +339,8 @@ const Joiners = () => {
                   </Button>
                 );
               }}
-              showActionsColumn={false}
+              additionalButton={() => false}
+              isEditDeleteShow={false}
               isLoading={isLoading}
             />
           );

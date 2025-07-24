@@ -14,7 +14,6 @@ export default function MeetingDesc() {
     meetingId,
     meetingResponse,
     meetingTiming,
-    isMeetingStart,
   } = useMeetingDesc();
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -30,6 +29,7 @@ export default function MeetingDesc() {
   if (meetingStatus === "NOT_STARTED" || meetingStatus === "STARTED") {
     content = (
       <Agenda
+        meetingName={meetingTiming?.meetingName ?? ""}
         meetingId={meetingId ?? ""}
         meetingStatus={meetingStatus}
         meetingResponse={meetingResponse}
@@ -38,7 +38,6 @@ export default function MeetingDesc() {
         handleStartMeeting={handleStartMeeting}
         handleDesc={handleDesc}
         joiners={meetingTiming?.employeeList ?? []}
-        meetingStart={isMeetingStart}
       />
     );
   } else if (meetingStatus === "DISCUSSION") {
@@ -48,6 +47,7 @@ export default function MeetingDesc() {
         meetingResponse={meetingResponse}
         detailMeetingId={meetingTiming?.detailMeetingId}
         meetingId={meetingId ?? ""}
+        joiners={meetingTiming?.employeeList ?? []}
       />
     );
   } else if (meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") {
