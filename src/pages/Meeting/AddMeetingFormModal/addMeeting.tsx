@@ -207,6 +207,7 @@ const Joiners = () => {
     formState: { errors },
   } = useFormContext();
 
+
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 25,
@@ -243,6 +244,7 @@ const Joiners = () => {
     <div>
       <div className=" mt-1 mb-4 flex items-center justify-between">
         <div className="flex items-center w-full">
+
           <SearchInput
             placeholder="Search..."
             searchValue={paginationFilter?.search || ""}
@@ -250,13 +252,17 @@ const Joiners = () => {
             className="w-80"
           />
           {errors?.employeeId && (
+
             <div className="mb-1">
               <span className="text-red-600 text-sm">
                 {String(errors?.employeeId?.message || "")}
               </span>
             </div>
+
           )}
         </div>
+
+        {/* Right side: Toggle Dropdown */}
         {canToggleColumns && (
           <div className="ml-3">
             <DropdownSearchMenu
@@ -267,6 +273,8 @@ const Joiners = () => {
           </div>
         )}
       </div>
+
+      {/* Table Section */}
       <Controller
         name="employeeId"
         control={control}
@@ -286,6 +294,7 @@ const Joiners = () => {
         }}
         render={({ field }) => {
           return (
+
             <TableData
               tableData={employeedata?.data.map((item, index) => {
                 const selected = (field.value || []).find(
@@ -308,7 +317,9 @@ const Joiners = () => {
               isEditDelete={() => false}
               moduleKey="emp"
               isActionButton={() => false}
+
               // showActionsColumn={meetingType?.parentType === "DETAIL"}
+
               selectedValue={field.value || []}
               handleChange={(selectedItems) => field.onChange(selectedItems)}
               customActions={(row: EmployeeDetails) => {
@@ -324,7 +335,9 @@ const Joiners = () => {
                 return (
                   <Button
                     variant={isTeamLeader ? "secondary" : "outline"}
+
                     className=" px-3 text-[12px]"
+
                     onClick={() => {
                       const updated = (field.value || []).map(
                         (emp: EmployeeDetails) =>
@@ -548,7 +561,6 @@ const AddMeeting = () => {
           onFinish={onFinish}
           isUpdate={!!companyMeetingId}
         />
-
         <div className="step-content w-full">{stepContent}</div>
 
         {isModalOpen && (

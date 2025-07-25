@@ -239,12 +239,14 @@ export default function useAddDataPoint() {
             )}
           </div>
           <div className="flex items-center">
+
             <SearchInput
               placeholder="Search..."
               searchValue={paginationFilter?.search || ""}
               setPaginationFilter={setPaginationFilter}
               className="w-80"
             />
+
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>
@@ -264,6 +266,7 @@ export default function useAddDataPoint() {
               </TooltipProvider>
             )}
           </div>
+
         </div>
 
         <Controller
@@ -289,6 +292,7 @@ export default function useAddDataPoint() {
               showActionsColumn={false}
               isLoading={isLoading}
             />
+
           )}
         />
       </div>
@@ -647,7 +651,7 @@ export default function useAddDataPoint() {
 
     return (
       <div>
-        <div className="w-fit min-w-96">
+        <div className=" w-1/2">
           <Controller
             control={control}
             name="employeeId"
@@ -668,7 +672,7 @@ export default function useAddDataPoint() {
             )}
           />
         </div>
-        <div className="mt-5">
+        <div className="mt-5 w-1/2">
           {employee && (
             <div>
               <div key={employee} className="flex flex-col gap-2">

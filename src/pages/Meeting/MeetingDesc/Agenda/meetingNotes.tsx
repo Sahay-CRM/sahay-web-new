@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
+
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import userDummy from "@/assets/userDummy.jpg";
 import {
@@ -31,6 +33,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   // console.log(joiners, employeeId, meetingId);
 
   const [noteInput, setNoteInput] = useState("");
+
   // const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   // const [editInput, setEditInput] = useState<string>("");
 
@@ -111,6 +114,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       </div>
 
       <div className="px-2 pt-2 space-y-2 max-h-[500px] pb-2 min-h-10 overflow-y-auto">
+
         {Array.isArray(meetingNotes?.data) &&
           meetingNotes.data.map((note: MeetingNotesRes, idx: number) => {
             const author = joiners.find(
@@ -125,6 +129,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
               >
                 {/* Avatar */}
                 <Avatar className="h-8 w-8 mt-0.5">
+
                   <AvatarFallback>
                     <img
                       src={author?.photo || userDummy}

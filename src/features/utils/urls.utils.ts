@@ -31,7 +31,7 @@ const Urls = {
   getAllMeetingType: () => `${baseUrl}/meeting-type/get`,
 
   getAllCompanyMeeting: () => `${baseUrl}/company/meeting/get-all`,
-  addCompanyMeeting: () => `${baseUrl}/company/meeting/create`,
+  addCompanyMeeting: () => `${baseUrl}/company/detail-meeting/note/create`,
   updateCompanyMeeting: (id: string) =>
     `${baseUrl}/company/meeting/update/${id}`,
   deleteCompanyMeeting: (id: string) =>
@@ -211,7 +211,6 @@ const Urls = {
   deleteMeetingKpisData: (id: string) =>
     `${baseUrl}/company/detail-meeting/kpi/remove/${id}`,
   allKpiList: () => `${baseUrl}/company/kpi/get-detail-meeting`,
-
   getTimeByMeeting: (id: string) =>
     `${baseUrl}/company/detail-meeting/get/${id}`,
 

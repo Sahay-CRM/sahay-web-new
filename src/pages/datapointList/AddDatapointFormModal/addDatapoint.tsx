@@ -58,6 +58,7 @@ const AddDatapoint = () => {
     <FormProvider {...methods}>
       <div>
         <div className="flex items-center gap-5 mb-3">
+
           <StepProgress
             currentStep={currentStep}
             stepNames={stepNames}
@@ -73,7 +74,7 @@ const AddDatapoint = () => {
             onFinish={onFinish}
             isUpdate={!!companykpimasterId}
           />
-        </div>
+
 
         <div className="step-content w-full">{stepContent}</div>
 

@@ -1,3 +1,4 @@
+
 import {
   Users,
   FileText,
@@ -6,6 +7,7 @@ import {
   Crown,
 } from "lucide-react";
 import MeetingNotes from "./meetingNotes";
+
 import {
   Tooltip,
   TooltipContent,
@@ -24,6 +26,7 @@ import { useSelector } from "react-redux";
 import { getUserId } from "@/features/selectors/auth.selector";
 import useMeetingUi from "./useMeetingUi";
 // import { useEffect } from "react";
+
 
 interface Joiner {
   employeeId: string;
@@ -46,6 +49,7 @@ interface MeetingDrawerProps {
   show?: boolean; // optional prop, default true
   showToggle?: boolean; // optional prop, default true
   showCrown?: boolean; // optional prop, default true
+
 }
 
 const MeetingDrawer: React.FC<MeetingDrawerProps> = ({
@@ -102,6 +106,7 @@ const MeetingDrawer: React.FC<MeetingDrawerProps> = ({
         }}
       >
         {sidebarOpen ? (
+
           <Tabs
             defaultValue="attendees"
             className="w-full h-full flex flex-col"
@@ -124,6 +129,7 @@ const MeetingDrawer: React.FC<MeetingDrawerProps> = ({
             </div>
 
             {/* Attendees Tab */}
+
             <TabsContent
               value="attendees"
               className="mt-4 flex-grow overflow-y-auto"
@@ -212,6 +218,7 @@ const MeetingDrawer: React.FC<MeetingDrawerProps> = ({
                           </>
                         )}
                       </DropdownMenu>
+
                     </div>
                   ))}
                 </div>
@@ -219,6 +226,7 @@ const MeetingDrawer: React.FC<MeetingDrawerProps> = ({
             </TabsContent>
 
             {/* Notes Tab */}
+
             <TabsContent
               value="notes"
               className="mt-4 flex-grow overflow-y-auto"
@@ -268,6 +276,7 @@ const MeetingDrawer: React.FC<MeetingDrawerProps> = ({
           )}
         </button>
       )}
+
     </div>
   );
 };

@@ -164,6 +164,7 @@ const DepartmentSelect = () => {
             )}
           </div>
         </div>
+
       </div>
       <Controller
         name="department" // Ensure this name matches what's expected in useAddEmployee's reset/payload
@@ -243,7 +244,19 @@ const Designation = () => {
 
   return (
     <div>
-      <div className=" mt-1 flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <div className="flex items-center  gap-2">
+          {formErrors?.designation && (
+            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+              {String(
+                formErrors.designation?.message ||
+                  formErrors.designationId?.message ||
+                  "",
+              )}
+            </span>
+          )}
+        </div>
+
         {canToggleColumns && (
           <div className="ml-4 ">
             <DropdownSearchMenu
@@ -252,6 +265,7 @@ const Designation = () => {
             />
           </div>
         )}
+        {/* Right Section (Error) */}
       </div>
       <Controller
         name="designation"
@@ -259,17 +273,7 @@ const Designation = () => {
         rules={{ required: "Please select a Designation" }}
         render={({ field }) => (
           <>
-            <div className="mb-4">
-              {formErrors?.designation && (
-                <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                  {String(
-                    formErrors.designation?.message ||
-                      formErrors.designationId?.message ||
-                      "",
-                  )}
-                </span>
-              )}
-            </div>
+            <div className="mb-4"></div>
             <TableData
               {...field}
               tableData={designationData?.data.map((item, index) => ({
@@ -331,7 +335,9 @@ const ReportingManage = () => {
 
   return (
     <div>
-      <div className=" mt-1 flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <div className="flex items-center  gap-2"></div>
+
         {canToggleColumns && (
           <div className="ml-4 ">
             <DropdownSearchMenu
@@ -341,6 +347,7 @@ const ReportingManage = () => {
           </div>
         )}
       </div>
+
       <Controller
         name="employee"
         control={control}

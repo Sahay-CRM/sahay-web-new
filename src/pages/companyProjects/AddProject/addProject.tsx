@@ -115,6 +115,7 @@ const ProjectStatus = () => {
             </div>
           )}
         </div>
+
       </div>
       <Controller
         name="projectStatusId"
@@ -142,6 +143,7 @@ const ProjectStatus = () => {
             isLoading={isLoading}
             showActionsColumn={false}
           />
+
         )}
       />
     </div>
@@ -210,6 +212,7 @@ const CoreParameter = () => {
             </div>
           )}
         </div>
+
       </div>
       <Controller
         name="coreParameterId"
@@ -236,6 +239,7 @@ const CoreParameter = () => {
             isLoading={isLoading}
             showActionsColumn={false}
           />
+
         )}
       />
     </div>
@@ -314,6 +318,7 @@ const SubParameter = () => {
           )}
         </div>
         <div className="flex items-center">
+
           <SearchInput
             placeholder="Search..."
             searchValue={paginationFilter?.search || ""}
@@ -330,6 +335,7 @@ const SubParameter = () => {
             </div>
           )}
         </div>
+
       </div>
       <Controller
         name="subParameterId"
@@ -431,7 +437,9 @@ const Employees = () => {
             </div>
           )}
         </div>
+
       </div>
+
       <Controller
         name="employeeId"
         control={control}
@@ -464,6 +472,7 @@ const Employees = () => {
             isLoading={isLoading}
             showActionsColumn={false}
           />
+
         )}
       />
     </div>

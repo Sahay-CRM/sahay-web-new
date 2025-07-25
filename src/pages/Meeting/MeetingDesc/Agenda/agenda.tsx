@@ -291,6 +291,7 @@ export default function Agenda({
   const canEdit = true;
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+
   // const handleTimerUpdate = (newTime: number) => {
   //   updateAgendaTime({
   //     meetingId: meetingId,

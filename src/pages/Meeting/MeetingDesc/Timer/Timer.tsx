@@ -1,6 +1,6 @@
 import { formatTime } from "@/features/utils/app.utils";
 import { useEffect, useState } from "react";
-import { Pencil, Check, X } from "lucide-react";
+import { Check, X, SquarePen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -75,7 +75,7 @@ export default function Timer({
         {editMode ? (
           <>
             <Input
-              value={`${editMinutes.padStart(2, "0")}:${editSeconds.padStart(2, "0")}`}
+              value={`${editMinutes.padStart(1, "0")}:${editSeconds.padStart(1, "0")}`}
               onChange={(e) => {
                 const val = e.target.value.replace(/[^0-9:]/g, "");
                 const [min = "0", sec = "0"] = val.split(":");
@@ -118,7 +118,7 @@ export default function Timer({
               variant="ghost"
               title="Edit time"
             >
-              <Pencil size={16} />
+              <SquarePen style={{ width: 19, height: 19 }} />
             </Button>
           </>
         )}

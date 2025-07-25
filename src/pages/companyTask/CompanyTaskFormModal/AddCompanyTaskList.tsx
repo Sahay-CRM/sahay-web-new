@@ -30,6 +30,7 @@ const ProjectSelectionStep = () => {
     <div className="p-0">
       <div className="flex items-center space-x-5 tb:space-x-7 mb-2 justify-between">
         <div className="flex gap-4">
+
           <SearchInput
             placeholder="Search Projects..."
             searchValue={paginationFilterProject?.search || ""}
@@ -44,12 +45,14 @@ const ProjectSelectionStep = () => {
             </div>
           )}
         </div>
+
         {permission.PROJECT_LIST.Add && (
           <Link to="/dashboard/projects/add?from=task">
             <Button className="py-2 w-fit">Add Company Project</Button>
           </Link>
         )}
       </div>
+
       <Controller
         name="project"
         control={control}
@@ -86,6 +89,7 @@ const ProjectSelectionStep = () => {
                 field.onChange(selected.projectId);
               } else {
                 field.onChange("");
+
               }
             }}
             onCheckbox={() => true}
@@ -125,6 +129,7 @@ const MeetingSelectionStep = () => {
           {errors?.meeting && (
             <div className="mt-2">
               <span className="text-red-600 w-fit text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+
                 {String(errors?.meeting?.message || "This field is required")}
               </span>
             </div>
@@ -136,6 +141,7 @@ const MeetingSelectionStep = () => {
           </Link>
         )}
       </div>
+
       <Controller
         name="meeting"
         control={control}
@@ -171,6 +177,7 @@ const MeetingSelectionStep = () => {
                 field.onChange(selected.meetingId);
               } else {
                 field.onChange("");
+
               }
             }}
             onCheckbox={() => true}
@@ -336,6 +343,7 @@ const AssignUserStep = () => {
             </span>
           </div>
         )}
+
       </div>
       <Controller
         name="assignUser"
@@ -478,6 +486,7 @@ export default function AddCompanyTask() {
           onFinish={handleSubmit(onSubmit)}
           isUpdate={!!taskId}
         />
+
 
         {renderStepContent()}
       </div>
