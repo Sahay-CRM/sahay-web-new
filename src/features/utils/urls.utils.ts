@@ -218,8 +218,7 @@ const Urls = {
   getConclusionByMeeting: (id: string) =>
     `${baseUrl}/company/detail-meeting/get-conclusion/${id}`,
 
-  addMeetingNots: (id: string) =>
-    `${baseUrl}/company/detail-meeting/note/create/${id}`,
+  addMeetingNots: () => `${baseUrl}/company/detail-meeting/note/create`,
 
   updateMeetingNots: (id: string) =>
     `${baseUrl}/company/detail-meeting/note/update/${id}`,

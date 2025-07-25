@@ -13,9 +13,7 @@ export default function useGetDetailMeetingAgenda({
     queryFn: async () => {
       const { data: resData } = await Api.post<DatePaging>({
         url: Urls.getMeetingAgendaObjective(),
-        data: {
-          detailMeetingId: "850f4e12-d858-4e33-8a76-68259377d9de",
-        },
+        data: filter,
       });
 
       return resData.data;

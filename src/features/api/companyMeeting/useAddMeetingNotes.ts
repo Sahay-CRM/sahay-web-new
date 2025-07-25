@@ -17,14 +17,14 @@ type DatePaging = CommonResponse<MeetingNotesRes>;
 
 export default function useAddMeetingNotes() {
   const addMeetingNotesMutation = useMutation({
-    mutationKey: ["add-meeting-note-data"],
+    mutationKey: ["add-meeting-note-data-1"],
     mutationFn: async (data: MeetingNoteAdd) => {
       const isUpdate = Boolean(data?.detailMeetingNoteId);
 
       const config = {
         url: isUpdate
           ? Urls.updateMeetingNots(data.detailMeetingNoteId!)
-          : Urls.addCompanyMeeting(),
+          : Urls.addMeetingNots(),
         data: data,
       };
 
