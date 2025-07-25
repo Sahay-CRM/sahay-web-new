@@ -1010,6 +1010,7 @@ interface KpiDataCell {
   value1?: string | number | null;
   value2?: string | number | null;
   avg?: string | number | null;
+  isSunday?: boolean;
 }
 
 interface UserLogDetails {

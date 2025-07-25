@@ -22,13 +22,14 @@ export default function Conclusion({
   meetingResponse,
 }: ConclusionProps) {
   const {
-    handleCloseMeetingWithLog,
     conclusionData,
     isPending,
     isLoading,
     hasChanges,
     setSelectedAgenda,
     selectedAgenda,
+    endMeet,
+    meetingId,
   } = useConclusion();
   const [elapsed, setElapsed] = useState(0);
 
@@ -46,6 +47,17 @@ export default function Conclusion({
   const minutes = String(Math.floor(elapsed / 60000)).padStart(2, "0");
   const seconds = String(Math.floor((elapsed % 60000) / 1000)).padStart(2, "0");
   const formattedTime = `${minutes}:${seconds}`;
+
+  const handleCloseMeetingWithLog = () => {
+    const [minutes, seconds] = formattedTime.split(":").map(Number);
+    const totalSeconds = minutes * 60 + seconds;
+
+    console.log(totalSeconds);
+    return;
+    if (meetingId) {
+      endMeet(meetingId);
+    }
+  };
 
   const formatTime = (timeInSeconds: number | string): string => {
     const totalSeconds = Math.floor(Number(timeInSeconds));
@@ -225,7 +237,7 @@ export default function Conclusion({
               <div className="space-y-2">
                 {conclusionData?.agenda.map((item, index) => (
                   <button
-                    key={item.srNo}
+                    key={item.detailMeetingAgendaIssueId}
                     onClick={() => setSelectedAgenda(index)}
                     className={`w-full text-left p-4 rounded-lg transition-all ${
                       selectedAgenda === index

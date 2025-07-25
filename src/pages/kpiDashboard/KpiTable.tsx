@@ -104,7 +104,6 @@ export default function UpdatedKpiTable() {
   const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
     {},
   );
-  console.log(inputValues);
 
   useEffect(() => {
     const originalPushState = history.pushState;
@@ -437,7 +436,7 @@ export default function UpdatedKpiTable() {
 
   return (
     <FormProvider {...methods}>
-      <div className="sticky top-0 z-30 bg-white pb-2 mb-2 pt-6">
+      <div className="sticky top-0 z-30 bg-white pb-2 pt-0">
         <div className="flex justify-between">
           {" "}
           <div className="flex justify-between items-center">
@@ -481,7 +480,7 @@ export default function UpdatedKpiTable() {
         {/* LEFT TABLE */}
         <div
           ref={leftScrollRef}
-          className="max-h-[70vh] overflow-y-scroll scrollbar-hide border shadow-sm"
+          className="max-h-[78vh] overflow-y-scroll scrollbar-hide border shadow-sm"
           style={{ width: "500px", minWidth: "500px", maxWidth: "500px" }}
         >
           <table className="w-full table-fixed border-collapse text-sm bg-white">
@@ -504,7 +503,7 @@ export default function UpdatedKpiTable() {
             <tbody>
               {groupedKpiRows.map((group) => (
                 <React.Fragment key={group.coreParameter.coreParameterId}>
-                  <tr className="sticky top-[50px] bg-blue-50 z-10">
+                  <tr className="sticky top-[50px] bg-blue-100 z-10">
                     <td
                       colSpan={4}
                       className="p-2 text-blue-800 border font-bold"
@@ -513,8 +512,10 @@ export default function UpdatedKpiTable() {
                     </td>
                   </tr>
                   {group.kpis.map(({ kpi }) => (
-                    <tr key={kpi.kpiId} className="border-b bg-gray-50 ">
-                      <td className="p-3 border w-[60px] align-middle h-[59px]">
+                    <tr key={kpi.kpiId} className="border-b bg-gray-100 ">
+                      <td
+                        className={`p-3 border border-gray-300 w-[60px] align-middle h-[59px]`}
+                      >
                         <Avatar className="h-6 w-6">
                           <TooltipProvider>
                             <Tooltip>
@@ -546,7 +547,7 @@ export default function UpdatedKpiTable() {
                           </TooltipProvider>
                         </Avatar>
                       </td>
-                      <td className="px-3 border w-[180px] text-left h-[59px] align-middle">
+                      <td className="px-3 border border-gray-300 w-[180px] text-left h-[59px] align-middle">
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -560,7 +561,7 @@ export default function UpdatedKpiTable() {
                           </Tooltip>
                         </TooltipProvider>
                       </td>
-                      <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
+                      <td className="px-3 border border-gray-300 w-[130px] text-left h-[59px] align-middle">
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -574,7 +575,7 @@ export default function UpdatedKpiTable() {
                           </Tooltip>
                         </TooltipProvider>
                       </td>
-                      <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
+                      <td className="px-3 border border-gray-300 w-[130px] text-left h-[59px] align-middle">
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -607,31 +608,38 @@ export default function UpdatedKpiTable() {
 
         {/* RIGHT TABLE */}
         <div className="overflow-x-auto border shadow-sm flex-1 bg-white">
-          <div ref={rightScrollRef} className="max-h-[70vh] overflow-y-auto">
+          <div ref={rightScrollRef} className="max-h-[78vh] overflow-y-auto">
             <table className="min-w-max border-collapse text-sm table-fixed">
               <thead className="sticky top-0 z-10 bg-white">
                 <tr className="">
-                  {headers.map((header, idx) => (
-                    <th
-                      key={idx}
-                      className="border p-2 min-w-[80px] font-semibold text-gray text-center h-[43px]"
-                    >
-                      <div className="flex flex-col items-center leading-tight">
-                        <span>{header.label}</span>
-                        {header.year && (
-                          <span className="text-xs text-muted-foreground">
-                            {header.year}
-                          </span>
-                        )}
-                      </div>
-                    </th>
-                  ))}
+                  {headers.map((header, idx) => {
+                    const isSunday = (header.data as { isSunday?: boolean })
+                      ?.isSunday;
+
+                    return (
+                      <th
+                        key={idx}
+                        className={`border p-2 min-w-[80px] font-semibold text-gray text-center h-[43px] ${
+                          isSunday ? "bg-gray-100" : ""
+                        }`}
+                      >
+                        <div className="flex flex-col items-center leading-tight">
+                          <span>{header.label}</span>
+                          {header.year && (
+                            <span className="text-xs text-muted-foreground">
+                              {header.year}
+                            </span>
+                          )}
+                        </div>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
                 {groupedKpiRows.map((group) => (
                   <React.Fragment key={group.coreParameter.coreParameterId}>
-                    <tr className="sticky h-[39px] top-[51px] bg-blue-50 z-0">
+                    <tr className="sticky h-[39px] top-[51px] bg-blue-100 z-0">
                       <td
                         colSpan={headers.length}
                         className="p-2  border text-black font-bold"
@@ -649,6 +657,7 @@ export default function UpdatedKpiTable() {
                             cells[0].kpiId === kpi.kpiId,
                         );
                       }
+
                       return (
                         <tr key={kpi.kpiId} className="h-[50px]">
                           {headers.map((_, colIdx) => {
@@ -665,6 +674,8 @@ export default function UpdatedKpiTable() {
                             const canInput =
                               !isVisualized && (canAdd || canEdit);
 
+                            const isSunday = cell?.isSunday;
+
                             if (validationType == "YES_NO") {
                               const selectOptions = [
                                 { value: "1", label: "Yes" },
@@ -674,7 +685,7 @@ export default function UpdatedKpiTable() {
                               return (
                                 <td
                                   key={colIdx}
-                                  className="p-2 border text-center w-[80px] h-[42px]"
+                                  className={`p-2 border text-center w-[80px] h-[42px] ${isSunday ? "bg-gray-100" : ""}`}
                                 >
                                   <TooltipProvider>
                                     <Tooltip>
@@ -712,7 +723,7 @@ export default function UpdatedKpiTable() {
                                             options={selectOptions}
                                             placeholder="Select"
                                             disabled={!canInput}
-                                            triggerClassName="text-sm px-1 text-center justify-center"
+                                            triggerClassName={`text-sm px-1 text-center justify-center ${!inputVal ? "border-gray-300" : "border-0"}`}
                                           />
                                         </div>
                                       </TooltipTrigger>
@@ -724,7 +735,7 @@ export default function UpdatedKpiTable() {
                             return (
                               <td
                                 key={colIdx}
-                                className="p-2 border text-center w-[80px] h-[42px]"
+                                className={`p-2 border text-center w-[80px] h-[42px] ${isSunday ? "bg-gray-100" : ""}`}
                               >
                                 <TooltipProvider>
                                   <Tooltip>
@@ -776,7 +787,7 @@ export default function UpdatedKpiTable() {
                                             : undefined
                                         }
                                         className={clsx(
-                                          "border p-2 rounded-sm text-center text-sm w-[80px] h-[42px]",
+                                          "border border-gray-300 p-2 rounded-sm text-center text-sm w-[80px] h-[42px]",
                                           inputVal !== "" &&
                                             validationType &&
                                             (isValidInput(

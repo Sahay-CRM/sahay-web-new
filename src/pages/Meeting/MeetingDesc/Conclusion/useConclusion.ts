@@ -11,11 +11,6 @@ export default function useConclusion() {
   const { data: conclusionData, isLoading } = useGetMeetingConclusion(
     meetingId ?? "",
   );
-  const handleCloseMeetingWithLog = () => {
-    if (meetingId) {
-      endMeet(meetingId);
-    }
-  };
 
   const hasChanges = (item: AgendaResConclusion | undefined) => {
     if (!item) return;
@@ -27,12 +22,13 @@ export default function useConclusion() {
   };
 
   return {
-    handleCloseMeetingWithLog,
     conclusionData,
     isPending,
     isLoading,
     setSelectedAgenda,
     selectedAgenda,
     hasChanges,
+    endMeet,
+    meetingId,
   };
 }
