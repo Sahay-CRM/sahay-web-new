@@ -48,7 +48,7 @@ export default function useDesc({
     allItems?.findIndex(
       (item) =>
         item.detailMeetingAgendaIssueId ===
-        meetingResponse?.state.currentAgendaItemId,
+        meetingResponse?.state.currentAgendaItemId
     ) ?? 0;
 
   const getCurrentItem = () => {
@@ -95,7 +95,7 @@ export default function useDesc({
 
         const meetTimersRef = ref(
           db,
-          `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}`,
+          `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}`
         );
 
         update(meetTimersRef, {
@@ -123,10 +123,10 @@ export default function useDesc({
                     status: "CONCLUSION",
                   });
                 },
-              },
+              }
             );
           },
-        },
+        }
       );
     }
   };
@@ -149,7 +149,7 @@ export default function useDesc({
 
         const meetTimersRef = ref(
           db,
-          `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}`,
+          `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}`
         );
 
         update(meetTimersRef, {
@@ -186,7 +186,7 @@ export default function useDesc({
 
         const meetTimersRef = ref(
           db,
-          `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}`,
+          `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}`
         );
 
         update(meetTimersRef, {
@@ -220,7 +220,7 @@ export default function useDesc({
 
         const meetTimersRef = ref(
           db,
-          `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}`,
+          `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}`
         );
 
         update(meetTimersRef, {
@@ -241,7 +241,7 @@ export default function useDesc({
   const handleTabChange = (tab: ActiveTab) => {
     const meetTimersRef = ref(
       db,
-      `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}`,
+      `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}`
     );
 
     update(meetTimersRef, {
@@ -259,7 +259,7 @@ export default function useDesc({
       const db = getDatabase();
       const meetTaskRef = ref(
         db,
-        `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}/tasks`,
+        `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}/tasks`
       );
       update(meetTaskRef, {
         updatedAt: Date.now(),
@@ -275,7 +275,7 @@ export default function useDesc({
       const db = getDatabase();
       const meetTaskRef = ref(
         db,
-        `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}/projects`,
+        `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}/projects`
       );
       update(meetTaskRef, {
         updatedAt: Date.now(),
@@ -291,7 +291,7 @@ export default function useDesc({
       const db = getDatabase();
       const meetTaskRef = ref(
         db,
-        `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}/kpis`,
+        `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}/kpis`
       );
       update(meetTaskRef, {
         updatedAt: Date.now(),
@@ -314,7 +314,7 @@ export default function useDesc({
 
     if (queryKeys?.length) {
       await Promise.all(
-        queryKeys.map((key) => queryClient.prefetchQuery({ queryKey: [key] })),
+        queryKeys.map((key) => queryClient.prefetchQuery({ queryKey: [key] }))
       );
     }
   }, []);
@@ -329,7 +329,7 @@ export default function useDesc({
       paths.map((type) => {
         const dataRef = ref(
           db,
-          `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}/${type}`,
+          `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}/${type}`
         );
 
         onValue(dataRef, (snapshot) => {

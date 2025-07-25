@@ -221,7 +221,7 @@ const MeetingDrawer: React.FC<MeetingDrawerProps> = ({
             {/* Notes Tab */}
             <TabsContent
               value="notes"
-              className="mt-4 flex-grow overflow-y-auto"
+              className="mt-4 flex-grow "
             >
               <MeetingNotes
                 joiners={joiners}
