@@ -19,6 +19,7 @@ interface MeetingNotesProps {
   joiners: Joiner[];
   employeeId: string;
   meetingId: string;
+  // height: string;
   detailMeetingId?: string;
 }
 
@@ -88,7 +89,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   // };
 
   return (
-    <div className="rounded-xl bg-gray-200 border w-full max-w-xs shadow p-0 overflow-hidden">
+    <div className="rounded-xl   bg-gray-200 border w-full max-w-xs shadow p-0 overflow-hidden">
       {/* Keep bg-[#303290] here to preserve visual separation */}
       <div className="px-4 pt-2 pb-1 bg-gray-200 flex items-center gap-2">
         <div className="relative w-full">
@@ -110,7 +111,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
         </div>
       </div>
 
-      <div className="px-2 pt-2 space-y-2 max-h-[500px] pb-2 min-h-10 overflow-y-auto">
+      <div className="px-2 pt-2 mb-5 space-y-2 max-h-[480px] pb-2 min-h-10 overflow-y-auto">
         {Array.isArray(meetingNotes?.data) &&
           meetingNotes.data.map((note: MeetingNotesRes, idx: number) => {
             const author = joiners.find(

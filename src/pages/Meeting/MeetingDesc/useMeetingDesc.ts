@@ -17,7 +17,7 @@ export default function useMeetingDesc() {
 
   const [isMeetingStart, setIsMeetingStart] = useState(false);
   const [meetingResponse, setMeetingResponse] = useState<MeetingResFire | null>(
-    null,
+    null
   );
 
   const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
@@ -25,7 +25,7 @@ export default function useMeetingDesc() {
   const { mutate: createMeet } = createMeetingMutation();
 
   const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
-
+  const [isPending, setIsPending] = useState(false);
   const handleUpdatedRefresh = useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({
@@ -69,8 +69,10 @@ export default function useMeetingDesc() {
   // Accept callbacks for onStart and onEnd
   const handleStartMeeting = () => {
     if (meetingId) {
+      setIsPending(true);
       createMeet(meetingId, {
         onSuccess: () => {
+          setIsPending(false);
           setIsMeetingStart(true);
         },
       });
@@ -93,6 +95,7 @@ export default function useMeetingDesc() {
       now - Number(meetingResponse?.state.lastSwitchTimestamp);
 
     if (meetingId) {
+      setIsPending(true);
       const db = getDatabase();
       const meetStateRef = ref(db, `meetings/${meetingId}/state`);
       const meetAgendaRef = ref(db, `meetings/${meetingId}/timers/agenda`);
@@ -105,6 +108,7 @@ export default function useMeetingDesc() {
         },
         {
           onSuccess: () => {
+            setIsPending(false);
             update(meetStateRef, {
               activeTab: "DISCUSSION",
               lastSwitchTimestamp: Date.now(),
@@ -116,7 +120,7 @@ export default function useMeetingDesc() {
               actualTime: String(totalAgendaTime),
             });
           },
-        },
+        }
       );
     }
   };
@@ -130,5 +134,6 @@ export default function useMeetingDesc() {
     meetingId,
     meetingResponse,
     meetingTiming,
+    isPending,
   };
 }

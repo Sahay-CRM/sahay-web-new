@@ -3,6 +3,7 @@ import {
   CirclePlay,
   CircleX,
   CornerDownLeft,
+  Loader2,
   SquarePen,
   Trash2,
 } from "lucide-react";
@@ -14,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   addMeetingAgendaMutation,
   deleteMeetingObjectiveMutation,
+  updateDetailMeetingMutation,
   useGetDetailMeetingAgenda,
   useGetDetailMeetingObj,
 } from "@/features/api/companyMeeting";
@@ -96,6 +98,7 @@ interface AgendaProps {
   handleStartMeeting: () => void;
   handleDesc: () => void;
   joiners: Joiners[];
+  isPending: boolean;
 }
 
 export default function Agenda({
@@ -106,6 +109,7 @@ export default function Agenda({
   agendaPlannedTime = 0,
   detailMeetingId,
   handleStartMeeting,
+  isPending,
   handleDesc,
   joiners,
 }: AgendaProps) {
@@ -127,7 +131,7 @@ export default function Agenda({
     detailMeetingAgendaIssueId: "",
   });
   const [editingPart, setEditingPart] = useState<"minutes" | "seconds" | null>(
-    null,
+    null
   );
   const [modalOpen, setModalOpen] = useState(false);
   const [modalIssue, setModalIssue] = useState("");
@@ -139,7 +143,7 @@ export default function Agenda({
     id: string,
     value: string,
     plannedTime: string | number | null | undefined,
-    detailMeetingAgendaIssueId: string,
+    detailMeetingAgendaIssueId: string
   ) => {
     if (!canEdit) return;
     const totalSeconds = plannedTime
@@ -199,23 +203,41 @@ export default function Agenda({
     e.preventDefault();
   };
 
+  // const handleDrop = (index: number) => {
+  //   if (draggedIndex === null || draggedIndex === index) return;
+  //   const updatedList = [...agendaList];
+  //   const [removed] = updatedList.splice(draggedIndex, 1);
+  //   updatedList.splice(index, 0, removed);
+  //   setAgendaList(updatedList);
+  //   setDraggedIndex(null);
+  //   // Log the new order
+  //   console.log(
+  //     "Dropped. New agenda sequence:",
+  //     updatedList.map((item) => item.name)
+  //   );
+  // };
+
   const handleDrop = (index: number) => {
     if (draggedIndex === null || draggedIndex === index) return;
+
     const updatedList = [...agendaList];
     const [removed] = updatedList.splice(draggedIndex, 1);
     updatedList.splice(index, 0, removed);
+
     setAgendaList(updatedList);
     setDraggedIndex(null);
-    // Log the new order
-    console.log(
-      "Dropped. New agenda sequence:",
-      updatedList.map((item) => item.name),
-    );
+
+    const payload = {
+      detailMeetingAgendaIssueId: removed.detailMeetingAgendaIssueId,
+      detailMeetingId: detailMeetingId,
+      sequence: index + 1,
+    };
+    addIssueAgenda(payload);
   };
 
   const { mutate: addIssue } = addUpdateIssues();
   const { mutate: addObjective } = addUpdateObjective();
-
+  const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
   const shouldFetch = issueInput.length >= 3;
   const { data: issueData } = useGetDetailMeetingObj({
     filter: {
@@ -228,7 +250,7 @@ export default function Agenda({
   const filteredIssues = (issueData?.data ?? []).filter(
     (item) =>
       item.name.toLowerCase().includes(issueInput.toLowerCase()) &&
-      issueInput.trim() !== "",
+      issueInput.trim() !== ""
   );
 
   // const agendaFireBase = (id: string) => {
@@ -263,7 +285,7 @@ export default function Agenda({
             });
             cancelEdit();
           },
-        },
+        }
       );
     } else if (editing.type === "objective") {
       addObjective(
@@ -277,7 +299,7 @@ export default function Agenda({
               queryKey: ["get-detail-meeting-agenda-issue-obj"],
             });
           },
-        },
+        }
       );
     }
   };
@@ -337,7 +359,7 @@ export default function Agenda({
           });
           cancelEdit(); // Reset edit state after successful update
         },
-      },
+      }
     );
   };
 
@@ -366,7 +388,7 @@ export default function Agenda({
               },
             });
           },
-        },
+        }
       );
     } else if (data.type === "objective") {
       addObjective(
@@ -393,9 +415,26 @@ export default function Agenda({
               },
             });
           },
-        },
+        }
       );
     }
+  };
+  const [plannedTime, setPlannedTime] = useState(Number(agendaPlannedTime));
+
+  // const handleTimeUpdate = (newTime: number) => {
+  //   console.log("User updated time (in seconds):", newTime);
+  //   setPlannedTime(newTime);
+  //   // You can also send this to your API or update state accordingly
+  // };
+
+  const handleTimeUpdate = (newTime: number) => {
+    setPlannedTime(newTime);
+
+    updateDetailMeeting({
+      meetingId: meetingId,
+      detailMeetingId: detailMeetingId,
+      agendaTimePlanned: String(newTime), // Make sure API accepts it as string
+    });
   };
 
   return (
@@ -410,11 +449,11 @@ export default function Agenda({
       <div className="flex flex-col md:flex-row justify-between gap-4 items-center w-full">
         {/* Left Section */}
         <div className="w-full md:max-w-[1373px] flex h-[40px] border border-gray-300 rounded-[10px] items-center px-4">
-          <div className="flex-1 text-primary ml-3 font-semibold truncate">
+          <div className="flex-1 text-lg w-[30%] text-primary ml-3 font-semibold truncate">
             {meetingName}
           </div>
 
-          <div className="hidden md:block md:w-[300px] text-primary font-semibold truncate ml-4">
+          <div className="hidden md:block w-[50%] text-gray-500  text-lg truncate ml-4">
             Meeting Agenda
           </div>
         </div>
@@ -426,9 +465,16 @@ export default function Agenda({
               variant="outline"
               className="w-full sm:w-[200px] h-[40px] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
               onClick={handleStartMeeting}
+              disabled={isPending}
             >
-              <CirclePlay className="w-6 h-6" />
-              Start Meeting
+              {isPending ? (
+                <Loader2 className="animate-spin w-6 h-6" />
+              ) : (
+                <>
+                  <CirclePlay className="w-6 h-6" />
+                  Start Meeting
+                </>
+              )}
             </Button>
           )}
 
@@ -437,30 +483,41 @@ export default function Agenda({
               variant="outline"
               className="w-full sm:w-[200px] h-[40px] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
               onClick={handleDesc}
+              disabled={isPending || agendaList.length === 0} // Disable if empty
             >
-              Start Discussion
+              {isPending ? "Loading..." : "Start Discussion"}
             </Button>
           )}
 
           {/* Timer */}
-          <div className="w-full sm:w-[200px] h-[40px] border border-gray-300 rounded-[10px] flex items-center justify-center">
-            <Timer
+          <div className="w-fit px-2 pl-4 h-[40px] border border-gray-300 rounded-[10px] flex items-center justify-center">
+            {/* <Timer
               plannedTime={Number(agendaPlannedTime)}
               actualTime={0}
               lastSwitchTimestamp={Number(
-                meetingResponse?.state.lastSwitchTimestamp,
+                meetingResponse?.state.lastSwitchTimestamp
               )}
               meetingStart={meetingStatus === "STARTED"}
               className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
+            /> */}
+            <Timer
+              plannedTime={plannedTime}
+              actualTime={0}
+              lastSwitchTimestamp={Number(
+                meetingResponse?.state.lastSwitchTimestamp
+              )}
+              meetingStart={meetingStatus === "STARTED"}
+              className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
+              onTimeUpdate={handleTimeUpdate}
             />
           </div>
         </div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 ">
         <div className="px-4 w-full">
           {canEdit && (
-            <div className="flex gap-2 relative w-full max-w-[1000px]">
+            <div className="flex gap-2 relative   w-[85%]">
               <Input
                 value={issueInput}
                 onChange={(e) => {
@@ -475,7 +532,7 @@ export default function Agenda({
                     handleAddIssue();
                   }
                 }}
-                className="w-full h-[45px] sm:h-[50px] border-0 border-b-2 border-gray-300 rounded-none pr-10 text-sm sm:text-base"
+                className="w-full h-[45px] sm:h-[50px] border-0 border-b-2 border-gray-300 rounded-none pr-10 text-sm sm:text-base focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[0px] "
               />
 
               {/* Icon inside input */}
@@ -522,7 +579,7 @@ export default function Agenda({
               )}
             </div>
           )}
-          <div className="mt-2 space-y-2">
+          <div className="mt-2 h-[calc(100vh-300px)] pr-1  w-[85%] overflow-auto ">
             {agendaList && agendaList.length > 0 ? (
               <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {agendaList.map((item, idx) => (
@@ -543,7 +600,7 @@ export default function Agenda({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      width: "1000px", // Set width
+                      // width: "85%",
                       height: "45px",
                     }}
                   >
@@ -649,7 +706,7 @@ export default function Agenda({
                               onChange={(e) => {
                                 let valSec = e.target.value.replace(
                                   /[^0-9]/g,
-                                  "",
+                                  ""
                                 );
                                 if (valSec.length > 2)
                                   valSec = valSec.slice(0, 2);
@@ -661,7 +718,7 @@ export default function Agenda({
                               onBlur={(e) => {
                                 let valSec = e.target.value.replace(
                                   /[^0-9]/g,
-                                  "",
+                                  ""
                                 );
                                 if (valSec.length > 2)
                                   valSec = valSec.slice(0, 2);
@@ -751,7 +808,7 @@ export default function Agenda({
                                   item.issueObjectiveId,
                                   item.name,
                                   item.plannedTime || "0",
-                                  String(item.detailMeetingAgendaIssueId),
+                                  String(item.detailMeetingAgendaIssueId)
                                 )
                               }
                             >
@@ -784,6 +841,7 @@ export default function Agenda({
           setSidebarOpen={setSidebarOpen}
           detailMeetingId={detailMeetingId}
           meetingStart={meetingStatus !== "NOT_STARTED"}
+          showToggle={false}
         />
       </div>
     </div>

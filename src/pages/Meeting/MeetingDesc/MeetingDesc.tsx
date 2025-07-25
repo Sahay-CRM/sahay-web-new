@@ -11,6 +11,7 @@ export default function MeetingDesc() {
     handleDesc,
     meetingStatus,
     // meetingData,
+    isPending,
     meetingId,
     meetingResponse,
     meetingTiming,
@@ -38,6 +39,7 @@ export default function MeetingDesc() {
         handleStartMeeting={handleStartMeeting}
         handleDesc={handleDesc}
         joiners={meetingTiming?.employeeList ?? []}
+        isPending={isPending}
       />
     );
   } else if (meetingStatus === "DISCUSSION") {
