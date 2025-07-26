@@ -10,6 +10,7 @@ export default function useDdAllKpiList({ filter, enable }: FilterDataProps) {
         url: Urls.ddAllDatapointList(),
         data: {
           ...filter,
+         
         },
       });
 

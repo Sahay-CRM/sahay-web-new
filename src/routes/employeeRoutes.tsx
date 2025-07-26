@@ -4,6 +4,7 @@ import DashboardLayout from "@/features/layouts/DashboardLayout/dashboardLayout"
 import AddCompanyEmployee from "@/pages/companyEmployee/AddEmployeeFormModal/addEmployee";
 import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
 import AddCompanyMeeting from "@/pages/Meeting/AddMeetingFormModal/addMeeting";
+import GroupKpisCreate from "@/pages/datapointList/GroupKpis/groupKpisCreateGroup";
 
 const Theme = lazy(() => import("../pages/theme/Theme"));
 const Profile = lazy(() => import("../pages/profile/Profile"));
@@ -108,6 +109,7 @@ export default function EmployeeRoutes() {
         <Route path="kpi/add" element={<AddCompanyDatapoint />} />
         <Route path="kpi/edit/:id" element={<AddCompanyDatapoint />} />
         <Route path="kpi/group-kpis" element={<GroupKpis />} />
+        <Route path="kpi/group-create" element={<GroupKpisCreate />} />
 
         <Route path="datapoint" Component={DatapointList} />
         <Route path="kpi-dashboard" Component={KPIDashboard} />

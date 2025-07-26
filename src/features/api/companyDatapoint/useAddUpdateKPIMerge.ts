@@ -7,10 +7,11 @@ import { toast } from "sonner";
 
 interface AddUpdateKpiMergeRes {
   kpiMergeId?: string;
-  kpiIds: string[];
-  tag: string;
-  visualFrequencyTypes: string;
-  visualFrequencyAggregate: string;
+  kpiIds?: string[];
+  tag?: string;
+  unit?: string;
+  visualFrequencyTypes?: string;
+  visualFrequencyAggregate?: string;
 }
 
 type DatePaging = BaseResponse<KpiMergeRes>;

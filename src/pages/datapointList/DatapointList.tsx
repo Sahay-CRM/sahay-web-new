@@ -122,9 +122,9 @@ export default function CompanyTaskList() {
                 <Button className="py-2 w-fit">Add KPI</Button>
               </Link>
             )}
-            <Link to="/dashboard/kpi/group-kpis">
+            {/* <Link to="/dashboard/kpi/group-kpis">
               <Button className="py-2 w-fit">Group KPIs</Button>
-            </Link>
+            </Link> */}
           </div>
         </div>
         <div className="flex justify-between items-center mb-4">

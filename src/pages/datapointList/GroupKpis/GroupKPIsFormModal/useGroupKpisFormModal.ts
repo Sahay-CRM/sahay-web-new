@@ -32,6 +32,7 @@ export default function useGroupKpisFormModal({
   modalClose,
   selectedKpiData,
   selectedKpisIds,
+  groupId,
 }: GroupKpisProps) {
   const {
     handleSubmit,
@@ -53,7 +54,7 @@ export default function useGroupKpisFormModal({
       ...new Set(
         selectedKpiData
           .map((item) => item.frequencyType)
-          .filter((f): f is string => !!f),
+          .filter((f): f is string => !!f)
       ),
     ];
     if (frequencies.length === 0) return;
@@ -64,7 +65,7 @@ export default function useGroupKpisFormModal({
     }, frequencies[0]);
     setValue("frequencyType", highestFrequency);
     const highestFreqKpis = selectedKpiData.filter(
-      (kpi) => kpi.frequencyType === highestFrequency,
+      (kpi) => kpi.frequencyType === highestFrequency
     );
     const aggregate = highestFreqKpis[0]?.visualFrequencyAggregate || "sum";
     setValue("visualFrequencyAggregate", aggregate);
@@ -99,7 +100,9 @@ export default function useGroupKpisFormModal({
       //     };
 
       const payload = {
+        kpiMergeId: groupId ?? undefined,
         kpiIds: selectedKpisIds,
+        unit: data.unit,
         tag: data.tag,
         visualFrequencyTypes: data.visualFrequencyTypes,
         visualFrequencyAggregate: data.visualFrequencyAggregate,
@@ -119,7 +122,7 @@ export default function useGroupKpisFormModal({
     const currentIndex = frequencyOrder.indexOf(selected);
     if (currentIndex === -1) return frequenceOptions;
     return frequenceOptions.filter(
-      (opt) => frequencyOrder.indexOf(opt.value) >= currentIndex,
+      (opt) => frequencyOrder.indexOf(opt.value) >= currentIndex
     );
   };
 

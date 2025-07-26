@@ -836,6 +836,7 @@ interface KPIFormData {
   dataPointName?: string;
   dataPointLabel?: string;
   KPIMasterId?: string;
+  kpiMergeId?: string;
   KPIMaster?: {
     KPIName: string;
     KPILabel: string;
@@ -1091,6 +1092,7 @@ interface KpiAllList {
   dataPointLabel?: string;
   KPIMasterId?: string;
   kpiId: string;
+  kpiMergeId?: string;
   KPIName?: string;
   kpiName?: string;
   KPILabel?: string;
@@ -1203,9 +1205,9 @@ interface DetailMeetingAgendaIssue {
 
 interface GroupKpisProps {
   selectedKpisIds?: string[];
-  selectedKpiData: KPIFormData[];
+  selectedKpiData?: KPIFormData[];
   isModalOpen: boolean;
-  modalClose: () => void;
+  modalClose: () => void; groupId?: string | null;
 }
 
 interface KpiMergeRes {
