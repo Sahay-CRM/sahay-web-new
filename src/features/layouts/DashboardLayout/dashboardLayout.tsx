@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet, useNavigate } from "react-router-dom";
 import { Bell, LogOut, User2Icon } from "lucide-react";
@@ -55,7 +56,7 @@ import {
 import { fireTokenMutation } from "@/features/api";
 import useGetUserNotification from "./useGetUserNotification";
 import { updateNotiMutation } from "@/features/api/Notification";
-import SidebarControlContext from "./SidebarControlContext";
+import { SidebarControlContext } from "./SidebarControlContext";
 
 interface FailureReasonType {
   response?: {
@@ -65,11 +66,17 @@ interface FailureReasonType {
   };
 }
 
+// Context is now imported from SidebarControlContext.ts
 const DashboardLayout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [open, setOpen] = useState(true);
+  // Collapse sidebar by default on MeetingDesc page
+  const isMeetingDesc = /\/dashboard\/meeting\/detail\//.test(
+    location.pathname,
+  );
+  const [open, setOpen] = useState(!isMeetingDesc ? true : false);
 
   const toggleDrawer = useCallback((e: { preventDefault: () => void }) => {
     e?.preventDefault();
@@ -420,7 +427,7 @@ const DashboardLayout = () => {
               />
             )}
           </div>
-          <main className="flex-1 overflow-auto p-6 bg-white mr-4">
+          <main className="flex-1 overflow-auto bg-white mr-4">
             <Outlet />
           </main>
         </div>

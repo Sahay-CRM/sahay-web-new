@@ -1143,6 +1143,7 @@ interface MeetingDetailsTiming {
   status?: string;
   updatedAt?: string;
   meetingName?: string;
+  conclusionTime?: string;
 }
 
 interface MeetingNotesRes {

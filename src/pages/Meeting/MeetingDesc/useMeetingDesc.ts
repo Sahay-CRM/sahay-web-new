@@ -17,8 +17,11 @@ export default function useMeetingDesc() {
 
   const [isMeetingStart, setIsMeetingStart] = useState(false);
   const [meetingResponse, setMeetingResponse] = useState<MeetingResFire | null>(
-    null
+    null,
   );
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const [activeTab, setActiveTab] = useState<string>();
+  const [isCardVisible, setIsCardVisible] = useState(false);
 
   const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
 
@@ -120,8 +123,18 @@ export default function useMeetingDesc() {
               actualTime: String(totalAgendaTime),
             });
           },
-        }
+        },
       );
+    }
+  };
+
+  const handleTabChange = (tab: string) => {
+    if (activeTab === tab) {
+      // Toggle card visibility when clicking the same tab
+      setIsCardVisible(!isCardVisible);
+    } else {
+      setActiveTab(tab);
+      setIsCardVisible(true); // Show card when switching to a different tab
     }
   };
 
@@ -135,5 +148,10 @@ export default function useMeetingDesc() {
     meetingResponse,
     meetingTiming,
     isPending,
+    isSidebarCollapsed,
+    setIsSidebarCollapsed,
+    handleTabChange,
+    activeTab,
+    isCardVisible,
   };
 }

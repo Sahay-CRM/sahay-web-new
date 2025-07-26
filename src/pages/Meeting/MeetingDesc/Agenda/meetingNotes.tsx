@@ -21,6 +21,7 @@ interface MeetingNotesProps {
   meetingId: string;
   // height: string;
   detailMeetingId?: string;
+  className?: string;
 }
 
 const MeetingNotes: React.FC<MeetingNotesProps> = ({
@@ -28,6 +29,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   employeeId,
   meetingId,
   detailMeetingId,
+  className,
 }) => {
   // console.log(joiners, employeeId, meetingId);
 
@@ -49,6 +51,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   // const currentUser = joiners.find((j) => j.employeeId === employeeId);
 
   const handleAddNote = () => {
+    if (!noteInput.trim()) return;
     const payload = {
       meetingId,
       employeeId,
@@ -89,19 +92,19 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   // };
 
   return (
-    <div className="rounded-xl   bg-gray-200 border w-full max-w-xs shadow p-0 overflow-hidden">
-      {/* Keep bg-[#303290] here to preserve visual separation */}
-      <div className="px-4 pt-2 pb-1 bg-gray-200 flex items-center gap-2">
+    <div className=" overflow-hidden">
+      <div className="flex items-center gap-2">
         <div className="relative w-full">
           <Input
-            className="rounded-full bg-white text-black placeholder:text-gray-400 h-9 pr-10 w-full"
+            className="rounded-full bg-white border-gray-500 text-black h-9 pr-10 w-full shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
             placeholder="Create a quick Note"
             value={noteInput}
             onChange={(e) => setNoteInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") handleAddNote();
+              if (e.key === "Enter" && noteInput.trim()) handleAddNote();
             }}
           />
+
           <button
             onClick={handleAddNote}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-[#303290] hover:text-black"
@@ -111,7 +114,9 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
         </div>
       </div>
 
-      <div className="px-2 pt-2 mb-5 space-y-2 max-h-[480px] pb-2 min-h-10 overflow-y-auto">
+      <div
+        className={`px-2 pt-2 mb-5 space-y-2 pb-2 min-h-10 overflow-y-auto ${className}`}
+      >
         {Array.isArray(meetingNotes?.data) &&
           meetingNotes.data.map((note: MeetingNotesRes, idx: number) => {
             const author = joiners.find(

@@ -130,9 +130,9 @@ export default function Agenda({
     plannedSeconds: "",
     detailMeetingAgendaIssueId: "",
   });
-  const [editingPart, setEditingPart] = useState<"minutes" | "seconds" | null>(
-    null
-  );
+  // const [editingPart, setEditingPart] = useState<"minutes" | "seconds" | null>(
+  //   null
+  // );
   const [modalOpen, setModalOpen] = useState(false);
   const [modalIssue, setModalIssue] = useState("");
   const [dropdownVisible, setDropdownVisible] = useState(false);
@@ -143,7 +143,7 @@ export default function Agenda({
     id: string,
     value: string,
     plannedTime: string | number | null | undefined,
-    detailMeetingAgendaIssueId: string
+    detailMeetingAgendaIssueId: string,
   ) => {
     if (!canEdit) return;
     const totalSeconds = plannedTime
@@ -186,6 +186,7 @@ export default function Agenda({
   // Local state for drag-and-drop
   const [agendaList, setAgendaList] = useState(selectedAgenda || []);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
   // Reset agendaList to backend order on refresh/data change
   useEffect(() => {
@@ -197,25 +198,19 @@ export default function Agenda({
 
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
+    setHoverIndex(null);
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLLIElement>) => {
+  const handleDragOver = (e: React.DragEvent<HTMLLIElement>, index: number) => {
     e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setHoverIndex(index); // Update hover position as we drag over items
+    }
   };
 
-  // const handleDrop = (index: number) => {
-  //   if (draggedIndex === null || draggedIndex === index) return;
-  //   const updatedList = [...agendaList];
-  //   const [removed] = updatedList.splice(draggedIndex, 1);
-  //   updatedList.splice(index, 0, removed);
-  //   setAgendaList(updatedList);
-  //   setDraggedIndex(null);
-  //   // Log the new order
-  //   console.log(
-  //     "Dropped. New agenda sequence:",
-  //     updatedList.map((item) => item.name)
-  //   );
-  // };
+  const handleDragLeave = () => {
+    setHoverIndex(null); // Clear hover position when leaving an item
+  };
 
   const handleDrop = (index: number) => {
     if (draggedIndex === null || draggedIndex === index) return;
@@ -226,6 +221,7 @@ export default function Agenda({
 
     setAgendaList(updatedList);
     setDraggedIndex(null);
+    setHoverIndex(null); // Clear hover position after drop
 
     const payload = {
       detailMeetingAgendaIssueId: removed.detailMeetingAgendaIssueId,
@@ -234,6 +230,24 @@ export default function Agenda({
     };
     addIssueAgenda(payload);
   };
+
+  // const handleDrop = (index: number) => {
+  //   if (draggedIndex === null || draggedIndex === index) return;
+
+  //   const updatedList = [...agendaList];
+  //   const [removed] = updatedList.splice(draggedIndex, 1);
+  //   updatedList.splice(index, 0, removed);
+
+  //   setAgendaList(updatedList);
+  //   setDraggedIndex(null);
+
+  //   const payload = {
+  //     detailMeetingAgendaIssueId: removed.detailMeetingAgendaIssueId,
+  //     detailMeetingId: detailMeetingId,
+  //     sequence: index + 1,
+  //   };
+  //   addIssueAgenda(payload);
+  // };
 
   const { mutate: addIssue } = addUpdateIssues();
   const { mutate: addObjective } = addUpdateObjective();
@@ -250,18 +264,8 @@ export default function Agenda({
   const filteredIssues = (issueData?.data ?? []).filter(
     (item) =>
       item.name.toLowerCase().includes(issueInput.toLowerCase()) &&
-      issueInput.trim() !== ""
+      issueInput.trim() !== "",
   );
-
-  // const agendaFireBase = (id: string) => {
-  //   if (meetingStatus) {
-  //     const db = getDatabase();
-  //     const meetRef = ref(db, `meetings/${meetingId}/timers/issues/${id}`);
-  //     update(meetRef, {
-  //       updatedAt: Date.now(),
-  //     });
-  //   }
-  // };
 
   const handleAddIssue = () => {
     setModalIssue(issueInput);
@@ -285,7 +289,7 @@ export default function Agenda({
             });
             cancelEdit();
           },
-        }
+        },
       );
     } else if (editing.type === "objective") {
       addObjective(
@@ -299,7 +303,7 @@ export default function Agenda({
               queryKey: ["get-detail-meeting-agenda-issue-obj"],
             });
           },
-        }
+        },
       );
     }
   };
@@ -340,28 +344,28 @@ export default function Agenda({
     });
   };
 
-  const handleUpdateTime = () => {
-    const min = Number(editing.plannedMinutes) || 0;
-    const sec = Number(editing.plannedSeconds) || 0;
-    const totalSeconds = min * 60 + sec;
-    addIssueAgenda(
-      {
-        detailMeetingAgendaIssueId: editing.detailMeetingAgendaIssueId,
-        detailMeetingId: detailMeetingId,
-        issueObjectiveId: String(editing.id),
-        plannedTime: String(totalSeconds),
-        agendaType: String(editing.type),
-      },
-      {
-        onSuccess: () => {
-          queryClient.resetQueries({
-            queryKey: ["get-detail-meeting-agenda-issue-obj"],
-          });
-          cancelEdit(); // Reset edit state after successful update
-        },
-      }
-    );
-  };
+  // const handleUpdateTime = () => {
+  //   const min = Number(editing.plannedMinutes) || 0;
+  //   const sec = Number(editing.plannedSeconds) || 0;
+  //   const totalSeconds = min * 60 + sec;
+  //   addIssueAgenda(
+  //     {
+  //       detailMeetingAgendaIssueId: editing.detailMeetingAgendaIssueId,
+  //       detailMeetingId: detailMeetingId,
+  //       issueObjectiveId: String(editing.id),
+  //       plannedTime: String(totalSeconds),
+  //       agendaType: String(editing.type),
+  //     },
+  //     {
+  //       onSuccess: () => {
+  //         queryClient.resetQueries({
+  //           queryKey: ["get-detail-meeting-agenda-issue-obj"],
+  //         });
+  //         cancelEdit(); // Reset edit state after successful update
+  //       },
+  //     }
+  //   );
+  // };
 
   const handleModalSubmit = (data: { type: string; value: string }) => {
     if (data.type === "issue") {
@@ -388,7 +392,7 @@ export default function Agenda({
               },
             });
           },
-        }
+        },
       );
     } else if (data.type === "objective") {
       addObjective(
@@ -415,7 +419,7 @@ export default function Agenda({
               },
             });
           },
-        }
+        },
       );
     }
   };
@@ -491,20 +495,11 @@ export default function Agenda({
 
           {/* Timer */}
           <div className="w-fit px-2 pl-4 h-[40px] border border-gray-300 rounded-[10px] flex items-center justify-center">
-            {/* <Timer
-              plannedTime={Number(agendaPlannedTime)}
-              actualTime={0}
-              lastSwitchTimestamp={Number(
-                meetingResponse?.state.lastSwitchTimestamp
-              )}
-              meetingStart={meetingStatus === "STARTED"}
-              className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
-            /> */}
             <Timer
               plannedTime={plannedTime}
               actualTime={0}
               lastSwitchTimestamp={Number(
-                meetingResponse?.state.lastSwitchTimestamp
+                meetingResponse?.state.lastSwitchTimestamp,
               )}
               meetingStart={meetingStatus === "STARTED"}
               className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
@@ -587,23 +582,47 @@ export default function Agenda({
                     key={item.issueObjectiveId}
                     draggable
                     onDragStart={() => handleDragStart(idx)}
-                    onDragOver={handleDragOver}
+                    onDragOver={(e) => handleDragOver(e, idx)}
+                    onDragLeave={handleDragLeave}
                     onDrop={() => handleDrop(idx)}
                     style={{
                       opacity: draggedIndex === idx ? 0.5 : 1,
                       cursor: "move",
                       background: "#fff",
-                      border: "1px solid #eee",
+                      border:
+                        hoverIndex === idx
+                          ? "2px dashed #3b82f6"
+                          : "1px solid #eee",
                       marginBottom: 4,
                       padding: 8,
                       borderRadius: 4,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      // width: "85%",
                       height: "45px",
+                      transition: "border 0.2s ease",
+                      position: "relative",
                     }}
                   >
+                    {hoverIndex === idx && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top:
+                            draggedIndex !== null && draggedIndex < idx
+                              ? "100%"
+                              : 0,
+                          left: 0,
+                          right: 0,
+                          height: "2px",
+                          backgroundColor: "#3b82f6",
+                          transform:
+                            draggedIndex !== null && draggedIndex < idx
+                              ? "translateY(-1px)"
+                              : "translateY(-1px)",
+                        }}
+                      />
+                    )}
                     {/* Left side: drag handle + name */}
                     <div style={{ display: "flex", alignItems: "center" }}>
                       <span style={{ marginRight: 8, cursor: "grab" }}>⋮⋮</span>
@@ -629,11 +648,12 @@ export default function Agenda({
                               }
                             }}
                           />
+
                           <span className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
                             <CornerDownLeft className="text-gray-400 w-4" />
                           </span>
                         </div>
-                        <div
+                        {/* <div
                           style={{
                             fontSize: "1.5rem",
                             display: "flex",
@@ -763,7 +783,7 @@ export default function Agenda({
                               {editing.plannedSeconds.padStart(2, "0")}
                             </span>
                           )}
-                        </div>
+                        </div> */}
                         <Button
                           variant="outline"
                           size="sm"
@@ -778,8 +798,7 @@ export default function Agenda({
                           {item.agendaType}
                         </span>
 
-                        <span className=" w-[60px]  h-[30px] flex items-center justify-center  text-sm rounded-[15px]">
-                          (
+                        {/* <span className=" w-[60px]  h-[30px] flex items-center justify-center  text-md font-semibold rounded-[15px]">
                           {(() => {
                             const total =
                               parseInt(item.plannedTime || "0", 10) || 0;
@@ -793,13 +812,11 @@ export default function Agenda({
 
                             return `${min}:${sec}`;
                           })()}
-                          )
-                        </span>
+                        </span> */}
                         {canEdit && (
                           <div className="flex gap-1">
                             <Button
                               variant="ghost"
-                              size="sm"
                               onClick={() =>
                                 startEdit(
                                   item.agendaType === "objective"
@@ -808,16 +825,17 @@ export default function Agenda({
                                   item.issueObjectiveId,
                                   item.name,
                                   item.plannedTime || "0",
-                                  String(item.detailMeetingAgendaIssueId)
+                                  String(item.detailMeetingAgendaIssueId),
                                 )
                               }
+                              className="w-5"
                             >
-                              <SquarePen className="h-4 w-4 text-blue-500" />
+                              <SquarePen className="h-4 w-4 text-primary" />
                             </Button>
                             <Button
                               variant="ghost"
-                              size="sm"
                               onClick={() => handleDelete(item)}
+                              className="w-5"
                             >
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>

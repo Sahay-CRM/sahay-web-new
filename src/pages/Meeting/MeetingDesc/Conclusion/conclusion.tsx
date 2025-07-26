@@ -11,16 +11,21 @@ import {
   Users,
   XCircle,
 } from "lucide-react";
+import { updateDetailMeetingMutation } from "@/features/api/companyMeeting";
 
 interface ConclusionProps {
   meetingStatus: string;
   meetingResponse: MeetingResFire | null;
+  detailMeetingId?: string;
 }
 
 export default function Conclusion({
   meetingStatus,
   meetingResponse,
+  detailMeetingId,
 }: ConclusionProps) {
+  const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
+
   const {
     conclusionData,
     isPending,
@@ -52,10 +57,19 @@ export default function Conclusion({
     const [minutes, seconds] = formattedTime.split(":").map(Number);
     const totalSeconds = minutes * 60 + seconds;
 
-    console.log(totalSeconds);
-    return;
-    if (meetingId) {
-      endMeet(meetingId);
+    if (meetingId && detailMeetingId) {
+      updateDetailMeeting(
+        {
+          meetingId: meetingId,
+          detailMeetingId: detailMeetingId,
+          conclusionTime: String(totalSeconds), // Make sure API accepts it as string
+        },
+        {
+          onSuccess: () => {
+            endMeet(meetingId);
+          },
+        },
+      );
     }
   };
 
