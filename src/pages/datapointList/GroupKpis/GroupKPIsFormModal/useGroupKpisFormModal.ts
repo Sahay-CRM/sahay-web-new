@@ -108,6 +108,7 @@ export default function useGroupKpisFormModal({
         visualFrequencyAggregate: data.visualFrequencyAggregate,
       };
       addUpdateKpiGroup(payload);
+      modalClose();
     }
   });
 

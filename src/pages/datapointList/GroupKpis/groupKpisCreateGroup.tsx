@@ -23,7 +23,10 @@ export default function GroupKpisCreate() {
   const { setBreadcrumbs } = useBreadcrumbs();
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "KPI Group", href: "" }]);
+    setBreadcrumbs([
+      { label: "KPI Group", href: "/dashboard/kpi/group-kpis" },
+      { label: "Create KPI Group", href: "" },
+    ]);
   }, [setBreadcrumbs]);
 
   const [selectedKpis, setSelectedKpis] = useState<string[]>([]);
@@ -95,7 +98,11 @@ export default function GroupKpisCreate() {
   return (
     <div>
       <div>
-        <Button className="py-2 w-fit mb-5" onClick={handleModalOpen}>
+        <Button
+          className="py-2 w-fit mb-5 "
+          disabled={selectedKpis.length === 0}
+          onClick={handleModalOpen}
+        >
           Create Group
         </Button>
       </div>
@@ -153,7 +160,6 @@ export default function GroupKpisCreate() {
                             </span>
                           )}
                         </div>
-                        
                       </div>
                     </TableCell>
                   </TableRow>
@@ -214,7 +220,6 @@ export default function GroupKpisCreate() {
                       <TableCell className="truncate">
                         {item.value2 ?? " - "}
                       </TableCell>
-                      
                     </TableRow>
                   ))}
                 </Fragment>

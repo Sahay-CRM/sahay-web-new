@@ -241,7 +241,7 @@ const Urls = {
 
   updateDetailObjectivesIssue: () =>
     `${baseUrl}/company/detail-meeting/agenda/update`,
-
+  getNonSelectKpiList: () => `${baseUrl}/company/kpi/non-select-for-merge`,
   createKPIMerge: () => `${baseUrl}/company/kpi-merge/create`,
   updateKPIMerge: (id: string) => `${baseUrl}/company/kpi-merge/update/${id}`,
   getKpiMergeById: (id: string) => `${baseUrl}/company/kpi-merge/get/${id}`,

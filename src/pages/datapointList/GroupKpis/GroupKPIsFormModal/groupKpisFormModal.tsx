@@ -39,15 +39,11 @@ export default function GroupKpisFormModal({
 
   useEffect(() => {
     if (isSuccess && fetchedGroupData) {
-      console.log(fetchedGroupData, "fetchedGroupData");
-
       setValue("frequencyType", fetchedGroupData.frequencyType || "");
-
       setValue(
         "visualFrequencyAggregate",
         fetchedGroupData.visualFrequencyAggregate || "sum"
       );
-      // ✅ Fix: convert comma-separated string to array
       const visualTypes = fetchedGroupData.visualFrequencyTypes
         ? fetchedGroupData.visualFrequencyTypes.split(",")
         : [];

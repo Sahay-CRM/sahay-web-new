@@ -841,6 +841,7 @@ interface KPIFormData {
     KPIName: string;
     KPILabel: string;
   };
+  kpiMasterId?:string;
   KPIName?: string;
   KPILabel?: string;
   validationType: string;
