@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+
 import {
-  CirclePlay,
+  BarChart2,
+  CheckSquare,
   CircleX,
   CornerDownLeft,
-  Loader2,
+  List,
   SquarePen,
   Trash2,
 } from "lucide-react";
@@ -12,21 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-import {
-  addMeetingAgendaMutation,
-  deleteMeetingObjectiveMutation,
-  updateDetailMeetingMutation,
-  useGetDetailMeetingAgenda,
-  useGetDetailMeetingObj,
-} from "@/features/api/companyMeeting";
-import Timer from "../Timer";
-import { addUpdateIssues } from "@/features/api/Issues";
-import { addUpdateObjective } from "@/features/api/Objective";
-import { queryClient } from "@/queryClient";
-import { useDispatch, useSelector } from "react-redux";
-import { setMeeting } from "@/features/reducers/common.reducer";
-import { getUserId } from "@/features/selectors/auth.selector";
-import MeetingDrawer from "./MeetingDrawer";
+import { Badge } from "@/components/ui/badge";
+import MeetingTimer from "../meetingTimer";
+import { cn } from "@/lib/utils";
+import { useAgenda } from "./useAgenda";
 
 function IssueModal({
   open,
@@ -96,9 +87,9 @@ interface AgendaProps {
   agendaPlannedTime: number | string | undefined;
   detailMeetingId: string | undefined;
   handleStartMeeting: () => void;
-  handleDesc: () => void;
   joiners: Joiners[];
   isPending: boolean;
+  meetingTime?: string;
 }
 
 export default function Agenda({
@@ -106,343 +97,58 @@ export default function Agenda({
   meetingId,
   meetingStatus,
   meetingResponse,
-  agendaPlannedTime = 0,
   detailMeetingId,
   handleStartMeeting,
   isPending,
-  handleDesc,
-  joiners,
+  meetingTime,
 }: AgendaProps) {
-  const dispatch = useDispatch();
-  const [issueInput, setIssueInput] = useState("");
-  const [editing, setEditing] = useState<{
-    type: "issue" | "objective" | null;
-    id: string | null;
-    value: string;
-    plannedMinutes: string;
-    plannedSeconds: string;
-    detailMeetingAgendaIssueId: string;
-  }>({
-    type: null,
-    id: null,
-    value: "",
-    plannedMinutes: "",
-    plannedSeconds: "",
-    detailMeetingAgendaIssueId: "",
+  const {
+    issueInput,
+    editing,
+    modalOpen,
+    modalIssue,
+    dropdownVisible,
+    agendaList,
+    draggedIndex,
+    hoverIndex,
+    isSelectedAgenda,
+    isSideBar,
+    filteredIssues,
+    searchOptions,
+    formattedTime,
+    setIssueInput,
+    setEditingValue,
+    setModalOpen,
+    setDropdownVisible,
+    setIsSelectedAgenda,
+    handleAddIssue,
+    startEdit,
+    cancelEdit,
+    updateEdit,
+    handleDelete,
+    handleDragStart,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    handleUpdateSelectedObjective,
+    handleModalSubmit,
+    handleTimeUpdate,
+    handleConclusionMeeting,
+    handleDesc,
+    activeTab,
+    handleTabChange,
+  } = useAgenda({
+    meetingId,
+    meetingStatus,
+    meetingResponse,
+    detailMeetingId,
+    canEdit: true,
   });
-  // const [editingPart, setEditingPart] = useState<"minutes" | "seconds" | null>(
-  //   null
-  // );
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalIssue, setModalIssue] = useState("");
-  const [dropdownVisible, setDropdownVisible] = useState(false);
-  const userId = useSelector(getUserId);
-
-  const startEdit = (
-    type: "issue" | "objective",
-    id: string,
-    value: string,
-    plannedTime: string | number | null | undefined,
-    detailMeetingAgendaIssueId: string,
-  ) => {
-    if (!canEdit) return;
-    const totalSeconds = plannedTime
-      ? parseInt(String(plannedTime), 10) || 0
-      : 0;
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    setEditing({
-      type,
-      id,
-      value,
-      plannedMinutes: String(minutes),
-      plannedSeconds: String(seconds),
-      detailMeetingAgendaIssueId,
-    });
-  };
-  const setEditingValue = (value: string) => {
-    setEditing((prev) => ({ ...prev, value }));
-  };
-  const cancelEdit = () => {
-    setEditing({
-      type: null,
-      id: null,
-      value: "",
-      plannedMinutes: "",
-      plannedSeconds: "",
-      detailMeetingAgendaIssueId: "",
-    });
-  };
-
-  const { mutate: deleteObjective } = deleteMeetingObjectiveMutation();
-  const { mutate: addIssueAgenda } = addMeetingAgendaMutation();
-  const { data: selectedAgenda } = useGetDetailMeetingAgenda({
-    filter: {
-      detailMeetingId: detailMeetingId,
-    },
-    enable: !!detailMeetingId,
-  });
-
-  // Local state for drag-and-drop
-  const [agendaList, setAgendaList] = useState(selectedAgenda || []);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
-
-  // Reset agendaList to backend order on refresh/data change
-  useEffect(() => {
-    setAgendaList(selectedAgenda || []);
-    if (selectedAgenda) {
-      dispatch(setMeeting(selectedAgenda));
-    }
-  }, [dispatch, selectedAgenda]);
-
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
-    setHoverIndex(null);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLLIElement>, index: number) => {
-    e.preventDefault();
-    if (draggedIndex !== null && draggedIndex !== index) {
-      setHoverIndex(index); // Update hover position as we drag over items
-    }
-  };
-
-  const handleDragLeave = () => {
-    setHoverIndex(null); // Clear hover position when leaving an item
-  };
-
-  const handleDrop = (index: number) => {
-    if (draggedIndex === null || draggedIndex === index) return;
-
-    const updatedList = [...agendaList];
-    const [removed] = updatedList.splice(draggedIndex, 1);
-    updatedList.splice(index, 0, removed);
-
-    setAgendaList(updatedList);
-    setDraggedIndex(null);
-    setHoverIndex(null); // Clear hover position after drop
-
-    const payload = {
-      detailMeetingAgendaIssueId: removed.detailMeetingAgendaIssueId,
-      detailMeetingId: detailMeetingId,
-      sequence: index + 1,
-    };
-    addIssueAgenda(payload);
-  };
-
-  // const handleDrop = (index: number) => {
-  //   if (draggedIndex === null || draggedIndex === index) return;
-
-  //   const updatedList = [...agendaList];
-  //   const [removed] = updatedList.splice(draggedIndex, 1);
-  //   updatedList.splice(index, 0, removed);
-
-  //   setAgendaList(updatedList);
-  //   setDraggedIndex(null);
-
-  //   const payload = {
-  //     detailMeetingAgendaIssueId: removed.detailMeetingAgendaIssueId,
-  //     detailMeetingId: detailMeetingId,
-  //     sequence: index + 1,
-  //   };
-  //   addIssueAgenda(payload);
-  // };
-
-  const { mutate: addIssue } = addUpdateIssues();
-  const { mutate: addObjective } = addUpdateObjective();
-  const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
-  const shouldFetch = issueInput.length >= 3;
-  const { data: issueData } = useGetDetailMeetingObj({
-    filter: {
-      search: issueInput,
-    },
-    enable: !!shouldFetch,
-  });
-
-  // Filtered issues for dropdown
-  const filteredIssues = (issueData?.data ?? []).filter(
-    (item) =>
-      item.name.toLowerCase().includes(issueInput.toLowerCase()) &&
-      issueInput.trim() !== "",
-  );
-
-  const handleAddIssue = () => {
-    setModalIssue(issueInput);
-    setModalOpen(true);
-    setDropdownVisible(false);
-  };
-
-  const updateEdit = () => {
-    if (!canEdit) return;
-    if (!editing.type || !editing.id || !meetingId) return;
-    if (editing.type === "issue") {
-      addIssue(
-        {
-          issueId: editing.id,
-          issueName: editing.value,
-        },
-        {
-          onSuccess: () => {
-            queryClient.resetQueries({
-              queryKey: ["get-detail-meeting-agenda-issue-obj"],
-            });
-            cancelEdit();
-          },
-        },
-      );
-    } else if (editing.type === "objective") {
-      addObjective(
-        {
-          objectiveId: editing.id,
-          objectiveName: editing.value,
-        },
-        {
-          onSuccess: () => {
-            queryClient.resetQueries({
-              queryKey: ["get-detail-meeting-agenda-issue-obj"],
-            });
-          },
-        },
-      );
-    }
-  };
-
-  const handleDelete = (item: MeetingAgenda) => {
-    if (item && item.detailMeetingAgendaIssueId) {
-      deleteObjective(item.detailMeetingAgendaIssueId);
-    }
-  };
 
   const canEdit = true;
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  // const handleTimerUpdate = (newTime: number) => {
-  //   updateAgendaTime({
-  //     meetingId: meetingId,
-  //     agendaTimePlanned: String(newTime),
-  //   });
-  // };
-
-  const searchOptions = (issueData?.data ?? []).map((item) => ({
-    name: item.name,
-    id: item.id,
-    type: item.type,
-  }));
-
-  const handleUpdateSelectedObjective = (data: DetailMeetingObjectives) => {
-    const payload = {
-      detailMeetingId: detailMeetingId,
-      issueObjectiveId: data.id,
-      meetingId: meetingId,
-      agendaType: data.type,
-    };
-    addIssueAgenda(payload, {
-      onSuccess: () => {
-        setIssueInput("");
-      },
-    });
-  };
-
-  // const handleUpdateTime = () => {
-  //   const min = Number(editing.plannedMinutes) || 0;
-  //   const sec = Number(editing.plannedSeconds) || 0;
-  //   const totalSeconds = min * 60 + sec;
-  //   addIssueAgenda(
-  //     {
-  //       detailMeetingAgendaIssueId: editing.detailMeetingAgendaIssueId,
-  //       detailMeetingId: detailMeetingId,
-  //       issueObjectiveId: String(editing.id),
-  //       plannedTime: String(totalSeconds),
-  //       agendaType: String(editing.type),
-  //     },
-  //     {
-  //       onSuccess: () => {
-  //         queryClient.resetQueries({
-  //           queryKey: ["get-detail-meeting-agenda-issue-obj"],
-  //         });
-  //         cancelEdit(); // Reset edit state after successful update
-  //       },
-  //     }
-  //   );
-  // };
-
-  const handleModalSubmit = (data: { type: string; value: string }) => {
-    if (data.type === "issue") {
-      addIssue(
-        {
-          issueName: data.value,
-        },
-        {
-          onSuccess: (res) => {
-            const payload = {
-              detailMeetingId: detailMeetingId,
-              issueObjectiveId: res.data.issueId,
-              meetingId: meetingId,
-              agendaType: "issue",
-            };
-            addIssueAgenda(payload, {
-              onSuccess: () => {
-                setIssueInput("");
-                queryClient.resetQueries({
-                  queryKey: ["get-detail-meeting-agenda-issue-obj"],
-                });
-                cancelEdit();
-                setModalOpen(false);
-              },
-            });
-          },
-        },
-      );
-    } else if (data.type === "objective") {
-      addObjective(
-        {
-          objectiveName: data.value,
-        },
-        {
-          onSuccess: (res) => {
-            const payload = {
-              detailMeetingId: detailMeetingId,
-              issueObjectiveId: res.data.objectiveId,
-              meetingId: meetingId,
-              agendaType: "objective",
-            };
-
-            addIssueAgenda(payload, {
-              onSuccess: () => {
-                setIssueInput("");
-                queryClient.resetQueries({
-                  queryKey: ["get-detail-meeting-agenda-issue-obj"],
-                });
-                cancelEdit();
-                setModalOpen(false);
-              },
-            });
-          },
-        },
-      );
-    }
-  };
-  const [plannedTime, setPlannedTime] = useState(Number(agendaPlannedTime));
-
-  // const handleTimeUpdate = (newTime: number) => {
-  //   console.log("User updated time (in seconds):", newTime);
-  //   setPlannedTime(newTime);
-  //   // You can also send this to your API or update state accordingly
-  // };
-
-  const handleTimeUpdate = (newTime: number) => {
-    setPlannedTime(newTime);
-
-    updateDetailMeeting({
-      meetingId: meetingId,
-      detailMeetingId: detailMeetingId,
-      agendaTimePlanned: String(newTime), // Make sure API accepts it as string
-    });
-  };
 
   return (
-    <div className="space-y-4">
+    <div>
       <IssueModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -450,395 +156,249 @@ export default function Agenda({
         defaultType=""
         onSubmit={handleModalSubmit}
       />
-      <div className="flex flex-col md:flex-row justify-between gap-4 items-center w-full">
-        {/* Left Section */}
-        <div className="w-full md:max-w-[1373px] flex h-[40px] border border-gray-300 rounded-[10px] items-center px-4">
-          <div className="flex-1 text-lg w-[30%] text-primary ml-3 font-semibold truncate">
-            {meetingName}
-          </div>
-
-          <div className="hidden md:block w-[50%] text-gray-500  text-lg truncate ml-4">
-            Meeting Agenda
-          </div>
-        </div>
-
-        {/* Right side - Buttons & Timer */}
-        <div className="flex flex-wrap md:flex-nowrap items-center gap-3 w-full md:w-auto">
-          {meetingStatus === "NOT_STARTED" && (
-            <Button
-              variant="outline"
-              className="w-full sm:w-[200px] h-[40px] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
-              onClick={handleStartMeeting}
-              disabled={isPending}
-            >
-              {isPending ? (
-                <Loader2 className="animate-spin w-6 h-6" />
-              ) : (
-                <>
-                  <CirclePlay className="w-6 h-6" />
-                  Start Meeting
-                </>
-              )}
-            </Button>
+      <div className="flex gap-3">
+        <div
+          className={cn(
+            "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]",
+            isSideBar ? "w-[400px]" : "w-[65%]",
           )}
-
-          {meetingStatus === "STARTED" && (
-            <Button
-              variant="outline"
-              className="w-full sm:w-[200px] h-[40px] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
-              onClick={handleDesc}
-              disabled={isPending || agendaList.length === 0} // Disable if empty
-            >
-              {isPending ? "Loading..." : "Start Discussion"}
-            </Button>
-          )}
-
-          {/* Timer */}
-          <div className="w-fit px-2 pl-4 h-[40px] border border-gray-300 rounded-[10px] flex items-center justify-center">
-            <Timer
-              plannedTime={plannedTime}
-              actualTime={0}
-              lastSwitchTimestamp={Number(
-                meetingResponse?.state.lastSwitchTimestamp,
-              )}
-              meetingStart={meetingStatus === "STARTED"}
-              className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
-              onTimeUpdate={handleTimeUpdate}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex gap-4 ">
-        <div className="px-4 w-full">
-          {canEdit && (
-            <div className="flex gap-2 relative   w-[85%]">
-              <Input
-                value={issueInput}
-                onChange={(e) => {
-                  setIssueInput(e.target.value);
-                  setDropdownVisible(true);
-                }}
-                placeholder="Add or Create Agenda (Issue or Objective)"
-                onFocus={() => setDropdownVisible(true)}
-                onBlur={() => setTimeout(() => setDropdownVisible(false), 150)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleAddIssue();
-                  }
-                }}
-                className="w-full h-[45px] sm:h-[50px] border-0 border-b-2 border-gray-300 rounded-none pr-10 text-sm sm:text-base focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[0px] "
-              />
-
-              {/* Icon inside input */}
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                <CornerDownLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              </span>
-
-              {/* Dropdown */}
-              {dropdownVisible && filteredIssues.length > 0 && (
-                <ul
-                  style={{
-                    position: "absolute",
-                    top: "110%",
-                    left: 0,
-                    right: 0,
-                    background: "white",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: 6,
-                    zIndex: 10,
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                    maxHeight: 180,
-                    overflowY: "auto",
-                    margin: 0,
-                    padding: 0,
-                    listStyle: "none",
+        >
+          {!isSideBar && canEdit && (
+            <div className="flex gap-2 relative">
+              <div className="flex gap-2 relative w-full">
+                <Input
+                  value={issueInput}
+                  onChange={(e) => {
+                    setIssueInput(e.target.value);
+                    setDropdownVisible(true);
                   }}
-                >
-                  {searchOptions.map((item) => (
-                    <li
-                      key={item.id}
-                      style={{
-                        padding: "8px 12px",
-                        cursor: "pointer",
-                        fontSize: "14px",
-                      }}
-                      onMouseDown={() => {
-                        handleUpdateSelectedObjective(item);
-                      }}
-                    >
-                      {item.name} ({item.type})
-                    </li>
-                  ))}
-                </ul>
-              )}
+                  placeholder="Add or Create Agenda (Issue or Objective)"
+                  onFocus={() => setDropdownVisible(true)}
+                  onBlur={() =>
+                    setTimeout(() => setDropdownVisible(false), 150)
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleAddIssue();
+                    }
+                  }}
+                  className="w-full h-[45px] sm:h-[50px] border-0 border-b-2 border-gray-300 rounded-none pr-10 text-sm sm:text-base focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[0px] "
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                  <CornerDownLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                </span>
+                {dropdownVisible && filteredIssues.length > 0 && (
+                  <ul
+                    style={{
+                      position: "absolute",
+                      top: "110%",
+                      left: 0,
+                      right: 0,
+                      background: "white",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: 6,
+                      zIndex: 10,
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                      maxHeight: 180,
+                      overflowY: "auto",
+                      margin: 0,
+                      padding: 0,
+                      listStyle: "none",
+                    }}
+                  >
+                    {searchOptions.map((item) => (
+                      <li
+                        key={item.id}
+                        style={{
+                          padding: "8px 12px",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                        }}
+                        onMouseDown={() => {
+                          handleUpdateSelectedObjective(item);
+                        }}
+                      >
+                        {item.name} ({item.type})
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           )}
-          <div className="mt-2 h-[calc(100vh-300px)] pr-1  w-[85%] overflow-auto ">
+          <div className="mt-2 h-[calc(100vh-200px)] pr-1 w-full overflow-auto">
             {agendaList && agendaList.length > 0 ? (
               <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {agendaList.map((item, idx) => (
                   <li
                     key={item.issueObjectiveId}
-                    draggable
-                    onDragStart={() => handleDragStart(idx)}
-                    onDragOver={(e) => handleDragOver(e, idx)}
-                    onDragLeave={handleDragLeave}
-                    onDrop={() => handleDrop(idx)}
+                    className={`h-12 group px-2 flex bg-red-100 mb-2 rounded-md shadow ${
+                      meetingStatus === "STARTED" ||
+                      meetingStatus === "NOT_STARTED"
+                        ? "cursor-pointer"
+                        : "opacity-100"
+                    }`}
+                    draggable={
+                      meetingStatus === "STARTED" ||
+                      meetingStatus === "NOT_STARTED"
+                    }
+                    onDragStart={
+                      meetingStatus === "STARTED" ||
+                      meetingStatus === "NOT_STARTED"
+                        ? () => handleDragStart(idx)
+                        : undefined
+                    }
+                    onDragOver={
+                      meetingStatus === "STARTED" ||
+                      meetingStatus === "NOT_STARTED"
+                        ? (e) => handleDragOver(e, idx)
+                        : undefined
+                    }
+                    onDragLeave={
+                      meetingStatus === "STARTED" ||
+                      meetingStatus === "NOT_STARTED"
+                        ? handleDragLeave
+                        : undefined
+                    }
+                    onDrop={
+                      meetingStatus === "STARTED" ||
+                      meetingStatus === "NOT_STARTED"
+                        ? () => handleDrop(idx)
+                        : undefined
+                    }
+                    onClick={() => {
+                      if (
+                        meetingStatus !== "STARTED" &&
+                        meetingStatus !== "NOT_STARTED"
+                      ) {
+                        setIsSelectedAgenda(item.detailMeetingAgendaIssueId);
+                      }
+
+                      console.log("Agenda item:", item);
+                    }}
                     style={{
                       opacity: draggedIndex === idx ? 0.5 : 1,
-                      cursor: "move",
-                      background: "#fff",
+                      cursor:
+                        meetingStatus === "STARTED" ||
+                        meetingStatus === "NOT_STARTED"
+                          ? "move"
+                          : "default",
                       border:
-                        hoverIndex === idx
+                        hoverIndex === idx &&
+                        (meetingStatus === "STARTED" ||
+                          meetingStatus === "NOT_STARTED")
                           ? "2px dashed #3b82f6"
                           : "1px solid #eee",
-                      marginBottom: 4,
-                      padding: 8,
-                      borderRadius: 4,
-                      display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      height: "45px",
                       transition: "border 0.2s ease",
                       position: "relative",
                     }}
                   >
-                    {hoverIndex === idx && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top:
-                            draggedIndex !== null && draggedIndex < idx
-                              ? "100%"
-                              : 0,
-                          left: 0,
-                          right: 0,
-                          height: "2px",
-                          backgroundColor: "#3b82f6",
-                          transform:
-                            draggedIndex !== null && draggedIndex < idx
-                              ? "translateY(-1px)"
-                              : "translateY(-1px)",
-                        }}
-                      />
-                    )}
-                    {/* Left side: drag handle + name */}
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <span style={{ marginRight: 8, cursor: "grab" }}>⋮⋮</span>
+                    {hoverIndex === idx &&
+                      (meetingStatus === "STARTED" ||
+                        meetingStatus === "NOT_STARTED") && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top:
+                              draggedIndex !== null && draggedIndex < idx
+                                ? "100%"
+                                : 0,
+                            left: 0,
+                            right: 0,
+                            height: "2px",
+                            backgroundColor: "#3b82f6",
+                            transform:
+                              draggedIndex !== null && draggedIndex < idx
+                                ? "translateY(-1px)"
+                                : "translateY(-1px)",
+                          }}
+                        />
+                      )}
+                    <div className="flex items-center">
+                      {(meetingStatus === "STARTED" ||
+                        meetingStatus === "NOT_STARTED") && (
+                        <span style={{ marginRight: 8, cursor: "grab" }}>
+                          ⋮⋮
+                        </span>
+                      )}
                       {editing.type === item.agendaType &&
                       editing.id === item.issueObjectiveId &&
-                      canEdit ? null : ( // Hide name when editing
-                        <span>{item.name}</span>
+                      canEdit ? null : (
+                        <div>
+                          <div className="text-sm">{item.name}</div>
+                          <div className="text-xs text-gray-500 flex gap-2 items-center group-hover:hidden absolute top-3 right-3">
+                            <Badge variant="secondary">{item.agendaType}</Badge>
+                            <div className="text-sm font-medium text-primary">
+                              {formattedTime}
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
-                    {/* Right side: type, time, edit, delete */}
-                    {editing.type === item.agendaType &&
-                    editing.id === item.issueObjectiveId &&
-                    canEdit ? (
-                      <div className="w-full flex items-center gap-1">
-                        <div className="relative w-full flex gap-2 items-center">
-                          <Input
-                            value={editing.value}
-                            onChange={(e) => setEditingValue(e.target.value)}
-                            className="mr-2"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                updateEdit();
-                              }
-                            }}
-                          />
-
-                          <span className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
-                            <CornerDownLeft className="text-gray-400 w-4" />
-                          </span>
-                        </div>
-                        {/* <div
-                          style={{
-                            fontSize: "1.5rem",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.5rem",
-                          }}
-                        >
-                          {editingPart === "minutes" ? (
-                            <input
-                              type="text"
-                              value={editing.plannedMinutes}
-                              maxLength={2}
-                              onChange={(e) => {
-                                let val = e.target.value.replace(/[^0-9]/g, "");
-                                if (val.length > 2) val = val.slice(0, 2);
-                                setEditing((prev) => ({
-                                  ...prev,
-                                  plannedMinutes: val,
-                                }));
-                              }}
-                              onBlur={(e) => {
-                                let val = e.target.value.replace(/[^0-9]/g, "");
-                                if (val.length > 2) val = val.slice(0, 2);
-                                setEditing((prev) => ({
-                                  ...prev,
-                                  plannedMinutes: val,
-                                }));
-                                setEditingPart(null);
-                                // Do NOT call handleUpdateTime here
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  let val = (
-                                    e.target as HTMLInputElement
-                                  ).value.replace(/[^0-9]/g, "");
-                                  if (val.length > 2) val = val.slice(0, 2);
-                                  setEditing((prev) => ({
-                                    ...prev,
-                                    plannedMinutes: val,
-                                  }));
-                                  setEditingPart(null);
-                                  handleUpdateTime();
+                    {(meetingStatus === "STARTED" ||
+                      meetingStatus === "NOT_STARTED") && (
+                      <div>
+                        {editing.type === item.agendaType &&
+                        editing.id === item.issueObjectiveId &&
+                        canEdit ? (
+                          <div className="w-full flex items-center gap-1">
+                            <div className="relative w-full flex gap-2 items-center">
+                              <Input
+                                value={editing.value}
+                                onChange={(e) =>
+                                  setEditingValue(e.target.value)
                                 }
-                              }}
-                              style={{
-                                width: "2.5rem",
-                                fontSize: "1.5rem",
-                                textAlign: "right",
-                              }}
-                              autoFocus
-                            />
-                          ) : (
-                            <span
-                              onClick={() => setEditingPart("minutes")}
-                              style={{
-                                cursor: "pointer",
-                                minWidth: "2rem",
-                                textAlign: "right",
-                              }}
-                            >
-                              {editing.plannedMinutes.padStart(2, "0")}
-                            </span>
-                          )}
-                          <span>:</span>
-                          {editingPart === "seconds" ? (
-                            <input
-                              type="text"
-                              value={editing.plannedSeconds}
-                              maxLength={2}
-                              onChange={(e) => {
-                                let valSec = e.target.value.replace(
-                                  /[^0-9]/g,
-                                  ""
-                                );
-                                if (valSec.length > 2)
-                                  valSec = valSec.slice(0, 2);
-                                setEditing((prev) => ({
-                                  ...prev,
-                                  plannedSeconds: valSec,
-                                }));
-                              }}
-                              onBlur={(e) => {
-                                let valSec = e.target.value.replace(
-                                  /[^0-9]/g,
-                                  ""
-                                );
-                                if (valSec.length > 2)
-                                  valSec = valSec.slice(0, 2);
-                                setEditing((prev) => ({
-                                  ...prev,
-                                  plannedSeconds: valSec,
-                                }));
-                                setEditingPart(null);
-                                // Do NOT call handleUpdateTime here
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  let valSec = (
-                                    e.target as HTMLInputElement
-                                  ).value.replace(/[^0-9]/g, "");
-                                  if (valSec.length > 2)
-                                    valSec = valSec.slice(0, 2);
-                                  setEditing((prev) => ({
-                                    ...prev,
-                                    plannedSeconds: valSec,
-                                  }));
-                                  setEditingPart(null);
-                                  handleUpdateTime();
-                                }
-                              }}
-                              style={{
-                                width: "2.5rem",
-                                fontSize: "1.5rem",
-                                textAlign: "left",
-                              }}
-                              autoFocus
-                            />
-                          ) : (
-                            <span
-                              onClick={() => setEditingPart("seconds")}
-                              style={{
-                                cursor: "pointer",
-                                minWidth: "2rem",
-                                textAlign: "left",
-                              }}
-                            >
-                              {editing.plannedSeconds.padStart(2, "0")}
-                            </span>
-                          )}
-                        </div> */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={cancelEdit}
-                        >
-                          <CircleX />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-4 items-center">
-                        <span className="w-[90px] h-[30px] flex items-center justify-center bg-gray-200 text-sm rounded-[15px]">
-                          {item.agendaType}
-                        </span>
-
-                        {/* <span className=" w-[60px]  h-[30px] flex items-center justify-center  text-md font-semibold rounded-[15px]">
-                          {(() => {
-                            const total =
-                              parseInt(item.plannedTime || "0", 10) || 0;
-
-                            const min = Math.floor(total / 60)
-                              .toString()
-                              .padStart(2, "0");
-                            const sec = (total % 60)
-                              .toString()
-                              .padStart(2, "0");
-
-                            return `${min}:${sec}`;
-                          })()}
-                        </span> */}
-                        {canEdit && (
-                          <div className="flex gap-1">
+                                className="mr-2"
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    updateEdit();
+                                  }
+                                }}
+                              />
+                              <span className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
+                                <CornerDownLeft className="text-gray-400 w-4" />
+                              </span>
+                            </div>
                             <Button
-                              variant="ghost"
-                              onClick={() =>
-                                startEdit(
-                                  item.agendaType === "objective"
-                                    ? "objective"
-                                    : "issue",
-                                  item.issueObjectiveId,
-                                  item.name,
-                                  item.plannedTime || "0",
-                                  String(item.detailMeetingAgendaIssueId),
-                                )
-                              }
-                              className="w-5"
+                              variant="outline"
+                              size="sm"
+                              onClick={cancelEdit}
                             >
-                              <SquarePen className="h-4 w-4 text-primary" />
+                              <CircleX />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              onClick={() => handleDelete(item)}
-                              className="w-5"
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-4 items-center">
+                            {canEdit && (
+                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                  variant="ghost"
+                                  onClick={() =>
+                                    startEdit(
+                                      item.agendaType === "objective"
+                                        ? "objective"
+                                        : "issue",
+                                      item.issueObjectiveId,
+                                      item.name,
+                                      item.plannedTime || "0",
+                                      String(item.detailMeetingAgendaIssueId),
+                                    )
+                                  }
+                                  className="w-5"
+                                >
+                                  <SquarePen className="h-4 w-4 text-primary" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  onClick={() => handleDelete(item)}
+                                  className="w-5"
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -851,16 +411,127 @@ export default function Agenda({
             )}
           </div>
         </div>
-        <MeetingDrawer
-          joiners={joiners}
-          meetingId={meetingId}
-          employeeId={userId}
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-          detailMeetingId={detailMeetingId}
-          meetingStart={meetingStatus !== "NOT_STARTED"}
-          showToggle={false}
-        />
+        <div className="w-full">
+          <div className="flex gap-3 mb-4">
+            <div className="w-full">
+              {meetingStatus === "STARTED" ||
+              meetingStatus === "NOT_STARTED" ? (
+                <div className="w-full flex h-[40px] border border-gray-300 rounded-[10px] items-center px-4">
+                  <div className="flex-1 text-lg w-[30%] text-primary ml-3 font-semibold truncate">
+                    {meetingName}
+                  </div>
+
+                  <div className="hidden md:block w-[50%] text-gray-500  text-lg truncate ml-4">
+                    Meeting Agenda
+                  </div>
+                </div>
+              ) : (
+                <div className="w-fit">
+                  <nav className="space-y-1 w-full ">
+                    <div className="mr-5 flex gap-3 items-center rounded-2xl px-1">
+                      <Button
+                        variant={activeTab === "tasks" ? "default" : "ghost"}
+                        className={`w-40 h-12 justify-start border cursor-pointer flex items-center`}
+                        onClick={() => {
+                          handleTabChange("tasks");
+                        }}
+                      >
+                        <List className="h-5 w-5" />
+                        <span className="ml-2">Tasks</span>
+                      </Button>
+                      <Button
+                        variant={activeTab === "projects" ? "default" : "ghost"}
+                        className={`w-40 h-12 justify-start border cursor-pointer flex items-center `}
+                        onClick={() => {
+                          handleTabChange("projects");
+                        }}
+                      >
+                        <CheckSquare className="h-5 w-5" />
+                        <span className="ml-2">Projects</span>
+                      </Button>
+                      <Button
+                        variant={activeTab === "kpis" ? "default" : "ghost"}
+                        className={`w-40 h-12 justify-start border cursor-pointer flex items-center`}
+                        onClick={() => {
+                          handleTabChange("kpis");
+                        }}
+                      >
+                        <BarChart2 className="h-5 w-5" />
+                        <span className="ml-2">KPIs</span>
+                      </Button>
+                    </div>
+                  </nav>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-wrap md:flex-nowrap items-center gap-3 w-[30%] md:w-auto">
+              {meetingStatus === "NOT_STARTED" && (
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-[200px] h-[40px] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
+                  onClick={handleStartMeeting}
+                  isLoading={isPending}
+                >
+                  Start Meeting
+                </Button>
+              )}
+
+              {meetingStatus === "STARTED" && (
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-[200px] h-[40px] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
+                  onClick={handleDesc}
+                  disabled={isPending || agendaList.length === 0} // Disable if empty
+                >
+                  {isPending ? "Loading..." : "Start Discussion"}
+                </Button>
+              )}
+
+              {meetingStatus === "DISCUSSION" && (
+                <Button
+                  variant="outline"
+                  className="bg-primary text-white px-4 py-5 text-sm sm:text-base md:text-lg"
+                  onClick={handleConclusionMeeting}
+                >
+                  Go To Conclusion
+                </Button>
+              )}
+
+              {/* Timer */}
+              <div className="w-fit px-2 pl-4 h-[40px] border-gray-300 rounded-[10px] flex items-center justify-center">
+                <MeetingTimer
+                  meetingTime={Number(meetingTime)}
+                  actualTime={0}
+                  lastSwitchTimestamp={Number(
+                    meetingResponse?.state.lastSwitchTimestamp,
+                  )}
+                  meetingStart={meetingStatus === "STARTED"}
+                  className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
+                  onTimeUpdate={handleTimeUpdate}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="border rounded-md flex items-center justify-center w-full h-[calc(100vh-200px)]">
+            {isSelectedAgenda}
+            <div className="w-[400px]">
+              📌 Tips for Writing a Clear & Effective Meeting Agenda Start with
+              the Goal ➤ What is the purpose of the meeting? Summarize it in one
+              sentence. List Key Discussion Points ➤ Break down the agenda into
+              focused, time-boxed topics. E.g., "Marketing Update (10 mins)" or
+              "Budget Review (15 mins)" Prioritize High-Impact Items First ➤
+              Cover the most important topics early, when attention is highest.
+              Assign Owners to Agenda Items ➤ Add who will lead each topic to
+              encourage preparation. Add Time Estimates ➤ Helps keep the meeting
+              on track and avoids overruns. Leave Room for Questions or Open
+              Discussion ➤ Allot a few minutes at the end to address any
+              additional points. Distribute Agenda Before the Meeting ➤ Share
+              the agenda with participants at least a day in advance. Be
+              Specific, Not Vague ✘ Bad: "Project discussion" ✔ Good: "Decide
+              launch date for Phase 2 of Project Phoenix"
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

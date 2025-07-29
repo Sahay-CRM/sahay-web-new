@@ -1,12 +1,20 @@
 import useMeetingDesc from "./useMeetingDesc";
-import Desc from "../MeetingDesc/Desc/desc";
-import Conclusion from "../MeetingDesc/Conclusion/conclusion";
+// import Desc from "../MeetingDesc/Desc/desc";
+// import Conclusion from "../MeetingDesc/Conclusion/conclusion";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect, useContext } from "react";
 import Agenda from "./Agenda";
 import { SidebarControlContext } from "@/features/layouts/DashboardLayout/SidebarControlContext";
 import { Button } from "@/components/ui/button";
-import { Crown, FileText, Notebook, Users, UsersRound } from "lucide-react";
+import {
+  Crown,
+  FileText,
+  Notebook,
+  Search,
+  Users,
+  UsersRound,
+  X,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import MeetingNotes from "./Agenda/meetingNotes";
@@ -21,11 +29,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+// import MeetingTimer from "./meetingTimer";
 
 export default function MeetingDesc() {
   const {
     handleStartMeeting,
-    handleDesc,
     meetingStatus,
     isPending,
     meetingId,
@@ -35,6 +43,10 @@ export default function MeetingDesc() {
     handleTabChange,
     activeTab,
     isCardVisible,
+    setIsCardVisible,
+    // handleTimeUpdate,
+    // handleConclusionMeeting,
+    // handleEndMeeting,
   } = useMeetingDesc();
   const { setBreadcrumbs } = useBreadcrumbs();
   const sidebarControl = useContext(SidebarControlContext);
@@ -48,7 +60,6 @@ export default function MeetingDesc() {
     ]);
   }, [meetingTiming?.meetingName, setBreadcrumbs]);
 
-  // Wrap handleStartMeeting to also collapse sidebar
   const handleStartMeetingWithSidebar = () => {
     if (sidebarControl?.setOpen) {
       sidebarControl.setOpen(false);
@@ -56,41 +67,47 @@ export default function MeetingDesc() {
     handleStartMeeting();
   };
 
-  let content = null;
-  if (meetingStatus === "NOT_STARTED" || meetingStatus === "STARTED") {
-    content = (
-      <Agenda
-        meetingName={meetingTiming?.meetingName ?? ""}
-        meetingId={meetingId ?? ""}
-        meetingStatus={meetingStatus}
-        meetingResponse={meetingResponse}
-        agendaPlannedTime={meetingTiming?.agendaTimePlanned}
-        detailMeetingId={meetingTiming?.detailMeetingId}
-        handleStartMeeting={handleStartMeetingWithSidebar}
-        handleDesc={handleDesc}
-        joiners={meetingTiming?.employeeList ?? []}
-        isPending={isPending}
-      />
-    );
-  } else if (meetingStatus === "DISCUSSION") {
-    content = (
-      <Desc
-        meetingStatus={meetingStatus}
-        meetingResponse={meetingResponse}
-        detailMeetingId={meetingTiming?.detailMeetingId}
-        meetingId={meetingId ?? ""}
-        joiners={meetingTiming?.employeeList ?? []}
-      />
-    );
-  } else if (meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") {
-    content = (
-      <Conclusion
-        meetingStatus={meetingStatus}
-        meetingResponse={meetingResponse}
-        detailMeetingId={meetingTiming?.detailMeetingId}
-      />
-    );
-  }
+  // let content = null;
+  // if (
+  //   meetingStatus === "NOT_STARTED" ||
+  //   meetingStatus === "STARTED" ||
+  //   meetingStatus === "DISCUSSION"
+  // ) {
+  // content = (
+  //   <Agenda
+  //     meetingName={meetingTiming?.meetingName ?? ""}
+  //     meetingId={meetingId ?? ""}
+  //     meetingStatus={meetingStatus}
+  //     meetingResponse={meetingResponse}
+  //     agendaPlannedTime={meetingTiming?.agendaTimePlanned}
+  //     detailMeetingId={meetingTiming?.detailMeetingId}
+  //     handleStartMeeting={handleStartMeetingWithSidebar}
+  //     handleDesc={handleDesc}
+  //     joiners={meetingTiming?.employeeList ?? []}
+  //     isPending={isPending}
+  //     meetingTime={meetingTiming?.meetingTimePlanned}
+  //   />
+  // );
+  // }
+  // } else if (meetingStatus === "DISCUSSION") {
+  //   content = (
+  //     <Desc
+  //       meetingStatus={meetingStatus}
+  //       meetingResponse={meetingResponse}
+  //       detailMeetingId={meetingTiming?.detailMeetingId}
+  //       meetingId={meetingId ?? ""}
+  //       joiners={meetingTiming?.employeeList ?? []}
+  //     />
+  //   );
+  // } else if (meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") {
+  //   content = (
+  //     <Conclusion
+  //       meetingStatus={meetingStatus}
+  //       meetingResponse={meetingResponse}
+  //       detailMeetingId={meetingTiming?.detailMeetingId}
+  //     />
+  //   );
+  // }
 
   const getInitials = (name: string) => {
     if (!name) return "";
@@ -102,15 +119,30 @@ export default function MeetingDesc() {
 
   return (
     <div className="flex w-full h-full bg-gray-200 overflow-hidden">
-      <div className="w-full px-4 py-4 bg-white">{content}</div>
+      <div className="w-full bg-white p-4">
+        <div className="w-full mt-4">
+          <Agenda
+            meetingName={meetingTiming?.meetingName ?? ""}
+            meetingId={meetingId ?? ""}
+            meetingStatus={meetingStatus}
+            meetingResponse={meetingResponse}
+            agendaPlannedTime={meetingTiming?.agendaTimePlanned}
+            detailMeetingId={meetingTiming?.detailMeetingId}
+            handleStartMeeting={handleStartMeetingWithSidebar}
+            joiners={meetingTiming?.employeeList ?? []}
+            isPending={isPending}
+            meetingTime={meetingTiming?.meetingTimePlanned}
+          />
+        </div>
+      </div>
       <div
         className={cn(
-          "h-full overflow-hidden rounded-lg mx-3",
-          "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]", // Smooth ease-in-out
-          isCardVisible ? "w-[350px] opacity-100" : "w-0 opacity-0",
+          "h-full rounded-lg mx-3",
+          "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]",
+          isCardVisible ? "w-[400px] opacity-100" : "w-0 opacity-0",
         )}
       >
-        <Card className="h-full w-full">
+        <Card className="h-full w-full p-0">
           {activeTab === "joiners" && (
             <div className="flex gap-3 justify-between">
               {(meetingTiming?.employeeList || []).map((item, index) => (
@@ -196,17 +228,28 @@ export default function MeetingDesc() {
             </div>
           )}
           {activeTab === "documents" && (
-            <div className="px-2">
-              <h3 className="mb-2 p-0">Meeting Nots</h3>
-              {meetingId && meetingTiming?.employeeList && (
-                <MeetingNotes
-                  joiners={meetingTiming?.employeeList}
-                  meetingId={meetingId}
-                  detailMeetingId={meetingTiming?.detailMeetingId}
-                  employeeId={userId}
-                  className="min-h-[40%] mt-4 max-h-[calc(100vh-200px)] overflow-hidden"
-                />
-              )}
+            <div>
+              <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
+                <h3 className="p-0 text-base">Meeting Nots</h3>
+                <div className="flex items-center gap-2">
+                  <Search className="w-4 h-4 text-gray-500" />
+                  <X
+                    className="w-5 h-5 text-gray-500 cursor-pointer"
+                    onClick={() => setIsCardVisible(false)}
+                  />
+                </div>
+              </div>
+              <div className="px-2">
+                {meetingId && meetingTiming?.employeeList && (
+                  <MeetingNotes
+                    joiners={meetingTiming?.employeeList}
+                    meetingId={meetingId}
+                    detailMeetingId={meetingTiming?.detailMeetingId}
+                    employeeId={userId}
+                    className="min-h-[40%] mt-2 max-h-[calc(100vh-200px)] overflow-hidden"
+                  />
+                )}
+              </div>
             </div>
           )}
           {activeTab === "participants" && <div>Participants List</div>}
@@ -223,16 +266,15 @@ export default function MeetingDesc() {
               handleTabChange("joiners");
             }}
           >
-            <UsersRound className="" />
+            <UsersRound className="w-16 h-16" />
           </Button>
           <Button
-            className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center p-0" : "p-2"}`}
+            className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center" : ""}`}
             onClick={() => handleTabChange("documents")}
           >
             <FileText className="h-6 w-6" />
           </Button>
 
-          {/* New Menu Item 2 - Participants */}
           <Button
             className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center p-0" : "p-2"}`}
             onClick={() => handleTabChange("participants")}
@@ -240,7 +282,6 @@ export default function MeetingDesc() {
             <Users className="h-6 w-6" />
           </Button>
 
-          {/* New Menu Item 3 - Notes */}
           <Button
             className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center p-0" : "p-2"}`}
             onClick={() => handleTabChange("notes")}

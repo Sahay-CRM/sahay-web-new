@@ -1144,6 +1144,8 @@ interface MeetingDetailsTiming {
   updatedAt?: string;
   meetingName?: string;
   conclusionTime?: string;
+  meetingTimeActual?: string;
+  meetingTimePlanned?: string;
 }
 
 interface MeetingNotesRes {
@@ -1190,6 +1192,7 @@ interface MeetingAgenda {
   name: string;
   actualTime: string | null;
   plannedTime: string | null;
+  createdAt?: string | null;
 }
 
 interface DetailMeetingAgendaIssue {

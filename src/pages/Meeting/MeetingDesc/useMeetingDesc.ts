@@ -1,19 +1,18 @@
 import {
   createMeetingMutation,
+  endMeetingMutation,
   updateDetailMeetingMutation,
   useGetMeetingTiming,
 } from "@/features/api/companyMeeting";
-import { getMeeting } from "@/features/selectors/auth.selector";
 import { queryClient } from "@/queryClient";
 import { getDatabase, off, onValue, ref, update } from "firebase/database";
 import { useCallback, useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();
 
-  const agendaList = useSelector(getMeeting);
+  // const [plannedTime, setPlannedTime] = useState<number>();
 
   const [isMeetingStart, setIsMeetingStart] = useState(false);
   const [meetingResponse, setMeetingResponse] = useState<MeetingResFire | null>(
@@ -26,6 +25,7 @@ export default function useMeetingDesc() {
   const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
 
   const { mutate: createMeet } = createMeetingMutation();
+  const { mutate: endMeet } = endMeetingMutation();
 
   const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
   const [isPending, setIsPending] = useState(false);
@@ -92,42 +92,6 @@ export default function useMeetingDesc() {
   //   }
   // };
 
-  const handleDesc = () => {
-    const now = Date.now();
-    const totalAgendaTime =
-      now - Number(meetingResponse?.state.lastSwitchTimestamp);
-
-    if (meetingId) {
-      setIsPending(true);
-      const db = getDatabase();
-      const meetStateRef = ref(db, `meetings/${meetingId}/state`);
-      const meetAgendaRef = ref(db, `meetings/${meetingId}/timers/agenda`);
-
-      updateDetailMeeting(
-        {
-          meetingId: meetingId,
-          status: "DISCUSSION",
-          agendaTimeActual: String(totalAgendaTime / 1000), // in seconds
-        },
-        {
-          onSuccess: () => {
-            setIsPending(false);
-            update(meetStateRef, {
-              activeTab: "DISCUSSION",
-              lastSwitchTimestamp: Date.now(),
-              status: "DISCUSSION",
-              currentAgendaItemId:
-                agendaList.items[0].detailMeetingAgendaIssueId,
-            });
-            update(meetAgendaRef, {
-              actualTime: String(totalAgendaTime),
-            });
-          },
-        },
-      );
-    }
-  };
-
   const handleTabChange = (tab: string) => {
     if (activeTab === tab) {
       // Toggle card visibility when clicking the same tab
@@ -138,12 +102,61 @@ export default function useMeetingDesc() {
     }
   };
 
+  // const handleTimeUpdate = (newTime: number) => {
+  //   // setPlannedTime(newTime);
+  //   if (meetingId) {
+  //     updateDetailMeeting({
+  //       meetingId: meetingId,
+  //       detailMeetingId: meetingTiming?.detailMeetingId,
+  //       meetingTimePlanned: String(newTime), // Make sure API accepts it as string
+  //     });
+  //   }
+  // };
+
+  const handleConclusionMeeting = () => {
+    if (meetingId) {
+      const db = getDatabase();
+      const meetStateRef = ref(db, `meetings/${meetingId}/state`);
+
+      // const now = Date.now();
+      // const elapsed = now - Number(meetingResponse?.state.lastSwitchTimestamp);
+
+      // if (meetingTiming && meetingTiming.detailMeetingId) {
+      // const objectiveActualTime =
+      //   meetingResponse?.timers.objectives?.[
+      //     currentItem.detailMeetingAgendaIssueId
+      //   ].actualTime;
+      // const time = (objectiveActualTime ?? 0) + elapsed;
+
+      updateDetailMeeting(
+        {
+          meetingId: meetingId,
+          status: "CONCLUSION",
+        },
+        {
+          onSuccess: () => {
+            update(meetStateRef, {
+              activeTab: "CONCLUSION",
+              lastSwitchTimestamp: Date.now(),
+              status: "CONCLUSION",
+            });
+          },
+        },
+      );
+    }
+  };
+
+  const handleEndMeeting = () => {
+    if (meetingId) {
+      endMeet(meetingId);
+    }
+  };
+
   return {
     handleStartMeeting,
     isMeetingStart,
     setIsMeetingStart,
     meetingStatus: meetingTiming?.status,
-    handleDesc,
     meetingId,
     meetingResponse,
     meetingTiming,
@@ -153,5 +166,9 @@ export default function useMeetingDesc() {
     handleTabChange,
     activeTab,
     isCardVisible,
+    setIsCardVisible,
+    // handleTimeUpdate,
+    handleConclusionMeeting,
+    handleEndMeeting,
   };
 }
