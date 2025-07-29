@@ -159,7 +159,7 @@ export default function TaskDrawer({
     <>
       {/* Overlay */}
       {open && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-black/30 z-50 transition-opacity" />
+        <div className="fixed inset-0  bg-black/60 z-50 transition-opacity" />
       )}
       <div
         ref={drawerRef}

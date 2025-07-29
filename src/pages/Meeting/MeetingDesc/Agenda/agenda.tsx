@@ -18,6 +18,10 @@ import { Badge } from "@/components/ui/badge";
 import MeetingTimer from "../meetingTimer";
 import { cn } from "@/lib/utils";
 import { useAgenda } from "./useAgenda";
+import Tasks from "../Tasks";
+import Projects from "../Projects";
+import KPITable from "../KpiTable";
+import Timer from "../Timer";
 
 function IssueModal({
   open,
@@ -90,6 +94,7 @@ interface AgendaProps {
   joiners: Joiners[];
   isPending: boolean;
   meetingTime?: string;
+  currentIssueObjId?: string;
 }
 
 export default function Agenda({
@@ -101,6 +106,7 @@ export default function Agenda({
   handleStartMeeting,
   isPending,
   meetingTime,
+  currentIssueObjId,
 }: AgendaProps) {
   const {
     issueInput,
@@ -115,12 +121,11 @@ export default function Agenda({
     isSideBar,
     filteredIssues,
     searchOptions,
-    formattedTime,
+    // formattedTime,
     setIssueInput,
     setEditingValue,
     setModalOpen,
     setDropdownVisible,
-    setIsSelectedAgenda,
     handleAddIssue,
     startEdit,
     cancelEdit,
@@ -137,12 +142,18 @@ export default function Agenda({
     handleDesc,
     activeTab,
     handleTabChange,
+    handleListClick,
+    detailAgendaData,
+    kpisFireBase,
+    projectsFireBase,
+    tasksFireBase,
   } = useAgenda({
     meetingId,
     meetingStatus,
     meetingResponse,
     detailMeetingId,
     canEdit: true,
+    currentIssueObjId,
   });
 
   const canEdit = true;
@@ -160,7 +171,7 @@ export default function Agenda({
         <div
           className={cn(
             "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]",
-            isSideBar ? "w-[400px]" : "w-[65%]",
+            isSideBar ? "w-[450px]" : "w-[65%]",
           )}
         >
           {!isSideBar && canEdit && (
@@ -232,7 +243,11 @@ export default function Agenda({
                 {agendaList.map((item, idx) => (
                   <li
                     key={item.issueObjectiveId}
-                    className={`h-12 group px-2 flex bg-red-100 mb-2 rounded-md shadow ${
+                    className={`group px-2 h-20 flex w-full ${
+                      isSelectedAgenda === item.detailMeetingAgendaIssueId
+                        ? "bg-primary text-white"
+                        : ""
+                    } mb-2 rounded-md shadow ${
                       meetingStatus === "STARTED" ||
                       meetingStatus === "NOT_STARTED"
                         ? "cursor-pointer"
@@ -271,10 +286,8 @@ export default function Agenda({
                         meetingStatus !== "STARTED" &&
                         meetingStatus !== "NOT_STARTED"
                       ) {
-                        setIsSelectedAgenda(item.detailMeetingAgendaIssueId);
+                        handleListClick(item.detailMeetingAgendaIssueId ?? "");
                       }
-
-                      console.log("Agenda item:", item);
                     }}
                     style={{
                       opacity: draggedIndex === idx ? 0.5 : 1,
@@ -326,12 +339,59 @@ export default function Agenda({
                       {editing.type === item.agendaType &&
                       editing.id === item.issueObjectiveId &&
                       canEdit ? null : (
-                        <div>
-                          <div className="text-sm">{item.name}</div>
-                          <div className="text-xs text-gray-500 flex gap-2 items-center group-hover:hidden absolute top-3 right-3">
-                            <Badge variant="secondary">{item.agendaType}</Badge>
+                        <div className="">
+                          <div className="text-sm w-[75%] overflow-hidden text-ellipsis line-clamp-3 ml-2">
+                            {item.name}
+                          </div>
+
+                          <div
+                            className={`text-xs text-center w-20 text-gray-500 ${
+                              meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED"
+                                ? "group-hover:hidden"
+                                : ""
+                            }   absolute top-3 right-3`}
+                          >
+                            <Badge variant="secondary" className="mb-1.5">
+                              {item.agendaType}
+                            </Badge>
                             <div className="text-sm font-medium text-primary">
-                              {formattedTime}
+                              {meetingStatus !== "STARTED" &&
+                                meetingStatus !== "NOT_STARTED" &&
+                                item.detailMeetingAgendaIssueId && (
+                                  <Timer
+                                    actualTime={Number(
+                                      meetingResponse?.timers.objectives?.[
+                                        item.detailMeetingAgendaIssueId ?? ""
+                                      ]?.actualTime || 0,
+                                    )}
+                                    defaultTime={Number(
+                                      meetingResponse?.timers.objectives?.[
+                                        item.detailMeetingAgendaIssueId ?? ""
+                                      ]?.actualTime || 0,
+                                    )}
+                                    lastSwitchTimestamp={
+                                      isSelectedAgenda ===
+                                      item.detailMeetingAgendaIssueId
+                                        ? Number(
+                                            meetingResponse?.state
+                                              .lastSwitchTimestamp ||
+                                              Date.now(),
+                                          )
+                                        : 0
+                                    }
+                                    isActive={
+                                      isSelectedAgenda ===
+                                      item.detailMeetingAgendaIssueId
+                                    }
+                                    className={`${
+                                      isSelectedAgenda ===
+                                      item.detailMeetingAgendaIssueId
+                                        ? "text-white"
+                                        : ""
+                                    }`}
+                                  />
+                                )}
                             </div>
                           </div>
                         </div>
@@ -503,33 +563,67 @@ export default function Agenda({
                   meetingTime={Number(meetingTime)}
                   actualTime={0}
                   lastSwitchTimestamp={Number(
-                    meetingResponse?.state.lastSwitchTimestamp,
+                    meetingResponse?.state.meetingTimestamp,
                   )}
-                  meetingStart={meetingStatus === "STARTED"}
+                  meetingStart={meetingStatus !== "NOT_STARTED"}
                   className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
                   onTimeUpdate={handleTimeUpdate}
                 />
               </div>
             </div>
           </div>
-          <div className="border rounded-md flex items-center justify-center w-full h-[calc(100vh-200px)]">
-            {isSelectedAgenda}
-            <div className="w-[400px]">
-              📌 Tips for Writing a Clear & Effective Meeting Agenda Start with
-              the Goal ➤ What is the purpose of the meeting? Summarize it in one
-              sentence. List Key Discussion Points ➤ Break down the agenda into
-              focused, time-boxed topics. E.g., "Marketing Update (10 mins)" or
-              "Budget Review (15 mins)" Prioritize High-Impact Items First ➤
-              Cover the most important topics early, when attention is highest.
-              Assign Owners to Agenda Items ➤ Add who will lead each topic to
-              encourage preparation. Add Time Estimates ➤ Helps keep the meeting
-              on track and avoids overruns. Leave Room for Questions or Open
-              Discussion ➤ Allot a few minutes at the end to address any
-              additional points. Distribute Agenda Before the Meeting ➤ Share
-              the agenda with participants at least a day in advance. Be
-              Specific, Not Vague ✘ Bad: "Project discussion" ✔ Good: "Decide
-              launch date for Phase 2 of Project Phoenix"
-            </div>
+          <div className="border rounded-md flex items-center justify-center w-full h-[calc(100vh-200px)] overflow-scroll">
+            {meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? (
+              <div className="w-[400px]">
+                📌 Tips for Writing a Clear & Effective Meeting Agenda Start
+                with the Goal ➤ What is the purpose of the meeting? Summarize it
+                in one sentence. List Key Discussion Points ➤ Break down the
+                agenda into focused, time-boxed topics. E.g., "Marketing Update
+                (10 mins)" or "Budget Review (15 mins)" Prioritize High-Impact
+                Items First ➤ Cover the most important topics early, when
+                attention is highest. Assign Owners to Agenda Items ➤ Add who
+                will lead each topic to encourage preparation. Add Time
+                Estimates ➤ Helps keep the meeting on track and avoids overruns.
+                Leave Room for Questions or Open Discussion ➤ Allot a few
+                minutes at the end to address any additional points. Distribute
+                Agenda Before the Meeting ➤ Share the agenda with participants
+                at least a day in advance. Be Specific, Not Vague ✘ Bad:
+                "Project discussion" ✔ Good: "Decide launch date for Phase 2 of
+                Project Phoenix"
+              </div>
+            ) : (
+              detailAgendaData && (
+                <div className="h-full mt-8">
+                  {activeTab === "tasks" && (
+                    <Tasks
+                      tasksFireBase={tasksFireBase}
+                      meetingAgendaIssueId={isSelectedAgenda}
+                      detailMeetingId={detailMeetingId}
+                    />
+                  )}
+                  {activeTab === "projects" && (
+                    <div>
+                      <div className="overflow-x-auto ">
+                        <Projects
+                          meetingId={meetingId}
+                          projectsFireBase={projectsFireBase}
+                          meetingAgendaIssueId={isSelectedAgenda}
+                          detailMeetingId={detailMeetingId}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {activeTab === "kpis" && (
+                    <KPITable
+                      meetingId={meetingId}
+                      kpisFireBase={kpisFireBase}
+                      meetingAgendaIssueId={isSelectedAgenda}
+                      detailMeetingId={detailMeetingId}
+                    />
+                  )}
+                </div>
+              )
+            )}
           </div>
         </div>
       </div>

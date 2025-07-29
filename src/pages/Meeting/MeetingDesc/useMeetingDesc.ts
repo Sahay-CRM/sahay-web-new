@@ -21,6 +21,7 @@ export default function useMeetingDesc() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [activeTab, setActiveTab] = useState<string>();
   const [isCardVisible, setIsCardVisible] = useState(false);
+  const [isIssueObjId, setIsIssueObjId] = useState();
 
   const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
 
@@ -45,6 +46,10 @@ export default function useMeetingDesc() {
       if (snapshot.exists()) {
         const data = snapshot.val();
         setMeetingResponse(data);
+        if (data && data.state.activeTab === "DISCUSSION") {
+          const issueObjId = data.state.currentAgendaItemId;
+          setIsIssueObjId(issueObjId);
+        }
       } else {
         setMeetingResponse(null);
       }
@@ -170,5 +175,6 @@ export default function useMeetingDesc() {
     // handleTimeUpdate,
     handleConclusionMeeting,
     handleEndMeeting,
+    isIssueObjId,
   };
 }

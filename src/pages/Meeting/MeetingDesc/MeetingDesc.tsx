@@ -44,6 +44,7 @@ export default function MeetingDesc() {
     activeTab,
     isCardVisible,
     setIsCardVisible,
+    isIssueObjId,
     // handleTimeUpdate,
     // handleConclusionMeeting,
     // handleEndMeeting,
@@ -132,6 +133,7 @@ export default function MeetingDesc() {
             joiners={meetingTiming?.employeeList ?? []}
             isPending={isPending}
             meetingTime={meetingTiming?.meetingTimePlanned}
+            currentIssueObjId={isIssueObjId}
           />
         </div>
       </div>

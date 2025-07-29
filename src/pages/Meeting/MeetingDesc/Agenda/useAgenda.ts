@@ -6,6 +6,7 @@ import {
   editAgendaTimingMeetingMutation,
   updateDetailMeetingMutation,
   useGetDetailMeetingAgenda,
+  useGetDetailMeetingAgendaIssue,
   useGetDetailMeetingObj,
 } from "@/features/api/companyMeeting";
 import { addUpdateIssues } from "@/features/api/Issues";
@@ -20,6 +21,7 @@ interface UseAgendaProps {
   meetingResponse?: MeetingResFire | null;
   detailMeetingId: string | undefined;
   canEdit: boolean;
+  currentIssueObjId?: string;
 }
 
 type ActiveTab = "tasks" | "projects" | "kpis";
@@ -30,6 +32,7 @@ export const useAgenda = ({
   meetingResponse,
   detailMeetingId,
   canEdit,
+  currentIssueObjId,
 }: UseAgendaProps) => {
   const dispatch = useDispatch();
 
@@ -63,6 +66,12 @@ export const useAgenda = ({
   const [elapsed, setElapsed] = useState(0);
   const [activeTab, setActiveTab] = useState<ActiveTab>();
 
+  useEffect(() => {
+    if (currentIssueObjId) {
+      setIsSelectedAgenda(currentIssueObjId);
+    }
+  }, [currentIssueObjId]);
+
   // API hooks
   const { data: selectedAgenda } = useGetDetailMeetingAgenda({
     filter: {
@@ -70,12 +79,21 @@ export const useAgenda = ({
     },
     enable: !!detailMeetingId,
   });
+
+  const { data: detailAgendaData } = useGetDetailMeetingAgendaIssue({
+    filter: {
+      detailMeetingAgendaIssueId: meetingResponse?.state.currentAgendaItemId,
+    },
+    enable: !!meetingResponse?.state.currentAgendaItemId,
+  });
+
   const shouldFetch = issueInput.length >= 3;
   const { data: issueData } = useGetDetailMeetingObj({
     filter: {
       search: issueInput,
+      detailMeetingId: detailMeetingId,
     },
-    enable: !!shouldFetch,
+    enable: !!shouldFetch && !!detailMeetingId,
   });
 
   // Mutations
@@ -323,23 +341,6 @@ export const useAgenda = ({
     }
   };
 
-  const currentIndex =
-    agendaList?.findIndex(
-      (item) =>
-        item.detailMeetingAgendaIssueId ===
-        meetingResponse?.state.currentAgendaItemId,
-    ) ?? 0;
-
-  const getCurrentItem = () => {
-    const issueLength = agendaList?.length ?? 0;
-    if (currentIndex >= 0 && currentIndex < issueLength) {
-      return agendaList?.[currentIndex];
-    }
-    return undefined;
-  };
-
-  const currentItem = getCurrentItem() as MeetingAgenda;
-
   const handleConclusionMeeting = () => {
     if (meetingId) {
       const db = getDatabase();
@@ -348,16 +349,14 @@ export const useAgenda = ({
       const now = Date.now();
       const elapsed = now - Number(meetingResponse?.state.lastSwitchTimestamp);
 
-      if (currentItem && currentItem.detailMeetingAgendaIssueId) {
+      if (isSelectedAgenda) {
         const objectiveActualTime =
-          meetingResponse?.timers.objectives?.[
-            currentItem.detailMeetingAgendaIssueId
-          ].actualTime;
+          meetingResponse?.timers.objectives?.[isSelectedAgenda].actualTime;
         const time = (objectiveActualTime ?? 0) + elapsed;
 
         const meetTimersRef = ref(
           db,
-          `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}`,
+          `meetings/${meetingId}/timers/objectives/${isSelectedAgenda}`,
         );
 
         update(meetTimersRef, {
@@ -431,24 +430,17 @@ export const useAgenda = ({
   const formattedTime = `${minutes}:${seconds}`;
 
   useEffect(() => {
-    if (
-      meetingResponse &&
-      currentItem &&
-      currentItem.detailMeetingAgendaIssueId
-    ) {
-      const actTab =
-        meetingResponse?.timers.objectives?.[
-          currentItem.detailMeetingAgendaIssueId
-        ];
+    if (meetingResponse && isSelectedAgenda) {
+      const actTab = meetingResponse?.timers.objectives?.[isSelectedAgenda];
 
       setActiveTab(actTab?.activeTab as ActiveTab);
     }
-  }, [currentItem, meetingResponse]);
+  }, [isSelectedAgenda, meetingResponse]);
 
   const handleTabChange = (tab: ActiveTab) => {
     const meetTimersRef = ref(
       db,
-      `meetings/${meetingId}/timers/objectives/${currentItem.detailMeetingAgendaIssueId}`,
+      `meetings/${meetingId}/timers/objectives/${isSelectedAgenda}`,
     );
 
     update(meetTimersRef, {
@@ -456,6 +448,78 @@ export const useAgenda = ({
     });
 
     setActiveTab(tab);
+  };
+
+  const handleListClick = (detailMeetingAgendaIssueId: string) => {
+    if (!detailMeetingAgendaIssueId || !meetingId) return;
+
+    const now = Date.now();
+    const db = getDatabase();
+
+    // 1. Update the timer for the previously selected item (if any)
+    if (isSelectedAgenda) {
+      const prevElapsed =
+        now - Number(meetingResponse?.state.lastSwitchTimestamp);
+      const prevObjectiveRef = ref(
+        db,
+        `meetings/${meetingId}/timers/objectives/${isSelectedAgenda}`,
+      );
+
+      update(prevObjectiveRef, {
+        actualTime:
+          (meetingResponse?.timers.objectives?.[isSelectedAgenda]?.actualTime ||
+            0) +
+          prevElapsed / 1000,
+        lastSwitchTimestamp: now,
+      });
+    }
+
+    // 2. Switch to the new item
+    update(ref(db, `meetings/${meetingId}/state`), {
+      lastSwitchTimestamp: now,
+      currentAgendaItemId: detailMeetingAgendaIssueId,
+    });
+
+    setIsSelectedAgenda(detailMeetingAgendaIssueId);
+  };
+
+  const tasksFireBase = () => {
+    if (meetingResponse?.state.status === "DISCUSSION" && isSelectedAgenda) {
+      const db = getDatabase();
+      const meetTaskRef = ref(
+        db,
+        `meetings/${meetingId}/timers/objectives/${isSelectedAgenda}/tasks`,
+      );
+      update(meetTaskRef, {
+        updatedAt: Date.now(),
+      });
+    }
+  };
+
+  const projectsFireBase = () => {
+    if (meetingResponse?.state.status === "DISCUSSION" && isSelectedAgenda) {
+      const db = getDatabase();
+      const meetTaskRef = ref(
+        db,
+        `meetings/${meetingId}/timers/objectives/${isSelectedAgenda}/projects`,
+      );
+      update(meetTaskRef, {
+        updatedAt: Date.now(),
+      });
+    }
+  };
+
+  const kpisFireBase = () => {
+    if (meetingResponse?.state.status === "DISCUSSION" && isSelectedAgenda) {
+      const db = getDatabase();
+      const meetTaskRef = ref(
+        db,
+        `meetings/${meetingId}/timers/objectives/${isSelectedAgenda}/kpis`,
+      );
+      update(meetTaskRef, {
+        updatedAt: Date.now(),
+      });
+    }
   };
 
   return {
@@ -477,7 +541,6 @@ export const useAgenda = ({
     setModalOpen,
     setModalIssue,
     setDropdownVisible,
-    setIsSelectedAgenda,
     handleAddIssue,
     startEdit,
     cancelEdit,
@@ -494,5 +557,10 @@ export const useAgenda = ({
     handleDesc,
     activeTab,
     handleTabChange,
+    handleListClick,
+    detailAgendaData,
+    kpisFireBase,
+    projectsFireBase,
+    tasksFireBase,
   };
 };

@@ -72,11 +72,6 @@ export default function Tasks({
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "taskName", label: "Task Name", visible: true },
-    {
-      key: "taskDescription",
-      label: "Task Description",
-      visible: true,
-    },
     { key: "taskDeadline", label: "Task Deadline", visible: true },
     { key: "assigneeNames", label: "Assignees", visible: true },
     { key: "taskStatus", label: "Status", visible: true },
@@ -142,7 +137,7 @@ export default function Tasks({
   );
 
   return (
-    <div className="p-4">
+    <div className="px-4 h-full">
       <div className="flex gap-5 justify-between mb-5">
         <div>
           <TaskSearchDropdown

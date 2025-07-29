@@ -1061,6 +1061,8 @@ interface MeetingResFire {
     activeTab: string;
     currentAgendaItemId?: string;
     status?: string;
+    follow: string;
+    meetingTimestamp?: number;
   };
   timers: {
     agenda?: TimerEntry;
@@ -1069,13 +1071,6 @@ interface MeetingResFire {
       [objectiveId: string]: TimerEntry;
     };
   };
-  activeScreen?: string;
-  meetingId: string;
-  updatedAt: string | number;
-  agenda?: { updatedAt: string | number };
-  conclusion?: { updatedAt: string | number };
-  discussion?: { updatedAt: string | number };
-  follow?: string;
 }
 
 interface FbIssues {
