@@ -2,9 +2,8 @@ import useMeetingDesc from "./useMeetingDesc";
 // import Desc from "../MeetingDesc/Desc/desc";
 // import Conclusion from "../MeetingDesc/Conclusion/conclusion";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { useEffect, useContext } from "react";
+import { useEffect } from "react";
 import Agenda from "./Agenda";
-import { SidebarControlContext } from "@/features/layouts/DashboardLayout/SidebarControlContext";
 import { Button } from "@/components/ui/button";
 import {
   Crown,
@@ -33,9 +32,7 @@ import {
 
 export default function MeetingDesc() {
   const {
-    handleStartMeeting,
     meetingStatus,
-    isPending,
     meetingId,
     meetingResponse,
     meetingTiming,
@@ -44,13 +41,12 @@ export default function MeetingDesc() {
     activeTab,
     isCardVisible,
     setIsCardVisible,
-    isIssueObjId,
     // handleTimeUpdate,
     // handleConclusionMeeting,
     // handleEndMeeting,
   } = useMeetingDesc();
   const { setBreadcrumbs } = useBreadcrumbs();
-  const sidebarControl = useContext(SidebarControlContext);
+
   const userId = useSelector(getUserId);
 
   useEffect(() => {
@@ -60,13 +56,6 @@ export default function MeetingDesc() {
       { label: `${meetingTiming?.meetingName}`, href: "" },
     ]);
   }, [meetingTiming?.meetingName, setBreadcrumbs]);
-
-  const handleStartMeetingWithSidebar = () => {
-    if (sidebarControl?.setOpen) {
-      sidebarControl.setOpen(false);
-    }
-    handleStartMeeting();
-  };
 
   // let content = null;
   // if (
@@ -129,11 +118,8 @@ export default function MeetingDesc() {
             meetingResponse={meetingResponse}
             agendaPlannedTime={meetingTiming?.agendaTimePlanned}
             detailMeetingId={meetingTiming?.detailMeetingId}
-            handleStartMeeting={handleStartMeetingWithSidebar}
             joiners={meetingTiming?.employeeList ?? []}
-            isPending={isPending}
             meetingTime={meetingTiming?.meetingTimePlanned}
-            currentIssueObjId={isIssueObjId}
           />
         </div>
       </div>

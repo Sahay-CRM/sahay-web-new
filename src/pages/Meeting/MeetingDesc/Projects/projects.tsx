@@ -147,7 +147,7 @@ export default function Projects({
   );
 
   return (
-    <div className="p-4">
+    <div className="px-4">
       <div className="flex gap-5 justify-between mb-5">
         <div>
           <ProjectSearchDropdown

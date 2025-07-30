@@ -18,6 +18,10 @@ interface AgendaResConclusion {
 interface MeetingConclusionData {
   agendaPlanned: string;
   agendaActual: string;
+  meetingPlanned: string;
+  meetingActual: string;
+  conclusionPlanned: string;
+  conclusionActual: string;
   agendaTotalPlanned: string;
   agendaTotalActual: string;
   agenda: AgendaResConclusion[];

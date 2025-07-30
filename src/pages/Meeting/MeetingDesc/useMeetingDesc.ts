@@ -1,5 +1,4 @@
 import {
-  createMeetingMutation,
   endMeetingMutation,
   updateDetailMeetingMutation,
   useGetMeetingTiming,
@@ -12,24 +11,19 @@ import { useParams } from "react-router-dom";
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();
 
-  // const [plannedTime, setPlannedTime] = useState<number>();
-
-  const [isMeetingStart, setIsMeetingStart] = useState(false);
   const [meetingResponse, setMeetingResponse] = useState<MeetingResFire | null>(
     null,
   );
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [activeTab, setActiveTab] = useState<string>();
   const [isCardVisible, setIsCardVisible] = useState(false);
-  const [isIssueObjId, setIsIssueObjId] = useState();
 
   const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
 
-  const { mutate: createMeet } = createMeetingMutation();
   const { mutate: endMeet } = endMeetingMutation();
 
   const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
-  const [isPending, setIsPending] = useState(false);
+
   const handleUpdatedRefresh = useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({
@@ -46,10 +40,6 @@ export default function useMeetingDesc() {
       if (snapshot.exists()) {
         const data = snapshot.val();
         setMeetingResponse(data);
-        if (data && data.state.activeTab === "DISCUSSION") {
-          const issueObjId = data.state.currentAgendaItemId;
-          setIsIssueObjId(issueObjId);
-        }
       } else {
         setMeetingResponse(null);
       }
@@ -75,17 +65,6 @@ export default function useMeetingDesc() {
   }, [db, handleUpdatedRefresh, meetingId]);
 
   // Accept callbacks for onStart and onEnd
-  const handleStartMeeting = () => {
-    if (meetingId) {
-      setIsPending(true);
-      createMeet(meetingId, {
-        onSuccess: () => {
-          setIsPending(false);
-          setIsMeetingStart(true);
-        },
-      });
-    }
-  };
 
   // const agendaFireBase = (id: string) => {
   //   if (meetingStatus) {
@@ -158,14 +137,10 @@ export default function useMeetingDesc() {
   };
 
   return {
-    handleStartMeeting,
-    isMeetingStart,
-    setIsMeetingStart,
     meetingStatus: meetingTiming?.status,
     meetingId,
     meetingResponse,
     meetingTiming,
-    isPending,
     isSidebarCollapsed,
     setIsSidebarCollapsed,
     handleTabChange,
@@ -175,6 +150,5 @@ export default function useMeetingDesc() {
     // handleTimeUpdate,
     handleConclusionMeeting,
     handleEndMeeting,
-    isIssueObjId,
   };
 }

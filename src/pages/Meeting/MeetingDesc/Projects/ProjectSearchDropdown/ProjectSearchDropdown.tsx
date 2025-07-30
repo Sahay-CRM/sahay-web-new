@@ -91,7 +91,9 @@ export default function ProjectSearchDropdown({
           {isFetching ? (
             <div className="p-2 text-center text-gray-500">Loading...</div>
           ) : project.length === 0 ? (
-            <div className="p-2 text-center text-gray-500">No tasks found</div>
+            <div className="p-2 text-center text-gray-500">
+              No Projects found
+            </div>
           ) : (
             <ul>
               {project.map((item) => (

@@ -17,15 +17,11 @@ export default function Timer({
   onTimeUpdate,
   className,
 }: TimerProps) {
-  // Initialize with either actualTime or defaultTime
-  const [displayTime, setDisplayTime] = useState(
-    actualTime !== undefined ? actualTime : defaultTime,
-  );
+  const [displayTime, setDisplayTime] = useState(actualTime || defaultTime);
 
   useEffect(() => {
-    // When inactive or no lastSwitchTimestamp, use stored time
     if (!isActive || !lastSwitchTimestamp) {
-      setDisplayTime(actualTime !== undefined ? actualTime : defaultTime);
+      setDisplayTime(actualTime || defaultTime);
       return;
     }
 
@@ -34,7 +30,7 @@ export default function Timer({
       const elapsedSeconds = (now - lastSwitchTimestamp) / 1000;
       const currentTime = (actualTime || 0) + elapsedSeconds;
 
-      setDisplayTime(Math.floor(currentTime));
+      setDisplayTime(currentTime);
 
       if (onTimeUpdate) {
         onTimeUpdate(currentTime);
@@ -42,16 +38,13 @@ export default function Timer({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [actualTime, lastSwitchTimestamp, isActive, defaultTime]);
+  }, [actualTime, lastSwitchTimestamp, isActive, defaultTime, onTimeUpdate]);
 
   const formatTime = (totalSeconds: number) => {
-    const absSeconds = Math.abs(totalSeconds);
-    const minutes = Math.floor(absSeconds / 60);
-    const seconds = Math.floor(absSeconds % 60);
-    return `${totalSeconds < 0 ? "-" : ""}${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
 
-  return (
-    <div className={`${className} text-2xl`}>{formatTime(displayTime)}</div>
-  );
+  return <div className={className}>{formatTime(displayTime)}</div>;
 }

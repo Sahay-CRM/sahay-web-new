@@ -1,13 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
+  AlertTriangle,
   BarChart2,
+  CheckCircle,
   CheckSquare,
   CircleX,
+  Clock,
   CornerDownLeft,
   List,
   SquarePen,
+  Target,
   Trash2,
+  TrendingUp,
+  Users,
+  XCircle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -22,6 +29,8 @@ import Tasks from "../Tasks";
 import Projects from "../Projects";
 import KPITable from "../KpiTable";
 import Timer from "../Timer";
+import { SpinnerIcon } from "@/components/shared/Icons";
+import { formatDate } from "@/features/utils/app.utils";
 
 function IssueModal({
   open,
@@ -90,11 +99,8 @@ interface AgendaProps {
   meetingResponse?: MeetingResFire | null;
   agendaPlannedTime: number | string | undefined;
   detailMeetingId: string | undefined;
-  handleStartMeeting: () => void;
   joiners: Joiners[];
-  isPending: boolean;
   meetingTime?: string;
-  currentIssueObjId?: string;
 }
 
 export default function Agenda({
@@ -103,10 +109,7 @@ export default function Agenda({
   meetingStatus,
   meetingResponse,
   detailMeetingId,
-  handleStartMeeting,
-  isPending,
   meetingTime,
-  currentIssueObjId,
 }: AgendaProps) {
   const {
     issueInput,
@@ -147,16 +150,119 @@ export default function Agenda({
     kpisFireBase,
     projectsFireBase,
     tasksFireBase,
+    isPending,
+    handleStartMeeting,
+    handleCloseMeetingWithLog,
+    endMeetingLoading,
+    conclusionData,
+    conclusionLoading,
+    hasChanges,
   } = useAgenda({
     meetingId,
     meetingStatus,
     meetingResponse,
     detailMeetingId,
     canEdit: true,
-    currentIssueObjId,
   });
+  const [contentWidth, setContentWidth] = useState("90%");
+
+  const SIDEBAR_WIDTH = 600; // in pixels
+
+  const updateWidth = () => {
+    const screenWidth = window.innerWidth;
+    if (isSideBar) {
+      setContentWidth(`${screenWidth - SIDEBAR_WIDTH}px`);
+    } else {
+      setContentWidth("90%");
+    }
+  };
+
+  useEffect(() => {
+    updateWidth(); // call on mount and sidebar toggle
+    window.addEventListener("resize", updateWidth);
+
+    return () => window.removeEventListener("resize", updateWidth);
+  }, [isSideBar]);
 
   const canEdit = true;
+
+  const formatTime = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  function formatSecondsToHHMM(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}`;
+  }
+
+  const selectedItem = conclusionData?.agenda?.find(
+    (item) => item.detailMeetingAgendaIssueId === isSelectedAgenda,
+  );
+
+  const getStatusIcon = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "completed":
+        return <CheckCircle className="w-4 h-4" />;
+      case "delayed":
+        return <AlertTriangle className="w-4 h-4" />;
+      case "in progress":
+        return <Clock className="w-4 h-4" />;
+      case "blasted":
+        return <XCircle className="w-4 h-4" />;
+      default:
+        return <Clock className="w-4 h-4" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "completed":
+        return "text-green-600 bg-green-100";
+      case "delayed":
+        return "text-red-600 bg-red-100";
+      case "in progress":
+        return "text-yellow-600 bg-yellow-100";
+      case "blasted":
+        return "text-purple-600 bg-purple-100";
+      default:
+        return "text-gray-600 bg-gray-100";
+    }
+  };
+
+  const renderStatusChange = (oldStatus: string, newStatus: string) => {
+    if (oldStatus === newStatus) {
+      return (
+        <span
+          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(newStatus)}`}
+        >
+          {getStatusIcon(newStatus)}
+          {newStatus}
+        </span>
+      );
+    }
+    return (
+      <div className="flex items-center gap-2">
+        <span
+          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(oldStatus)}`}
+        >
+          {getStatusIcon(oldStatus)}
+          {oldStatus}
+        </span>
+        <span className="text-gray-400">→</span>
+        <span
+          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(newStatus)}`}
+        >
+          {getStatusIcon(newStatus)}
+          {newStatus}
+        </span>
+      </div>
+    );
+  };
 
   return (
     <div>
@@ -167,15 +273,17 @@ export default function Agenda({
         defaultType=""
         onSubmit={handleModalSubmit}
       />
-      <div className="flex gap-3">
+      <div className="flex gap-3 transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]">
         <div
           className={cn(
+            // "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]",
             "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]",
-            isSideBar ? "w-[450px]" : "w-[65%]",
+            isSideBar ? "w-[370px] min-w-[370px]" : "w-[65%]",
           )}
         >
-          {!isSideBar && canEdit && (
-            <div className="flex gap-2 relative">
+          <div className="flex gap-2 relative transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]">
+            {(meetingStatus === "STARTED" ||
+              meetingStatus === "NOT_STARTED") && (
               <div className="flex gap-2 relative w-full">
                 <Input
                   value={issueInput}
@@ -235,9 +343,9 @@ export default function Agenda({
                   </ul>
                 )}
               </div>
-            </div>
-          )}
-          <div className="mt-2 h-[calc(100vh-200px)] pr-1 w-full overflow-auto">
+            )}
+          </div>
+          <div className="mt-2 h-[calc(100vh-200px)] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] pr-1 w-full overflow-auto">
             {agendaList && agendaList.length > 0 ? (
               <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {agendaList.map((item, idx) => (
@@ -340,7 +448,9 @@ export default function Agenda({
                       editing.id === item.issueObjectiveId &&
                       canEdit ? null : (
                         <div className="">
-                          <div className="text-sm w-[75%] overflow-hidden text-ellipsis line-clamp-3 ml-2">
+                          <div
+                            className={`text-sm ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "w-full" : "w-[75%]"} overflow-hidden text-ellipsis line-clamp-3 ml-2`}
+                          >
                             {item.name}
                           </div>
 
@@ -359,38 +469,82 @@ export default function Agenda({
                               {meetingStatus !== "STARTED" &&
                                 meetingStatus !== "NOT_STARTED" &&
                                 item.detailMeetingAgendaIssueId && (
-                                  <Timer
-                                    actualTime={Number(
-                                      meetingResponse?.timers.objectives?.[
-                                        item.detailMeetingAgendaIssueId ?? ""
-                                      ]?.actualTime || 0,
+                                  <div>
+                                    {meetingStatus === "DISCUSSION" ? (
+                                      <Timer
+                                        actualTime={Number(
+                                          meetingResponse?.timers.objectives?.[
+                                            item.detailMeetingAgendaIssueId ??
+                                              ""
+                                          ]?.actualTime || 0,
+                                        )}
+                                        defaultTime={Number(
+                                          meetingResponse?.timers.objectives?.[
+                                            item.detailMeetingAgendaIssueId ??
+                                              ""
+                                          ]?.actualTime || 0,
+                                        )}
+                                        lastSwitchTimestamp={
+                                          isSelectedAgenda ===
+                                          item.detailMeetingAgendaIssueId
+                                            ? Number(
+                                                meetingResponse?.state
+                                                  .lastSwitchTimestamp ||
+                                                  Date.now(),
+                                              )
+                                            : 0
+                                        }
+                                        isActive={
+                                          isSelectedAgenda ===
+                                          item.detailMeetingAgendaIssueId
+                                        }
+                                        className={`${
+                                          isSelectedAgenda ===
+                                          item.detailMeetingAgendaIssueId
+                                            ? "text-white"
+                                            : ""
+                                        }`}
+                                      />
+                                    ) : meetingStatus === "DISCUSSION" ? (
+                                      <div
+                                        className={`text-xl ${
+                                          isSelectedAgenda ===
+                                          item.detailMeetingAgendaIssueId
+                                            ? "text-white"
+                                            : ""
+                                        }`}
+                                      >
+                                        {formatTime(
+                                          Number(
+                                            meetingResponse?.timers
+                                              ?.objectives?.[
+                                              item.detailMeetingAgendaIssueId ??
+                                                ""
+                                            ]?.actualTime || 0,
+                                          ),
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <div
+                                        className={`text-xl ${
+                                          isSelectedAgenda ===
+                                          item.detailMeetingAgendaIssueId
+                                            ? "text-white"
+                                            : ""
+                                        }`}
+                                      >
+                                        {formatTime(
+                                          Number(
+                                            conclusionData?.agenda.find(
+                                              (con) =>
+                                                con.detailMeetingAgendaIssueId ===
+                                                item.detailMeetingAgendaIssueId,
+                                            )?.actualTime,
+                                          ),
+                                        )}
+                                      </div>
                                     )}
-                                    defaultTime={Number(
-                                      meetingResponse?.timers.objectives?.[
-                                        item.detailMeetingAgendaIssueId ?? ""
-                                      ]?.actualTime || 0,
-                                    )}
-                                    lastSwitchTimestamp={
-                                      isSelectedAgenda ===
-                                      item.detailMeetingAgendaIssueId
-                                        ? Number(
-                                            meetingResponse?.state
-                                              .lastSwitchTimestamp ||
-                                              Date.now(),
-                                          )
-                                        : 0
-                                    }
-                                    isActive={
-                                      isSelectedAgenda ===
-                                      item.detailMeetingAgendaIssueId
-                                    }
-                                    className={`${
-                                      isSelectedAgenda ===
-                                      item.detailMeetingAgendaIssueId
-                                        ? "text-white"
-                                        : ""
-                                    }`}
-                                  />
+                                  </div>
                                 )}
                             </div>
                           </div>
@@ -471,13 +625,16 @@ export default function Agenda({
             )}
           </div>
         </div>
-        <div className="w-full">
-          <div className="flex gap-3 mb-4">
+        <div
+          className="transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]"
+          style={{ width: contentWidth }}
+        >
+          <div className="flex gap-3 mb-4 transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]">
             <div className="w-full">
               {meetingStatus === "STARTED" ||
               meetingStatus === "NOT_STARTED" ? (
                 <div className="w-full flex h-[40px] border border-gray-300 rounded-[10px] items-center px-4">
-                  <div className="flex-1 text-lg w-[30%] text-primary ml-3 font-semibold truncate">
+                  <div className="flex-1 text-lg  w-[30%] text-primary ml-3 font-semibold truncate">
                     {meetingName}
                   </div>
 
@@ -485,7 +642,7 @@ export default function Agenda({
                     Meeting Agenda
                   </div>
                 </div>
-              ) : (
+              ) : meetingStatus === "DISCUSSION" ? (
                 <div className="w-fit">
                   <nav className="space-y-1 w-full ">
                     <div className="mr-5 flex gap-3 items-center rounded-2xl px-1">
@@ -522,13 +679,63 @@ export default function Agenda({
                     </div>
                   </nav>
                 </div>
+              ) : (
+                <div className="flex gap-4 items-center flex-wrap">
+                  <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                    <Clock className="w-4 h-4 text-green-600" />
+                    <span className="font-medium">Agenda Actual:</span>
+                    <span className="font-bold">
+                      {conclusionData?.agendaActual}m
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                    <Clock className="w-4 h-4 text-green-600" />
+                    <span className="font-medium">Discussion Actual:</span>
+                    <span className="font-bold">
+                      {conclusionData?.agendaTotalActual}m
+                    </span>
+                  </div>
+
+                  {conclusionData?.conclusionActual != null && (
+                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                      <Clock className="w-4 h-4 text-green-600" />
+                      <span className="font-medium">Conclusion Actual:</span>
+                      <span className="font-bold">
+                        {conclusionData.conclusionActual}m
+                      </span>
+                    </div>
+                  )}
+
+                  {conclusionData?.meetingPlanned != null && (
+                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                      <Clock className="w-4 h-4 text-green-600" />
+                      <span className="font-medium">Meeting Planned:</span>
+                      <span className="font-bold">
+                        {conclusionData.meetingPlanned}m
+                      </span>
+                    </div>
+                  )}
+
+                  {conclusionData?.meetingActual != null && (
+                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                      <Clock className="w-4 h-4 text-green-600" />
+                      <span className="font-medium">Meeting Actual:</span>
+                      <span className="font-bold">
+                        {formatSecondsToHHMM(
+                          Number(conclusionData.meetingActual),
+                        )}
+                      </span>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-            <div className="flex flex-wrap md:flex-nowrap items-center gap-3 w-[30%] md:w-auto">
+            <div className="flex flex-wrap transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] md:flex-nowrap items-center gap-3 w-[30%] md:w-auto">
               {meetingStatus === "NOT_STARTED" && (
                 <Button
                   variant="outline"
-                  className="w-full sm:w-[200px] h-[40px] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
+                  className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
                   onClick={handleStartMeeting}
                   isLoading={isPending}
                 >
@@ -539,42 +746,53 @@ export default function Agenda({
               {meetingStatus === "STARTED" && (
                 <Button
                   variant="outline"
-                  className="w-full sm:w-[200px] h-[40px] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
+                  className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
                   onClick={handleDesc}
-                  disabled={isPending || agendaList.length === 0} // Disable if empty
+                  isLoading={isPending}
                 >
-                  {isPending ? "Loading..." : "Start Discussion"}
+                  Start Discussion
                 </Button>
               )}
 
               {meetingStatus === "DISCUSSION" && (
                 <Button
                   variant="outline"
-                  className="bg-primary text-white px-4 py-5 text-sm sm:text-base md:text-lg"
+                  className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
                   onClick={handleConclusionMeeting}
                 >
                   Go To Conclusion
                 </Button>
               )}
 
-              {/* Timer */}
-              <div className="w-fit px-2 pl-4 h-[40px] border-gray-300 rounded-[10px] flex items-center justify-center">
-                <MeetingTimer
-                  meetingTime={Number(meetingTime)}
-                  actualTime={0}
-                  lastSwitchTimestamp={Number(
-                    meetingResponse?.state.meetingTimestamp,
-                  )}
-                  meetingStart={meetingStatus !== "NOT_STARTED"}
-                  className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
-                  onTimeUpdate={handleTimeUpdate}
-                />
-              </div>
+              {meetingStatus === "CONCLUSION" && (
+                <Button
+                  variant="outline"
+                  className="bg-primary transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] text-white px-4 py-5 text-sm sm:text-base md:text-lg"
+                  onClick={handleCloseMeetingWithLog}
+                  isLoading={endMeetingLoading}
+                >
+                  End Meeting
+                </Button>
+              )}
+              {meetingStatus !== "ENDED" && (
+                <div className="w-fit transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] px-2 pl-4 h-[40px] border-gray-300 rounded-[10px] flex items-center justify-center">
+                  <MeetingTimer
+                    meetingTime={Number(meetingTime)}
+                    actualTime={0}
+                    lastSwitchTimestamp={Number(
+                      meetingResponse?.state.meetingTimestamp,
+                    )}
+                    meetingStart={meetingStatus !== "NOT_STARTED"}
+                    className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
+                    onTimeUpdate={handleTimeUpdate}
+                  />
+                </div>
+              )}
             </div>
           </div>
-          <div className="border rounded-md flex items-center justify-center w-full h-[calc(100vh-200px)] overflow-scroll">
+          <div className="border transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] rounded-md flex  justify-center w-full h-[calc(100vh-200px)] overflow-scroll">
             {meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? (
-              <div className="w-[400px]">
+              <div className="w-[400px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]">
                 📌 Tips for Writing a Clear & Effective Meeting Agenda Start
                 with the Goal ➤ What is the purpose of the meeting? Summarize it
                 in one sentence. List Key Discussion Points ➤ Break down the
@@ -591,9 +809,9 @@ export default function Agenda({
                 "Project discussion" ✔ Good: "Decide launch date for Phase 2 of
                 Project Phoenix"
               </div>
-            ) : (
+            ) : meetingStatus === "DISCUSSION" ? (
               detailAgendaData && (
-                <div className="h-full mt-8">
+                <div className="max-h-full transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] h-auto mt-8 px-2 w-full">
                   {activeTab === "tasks" && (
                     <Tasks
                       tasksFireBase={tasksFireBase}
@@ -602,16 +820,12 @@ export default function Agenda({
                     />
                   )}
                   {activeTab === "projects" && (
-                    <div>
-                      <div className="overflow-x-auto ">
-                        <Projects
-                          meetingId={meetingId}
-                          projectsFireBase={projectsFireBase}
-                          meetingAgendaIssueId={isSelectedAgenda}
-                          detailMeetingId={detailMeetingId}
-                        />
-                      </div>
-                    </div>
+                    <Projects
+                      meetingId={meetingId}
+                      projectsFireBase={projectsFireBase}
+                      meetingAgendaIssueId={isSelectedAgenda}
+                      detailMeetingId={detailMeetingId}
+                    />
                   )}
                   {activeTab === "kpis" && (
                     <KPITable
@@ -623,6 +837,231 @@ export default function Agenda({
                   )}
                 </div>
               )
+            ) : conclusionLoading ? (
+              <div className="flex justify-center items-center h-20">
+                <div className="animate-spin">
+                  <SpinnerIcon />
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 px-6 h-[calc(100vh-230px)] overflow-x-scroll w-full">
+                {/* <div className="mb-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-800">
+                        {selectedItem?.name}
+                      </h2>
+                    </div>
+                  </div>
+                </div> */}
+                <div className="space-y-6 ">
+                  {!hasChanges(selectedItem) ? (
+                    <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                      <div className="text-gray-400 mb-2">
+                        <Target className="w-12 h-12 mx-auto" />
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-600 mb-2">
+                        No Updates Recorded
+                      </h3>
+                      <p className="text-gray-500">
+                        This agenda item was discussed but no specific updates
+                        were recorded.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      {selectedItem &&
+                        selectedItem?.discussion.taskUpdate.length > 0 && (
+                          <div className="bg-white border rounded-lg p-6">
+                            <div className="flex items-center gap-2 mb-4">
+                              <CheckCircle className="w-6 h-6 text-blue-600" />
+                              <h3 className="text-lg font-semibold text-gray-800">
+                                Tasks Updates
+                              </h3>
+                              <span className="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded-full">
+                                {selectedItem?.discussion.taskUpdate.length}{" "}
+                                updates
+                              </span>
+                            </div>
+                            <div className="space-y-4">
+                              {selectedItem?.discussion.taskUpdate.map(
+                                (task, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="bg-gray-100 p-4 rounded-lg"
+                                  >
+                                    <h4 className="font-medium text-gray-800 mb-2">
+                                      Task Name : {task.newValues.taskName}
+                                    </h4>
+                                    {(task.oldValues.taskStatus ||
+                                      task.newValues.taskStatus) && (
+                                      <p className="text-sm text-gray-700">
+                                        <span className="text-red-500">
+                                          {task.oldValues.taskStatus || "N/A"}
+                                        </span>
+                                        ➜
+                                        <span className="text-green-600">
+                                          {task.newValues.taskStatus || "N/A"}
+                                        </span>
+                                      </p>
+                                    )}
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                      {selectedItem &&
+                        selectedItem?.discussion.projectUpdate.length > 0 && (
+                          <div className="bg-white border rounded-lg p-6">
+                            <div className="flex items-center gap-2 mb-4">
+                              <Users className="w-6 h-6 text-green-600" />
+                              <h3 className="text-lg font-semibold text-gray-800">
+                                Projects Updates
+                              </h3>
+                              <span className="bg-green-100 text-green-800 text-sm px-2 py-1 rounded-full">
+                                {selectedItem?.discussion.projectUpdate.length}{" "}
+                                updates
+                              </span>
+                            </div>
+                            <div className="space-y-4">
+                              {selectedItem?.discussion.projectUpdate.map(
+                                (project, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="bg-gray-100 p-4 rounded-lg"
+                                  >
+                                    <div className="flex items-start justify-between mb-3">
+                                      <div>
+                                        <h4 className="font-medium text-gray-800">
+                                          Project Name :{" "}
+                                          {project.newValues.projectName}
+                                        </h4>
+                                        <p className="text-sm text-gray-600 mt-1">
+                                          {project.newValues.projectDescription}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    {project.oldValues.projectStatus ||
+                                      (project.newValues.projectStatus && (
+                                        <div className="mb-3">
+                                          {renderStatusChange(
+                                            project.oldValues.projectStatus,
+                                            project.newValues.projectStatus,
+                                          )}
+                                        </div>
+                                      ))}
+
+                                    <div className="flex flex-wrap gap-2 mb-2">
+                                      {project.newValues.subParameters
+                                        ?.split(",")
+                                        .map((param, paramIdx) => (
+                                          <span
+                                            key={paramIdx}
+                                            className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+                                          >
+                                            {param.trim()}
+                                          </span>
+                                        ))}
+                                    </div>
+                                    {project.newValues.projectEmployees && (
+                                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                                        <Users className="w-4 h-4" />
+                                        <span>
+                                          Team:{" "}
+                                          {project.newValues.projectEmployees}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                      {selectedItem &&
+                        selectedItem?.discussion.kpiUpdate.length > 0 && (
+                          <div className="bg-white border rounded-lg p-6">
+                            <div className="flex items-center gap-2 mb-4">
+                              <TrendingUp className="w-6 h-6 text-purple-600" />
+                              <h3 className="text-lg font-semibold text-gray-800">
+                                KPIs Updates
+                              </h3>
+                              <span className="bg-purple-100 text-purple-800 text-sm px-2 py-1 rounded-full">
+                                {selectedItem?.discussion.kpiUpdate.length}{" "}
+                                updates
+                              </span>
+                            </div>
+                            <div className="space-y-4">
+                              {selectedItem?.discussion.kpiUpdate.map(
+                                (kpi, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="bg-gray-100 p-4 rounded-lg"
+                                  >
+                                    <div className="flex items-start justify-between mb-3">
+                                      <div>
+                                        <h4 className="font-medium text-gray-800">
+                                          KPI Name : {kpi.newValues.kpiName}
+                                        </h4>
+                                        <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                                          {kpi.newValues.kpiFrequency && (
+                                            <span>
+                                              Frequency:{" "}
+                                              {kpi.newValues.kpiFrequency}
+                                            </span>
+                                          )}
+                                          {kpi.newValues.value1 && (
+                                            <span>
+                                              Target: {kpi.newValues.value1}
+                                              {kpi.newValues.kpiUnit}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      {kpi.newValues.tag && (
+                                        <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+                                          {kpi.newValues.tag}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {kpi.recData && kpi.recData.length > 0 && (
+                                      <div className="mt-3">
+                                        <h5 className="text-sm font-medium text-gray-700 mb-2">
+                                          Recent Data:
+                                        </h5>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                          {kpi.recData.map((data, dataIdx) => (
+                                            <div
+                                              key={dataIdx}
+                                              className="bg-white p-2 rounded border"
+                                            >
+                                              <div className="flex justify-between items-center">
+                                                <span className="text-sm text-gray-600">
+                                                  {formatDate(data.startDate)}
+                                                </span>
+                                                <span className="font-semibold text-lg text-purple-600">
+                                                  {data.data}
+                                                </span>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          </div>
+                        )}
+                    </>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </div>

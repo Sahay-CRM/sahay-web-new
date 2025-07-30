@@ -846,14 +846,14 @@ export default function KPITable({
 
   return (
     <FormProvider {...methods}>
-      <div>
+      <div className="w-full">
         <KpisSearchDropdown
           onAdd={handleAddKpis}
           minSearchLength={2}
           filterProps={{ pageSize: 20 }}
         />
       </div>
-      <div className="flex justify-between">
+      <div className="flex w-full justify-between">
         {" "}
         <div className="flex justify-between items-center">
           <TabsSection
