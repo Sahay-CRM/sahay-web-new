@@ -21,6 +21,7 @@ import {
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
 import { queryClient } from "@/queryClient";
 import TaskDrawer from "./taskDrawer";
+import { Button } from "@/components/ui/button";
 
 interface TasksProps {
   tasksFireBase: () => void;
@@ -110,12 +111,12 @@ export default function Tasks({
 
   const conformDelete = useCallback(
     async (data: TaskGetPaging) => {
-      if (data && data.taskId) {
+      if (data && data.detailMeetingTaskId) {
         // const payload = {
         //   taskId: data.taskId,
         //   meetingId: meetingId,
         // };
-        deleteTaskById(data.taskId, {
+        deleteTaskById(data.detailMeetingTaskId, {
           onSuccess: () => {
             queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
             tasksFireBase();
@@ -136,15 +137,23 @@ export default function Tasks({
     [deleteTaskById, tasksFireBase],
   );
 
+  const handleAddTask = () => {
+    setDrawerOpen(true);
+    setSelected(null);
+  };
+
   return (
-    <div className="px-4 h-full">
+    <div className=" h-full">
       <div className="flex gap-5 justify-between mb-5">
-        <div>
+        <div className="flex gap-5 items-center">
           <TaskSearchDropdown
             onAdd={handleAddTasks}
             minSearchLength={2}
             filterProps={{ pageSize: 20 }}
           />
+          <Button className="py-2 w-fit" onClick={handleAddTask}>
+            Add Company Task
+          </Button>
         </div>
         <div>
           {canToggleColumns && (
@@ -224,6 +233,8 @@ export default function Tasks({
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           taskData={selected}
+          detailMeetingAgendaIssueId={meetingAgendaIssueId}
+          detailMeetingId={detailMeetingId}
         />
       )}
     </div>

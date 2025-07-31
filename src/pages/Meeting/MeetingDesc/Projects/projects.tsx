@@ -22,6 +22,7 @@ import {
 } from "@/features/api/companyMeeting";
 import { queryClient } from "@/queryClient";
 import ProjectDrawer from "./projectDrawer";
+import { Button } from "@/components/ui/button";
 
 interface ProjectProps {
   meetingId: string;
@@ -120,10 +121,11 @@ export default function Projects({
 
   const conformDelete = useCallback(
     async (data: IProjectFormData) => {
-      if (data && data.projectId) {
+      if (data && data.detailMeetingProjectId && data.projectId) {
         const payload = {
           projectId: data.projectId,
           meetingId: meetingId,
+          detailMeetingProjectId: data.detailMeetingProjectId ?? "",
         };
         deleteProjectById(payload, {
           onSuccess: () => {
@@ -146,15 +148,23 @@ export default function Projects({
     [deleteProjectById, meetingId, projectsFireBase],
   );
 
+  const handleAddProject = () => {
+    setDrawerOpen(true);
+    setSelected(null);
+  };
+
   return (
-    <div className="px-4">
+    <div>
       <div className="flex gap-5 justify-between mb-5">
-        <div>
+        <div className="flex gap-5 items-center">
           <ProjectSearchDropdown
             onAdd={handleAdd}
             minSearchLength={3}
             filterProps={{ pageSize: 25 }}
           />
+          <Button className="py-2 w-fit" onClick={handleAddProject}>
+            Add Company Project
+          </Button>
         </div>
         <div>
           {canToggleColumns && (
@@ -227,6 +237,8 @@ export default function Projects({
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           projectData={selected}
+          detailMeetingAgendaIssueId={meetingAgendaIssueId}
+          detailMeetingId={detailMeetingId}
         />
       )}
     </div>

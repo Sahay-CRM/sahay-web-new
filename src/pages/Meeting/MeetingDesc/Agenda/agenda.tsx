@@ -101,6 +101,8 @@ interface AgendaProps {
   detailMeetingId: string | undefined;
   joiners: Joiners[];
   meetingTime?: string;
+  isTeamLeader: boolean | undefined;
+  isCheckIn?: boolean;
 }
 
 export default function Agenda({
@@ -110,6 +112,7 @@ export default function Agenda({
   meetingResponse,
   detailMeetingId,
   meetingTime,
+  isTeamLeader,
 }: AgendaProps) {
   const {
     issueInput,
@@ -157,6 +160,7 @@ export default function Agenda({
     conclusionData,
     conclusionLoading,
     hasChanges,
+    selectedItem,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -166,7 +170,7 @@ export default function Agenda({
   });
   const [contentWidth, setContentWidth] = useState("90%");
 
-  const SIDEBAR_WIDTH = 600; // in pixels
+  const SIDEBAR_WIDTH = 600;
 
   const updateWidth = () => {
     const screenWidth = window.innerWidth;
@@ -178,10 +182,10 @@ export default function Agenda({
   };
 
   useEffect(() => {
-    updateWidth(); // call on mount and sidebar toggle
+    updateWidth();
     window.addEventListener("resize", updateWidth);
-
     return () => window.removeEventListener("resize", updateWidth);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSideBar]);
 
   const canEdit = true;
@@ -195,15 +199,8 @@ export default function Agenda({
   function formatSecondsToHHMM(seconds: number): string {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}`;
+    return `${hours.toString().padStart(2, "0")}h:${minutes.toString().padStart(2, "0")}m`;
   }
-
-  const selectedItem = conclusionData?.agenda?.find(
-    (item) => item.detailMeetingAgendaIssueId === isSelectedAgenda,
-  );
-
   const getStatusIcon = (status: string) => {
     switch (status?.toLowerCase()) {
       case "completed":
@@ -273,15 +270,15 @@ export default function Agenda({
         defaultType=""
         onSubmit={handleModalSubmit}
       />
-      <div className="flex gap-3 transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]">
+      <div className="flex gap-3 transition-all duration-1000">
         <div
           className={cn(
             // "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]",
-            "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]",
+            "ease-out",
             isSideBar ? "w-[370px] min-w-[370px]" : "w-[65%]",
           )}
         >
-          <div className="flex gap-2 relative transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]">
+          <div className="flex gap-2 relative">
             {(meetingStatus === "STARTED" ||
               meetingStatus === "NOT_STARTED") && (
               <div className="flex gap-2 relative w-full">
@@ -345,22 +342,27 @@ export default function Agenda({
               </div>
             )}
           </div>
-          <div className="mt-2 h-[calc(100vh-200px)] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] pr-1 w-full overflow-auto">
+          <div className="mt-2 h-[calc(100vh-150px)] pr-1 w-full overflow-auto">
             {agendaList && agendaList.length > 0 ? (
               <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {agendaList.map((item, idx) => (
                   <li
                     key={item.issueObjectiveId}
-                    className={`group px-2 h-20 flex w-full ${
-                      isSelectedAgenda === item.detailMeetingAgendaIssueId
-                        ? "bg-primary text-white"
-                        : ""
-                    } mb-2 rounded-md shadow ${
-                      meetingStatus === "STARTED" ||
-                      meetingStatus === "NOT_STARTED"
-                        ? "cursor-pointer"
-                        : "opacity-100"
-                    }`}
+                    className={`group px-2 flex w-full 
+                      ${
+                        meetingStatus === "STARTED" ||
+                        (meetingStatus === "NOT_STARTED" ? "h-14" : "h-20")
+                      }
+                      ${
+                        isSelectedAgenda === item.detailMeetingAgendaIssueId
+                          ? "bg-primary text-white"
+                          : ""
+                      } mb-2 rounded-md shadow ${
+                        meetingStatus === "STARTED" ||
+                        meetingStatus === "NOT_STARTED"
+                          ? "cursor-pointer"
+                          : "opacity-100"
+                      }`}
                     draggable={
                       meetingStatus === "STARTED" ||
                       meetingStatus === "NOT_STARTED"
@@ -437,7 +439,7 @@ export default function Agenda({
                           }}
                         />
                       )}
-                    <div className="flex items-center">
+                    <div className="flex items-center w-full">
                       {(meetingStatus === "STARTED" ||
                         meetingStatus === "NOT_STARTED") && (
                         <span style={{ marginRight: 8, cursor: "grab" }}>
@@ -447,9 +449,9 @@ export default function Agenda({
                       {editing.type === item.agendaType &&
                       editing.id === item.issueObjectiveId &&
                       canEdit ? null : (
-                        <div className="">
+                        <div className="w-full flex items-center">
                           <div
-                            className={`text-sm ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "w-full" : "w-[75%]"} overflow-hidden text-ellipsis line-clamp-3 ml-2`}
+                            className={`text-sm ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "w-[calc(100%-50px)] pr-8 h-14 flex items-center" : "w-[75%] min-w-52 max-w-[75%]"}  overflow-hidden line-clamp-3 ml-2`}
                           >
                             {item.name}
                           </div>
@@ -498,32 +500,13 @@ export default function Agenda({
                                           isSelectedAgenda ===
                                           item.detailMeetingAgendaIssueId
                                         }
-                                        className={`${
-                                          isSelectedAgenda ===
-                                          item.detailMeetingAgendaIssueId
-                                            ? "text-white"
-                                            : ""
-                                        }`}
-                                      />
-                                    ) : meetingStatus === "DISCUSSION" ? (
-                                      <div
                                         className={`text-xl ${
                                           isSelectedAgenda ===
                                           item.detailMeetingAgendaIssueId
                                             ? "text-white"
                                             : ""
                                         }`}
-                                      >
-                                        {formatTime(
-                                          Number(
-                                            meetingResponse?.timers
-                                              ?.objectives?.[
-                                              item.detailMeetingAgendaIssueId ??
-                                                ""
-                                            ]?.actualTime || 0,
-                                          ),
-                                        )}
-                                      </div>
+                                      />
                                     ) : (
                                       <div
                                         className={`text-xl ${
@@ -535,11 +518,12 @@ export default function Agenda({
                                       >
                                         {formatTime(
                                           Number(
-                                            conclusionData?.agenda.find(
-                                              (con) =>
-                                                con.detailMeetingAgendaIssueId ===
-                                                item.detailMeetingAgendaIssueId,
-                                            )?.actualTime,
+                                            conclusionData &&
+                                              conclusionData?.agenda.find(
+                                                (con) =>
+                                                  con.detailMeetingAgendaIssueId ===
+                                                  item.detailMeetingAgendaIssueId,
+                                              )?.actualTime,
                                           ),
                                         )}
                                       </div>
@@ -625,11 +609,8 @@ export default function Agenda({
             )}
           </div>
         </div>
-        <div
-          className="transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]"
-          style={{ width: contentWidth }}
-        >
-          <div className="flex gap-3 mb-4 transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]">
+        <div style={{ width: contentWidth }}>
+          <div className="flex gap-3 mb-4">
             <div className="w-full">
               {meetingStatus === "STARTED" ||
               meetingStatus === "NOT_STARTED" ? (
@@ -683,26 +664,30 @@ export default function Agenda({
                 <div className="flex gap-4 items-center flex-wrap">
                   <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
                     <Clock className="w-4 h-4 text-green-600" />
-                    <span className="font-medium">Agenda Actual:</span>
+                    <span className="font-medium text-sm">Agenda Actual:</span>
                     <span className="font-bold">
-                      {conclusionData?.agendaActual}m
+                      {formatTime(Number(conclusionData?.agendaActual))}m
                     </span>
                   </div>
 
                   <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
                     <Clock className="w-4 h-4 text-green-600" />
-                    <span className="font-medium">Discussion Actual:</span>
+                    <span className="font-medium text-sm">
+                      Discussion Actual:
+                    </span>
                     <span className="font-bold">
-                      {conclusionData?.agendaTotalActual}m
+                      {formatTime(Number(conclusionData?.agendaTotalActual))}m
                     </span>
                   </div>
 
                   {conclusionData?.conclusionActual != null && (
                     <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
                       <Clock className="w-4 h-4 text-green-600" />
-                      <span className="font-medium">Conclusion Actual:</span>
+                      <span className="font-medium text-sm">
+                        Conclusion Actual:
+                      </span>
                       <span className="font-bold">
-                        {conclusionData.conclusionActual}m
+                        {formatTime(Number(conclusionData.conclusionActual))}m
                       </span>
                     </div>
                   )}
@@ -710,89 +695,124 @@ export default function Agenda({
                   {conclusionData?.meetingPlanned != null && (
                     <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
                       <Clock className="w-4 h-4 text-green-600" />
-                      <span className="font-medium">Meeting Planned:</span>
-                      <span className="font-bold">
-                        {conclusionData.meetingPlanned}m
+                      <span className="font-medium text-sm">
+                        Meeting Planned:
                       </span>
-                    </div>
-                  )}
-
-                  {conclusionData?.meetingActual != null && (
-                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
-                      <Clock className="w-4 h-4 text-green-600" />
-                      <span className="font-medium">Meeting Actual:</span>
                       <span className="font-bold">
                         {formatSecondsToHHMM(
-                          Number(conclusionData.meetingActual),
+                          Number(conclusionData.meetingPlanned),
                         )}
                       </span>
                     </div>
                   )}
-                </div>
-              )}
-            </div>
-            <div className="flex flex-wrap transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] md:flex-nowrap items-center gap-3 w-[30%] md:w-auto">
-              {meetingStatus === "NOT_STARTED" && (
-                <Button
-                  variant="outline"
-                  className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
-                  onClick={handleStartMeeting}
-                  isLoading={isPending}
-                >
-                  Start Meeting
-                </Button>
-              )}
 
-              {meetingStatus === "STARTED" && (
-                <Button
-                  variant="outline"
-                  className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
-                  onClick={handleDesc}
-                  isLoading={isPending}
-                >
-                  Start Discussion
-                </Button>
-              )}
-
-              {meetingStatus === "DISCUSSION" && (
-                <Button
-                  variant="outline"
-                  className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
-                  onClick={handleConclusionMeeting}
-                >
-                  Go To Conclusion
-                </Button>
-              )}
-
-              {meetingStatus === "CONCLUSION" && (
-                <Button
-                  variant="outline"
-                  className="bg-primary transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] text-white px-4 py-5 text-sm sm:text-base md:text-lg"
-                  onClick={handleCloseMeetingWithLog}
-                  isLoading={endMeetingLoading}
-                >
-                  End Meeting
-                </Button>
-              )}
-              {meetingStatus !== "ENDED" && (
-                <div className="w-fit transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] px-2 pl-4 h-[40px] border-gray-300 rounded-[10px] flex items-center justify-center">
-                  <MeetingTimer
-                    meetingTime={Number(meetingTime)}
-                    actualTime={0}
-                    lastSwitchTimestamp={Number(
-                      meetingResponse?.state.meetingTimestamp,
+                  {conclusionData?.meetingActual != null &&
+                    conclusionData?.meetingActual != "0" && (
+                      <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                        <Clock className="w-4 h-4 text-green-600" />
+                        <span className="font-medium text-sm">
+                          Meeting Actual:
+                        </span>
+                        <span className="font-bold">
+                          {formatSecondsToHHMM(
+                            Number(conclusionData.meetingActual),
+                          )}
+                        </span>
+                      </div>
                     )}
-                    meetingStart={meetingStatus !== "NOT_STARTED"}
-                    className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
-                    onTimeUpdate={handleTimeUpdate}
-                  />
+                  <div className="flex gap-4 items-center">
+                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                      <span className="font-medium text-sm">Total Tasks:</span>
+                      <span className="font-bold">
+                        {conclusionData?.noOfTasks}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                      <span className="font-medium text-sm">
+                        Total Projects:
+                      </span>
+                      <span className="font-bold">
+                        {conclusionData?.noOfProjects}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                      <span className="font-medium text-sm">Total KPIs:</span>
+                      <span className="font-bold">
+                        {conclusionData?.noOfKPIs}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
+            {meetingStatus !== "ENDED" && (
+              <div className="flex flex-wrap transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] md:flex-nowrap items-center gap-3 w-[30%] md:w-auto">
+                {meetingStatus === "NOT_STARTED" && isTeamLeader ? (
+                  <Button
+                    variant="outline"
+                    className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
+                    onClick={handleStartMeeting}
+                    isLoading={isPending}
+                  >
+                    Start Meeting
+                  </Button>
+                ) : (
+                  <div className="w-[200px] h-[40px] text-center content-center border rounded-md">
+                    Not Started
+                  </div>
+                )}
+
+                {meetingStatus === "STARTED" && (
+                  <Button
+                    variant="outline"
+                    className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
+                    onClick={handleDesc}
+                    isLoading={isPending}
+                  >
+                    Start Discussion
+                  </Button>
+                )}
+
+                {meetingStatus === "DISCUSSION" && (
+                  <Button
+                    variant="outline"
+                    className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
+                    onClick={handleConclusionMeeting}
+                  >
+                    Go To Conclusion
+                  </Button>
+                )}
+
+                {meetingStatus === "CONCLUSION" && (
+                  <Button
+                    variant="outline"
+                    className="bg-primary transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] text-white px-4 py-5 text-sm sm:text-base md:text-lg"
+                    onClick={handleCloseMeetingWithLog}
+                    isLoading={endMeetingLoading}
+                  >
+                    End Meeting
+                  </Button>
+                )}
+                {meetingStatus !== "ENDED" && (
+                  <div className="w-fit transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] px-2 pl-4 h-[40px] border-gray-300 rounded-[10px] flex items-center justify-center">
+                    <MeetingTimer
+                      meetingTime={Number(meetingTime)}
+                      actualTime={0}
+                      lastSwitchTimestamp={Number(
+                        meetingResponse?.state.meetingTimestamp,
+                      )}
+                      meetingStart={meetingStatus !== "NOT_STARTED"}
+                      className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
+                      onTimeUpdate={handleTimeUpdate}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-          <div className="border transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] rounded-md flex  justify-center w-full h-[calc(100vh-200px)] overflow-scroll">
+          <div className="border rounded-md flex  justify-center w-full h-[calc(100vh-200px)] overflow-scroll">
             {meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? (
-              <div className="w-[400px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]">
+              <div className="w-[500px] h-[calc(100vh-250px)] flex items-center text-justify leading-8">
                 📌 Tips for Writing a Clear & Effective Meeting Agenda Start
                 with the Goal ➤ What is the purpose of the meeting? Summarize it
                 in one sentence. List Key Discussion Points ➤ Break down the
@@ -811,7 +831,7 @@ export default function Agenda({
               </div>
             ) : meetingStatus === "DISCUSSION" ? (
               detailAgendaData && (
-                <div className="max-h-full transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] h-auto mt-8 px-2 w-full">
+                <div className="max-h-full h-auto mt-8 px-2 w-full">
                   {activeTab === "tasks" && (
                     <Tasks
                       tasksFireBase={tasksFireBase}
@@ -845,18 +865,9 @@ export default function Agenda({
               </div>
             ) : (
               <div className="flex-1 px-6 h-[calc(100vh-230px)] overflow-x-scroll w-full">
-                {/* <div className="mb-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-800">
-                        {selectedItem?.name}
-                      </h2>
-                    </div>
-                  </div>
-                </div> */}
                 <div className="space-y-6 ">
-                  {!hasChanges(selectedItem) ? (
-                    <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  {!selectedItem || !hasChanges(selectedItem) ? (
+                    <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg mt-6 p-8 text-center">
                       <div className="text-gray-400 mb-2">
                         <Target className="w-12 h-12 mx-auto" />
                       </div>

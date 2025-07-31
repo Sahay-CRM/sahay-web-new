@@ -6,6 +6,7 @@ import Urls from "@/features/utils/urls.utils";
 interface DeleteMeetingKpis {
   kpiId: string;
   meetingId: string;
+  detailMeetingKPIId: string;
 }
 
 export default function useDeleteMeetingKpis() {
@@ -16,7 +17,7 @@ export default function useDeleteMeetingKpis() {
         throw new Error("Something Went Wrong");
       }
       const { data: resData } = await Api.delete({
-        url: Urls.deleteMeetingKpisData(data.kpiId),
+        url: Urls.deleteMeetingKpisData(data.detailMeetingKPIId),
         data: {
           meetingId: data.meetingId,
         },

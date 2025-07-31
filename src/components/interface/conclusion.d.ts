@@ -24,6 +24,9 @@ interface MeetingConclusionData {
   conclusionActual: string;
   agendaTotalPlanned: string;
   agendaTotalActual: string;
+  noOfTasks?: number;
+  noOfProjects?: number;
+  noOfKPIs?: number;
   agenda: AgendaResConclusion[];
 }
 

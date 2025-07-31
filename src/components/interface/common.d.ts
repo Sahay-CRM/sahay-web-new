@@ -221,6 +221,7 @@ interface IProjectFormData {
       };
     };
   }[];
+  detailMeetingProjectId?: string;
 }
 
 //
@@ -344,7 +345,7 @@ interface CompanyProjectDataProps {
   projectName?: string;
   projectDescription?: string;
   projectActualEndDate?: string | null;
-  projectDeadline?: string;
+  projectDeadline?: Date | string | null;
   employeeId?: string;
   ProjectParameters?: ProjectParameters;
   ProjectEmployees?: Employee[];
@@ -359,6 +360,7 @@ interface CompanyProjectDataProps {
   subParameters?: SubParameter[];
   coreParameterId?: string;
   coreParameterName?: string;
+  detailMeetingProjectId?: string;
 }
 
 interface ProjectParameters {
@@ -584,6 +586,9 @@ interface AddUpdateTask {
   comment?: string;
   employeeIds?: string[];
   projectId?: string;
+  meetingId?: string;
+  detailMeetingAgendaIssueId?: string;
+  detailMeetingId?: string;
 }
 
 interface TaskGetPaging {
@@ -618,6 +623,8 @@ interface TaskGetPaging {
   detailMeetingTaskId?: string;
   detailMeetingId?: string;
   projectId?: string;
+  detailMeetingTaskId?: string;
+  repetition?: string;
 }
 
 interface TaskProject {
@@ -1112,6 +1119,7 @@ interface KpiAllList {
   visualFrequencyAggregate: string | null;
   visualFrequencyTypes: string;
   employeeId: string;
+  detailMeetingKPIId?: string;
 }
 
 interface KPICoreParameter {
@@ -1141,6 +1149,7 @@ interface MeetingDetailsTiming {
   conclusionTime?: string;
   meetingTimeActual?: string;
   meetingTimePlanned?: string;
+  conclusionTimeActual?: string;
 }
 
 interface MeetingNotesRes {

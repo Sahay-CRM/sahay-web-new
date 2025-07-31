@@ -959,6 +959,7 @@ export default function KPITable({
         onClose={() => setDrawerOpen(false)}
         kpiId={selectedKpi?.kpiId}
         meetingId={meetingId}
+        detailMeetingKPIId={selectedKpi?.detailMeetingKPIId}
       />
     </FormProvider>
   );

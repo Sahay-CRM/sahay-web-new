@@ -120,6 +120,16 @@ export default function MeetingDesc() {
             detailMeetingId={meetingTiming?.detailMeetingId}
             joiners={meetingTiming?.employeeList ?? []}
             meetingTime={meetingTiming?.meetingTimePlanned}
+            isTeamLeader={
+              meetingTiming?.employeeList?.find(
+                (item) => item.employeeId === userId,
+              )?.isTeamLeader
+            }
+            isCheckIn={
+              meetingTiming?.employeeList?.find(
+                (item) => item.employeeId === userId,
+              )?.attendanceMark
+            }
           />
         </div>
       </div>

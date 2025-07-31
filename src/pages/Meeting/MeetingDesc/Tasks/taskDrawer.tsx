@@ -10,11 +10,15 @@ import {
 } from "@/features/api/companyTask";
 import { useGetCompanyProjectAll } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
+import { useParams } from "react-router-dom";
+import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 
 interface TaskDrawerProps {
   open: boolean;
   onClose: () => void;
   taskData?: TaskGetPaging | null; // Use your TaskGetPaging type if available
+  detailMeetingAgendaIssueId?: string;
+  detailMeetingId?: string;
 }
 
 type TaskFormData = {
@@ -24,14 +28,19 @@ type TaskFormData = {
   taskTypeId: string;
   projectId: string;
   assignUsers: string[];
-  // Add other fields if needed
+  taskStartDate?: string | Date | null;
+  taskDeadline?: string | Date | null;
+  repetition?: string;
 };
 
 export default function TaskDrawer({
   open,
   onClose,
   taskData,
+  detailMeetingAgendaIssueId,
+  detailMeetingId,
 }: TaskDrawerProps) {
+  const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
   const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
   const { data: taskStatus } = useGetAllTaskStatus({ filter: {} });
@@ -78,6 +87,9 @@ export default function TaskDrawer({
         assignUsers: Array.isArray(taskData.assignUsers)
           ? taskData.assignUsers.map((u) => u.employeeId)
           : [],
+        taskStartDate: taskData.taskStartDate || null,
+        taskDeadline: taskData.taskDeadline || null,
+        repetition: taskData.repetition || "",
       }
     : {
         taskName: "",
@@ -86,6 +98,9 @@ export default function TaskDrawer({
         taskTypeId: "",
         projectId: "",
         assignUsers: [],
+        taskStartDate: null,
+        taskDeadline: null,
+        repetition: "",
       };
 
   const {
@@ -97,6 +112,14 @@ export default function TaskDrawer({
   } = useForm<TaskFormData>({
     defaultValues,
   });
+
+  const repetitionOptions = [
+    { value: "none", label: "No Repetition" },
+    { value: "daily", label: "Daily" },
+    { value: "weekly", label: "Weekly" },
+    { value: "monthly", label: "Monthly" },
+    { value: "annually", label: "Annually" },
+  ];
 
   // Reset form when taskData changes
   useEffect(() => {
@@ -141,18 +164,25 @@ export default function TaskDrawer({
   }, [onClose, open]);
 
   const onSubmit = (data: TaskFormData) => {
-    const { assignUsers, ...rest } = data;
-    const payload: AddUpdateTask = {
-      ...rest,
-      employeeIds: assignUsers,
-      taskId: taskData?.taskId,
-    };
-    addUpdateTask(payload, {
-      onSuccess: () => {
-        queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
-        onClose();
-      },
-    });
+    if (meetingId && detailMeetingAgendaIssueId && detailMeetingId) {
+      const { assignUsers, taskStartDate, taskDeadline, ...rest } = data;
+      const payload: AddUpdateTask = {
+        ...rest,
+        employeeIds: assignUsers,
+        taskId: taskData?.taskId,
+        taskStartDate: taskStartDate ? new Date(taskStartDate) : null,
+        taskDeadline: taskDeadline ? new Date(taskDeadline) : null,
+        meetingId: meetingId,
+        detailMeetingAgendaIssueId: detailMeetingAgendaIssueId,
+        detailMeetingId: detailMeetingId,
+      };
+      addUpdateTask(payload, {
+        onSuccess: () => {
+          queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
+          onClose();
+        },
+      });
+    }
   };
 
   return (
@@ -247,6 +277,45 @@ export default function TaskDrawer({
                   error={errors.assignUsers}
                   isMulti={true}
                   placeholder="Select employees"
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="taskStartDate"
+              render={({ field }) => (
+                <FormDateTimePicker
+                  label="Task Start Date"
+                  value={field.value ?? null}
+                  onChange={field.onChange}
+                  error={errors.taskStartDate}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="taskDeadline"
+              render={({ field }) => (
+                <FormDateTimePicker
+                  label="Task Deadline"
+                  value={field.value ?? null}
+                  onChange={field.onChange}
+                  error={errors.taskDeadline}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="repetition"
+              render={({ field }) => (
+                <FormSelect
+                  label="Repetition"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={repetitionOptions}
+                  placeholder="Select repetition"
                 />
               )}
             />

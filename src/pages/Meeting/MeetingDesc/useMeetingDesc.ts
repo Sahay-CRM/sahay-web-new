@@ -64,53 +64,19 @@ export default function useMeetingDesc() {
     };
   }, [db, handleUpdatedRefresh, meetingId]);
 
-  // Accept callbacks for onStart and onEnd
-
-  // const agendaFireBase = (id: string) => {
-  //   if (meetingStatus) {
-  //     const db = getDatabase();
-  //     const meetRef = ref(db, `meetings/${meetingId}/timers/issues/${id}`);
-  //     update(meetRef, {
-  //       updatedAt: Date.now(),
-  //     });
-  //   }
-  // };
-
   const handleTabChange = (tab: string) => {
     if (activeTab === tab) {
-      // Toggle card visibility when clicking the same tab
       setIsCardVisible(!isCardVisible);
     } else {
       setActiveTab(tab);
-      setIsCardVisible(true); // Show card when switching to a different tab
+      setIsCardVisible(true);
     }
   };
-
-  // const handleTimeUpdate = (newTime: number) => {
-  //   // setPlannedTime(newTime);
-  //   if (meetingId) {
-  //     updateDetailMeeting({
-  //       meetingId: meetingId,
-  //       detailMeetingId: meetingTiming?.detailMeetingId,
-  //       meetingTimePlanned: String(newTime), // Make sure API accepts it as string
-  //     });
-  //   }
-  // };
 
   const handleConclusionMeeting = () => {
     if (meetingId) {
       const db = getDatabase();
       const meetStateRef = ref(db, `meetings/${meetingId}/state`);
-
-      // const now = Date.now();
-      // const elapsed = now - Number(meetingResponse?.state.lastSwitchTimestamp);
-
-      // if (meetingTiming && meetingTiming.detailMeetingId) {
-      // const objectiveActualTime =
-      //   meetingResponse?.timers.objectives?.[
-      //     currentItem.detailMeetingAgendaIssueId
-      //   ].actualTime;
-      // const time = (objectiveActualTime ?? 0) + elapsed;
 
       updateDetailMeeting(
         {
