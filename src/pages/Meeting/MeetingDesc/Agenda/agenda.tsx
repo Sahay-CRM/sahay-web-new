@@ -113,6 +113,7 @@ export default function Agenda({
   detailMeetingId,
   meetingTime,
   isTeamLeader,
+  isCheckIn,
 }: AgendaProps) {
   const {
     issueInput,
@@ -161,6 +162,7 @@ export default function Agenda({
     conclusionLoading,
     hasChanges,
     selectedItem,
+    handleJoinMeeting,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -259,6 +261,14 @@ export default function Agenda({
         </span>
       </div>
     );
+  };
+
+  const meetingStatusLabels = {
+    NOT_STARTED: "Not Started",
+    STARTED: "Started",
+    DISCUSSION: "Discussion",
+    CONCLUSION: "Conclusion",
+    ENDED: "Ended",
   };
 
   return (
@@ -747,7 +757,7 @@ export default function Agenda({
             </div>
             {meetingStatus !== "ENDED" && (
               <div className="flex flex-wrap transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] md:flex-nowrap items-center gap-3 w-[30%] md:w-auto">
-                {meetingStatus === "NOT_STARTED" && isTeamLeader ? (
+                {meetingStatus === "NOT_STARTED" && isTeamLeader && (
                   <Button
                     variant="outline"
                     className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
@@ -756,43 +766,56 @@ export default function Agenda({
                   >
                     Start Meeting
                   </Button>
-                ) : (
-                  <div className="w-[200px] h-[40px] text-center content-center border rounded-md">
-                    Not Started
-                  </div>
                 )}
 
-                {meetingStatus === "STARTED" && (
+                {!isTeamLeader && (
                   <Button
                     variant="outline"
                     className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
-                    onClick={handleDesc}
-                    isLoading={isPending}
+                    onClick={handleJoinMeeting}
                   >
-                    Start Discussion
+                    {
+                      meetingStatusLabels[
+                        meetingStatus as keyof typeof meetingStatusLabels
+                      ]
+                    }
                   </Button>
                 )}
 
-                {meetingStatus === "DISCUSSION" && (
-                  <Button
-                    variant="outline"
-                    className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
-                    onClick={handleConclusionMeeting}
-                  >
-                    Go To Conclusion
-                  </Button>
+                {isTeamLeader && isCheckIn && (
+                  <>
+                    {meetingStatus === "STARTED" && (
+                      <Button
+                        variant="outline"
+                        className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
+                        onClick={handleDesc}
+                        isLoading={isPending}
+                      >
+                        Start Discussion
+                      </Button>
+                    )}
+                    {meetingStatus === "DISCUSSION" && (
+                      <Button
+                        variant="outline"
+                        className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
+                        onClick={handleConclusionMeeting}
+                      >
+                        Go To Conclusion
+                      </Button>
+                    )}
+                    {meetingStatus === "CONCLUSION" && (
+                      <Button
+                        variant="outline"
+                        className="bg-primary transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] text-white px-4 py-5 text-sm sm:text-base md:text-lg"
+                        onClick={handleCloseMeetingWithLog}
+                        isLoading={endMeetingLoading}
+                      >
+                        End Meeting
+                      </Button>
+                    )}
+                  </>
                 )}
 
-                {meetingStatus === "CONCLUSION" && (
-                  <Button
-                    variant="outline"
-                    className="bg-primary transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] text-white px-4 py-5 text-sm sm:text-base md:text-lg"
-                    onClick={handleCloseMeetingWithLog}
-                    isLoading={endMeetingLoading}
-                  >
-                    End Meeting
-                  </Button>
-                )}
                 {meetingStatus !== "ENDED" && (
                   <div className="w-fit transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] px-2 pl-4 h-[40px] border-gray-300 rounded-[10px] flex items-center justify-center">
                     <MeetingTimer
@@ -804,6 +827,7 @@ export default function Agenda({
                       meetingStart={meetingStatus !== "NOT_STARTED"}
                       className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
                       onTimeUpdate={handleTimeUpdate}
+                      isEditMode={isTeamLeader}
                     />
                   </div>
                 )}

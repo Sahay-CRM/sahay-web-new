@@ -155,7 +155,7 @@ export default function MeetingTimer({
             <span className="text-sm font-normal">m</span>
           </span>
 
-          {!meetingStart && (
+          {!meetingStart && isEditMode && (
             <Button
               size="sm"
               variant="ghost"

@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   addMeetingAgendaMutation,
   createMeetingMutation,
@@ -18,6 +18,7 @@ import { setMeeting } from "@/features/reducers/common.reducer";
 import { getDatabase, ref, update } from "firebase/database";
 import { SidebarControlContext } from "@/features/layouts/DashboardLayout/SidebarControlContext";
 import useGetMeetingConclusion from "@/features/api/companyMeeting/useGetMeetingConclusion";
+import { getUserId } from "@/features/selectors/auth.selector";
 
 interface UseAgendaProps {
   meetingId: string;
@@ -37,6 +38,7 @@ export const useAgenda = ({
   canEdit,
 }: UseAgendaProps) => {
   const dispatch = useDispatch();
+  const userId = useSelector(getUserId);
 
   const db = getDatabase();
   // const meetStateRef = ref(db, `meetings/${meetingId}/state`);
@@ -727,7 +729,11 @@ export const useAgenda = ({
         },
         {
           onSuccess: () => {
-            endMeet(meetingId);
+            endMeet(meetingId, {
+              onSuccess: () => {
+                window.location.reload();
+              },
+            });
             window.location.reload();
           },
         },
@@ -764,6 +770,14 @@ export const useAgenda = ({
       ) || null;
     setSelectedItem(foundItem);
   }, [conclusionData, isSelectedAgenda]);
+
+  const handleJoinMeeting = () => {
+    updateDetailMeeting({
+      employeeId: userId,
+      attendanceMark: true,
+      meetingId: meetingId,
+    });
+  };
 
   return {
     issueInput,
@@ -812,5 +826,6 @@ export const useAgenda = ({
     conclusionLoading,
     hasChanges,
     selectedItem,
+    handleJoinMeeting,
   };
 };
