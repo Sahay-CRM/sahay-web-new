@@ -162,7 +162,7 @@ export default function Agenda({
     conclusionLoading,
     hasChanges,
     selectedItem,
-    handleJoinMeeting,
+    // handleJoinMeeting,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -771,8 +771,8 @@ export default function Agenda({
                 {!isTeamLeader && (
                   <Button
                     variant="outline"
-                    className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
-                    onClick={handleJoinMeeting}
+                    className="w-[200px] h-[40px] cursor-not-allowed transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] text-lg font-semibold"
+                    // onClick={handleJoinMeeting}
                   >
                     {
                       meetingStatusLabels[

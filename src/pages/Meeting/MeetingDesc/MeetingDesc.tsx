@@ -1,10 +1,6 @@
-import useMeetingDesc from "./useMeetingDesc";
-// import Desc from "../MeetingDesc/Desc/desc";
-// import Conclusion from "../MeetingDesc/Conclusion/conclusion";
-import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect } from "react";
-import Agenda from "./Agenda";
-import { Button } from "@/components/ui/button";
+import { useSelector } from "react-redux";
+
 import {
   Crown,
   FileText,
@@ -14,10 +10,14 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
+
+import useMeetingDesc from "./useMeetingDesc";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import Agenda from "./Agenda";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import MeetingNotes from "./Agenda/meetingNotes";
-import { useSelector } from "react-redux";
 import { getUserId } from "@/features/selectors/auth.selector";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";

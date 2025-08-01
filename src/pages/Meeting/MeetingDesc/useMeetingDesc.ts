@@ -1,12 +1,13 @@
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { getDatabase, off, onValue, ref, update } from "firebase/database";
+
 import {
   endMeetingMutation,
   updateDetailMeetingMutation,
   useGetMeetingTiming,
 } from "@/features/api/companyMeeting";
 import { queryClient } from "@/queryClient";
-import { getDatabase, off, onValue, ref, update } from "firebase/database";
-import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();
