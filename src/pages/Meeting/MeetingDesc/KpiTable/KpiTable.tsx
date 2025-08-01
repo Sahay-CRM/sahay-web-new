@@ -757,6 +757,7 @@ export default function KPITable({
         // queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] });
         queryClient.resetQueries({ queryKey: ["get-kpi-dashboard-data"] });
         kpisFireBase();
+        setTempValues({});
       },
     });
   };
