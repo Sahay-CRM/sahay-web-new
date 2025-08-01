@@ -3,12 +3,15 @@ import ModalData from "@/components/shared/Modal/ModalData";
 import useGroupKpisFormModal from "./useGroupKpisFormModal";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
+import { useGetKpiMergeById } from "@/features/api/companyDatapoint";
+import { useEffect } from "react";
 
 export default function GroupKpisFormModal({
   isModalOpen,
   modalClose,
   selectedKpiData,
   selectedKpisIds,
+  groupId,
 }: GroupKpisProps) {
   const methods = useForm();
   const {
@@ -28,13 +31,35 @@ export default function GroupKpisFormModal({
     isModalOpen,
     selectedKpiData,
     selectedKpisIds,
+    groupId,
   });
+  const { data: fetchedGroupData, isSuccess } = useGetKpiMergeById(
+    groupId ?? "",
+  );
+
+  useEffect(() => {
+    if (isSuccess && fetchedGroupData) {
+      setValue("frequencyType", fetchedGroupData.frequencyType || "");
+      setValue(
+        "visualFrequencyAggregate",
+        fetchedGroupData.visualFrequencyAggregate || "sum",
+      );
+      const visualTypes = fetchedGroupData.visualFrequencyTypes
+        ? fetchedGroupData.visualFrequencyTypes.split(",")
+        : [];
+
+      setValue("visualFrequencyTypes", visualTypes);
+
+      setValue("unit", fetchedGroupData.unit || "");
+      setValue("tag", fetchedGroupData.tag || "");
+    }
+  }, [isSuccess, fetchedGroupData, setValue]);
 
   return (
     <FormProvider {...methods}>
       <ModalData
         isModalOpen={isModalOpen}
-        modalTitle="Create KPIs Group"
+        modalTitle={groupId ? "Update KPIs Group" : "Create KPIs Group"}
         modalClose={handleModalClose}
         buttons={[
           {
@@ -50,7 +75,7 @@ export default function GroupKpisFormModal({
             <Controller
               control={control}
               name="frequencyType"
-              rules={{ required: "Frequency is required" }}
+              // rules={{ required: "Frequency is required" }}
               render={({ field }) => (
                 <FormSelect
                   label="Frequency"
@@ -61,6 +86,7 @@ export default function GroupKpisFormModal({
                   }}
                   options={frequenceOptions}
                   error={errors.frequencyType}
+                  disabled={true}
                   isMandatory
                 />
               )}

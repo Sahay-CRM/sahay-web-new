@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
@@ -23,6 +23,7 @@ import {
 import { queryClient } from "@/queryClient";
 import ProjectDrawer from "./projectDrawer";
 import { Button } from "@/components/ui/button";
+import { getDatabase, off, onValue, ref } from "firebase/database";
 
 interface ProjectProps {
   meetingId: string;
@@ -147,6 +148,24 @@ export default function Projects({
     },
     [deleteProjectById, meetingId, projectsFireBase],
   );
+
+  useEffect(() => {
+    const db = getDatabase();
+    const meetingRef = ref(
+      db,
+      `meetings/${meetingId}/timers/objectives/${meetingAgendaIssueId}/projects`,
+    );
+
+    onValue(meetingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
+      }
+    });
+
+    return () => {
+      off(meetingRef);
+    };
+  }, [meetingAgendaIssueId, meetingId]);
 
   const handleAddProject = () => {
     setDrawerOpen(true);

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
@@ -22,6 +22,8 @@ import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateComp
 import { queryClient } from "@/queryClient";
 import TaskDrawer from "./taskDrawer";
 import { Button } from "@/components/ui/button";
+import { getDatabase, off, onValue, ref } from "firebase/database";
+import { useParams } from "react-router-dom";
 
 interface TasksProps {
   tasksFireBase: () => void;
@@ -34,6 +36,7 @@ export default function Tasks({
   meetingAgendaIssueId,
   detailMeetingId,
 }: TasksProps) {
+  const { id: meetingId } = useParams();
   const { data: taskStatus } = useGetAllTaskStatus({
     filter: {},
   });
@@ -64,11 +67,28 @@ export default function Tasks({
         onSuccess: () => {
           queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
           tasksFireBase();
-          // setSelectedTask(tasks);
         },
       });
     }
   };
+
+  useEffect(() => {
+    const db = getDatabase();
+    const meetingRef = ref(
+      db,
+      `meetings/${meetingId}/timers/objectives/${meetingAgendaIssueId}/tasks`,
+    );
+
+    onValue(meetingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
+      }
+    });
+
+    return () => {
+      off(meetingRef);
+    };
+  }, [meetingAgendaIssueId, meetingId]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },

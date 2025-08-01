@@ -1,5 +1,5 @@
 import { SpinnerIcon } from "@/components/shared/Icons";
-import Timer from "../Timer";
+// import Timer from "../Timer";
 import useDesc from "./useDesc";
 import { Button } from "@/components/ui/button";
 import {
@@ -125,7 +125,7 @@ export default function Desc({
                 )}
 
                 <div className="flex items-center justify-center w-[150px] rounded-md border border-gray-500 px-3 py-1">
-                  <Timer
+                  {/* <Timer
                     plannedTime={Number(currentItem?.plannedTime)}
                     actualTime={Number(
                       meetingResponse?.timers.objectives?.[
@@ -138,7 +138,7 @@ export default function Desc({
                     isEditMode={false}
                     meetingStart={true}
                     className="text-xl sm:text-2xl  font-semibold  text-primary"
-                  />
+                  /> */}
                 </div>
               </div>
             </div>

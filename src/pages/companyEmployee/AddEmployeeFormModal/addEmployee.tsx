@@ -223,6 +223,7 @@ const Designation = () => {
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "designationName", label: "Designation Name", visible: true },
+    { key: "designationName", label: "Designation Name", visible: true },
   ]);
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
@@ -239,7 +240,6 @@ const Designation = () => {
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
-  console.log(designationData);
 
   return (
     <div>
@@ -252,6 +252,17 @@ const Designation = () => {
             />
           </div>
         )}
+        <div className="mb-4">
+          {formErrors?.designation && (
+            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+              {String(
+                formErrors.designation?.message ||
+                  formErrors.designationId?.message ||
+                  "",
+              )}
+            </span>
+          )}
+        </div>
       </div>
       <Controller
         name="designation"
@@ -259,17 +270,6 @@ const Designation = () => {
         rules={{ required: "Please select a Designation" }}
         render={({ field }) => (
           <>
-            <div className="mb-4">
-              {formErrors?.designation && (
-                <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                  {String(
-                    formErrors.designation?.message ||
-                      formErrors.designationId?.message ||
-                      "",
-                  )}
-                </span>
-              )}
-            </div>
             <TableData
               {...field}
               tableData={designationData?.data.map((item, index) => ({
@@ -285,7 +285,7 @@ const Designation = () => {
               paginationDetails={designationData as PaginationFilter} // Cast might be needed
               setPaginationFilter={setPaginationFilter}
               onCheckbox={() => true}
-              multiSelect={false}
+              multiSelect={true}
               selectedValue={field.value}
               handleChange={field.onChange}
               isLoading={isLoading}
@@ -449,7 +449,7 @@ const AddEmployee = () => {
 
   return (
     <FormProvider {...methods}>
-      <div>
+      <div className="p-4">
         <StepProgress
           currentStep={currentStep}
           stepNames={stepNames}
@@ -465,32 +465,6 @@ const AddEmployee = () => {
           onFinish={onFinish}
           isUpdate={!!companyEmployeeId}
         />
-
-        {/* <div className="flex justify-end gap-5 mb-5 ">
-          <Button
-            onClick={back}
-            disabled={isFirstStep || isPending}
-            className="w-fit"
-            type="button"
-          >
-            Previous
-          </Button>
-          <Button
-            onClick={isLastStep ? onFinish : next}
-            className="w-fit"
-            isLoading={isPending}
-            type="button"
-            disabled={isPending}
-          >
-            {isLastStep ? "Finish" : "Next"}
-          </Button>
-
-          {companyEmployeeId && !isLastStep && (
-            <Button onClick={onFinish} className="w-fit">
-              Submit
-            </Button>
-          )}
-        </div> */}
 
         <div className="step-content w-full">{stepContent}</div>
 

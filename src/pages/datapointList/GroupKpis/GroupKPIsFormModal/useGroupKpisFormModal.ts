@@ -32,6 +32,7 @@ export default function useGroupKpisFormModal({
   modalClose,
   selectedKpiData,
   selectedKpisIds,
+  groupId,
 }: GroupKpisProps) {
   const {
     handleSubmit,
@@ -82,29 +83,16 @@ export default function useGroupKpisFormModal({
 
   const onSubmit = handleSubmit(async (data) => {
     if (selectedKpisIds) {
-      // const kpiMergeId = "5ef4dfbd-a0c7-4ee4-8dff-c816311fb7d3";
-      // const payload = kpiMergeId
-      //   ? {
-      //       kpiMergeId: kpiMergeId,
-      //       kpiIds: selectedKpisIds,
-      //       tag: data.tag,
-      //       visualFrequencyTypes: data.visualFrequencyTypes,
-      //       visualFrequencyAggregate: data.visualFrequencyAggregate,
-      //     }
-      //   : {
-      //       kpiIds: selectedKpisIds,
-      //       tag: data.tag,
-      //       visualFrequencyTypes: data.visualFrequencyTypes,
-      //       visualFrequencyAggregate: data.visualFrequencyAggregate,
-      //     };
-
       const payload = {
+        kpiMergeId: groupId ?? undefined,
         kpiIds: selectedKpisIds,
+        unit: data.unit,
         tag: data.tag,
         visualFrequencyTypes: data.visualFrequencyTypes,
         visualFrequencyAggregate: data.visualFrequencyAggregate,
       };
       addUpdateKpiGroup(payload);
+      modalClose();
     }
   });
 

@@ -138,10 +138,11 @@ const TableData = <T extends Record<string, unknown>>({
   actionColumnWidth,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
-  // Only show checkboxes if explicitly enabled with multiSelect OR if both selectedValue and handleChange are provided
-  const showCheckboxes =
-    multiSelect || (!!selectedValue && !!handleChange && !!onCheckbox);
 
+  // const showCheckboxes =
+  //   multiSelect || (!!selectedValue && !!handleChange && !!onCheckbox);
+
+  const showCheckboxes = multiSelect || (!!handleChange && !!onCheckbox);
   const permission = useSelector(getUserPermission)?.[moduleKey];
 
   const handleCheckboxChange = (item: T, isChecked: boolean) => {
@@ -269,6 +270,7 @@ const TableData = <T extends Record<string, unknown>>({
                 truncate text-left px-4
                 ${clm === "srNo" ? "w-[80px]" : ""}
                 ${sortableColumns.includes(clm) ? "cursor-pointer select-none" : ""}
+                ${showActionsColumn === false && "bg-primary"}
               `}
                   onClick={() => handleSort(clm)}
                 >

@@ -42,6 +42,7 @@ import {
 import KpiDrawer from "./KpiDrawer";
 import { addUpdateKpi } from "@/features/api/kpiDashboard";
 import { queryClient } from "@/queryClient";
+import { getDatabase, off, onValue, ref } from "firebase/database";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -137,12 +138,30 @@ export default function KPITable({
   const [tempValues, setTempValues] = useState<{ [key: string]: string }>({});
   const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
     {},
-  ); // Custom navigation interceptor for drawer/sidebar navigation
+  );
+
   useEffect(() => {
-    // Store the original navigate function to restore later
+    const db = getDatabase();
+    const meetingRef = ref(
+      db,
+      `meetings/${meetingId}/timers/objectives/${meetingAgendaIssueId}/projects`,
+    );
+
+    onValue(meetingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        queryClient.resetQueries({ queryKey: ["get-kpi-dashboard-data"] });
+        queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] });
+      }
+    });
+
+    return () => {
+      off(meetingRef);
+    };
+  }, [meetingAgendaIssueId, meetingId]);
+
+  useEffect(() => {
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
-    // Override history methods to intercept navigation
     history.pushState = function (
       data: unknown,
       title: string,
@@ -736,11 +755,12 @@ export default function KPITable({
     addUpdateKpiData(formatTempValuesToPayload(tempValues), {
       onSuccess: () => {
         // queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] });
-        // queryClient.resetQueries({ queryKey: ["get-kpi-dashboard-data"] });
+        queryClient.resetQueries({ queryKey: ["get-kpi-dashboard-data"] });
         kpisFireBase();
       },
     });
   };
+
   const handlePeriodChange = (newPeriod: string) => {
     if (Object.keys(tempValues).length > 0) {
       setPendingPeriod(newPeriod);

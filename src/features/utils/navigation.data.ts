@@ -74,9 +74,24 @@ export const companyNavigationData = [
     id: 8,
     icon: "BarChart3",
     label: "KPI List",
-    link: "/dashboard/kpi",
     permission: "View",
     moduleKey: "DATAPOINT_LIST",
+    items: [
+      {
+        id: 1,
+        label: "KPI List",
+        link: "/dashboard/kpi",
+        permission: "View",
+        moduleKey: "ISSUES",
+      },
+      {
+        id: 2,
+        label: "KPI Group",
+        link: "/dashboard/kpi/group-kpis",
+        permission: "View",
+        moduleKey: "OBJECTIVE",
+      },
+    ],
   },
   {
     id: 9,

@@ -847,6 +847,7 @@ interface KPIFormData {
     KPIName: string;
     KPILabel: string;
   };
+  kpiMergeId?: string;
   KPIName?: string;
   KPILabel?: string;
   validationType: string;
@@ -1070,6 +1071,7 @@ interface MeetingResFire {
     status?: string;
     follow: string;
     meetingTimestamp?: number;
+    updatedAt: number | string;
   };
   timers: {
     agenda?: TimerEntry;
@@ -1120,6 +1122,7 @@ interface KpiAllList {
   visualFrequencyTypes: string;
   employeeId: string;
   detailMeetingKPIId?: string;
+  kpiMergeId?: string;
 }
 
 interface KPICoreParameter {
@@ -1212,9 +1215,10 @@ interface DetailMeetingAgendaIssue {
 
 interface GroupKpisProps {
   selectedKpisIds?: string[];
-  selectedKpiData: KPIFormData[];
+  selectedKpiData?: KPIFormData[];
   isModalOpen: boolean;
   modalClose: () => void;
+  groupId?: string | null;
 }
 
 interface KpiMergeRes {

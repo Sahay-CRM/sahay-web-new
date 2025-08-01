@@ -359,48 +359,46 @@ export default function Agenda({
                   <li
                     key={item.issueObjectiveId}
                     className={`group px-2 flex w-full 
-                      ${
-                        meetingStatus === "STARTED" ||
-                        (meetingStatus === "NOT_STARTED" ? "h-14" : "h-20")
-                      }
-                      ${
-                        isSelectedAgenda === item.detailMeetingAgendaIssueId
-                          ? "bg-primary text-white"
-                          : ""
-                      } mb-2 rounded-md shadow ${
-                        meetingStatus === "STARTED" ||
-                        meetingStatus === "NOT_STARTED"
-                          ? "cursor-pointer"
-                          : "opacity-100"
-                      }`}
+                ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-14" : "h-20"}
+                ${isSelectedAgenda === item.detailMeetingAgendaIssueId ? "bg-primary text-white" : ""}
+                mb-2 rounded-md shadow
+                ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "cursor-pointer" : ""}`}
                     draggable={
                       meetingStatus === "STARTED" ||
                       meetingStatus === "NOT_STARTED"
                     }
-                    onDragStart={
-                      meetingStatus === "STARTED" ||
-                      meetingStatus === "NOT_STARTED"
-                        ? () => handleDragStart(idx)
-                        : undefined
-                    }
-                    onDragOver={
-                      meetingStatus === "STARTED" ||
-                      meetingStatus === "NOT_STARTED"
-                        ? (e) => handleDragOver(e, idx)
-                        : undefined
-                    }
-                    onDragLeave={
-                      meetingStatus === "STARTED" ||
-                      meetingStatus === "NOT_STARTED"
-                        ? handleDragLeave
-                        : undefined
-                    }
-                    onDrop={
-                      meetingStatus === "STARTED" ||
-                      meetingStatus === "NOT_STARTED"
-                        ? () => handleDrop(idx)
-                        : undefined
-                    }
+                    onDragStart={() => {
+                      if (
+                        meetingStatus === "STARTED" ||
+                        meetingStatus === "NOT_STARTED"
+                      ) {
+                        handleDragStart(idx);
+                      }
+                    }}
+                    onDragOver={(e) => {
+                      if (
+                        meetingStatus === "STARTED" ||
+                        meetingStatus === "NOT_STARTED"
+                      ) {
+                        handleDragOver(e, idx);
+                      }
+                    }}
+                    onDragLeave={() => {
+                      if (
+                        meetingStatus === "STARTED" ||
+                        meetingStatus === "NOT_STARTED"
+                      ) {
+                        handleDragLeave();
+                      }
+                    }}
+                    onDrop={() => {
+                      if (
+                        meetingStatus === "STARTED" ||
+                        meetingStatus === "NOT_STARTED"
+                      ) {
+                        handleDrop(idx);
+                      }
+                    }}
                     onClick={() => {
                       if (
                         meetingStatus !== "STARTED" &&
@@ -409,6 +407,8 @@ export default function Agenda({
                         handleListClick(item.detailMeetingAgendaIssueId ?? "");
                       }
                     }}
+                    // onMouseEnter={() => setHoverIndex(idx)}
+                    // onMouseLeave={() => setHoverIndex(null)}
                     style={{
                       opacity: draggedIndex === idx ? 0.5 : 1,
                       cursor:
@@ -428,162 +428,92 @@ export default function Agenda({
                       position: "relative",
                     }}
                   >
-                    {hoverIndex === idx &&
-                      (meetingStatus === "STARTED" ||
-                        meetingStatus === "NOT_STARTED") && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            top:
-                              draggedIndex !== null && draggedIndex < idx
-                                ? "100%"
-                                : 0,
-                            left: 0,
-                            right: 0,
-                            height: "2px",
-                            backgroundColor: "#3b82f6",
-                            transform:
-                              draggedIndex !== null && draggedIndex < idx
-                                ? "translateY(-1px)"
-                                : "translateY(-1px)",
-                          }}
-                        />
-                      )}
                     <div className="flex items-center w-full">
+                      {/* Drag handle */}
                       {(meetingStatus === "STARTED" ||
                         meetingStatus === "NOT_STARTED") && (
-                        <span style={{ marginRight: 8, cursor: "grab" }}>
+                        <span
+                          style={{ cursor: "grab" }}
+                          className="w-5 mr-2 flex-shrink-0"
+                        >
                           ⋮⋮
                         </span>
                       )}
+
+                      {/* Content - either editing input or display text */}
                       {editing.type === item.agendaType &&
                       editing.id === item.issueObjectiveId &&
-                      canEdit ? null : (
+                      canEdit ? (
+                        <div className="w-full flex items-center gap-1">
+                          <div className="relative w-full flex gap-2 items-center">
+                            <Input
+                              value={editing.value}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              className="mr-2"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  updateEdit();
+                                }
+                              }}
+                            />
+                            <span className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
+                              <CornerDownLeft className="text-gray-400 w-4" />
+                            </span>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={cancelEdit}
+                          >
+                            <CircleX />
+                          </Button>
+                        </div>
+                      ) : (
                         <div className="w-full flex items-center">
                           <div
-                            className={`text-sm ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "w-[calc(100%-50px)] pr-8 h-14 flex items-center" : "w-[75%] min-w-52 max-w-[75%]"}  overflow-hidden line-clamp-3 ml-2`}
+                            className={`text-sm ${
+                              meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED"
+                                ? "w-full pr-8 h-14 flex items-center"
+                                : "w-full min-w-52"
+                            } overflow-hidden line-clamp-3`}
                           >
                             {item.name}
                           </div>
-
-                          <div
-                            className={`text-xs text-center w-20 text-gray-500 ${
-                              meetingStatus === "STARTED" ||
-                              meetingStatus === "NOT_STARTED"
-                                ? "group-hover:hidden"
-                                : ""
-                            }   absolute top-3 right-3`}
-                          >
-                            <Badge variant="secondary" className="mb-1.5">
-                              {item.agendaType}
-                            </Badge>
-                            <div className="text-sm font-medium text-primary">
-                              {meetingStatus !== "STARTED" &&
-                                meetingStatus !== "NOT_STARTED" &&
-                                item.detailMeetingAgendaIssueId && (
-                                  <div>
-                                    {meetingStatus === "DISCUSSION" ? (
-                                      <Timer
-                                        actualTime={Number(
-                                          meetingResponse?.timers.objectives?.[
-                                            item.detailMeetingAgendaIssueId ??
-                                              ""
-                                          ]?.actualTime || 0,
-                                        )}
-                                        defaultTime={Number(
-                                          meetingResponse?.timers.objectives?.[
-                                            item.detailMeetingAgendaIssueId ??
-                                              ""
-                                          ]?.actualTime || 0,
-                                        )}
-                                        lastSwitchTimestamp={
-                                          isSelectedAgenda ===
-                                          item.detailMeetingAgendaIssueId
-                                            ? Number(
-                                                meetingResponse?.state
-                                                  .lastSwitchTimestamp ||
-                                                  Date.now(),
-                                              )
-                                            : 0
-                                        }
-                                        isActive={
-                                          isSelectedAgenda ===
-                                          item.detailMeetingAgendaIssueId
-                                        }
-                                        className={`text-xl ${
-                                          isSelectedAgenda ===
-                                          item.detailMeetingAgendaIssueId
-                                            ? "text-white"
-                                            : ""
-                                        }`}
-                                      />
-                                    ) : (
-                                      <div
-                                        className={`text-xl ${
-                                          isSelectedAgenda ===
-                                          item.detailMeetingAgendaIssueId
-                                            ? "text-white"
-                                            : ""
-                                        }`}
-                                      >
-                                        {formatTime(
-                                          Number(
-                                            conclusionData &&
-                                              conclusionData?.agenda.find(
-                                                (con) =>
-                                                  con.detailMeetingAgendaIssueId ===
-                                                  item.detailMeetingAgendaIssueId,
-                                              )?.actualTime,
-                                          ),
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                            </div>
-                          </div>
+                          {meetingStatus === "STARTED" ||
+                            (meetingStatus === "NOT_STARTED" && (
+                              <div className="text-xs text-center w-20 text-gray-500">
+                                <Badge variant="secondary" className="mb-1.5">
+                                  {item.agendaType}
+                                </Badge>
+                              </div>
+                            ))}
                         </div>
                       )}
                     </div>
-                    {(meetingStatus === "STARTED" ||
-                      meetingStatus === "NOT_STARTED") && (
-                      <div>
-                        {editing.type === item.agendaType &&
-                        editing.id === item.issueObjectiveId &&
-                        canEdit ? (
-                          <div className="w-full flex items-center gap-1">
-                            <div className="relative w-full flex gap-2 items-center">
-                              <Input
-                                value={editing.value}
-                                onChange={(e) =>
-                                  setEditingValue(e.target.value)
-                                }
-                                className="mr-2"
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") {
-                                    updateEdit();
-                                  }
-                                }}
-                              />
-                              <span className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
-                                <CornerDownLeft className="text-gray-400 w-4" />
-                              </span>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={cancelEdit}
-                            >
-                              <CircleX />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex gap-4 items-center">
-                            {canEdit && (
-                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                    <div className="flex items-center gap-2">
+                      {/* <div className="text-xs text-center w-20 text-gray-500">
+                        <Badge variant="secondary" className="mb-1.5">
+                          {item.agendaType}
+                        </Badge>
+                      </div> */}
+
+                      {/* Edit/Delete buttons - shown only on hover and when canEdit is true */}
+                      {(meetingStatus === "STARTED" ||
+                        meetingStatus === "NOT_STARTED") &&
+                        canEdit && (
+                          <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {!(
+                              editing.type === item.agendaType &&
+                              editing.id === item.issueObjectiveId
+                            ) && (
+                              <div className="flex gap-1">
                                 <Button
                                   variant="ghost"
-                                  onClick={() =>
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     startEdit(
                                       item.agendaType === "objective"
                                         ? "objective"
@@ -592,15 +522,18 @@ export default function Agenda({
                                       item.name,
                                       item.plannedTime || "0",
                                       String(item.detailMeetingAgendaIssueId),
-                                    )
-                                  }
+                                    );
+                                  }}
                                   className="w-5"
                                 >
                                   <SquarePen className="h-4 w-4 text-primary" />
                                 </Button>
                                 <Button
                                   variant="ghost"
-                                  onClick={() => handleDelete(item)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(item);
+                                  }}
                                   className="w-5"
                                 >
                                   <Trash2 className="h-4 w-4 text-red-500" />
@@ -609,8 +542,72 @@ export default function Agenda({
                             )}
                           </div>
                         )}
-                      </div>
-                    )}
+
+                      {/* Timer - shown based on meeting status */}
+                      {meetingStatus !== "STARTED" &&
+                        meetingStatus !== "NOT_STARTED" &&
+                        item.detailMeetingAgendaIssueId && (
+                          <div className="text-sm text-center ml-2 font-medium text-primary">
+                            <div className="text-xs text-center w-20 text-gray-500">
+                              <Badge variant="secondary" className="mb-1.5">
+                                {item.agendaType}
+                              </Badge>
+                            </div>
+                            {meetingStatus === "DISCUSSION" ? (
+                              <Timer
+                                actualTime={Number(
+                                  meetingResponse?.timers.objectives?.[
+                                    item.detailMeetingAgendaIssueId ?? ""
+                                  ]?.actualTime || 0,
+                                )}
+                                defaultTime={Number(
+                                  meetingResponse?.timers.objectives?.[
+                                    item.detailMeetingAgendaIssueId ?? ""
+                                  ]?.actualTime || 0,
+                                )}
+                                lastSwitchTimestamp={
+                                  isSelectedAgenda ===
+                                  item.detailMeetingAgendaIssueId
+                                    ? Number(
+                                        meetingResponse?.state
+                                          .lastSwitchTimestamp || Date.now(),
+                                      )
+                                    : 0
+                                }
+                                isActive={
+                                  isSelectedAgenda ===
+                                  item.detailMeetingAgendaIssueId
+                                }
+                                className={`text-xl ${
+                                  isSelectedAgenda ===
+                                  item.detailMeetingAgendaIssueId
+                                    ? "text-white"
+                                    : ""
+                                }`}
+                              />
+                            ) : (
+                              <div
+                                className={`text-xl ${
+                                  isSelectedAgenda ===
+                                  item.detailMeetingAgendaIssueId
+                                    ? "text-white"
+                                    : ""
+                                }`}
+                              >
+                                {formatTime(
+                                  Number(
+                                    conclusionData?.agenda.find(
+                                      (con) =>
+                                        con.detailMeetingAgendaIssueId ===
+                                        item.detailMeetingAgendaIssueId,
+                                    )?.actualTime,
+                                  ),
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -756,11 +753,11 @@ export default function Agenda({
               )}
             </div>
             {meetingStatus !== "ENDED" && (
-              <div className="flex flex-wrap transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] md:flex-nowrap items-center gap-3 w-[30%] md:w-auto">
+              <div className="flex flex-wrap md:flex-nowrap items-center gap-3 w-[30%] md:w-auto">
                 {meetingStatus === "NOT_STARTED" && isTeamLeader && (
                   <Button
                     variant="outline"
-                    className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
+                    className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
                     onClick={handleStartMeeting}
                     isLoading={isPending}
                   >
@@ -771,7 +768,7 @@ export default function Agenda({
                 {!isTeamLeader && (
                   <Button
                     variant="outline"
-                    className="w-[200px] h-[40px] cursor-not-allowed transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] text-lg font-semibold"
+                    className="w-[200px] h-[40px] cursor-not-allowed hover:bg-primary hover:text-white bg-primary text-white rounded-[10px] text-lg font-semibold"
                     // onClick={handleJoinMeeting}
                   >
                     {
@@ -787,7 +784,7 @@ export default function Agenda({
                     {meetingStatus === "STARTED" && (
                       <Button
                         variant="outline"
-                        className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
+                        className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
                         onClick={handleDesc}
                         isLoading={isPending}
                       >
@@ -797,7 +794,7 @@ export default function Agenda({
                     {meetingStatus === "DISCUSSION" && (
                       <Button
                         variant="outline"
-                        className="w-[200px] h-[40px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] bg-primary text-white rounded-[10px] cursor-pointer text-lg font-semibold"
+                        className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
                         onClick={handleConclusionMeeting}
                       >
                         Go To Conclusion
@@ -806,7 +803,7 @@ export default function Agenda({
                     {meetingStatus === "CONCLUSION" && (
                       <Button
                         variant="outline"
-                        className="bg-primary transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] text-white px-4 py-5 text-sm sm:text-base md:text-lg"
+                        className="bg-primary text-white px-4 hover:bg-primary py-5 text-sm hover:text-white sm:text-base md:text-lg"
                         onClick={handleCloseMeetingWithLog}
                         isLoading={endMeetingLoading}
                       >
@@ -817,7 +814,7 @@ export default function Agenda({
                 )}
 
                 {meetingStatus !== "ENDED" && (
-                  <div className="w-fit transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)] px-2 pl-4 h-[40px] border-gray-300 rounded-[10px] flex items-center justify-center">
+                  <div className="w-fit px-2 pl-4 h-[40px] border-gray-300 rounded-[10px] flex items-center justify-center">
                     <MeetingTimer
                       meetingTime={Number(meetingTime)}
                       actualTime={0}
@@ -836,22 +833,25 @@ export default function Agenda({
           </div>
           <div className="border rounded-md flex  justify-center w-full h-[calc(100vh-200px)] overflow-scroll">
             {meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? (
-              <div className="w-[500px] h-[calc(100vh-250px)] flex items-center text-justify leading-8">
-                📌 Tips for Writing a Clear & Effective Meeting Agenda Start
-                with the Goal ➤ What is the purpose of the meeting? Summarize it
-                in one sentence. List Key Discussion Points ➤ Break down the
+              <div className="w-[600px] h-full flex flex-wrap items-center content-center text-justify leading-7 text-sm">
+                <b className="mb-0">
+                  📌 Tips for Writing a Clear & Effective Meeting Agenda Start
+                  with the Goal{" "}
+                </b>{" "}
+                ➤ What is the purpose of the meeting? Summarize it in one
+                sentence. List Key Discussion Points <br /> ➤ Break down the
                 agenda into focused, time-boxed topics. E.g., "Marketing Update
                 (10 mins)" or "Budget Review (15 mins)" Prioritize High-Impact
-                Items First ➤ Cover the most important topics early, when
-                attention is highest. Assign Owners to Agenda Items ➤ Add who
-                will lead each topic to encourage preparation. Add Time
-                Estimates ➤ Helps keep the meeting on track and avoids overruns.
-                Leave Room for Questions or Open Discussion ➤ Allot a few
-                minutes at the end to address any additional points. Distribute
-                Agenda Before the Meeting ➤ Share the agenda with participants
-                at least a day in advance. Be Specific, Not Vague ✘ Bad:
-                "Project discussion" ✔ Good: "Decide launch date for Phase 2 of
-                Project Phoenix"
+                Items First <br /> ➤ Cover the most important topics early, when
+                attention is highest. Assign Owners to Agenda Items <br /> ➤ Add
+                who will lead each topic to encourage preparation. Add Time
+                Estimates <br /> ➤ Helps keep the meeting on track and avoids
+                overruns. Leave Room for Questions or Open Discussion <br /> ➤
+                Allot a few minutes at the end to address any additional points.
+                Distribute Agenda Before the Meeting <br /> ➤ Share the agenda
+                with participants at least a day in advance. Be Specific, Not
+                Vague ✘ Bad: "Project discussion" ✔ Good: "Decide launch date
+                for Phase 2 of Project Phoenix"
               </div>
             ) : meetingStatus === "DISCUSSION" ? (
               detailAgendaData && (

@@ -8,9 +8,12 @@ export default function useConclusion() {
   const [selectedAgenda, setSelectedAgenda] = useState(0);
 
   const { mutate: endMeet, isPending } = endMeetingMutation();
-  const { data: conclusionData, isLoading } = useGetMeetingConclusion(
-    meetingId ?? "",
-  );
+  const { data: conclusionData, isLoading } = useGetMeetingConclusion({
+    filter: {
+      meetingId: meetingId,
+    },
+    enable: !!meetingId,
+  });
 
   const hasChanges = (item: AgendaResConclusion | undefined) => {
     if (!item) return;

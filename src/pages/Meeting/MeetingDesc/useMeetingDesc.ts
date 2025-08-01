@@ -34,6 +34,7 @@ export default function useMeetingDesc() {
   }, []);
 
   const db = getDatabase();
+
   useEffect(() => {
     const meetingRef = ref(db, `meetings/${meetingId}`);
 

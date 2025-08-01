@@ -18,10 +18,12 @@ import {
   useGetProjectStatus,
   useGetSubParaFilter,
 } from "@/features/api/companyProject";
+import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 
 const ProjectInfo = () => {
   const {
     register,
+    control,
     formState: { errors },
   } = useFormContext();
   return (
@@ -39,14 +41,35 @@ const ProjectInfo = () => {
           })}
           error={errors.projectDescription}
         />
-        <FormInputField
-          id="projectDeadline"
-          type="date"
-          label="Project Deadline"
-          {...register("projectDeadline", {
-            required: "Date & Time is required",
-          })}
-          error={errors.projectDeadline}
+        <Controller
+          control={control}
+          name="projectDeadline"
+          render={({ field }) => {
+            // Convert to local time for display
+            const localDate = field.value
+              ? new Date(
+                  new Date(field.value).getTime() +
+                    new Date().getTimezoneOffset() * 60000,
+                )
+              : null;
+
+            return (
+              <FormDateTimePicker
+                label="Project Deadline (Local Time)"
+                value={localDate}
+                onChange={(date) => {
+                  // Convert back to UTC when saving
+                  const utcDate = date
+                    ? new Date(
+                        date.getTime() - date.getTimezoneOffset() * 60000,
+                      )
+                    : null;
+                  field.onChange(utcDate);
+                }}
+                error={errors.projectDeadline}
+              />
+            );
+          }}
         />
       </Card>
     </div>
