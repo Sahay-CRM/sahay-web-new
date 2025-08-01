@@ -144,7 +144,7 @@ export default function KPITable({
     const db = getDatabase();
     const meetingRef = ref(
       db,
-      `meetings/${meetingId}/timers/objectives/${meetingAgendaIssueId}/projects`,
+      `meetings/${meetingId}/timers/objectives/${meetingAgendaIssueId}/kpis`,
     );
 
     onValue(meetingRef, (snapshot) => {
