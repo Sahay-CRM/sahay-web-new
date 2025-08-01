@@ -107,7 +107,7 @@ export default function CompanyTaskList() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full  overflow-x-auto">
+      <div className="w-full p-4 overflow-x-auto">
         <div className="flex mb-3 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             Company Task List

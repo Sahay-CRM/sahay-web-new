@@ -436,7 +436,7 @@ export default function UpdatedKpiTable() {
 
   return (
     <FormProvider {...methods}>
-      <div className="sticky top-0 z-30 bg-white pb-2 pt-0">
+      <div className="sticky top-0 z-30 bg-white p-4">
         <div className="flex justify-between">
           {" "}
           <div className="flex justify-between items-center">

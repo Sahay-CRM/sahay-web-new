@@ -561,7 +561,7 @@ const AddProject = () => {
 
   return (
     <FormProvider {...methods}>
-      <div>
+      <div className="p-4">
         <StepProgress
           currentStep={currentStep}
           stepNames={stepNames}
