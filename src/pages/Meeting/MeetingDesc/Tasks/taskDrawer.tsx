@@ -2,7 +2,6 @@ import { useRef, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
-import { queryClient } from "@/queryClient";
 import {
   addUpdateCompanyTaskMutation,
   useDdTaskType,
@@ -176,12 +175,7 @@ export default function TaskDrawer({
         detailMeetingAgendaIssueId: detailMeetingAgendaIssueId,
         detailMeetingId: detailMeetingId,
       };
-      addUpdateTask(payload, {
-        onSuccess: () => {
-          queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
-          onClose();
-        },
-      });
+      addUpdateTask(payload);
     }
   };
 

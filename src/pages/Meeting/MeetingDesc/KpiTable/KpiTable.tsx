@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import clsx from "clsx";
 import {
   formatCompactNumber,
-  formatTempValuesToPayload,
+  formatTempValuesMeetingToPayload,
   getColorFromName,
   getKpiHeadersFromData,
   isValidInput,
@@ -36,11 +36,11 @@ import WarningDialog from "./WarningModal";
 import KpisSearchDropdown from "./KpiSearchDropdown";
 import {
   addMeetingKpisDataMutation,
+  updateKPIDataMutation,
   // useGetMeetingKpis,
   useGetMeetingSelectedKpis,
 } from "@/features/api/companyMeeting";
 import KpiDrawer from "./KpiDrawer";
-import { addUpdateKpi } from "@/features/api/kpiDashboard";
 import { queryClient } from "@/queryClient";
 import { getDatabase, off, onValue, ref } from "firebase/database";
 
@@ -366,7 +366,7 @@ export default function KPITable({
     };
   }, [tempValues]);
 
-  const { mutate: addUpdateKpiData } = addUpdateKpi();
+  const { mutate: addUpdateKpiData } = updateKPIDataMutation();
 
   useEffect(() => {
     if (isKpiDataCellArrayArray(selectedKpisTyped)) {
@@ -751,15 +751,24 @@ export default function KPITable({
   }
 
   const handleSubmit = () => {
-    // console.log(formatTempValuesToPayload(tempValues));
-    addUpdateKpiData(formatTempValuesToPayload(tempValues), {
-      onSuccess: () => {
-        // queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] });
-        queryClient.resetQueries({ queryKey: ["get-kpi-dashboard-data"] });
-        kpisFireBase();
-        setTempValues({});
-      },
-    });
+    if (meetingAgendaIssueId) {
+      // const payload = formatTempValuesMeetingToPayload(
+      //   tempValues,
+      //   meetingAgendaIssueId
+      // );
+
+      addUpdateKpiData(
+        formatTempValuesMeetingToPayload(tempValues, meetingAgendaIssueId),
+        {
+          onSuccess: () => {
+            // queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] });
+            queryClient.resetQueries({ queryKey: ["get-kpi-dashboard-data"] });
+            kpisFireBase();
+            setTempValues({});
+          },
+        },
+      );
+    }
   };
 
   const handlePeriodChange = (newPeriod: string) => {

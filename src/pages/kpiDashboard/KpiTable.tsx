@@ -436,7 +436,7 @@ export default function UpdatedKpiTable() {
 
   return (
     <FormProvider {...methods}>
-      <div className="sticky top-0 z-30 bg-white p-4">
+      <div className="sticky top-0 z-30 bg-white p-4 m-0">
         <div className="flex justify-between">
           {" "}
           <div className="flex justify-between items-center">
@@ -476,8 +476,7 @@ export default function UpdatedKpiTable() {
           </div>
         </div>
       </div>
-      <div className="flex w-full p-0 gap-0 mt-4">
-        {/* LEFT TABLE */}
+      <div className="flex w-full gap-0 p-4">
         <div
           ref={leftScrollRef}
           className="max-h-[78vh] overflow-y-scroll scrollbar-hide border shadow-sm"

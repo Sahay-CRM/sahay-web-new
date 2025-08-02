@@ -107,7 +107,9 @@ export const useAgenda = ({
   });
 
   const isConclusion =
-    meetingStatus === "CONCLUSION" || meetingStatus === "ENDED";
+    meetingResponse?.state.activeTab === "CONCLUSION" ||
+    meetingStatus === "ENDED";
+
   const { data: conclusionData, isLoading: conclusionLoading } =
     useGetMeetingConclusion({
       filter: {
@@ -493,7 +495,7 @@ export const useAgenda = ({
                     status: "CONCLUSION",
                   }).then(() => {
                     queryClient.resetQueries({
-                      queryKey: ["get-meeting-details-timing"],
+                      queryKey: ["get-meeting-conclusion-res"],
                     });
                     resolve();
                   });
@@ -707,14 +709,6 @@ export const useAgenda = ({
       ) || null;
     setSelectedItem(foundItem);
   }, [conclusionData, isSelectedAgenda]);
-
-  // const handleJoinMeeting = () => {
-  //   updateDetailMeeting({
-  //     employeeId: userId,
-  //     attendanceMark: true,
-  //     meetingId: meetingId,
-  //   });
-  // };
 
   return {
     issueInput,

@@ -20,9 +20,13 @@ const AllNotifications = () => {
     setBreadcrumbs([{ label: "Notifications", href: "" }]);
   }, [setBreadcrumbs]);
 
-  const handleView = (type?: string, typeId?: string) => {
-    if (typeId) {
-      updateNotification([typeId], {
+  const handleView = (
+    type?: string,
+    typeId?: string,
+    notificationId?: string,
+  ) => {
+    if (notificationId) {
+      updateNotification([notificationId], {
         onSuccess: () => {
           if (type === "TASK" && typeId) {
             navigate(`/dashboard/tasks/view/${typeId}`);
@@ -78,6 +82,7 @@ const AllNotifications = () => {
                           handleView(
                             notification.data?.type,
                             notification.data?.typeId,
+                            notification.notificationId || "",
                           )
                         }
                       >

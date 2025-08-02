@@ -40,3 +40,5 @@ export { default as editAgendaTimingMeetingMutation } from "./useUpdateAgendaMee
 
 export { default as deleteCompanyMeetingMutation } from "./useDeleteCompanyMeetingNote";
 export { default as addMeetingTimeMutation } from "./useUpdateMeetingTime";
+
+export { default as updateKPIDataMutation } from "./useUpdateKPIData";

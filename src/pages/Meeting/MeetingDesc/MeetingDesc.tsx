@@ -19,8 +19,8 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import MeetingNotes from "./Agenda/meetingNotes";
 import { getUserId } from "@/features/selectors/auth.selector";
-import { DropdownMenu } from "@/components/ui/dropdown-menu";
-import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+// import { DropdownMenu } from "@/components/ui/dropdown-menu";
+// import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -41,9 +41,13 @@ export default function MeetingDesc() {
     activeTab,
     isCardVisible,
     setIsCardVisible,
-    // handleTimeUpdate,
-    // handleConclusionMeeting,
-    // handleEndMeeting,
+    openEmployeeId,
+    setOpenEmployeeId,
+    handleAddTeamLeader,
+    handleCheckOut,
+    follow,
+    handleFollow,
+    handleCheckIn,
   } = useMeetingDesc();
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -57,48 +61,6 @@ export default function MeetingDesc() {
     ]);
   }, [meetingTiming?.meetingName, setBreadcrumbs]);
 
-  // let content = null;
-  // if (
-  //   meetingStatus === "NOT_STARTED" ||
-  //   meetingStatus === "STARTED" ||
-  //   meetingStatus === "DISCUSSION"
-  // ) {
-  // content = (
-  //   <Agenda
-  //     meetingName={meetingTiming?.meetingName ?? ""}
-  //     meetingId={meetingId ?? ""}
-  //     meetingStatus={meetingStatus}
-  //     meetingResponse={meetingResponse}
-  //     agendaPlannedTime={meetingTiming?.agendaTimePlanned}
-  //     detailMeetingId={meetingTiming?.detailMeetingId}
-  //     handleStartMeeting={handleStartMeetingWithSidebar}
-  //     handleDesc={handleDesc}
-  //     joiners={meetingTiming?.employeeList ?? []}
-  //     isPending={isPending}
-  //     meetingTime={meetingTiming?.meetingTimePlanned}
-  //   />
-  // );
-  // }
-  // } else if (meetingStatus === "DISCUSSION") {
-  //   content = (
-  //     <Desc
-  //       meetingStatus={meetingStatus}
-  //       meetingResponse={meetingResponse}
-  //       detailMeetingId={meetingTiming?.detailMeetingId}
-  //       meetingId={meetingId ?? ""}
-  //       joiners={meetingTiming?.employeeList ?? []}
-  //     />
-  //   );
-  // } else if (meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") {
-  //   content = (
-  //     <Conclusion
-  //       meetingStatus={meetingStatus}
-  //       meetingResponse={meetingResponse}
-  //       detailMeetingId={meetingTiming?.detailMeetingId}
-  //     />
-  //   );
-  // }
-
   const getInitials = (name: string) => {
     if (!name) return "";
     const names = name.split(" ");
@@ -107,10 +69,19 @@ export default function MeetingDesc() {
     return (firstInitial + secondInitial).toUpperCase();
   };
 
+  const isTeamLeader = meetingTiming?.employeeList?.find(
+    (item) => item.employeeId === userId,
+  )?.isTeamLeader;
+
   return (
     <div className="flex w-full h-full bg-gray-200 overflow-hidden">
-      <div className="w-full bg-white p-4">
-        <div className="w-full mt-4">
+      <div
+        className={cn(
+          "bg-white p-4 flex-1 min-w-0",
+          "transition-all duration-300 ease-in-out",
+        )}
+      >
+        <div className="w-full mt-4 overflow-hidden">
           <Agenda
             meetingName={meetingTiming?.meetingName ?? ""}
             meetingId={meetingId ?? ""}
@@ -130,6 +101,7 @@ export default function MeetingDesc() {
                 (item) => item.employeeId === userId,
               )?.attendanceMark
             }
+            follow={meetingResponse?.state.follow === userId}
           />
         </div>
       </div>
@@ -142,89 +114,122 @@ export default function MeetingDesc() {
       >
         <Card className="h-full w-full p-0">
           {activeTab === "joiners" && (
-            <div className="flex gap-3 justify-between">
-              {(meetingTiming?.employeeList || []).map((item, index) => (
-                <div key={index + item.employeeId} className="relative">
-                  {item.isTeamLeader && (
-                    <span className="absolute -top-0 right-1 z-10 bg-white shadow-2xl rounded-full p-0.5">
-                      <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
-                    </span>
-                  )}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      asChild
-                      disabled={meetingStatus !== "NOT_STARTED"}
-                    >
-                      <Avatar className="h-8 mt-2 w-8 relative cursor-pointer">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              {item.photo ? (
-                                <img
-                                  src={item.photo}
-                                  alt={item.employeeName}
-                                  className="w-full rounded-full object-cover outline-2 outline-blue-400 bg-black"
-                                />
-                              ) : (
-                                <AvatarFallback className="bg-gray-300 text-gray-700 font-semibold text-sm">
-                                  {getInitials(item.employeeName)}
-                                </AvatarFallback>
-                              )}
-                            </TooltipTrigger>
-                            <TooltipContent>{item.employeeName}</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </Avatar>
-                    </DropdownMenuTrigger>
+            <div>
+              <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
+                <h3 className="p-0 text-base">Meeting Joiners</h3>
+                <div className="flex items-center gap-2">
+                  <Search className="w-4 h-4 text-gray-500" />
+                  <X
+                    className="w-5 h-5 text-gray-500 cursor-pointer"
+                    onClick={() => setIsCardVisible(false)}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-3">
+                {(meetingTiming?.employeeList || []).map((item, index) => {
+                  const isOpen = openEmployeeId === item.employeeId;
+                  const toggleOpen = () =>
+                    setOpenEmployeeId(isOpen ? null : item.employeeId);
 
-                    {/* {meetingStatus !== "NOT_STARTED" && (
-                      <>
-                        {item.attendanceMark ? (
-                          <DropdownMenuContent>
-                            {isTeamLeader && (
-                              <DropdownMenuItem
-                                onClick={() => handleAddTeamLeader(item)}
-                                className="border mb-2"
-                              >
-                                {item.isTeamLeader
-                                  ? "Remove TeamLeader"
-                                  : "Add TeamLeader"}
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              onClick={() => handleCheckOut(item.employeeId)}
-                              className="border mb-2"
+                  return (
+                    <div
+                      key={index + item.employeeId}
+                      className="rounded-md bg-white shadow-sm p-3"
+                    >
+                      <div
+                        className="flex items-center gap-3 cursor-pointer"
+                        onClick={toggleOpen}
+                      >
+                        <div className="relative">
+                          {item.isTeamLeader && (
+                            <span className="absolute -top-1 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                              <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
+                            </span>
+                          )}
+
+                          <Avatar className="h-10 w-10 relative">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  {item.photo ? (
+                                    <img
+                                      src={item.photo}
+                                      alt={item.employeeName}
+                                      className="w-full h-full rounded-full object-cover outline-2 outline-blue-400 bg-black"
+                                    />
+                                  ) : (
+                                    <AvatarFallback className="bg-gray-300 text-gray-700 font-semibold text-sm">
+                                      {getInitials(item.employeeName)}
+                                    </AvatarFallback>
+                                  )}
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {item.employeeName}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </Avatar>
+                        </div>
+
+                        <div className="text-sm font-medium text-gray-800">
+                          {item.employeeName}
+                        </div>
+                      </div>
+
+                      {/* Accordion content (only if open) */}
+                      {isOpen && meetingStatus !== "NOT_STARTED" && (
+                        <div className="mt-3 pl-12 flex flex-col gap-2">
+                          {isTeamLeader && (
+                            <button
+                              onClick={() => handleAddTeamLeader(item)}
+                              className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
                             >
-                              Check Out
-                            </DropdownMenuItem>
-                            {item.employeeId !== follow &&
-                              userId === follow &&
-                              follow && (
-                                <DropdownMenuItem
-                                  onClick={() => handleFollow(item.employeeId)}
-                                  className="border"
-                                >
-                                  Follow
-                                </DropdownMenuItem>
-                              )}
-                          </DropdownMenuContent>
-                        ) : (
-                          <DropdownMenuContent>
-                            <DropdownMenuItem
+                              {item.isTeamLeader
+                                ? "Remove Team Leader"
+                                : "Add Team Leader"}
+                            </button>
+                          )}
+
+                          {item.attendanceMark ? (
+                            <>
+                              <button
+                                onClick={() => handleCheckOut(item.employeeId)}
+                                className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                              >
+                                Check Out
+                              </button>
+
+                              {item.isTeamLeader &&
+                                item.employeeId !== follow &&
+                                userId === follow &&
+                                follow && (
+                                  <button
+                                    onClick={() =>
+                                      handleFollow(item.employeeId)
+                                    }
+                                    className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                  >
+                                    Follow
+                                  </button>
+                                )}
+                            </>
+                          ) : (
+                            <button
                               onClick={() => handleCheckIn(item.employeeId)}
-                              className="border"
+                              className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
                             >
                               Check In
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        )}
-                      </>
-                    )} */}
-                  </DropdownMenu>
-                </div>
-              ))}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
+
           {activeTab === "documents" && (
             <div>
               <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
@@ -255,7 +260,7 @@ export default function MeetingDesc() {
         </Card>
       </div>
       <div
-        className={`${isSidebarCollapsed ? "bg-white border rounded-md" : ""}`}
+        className={`${isSidebarCollapsed ? "bg-white border rounded-md" : ""} flex flex-col z-30`}
       >
         <nav className="space-y-1 w-[56px]">
           <Button

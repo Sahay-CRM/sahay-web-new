@@ -64,7 +64,8 @@ interface ProjectValues {
 interface KpiUpdate {
   oldValues: KpiValues;
   newValues: KpiValues;
-  recData?: KpiRecordedData[];
+  oldData?: KpiRecordedData[];
+  newData?: KpiRecordedData[];
 }
 
 interface KpiValues {
@@ -82,5 +83,5 @@ interface KpiRecordedData {
   kpiId: string;
   startDate: string;
   endDate: string;
-  data: string;
+  data: string | null;
 }

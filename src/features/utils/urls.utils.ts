@@ -252,6 +252,9 @@ const Urls = {
 
   timeUpdateByMeeting: (id: string) =>
     `${baseUrl}/company/detail-meeting/update/${id}`,
+
+  updateDetailMeetingKPIData: () =>
+    `${baseUrl}/company/detail-meeting/kpi/update-data`,
 };
 
 export default Urls;

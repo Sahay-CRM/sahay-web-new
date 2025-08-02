@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 
 import {
-  AlertTriangle,
   BarChart2,
-  CheckCircle,
   CheckSquare,
   CircleX,
   Clock,
@@ -12,9 +10,6 @@ import {
   SquarePen,
   Target,
   Trash2,
-  TrendingUp,
-  Users,
-  XCircle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -103,6 +98,7 @@ interface AgendaProps {
   meetingTime?: string;
   isTeamLeader: boolean | undefined;
   isCheckIn?: boolean;
+  follow?: boolean;
 }
 
 export default function Agenda({
@@ -114,6 +110,7 @@ export default function Agenda({
   meetingTime,
   isTeamLeader,
   isCheckIn,
+  follow,
 }: AgendaProps) {
   const {
     issueInput,
@@ -128,7 +125,6 @@ export default function Agenda({
     isSideBar,
     filteredIssues,
     searchOptions,
-    // formattedTime,
     setIssueInput,
     setEditingValue,
     setModalOpen,
@@ -162,7 +158,6 @@ export default function Agenda({
     conclusionLoading,
     hasChanges,
     selectedItem,
-    // handleJoinMeeting,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -198,70 +193,28 @@ export default function Agenda({
     return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
 
+  const formatLocalDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "N/A";
+
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "Invalid Date";
+    }
+  };
+
   function formatSecondsToHHMM(seconds: number): string {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     return `${hours.toString().padStart(2, "0")}h:${minutes.toString().padStart(2, "0")}m`;
   }
-  const getStatusIcon = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "completed":
-        return <CheckCircle className="w-4 h-4" />;
-      case "delayed":
-        return <AlertTriangle className="w-4 h-4" />;
-      case "in progress":
-        return <Clock className="w-4 h-4" />;
-      case "blasted":
-        return <XCircle className="w-4 h-4" />;
-      default:
-        return <Clock className="w-4 h-4" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "completed":
-        return "text-green-600 bg-green-100";
-      case "delayed":
-        return "text-red-600 bg-red-100";
-      case "in progress":
-        return "text-yellow-600 bg-yellow-100";
-      case "blasted":
-        return "text-purple-600 bg-purple-100";
-      default:
-        return "text-gray-600 bg-gray-100";
-    }
-  };
-
-  const renderStatusChange = (oldStatus: string, newStatus: string) => {
-    if (oldStatus === newStatus) {
-      return (
-        <span
-          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(newStatus)}`}
-        >
-          {getStatusIcon(newStatus)}
-          {newStatus}
-        </span>
-      );
-    }
-    return (
-      <div className="flex items-center gap-2">
-        <span
-          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(oldStatus)}`}
-        >
-          {getStatusIcon(oldStatus)}
-          {oldStatus}
-        </span>
-        <span className="text-gray-400">→</span>
-        <span
-          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(newStatus)}`}
-        >
-          {getStatusIcon(newStatus)}
-          {newStatus}
-        </span>
-      </div>
-    );
-  };
 
   const meetingStatusLabels = {
     NOT_STARTED: "Not Started",
@@ -728,13 +681,13 @@ export default function Agenda({
                       </div>
                     )}
                   <div className="flex gap-4 items-center">
-                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
                       <span className="font-medium text-sm">Total Tasks:</span>
                       <span className="font-bold">
                         {conclusionData?.noOfTasks}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
                       <span className="font-medium text-sm">
                         Total Projects:
                       </span>
@@ -742,7 +695,7 @@ export default function Agenda({
                         {conclusionData?.noOfProjects}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
                       <span className="font-medium text-sm">Total KPIs:</span>
                       <span className="font-bold">
                         {conclusionData?.noOfKPIs}
@@ -765,7 +718,7 @@ export default function Agenda({
                   </Button>
                 )}
 
-                {!isTeamLeader && (
+                {(!isTeamLeader || !follow) && (
                   <Button
                     variant="outline"
                     className="w-[200px] h-[40px] cursor-not-allowed hover:bg-primary hover:text-white bg-primary text-white rounded-[10px] text-lg font-semibold"
@@ -779,7 +732,7 @@ export default function Agenda({
                   </Button>
                 )}
 
-                {isTeamLeader && isCheckIn && (
+                {isTeamLeader && isCheckIn && follow && (
                   <>
                     {meetingStatus === "STARTED" && (
                       <Button
@@ -888,8 +841,8 @@ export default function Agenda({
                 </div>
               </div>
             ) : (
-              <div className="flex-1 px-6 h-[calc(100vh-230px)] overflow-x-scroll w-full">
-                <div className="space-y-6 ">
+              <div className="flex-1 h-[calc(100vh-230px)] overflow-x-scroll w-full">
+                <div>
                   {!selectedItem || !hasChanges(selectedItem) ? (
                     <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg mt-6 p-8 text-center">
                       <div className="text-gray-400 mb-2">
@@ -907,41 +860,90 @@ export default function Agenda({
                     <>
                       {selectedItem &&
                         selectedItem?.discussion.taskUpdate.length > 0 && (
-                          <div className="bg-white border rounded-lg p-6">
-                            <div className="flex items-center gap-2 mb-4">
-                              <CheckCircle className="w-6 h-6 text-blue-600" />
-                              <h3 className="text-lg font-semibold text-gray-800">
-                                Tasks Updates
-                              </h3>
-                              <span className="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded-full">
-                                {selectedItem?.discussion.taskUpdate.length}{" "}
-                                updates
-                              </span>
+                          <div>
+                            <div className="bg-primary text-white p-2 px-4">
+                              <p>Task Name</p>
                             </div>
-                            <div className="space-y-4">
+                            <div className="my-2">
                               {selectedItem?.discussion.taskUpdate.map(
-                                (task, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="bg-gray-100 p-4 rounded-lg"
-                                  >
-                                    <h4 className="font-medium text-gray-800 mb-2">
-                                      Task Name : {task.newValues.taskName}
-                                    </h4>
-                                    {(task.oldValues.taskStatus ||
-                                      task.newValues.taskStatus) && (
-                                      <p className="text-sm text-gray-700">
-                                        <span className="text-red-500">
-                                          {task.oldValues.taskStatus || "N/A"}
-                                        </span>
-                                        ➜
-                                        <span className="text-green-600">
-                                          {task.newValues.taskStatus || "N/A"}
-                                        </span>
-                                      </p>
-                                    )}
-                                  </div>
-                                ),
+                                (task, idx) => {
+                                  // Get all possible keys from both old and new values
+                                  const allKeys = [
+                                    ...new Set([
+                                      ...Object.keys(task.oldValues),
+                                      ...Object.keys(task.newValues),
+                                    ]),
+                                  ] as Array<keyof typeof task.oldValues>;
+
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className="flex overflow-hidden border-b py-2"
+                                    >
+                                      <div className="w-1/3 pl-4">
+                                        <h4 className="font-medium text-gray-800">
+                                          {task.oldValues.taskName !==
+                                          task.newValues.taskName ? (
+                                            <>
+                                              <span className="text-red-500 line-through">
+                                                {task.oldValues.taskName}
+                                              </span>
+                                              <span className="text-green-600 ml-2">
+                                                {task.newValues.taskName}
+                                              </span>
+                                            </>
+                                          ) : (
+                                            task.newValues.taskName
+                                          )}
+                                        </h4>
+                                      </div>
+                                      <div className="w-2/3">
+                                        <div className="space-y-1">
+                                          {allKeys.map((key) => {
+                                            const oldValue =
+                                              task.oldValues[key];
+                                            const newValue =
+                                              task.newValues[key];
+
+                                            // Only show if values are different
+                                            if (oldValue !== newValue) {
+                                              return (
+                                                <div
+                                                  key={String(key)}
+                                                  className="text-sm"
+                                                >
+                                                  <span className="font-medium text-gray-600 capitalize">
+                                                    {key
+                                                      .toString()
+                                                      .replace("task", "")
+                                                      .replace(
+                                                        /([A-Z])/g,
+                                                        " $1",
+                                                      )
+                                                      .trim()}
+                                                    :
+                                                  </span>{" "}
+                                                  <span className="text-red-500 line-through">
+                                                    {oldValue?.toString() ||
+                                                      "N/A"}
+                                                  </span>
+                                                  <span className="mx-2 text-gray-400">
+                                                    →
+                                                  </span>
+                                                  <span className="text-green-600">
+                                                    {newValue?.toString() ||
+                                                      "N/A"}
+                                                  </span>
+                                                </div>
+                                              );
+                                            }
+                                            return null;
+                                          })}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                },
                               )}
                             </div>
                           </div>
@@ -949,68 +951,131 @@ export default function Agenda({
 
                       {selectedItem &&
                         selectedItem?.discussion.projectUpdate.length > 0 && (
-                          <div className="bg-white border rounded-lg p-6">
-                            <div className="flex items-center gap-2 mb-4">
-                              <Users className="w-6 h-6 text-green-600" />
-                              <h3 className="text-lg font-semibold text-gray-800">
-                                Projects Updates
-                              </h3>
-                              <span className="bg-green-100 text-green-800 text-sm px-2 py-1 rounded-full">
-                                {selectedItem?.discussion.projectUpdate.length}{" "}
-                                updates
-                              </span>
+                          <div className="mt-5">
+                            <div className="bg-primary text-white p-2 px-4">
+                              <p>Project Name</p>
                             </div>
-                            <div className="space-y-4">
+                            <div className="my-2">
                               {selectedItem?.discussion.projectUpdate.map(
-                                (project, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="bg-gray-100 p-4 rounded-lg"
-                                  >
-                                    <div className="flex items-start justify-between mb-3">
-                                      <div>
+                                (project, idx) => {
+                                  const allKeys = [
+                                    ...new Set([
+                                      ...Object.keys(project.oldValues),
+                                      ...Object.keys(project.newValues),
+                                    ]),
+                                  ] as Array<keyof typeof project.oldValues>;
+
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className="flex overflow-hidden border-b py-2"
+                                    >
+                                      <div className="w-1/3 pl-4">
                                         <h4 className="font-medium text-gray-800">
-                                          Project Name :{" "}
-                                          {project.newValues.projectName}
+                                          {project.oldValues.projectName !==
+                                          project.newValues.projectName ? (
+                                            <>
+                                              <span className="text-red-500 line-through">
+                                                {project.oldValues.projectName}
+                                              </span>
+                                              <span className="text-green-600 ml-2">
+                                                {project.newValues.projectName}
+                                              </span>
+                                            </>
+                                          ) : (
+                                            project.newValues.projectName
+                                          )}
                                         </h4>
-                                        <p className="text-sm text-gray-600 mt-1">
-                                          {project.newValues.projectDescription}
-                                        </p>
                                       </div>
-                                    </div>
-                                    {project.oldValues.projectStatus ||
-                                      (project.newValues.projectStatus && (
-                                        <div className="mb-3">
-                                          {renderStatusChange(
-                                            project.oldValues.projectStatus,
-                                            project.newValues.projectStatus,
+                                      <div className="w-2/3">
+                                        <div className="space-y-1">
+                                          {allKeys.map((key) => {
+                                            const oldValue =
+                                              project.oldValues[key];
+                                            const newValue =
+                                              project.newValues[key];
+
+                                            if (key === "subParameters")
+                                              return null;
+
+                                            // Check if this is a date field (you might need to adjust this condition)
+                                            const isDateField =
+                                              key
+                                                .toString()
+                                                .toLowerCase()
+                                                .includes("date") ||
+                                              key
+                                                .toString()
+                                                .toLowerCase()
+                                                .includes("deadline");
+
+                                            if (oldValue !== newValue) {
+                                              return (
+                                                <div
+                                                  key={String(key)}
+                                                  className="text-sm"
+                                                >
+                                                  <span className="font-medium text-gray-600 capitalize">
+                                                    {key
+                                                      .toString()
+                                                      .replace("project", "")
+                                                      .replace(
+                                                        /([A-Z])/g,
+                                                        " $1",
+                                                      )
+                                                      .trim()}
+                                                    :
+                                                  </span>{" "}
+                                                  <span className="text-red-500 line-through">
+                                                    {isDateField
+                                                      ? formatLocalDate(
+                                                          oldValue,
+                                                        )
+                                                      : oldValue?.toString() ||
+                                                        "N/A"}
+                                                  </span>
+                                                  <span className="mx-2 text-gray-400">
+                                                    →
+                                                  </span>
+                                                  <span className="text-green-600">
+                                                    {isDateField
+                                                      ? formatLocalDate(
+                                                          newValue,
+                                                        )
+                                                      : newValue?.toString() ||
+                                                        "N/A"}
+                                                  </span>
+                                                </div>
+                                              );
+                                            }
+                                            return null;
+                                          })}
+
+                                          {/* Special handling for subParameters */}
+                                          {project.newValues.subParameters && (
+                                            <div className="text-sm">
+                                              <span className="font-medium text-gray-600 capitalize">
+                                                Sub Parameters:
+                                              </span>{" "}
+                                              <div className="flex flex-wrap gap-1 mt-1">
+                                                {project.newValues.subParameters
+                                                  ?.split(",")
+                                                  .map((param, paramIdx) => (
+                                                    <span
+                                                      key={paramIdx}
+                                                      className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+                                                    >
+                                                      {param.trim()}
+                                                    </span>
+                                                  ))}
+                                              </div>
+                                            </div>
                                           )}
                                         </div>
-                                      ))}
-
-                                    <div className="flex flex-wrap gap-2 mb-2">
-                                      {project.newValues.subParameters
-                                        ?.split(",")
-                                        .map((param, paramIdx) => (
-                                          <span
-                                            key={paramIdx}
-                                            className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
-                                          >
-                                            {param.trim()}
-                                          </span>
-                                        ))}
-                                    </div>
-                                    {project.newValues.projectEmployees && (
-                                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                                        <Users className="w-4 h-4" />
-                                        <span>
-                                          Team:{" "}
-                                          {project.newValues.projectEmployees}
-                                        </span>
                                       </div>
-                                    )}
-                                  </div>
-                                ),
+                                    </div>
+                                  );
+                                },
                               )}
                             </div>
                           </div>
@@ -1018,77 +1083,127 @@ export default function Agenda({
 
                       {selectedItem &&
                         selectedItem?.discussion.kpiUpdate.length > 0 && (
-                          <div className="bg-white border rounded-lg p-6">
-                            <div className="flex items-center gap-2 mb-4">
-                              <TrendingUp className="w-6 h-6 text-purple-600" />
-                              <h3 className="text-lg font-semibold text-gray-800">
-                                KPIs Updates
-                              </h3>
-                              <span className="bg-purple-100 text-purple-800 text-sm px-2 py-1 rounded-full">
-                                {selectedItem?.discussion.kpiUpdate.length}{" "}
-                                updates
-                              </span>
+                          <div className="mt-5">
+                            <div className="bg-primary text-white p-2 px-4">
+                              <p>KPIs Name</p>
                             </div>
-                            <div className="space-y-4">
+                            <div className="my-2">
                               {selectedItem?.discussion.kpiUpdate.map(
-                                (kpi, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="bg-gray-100 p-4 rounded-lg"
-                                  >
-                                    <div className="flex items-start justify-between mb-3">
-                                      <div>
-                                        <h4 className="font-medium text-gray-800">
-                                          KPI Name : {kpi.newValues.kpiName}
-                                        </h4>
-                                        <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                                          {kpi.newValues.kpiFrequency && (
-                                            <span>
-                                              Frequency:{" "}
-                                              {kpi.newValues.kpiFrequency}
-                                            </span>
-                                          )}
-                                          {kpi.newValues.value1 && (
-                                            <span>
-                                              Target: {kpi.newValues.value1}
-                                              {kpi.newValues.kpiUnit}
-                                            </span>
-                                          )}
-                                        </div>
-                                      </div>
-                                      {kpi.newValues.tag && (
-                                        <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
-                                          {kpi.newValues.tag}
-                                        </span>
-                                      )}
-                                    </div>
+                                (kpi: KpiUpdate, idx: number) => {
+                                  const allKeys = [
+                                    ...new Set([
+                                      ...Object.keys(kpi.oldValues),
+                                      ...Object.keys(kpi.newValues),
+                                    ]),
+                                  ] as Array<keyof typeof kpi.oldValues>;
 
-                                    {kpi.recData && kpi.recData.length > 0 && (
-                                      <div className="mt-3">
-                                        <h5 className="text-sm font-medium text-gray-700 mb-2">
-                                          Recent Data:
-                                        </h5>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                          {kpi.recData.map((data, dataIdx) => (
-                                            <div
-                                              key={dataIdx}
-                                              className="bg-white p-2 rounded border"
-                                            >
-                                              <div className="flex justify-between items-center">
-                                                <span className="text-sm text-gray-600">
-                                                  {formatDate(data.startDate)}
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className="flex overflow-hidden border-b py-2"
+                                    >
+                                      <div className="w-1/3 pl-4">
+                                        <h4 className="font-medium text-gray-800">
+                                          {kpi.oldValues.kpiName !==
+                                          kpi.newValues.kpiName ? (
+                                            <>
+                                              <span className="text-red-500 line-through">
+                                                {kpi.oldValues.kpiName}
+                                              </span>
+                                              <span className="text-green-600 ml-2">
+                                                {kpi.newValues.kpiName}
+                                              </span>
+                                            </>
+                                          ) : (
+                                            kpi.newValues.kpiName
+                                          )}
+                                        </h4>
+                                      </div>
+                                      <div className="w-2/3">
+                                        <div className="space-y-1">
+                                          {allKeys.map((key) => {
+                                            const oldValue = kpi.oldValues[key];
+                                            const newValue = kpi.newValues[key];
+
+                                            // Skip if values are the same
+                                            if (oldValue === newValue)
+                                              return null;
+
+                                            return (
+                                              <div
+                                                key={String(key)}
+                                                className="text-sm"
+                                              >
+                                                <span className="font-medium text-gray-600 capitalize">
+                                                  {key
+                                                    .toString()
+                                                    .replace("kpi", "")
+                                                    .replace(/([A-Z])/g, " $1")
+                                                    .trim()}
+                                                  :
+                                                </span>{" "}
+                                                <span className="text-red-500 line-through">
+                                                  {oldValue?.toString() ||
+                                                    "N/A"}
                                                 </span>
-                                                <span className="font-semibold text-lg text-purple-600">
-                                                  {data.data}
+                                                <span className="mx-2 text-gray-400">
+                                                  →
+                                                </span>
+                                                <span className="text-green-600">
+                                                  {newValue?.toString() ||
+                                                    "N/A"}
                                                 </span>
                                               </div>
-                                            </div>
-                                          ))}
+                                            );
+                                          })}
+
+                                          {kpi.newData &&
+                                            kpi.newData.length > 0 && (
+                                              <div className="mt-2">
+                                                <div className="mt-1 space-y-2">
+                                                  {kpi.newData.map(
+                                                    (
+                                                      newDataItem: KpiRecordedData,
+                                                      dataIdx: number,
+                                                    ) => {
+                                                      const oldDataItem = kpi
+                                                        .oldData?.[dataIdx] || {
+                                                        data: null,
+                                                      };
+                                                      return (
+                                                        <div
+                                                          key={dataIdx}
+                                                          className="text-sm"
+                                                        >
+                                                          <span className="font-medium text-gray-600">
+                                                            {formatDate(
+                                                              newDataItem.startDate,
+                                                            )}
+                                                            :
+                                                          </span>{" "}
+                                                          <span className="text-red-500 line-through">
+                                                            {oldDataItem.data ||
+                                                              "N/A"}
+                                                          </span>
+                                                          <span className="mx-2 text-gray-400">
+                                                            →
+                                                          </span>
+                                                          <span className="text-green-600">
+                                                            {newDataItem.data ||
+                                                              "N/A"}
+                                                          </span>
+                                                        </div>
+                                                      );
+                                                    },
+                                                  )}
+                                                </div>
+                                              </div>
+                                            )}
                                         </div>
                                       </div>
-                                    )}
-                                  </div>
-                                ),
+                                    </div>
+                                  );
+                                },
                               )}
                             </div>
                           </div>

@@ -195,3 +195,23 @@ export function formatTempValuesToPayload(tempValues: Record<string, string>) {
     };
   });
 }
+
+export function formatTempValuesMeetingToPayload(
+  tempValues: Record<string, string>,
+  detailMeetingAgendaIssueId: string,
+) {
+  const data = Object.entries(tempValues).map(([key, value]) => {
+    const [kpiId, startDate, endDate] = key.split("/");
+    return {
+      kpiId,
+      startDate,
+      endDate,
+      data: value,
+    };
+  });
+
+  return {
+    data,
+    detailMeetingAgendaIssueId,
+  };
+}
