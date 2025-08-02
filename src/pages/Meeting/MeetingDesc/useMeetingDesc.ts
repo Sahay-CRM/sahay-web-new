@@ -179,8 +179,8 @@ export default function useMeetingDesc() {
           onSuccess: () => {
             if (meetingId) {
               const db = getDatabase();
-              const meetRef = ref(db, `meetings/${meetingId}`);
-              update(meetRef, { updatedAt: new Date().toISOString() });
+              const meetRef = ref(db, `meetings/${meetingId}/state`);
+              update(meetRef, { updatedAt: new Date() });
             }
           },
         },
@@ -211,8 +211,8 @@ export default function useMeetingDesc() {
           onSuccess: () => {
             if (meetingId) {
               const db = getDatabase();
-              const meetRef = ref(db, `meetings/${meetingId}`);
-              update(meetRef, { updatedAt: new Date().toISOString() });
+              const meetRef = ref(db, `meetings/${meetingId}/state`);
+              update(meetRef, { updatedAt: new Date() });
             }
           },
         },

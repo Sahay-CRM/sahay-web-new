@@ -718,19 +718,20 @@ export default function Agenda({
                   </Button>
                 )}
 
-                {(!isTeamLeader || !follow) && (
-                  <Button
-                    variant="outline"
-                    className="w-[200px] h-[40px] cursor-not-allowed hover:bg-primary hover:text-white bg-primary text-white rounded-[10px] text-lg font-semibold"
-                    // onClick={handleJoinMeeting}
-                  >
-                    {
-                      meetingStatusLabels[
-                        meetingStatus as keyof typeof meetingStatusLabels
-                      ]
-                    }
-                  </Button>
-                )}
+                {meetingStatus === "NOT_STARTED" ||
+                  ((!isTeamLeader || !follow) && (
+                    <Button
+                      variant="outline"
+                      className="w-[200px] h-[40px] cursor-not-allowed hover:bg-primary hover:text-white bg-primary text-white rounded-[10px] text-lg font-semibold"
+                      // onClick={handleJoinMeeting}
+                    >
+                      {
+                        meetingStatusLabels[
+                          meetingStatus as keyof typeof meetingStatusLabels
+                        ]
+                      }
+                    </Button>
+                  ))}
 
                 {isTeamLeader && isCheckIn && follow && (
                   <>
@@ -777,7 +778,9 @@ export default function Agenda({
                       meetingStart={meetingStatus !== "NOT_STARTED"}
                       className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
                       onTimeUpdate={handleTimeUpdate}
-                      isEditMode={isTeamLeader}
+                      isEditMode={
+                        meetingStatus === "NOT_STARTED" && isTeamLeader
+                      }
                     />
                   </div>
                 )}
