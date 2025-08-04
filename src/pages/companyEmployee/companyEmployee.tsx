@@ -187,7 +187,7 @@ export default function CompanyDesignation() {
             onToggleActive={(item) => {
               handleInactive(item);
             }}
-            actionColumnWidth="w-[200px] overflow-hidden "
+            actionColumnWidth="w-[160px] overflow-hidden "
           />
         </div>
 
