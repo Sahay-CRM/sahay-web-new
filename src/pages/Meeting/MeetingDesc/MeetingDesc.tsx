@@ -3,7 +3,7 @@ import Desc from "../MeetingDesc/Desc/desc";
 import Conclusion from "../MeetingDesc/Conclusion/conclusion";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect } from "react";
-import Agenda from "./AgendaCopy";
+import Agenda from "./Agenda";
 
 export default function MeetingDesc() {
   const {

@@ -12,9 +12,9 @@ import {
 import Projects from "../Projects";
 import Tasks from "../Tasks";
 import KPITable from "../KpiTable";
-import MeetingDrawer from "../AgendaCopy/MeetingDrawer";
 import { useSelector } from "react-redux";
 import { getUserId } from "@/features/selectors/auth.selector";
+import MeetingDrawer from "../Agenda/MeetingDrawer";
 
 interface DescProps {
   meetingResponse?: MeetingResFire | null;
