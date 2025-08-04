@@ -28,7 +28,7 @@ const ProjectSelectionStep = () => {
 
   return (
     <div className="p-0">
-      <div className="flex items-center space-x-5 tb:space-x-7 mb-2 justify-between">
+      <div className="flex items-center space-x-5 tb:space-x-7 mb-4 justify-between">
         <div className="flex gap-4">
           <SearchInput
             placeholder="Search Projects..."
@@ -74,7 +74,7 @@ const ProjectSelectionStep = () => {
             selectedValue={
               field.value
                 ? (projectListdata?.data?.find(
-                    (item) => item.projectId === field.value,
+                    (item) => item.projectId === field.value
                   ) as Record<string, unknown> | undefined)
                 : undefined
             }
@@ -115,7 +115,7 @@ const MeetingSelectionStep = () => {
 
   return (
     <div className="p-0">
-      <div className="flex items-center justify-between mb-2 space-x-5 tb:space-x-7">
+      <div className="flex items-center justify-between mb-4 space-x-5 tb:space-x-7">
         {/* Left: Search + Error */}
         <div className="flex items-center gap-4">
           <SearchInput
@@ -163,7 +163,7 @@ const MeetingSelectionStep = () => {
             selectedValue={
               field.value
                 ? (meetingData?.data?.find(
-                    (item) => item.meetingId === field.value,
+                    (item) => item.meetingId === field.value
                   ) as Record<string, unknown> | undefined)
                 : undefined
             }
@@ -202,7 +202,7 @@ const TaskDetailsStep = () => {
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
+      <Card className="col-span-2 mt-4 px-4 py-4 grid grid-cols-2 gap-4">
         <div>
           <FormInputField
             label="Task Name"
@@ -327,9 +327,9 @@ const AssignUserStep = () => {
 
   return (
     <div className="">
-      <div className="flex items-center justify-between mb-2 space-x-5 tb:space-x-7">
+      <div className="flex items-center justify-between mb-4 space-x-5 tb:space-x-7">
         {/* Left: Search + Error */}
-        <div className="flex items-center gap-4">
+        <div className="flex  items-center gap-4">
           <SearchInput
             placeholder="Search..."
             searchValue={paginationFilterEmployee?.search || ""}
@@ -353,7 +353,7 @@ const AssignUserStep = () => {
           const selectedEmployees =
             Array.isArray(field.value) && Array.isArray(employeedata?.data)
               ? employeedata.data.filter((emp) =>
-                  field.value.includes(emp.employeeId),
+                  field.value.includes(emp.employeeId)
                 )
               : [];
           return (
@@ -472,7 +472,7 @@ export default function AddCompanyTask() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <StepProgress
           currentStep={step}
           totalSteps={totalSteps} // Use adjusted totalSteps

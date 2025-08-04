@@ -54,14 +54,14 @@ export default function Issues() {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
 
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   // Check if the number of columns is more than 3
@@ -74,7 +74,7 @@ export default function Issues() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-5 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             Issues List
@@ -128,7 +128,7 @@ export default function Issues() {
                 ...item,
                 srNo:
                   (issueList.currentPage - 1) * issueList.pageSize + index + 1,
-              }),
+              })
             )}
             columns={visibleColumns}
             primaryKey="issueId"

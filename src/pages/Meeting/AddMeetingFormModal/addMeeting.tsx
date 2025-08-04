@@ -559,7 +559,7 @@ const AddMeeting = () => {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
+     <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <StepProgress
           currentStep={currentStep}
           stepNames={stepNames}

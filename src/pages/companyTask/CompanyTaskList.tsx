@@ -107,7 +107,7 @@ export default function CompanyTaskList() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full p-4 overflow-x-auto">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-3 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             Company Task List
@@ -130,7 +130,7 @@ export default function CompanyTaskList() {
             />
           </div>
           <div className="flex gap-4 flex-wrap">
-            <div className="z-10 relative flex items-center gap-2">
+            <div className="z-15 relative flex items-center gap-2">
               {!showOverdue && (
                 <DateRangePicker
                   value={{

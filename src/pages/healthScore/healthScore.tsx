@@ -39,7 +39,7 @@ export default function HealthScoreList() {
 
   return (
     <FormProvider {...formMethods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-5 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             Health Score

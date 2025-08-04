@@ -41,7 +41,7 @@ export default function CompanyLevelAssign() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
+   <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex justify-between h-[65px] overflow-hidden">
           <h1 className="font-semibold capitalize text-xl text-black mb-4">
             Company Level Assign

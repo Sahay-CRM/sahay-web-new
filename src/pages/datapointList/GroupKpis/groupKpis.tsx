@@ -143,7 +143,7 @@ export default function GroupKpis() {
   };
 
   return (
-    <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
+    <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
       <div>
         <Link to="/dashboard/kpi/group-create">
           <Button className="py-2 w-fit mb-5">Create Group KPIs</Button>

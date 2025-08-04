@@ -45,7 +45,7 @@ export default function GroupKpisCreate() {
       acc[masterId].push(item as KpiAllList);
       return acc;
     },
-    {} as Record<string, KPIFormData[]>,
+    {} as Record<string, KPIFormData[]>
   );
 
   const isGroupSelected = (masterId: string) => {
@@ -75,7 +75,7 @@ export default function GroupKpisCreate() {
       if (groupedData) {
         const allItems = Object.values(groupedData).flat();
         const newSelectedData = allItems.filter((item) =>
-          newSelection.includes(item.kpiId!),
+          newSelection.includes(item.kpiId!)
         );
         setSelectedKpiData(newSelectedData);
       }
@@ -96,7 +96,7 @@ export default function GroupKpisCreate() {
   };
 
   return (
-    <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
+    <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
       <div>
         <Button
           className="py-2 w-fit mb-5 "
