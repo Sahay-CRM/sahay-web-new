@@ -1,15 +1,20 @@
 import { useEffect, useState } from "react";
 
 import {
+  ArrowUp,
   BarChart2,
+  Calendar,
   CheckSquare,
   CircleX,
   Clock,
   CornerDownLeft,
+  Crown,
+  FileText,
   List,
   SquarePen,
   Target,
   Trash2,
+  User,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,7 +30,15 @@ import Projects from "../Projects";
 import KPITable from "../KpiTable";
 import Timer from "../Timer";
 import { SpinnerIcon } from "@/components/shared/Icons";
-import { formatDate } from "@/features/utils/app.utils";
+import { formatDate, getInitials } from "@/features/utils/app.utils";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 
 function IssueModal({
   open,
@@ -111,6 +124,7 @@ export default function Agenda({
   isTeamLeader,
   isCheckIn,
   follow,
+  joiners,
 }: AgendaProps) {
   const {
     issueInput,
@@ -158,6 +172,7 @@ export default function Agenda({
     conclusionLoading,
     hasChanges,
     selectedItem,
+    handleCheckIn,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -224,6 +239,39 @@ export default function Agenda({
     ENDED: "Ended",
   };
 
+  const tips: TipItem[] = [
+    {
+      icon: <Target className="w-8 h-8 text-blue-500" />,
+      title: "DEFINE PURPOSE AND KEY POINTS",
+      description: "Summarize the goal, list discussion points",
+    },
+    {
+      icon: <Calendar className="w-8 h-8 text-blue-500" />,
+      title: "BREAK DOWN AGENDA INTO TIME-BOXED TOPICS",
+      description: "Use focused, time boxed topics",
+    },
+    {
+      icon: <ArrowUp className="w-8 h-8 text-blue-500" />,
+      title: "PRIORITIZE HIGH IMPACT ITEMS",
+      description: "Address them first",
+    },
+    {
+      icon: <User className="w-8 h-8 text-blue-500" />,
+      title: "ASSIGN TOPIC OWNERS AND TIME ESTIMATES",
+      description: "Add leaders and time estimates",
+    },
+    {
+      icon: <Clock className="w-8 h-8 text-blue-500" />,
+      title: "KEEP MEETING ON TRACK AND LEAVE ROOM FOR QUESTIONS",
+      description: "Stick to the agenda, allocate time questions",
+    },
+    {
+      icon: <FileText className="w-8 h-8 text-blue-500" />,
+      title: "ALLOCATE TIME FOR ADDITIONAL",
+      description: "Allow a few minutes at the end",
+    },
+  ];
+
   return (
     <div>
       <IssueModal
@@ -233,6 +281,206 @@ export default function Agenda({
         defaultType=""
         onSubmit={handleModalSubmit}
       />
+      <div className="flex gap-3 mb-4">
+        <div className="w-full">
+          {meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? (
+            <div className="w-full flex h-[40px] border border-gray-300 rounded-[10px] items-center px-4">
+              <div className="flex-1 text-lg  w-[30%] text-primary ml-3 font-semibold truncate">
+                {meetingName}
+              </div>
+
+              <div className="hidden md:block w-[50%] text-gray-500  text-lg truncate ml-4">
+                Meeting Agenda
+              </div>
+            </div>
+          ) : meetingStatus === "DISCUSSION" ? (
+            <div className="w-fit">
+              <nav className="space-y-1 w-full ">
+                <div className="mr-5 flex gap-3 items-center rounded-2xl px-1">
+                  <Button
+                    variant={activeTab === "tasks" ? "default" : "ghost"}
+                    className={`w-40 h-12 justify-start border cursor-pointer flex items-center`}
+                    onClick={() => {
+                      handleTabChange("tasks");
+                    }}
+                  >
+                    <List className="h-5 w-5" />
+                    <span className="ml-2">Tasks</span>
+                  </Button>
+                  <Button
+                    variant={activeTab === "projects" ? "default" : "ghost"}
+                    className={`w-40 h-12 justify-start border cursor-pointer flex items-center `}
+                    onClick={() => {
+                      handleTabChange("projects");
+                    }}
+                  >
+                    <CheckSquare className="h-5 w-5" />
+                    <span className="ml-2">Projects</span>
+                  </Button>
+                  <Button
+                    variant={activeTab === "kpis" ? "default" : "ghost"}
+                    className={`w-40 h-12 justify-start border cursor-pointer flex items-center`}
+                    onClick={() => {
+                      handleTabChange("kpis");
+                    }}
+                  >
+                    <BarChart2 className="h-5 w-5" />
+                    <span className="ml-2">KPIs</span>
+                  </Button>
+                </div>
+              </nav>
+            </div>
+          ) : (
+            <div className="flex gap-4 items-center flex-wrap">
+              <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                <Clock className="w-4 h-4 text-green-600" />
+                <span className="font-medium text-sm">Agenda Actual:</span>
+                <span className="font-bold">
+                  {formatTime(Number(conclusionData?.agendaActual))}m
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                <Clock className="w-4 h-4 text-green-600" />
+                <span className="font-medium text-sm">Discussion Actual:</span>
+                <span className="font-bold">
+                  {formatTime(Number(conclusionData?.agendaTotalActual))}m
+                </span>
+              </div>
+
+              {conclusionData?.conclusionActual != null && (
+                <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                  <Clock className="w-4 h-4 text-green-600" />
+                  <span className="font-medium text-sm">
+                    Conclusion Actual:
+                  </span>
+                  <span className="font-bold">
+                    {formatTime(Number(conclusionData.conclusionActual))}m
+                  </span>
+                </div>
+              )}
+
+              {conclusionData?.meetingPlanned != null && (
+                <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                  <Clock className="w-4 h-4 text-green-600" />
+                  <span className="font-medium text-sm">Meeting Planned:</span>
+                  <span className="font-bold">
+                    {formatSecondsToHHMM(Number(conclusionData.meetingPlanned))}
+                  </span>
+                </div>
+              )}
+
+              {conclusionData?.meetingActual != null &&
+                conclusionData?.meetingActual != "0" && (
+                  <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                    <Clock className="w-4 h-4 text-green-600" />
+                    <span className="font-medium text-sm">Meeting Actual:</span>
+                    <span className="font-bold">
+                      {formatSecondsToHHMM(
+                        Number(conclusionData.meetingActual),
+                      )}
+                    </span>
+                  </div>
+                )}
+              <div className="flex gap-4 items-center">
+                <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
+                  <span className="font-medium text-sm">Total Tasks:</span>
+                  <span className="font-bold">{conclusionData?.noOfTasks}</span>
+                </div>
+                <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
+                  <span className="font-medium text-sm">Total Projects:</span>
+                  <span className="font-bold">
+                    {conclusionData?.noOfProjects}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
+                  <span className="font-medium text-sm">Total KPIs:</span>
+                  <span className="font-bold">{conclusionData?.noOfKPIs}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        {meetingStatus !== "ENDED" && (
+          <div className="flex flex-wrap md:flex-nowrap items-center gap-3 w-[30%] md:w-auto">
+            {meetingStatus === "NOT_STARTED" && isTeamLeader && (
+              <Button
+                variant="outline"
+                className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
+                onClick={handleStartMeeting}
+                isLoading={isPending}
+              >
+                Start Meeting
+              </Button>
+            )}
+
+            {meetingStatus === "NOT_STARTED" ||
+              ((!isTeamLeader || !follow) && (
+                <Button
+                  variant="outline"
+                  className="w-[200px] h-[40px] cursor-not-allowed hover:bg-primary hover:text-white bg-primary text-white rounded-[10px] text-lg font-semibold"
+                  // onClick={handleJoinMeeting}
+                >
+                  {
+                    meetingStatusLabels[
+                      meetingStatus as keyof typeof meetingStatusLabels
+                    ]
+                  }
+                </Button>
+              ))}
+
+            {isTeamLeader && isCheckIn && follow && (
+              <>
+                {meetingStatus === "STARTED" && (
+                  <Button
+                    variant="outline"
+                    className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
+                    onClick={handleDesc}
+                    isLoading={isPending}
+                  >
+                    Start Discussion
+                  </Button>
+                )}
+                {meetingStatus === "DISCUSSION" && (
+                  <Button
+                    variant="outline"
+                    className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
+                    onClick={handleConclusionMeeting}
+                  >
+                    Go To Conclusion
+                  </Button>
+                )}
+                {meetingStatus === "CONCLUSION" && (
+                  <Button
+                    variant="outline"
+                    className="bg-primary text-white px-4 hover:bg-primary py-5 text-sm hover:text-white sm:text-base md:text-lg"
+                    onClick={handleCloseMeetingWithLog}
+                    isLoading={endMeetingLoading}
+                  >
+                    End Meeting
+                  </Button>
+                )}
+              </>
+            )}
+
+            {meetingStatus !== "ENDED" && (
+              <div className="w-fit px-2 pl-4 h-[40px] border-gray-300 rounded-[10px] flex items-center justify-center">
+                <MeetingTimer
+                  meetingTime={Number(meetingTime)}
+                  actualTime={0}
+                  lastSwitchTimestamp={Number(
+                    meetingResponse?.state.meetingTimestamp,
+                  )}
+                  meetingStart={meetingStatus !== "NOT_STARTED"}
+                  className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
+                  onTimeUpdate={handleTimeUpdate}
+                  isEditMode={meetingStatus === "NOT_STARTED" && isTeamLeader}
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       <div className="flex gap-3 transition-all duration-1000">
         <div
           className={cn(
@@ -305,7 +553,7 @@ export default function Agenda({
               </div>
             )}
           </div>
-          <div className="mt-2 h-[calc(100vh-150px)] pr-1 w-full overflow-auto">
+          <div className="mt-2 h-[calc(100vh-250px)] pr-1 w-full overflow-auto">
             {agendaList && agendaList.length > 0 ? (
               <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {agendaList.map((item, idx) => (
@@ -360,8 +608,6 @@ export default function Agenda({
                         handleListClick(item.detailMeetingAgendaIssueId ?? "");
                       }
                     }}
-                    // onMouseEnter={() => setHoverIndex(idx)}
-                    // onMouseLeave={() => setHoverIndex(null)}
                     style={{
                       opacity: draggedIndex === idx ? 0.5 : 1,
                       cursor:
@@ -382,18 +628,20 @@ export default function Agenda({
                     }}
                   >
                     <div className="flex items-center w-full">
-                      {/* Drag handle */}
                       {(meetingStatus === "STARTED" ||
                         meetingStatus === "NOT_STARTED") && (
                         <span
                           style={{ cursor: "grab" }}
-                          className="w-5 mr-2 flex-shrink-0"
+                          className="w-5 flex-shrink-0"
                         >
                           ⋮⋮
                         </span>
                       )}
 
-                      {/* Content - either editing input or display text */}
+                      <span className="w-10 mr-3 text-4xl text-primary text-center">
+                        {idx + 1}
+                      </span>
+
                       {editing.type === item.agendaType &&
                       editing.id === item.issueObjectiveId &&
                       canEdit ? (
@@ -434,30 +682,21 @@ export default function Agenda({
                           >
                             {item.name}
                           </div>
-                          {meetingStatus === "STARTED" ||
-                            (meetingStatus === "NOT_STARTED" && (
-                              <div className="text-xs text-center w-20 text-gray-500">
-                                <Badge variant="secondary" className="mb-1.5">
-                                  {item.agendaType}
-                                </Badge>
-                              </div>
-                            ))}
                         </div>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      {/* <div className="text-xs text-center w-20 text-gray-500">
+                    <div className="flex items-center gap-2 relative">
+                      <div className="text-xs text-center w-20 text-gray-500 absolute top-0 right-0">
                         <Badge variant="secondary" className="mb-1.5">
                           {item.agendaType}
                         </Badge>
-                      </div> */}
+                      </div>
 
-                      {/* Edit/Delete buttons - shown only on hover and when canEdit is true */}
                       {(meetingStatus === "STARTED" ||
                         meetingStatus === "NOT_STARTED") &&
                         canEdit && (
-                          <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex-shrink-0 opacity-0 z-30 pl-5 bg-white w-20 text-left group-hover:opacity-100 transition-opacity">
                             {!(
                               editing.type === item.agendaType &&
                               editing.id === item.issueObjectiveId
@@ -496,7 +735,6 @@ export default function Agenda({
                           </div>
                         )}
 
-                      {/* Timer - shown based on meeting status */}
                       {meetingStatus !== "STARTED" &&
                         meetingStatus !== "NOT_STARTED" &&
                         item.detailMeetingAgendaIssueId && (
@@ -570,7 +808,7 @@ export default function Agenda({
           </div>
         </div>
         <div style={{ width: contentWidth }}>
-          <div className="flex gap-3 mb-4">
+          {/* <div className="flex gap-3 mb-4">
             <div className="w-full">
               {meetingStatus === "STARTED" ||
               meetingStatus === "NOT_STARTED" ? (
@@ -660,7 +898,7 @@ export default function Agenda({
                       </span>
                       <span className="font-bold">
                         {formatSecondsToHHMM(
-                          Number(conclusionData.meetingPlanned),
+                          Number(conclusionData.meetingPlanned)
                         )}
                       </span>
                     </div>
@@ -675,7 +913,7 @@ export default function Agenda({
                         </span>
                         <span className="font-bold">
                           {formatSecondsToHHMM(
-                            Number(conclusionData.meetingActual),
+                            Number(conclusionData.meetingActual)
                           )}
                         </span>
                       </div>
@@ -773,7 +1011,7 @@ export default function Agenda({
                       meetingTime={Number(meetingTime)}
                       actualTime={0}
                       lastSwitchTimestamp={Number(
-                        meetingResponse?.state.meetingTimestamp,
+                        meetingResponse?.state.meetingTimestamp
                       )}
                       meetingStart={meetingStatus !== "NOT_STARTED"}
                       className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
@@ -786,28 +1024,113 @@ export default function Agenda({
                 )}
               </div>
             )}
-          </div>
-          <div className="border rounded-md flex  justify-center w-full h-[calc(100vh-200px)] overflow-scroll">
-            {meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? (
-              <div className="w-[600px] h-full flex flex-wrap items-center content-center text-justify leading-7 text-sm">
-                <b className="mb-0">
-                  📌 Tips for Writing a Clear & Effective Meeting Agenda Start
-                  with the Goal{" "}
-                </b>{" "}
-                ➤ What is the purpose of the meeting? Summarize it in one
-                sentence. List Key Discussion Points <br /> ➤ Break down the
-                agenda into focused, time-boxed topics. E.g., "Marketing Update
-                (10 mins)" or "Budget Review (15 mins)" Prioritize High-Impact
-                Items First <br /> ➤ Cover the most important topics early, when
-                attention is highest. Assign Owners to Agenda Items <br /> ➤ Add
-                who will lead each topic to encourage preparation. Add Time
-                Estimates <br /> ➤ Helps keep the meeting on track and avoids
-                overruns. Leave Room for Questions or Open Discussion <br /> ➤
-                Allot a few minutes at the end to address any additional points.
-                Distribute Agenda Before the Meeting <br /> ➤ Share the agenda
-                with participants at least a day in advance. Be Specific, Not
-                Vague ✘ Bad: "Project discussion" ✔ Good: "Decide launch date
-                for Phase 2 of Project Phoenix"
+          </div> */}
+          <div className="border rounded-md flex justify-center w-full h-[calc(100vh-200px)] overflow-scroll">
+            {meetingStatus === "NOT_STARTED" ? (
+              <div className="max-w-3xl">
+                <div className="bg-white rounded-lg shadow-lg p-6">
+                  <div className="text-center mb-6">
+                    <h1
+                      className="text-2xl font-bold text-navy-900 mb-2"
+                      style={{ color: "#1e3a8a" }}
+                    >
+                      TIPS FOR WRITING A CLEAR & EFFECTIVE
+                    </h1>
+                    <h3
+                      className="text-2xl font-bold text-navy-900 mb-2"
+                      style={{ color: "#1e3a8a" }}
+                    >
+                      MEETING AGENDA
+                    </h3>
+                    <div className="w-20 h-1 bg-orange-400 mx-auto"></div>
+                  </div>
+
+                  {/* Tips List */}
+                  <div className="space-y-6">
+                    {tips.map((tip, index) => (
+                      <div key={index} className="flex items-start space-x-6">
+                        {/* Icon Container */}
+                        <div className="flex-shrink-0 w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                          {tip.icon}
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1">
+                          <h4 className="text-lg font-bold text-gray-900 mb-2 leading-tight">
+                            {tip.title}
+                          </h4>
+                          <p className="text-gray-600 text-base leading-relaxed">
+                            {tip.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : meetingStatus === "STARTED" ? (
+              <div className="flex gap-6 text-center mt-48">
+                {joiners &&
+                  joiners.map((item) => {
+                    return (
+                      <div
+                        key={item.employeeId}
+                        className="flex flex-col w-full items-center"
+                      >
+                        <div className="relative">
+                          {item.isTeamLeader && (
+                            <span className="absolute -top-1 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                              <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
+                            </span>
+                          )}
+
+                          <Avatar className="h-10 w-10 relative">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  {item.photo ? (
+                                    <img
+                                      src={item.photo}
+                                      alt={item.employeeName}
+                                      className="w-full h-full rounded-full object-cover outline-2 outline-blue-400 bg-black"
+                                    />
+                                  ) : (
+                                    <AvatarFallback className="bg-gray-300 text-gray-700 font-semibold text-sm">
+                                      {getInitials(item.employeeName)}
+                                    </AvatarFallback>
+                                  )}
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {item.employeeName}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </Avatar>
+                        </div>
+
+                        <div className="text-sm font-medium text-gray-800">
+                          {item.employeeName}
+                        </div>
+                        <div>
+                          <FormCheckbox
+                            id={`${item.employeeId}-checkbox`}
+                            className="w-[16px] h-[16px]"
+                            containerClass="p-0 ml-1"
+                            checked={item.attendanceMark}
+                            onChange={(e) => {
+                              const updatedAttendance = e.target.checked;
+                              handleCheckIn(item, updatedAttendance);
+                              // console.log({
+                              //   ...item,
+                              //   attendanceMark: updatedAttendance,
+                              // });
+                            }}
+                            disabled={false}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             ) : meetingStatus === "DISCUSSION" ? (
               detailAgendaData && (

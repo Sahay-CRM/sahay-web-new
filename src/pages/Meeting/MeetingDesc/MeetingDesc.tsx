@@ -28,6 +28,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getInitials } from "@/features/utils/app.utils";
 // import MeetingTimer from "./meetingTimer";
 
 export default function MeetingDesc() {
@@ -60,14 +61,6 @@ export default function MeetingDesc() {
       { label: `${meetingTiming?.meetingName}`, href: "" },
     ]);
   }, [meetingTiming?.meetingName, setBreadcrumbs]);
-
-  const getInitials = (name: string) => {
-    if (!name) return "";
-    const names = name.split(" ");
-    const firstInitial = names[0]?.charAt(0) || "";
-    const secondInitial = names.length > 1 ? names[1]?.charAt(0) || "" : "";
-    return (firstInitial + secondInitial).toUpperCase();
-  };
 
   const isTeamLeader = meetingTiming?.employeeList?.find(
     (item) => item.employeeId === userId,
@@ -131,6 +124,10 @@ export default function MeetingDesc() {
                   const toggleOpen = () =>
                     setOpenEmployeeId(isOpen ? null : item.employeeId);
 
+                  const teamLeaderCount = (
+                    meetingTiming?.employeeList || []
+                  ).filter((emp) => emp.isTeamLeader).length;
+
                   return (
                     <div
                       key={index + item.employeeId}
@@ -180,14 +177,25 @@ export default function MeetingDesc() {
                       {isOpen && meetingStatus !== "NOT_STARTED" && (
                         <div className="mt-3 pl-12 flex flex-col gap-2">
                           {isTeamLeader && (
-                            <button
-                              onClick={() => handleAddTeamLeader(item)}
-                              className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                            >
-                              {item.isTeamLeader
-                                ? "Remove Team Leader"
-                                : "Add Team Leader"}
-                            </button>
+                            <>
+                              {!item.isTeamLeader && (
+                                <button
+                                  onClick={() => handleAddTeamLeader(item)}
+                                  className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                >
+                                  Add Team Leader
+                                </button>
+                              )}
+
+                              {item.isTeamLeader && teamLeaderCount > 1 && (
+                                <button
+                                  onClick={() => handleAddTeamLeader(item)}
+                                  className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                >
+                                  Remove Team Leader
+                                </button>
+                              )}
+                            </>
                           )}
 
                           {item.attendanceMark ? (

@@ -85,3 +85,9 @@ interface KpiRecordedData {
   endDate: string;
   data: string | null;
 }
+
+interface TipItem {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}

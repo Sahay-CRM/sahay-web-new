@@ -4,6 +4,7 @@ import { get, getDatabase, off, onValue, ref, update } from "firebase/database";
 
 import {
   addMeetingAgendaMutation,
+  addMeetingTimeMutation,
   createMeetingMutation,
   deleteMeetingObjectiveMutation,
   editAgendaTimingMeetingMutation,
@@ -130,6 +131,7 @@ export const useAgenda = ({
   const { mutate: createMeet, isPending } = createMeetingMutation();
   const { mutate: endMeet, isPending: endMeetingLoading } =
     endMeetingMutation();
+  const { mutate: updateTime } = addMeetingTimeMutation();
 
   const handleStartMeeting = () => {
     if (meetingId) {
@@ -755,6 +757,29 @@ export const useAgenda = ({
     setSelectedItem(foundItem);
   }, [conclusionData, isSelectedAgenda]);
 
+  const handleCheckIn = (item: Joiners, attendanceMark: boolean) => {
+    if (meetingId) {
+      updateTime(
+        {
+          meetingId: meetingId,
+          employeeId: item.employeeId,
+          attendanceMark: attendanceMark,
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          onSuccess: () => {
+            handleCheckMeetingExist();
+            if (isMeetingStart) {
+              const db = getDatabase();
+              const meetRef = ref(db, `meetings/${meetingId}/state`);
+              update(meetRef, { updatedAt: new Date() });
+            }
+          },
+        },
+      );
+    }
+  };
+
   return {
     issueInput,
     editing,
@@ -802,6 +827,7 @@ export const useAgenda = ({
     conclusionLoading,
     hasChanges,
     selectedItem,
+    handleCheckIn,
     // handleJoinMeeting,
   };
 };

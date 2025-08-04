@@ -109,3 +109,11 @@ export const formatDate = (dateString: string) => {
     day: "numeric",
   });
 };
+
+export const getInitials = (name: string) => {
+  if (!name) return "";
+  const names = name.split(" ");
+  const firstInitial = names[0]?.charAt(0) || "";
+  const secondInitial = names.length > 1 ? names[1]?.charAt(0) || "" : "";
+  return (firstInitial + secondInitial).toUpperCase();
+};

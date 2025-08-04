@@ -73,3 +73,65 @@
 .transition-height-smooth {
   transition: height 0.7s ease-in-out;
 }
+
+/* For the digit roll animation */
+.animate-roll-up {
+  animation: roll-up 0.5s ease-in-out;
+}
+
+.animate-roll-down {
+  animation: roll-down 0.5s ease-in-out;
+}
+
+@keyframes roll-up {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  51% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes roll-down {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  51% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* For the blinking colon */
+.animate-caret-blink {
+  animation: caret-blink 1.2s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
