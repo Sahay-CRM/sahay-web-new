@@ -12,7 +12,7 @@ import {
 import Projects from "../Projects";
 import Tasks from "../Tasks";
 import KPITable from "../KpiTable";
-import MeetingDrawer from "../Agenda/MeetingDrawer";
+import MeetingDrawer from "../AgendaCopy/MeetingDrawer";
 import { useSelector } from "react-redux";
 import { getUserId } from "@/features/selectors/auth.selector";
 
@@ -130,10 +130,10 @@ export default function Desc({
                     actualTime={Number(
                       meetingResponse?.timers.objectives?.[
                         currentItem.detailMeetingAgendaIssueId ?? 0
-                      ]?.actualTime,
+                      ]?.actualTime
                     )}
                     lastSwitchTimestamp={Number(
-                      meetingResponse?.state.lastSwitchTimestamp,
+                      meetingResponse?.state.lastSwitchTimestamp
                     )}
                     isEditMode={false}
                     meetingStart={true}
