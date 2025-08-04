@@ -19,7 +19,7 @@ export default function useAdminUser() {
   const { mutate: deleteDatapoint } = useDeleteDatapoint();
   const [isChildData, setIsChildData] = useState<string | undefined>();
   const [viewModalData, setViewModalData] = useState<KPIFormData>(
-    {} as KPIFormData,
+    {} as KPIFormData
   );
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   // Pagination Details and Filter
@@ -113,11 +113,11 @@ export default function useAdminUser() {
               setIsChildData(axiosError.response?.data?.message);
             } else if (axiosError.response?.data.status !== 417) {
               toast.error(
-                `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+                `Error: ${axiosError.response?.data?.message || "An error occurred"}`
               );
             }
           },
-        },
+        }
       );
     }
   };
@@ -136,10 +136,10 @@ export default function useAdminUser() {
               status: number;
             }>;
             toast.error(
-              `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+              `Error: ${axiosError.response?.data?.message || "An error occurred"}`
             );
           },
-        },
+        }
       );
     }
   };
@@ -154,6 +154,8 @@ export default function useAdminUser() {
   }, []);
 
   const handleRowsModalOpen = (data: KPIFormData) => {
+
+
     setViewModalData(data);
     setIsViewModalOpen(true);
   };

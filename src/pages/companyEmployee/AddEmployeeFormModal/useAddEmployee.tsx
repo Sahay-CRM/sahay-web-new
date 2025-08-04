@@ -34,6 +34,7 @@ export default function useAddEmployee() {
       const data = employeeApiData?.data;
 
       reset({
+        employeeId: data.employeeId || " ",
         employeeName: data.employeeName || "",
         employeeEmail: data.employeeEmail || "",
         employeeMobile: data.employeeMobile
@@ -133,7 +134,7 @@ export default function useAddEmployee() {
         const employeeId = getEmployeeId();
         const uploadIfPresent = async (
           file: File | string | null | undefined,
-          fileType: string,
+          fileType: string
         ) => {
           if (
             file &&
@@ -157,7 +158,7 @@ export default function useAddEmployee() {
               formData.append(
                 "file",
                 new Blob([u8arr], { type: mime }),
-                "file.png",
+                "file.png"
               );
             } else {
               formData.append("file", file as File);

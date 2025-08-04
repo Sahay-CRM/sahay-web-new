@@ -93,8 +93,8 @@ function Calendar() {
     selectOptions.unshift({ value: "all", label: "All" });
 
   return (
-    <FormProvider {...methods}>
-      <div className="px-4 h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto">
+    <FormProvider {...methods}>     
+      <div className="px-4 h-[calc(100vh-120px)] min-h-[500px] py-4 overflow-y-auto">
         <div className="mb-4 flex justify-between gap-5">
           {permission.IMPORTANT_DATE.Add && (
             <div>

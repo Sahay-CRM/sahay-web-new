@@ -104,7 +104,6 @@ export default function UpdatedKpiTable() {
   const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
     {},
   );
-  console.log(inputValues);
 
   useEffect(() => {
     const originalPushState = history.pushState;
@@ -437,7 +436,7 @@ export default function UpdatedKpiTable() {
 
   return (
     <FormProvider {...methods}>
-      <div className="sticky top-0 z-30 bg-white pb-2 mb-2 pt-6">
+      <div className="sticky top-0 z-10 bg-white p-4 m-0">
         <div className="flex justify-between">
           {" "}
           <div className="flex justify-between items-center">
@@ -477,11 +476,11 @@ export default function UpdatedKpiTable() {
           </div>
         </div>
       </div>
-      <div className="flex w-full p-0 gap-0 mt-4">
+      <div className="flex w-full gap-0 p-2">
         {/* LEFT TABLE */}
         <div
           ref={leftScrollRef}
-          className="max-h-[70vh] overflow-y-scroll scrollbar-hide border shadow-sm"
+          className="max-h-[78vh] overflow-y-scroll scrollbar-hide border shadow-sm"
           style={{ width: "500px", minWidth: "500px", maxWidth: "500px" }}
         >
           <table className="w-full table-fixed border-collapse text-sm bg-white">
@@ -607,7 +606,7 @@ export default function UpdatedKpiTable() {
 
         {/* RIGHT TABLE */}
         <div className="overflow-x-auto border shadow-sm flex-1 bg-white">
-          <div ref={rightScrollRef} className="max-h-[70vh] overflow-y-auto">
+          <div ref={rightScrollRef} className="max-h-[78vh] overflow-y-auto">
             <table className="min-w-max border-collapse text-sm table-fixed">
               <thead className="sticky top-0 z-10 bg-white">
                 <tr className="">

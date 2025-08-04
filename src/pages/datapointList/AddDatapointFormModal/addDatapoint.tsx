@@ -20,7 +20,6 @@ const AddDatapoint = () => {
     isLoading,
     isPending,
     companykpimasterId,
-    datapointApiData,
     Details,
   } = useAddDatapoint();
 
@@ -56,15 +55,13 @@ const AddDatapoint = () => {
 
   return (
     <FormProvider {...methods}>
-      <div>
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
         <div className="flex items-center gap-5 mb-3">
           <StepProgress
             currentStep={currentStep}
             stepNames={stepNames}
             totalSteps={totalSteps}
-            header={
-              companykpimasterId ? datapointApiData?.KPIMaster?.KPIName : null
-            }
+          
             back={back}
             isFirstStep={isFirstStep}
             next={next}

@@ -50,6 +50,7 @@ export default function useAddDataPoint() {
                   : ""
               }`,
               href: `/dashboard/kpi/${companykpimasterId}`,
+              isHighlight: true,
             },
           ]
         : []),
@@ -81,6 +82,7 @@ export default function useAddDataPoint() {
   useEffect(() => {
     if (datapointApiData) {
       setValue("KPIMasterId", {
+        kpiId: datapointApiData.kpiId,
         KPIMasterId: datapointApiData.KPIMasterId,
         KPIName:
           datapointApiData.KPIMaster?.KPIName ||
@@ -95,7 +97,7 @@ export default function useAddDataPoint() {
       setValue("validationType", datapointApiData.validationType);
       setValue(
         "visualFrequencyAggregate",
-        datapointApiData.visualFrequencyAggregate,
+        datapointApiData.visualFrequencyAggregate
       );
       // Set unit
       setValue("employeeId", datapointApiData.employeeId);
@@ -111,7 +113,7 @@ export default function useAddDataPoint() {
           `yesno_${datapointApiData.employeeId}`,
           datapointApiData.value1 === "1"
             ? { value: "1", label: "Yes" }
-            : { value: "0", label: "No" },
+            : { value: "0", label: "No" }
         );
       }
       // Set core parameter
@@ -214,15 +216,15 @@ export default function useAddDataPoint() {
         if (col.visible) acc[col.key] = col.label;
         return acc;
       },
-      {} as Record<string, string>,
+      {} as Record<string, string>
     );
 
     // Toggle column visibility
     const onToggleColumn = (key: string) => {
       setColumnToggleOptions((prev) =>
         prev.map((col) =>
-          col.key === key ? { ...col, visible: !col.visible } : col,
-        ),
+          col.key === key ? { ...col, visible: !col.visible } : col
+        )
       );
     };
     // Check if the number of columns is more than 3
@@ -230,21 +232,24 @@ export default function useAddDataPoint() {
 
     return (
       <div>
-        <div className=" mt-1 mb-4 flex items-center justify-between">
-          <div className="mr-4">
-            {errors?.KPIMasterId && (
-              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                {String(errors?.KPIMasterId?.message || "")}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center">
+        <div className="mt-1 mb-4 flex items-center justify-between">
+          {/* Search + Error Container */}
+          <div className="flex items-center gap-2 mr-4">
             <SearchInput
               placeholder="Search..."
               searchValue={paginationFilter?.search || ""}
               setPaginationFilter={setPaginationFilter}
               className="w-80"
             />
+            {errors?.KPIMasterId && (
+              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] whitespace-nowrap">
+                {String(errors?.KPIMasterId?.message || "")}
+              </span>
+            )}
+          </div>
+
+          {/* Column Toggle Icon */}
+          <div className="flex items-center">
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>
@@ -469,7 +474,7 @@ export default function useAddDataPoint() {
       if (!selectedFrequency) return frequenceOptions;
 
       const frequencyIndex = frequenceOptions.findIndex(
-        (opt) => opt.value === selectedFrequency,
+        (opt) => opt.value === selectedFrequency
       );
 
       if (frequencyIndex === -1) return frequenceOptions;
@@ -630,7 +635,7 @@ export default function useAddDataPoint() {
     const getEmployeeName = (emp: DataPointEmployee) => {
       if (emp?.employeeName) return emp.employeeName;
       const found = employeedata?.data?.find(
-        (e: EmployeeDetails) => e.employeeId === emp.employeeId,
+        (e: EmployeeDetails) => e.employeeId === emp.employeeId
       );
       return found?.employeeName || emp.employeeId || "";
     };

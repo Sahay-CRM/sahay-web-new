@@ -11,6 +11,7 @@ interface DatapointListData {
   KPIMasterId: string;
   KPIName: string;
   KPILabel: string;
+  kpiId: string;
 }
 
 interface KPIFormDataProp {
@@ -55,7 +56,7 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
     <div>
       <ModalData
         isModalOpen={isModalOpen}
-        modalTitle={modalData?.KPIName ? "Update KPI" : "Add KPI"}
+        modalTitle={modalData?.KPIMasterId?.kpiId ? "Update KPI" : "Add KPI"}
         modalClose={modalClose}
         buttons={[
           {

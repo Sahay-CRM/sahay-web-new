@@ -59,14 +59,14 @@ export default function CompanyDesignation() {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
 
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   // Check if the number of columns is more than 3
@@ -135,7 +135,7 @@ export default function CompanyDesignation() {
                   (designationList.currentPage - 1) * designationList.pageSize +
                   index +
                   1,
-              }),
+              })
             )}
             columns={visibleColumns} // Pass only visible columns to the Table
             primaryKey="designationId"
@@ -154,6 +154,7 @@ export default function CompanyDesignation() {
               "departmentName",
               "parentName",
             ]}
+            actionColumnWidth="w-[100px] overflow-hidden "
           />
         </div>
         {addDesignationModal && (

@@ -143,7 +143,7 @@ export default function GroupKpis() {
   };
 
   return (
-    <div>
+    <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
       <div>
         <Link to="/dashboard/kpi/group-create">
           <Button className="py-2 w-fit mb-5">Create Group KPIs</Button>
@@ -152,9 +152,9 @@ export default function GroupKpis() {
 
       <div className="flex h-[calc(100vh-195px)] flex-col overflow-hidden">
         <Table className="min-w-full h-full table-fixed">
-          <TableHeader className="sticky top-0 z-50 bg-primary shadow-sm">
+          <TableHeader className="sticky top-0 z-15 bg-primary shadow-sm">
             <TableRow>
-              <TableHead className="w-[60px] sticky left-0 z-40 bg-primary">
+              <TableHead className="w-[60px] sticky left-0 z-20 bg-primary">
                 Sr No
               </TableHead>
               <TableHead className="min-w-[200px]">KPI Name</TableHead>
@@ -213,7 +213,7 @@ export default function GroupKpis() {
                             dropdownOptions[masterId] && (
                               <div
                                 ref={dropdownRef}
-                                className="absolute top-full right-0 z-20 mt-1 max-h-60 w-80 overflow-auto rounded border bg-white shadow-lg"
+                                className="absolute top-full right-0 z-10 mt-1 max-h-60 w-80 overflow-auto rounded border bg-white shadow-lg"
                               >
                                 {dropdownOptions[masterId].length ? (
                                   <>
@@ -270,31 +270,37 @@ export default function GroupKpis() {
                     >
                       <TableCell>{item.srNo}</TableCell>
                       <TableCell className="truncate">
-                        <TableTooltip text={item.KPIName ?? " - "} />
+                        <TableTooltip text={String(item.KPIName ?? " - ")} />
                       </TableCell>
                       <TableCell className="truncate">
-                        {item.KPILabel ?? " - "}
+                        <TableTooltip text={String(item.KPILabel ?? " - ")} />
                       </TableCell>
                       <TableCell className="truncate">
-                        <TableTooltip text={item.coreParameterName ?? " - "} />
+                        <TableTooltip
+                          text={String(item.coreParameterName ?? " - ")}
+                        />
                       </TableCell>
                       <TableCell className="truncate">
-                        <TableTooltip text={item.tag ?? " - "} />
+                        <TableTooltip text={String(item.tag ?? " - ")} />
                       </TableCell>
                       <TableCell className="truncate">
-                        <TableTooltip text={item.validationType ?? " - "} />
+                        <TableTooltip
+                          text={String(item.validationType ?? " - ")}
+                        />
                       </TableCell>
                       <TableCell className="truncate">
-                        <TableTooltip text={item.frequencyType ?? " - "} />
+                        <TableTooltip
+                          text={String(item.frequencyType ?? " - ")}
+                        />
                       </TableCell>
                       <TableCell className="truncate">
-                        {item.unit ?? " - "}
+                        <TableTooltip text={String(item.unit ?? " - ")} />
                       </TableCell>
                       <TableCell className="truncate">
-                        {item.value1 ?? " - "}
+                        <TableTooltip text={String(item.value1 ?? " - ")} />
                       </TableCell>
                       <TableCell className="truncate">
-                        {item.value2 ?? " - "}
+                        <TableTooltip text={String(item.value2 ?? " - ")} />
                       </TableCell>
                       <TableCell className="truncate text-end">
                         <button

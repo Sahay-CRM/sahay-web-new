@@ -96,7 +96,7 @@ export default function GroupKpisCreate() {
   };
 
   return (
-    <div>
+   <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
       <div>
         <Button
           className="py-2 w-fit mb-5 "
@@ -191,7 +191,9 @@ export default function GroupKpisCreate() {
                         <TableTooltip text={String(item.KPIName ?? " - ")} />
                       </TableCell>
                       <TableCell className="truncate">
-                        {item.KPILabel ?? " - "}
+                         <TableTooltip
+                          text={String(item.KPILabel ?? " - ")}
+                        />
                       </TableCell>
                       <TableCell className="truncate">
                         <TableTooltip
@@ -212,13 +214,19 @@ export default function GroupKpisCreate() {
                         />
                       </TableCell>
                       <TableCell className="truncate">
-                        {item.unit ?? " - "}
+                         <TableTooltip
+                          text={String(item.unit ?? " - ")}
+                        />
                       </TableCell>
                       <TableCell className="truncate">
-                        {item.value1 ?? " - "}
+                         <TableTooltip
+                          text={String(item.value1 ?? " - ")}
+                        />
                       </TableCell>
                       <TableCell className="truncate">
-                        {item.value2 ?? " - "}
+                        <TableTooltip
+                          text={String(item.value2 ?? " - ")}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}

@@ -54,14 +54,14 @@ export default function Objective() {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
 
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   // Check if the number of columns is more than 3
@@ -130,7 +130,7 @@ export default function Objective() {
                   (objectiveList.currentPage - 1) * objectiveList.pageSize +
                   index +
                   1,
-              }),
+              })
             )}
             columns={visibleColumns}
             primaryKey="objectiveId"
@@ -144,6 +144,7 @@ export default function Objective() {
             isLoading={isLoading}
             permissionKey="users"
             moduleKey="DESIGNATION"
+            actionColumnWidth="w-[100px] overflow-hidden "
             // sortableColumns={[
             //   "designationName",
             //   "departmentName",

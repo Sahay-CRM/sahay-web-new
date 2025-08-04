@@ -51,14 +51,14 @@ export default function MeetingList() {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
   // Toggle column visibility
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   // Check if the number of columns is more than 3
@@ -135,9 +135,10 @@ export default function MeetingList() {
             onAdditionButton={(data) => {
               navigate(
                 `/dashboard/roles/user-permission/edit/${data.employeeId}`,
-                { state: { userName: data.employeeName } },
+                { state: { userName: data.employeeName } }
               );
             }}
+            actionColumnWidth="w-[80px] overflow-hidden "
             sortableColumns={[
               "employeeName",
               "departmentName",

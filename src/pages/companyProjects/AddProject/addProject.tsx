@@ -75,47 +75,50 @@ const ProjectStatus = () => {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
 
   return (
     <div>
-      <div className=" mt-1 mb-4 flex items-center justify-between">
-        <div className="mr-4">
-          {errors?.projectStatusId && (
-            <div className="mb-1">
-              <span className="text-red-600 text-sm">
-                {String(errors?.projectStatusId?.message || "")}
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center">
+      <div className="flex items-center justify-between mb-2 space-x-5 tb:space-x-7">
+        {/* Left: Search + Error */}
+        <div className="flex items-center gap-4">
           <SearchInput
             placeholder="Search..."
             searchValue={paginationFilter?.search || ""}
             setPaginationFilter={setPaginationFilter}
             className="w-80"
           />
-          {canToggleColumns && (
-            <div className="ml-3">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-                columnIcon={true}
-              />
+
+          {errors?.projectStatusId && (
+            <div className="mb-1">
+              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] whitespace-nowrap">
+                {String(errors?.projectStatusId?.message || "")}
+              </span>
             </div>
           )}
         </div>
+
+        {/* Right: Button */}
+        {canToggleColumns && (
+          <div className="ml-3">
+            <DropdownSearchMenu
+              columns={columnToggleOptions}
+              onToggleColumn={onToggleColumn}
+              columnIcon={true}
+            />
+          </div>
+        )}
       </div>
+
       <Controller
         name="projectStatusId"
         control={control}
@@ -170,46 +173,47 @@ const CoreParameter = () => {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
 
   return (
     <div>
-      <div className=" mt-1 mb-4 flex items-center justify-between">
-        <div className="mr-4">
-          {errors?.coreParameterId && (
-            <div className="mb-1">
-              <span className="text-red-600 text-sm">
-                {String(errors?.coreParameterId?.message || "")}
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center">
+      <div className="flex items-center justify-between mb-2 space-x-5 tb:space-x-7">
+        {/* Left: Search + Error */}
+        <div className="flex items-center gap-4">
           <SearchInput
             placeholder="Search..."
             searchValue={paginationFilter?.search || ""}
             setPaginationFilter={setPaginationFilter}
             className="w-80"
           />
-          {canToggleColumns && (
-            <div className="ml-3">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-                columnIcon={true}
-              />
+          {errors?.coreParameterId && (
+            <div className="mb-1">
+              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] whitespace-nowrap">
+                {String(errors?.coreParameterId?.message || "")}
+              </span>
             </div>
           )}
         </div>
+
+        {/* Right: Button */}
+        {canToggleColumns && (
+          <div className="ml-3">
+            <DropdownSearchMenu
+              columns={columnToggleOptions}
+              onToggleColumn={onToggleColumn}
+              columnIcon={true}
+            />
+          </div>
+        )}
       </div>
       <Controller
         name="coreParameterId"
@@ -282,13 +286,13 @@ const SubParameter = () => {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
@@ -303,33 +307,34 @@ const SubParameter = () => {
 
   return (
     <div>
-      <div className=" mt-1 mb-4 flex items-center justify-between">
-        <div className="mr-4">
-          {errors?.subParameterId && (
-            <div className="mb-1">
-              <span className="text-red-600 text-sm">
-                {String(errors?.subParameterId?.message || "")}
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center">
+      <div className="flex items-center justify-between mb-2 space-x-5 tb:space-x-7">
+        {/* Left: Search + Error */}
+        <div className="flex items-center gap-4">
           <SearchInput
             placeholder="Search..."
             searchValue={paginationFilter?.search || ""}
             setPaginationFilter={setPaginationFilter}
             className="w-80"
           />
-          {canToggleColumns && (
-            <div className="ml-3">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-                columnIcon={true}
-              />
+          {errors?.subParameterId && (
+            <div className="mb-1">
+              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] whitespace-nowrap">
+                {String(errors?.subParameterId?.message || "")}
+              </span>
             </div>
           )}
         </div>
+
+        {/* Right: Button */}
+        {canToggleColumns && (
+          <div className="ml-3">
+            <DropdownSearchMenu
+              columns={columnToggleOptions}
+              onToggleColumn={onToggleColumn}
+              columnIcon={true}
+            />
+          </div>
+        )}
       </div>
       <Controller
         name="subParameterId"
@@ -354,7 +359,7 @@ const SubParameter = () => {
               const ids = selectedItems.map((item: SubParameter | string) =>
                 typeof item === "object" && item !== null
                   ? item.subParameterId
-                  : item,
+                  : item
               );
               field.onChange(ids);
             }}
@@ -391,46 +396,48 @@ const Employees = () => {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
 
   return (
     <div>
-      <div className=" mt-1 mb-4 flex items-center justify-between">
-        <div className="mr-4">
-          {errors?.employeeId && (
-            <div className="mb-1">
-              <span className="text-red-600 text-sm">
-                {String(errors?.employeeId?.message || "")}
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center">
+      <div className="flex items-center justify-between mb-2 space-x-5 tb:space-x-7">
+        {/* Left: Search + Error */}
+        <div className="flex items-center gap-4">
           <SearchInput
             placeholder="Search..."
             searchValue={paginationFilter?.search || ""}
             setPaginationFilter={setPaginationFilter}
             className="w-80"
           />
-          {canToggleColumns && (
-            <div className="ml-3">
-              <DropdownSearchMenu
-                columns={columnToggleOptions}
-                onToggleColumn={onToggleColumn}
-                columnIcon={true}
-              />
+
+          {errors?.employeeId && (
+            <div className="mb-1">
+              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] whitespace-nowrap">
+                {String(errors?.employeeId?.message || "")}
+              </span>
             </div>
           )}
         </div>
+
+        {/* Right: Button */}
+        {canToggleColumns && (
+          <div className="ml-3">
+            <DropdownSearchMenu
+              columns={columnToggleOptions}
+              onToggleColumn={onToggleColumn}
+              columnIcon={true}
+            />
+          </div>
+        )}
       </div>
       <Controller
         name="employeeId"
@@ -456,7 +463,7 @@ const Employees = () => {
               const ids = selectedItems.map((item: Employee | string) =>
                 typeof item === "object" && item !== null
                   ? item.employeeId
-                  : item,
+                  : item
               );
               field.onChange(ids);
             }}
@@ -503,7 +510,7 @@ const AddProject = () => {
                   ? projectApiData.data.projectName
                   : ""
               }`,
-              href: `/dashboard/kpi/${companyProjectId}`,
+              href: `/dashboard/kpi/${companyProjectId}`,  isHighlight: true,
             },
           ]
         : []),
@@ -538,12 +545,11 @@ const AddProject = () => {
 
   return (
     <FormProvider {...methods}>
-      <div>
+     <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
         <StepProgress
           currentStep={currentStep}
           stepNames={stepNames}
           totalSteps={totalSteps}
-          header={companyProjectId ? projectApiData?.data.projectName : null}
           back={back}
           isFirstStep={isFirstStep}
           next={next}

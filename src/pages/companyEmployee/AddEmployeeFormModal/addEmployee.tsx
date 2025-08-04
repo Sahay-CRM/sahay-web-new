@@ -121,49 +121,53 @@ const DepartmentSelect = () => {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
 
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
 
   return (
     <div>
-      <div className=" mt-1 flex items-center justify-between">
-        <div className="mb-4">
-          <div>
-            <SearchInput
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-              className="w-80"
-            />
-            {formErrors?.department && (
-              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                {/* Adjust error message access based on actual error object structure */}
-                {String(
-                  formErrors.department?.message ||
-                    formErrors.departmentId?.message ||
-                    "",
-                )}
-              </span>
-            )}
-            {canToggleColumns && (
-              <div className="ml-4 ">
-                <DropdownSearchMenu
-                  columns={columnToggleOptions}
-                  onToggleColumn={onToggleColumn}
-                />
-              </div>
-            )}
-          </div>
+      <div className="mt-1 mb-4 flex items-start justify-between">
+        {/* Left side: Search + Error */}
+        <div className="flex items-center gap-2">
+          {/* Search Input */}
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
+          />
+
+          {/* Inline, No-Wrap Error Message */}
+          {formErrors?.department && (
+            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] whitespace-nowrap before:content-['*']">
+              {/* Adjust error message access based on actual error object structure */}
+              {String(
+                formErrors.department?.message ||
+                  formErrors.departmentId?.message ||
+                  ""
+              )}
+            </span>
+          )}
         </div>
+
+        {/* Right side: Toggle */}
+        {canToggleColumns && (
+          <div className="ml-4">
+            <DropdownSearchMenu
+              columns={columnToggleOptions}
+              onToggleColumn={onToggleColumn}
+            />
+          </div>
+        )}
       </div>
       <Controller
         name="department" // Ensure this name matches what's expected in useAddEmployee's reset/payload
@@ -229,23 +233,45 @@ const Designation = () => {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
-  console.log(designationData);
 
   return (
     <div>
-      <div className=" mt-1 flex items-center justify-between">
+      <div className="mt-1 mb-4 flex items-start justify-between">
+        {/* Left side: Search + Error */}
+        <div className="flex items-center gap-2">
+          {/* Search Input */}
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
+          />
+
+          {/* Inline, No-Wrap Error Message */}
+          {formErrors?.designation && (
+            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] whitespace-nowrap before:content-['*']">
+              {String(
+                formErrors.designation?.message ||
+                  formErrors.designationId?.message ||
+                  ""
+              )}
+            </span>
+          )}
+        </div>
+
+        {/* Right side: Toggle */}
         {canToggleColumns && (
-          <div className="ml-4 ">
+          <div className="ml-4">
             <DropdownSearchMenu
               columns={columnToggleOptions}
               onToggleColumn={onToggleColumn}
@@ -253,23 +279,13 @@ const Designation = () => {
           </div>
         )}
       </div>
+
       <Controller
         name="designation"
         control={control}
         rules={{ required: "Please select a Designation" }}
         render={({ field }) => (
           <>
-            <div className="mb-4">
-              {formErrors?.designation && (
-                <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                  {String(
-                    formErrors.designation?.message ||
-                      formErrors.designationId?.message ||
-                      "",
-                  )}
-                </span>
-              )}
-            </div>
             <TableData
               {...field}
               tableData={designationData?.data.map((item, index) => ({
@@ -318,22 +334,34 @@ const ReportingManage = () => {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
 
   return (
     <div>
-      <div className=" mt-1 flex items-center justify-between">
+      <div className="mt-1 mb-4 flex items-start justify-between">
+        {/* Left side: Search + Error */}
+        <div className="flex items-center gap-2">
+          {/* Search Input */}
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
+          />
+        </div>
+
+        {/* Right side: Toggle */}
         {canToggleColumns && (
-          <div className="ml-4 ">
+          <div className="ml-4">
             <DropdownSearchMenu
               columns={columnToggleOptions}
               onToggleColumn={onToggleColumn}
@@ -415,6 +443,7 @@ const AddEmployee = () => {
                   : ""
               }`,
               href: `/dashboard/kpi/${companyEmployeeId}`,
+              isHighlight: true,
             },
           ]
         : []),
@@ -449,14 +478,12 @@ const AddEmployee = () => {
 
   return (
     <FormProvider {...methods}>
-      <div>
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
         <StepProgress
           currentStep={currentStep}
           stepNames={stepNames}
           totalSteps={totalSteps}
-          header={
-            companyEmployeeId ? employeeApiData?.data?.employeeName : null
-          }
+         
           back={back}
           isFirstStep={isFirstStep}
           next={next}

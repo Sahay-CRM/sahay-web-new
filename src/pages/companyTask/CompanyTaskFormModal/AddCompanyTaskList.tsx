@@ -65,6 +65,7 @@ const ProjectSelectionStep = () => {
             }))}
             isActionButton={() => false}
             columns={{
+              srNo: "srNo",
               projectName: "Project Name",
             }}
             isLoading={projectLoading}
@@ -73,7 +74,7 @@ const ProjectSelectionStep = () => {
             selectedValue={
               field.value
                 ? (projectListdata?.data?.find(
-                    (item) => item.projectId === field.value,
+                    (item) => item.projectId === field.value
                   ) as Record<string, unknown> | undefined)
                 : undefined
             }
@@ -113,29 +114,32 @@ const MeetingSelectionStep = () => {
   } = useAddCompanyTask();
 
   return (
-    <div className="px-4 py-4">
-      <div className=" mt-1 mb-4 flex items-center justify-between">
-        <div className="flex items-center w-full">
+    <div className="p-0">
+      <div className="flex items-center justify-between mb-2 space-x-5 tb:space-x-7">
+        {/* Left: Search + Error */}
+        <div className="flex items-center gap-4">
           <SearchInput
             placeholder="Search..."
             searchValue={paginationFilterMeeting?.search || ""}
             setPaginationFilter={setPaginationFilterMeeting}
             className="w-80"
           />
+
           {errors?.meeting && (
-            <div className="mt-2">
-              <span className="text-red-600 w-fit text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                {String(errors?.meeting?.message || "This field is required")}
-              </span>
-            </div>
+            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] whitespace-nowrap">
+              {String(errors?.meeting?.message || "")}
+            </span>
           )}
         </div>
+
+        {/* Right: Button */}
         {permission.MEETING_LIST?.Add && (
           <Link to="/dashboard/meeting/add?from=task">
             <Button className="py-2 w-fit">Add Meeting</Button>
           </Link>
         )}
       </div>
+
       <Controller
         name="meeting"
         control={control}
@@ -151,6 +155,7 @@ const MeetingSelectionStep = () => {
             }))}
             isActionButton={() => false}
             columns={{
+              srNo: "srNo",
               meetingName: "Meeting Name",
             }}
             primaryKey="meetingId"
@@ -158,7 +163,7 @@ const MeetingSelectionStep = () => {
             selectedValue={
               field.value
                 ? (meetingData?.data?.find(
-                    (item) => item.meetingId === field.value,
+                    (item) => item.meetingId === field.value
                   ) as Record<string, unknown> | undefined)
                 : undefined
             }
@@ -321,22 +326,25 @@ const AssignUserStep = () => {
   } = useAddCompanyTask(); // Assuming hook can be called here
 
   return (
-    <div className="px-4 py-4">
-      <div className=" mt-1 mb-4 flex items-center w-full">
-        <SearchInput
-          placeholder="Search..."
-          searchValue={paginationFilterEmployee?.search || ""}
-          setPaginationFilter={setPaginationFilterEmployee}
-          className="w-80"
-        />
-        {errors?.assignUser && (
-          <div className="mt-2">
-            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-              {String(errors?.assignUser?.message || "This field is required")}
+    <div className="">
+      <div className="flex items-center justify-between mb-2 space-x-5 tb:space-x-7">
+        {/* Left: Search + Error */}
+        <div className="flex items-center gap-4">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilterEmployee?.search || ""}
+            setPaginationFilter={setPaginationFilterEmployee}
+            className="w-80"
+          />
+
+          {errors?.assignUser && (
+            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] whitespace-nowrap">
+              {String(errors?.assignUser?.message || "")}
             </span>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
       <Controller
         name="assignUser"
         control={control}
@@ -345,7 +353,7 @@ const AssignUserStep = () => {
           const selectedEmployees =
             Array.isArray(field.value) && Array.isArray(employeedata?.data)
               ? employeedata.data.filter((emp) =>
-                  field.value.includes(emp.employeeId),
+                  field.value.includes(emp.employeeId)
                 )
               : [];
           return (
@@ -360,6 +368,7 @@ const AssignUserStep = () => {
                 }))}
                 isActionButton={() => false}
                 columns={{
+                  srNo: "srNo",
                   employeeName: "User Name",
                 }}
                 primaryKey="employeeId"
@@ -430,10 +439,9 @@ export default function AddCompanyTask() {
       ...(taskId
         ? [
             {
-              label: `${
-                taskDataById?.data.taskName ? taskDataById?.data.taskName : ""
-              }`,
+              label: taskDataById?.data.taskName || "",
               href: `/dashboard/kpi/${taskId}`,
+              isHighlight: true,
             },
           ]
         : []),
@@ -464,13 +472,14 @@ export default function AddCompanyTask() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full mx-auto px-4">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
         <StepProgress
           currentStep={step}
           totalSteps={totalSteps} // Use adjusted totalSteps
           stepNames={stepNamesArray}
-          header={taskId ? taskDataById?.data.taskName : null}
           back={prevStep}
+          isFirstStep={step === 1} // ✅ add this
+          isLastStep={step === totalSteps}
           // isFirstStep={isFirstStep}
           next={nextStep}
           // isLastStep={isLastStep}

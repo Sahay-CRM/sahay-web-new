@@ -75,15 +75,15 @@ export default function CompanyTaskList() {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
 
   // Toggle column visibility
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
 
@@ -107,7 +107,7 @@ export default function CompanyTaskList() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full  overflow-x-auto">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
         <div className="flex mb-3 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             Company Task List
@@ -130,7 +130,7 @@ export default function CompanyTaskList() {
             />
           </div>
           <div className="flex gap-4 flex-wrap">
-            <div className="z-10 relative flex items-center gap-2">
+            <div className="relative flex items-center gap-2">
               {!showOverdue && (
                 <DateRangePicker
                   value={{
@@ -194,12 +194,12 @@ export default function CompanyTaskList() {
                 taskDeadline: formatLocalDate(item.taskDeadline),
                 assigneeNames: item.TaskEmployeeJunction
                   ? item.TaskEmployeeJunction.map(
-                      (j) => j.Employee?.employeeName,
+                      (j) => j.Employee?.employeeName
                     )
                       .filter(Boolean)
                       .join(", ")
                   : "",
-              }),
+              })
             )}
             columns={visibleColumns}
             primaryKey="taskId"

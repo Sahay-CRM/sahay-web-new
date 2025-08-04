@@ -420,7 +420,7 @@ const DashboardLayout = () => {
               />
             )}
           </div>
-          <main className="flex-1 overflow-auto p-6 bg-white mr-4">
+          <main className="flex-1 p-2 overflow-auto bg-white mr-4">
             <Outlet />
           </main>
         </div>

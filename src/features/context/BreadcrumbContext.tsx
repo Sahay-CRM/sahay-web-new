@@ -1,8 +1,11 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
-type BreadcrumbItemType = {
+// ✅ Updated type with optional className and isHighlight
+export type BreadcrumbItemType = {
   label: string;
   href?: string;
+  className?: string;
+  isHighlight?: boolean;
 };
 
 interface BreadcrumbContextType {
@@ -11,7 +14,7 @@ interface BreadcrumbContextType {
 }
 
 const BreadcrumbContext = createContext<BreadcrumbContextType | undefined>(
-  undefined,
+  undefined
 );
 
 export function BreadcrumbProvider({ children }: { children: ReactNode }) {

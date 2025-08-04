@@ -38,7 +38,7 @@ interface ModulePermission {
 interface PermissionTableProps {
   data?: string;
   onChange?: (
-    permissions: Array<{ moduleId: string; permissionId: string }>,
+    permissions: Array<{ moduleId: string; permissionId: string }>
   ) => void;
 }
 
@@ -72,13 +72,13 @@ function PermissionTableInner({ data, onChange }: PermissionTableProps) {
   const { data: permissionData, isLoading: permissionLoading } =
     useGetAllPermission();
   const { data: userPerm, isLoading: userDataLoading } = useGetUserPerById(
-    data || "",
+    data || ""
   );
   const isLoading = moduleLoading || userDataLoading || permissionLoading;
   const [permissions, setPermissions] = useState<PermissionState>({});
   const [isInitialized, setIsInitialized] = useState(false);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(
-    new Set(),
+    new Set()
   );
 
   // Organize modules into a tree structure
@@ -111,13 +111,13 @@ function PermissionTableInner({ data, onChange }: PermissionTableProps) {
         userPermissions.map((perm) => [
           `${perm.moduleId}-${perm.permissionId}`,
           true,
-        ]),
+        ])
       );
       moduleData.data.forEach((module: ModuleDetails) => {
         initialPermissions[module.moduleName] = {};
         permissionData.data.forEach((permission: PermissionDetails) => {
           const isChecked = userPermissionMap.has(
-            `${module.moduleId}-${permission.permissionId}`,
+            `${module.moduleId}-${permission.permissionId}`
           );
           initialPermissions[module.moduleName][permission.permissionName] = {
             checked: isChecked,
@@ -165,7 +165,7 @@ function PermissionTableInner({ data, onChange }: PermissionTableProps) {
 
   const toggleColumn = (permType: string) => {
     const allChecked = Object.values(permissions).every(
-      (perm) => perm[permType]?.checked === true,
+      (perm) => perm[permType]?.checked === true
     );
     setPermissions((prev) => {
       const updated = { ...prev };
@@ -182,7 +182,7 @@ function PermissionTableInner({ data, onChange }: PermissionTableProps) {
 
   const toggleRow = (moduleName: string) => {
     const allChecked = Object.values(permissions[moduleName] || {}).every(
-      (perm) => perm.checked,
+      (perm) => perm.checked
     );
     setPermissions((prev) => {
       const updated = {
@@ -220,7 +220,7 @@ function PermissionTableInner({ data, onChange }: PermissionTableProps) {
 
   const renderModuleRow = (
     module: ModuleWithChildren,
-    level: number = 0,
+    level: number = 0
   ): React.ReactElement => {
     const isExpanded = expandedModules.has(module.moduleId);
     const hasChildren = module.children && module.children.length > 0;
@@ -342,7 +342,7 @@ export default function UserPermissionTableMerged() {
         href: "/dashboard/roles/user-permission",
       },
       { label: "Edit Permissions" },
-      { label: `${userName || ""}` },
+      { label: `${userName || ""}`, isHighlight: true },
     ]);
   }, [setBreadcrumbs, userName]);
 
@@ -398,8 +398,8 @@ export default function UserPermissionTableMerged() {
       <div className="flex justify-between items-center mb-4">
         <div>
           <h2 className="text-xl">
-            Editing permissions for:{" "}
-            {userName ? <span className="font-bold">{userName}</span> : "User"}
+            Editing permissions for :{" "}
+            {userName ? <span className="font-bold text-[#2e3090]">{userName}</span> : "User"}
           </h2>
         </div>
         <Button
