@@ -142,6 +142,7 @@ export default function Issues() {
             isLoading={isLoading}
             permissionKey="users"
             moduleKey="DESIGNATION"
+            actionColumnWidth="w-[100px] overflow-hidden "
           />
         </div>
         {addModal && (

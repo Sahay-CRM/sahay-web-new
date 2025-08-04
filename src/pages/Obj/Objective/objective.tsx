@@ -144,6 +144,7 @@ export default function Objective() {
             isLoading={isLoading}
             permissionKey="users"
             moduleKey="DESIGNATION"
+            actionColumnWidth="w-[100px] overflow-hidden "
             // sortableColumns={[
             //   "designationName",
             //   "departmentName",

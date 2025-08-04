@@ -1,5 +1,6 @@
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
+import { queryClient } from "@/queryClient";
 // import { queryClient } from "@/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -37,7 +38,7 @@ export default function useAddUpdateKPIMerge() {
     },
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
-      // queryClient.resetQueries({ queryKey: ["get-datapoint-list"] });
+      queryClient.resetQueries({ queryKey: ["kpi-list-dd-all"] });
       // queryClient.resetQueries({ queryKey: ["get-datapoint-list-non-select"] });
       // queryClient.resetQueries({ queryKey: ["get-kpi-by-id"] });
     },

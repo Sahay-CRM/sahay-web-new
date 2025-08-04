@@ -40,7 +40,7 @@ const MeetingType = () => {
   const { data: meetingTypeData, isLoading } = getMeetingType({
     filter: paginationFilter,
   });
-  const [columnToggleOptions] = useState([
+  const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "meetingTypeName", label: "Meeting Type Name", visible: true },
     { key: "parentType", label: "Parent Type", visible: true },
@@ -53,22 +53,39 @@ const MeetingType = () => {
     },
     {} as Record<string, string>,
   );
-
+  const onToggleColumn = (key: string) => {
+    setColumnToggleOptions((prev) =>
+      prev.map((col) =>
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
+    );
+  };
+  const canToggleColumns = columnToggleOptions.length > 3;
   return (
     <div>
-      <div className="flex gap-2 w-full mb-2 items-center">
-        <SearchInput
-          placeholder="Search Type..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-80"
-        />
-        {errors.meetingTypeId && (
-          <p className="text-red-500 text-sm">
-            {typeof errors.meetingTypeId?.message === "string"
-              ? errors.meetingTypeId.message
-              : ""}
-          </p>
+      <div className="mt-1 mb-4 flex items-start justify-between">
+        <div className="flex items-center gap-2">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
+          />
+          {errors.meetingTypeId && (
+            <p className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] whitespace-nowrap before:content-['*']">
+              {typeof errors.meetingTypeId?.message === "string"
+                ? errors.meetingTypeId.message
+                : ""}
+            </p>
+          )}
+        </div>
+        {canToggleColumns && (
+          <div className="ml-4">
+            <DropdownSearchMenu
+              columns={columnToggleOptions}
+              onToggleColumn={onToggleColumn}
+            />
+          </div>
         )}
       </div>
       <Controller
@@ -244,28 +261,28 @@ const Joiners = () => {
 
   return (
     <div>
-      <div className=" mt-1 mb-4 flex items-center justify-between">
-        <div className="flex items-center w-full">
+      <div className="mt-1 mb-4 flex items-start justify-between">
+        <div className="flex items-center gap-2">
           <SearchInput
             placeholder="Search..."
             searchValue={paginationFilter?.search || ""}
             setPaginationFilter={setPaginationFilter}
             className="w-80"
           />
+
           {errors?.employeeId && (
             <div className="mb-1">
-              <span className="text-red-600 text-sm">
+              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] whitespace-nowrap before:content-['*']">
                 {String(errors?.employeeId?.message || "")}
               </span>
             </div>
           )}
         </div>
         {canToggleColumns && (
-          <div className="ml-3">
+          <div className="ml-4">
             <DropdownSearchMenu
               columns={columnToggleOptions}
               onToggleColumn={onToggleColumn}
-              columnIcon={true}
             />
           </div>
         )}
@@ -508,6 +525,7 @@ const AddMeeting = () => {
                   : ""
               }`,
               href: `/dashboard/kpi/${companyMeetingId}`,
+              isHighlight: true,
             },
           ]
         : []),
@@ -541,12 +559,11 @@ const AddMeeting = () => {
 
   return (
     <FormProvider {...methods}>
-      <div className="p-4">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
         <StepProgress
           currentStep={currentStep}
           stepNames={stepNames}
           totalSteps={totalSteps}
-          header={companyMeetingId ? meetingApiData?.data?.meetingName : null}
           back={back}
           isFirstStep={isFirstStep}
           next={next}

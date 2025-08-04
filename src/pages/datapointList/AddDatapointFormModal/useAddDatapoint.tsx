@@ -50,6 +50,7 @@ export default function useAddDataPoint() {
                   : ""
               }`,
               href: `/dashboard/kpi/${companykpimasterId}`,
+              isHighlight: true,
             },
           ]
         : []),
@@ -81,6 +82,7 @@ export default function useAddDataPoint() {
   useEffect(() => {
     if (datapointApiData) {
       setValue("KPIMasterId", {
+        kpiId: datapointApiData.kpiId,
         KPIMasterId: datapointApiData.KPIMasterId,
         KPIName:
           datapointApiData.KPIMaster?.KPIName ||
@@ -230,21 +232,24 @@ export default function useAddDataPoint() {
 
     return (
       <div>
-        <div className=" mt-1 mb-4 flex items-center justify-between">
-          <div className="mr-4">
-            {errors?.KPIMasterId && (
-              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                {String(errors?.KPIMasterId?.message || "")}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center">
+        <div className="mt-1 mb-4 flex items-center justify-between">
+          {/* Search + Error Container */}
+          <div className="flex items-center gap-2 mr-4">
             <SearchInput
               placeholder="Search..."
               searchValue={paginationFilter?.search || ""}
               setPaginationFilter={setPaginationFilter}
               className="w-80"
             />
+            {errors?.KPIMasterId && (
+              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] whitespace-nowrap">
+                {String(errors?.KPIMasterId?.message || "")}
+              </span>
+            )}
+          </div>
+
+          {/* Column Toggle Icon */}
+          <div className="flex items-center">
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>

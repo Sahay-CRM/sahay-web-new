@@ -70,6 +70,14 @@ export const companyNavigationData = [
     permission: "View",
     moduleKey: "PROJECT_LIST",
   },
+  // {
+  //   id: 8,
+  //   icon: "BarChart3",
+  //   label: "KPI List",
+  //   link: "/dashboard/kpi",
+  //   permission: "View",
+  //   moduleKey: "DATAPOINT_LIST",
+  // },
   {
     id: 8,
     icon: "BarChart3",

@@ -138,6 +138,7 @@ export default function MeetingList() {
                 { state: { userName: data.employeeName } },
               );
             }}
+            actionColumnWidth="w-[80px] overflow-hidden "
             sortableColumns={[
               "employeeName",
               "departmentName",

@@ -154,6 +154,7 @@ export default function CompanyDesignation() {
               "departmentName",
               "parentName",
             ]}
+            actionColumnWidth="w-[100px] overflow-hidden "
           />
         </div>
         {addDesignationModal && (

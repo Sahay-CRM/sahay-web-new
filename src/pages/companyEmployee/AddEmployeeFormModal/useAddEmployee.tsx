@@ -34,6 +34,7 @@ export default function useAddEmployee() {
       const data = employeeApiData?.data;
 
       reset({
+        employeeId: data.employeeId || " ",
         employeeName: data.employeeName || "",
         employeeEmail: data.employeeEmail || "",
         employeeMobile: data.employeeMobile

@@ -135,35 +135,39 @@ const DepartmentSelect = () => {
 
   return (
     <div>
-      <div className=" mt-1 flex items-center justify-between">
-        <div className="mb-4">
-          <div>
-            <SearchInput
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-              className="w-80"
-            />
-            {formErrors?.department && (
-              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                {/* Adjust error message access based on actual error object structure */}
-                {String(
-                  formErrors.department?.message ||
-                    formErrors.departmentId?.message ||
-                    "",
-                )}
-              </span>
-            )}
-            {canToggleColumns && (
-              <div className="ml-4 ">
-                <DropdownSearchMenu
-                  columns={columnToggleOptions}
-                  onToggleColumn={onToggleColumn}
-                />
-              </div>
-            )}
-          </div>
+      <div className="mt-1 mb-4 flex items-start justify-between">
+        {/* Left side: Search + Error */}
+        <div className="flex items-center gap-2">
+          {/* Search Input */}
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
+          />
+
+          {/* Inline, No-Wrap Error Message */}
+          {formErrors?.department && (
+            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] whitespace-nowrap before:content-['*']">
+              {/* Adjust error message access based on actual error object structure */}
+              {String(
+                formErrors.department?.message ||
+                  formErrors.departmentId?.message ||
+                  "",
+              )}
+            </span>
+          )}
         </div>
+
+        {/* Right side: Toggle */}
+        {canToggleColumns && (
+          <div className="ml-4">
+            <DropdownSearchMenu
+              columns={columnToggleOptions}
+              onToggleColumn={onToggleColumn}
+            />
+          </div>
+        )}
       </div>
       <Controller
         name="department" // Ensure this name matches what's expected in useAddEmployee's reset/payload
@@ -223,7 +227,6 @@ const Designation = () => {
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "designationName", label: "Designation Name", visible: true },
-    { key: "designationName", label: "Designation Name", visible: true },
   ]);
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
@@ -243,18 +246,20 @@ const Designation = () => {
 
   return (
     <div>
-      <div className=" mt-1 flex items-center justify-between">
-        {canToggleColumns && (
-          <div className="ml-4 ">
-            <DropdownSearchMenu
-              columns={columnToggleOptions}
-              onToggleColumn={onToggleColumn}
-            />
-          </div>
-        )}
-        <div className="mb-4">
+      <div className="mt-1 mb-4 flex items-start justify-between">
+        {/* Left side: Search + Error */}
+        <div className="flex items-center gap-2">
+          {/* Search Input */}
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
+          />
+
+          {/* Inline, No-Wrap Error Message */}
           {formErrors?.designation && (
-            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] whitespace-nowrap before:content-['*']">
               {String(
                 formErrors.designation?.message ||
                   formErrors.designationId?.message ||
@@ -263,7 +268,18 @@ const Designation = () => {
             </span>
           )}
         </div>
+
+        {/* Right side: Toggle */}
+        {canToggleColumns && (
+          <div className="ml-4">
+            <DropdownSearchMenu
+              columns={columnToggleOptions}
+              onToggleColumn={onToggleColumn}
+            />
+          </div>
+        )}
       </div>
+
       <Controller
         name="designation"
         control={control}
@@ -285,7 +301,7 @@ const Designation = () => {
               paginationDetails={designationData as PaginationFilter} // Cast might be needed
               setPaginationFilter={setPaginationFilter}
               onCheckbox={() => true}
-              multiSelect={true}
+              multiSelect={false}
               selectedValue={field.value}
               handleChange={field.onChange}
               isLoading={isLoading}
@@ -331,9 +347,21 @@ const ReportingManage = () => {
 
   return (
     <div>
-      <div className=" mt-1 flex items-center justify-between">
+      <div className="mt-1 mb-4 flex items-start justify-between">
+        {/* Left side: Search + Error */}
+        <div className="flex items-center gap-2">
+          {/* Search Input */}
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
+          />
+        </div>
+
+        {/* Right side: Toggle */}
         {canToggleColumns && (
-          <div className="ml-4 ">
+          <div className="ml-4">
             <DropdownSearchMenu
               columns={columnToggleOptions}
               onToggleColumn={onToggleColumn}
@@ -415,6 +443,7 @@ const AddEmployee = () => {
                   : ""
               }`,
               href: `/dashboard/kpi/${companyEmployeeId}`,
+              isHighlight: true,
             },
           ]
         : []),
@@ -449,14 +478,11 @@ const AddEmployee = () => {
 
   return (
     <FormProvider {...methods}>
-      <div className="p-4">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
         <StepProgress
           currentStep={currentStep}
           stepNames={stepNames}
           totalSteps={totalSteps}
-          header={
-            companyEmployeeId ? employeeApiData?.data?.employeeName : null
-          }
           back={back}
           isFirstStep={isFirstStep}
           next={next}
@@ -465,6 +491,32 @@ const AddEmployee = () => {
           onFinish={onFinish}
           isUpdate={!!companyEmployeeId}
         />
+
+        {/* <div className="flex justify-end gap-5 mb-5 ">
+          <Button
+            onClick={back}
+            disabled={isFirstStep || isPending}
+            className="w-fit"
+            type="button"
+          >
+            Previous
+          </Button>
+          <Button
+            onClick={isLastStep ? onFinish : next}
+            className="w-fit"
+            isLoading={isPending}
+            type="button"
+            disabled={isPending}
+          >
+            {isLastStep ? "Finish" : "Next"}
+          </Button>
+
+          {companyEmployeeId && !isLastStep && (
+            <Button onClick={onFinish} className="w-fit">
+              Submit
+            </Button>
+          )}
+        </div> */}
 
         <div className="step-content w-full">{stepContent}</div>
 
