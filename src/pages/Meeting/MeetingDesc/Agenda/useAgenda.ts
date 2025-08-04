@@ -828,6 +828,7 @@ export const useAgenda = ({
     hasChanges,
     selectedItem,
     handleCheckIn,
+    setActiveTab,
     // handleJoinMeeting,
   };
 };

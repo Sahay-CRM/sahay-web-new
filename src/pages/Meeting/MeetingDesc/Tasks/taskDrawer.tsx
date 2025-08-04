@@ -274,18 +274,6 @@ export default function TaskDrawer({
                 />
               )}
             />
-            <Controller
-              control={control}
-              name="taskStartDate"
-              render={({ field }) => (
-                <FormDateTimePicker
-                  label="Task Start Date"
-                  value={field.value ?? null}
-                  onChange={field.onChange}
-                  error={errors.taskStartDate}
-                />
-              )}
-            />
 
             <Controller
               control={control}

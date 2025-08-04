@@ -282,7 +282,7 @@ export default function Agenda({
         defaultType=""
         onSubmit={handleModalSubmit}
       />
-      <div className="flex gap-3 mb-4">
+      <div className="flex gap-3 ">
         <div className="w-full">
           {meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? (
             <div className="w-full flex h-[40px] border border-gray-300 rounded-[10px] items-center px-4">
@@ -295,12 +295,14 @@ export default function Agenda({
               </div>
             </div>
           ) : meetingStatus === "DISCUSSION" ? (
-            <div className="w-fit">
-              <nav className="space-y-1 w-full ">
+            <div className="flex gap-4">
+              <div className="hidden md:block w-[488px] text-gray-500  text-lg truncate ml-4">
+                Meeting Agenda
+              </div>
+              <nav className="w-full z-20 flex">
                 <div className="mr-5 flex gap-3 items-center rounded-2xl px-1">
                   <Button
-                    variant={activeTab === "tasks" ? "default" : "ghost"}
-                    className={`w-40 h-12 justify-start border cursor-pointer flex items-center`}
+                    className={`w-40 justify-start border border-b-0 shadow-border rounded-b-none hover:bg-white text-primary cursor-pointer flex items-center ${activeTab === "tasks" ? "bg-white h-[50px] -mb-1 shadow-none" : "bg-gray-200 h-12"}`}
                     onClick={() => {
                       handleTabChange("tasks");
                     }}
@@ -309,8 +311,7 @@ export default function Agenda({
                     <span className="ml-2">Tasks</span>
                   </Button>
                   <Button
-                    variant={activeTab === "projects" ? "default" : "ghost"}
-                    className={`w-40 h-12 justify-start border cursor-pointer flex items-center `}
+                    className={`w-40 justify-start border border-b-0 rounded-b-none hover:bg-white text-primary cursor-pointer flex items-center ${activeTab === "projects" ? "bg-white h-[50px] -mb-1 shadow-none" : "bg-gray-200 h-12"}`}
                     onClick={() => {
                       handleTabChange("projects");
                     }}
@@ -319,8 +320,7 @@ export default function Agenda({
                     <span className="ml-2">Projects</span>
                   </Button>
                   <Button
-                    variant={activeTab === "kpis" ? "default" : "ghost"}
-                    className={`w-40 h-12 justify-start border cursor-pointer flex items-center`}
+                    className={`w-40 justify-start border border-b-0 rounded-b-none hover:bg-white text-primary cursor-pointer flex items-center ${activeTab === "kpis" ? "bg-white h-[50px] -mb-1 shadow-none" : "bg-gray-200 h-12"}`}
                     onClick={() => {
                       handleTabChange("kpis");
                     }}
@@ -639,7 +639,9 @@ export default function Agenda({
                         </span>
                       )}
 
-                      <span className="w-10 mr-3 text-4xl text-primary text-center">
+                      <span
+                        className={`w-10 mr-3 text-4xl text-primary text-center ${isSelectedAgenda === item.detailMeetingAgendaIssueId ? "bg-primary text-white" : "text-primary"}`}
+                      >
                         {idx + 1}
                       </span>
 
