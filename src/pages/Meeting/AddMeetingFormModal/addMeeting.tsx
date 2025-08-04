@@ -205,7 +205,10 @@ const Joiners = () => {
   const {
     control,
     formState: { errors },
+    watch,
   } = useFormContext();
+
+  const meetingType = watch("meetingTypeId");
 
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
@@ -272,14 +275,16 @@ const Joiners = () => {
         control={control}
         rules={{
           validate: (value) => {
-            if (!value || value.length === 0) {
-              return "Please select at least one joiner";
-            }
-            const hasTeamLeader = value.some(
-              (emp: EmployeeDetails) => emp.isTeamLeader,
-            );
-            if (!hasTeamLeader) {
-              return "At least one joiner must be marked as Team Leader";
+            if (meetingType.parentType === "DETAIL") {
+              if (!value || value.length === 0) {
+                return "Please select at least one joiner";
+              }
+              const hasTeamLeader = value.some(
+                (emp: EmployeeDetails) => emp.isTeamLeader,
+              );
+              if (!hasTeamLeader) {
+                return "At least one joiner must be marked as Team Leader";
+              }
             }
             return true;
           },
@@ -308,10 +313,11 @@ const Joiners = () => {
               isEditDelete={() => false}
               moduleKey="emp"
               isActionButton={() => false}
-              // showActionsColumn={meetingType?.parentType === "DETAIL"}
+              showActionsColumn={meetingType?.parentType === "DETAIL"}
               selectedValue={field.value || []}
               handleChange={(selectedItems) => field.onChange(selectedItems)}
               customActions={(row: EmployeeDetails) => {
+                if (!(meetingType.parentType === "DETAIL")) return;
                 const isSelected = (field.value || []).some(
                   (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
                 );
@@ -342,6 +348,7 @@ const Joiners = () => {
               additionalButton={() => false}
               isEditDeleteShow={false}
               isLoading={isLoading}
+              actionColumnWidth="w-40"
             />
           );
         }}
@@ -534,7 +541,7 @@ const AddMeeting = () => {
 
   return (
     <FormProvider {...methods}>
-      <div>
+      <div className="p-4">
         <StepProgress
           currentStep={currentStep}
           stepNames={stepNames}

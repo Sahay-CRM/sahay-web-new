@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import clsx from "clsx";
 import {
   formatCompactNumber,
-  formatTempValuesToPayload,
+  formatTempValuesMeetingToPayload,
   getColorFromName,
   getKpiHeadersFromData,
   isValidInput,
@@ -36,12 +36,13 @@ import WarningDialog from "./WarningModal";
 import KpisSearchDropdown from "./KpiSearchDropdown";
 import {
   addMeetingKpisDataMutation,
+  updateKPIDataMutation,
   // useGetMeetingKpis,
   useGetMeetingSelectedKpis,
 } from "@/features/api/companyMeeting";
 import KpiDrawer from "./KpiDrawer";
-import { addUpdateKpi } from "@/features/api/kpiDashboard";
 import { queryClient } from "@/queryClient";
+import { getDatabase, off, onValue, ref } from "firebase/database";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -137,12 +138,30 @@ export default function KPITable({
   const [tempValues, setTempValues] = useState<{ [key: string]: string }>({});
   const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
     {},
-  ); // Custom navigation interceptor for drawer/sidebar navigation
+  );
+
   useEffect(() => {
-    // Store the original navigate function to restore later
+    const db = getDatabase();
+    const meetingRef = ref(
+      db,
+      `meetings/${meetingId}/timers/objectives/${meetingAgendaIssueId}/kpis`,
+    );
+
+    onValue(meetingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        queryClient.resetQueries({ queryKey: ["get-kpi-dashboard-data"] });
+        queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] });
+      }
+    });
+
+    return () => {
+      off(meetingRef);
+    };
+  }, [meetingAgendaIssueId, meetingId]);
+
+  useEffect(() => {
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
-    // Override history methods to intercept navigation
     history.pushState = function (
       data: unknown,
       title: string,
@@ -347,7 +366,7 @@ export default function KPITable({
     };
   }, [tempValues]);
 
-  const { mutate: addUpdateKpiData } = addUpdateKpi();
+  const { mutate: addUpdateKpiData } = updateKPIDataMutation();
 
   useEffect(() => {
     if (isKpiDataCellArrayArray(selectedKpisTyped)) {
@@ -732,15 +751,26 @@ export default function KPITable({
   }
 
   const handleSubmit = () => {
-    // console.log(formatTempValuesToPayload(tempValues));
-    addUpdateKpiData(formatTempValuesToPayload(tempValues), {
-      onSuccess: () => {
-        // queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] });
-        // queryClient.resetQueries({ queryKey: ["get-kpi-dashboard-data"] });
-        kpisFireBase();
-      },
-    });
+    if (meetingAgendaIssueId) {
+      // const payload = formatTempValuesMeetingToPayload(
+      //   tempValues,
+      //   meetingAgendaIssueId
+      // );
+
+      addUpdateKpiData(
+        formatTempValuesMeetingToPayload(tempValues, meetingAgendaIssueId),
+        {
+          onSuccess: () => {
+            // queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] });
+            queryClient.resetQueries({ queryKey: ["get-kpi-dashboard-data"] });
+            kpisFireBase();
+            setTempValues({});
+          },
+        },
+      );
+    }
   };
+
   const handlePeriodChange = (newPeriod: string) => {
     if (Object.keys(tempValues).length > 0) {
       setPendingPeriod(newPeriod);
@@ -846,14 +876,14 @@ export default function KPITable({
 
   return (
     <FormProvider {...methods}>
-      <div>
+      <div className="w-full">
         <KpisSearchDropdown
           onAdd={handleAddKpis}
           minSearchLength={2}
           filterProps={{ pageSize: 20 }}
         />
       </div>
-      <div className="flex justify-between">
+      <div className="flex w-full justify-between">
         {" "}
         <div className="flex justify-between items-center">
           <TabsSection
@@ -959,6 +989,7 @@ export default function KPITable({
         onClose={() => setDrawerOpen(false)}
         kpiId={selectedKpi?.kpiId}
         meetingId={meetingId}
+        detailMeetingKPIId={selectedKpi?.detailMeetingKPIId}
       />
     </FormProvider>
   );

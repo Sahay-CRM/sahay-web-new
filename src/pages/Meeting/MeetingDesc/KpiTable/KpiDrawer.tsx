@@ -13,6 +13,7 @@ interface KpiDrawerProps {
   onClose: () => void;
   kpiId?: string;
   meetingId: string;
+  detailMeetingKPIId?: string;
 }
 
 const frequenceOptions = [
@@ -39,6 +40,7 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
   onClose,
   kpiId,
   meetingId,
+  detailMeetingKPIId,
 }) => {
   const drawerRef = useRef<HTMLDivElement>(null);
   const { data: kpiData } = useGetDatapointById(kpiId || "");
@@ -46,13 +48,13 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
   const { mutate: addDatapoint } = useAddUpdateDatapoint();
   const { mutate: deleteKpi } = deleteMeetingKpisMutation();
 
-  // You need to provide meetingId here. Replace 'yourMeetingId' with the actual meetingId from props or context.
   const handleDeleteKpi = () => {
-    if (kpiId && meetingId) {
+    if (kpiId && meetingId && detailMeetingKPIId) {
       deleteKpi(
         {
           kpiId: kpiId,
           meetingId: meetingId,
+          detailMeetingKPIId: detailMeetingKPIId,
         },
         {
           onSuccess: () => {
@@ -77,7 +79,6 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
     });
   };
 
-  // Local state for editable data
   const [editableData, setEditableData] = useState<KPIFormData | null>(null);
 
   useEffect(() => {

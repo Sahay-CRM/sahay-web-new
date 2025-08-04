@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
@@ -21,6 +21,9 @@ import {
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
 import { queryClient } from "@/queryClient";
 import TaskDrawer from "./taskDrawer";
+import { Button } from "@/components/ui/button";
+import { getDatabase, off, onValue, ref } from "firebase/database";
+import { useParams } from "react-router-dom";
 
 interface TasksProps {
   tasksFireBase: () => void;
@@ -33,6 +36,7 @@ export default function Tasks({
   meetingAgendaIssueId,
   detailMeetingId,
 }: TasksProps) {
+  const { id: meetingId } = useParams();
   const { data: taskStatus } = useGetAllTaskStatus({
     filter: {},
   });
@@ -63,20 +67,32 @@ export default function Tasks({
         onSuccess: () => {
           queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
           tasksFireBase();
-          // setSelectedTask(tasks);
         },
       });
     }
   };
 
+  useEffect(() => {
+    const db = getDatabase();
+    const meetingRef = ref(
+      db,
+      `meetings/${meetingId}/timers/objectives/${meetingAgendaIssueId}/tasks`,
+    );
+
+    onValue(meetingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
+      }
+    });
+
+    return () => {
+      off(meetingRef);
+    };
+  }, [meetingAgendaIssueId, meetingId]);
+
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "taskName", label: "Task Name", visible: true },
-    {
-      key: "taskDescription",
-      label: "Task Description",
-      visible: true,
-    },
     { key: "taskDeadline", label: "Task Deadline", visible: true },
     { key: "assigneeNames", label: "Assignees", visible: true },
     { key: "taskStatus", label: "Status", visible: true },
@@ -115,12 +131,12 @@ export default function Tasks({
 
   const conformDelete = useCallback(
     async (data: TaskGetPaging) => {
-      if (data && data.taskId) {
+      if (data && data.detailMeetingTaskId) {
         // const payload = {
         //   taskId: data.taskId,
         //   meetingId: meetingId,
         // };
-        deleteTaskById(data.taskId, {
+        deleteTaskById(data.detailMeetingTaskId, {
           onSuccess: () => {
             queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
             tasksFireBase();
@@ -141,15 +157,23 @@ export default function Tasks({
     [deleteTaskById, tasksFireBase],
   );
 
+  const handleAddTask = () => {
+    setDrawerOpen(true);
+    setSelected(null);
+  };
+
   return (
-    <div className="p-4">
+    <div className=" h-full">
       <div className="flex gap-5 justify-between mb-5">
-        <div>
+        <div className="flex gap-5 items-center">
           <TaskSearchDropdown
             onAdd={handleAddTasks}
             minSearchLength={2}
             filterProps={{ pageSize: 20 }}
           />
+          <Button className="py-2 w-fit" onClick={handleAddTask}>
+            Add Company Task
+          </Button>
         </div>
         <div>
           {canToggleColumns && (
@@ -229,6 +253,8 @@ export default function Tasks({
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           taskData={selected}
+          detailMeetingAgendaIssueId={meetingAgendaIssueId}
+          detailMeetingId={detailMeetingId}
         />
       )}
     </div>

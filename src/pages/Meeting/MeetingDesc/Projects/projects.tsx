@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
@@ -22,6 +22,8 @@ import {
 } from "@/features/api/companyMeeting";
 import { queryClient } from "@/queryClient";
 import ProjectDrawer from "./projectDrawer";
+import { Button } from "@/components/ui/button";
+import { getDatabase, off, onValue, ref } from "firebase/database";
 
 interface ProjectProps {
   meetingId: string;
@@ -120,10 +122,11 @@ export default function Projects({
 
   const conformDelete = useCallback(
     async (data: IProjectFormData) => {
-      if (data && data.projectId) {
+      if (data && data.detailMeetingProjectId && data.projectId) {
         const payload = {
           projectId: data.projectId,
           meetingId: meetingId,
+          detailMeetingProjectId: data.detailMeetingProjectId ?? "",
         };
         deleteProjectById(payload, {
           onSuccess: () => {
@@ -146,15 +149,41 @@ export default function Projects({
     [deleteProjectById, meetingId, projectsFireBase],
   );
 
+  useEffect(() => {
+    const db = getDatabase();
+    const meetingRef = ref(
+      db,
+      `meetings/${meetingId}/timers/objectives/${meetingAgendaIssueId}/projects`,
+    );
+
+    onValue(meetingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
+      }
+    });
+
+    return () => {
+      off(meetingRef);
+    };
+  }, [meetingAgendaIssueId, meetingId]);
+
+  const handleAddProject = () => {
+    setDrawerOpen(true);
+    setSelected(null);
+  };
+
   return (
-    <div className="p-4">
+    <div>
       <div className="flex gap-5 justify-between mb-5">
-        <div>
+        <div className="flex gap-5 items-center">
           <ProjectSearchDropdown
             onAdd={handleAdd}
             minSearchLength={3}
             filterProps={{ pageSize: 25 }}
           />
+          <Button className="py-2 w-fit" onClick={handleAddProject}>
+            Add Company Project
+          </Button>
         </div>
         <div>
           {canToggleColumns && (
@@ -227,6 +256,8 @@ export default function Projects({
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           projectData={selected}
+          detailMeetingAgendaIssueId={meetingAgendaIssueId}
+          detailMeetingId={detailMeetingId}
         />
       )}
     </div>

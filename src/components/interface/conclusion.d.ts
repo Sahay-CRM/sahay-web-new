@@ -18,8 +18,15 @@ interface AgendaResConclusion {
 interface MeetingConclusionData {
   agendaPlanned: string;
   agendaActual: string;
+  meetingPlanned: string;
+  meetingActual: string;
+  conclusionPlanned: string;
+  conclusionActual: string;
   agendaTotalPlanned: string;
   agendaTotalActual: string;
+  noOfTasks?: number;
+  noOfProjects?: number;
+  noOfKPIs?: number;
   agenda: AgendaResConclusion[];
 }
 
@@ -57,7 +64,8 @@ interface ProjectValues {
 interface KpiUpdate {
   oldValues: KpiValues;
   newValues: KpiValues;
-  recData?: KpiRecordedData[];
+  oldData?: KpiRecordedData[];
+  newData?: KpiRecordedData[];
 }
 
 interface KpiValues {
@@ -75,5 +83,5 @@ interface KpiRecordedData {
   kpiId: string;
   startDate: string;
   endDate: string;
-  data: string;
+  data: string | null;
 }

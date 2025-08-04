@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
-import { format, parseISO } from "date-fns";
+
 import FormSelect from "@/components/shared/Form/FormSelect";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { queryClient } from "@/queryClient";
@@ -11,18 +12,21 @@ import {
   useGetSubParaFilter,
 } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
+import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 
 interface ProjectDrawerProps {
   open: boolean;
   onClose: () => void;
   projectData?: CompanyProjectDataProps | null;
+  detailMeetingAgendaIssueId?: string;
+  detailMeetingId?: string;
 }
 
 type ProjectFormData = {
   projectId: string;
   projectName: string;
   projectDescription: string;
-  projectDeadline: string;
+  projectDeadline: Date | string | null;
   projectStatusId: string;
   coreParameterId: string;
   subParameterId: string[];
@@ -33,7 +37,10 @@ export default function ProjectDrawer({
   open,
   onClose,
   projectData,
+  detailMeetingAgendaIssueId,
+  detailMeetingId,
 }: ProjectDrawerProps) {
+  const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
   const { mutate: addProject } = useAddUpdateCompanyProject();
   const { data: projectStatusData } = useGetAllProjectStatus();
@@ -69,8 +76,8 @@ export default function ProjectDrawer({
         projectName: projectData.projectName || "",
         projectDescription: projectData.projectDescription || "",
         projectDeadline: projectData.projectDeadline
-          ? format(parseISO(projectData.projectDeadline), "yyyy-MM-dd")
-          : "",
+          ? new Date(projectData.projectDeadline)
+          : null,
         projectStatusId: projectData.projectStatusId || "",
         coreParameterId: projectData.coreParameterId || "",
         subParameterId: Array.isArray(projectData.subParameters)
@@ -102,7 +109,6 @@ export default function ProjectDrawer({
     defaultValues,
   });
 
-  // Watch coreParameterId for subParameter options
   const watchedCoreParameterId = watch("coreParameterId");
   const { data: subParameterData } = useGetSubParaFilter({
     filter: {
@@ -118,8 +124,6 @@ export default function ProjectDrawer({
         value: item.subParameterId,
       }))
     : [];
-
-  // Reset form when projectData changes
   useEffect(() => {
     if (open && projectData) {
       reset(defaultValues);
@@ -129,14 +133,12 @@ export default function ProjectDrawer({
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      // If click is inside the drawer, do nothing
       if (
         drawerRef.current &&
         drawerRef.current.contains(event.target as Node)
       ) {
         return;
       }
-      // If click is inside a select or popover menu, do nothing
       if (
         (event.target as HTMLElement).closest('[data-slot="select-content"]') ||
         (event.target as HTMLElement).closest(
@@ -148,7 +150,6 @@ export default function ProjectDrawer({
       ) {
         return;
       }
-      // Otherwise, close the drawer
       onClose();
     }
     if (open) {
@@ -162,23 +163,29 @@ export default function ProjectDrawer({
   }, [onClose, open]);
 
   const onSubmit = (data: ProjectFormData) => {
-    const { employeeId, ...rest } = data;
-    const payload = {
-      ...rest,
-      projectId: projectData?.projectId,
-      otherProjectEmployees: employeeId, // API expects this field for employees
-    };
-    addProject(payload, {
-      onSuccess: () => {
-        queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
-        onClose();
-      },
-    });
+    if (meetingId && detailMeetingAgendaIssueId) {
+      const { employeeId, projectDeadline, ...rest } = data;
+      const payload = {
+        ...rest,
+        projectId: projectData?.projectId,
+        otherProjectEmployees: employeeId,
+        detailMeetingId: detailMeetingId,
+        projectDeadline: projectDeadline
+          ? new Date(projectDeadline).toISOString()
+          : null,
+        detailMeetingAgendaIssueId: detailMeetingAgendaIssueId,
+      };
+      addProject(payload, {
+        onSuccess: () => {
+          queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
+          onClose();
+        },
+      });
+    }
   };
 
   return (
     <>
-      {/* Overlay */}
       {open && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/30 z-50 transition-opacity" />
       )}
@@ -215,13 +222,35 @@ export default function ProjectDrawer({
               })}
               error={errors.projectDescription}
             />
-            <FormInputField
-              type="date"
-              label="Project Deadline"
-              {...register("projectDeadline", {
-                required: "Deadline is required",
-              })}
-              error={errors.projectDeadline}
+            <Controller
+              control={control}
+              name="projectDeadline"
+              render={({ field }) => {
+                // Convert to local time for display
+                const localDate = field.value
+                  ? new Date(
+                      new Date(field.value).getTime() +
+                        new Date().getTimezoneOffset() * 60000,
+                    )
+                  : null;
+
+                return (
+                  <FormDateTimePicker
+                    label="Project Deadline (Local Time)"
+                    value={localDate}
+                    onChange={(date) => {
+                      // Convert back to UTC when saving
+                      const utcDate = date
+                        ? new Date(
+                            date.getTime() - date.getTimezoneOffset() * 60000,
+                          )
+                        : null;
+                      field.onChange(utcDate);
+                    }}
+                    error={errors.projectDeadline}
+                  />
+                );
+              }}
             />
             <Controller
               control={control}

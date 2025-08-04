@@ -1093,7 +1093,6 @@ interface KpiAllList {
   dataPointLabel?: string;
   KPIMasterId?: string;
   kpiId: string;
-  kpiMergeId?: string;
   KPIName?: string;
   kpiName?: string;
   KPILabel?: string;
@@ -1119,6 +1118,8 @@ interface KpiAllList {
   visualFrequencyAggregate: string | null;
   visualFrequencyTypes: string;
   employeeId: string;
+  detailMeetingKPIId?: string;
+  kpiMergeId?: string;
 }
 
 interface KPICoreParameter {
@@ -1145,6 +1146,10 @@ interface MeetingDetailsTiming {
   status?: string;
   updatedAt?: string;
   meetingName?: string;
+  conclusionTime?: string;
+  meetingTimeActual?: string;
+  meetingTimePlanned?: string;
+  conclusionTimeActual?: string;
 }
 
 interface MeetingNotesRes {

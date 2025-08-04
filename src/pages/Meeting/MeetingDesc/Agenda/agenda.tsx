@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import { Badge } from "@/components/ui/badge";
+import MeetingTimer from "../meetingTimer";
 import { cn } from "@/lib/utils";
 import { useAgenda } from "./useAgenda";
 import Tasks from "../Tasks";
@@ -25,7 +26,6 @@ import KPITable from "../KpiTable";
 import Timer from "../Timer";
 import { SpinnerIcon } from "@/components/shared/Icons";
 import { formatDate } from "@/features/utils/app.utils";
-import MeetingTimer from "../meetingTimer";
 
 function IssueModal({
   open,
@@ -238,7 +238,7 @@ export default function Agenda({
           className={cn(
             // "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]",
             "ease-out",
-            isSideBar ? "w-[370px] min-w-[370px]" : "w-[65%]",
+            isSideBar ? "w-[370px] min-w-[370px]" : "w-[65%]"
           )}
         >
           <div className="flex gap-2 relative">
@@ -305,7 +305,7 @@ export default function Agenda({
               </div>
             )}
           </div>
-          <div className="mt-2 h-[calc(100vh-150px)] pr-1 w-full overflow-auto">
+          <div className="mt-2 h-[calc(100vh-200px)] pr-1 w-full overflow-auto">
             {agendaList && agendaList.length > 0 ? (
               <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {agendaList.map((item, idx) => (
@@ -360,8 +360,6 @@ export default function Agenda({
                         handleListClick(item.detailMeetingAgendaIssueId ?? "");
                       }
                     }}
-                    // onMouseEnter={() => setHoverIndex(idx)}
-                    // onMouseLeave={() => setHoverIndex(null)}
                     style={{
                       opacity: draggedIndex === idx ? 0.5 : 1,
                       cursor:
@@ -382,18 +380,18 @@ export default function Agenda({
                     }}
                   >
                     <div className="flex items-center w-full">
-                      {/* Drag handle */}
                       {(meetingStatus === "STARTED" ||
                         meetingStatus === "NOT_STARTED") && (
                         <span
                           style={{ cursor: "grab" }}
-                          className="w-5 mr-2 flex-shrink-0"
+                          className="w-5 flex-shrink-0"
                         >
                           ⋮⋮
                         </span>
                       )}
 
-                      {/* Content - either editing input or display text */}
+                      <span className="w-10 text-4xl">{idx + 1}</span>
+
                       {editing.type === item.agendaType &&
                       editing.id === item.issueObjectiveId &&
                       canEdit ? (
@@ -434,26 +432,25 @@ export default function Agenda({
                           >
                             {item.name}
                           </div>
-                          {meetingStatus === "STARTED" ||
+                          {/* {meetingStatus === "STARTED" ||
                             (meetingStatus === "NOT_STARTED" && (
                               <div className="text-xs text-center w-20 text-gray-500">
                                 <Badge variant="secondary" className="mb-1.5">
                                   {item.agendaType}
                                 </Badge>
                               </div>
-                            ))}
+                            ))} */}
                         </div>
                       )}
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {/* <div className="text-xs text-center w-20 text-gray-500">
+                      <div className="text-xs text-center w-20 text-gray-500 bg-red-100 absolute top-0">
                         <Badge variant="secondary" className="mb-1.5">
                           {item.agendaType}
                         </Badge>
-                      </div> */}
+                      </div>
 
-                      {/* Edit/Delete buttons - shown only on hover and when canEdit is true */}
                       {(meetingStatus === "STARTED" ||
                         meetingStatus === "NOT_STARTED") &&
                         canEdit && (
@@ -474,7 +471,7 @@ export default function Agenda({
                                       item.issueObjectiveId,
                                       item.name,
                                       item.plannedTime || "0",
-                                      String(item.detailMeetingAgendaIssueId),
+                                      String(item.detailMeetingAgendaIssueId)
                                     );
                                   }}
                                   className="w-5"
@@ -496,7 +493,6 @@ export default function Agenda({
                           </div>
                         )}
 
-                      {/* Timer - shown based on meeting status */}
                       {meetingStatus !== "STARTED" &&
                         meetingStatus !== "NOT_STARTED" &&
                         item.detailMeetingAgendaIssueId && (
@@ -511,19 +507,19 @@ export default function Agenda({
                                 actualTime={Number(
                                   meetingResponse?.timers.objectives?.[
                                     item.detailMeetingAgendaIssueId ?? ""
-                                  ]?.actualTime || 0,
+                                  ]?.actualTime || 0
                                 )}
                                 defaultTime={Number(
                                   meetingResponse?.timers.objectives?.[
                                     item.detailMeetingAgendaIssueId ?? ""
-                                  ]?.actualTime || 0,
+                                  ]?.actualTime || 0
                                 )}
                                 lastSwitchTimestamp={
                                   isSelectedAgenda ===
                                   item.detailMeetingAgendaIssueId
                                     ? Number(
                                         meetingResponse?.state
-                                          .lastSwitchTimestamp || Date.now(),
+                                          .lastSwitchTimestamp || Date.now()
                                       )
                                     : 0
                                 }
@@ -552,9 +548,9 @@ export default function Agenda({
                                     conclusionData?.agenda.find(
                                       (con) =>
                                         con.detailMeetingAgendaIssueId ===
-                                        item.detailMeetingAgendaIssueId,
-                                    )?.actualTime,
-                                  ),
+                                        item.detailMeetingAgendaIssueId
+                                    )?.actualTime
+                                  )
                                 )}
                               </div>
                             )}
@@ -660,7 +656,7 @@ export default function Agenda({
                       </span>
                       <span className="font-bold">
                         {formatSecondsToHHMM(
-                          Number(conclusionData.meetingPlanned),
+                          Number(conclusionData.meetingPlanned)
                         )}
                       </span>
                     </div>
@@ -675,7 +671,7 @@ export default function Agenda({
                         </span>
                         <span className="font-bold">
                           {formatSecondsToHHMM(
-                            Number(conclusionData.meetingActual),
+                            Number(conclusionData.meetingActual)
                           )}
                         </span>
                       </div>
@@ -773,7 +769,7 @@ export default function Agenda({
                       meetingTime={Number(meetingTime)}
                       actualTime={0}
                       lastSwitchTimestamp={Number(
-                        meetingResponse?.state.meetingTimestamp,
+                        meetingResponse?.state.meetingTimestamp
                       )}
                       meetingStart={meetingStatus !== "NOT_STARTED"}
                       className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
@@ -921,7 +917,7 @@ export default function Agenda({
                                                       .replace("task", "")
                                                       .replace(
                                                         /([A-Z])/g,
-                                                        " $1",
+                                                        " $1"
                                                       )
                                                       .trim()}
                                                     :
@@ -946,7 +942,7 @@ export default function Agenda({
                                       </div>
                                     </div>
                                   );
-                                },
+                                }
                               )}
                             </div>
                           </div>
@@ -1024,7 +1020,7 @@ export default function Agenda({
                                                       .replace("project", "")
                                                       .replace(
                                                         /([A-Z])/g,
-                                                        " $1",
+                                                        " $1"
                                                       )
                                                       .trim()}
                                                     :
@@ -1032,7 +1028,7 @@ export default function Agenda({
                                                   <span className="text-red-500 line-through">
                                                     {isDateField
                                                       ? formatLocalDate(
-                                                          oldValue,
+                                                          oldValue
                                                         )
                                                       : oldValue?.toString() ||
                                                         "N/A"}
@@ -1043,7 +1039,7 @@ export default function Agenda({
                                                   <span className="text-green-600">
                                                     {isDateField
                                                       ? formatLocalDate(
-                                                          newValue,
+                                                          newValue
                                                         )
                                                       : newValue?.toString() ||
                                                         "N/A"}
@@ -1078,7 +1074,7 @@ export default function Agenda({
                                       </div>
                                     </div>
                                   );
-                                },
+                                }
                               )}
                             </div>
                           </div>
@@ -1167,7 +1163,7 @@ export default function Agenda({
                                                   {kpi.newData.map(
                                                     (
                                                       newDataItem: KpiRecordedData,
-                                                      dataIdx: number,
+                                                      dataIdx: number
                                                     ) => {
                                                       const oldDataItem = kpi
                                                         .oldData?.[dataIdx] || {
@@ -1180,7 +1176,7 @@ export default function Agenda({
                                                         >
                                                           <span className="font-medium text-gray-600">
                                                             {formatDate(
-                                                              newDataItem.startDate,
+                                                              newDataItem.startDate
                                                             )}
                                                             :
                                                           </span>{" "}
@@ -1197,7 +1193,7 @@ export default function Agenda({
                                                           </span>
                                                         </div>
                                                       );
-                                                    },
+                                                    }
                                                   )}
                                                 </div>
                                               </div>
@@ -1206,7 +1202,7 @@ export default function Agenda({
                                       </div>
                                     </div>
                                   );
-                                },
+                                }
                               )}
                             </div>
                           </div>

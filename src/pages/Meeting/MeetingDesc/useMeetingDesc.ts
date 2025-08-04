@@ -1,31 +1,35 @@
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { getDatabase, off, onValue, ref, update } from "firebase/database";
+
 import {
-  createMeetingMutation,
+  addMeetingTimeMutation,
+  addUpdateCompanyMeetingMutation,
+  endMeetingMutation,
   updateDetailMeetingMutation,
   useGetMeetingTiming,
 } from "@/features/api/companyMeeting";
-import { getMeeting } from "@/features/selectors/auth.selector";
 import { queryClient } from "@/queryClient";
-import { getDatabase, off, onValue, ref, update } from "firebase/database";
-import { useCallback, useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
 
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();
 
-  const agendaList = useSelector(getMeeting);
-
-  const [isMeetingStart, setIsMeetingStart] = useState(false);
   const [meetingResponse, setMeetingResponse] = useState<MeetingResFire | null>(
-    null
+    null,
   );
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const [activeTab, setActiveTab] = useState<string>();
+  const [isCardVisible, setIsCardVisible] = useState(false);
+  const [openEmployeeId, setOpenEmployeeId] = useState<string | null>(null);
 
   const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
 
-  const { mutate: createMeet } = createMeetingMutation();
+  const { mutate: endMeet } = endMeetingMutation();
 
   const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
-  const [isPending, setIsPending] = useState(false);
+  const { mutate: updateMeetingTeamLeader } = addUpdateCompanyMeetingMutation();
+  const { mutate: updateTime } = addMeetingTimeMutation();
+
   const handleUpdatedRefresh = useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({
@@ -35,6 +39,7 @@ export default function useMeetingDesc() {
   }, []);
 
   const db = getDatabase();
+
   useEffect(() => {
     const meetingRef = ref(db, `meetings/${meetingId}`);
 
@@ -53,87 +58,188 @@ export default function useMeetingDesc() {
   }, [db, handleUpdatedRefresh, meetingId]);
 
   useEffect(() => {
+    if (!meetingId) return;
+
     const meetingRef = ref(db, `meetings/${meetingId}/state/activeTab`);
 
-    onValue(meetingRef, (snapshot) => {
+    const unsubscribe = onValue(meetingRef, (snapshot) => {
+      try {
+        if (snapshot.exists()) {
+          const activeTab = snapshot.val();
+          handleUpdatedRefresh();
+
+          if (activeTab === "CONCLUSION") {
+            queryClient.resetQueries({
+              queryKey: ["get-meeting-conclusion-res"],
+            });
+          }
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error in activeTab listener:", error);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [db, handleUpdatedRefresh, meetingId]);
+
+  useEffect(() => {
+    if (!meetingId) return;
+
+    const meetingRef = ref(db, `meetings/${meetingId}/state/updatedAt`);
+
+    const unsubscribe = onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
         handleUpdatedRefresh();
       }
     });
 
     return () => {
-      off(meetingRef);
+      unsubscribe();
     };
   }, [db, handleUpdatedRefresh, meetingId]);
 
-  // Accept callbacks for onStart and onEnd
-  const handleStartMeeting = () => {
-    if (meetingId) {
-      setIsPending(true);
-      createMeet(meetingId, {
-        onSuccess: () => {
-          setIsPending(false);
-          setIsMeetingStart(true);
-        },
-      });
+  const handleTabChange = (tab: string) => {
+    if (activeTab === tab) {
+      setIsCardVisible(!isCardVisible);
+    } else {
+      setActiveTab(tab);
+      setIsCardVisible(true);
     }
   };
 
-  // const agendaFireBase = (id: string) => {
-  //   if (meetingStatus) {
-  //     const db = getDatabase();
-  //     const meetRef = ref(db, `meetings/${meetingId}/timers/issues/${id}`);
-  //     update(meetRef, {
-  //       updatedAt: Date.now(),
-  //     });
-  //   }
-  // };
-
-  const handleDesc = () => {
-    const now = Date.now();
-    const totalAgendaTime =
-      now - Number(meetingResponse?.state.lastSwitchTimestamp);
-
+  const handleConclusionMeeting = () => {
     if (meetingId) {
-      setIsPending(true);
       const db = getDatabase();
       const meetStateRef = ref(db, `meetings/${meetingId}/state`);
-      const meetAgendaRef = ref(db, `meetings/${meetingId}/timers/agenda`);
 
       updateDetailMeeting(
         {
           meetingId: meetingId,
-          status: "DISCUSSION",
-          agendaTimeActual: String(totalAgendaTime / 1000), // in seconds
+          status: "CONCLUSION",
         },
         {
           onSuccess: () => {
-            setIsPending(false);
             update(meetStateRef, {
-              activeTab: "DISCUSSION",
+              activeTab: "CONCLUSION",
               lastSwitchTimestamp: Date.now(),
-              status: "DISCUSSION",
-              currentAgendaItemId:
-                agendaList.items[0].detailMeetingAgendaIssueId,
-            });
-            update(meetAgendaRef, {
-              actualTime: String(totalAgendaTime),
+              status: "CONCLUSION",
             });
           },
-        }
+        },
+      );
+    }
+  };
+
+  const handleEndMeeting = () => {
+    if (meetingId) {
+      endMeet(meetingId);
+    }
+  };
+
+  const handleAddTeamLeader = (data: Joiners) => {
+    const meetRef = ref(db, `meetings/${meetingId}/state`);
+    const meetingJoiners = meetingTiming?.employeeList;
+    const teamLeader = (meetingJoiners as Joiners[])
+      ?.filter((da) => da.isTeamLeader)
+      .map((item) => item.employeeId);
+
+    let updatedTeamLeaders: string[];
+    if (teamLeader?.includes(data.employeeId)) {
+      updatedTeamLeaders = teamLeader.filter((id) => id !== data.employeeId);
+    } else {
+      updatedTeamLeaders = [...(teamLeader || []), data.employeeId];
+    }
+
+    const payload = {
+      companyMeetingId: meetingId,
+      teamLeaders: updatedTeamLeaders,
+    };
+    updateMeetingTeamLeader(payload, {
+      onSuccess: () => {
+        update(meetRef, {
+          follow: data.employeeId,
+          updatedAt: new Date(),
+        });
+      },
+    });
+  };
+  const handleCheckOut = (employeeId: string) => {
+    if (meetingId) {
+      updateTime(
+        {
+          meetingId: meetingId,
+          employeeId: employeeId,
+          attendanceMark: false,
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          onSuccess: () => {
+            if (meetingId) {
+              const db = getDatabase();
+              const meetRef = ref(db, `meetings/${meetingId}/state`);
+              update(meetRef, { updatedAt: new Date() });
+            }
+          },
+        },
+      );
+    }
+  };
+
+  const handleFollow = (employeeId: string) => {
+    if (meetingId) {
+      const meetRef = ref(db, `meetings/${meetingId}/state`);
+      update(meetRef, {
+        follow: employeeId,
+        updatedAt: new Date(),
+      });
+    }
+  };
+
+  const handleCheckIn = (employeeId: string) => {
+    if (meetingId) {
+      updateTime(
+        {
+          meetingId: meetingId,
+          employeeId: employeeId,
+          attendanceMark: true,
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          onSuccess: () => {
+            if (meetingId) {
+              const db = getDatabase();
+              const meetRef = ref(db, `meetings/${meetingId}/state`);
+              update(meetRef, { updatedAt: new Date() });
+            }
+          },
+        },
       );
     }
   };
 
   return {
-    handleStartMeeting,
-    isMeetingStart,
-    setIsMeetingStart,
     meetingStatus: meetingTiming?.status,
-    handleDesc,
     meetingId,
     meetingResponse,
     meetingTiming,
-    isPending,
+    isSidebarCollapsed,
+    setIsSidebarCollapsed,
+    handleTabChange,
+    activeTab,
+    isCardVisible,
+    setIsCardVisible,
+    // handleTimeUpdate,
+    handleConclusionMeeting,
+    handleEndMeeting,
+    openEmployeeId,
+    setOpenEmployeeId,
+    handleAddTeamLeader,
+    handleCheckOut,
+    follow: meetingResponse?.state.follow,
+    handleFollow,
+    handleCheckIn,
   };
 }

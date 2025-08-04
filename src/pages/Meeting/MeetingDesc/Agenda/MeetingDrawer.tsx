@@ -102,23 +102,20 @@ const MeetingDrawer: React.FC<MeetingDrawerProps> = ({
         }}
       >
         {sidebarOpen ? (
-          <Tabs
-            defaultValue="attendees"
-            className="w-full h-full flex flex-col"
-          >
+          <Tabs defaultValue="notes" className="w-full h-full flex flex-col">
             <div className="flex justify-center">
               <TabsList className="grid w-full grid-cols-2 gap-1 sm:gap-2 text-sm sm:text-base">
-                <TabsTrigger
-                  value="attendees"
-                  className="truncate text-gray-700 data-[state=active]:text-white data-[state=active]:bg-primary"
-                >
-                  Attendees
-                </TabsTrigger>
                 <TabsTrigger
                   value="notes"
                   className="truncate text-gray-700 data-[state=active]:text-white data-[state=active]:bg-primary"
                 >
                   Meeting Notes
+                </TabsTrigger>
+                <TabsTrigger
+                  value="attendees"
+                  className="truncate text-gray-700 data-[state=active]:text-white data-[state=active]:bg-primary"
+                >
+                  Attendees
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -219,10 +216,7 @@ const MeetingDrawer: React.FC<MeetingDrawerProps> = ({
             </TabsContent>
 
             {/* Notes Tab */}
-            <TabsContent
-              value="notes"
-              className="mt-4 flex-grow "
-            >
+            <TabsContent value="notes" className="mt-4 flex-grow ">
               <MeetingNotes
                 joiners={joiners}
                 meetingId={meetingId}
