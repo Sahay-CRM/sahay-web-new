@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { get, getDatabase, off, onValue, ref, update } from "firebase/database";
 
@@ -75,6 +75,8 @@ export const useAgenda = ({
   const [selectedItem, setSelectedItem] = useState<AgendaResConclusion | null>(
     null,
   );
+
+  const [isMeetingStart, setIsMeetingStart] = useState(false);
 
   useEffect(() => {
     if (meetingResponse) {
@@ -172,6 +174,22 @@ export const useAgenda = ({
     }
   }, [meetingResponse?.state.lastSwitchTimestamp]);
 
+  const handleCheckMeetingExist = useCallback(() => {
+    if (!meetingId) return;
+
+    const meetingRef = ref(db, `meetings/${meetingId}/state/updatedAt`);
+
+    const unsubscribe = onValue(meetingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setIsMeetingStart(true);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [db, meetingId]);
+
   const startEdit = (
     type: "issue" | "objective",
     id: string,
@@ -244,9 +262,12 @@ export const useAgenda = ({
     };
     addIssueAgenda(payload, {
       onSuccess: () => {
-        update(meetStateRef, {
-          updatedAt: Date.now(),
-        });
+        handleCheckMeetingExist();
+        if (isMeetingStart) {
+          update(meetStateRef, {
+            updatedAt: Date.now(),
+          });
+        }
       },
     });
   };
@@ -269,9 +290,12 @@ export const useAgenda = ({
         },
         {
           onSuccess: () => {
-            update(meetStateRef, {
-              updatedAt: Date.now(),
-            });
+            handleCheckMeetingExist();
+            if (isMeetingStart) {
+              update(meetStateRef, {
+                updatedAt: Date.now(),
+              });
+            }
             // cancelEdit();
           },
         },
@@ -284,9 +308,12 @@ export const useAgenda = ({
         },
         {
           onSuccess: () => {
-            update(meetStateRef, {
-              updatedAt: Date.now(),
-            });
+            handleCheckMeetingExist();
+            if (isMeetingStart) {
+              update(meetStateRef, {
+                updatedAt: Date.now(),
+              });
+            }
           },
         },
       );
@@ -321,9 +348,12 @@ export const useAgenda = ({
     if (item && item.detailMeetingAgendaIssueId) {
       deleteObjective(item.detailMeetingAgendaIssueId, {
         onSuccess: () => {
-          update(meetStateRef, {
-            updatedAt: Date.now(),
-          });
+          handleCheckMeetingExist();
+          if (isMeetingStart) {
+            update(meetStateRef, {
+              updatedAt: Date.now(),
+            });
+          }
         },
       });
     }
@@ -350,10 +380,13 @@ export const useAgenda = ({
     };
     addIssueAgenda(payload, {
       onSuccess: () => {
+        handleCheckMeetingExist();
+        if (isMeetingStart) {
+          update(meetStateRef, {
+            updatedAt: Date.now(),
+          });
+        }
         setIssueInput("");
-        update(meetStateRef, {
-          updatedAt: Date.now(),
-        });
       },
     });
   };
@@ -374,10 +407,13 @@ export const useAgenda = ({
             };
             addIssueAgenda(payload, {
               onSuccess: () => {
+                handleCheckMeetingExist();
+                if (isMeetingStart) {
+                  update(meetStateRef, {
+                    updatedAt: Date.now(),
+                  });
+                }
                 setIssueInput("");
-                update(meetStateRef, {
-                  updatedAt: Date.now(),
-                });
                 // queryClient.resetQueries({
                 //   queryKey: ["get-detail-meeting-agenda-issue-obj"],
                 // });
@@ -404,12 +440,15 @@ export const useAgenda = ({
 
             addIssueAgenda(payload, {
               onSuccess: () => {
+                handleCheckMeetingExist();
+                if (isMeetingStart) {
+                  update(meetStateRef, {
+                    updatedAt: Date.now(),
+                  });
+                  cancelEdit();
+                  setModalOpen(false);
+                }
                 setIssueInput("");
-                update(meetStateRef, {
-                  updatedAt: Date.now(),
-                });
-                cancelEdit();
-                setModalOpen(false);
               },
             });
           },
@@ -556,10 +595,12 @@ export const useAgenda = ({
       db,
       `meetings/${meetingId}/timers/objectives/${isSelectedAgenda}`,
     );
-
-    update(meetTimersRef, {
-      activeTab: tab,
-    });
+    handleCheckMeetingExist();
+    if (isMeetingStart) {
+      update(meetTimersRef, {
+        activeTab: tab,
+      });
+    }
 
     setActiveTab(tab);
   };
@@ -608,17 +649,21 @@ export const useAgenda = ({
 
       const currentActualTime =
         meetingResponse?.timers.objectives?.[isSelectedAgenda]?.actualTime || 0;
-
-      await update(prevObjectiveRef, {
-        actualTime: currentActualTime + prevElapsedSeconds,
+      handleCheckMeetingExist();
+      if (isMeetingStart) {
+        await update(prevObjectiveRef, {
+          actualTime: currentActualTime + prevElapsedSeconds,
+          lastSwitchTimestamp: now,
+        });
+      }
+    }
+    handleCheckMeetingExist();
+    if (isMeetingStart) {
+      await update(ref(db, `meetings/${meetingId}/state`), {
         lastSwitchTimestamp: now,
+        currentAgendaItemId: detailMeetingAgendaIssueId,
       });
     }
-
-    await update(ref(db, `meetings/${meetingId}/state`), {
-      lastSwitchTimestamp: now,
-      currentAgendaItemId: detailMeetingAgendaIssueId,
-    });
   };
 
   const tasksFireBase = () => {

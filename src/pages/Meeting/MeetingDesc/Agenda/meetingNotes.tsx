@@ -48,7 +48,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   };
 
   const handleAddNote = () => {
-    if (!noteInput.trim() || !titleInput.trim()) return;
+    console.log(noteInput);
 
     const payload = {
       meetingId,
@@ -118,13 +118,18 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
             onChange={(e) => setNoteInput(e.target.value)}
             autoFocus
             rows={3}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleAddNote();
+              }
+            }}
           />
 
           <div className="flex justify-end items-center mt-2">
             <button
               onClick={handleAddNote}
-              className="text-sm text-gray-600"
-              disabled={!noteInput.trim() || !titleInput.trim()}
+              className="text-sm text-gray-600 cursor-pointer flex flex-col z-50"
             >
               Done
             </button>
