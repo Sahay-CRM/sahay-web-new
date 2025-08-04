@@ -29,6 +29,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getInitials } from "@/features/utils/app.utils";
+import { ImageBaseURL } from "@/features/utils/urls.utils";
 // import MeetingTimer from "./meetingTimer";
 
 export default function MeetingDesc() {
@@ -58,7 +59,7 @@ export default function MeetingDesc() {
     setBreadcrumbs([
       { label: "Meeting", href: "/dashboard/meeting" },
       { label: "Meeting Detail", href: "" },
-      { label: `${meetingTiming?.meetingName}`, href: "" },
+      { label: `${meetingTiming?.meetingName}`, href: "", isHighlight: true },
     ]);
   }, [meetingTiming?.meetingName, setBreadcrumbs]);
 
@@ -148,9 +149,9 @@ export default function MeetingDesc() {
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  {item.photo ? (
+                                  {item.employeeImage ? (
                                     <img
-                                      src={item.photo}
+                                      src={`${ImageBaseURL}/share/company/profilePics/${item.employeeImage}`}
                                       alt={item.employeeName}
                                       className="w-full h-full rounded-full object-cover outline-2 outline-blue-400 bg-black"
                                     />

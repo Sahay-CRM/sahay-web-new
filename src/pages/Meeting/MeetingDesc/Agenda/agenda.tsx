@@ -1080,8 +1080,8 @@ export default function Agenda({
                       >
                         <div className="relative">
                           {item.isTeamLeader && (
-                            <span className="absolute -top-2 right-3 z-10 bg-white shadow-2xl rounded-full p-0.5">
-                              <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
+                            <span className="absolute -top-4 right-2 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                              <Crown className="w-5 h-5 text-[#303290] drop-shadow" />
                             </span>
                           )}
                           <div className="w-10 h-10 rounded-lg overflow-hidden">
@@ -1108,7 +1108,7 @@ export default function Agenda({
                           </div>
                         </div>
 
-                        <div className="text-sm font-medium text-gray-800">
+                        <div className="text-sm font-medium text-gray-800 mt-2">
                           {item.employeeName}
                         </div>
                         <div>
@@ -1120,12 +1120,8 @@ export default function Agenda({
                             onChange={(e) => {
                               const updatedAttendance = e.target.checked;
                               handleCheckIn(item, updatedAttendance);
-                              // console.log({
-                              //   ...item,
-                              //   attendanceMark: updatedAttendance,
-                              // });
                             }}
-                            disabled={false}
+                            disabled={!isTeamLeader}
                           />
                         </div>
                       </div>
