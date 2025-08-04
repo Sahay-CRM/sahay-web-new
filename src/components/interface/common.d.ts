@@ -304,7 +304,7 @@ interface Joiners {
   employeeName: string;
   isTeamLeader?: boolean;
   attendanceMark?: boolean;
-  photo?: string;
+  employeeImage?: string;
 }
 
 interface CompanyDatapointDataProps {

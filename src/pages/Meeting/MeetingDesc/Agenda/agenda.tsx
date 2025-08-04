@@ -31,7 +31,7 @@ import KPITable from "../KpiTable";
 import Timer from "../Timer";
 import { SpinnerIcon } from "@/components/shared/Icons";
 import { formatDate, getInitials } from "@/features/utils/app.utils";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
 import {
   Tooltip,
   TooltipContent,
@@ -39,6 +39,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
+import { ImageBaseURL } from "@/features/utils/urls.utils";
 
 function IssueModal({
   open,
@@ -1079,25 +1080,24 @@ export default function Agenda({
                       >
                         <div className="relative">
                           {item.isTeamLeader && (
-                            <span className="absolute -top-1 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                            <span className="absolute -top-2 right-3 z-10 bg-white shadow-2xl rounded-full p-0.5">
                               <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
                             </span>
                           )}
-
-                          <Avatar className="h-10 w-10 relative">
+                          <div className="w-10 h-10 rounded-lg overflow-hidden">
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  {item.photo ? (
+                                  {item.employeeImage !== null ? (
                                     <img
-                                      src={item.photo}
+                                      src={`${ImageBaseURL}/share/company/profilePics/${item.employeeImage}`}
                                       alt={item.employeeName}
-                                      className="w-full h-full rounded-full object-cover outline-2 outline-blue-400 bg-black"
+                                      className="w-full h-full rounded-md object-cover outline-2 outline-blue-400 bg-black"
                                     />
                                   ) : (
-                                    <AvatarFallback className="bg-gray-300 text-gray-700 font-semibold text-sm">
+                                    <div className="bg-gray-300 text-gray-700 w-full h-full content-center font-semibold text-sm">
                                       {getInitials(item.employeeName)}
-                                    </AvatarFallback>
+                                    </div>
                                   )}
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -1105,7 +1105,7 @@ export default function Agenda({
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
-                          </Avatar>
+                          </div>
                         </div>
 
                         <div className="text-sm font-medium text-gray-800">

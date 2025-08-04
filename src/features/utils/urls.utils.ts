@@ -1,6 +1,6 @@
 export const baseUrl = import.meta.env.VITE_API_BASE;
 
-export const ImageBaseURL = import.meta.env.VITE_IMAGEURL;
+export const ImageBaseURL = import.meta.env.VITE_FILE_BASE_URL;
 
 const Urls = {
   loginSendOtp: () => `${baseUrl}/auth/login`,
