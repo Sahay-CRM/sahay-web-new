@@ -3,7 +3,15 @@ import {
   addMeetingNotesMutation,
   useGetMeetingNotes,
 } from "@/features/api/companyMeeting";
-import { Trash2, Plus, EllipsisVertical, X } from "lucide-react";
+import {
+  Trash2,
+  Plus,
+  EllipsisVertical,
+  X,
+  Edit,
+  Copy,
+  Share2,
+} from "lucide-react";
 import { deleteCompanyMeetingMutation } from "@/features/api/companyMeeting";
 import {
   DropdownMenu,
@@ -12,6 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import TaskDrawer from "../Tasks/taskDrawer";
+import ProjectDrawer from "../Projects/projectDrawer";
 
 interface MeetingNotesProps {
   joiners: Joiners[];
@@ -19,6 +29,12 @@ interface MeetingNotesProps {
   meetingId: string;
   detailMeetingId?: string;
   className?: string;
+  meetingName?: string;
+  meetingStatus?: string;
+}
+
+interface TaskData {
+  [key: string]: string | null;
 }
 
 const MeetingNotes: React.FC<MeetingNotesProps> = ({
@@ -27,14 +43,23 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   meetingId,
   detailMeetingId,
   className,
+  meetingName,
+  meetingStatus,
 }) => {
   const [noteInput, setNoteInput] = useState("");
   const [titleInput, setTitleInput] = useState("");
   const [isAddingNote, setIsAddingNote] = useState(false);
   const { data: meetingNotes, refetch: refetchMeetingNotes } =
     useGetMeetingNotes(detailMeetingId ?? "");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerProj, setDrawerProj] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<TaskGetPaging | TaskData>();
+  const [selectedProject, setSelectedProject] = useState<
+    CompanyProjectDataProps | TaskData
+  >();
+  const [isAdded, setIsAdded] = useState<string>();
 
   const { mutate: addNote } = addMeetingNotesMutation();
   const deleteNoteMutation = deleteCompanyMeetingMutation();
@@ -43,13 +68,39 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
     deleteNoteMutation.mutate(id);
   };
 
+  const handleAddTask = (data: MeetingNotesRes) => {
+    const deadline = new Date();
+    deadline.setDate(deadline.getDate() + 15);
+
+    const payload = {
+      taskName: data.note,
+      taskDescription: `${data.note} created in ${meetingName}`,
+      taskDeadline: deadline.toISOString(),
+    };
+    setSelectedTask(payload);
+    setDrawerOpen(true);
+  };
+
+  const handleAddProject = (data: MeetingNotesRes) => {
+    const payload = {
+      projectName: data.note,
+      projectDescription: `${data.note} created in ${meetingName}`,
+    };
+    setSelectedProject(payload);
+    setDrawerProj(true);
+  };
+
+  const handleShare = (id: string) => {
+    // Implement share functionality
+    console.log("Share note with id:", id);
+    setDropdownOpen(null);
+  };
+
   const handleStartAddNote = () => {
     setIsAddingNote(true);
   };
 
   const handleAddNote = () => {
-    console.log(noteInput);
-
     const payload = {
       meetingId,
       employeeId,
@@ -57,6 +108,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       note: noteInput,
       detailMeetingId,
       createdAt: new Date().toISOString(),
+      type: isAdded,
     };
 
     addNote(payload, {
@@ -75,7 +127,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node)
       ) {
-        setDropdownOpen(false);
+        setDropdownOpen(null);
       }
     };
 
@@ -92,78 +144,97 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
         className,
       )}
     >
-      {!isAddingNote ? (
-        <div className="flex items-center gap-2">
-          <div className="relative w-full flex gap-2 justify-between">
-            <button
-              onClick={handleStartAddNote}
-              className="text-gray-500 hover:bg-gray-100 rounded-full flex gap-3 items-center mr-2 text-sm w-full py-2 px-2 "
-            >
-              <Plus className="h-5 w-5" /> Take a Note...
-            </button>
-            <button
-              onClick={handleStartAddNote}
-              className="text-gray-500 hover:bg-gray-100 rounded-full flex gap-3 items-center mr-2 text-sm w-fit py-1.5 px-2 "
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg border px-3 py-2 shadow-sm relative">
-          <textarea
-            className="w-[80%] border-none text-black px-0 pr-1 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
-            placeholder="Take a note..."
-            value={noteInput}
-            onChange={(e) => setNoteInput(e.target.value)}
-            autoFocus
-            rows={3}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleAddNote();
-              }
-            }}
-          />
-
-          <div className="flex justify-end items-center mt-2">
-            <button
-              onClick={handleAddNote}
-              className="text-sm text-gray-600 cursor-pointer flex flex-col z-50"
-            >
-              Done
-            </button>
-          </div>
-          <div className="absolute top-2 right-2 flex items-center">
-            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-              <DropdownMenuTrigger asChild>
+      {meetingStatus !== "ENDED" && (
+        <>
+          {!isAddingNote ? (
+            <div className="flex items-center gap-2">
+              <div className="relative w-full flex gap-2 justify-between">
                 <button
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
+                  onClick={handleStartAddNote}
+                  className="text-gray-500 hover:bg-gray-100 rounded-full flex gap-3 items-center mr-2 text-sm w-full py-2 px-2 "
                 >
-                  <EllipsisVertical className="h-5 w-5" />
+                  <Plus className="h-5 w-5" /> Take a Note...
                 </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-14">
-                <DropdownMenuItem
-                  onClick={() => {
-                    setNoteInput("");
-                    setTitleInput("");
-                    setIsAddingNote(false);
-                  }}
-                  className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-0.5"
+                <button
+                  onClick={handleStartAddNote}
+                  className="text-gray-500 hover:bg-gray-100 rounded-full flex gap-3 items-center mr-2 text-sm w-fit py-1.5 px-2 "
                 >
-                  <Trash2 className="h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <X
-              className="w-5 h-5 text-gray-500 cursor-pointer"
-              onClick={() => setIsAddingNote(false)}
-            />
-          </div>
-        </div>
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg border px-3 py-2 shadow-sm relative">
+              <textarea
+                className="w-[80%] border-none text-black px-0 pr-1 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
+                placeholder="Take a note..."
+                value={noteInput}
+                onChange={(e) => setNoteInput(e.target.value)}
+                autoFocus
+                rows={3}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleAddNote();
+                  }
+                }}
+              />
+
+              <div className="flex justify-end items-center mt-2">
+                <button
+                  onClick={handleAddNote}
+                  className="text-sm text-gray-600 cursor-pointer flex flex-col z-50"
+                >
+                  Done
+                </button>
+              </div>
+              <div className="absolute top-2 right-2 flex items-center">
+                <DropdownMenu
+                  open={dropdownOpen === "new"}
+                  onOpenChange={(open) => setDropdownOpen(open ? "new" : null)}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      onClick={() => setDropdownOpen("new")}
+                      className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
+                    >
+                      <EllipsisVertical className="h-5 w-5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setNoteInput("");
+                        setTitleInput("");
+                        setIsAddingNote(false);
+                      }}
+                      className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="px-2 py-1.5">
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="px-2 py-1.5">
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="px-2 py-1.5">
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <X
+                  className="w-5 h-5 text-gray-500 cursor-pointer"
+                  onClick={() => setIsAddingNote(false)}
+                />
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <div className={`px-2 space-y-2 pb-2 overflow-y-auto ${className}`}>
@@ -195,19 +266,91 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
 
                   <div className="flex justify-between items-start gap-2 group">
                     <p className="break-words">{note.note}</p>
-                    <button
-                      onClick={() => handleDelete(note.detailMeetingNoteId)}
-                      className="text-red-600 hover:bg-red-100 rounded-full shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      title="Delete Note"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {meetingStatus !== "ENDED" && (
+                      <div>
+                        <DropdownMenu
+                          open={dropdownOpen === note.detailMeetingNoteId}
+                          onOpenChange={(open) =>
+                            setDropdownOpen(
+                              open ? note.detailMeetingNoteId : null,
+                            )
+                          }
+                        >
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              onClick={() =>
+                                setDropdownOpen(note.detailMeetingNoteId)
+                              }
+                              className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
+                            >
+                              <EllipsisVertical className="h-5 w-5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem
+                              onClick={() => handleAddTask(note)}
+                              className="px-2 py-1.5"
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Add Task
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleAddProject(note)}
+                              className="px-2 py-1.5"
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Add Project
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleShare(note.detailMeetingNoteId)
+                              }
+                              className="px-2 py-1.5"
+                            >
+                              <Share2 className="h-4 w-4 mr-2" />
+                              Share
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleDelete(note.detailMeetingNoteId)
+                              }
+                              className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             );
           })}
       </div>
+      {drawerOpen && (
+        <TaskDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          taskData={selectedTask as TaskGetPaging}
+          detailMeetingAgendaIssueId=""
+          detailMeetingId={detailMeetingId}
+          setIsAdded={setIsAdded}
+          noteTask={true}
+        />
+      )}
+      {drawerProj && (
+        <ProjectDrawer
+          open={drawerProj}
+          onClose={() => setDrawerProj(false)}
+          projectData={selectedProject as CompanyProjectDataProps}
+          // detailMeetingAgendaIssueId={meetingAgendaIssueId}
+          detailMeetingId={detailMeetingId}
+          setIsAdded={setIsAdded}
+          noteTask={true}
+        />
+      )}
     </div>
   );
 };

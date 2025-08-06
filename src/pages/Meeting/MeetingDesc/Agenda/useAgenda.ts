@@ -40,8 +40,6 @@ export const useAgenda = ({
   canEdit,
 }: UseAgendaProps) => {
   const dispatch = useDispatch();
-  // const userId = useSelector(getUserId);
-
   const db = getDatabase();
   const meetStateRef = ref(db, `meetings/${meetingId}/state`);
   const sidebarControl = useContext(SidebarControlContext);
@@ -76,6 +74,7 @@ export const useAgenda = ({
   const [selectedItem, setSelectedItem] = useState<AgendaResConclusion | null>(
     null,
   );
+  const [addIssueModal, setAddIssueModal] = useState(false);
 
   const [isMeetingStart, setIsMeetingStart] = useState(false);
 
@@ -389,6 +388,7 @@ export const useAgenda = ({
           });
         }
         setIssueInput("");
+        setAddIssueModal(false);
       },
     });
   };
@@ -421,6 +421,7 @@ export const useAgenda = ({
                 // });
                 // cancelEdit();
                 setModalOpen(false);
+                setAddIssueModal(false);
               },
             });
           },
@@ -451,6 +452,7 @@ export const useAgenda = ({
                   setModalOpen(false);
                 }
                 setIssueInput("");
+                setAddIssueModal(false);
               },
             });
           },
@@ -780,6 +782,10 @@ export const useAgenda = ({
     }
   };
 
+  const handleAddAgendaModal = () => {
+    setAddIssueModal(true);
+  };
+
   return {
     issueInput,
     editing,
@@ -829,6 +835,9 @@ export const useAgenda = ({
     selectedItem,
     handleCheckIn,
     setActiveTab,
+    handleAddAgendaModal,
+    addIssueModal,
+    setAddIssueModal,
     // handleJoinMeeting,
   };
 };

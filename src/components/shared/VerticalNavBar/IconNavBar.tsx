@@ -9,6 +9,7 @@ import {
 import { useSelector } from "react-redux";
 import LucideIcon from "@/components/shared/Icons/LucideIcon";
 import { type IconName } from "@/components/shared/Icons/iconMap";
+import { Avatar } from "@/components/ui/avatar";
 
 interface ChildItem {
   label: string;
@@ -104,21 +105,21 @@ const CompanyLogo: React.FC = () => {
     setIsHovered(true);
   };
 
+  const logoUrl = user?.companyLogo || mainLogoImg;
+
   return (
     <div
-      className="relative z-[9998]"
+      className="relative"
+      ref={logoRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div ref={logoRef} className="flex justify-center items-center p-4 mb-4">
-        <div className="w-8 h-8">
-          <img
-            src={user?.companyLogo ? user?.companyLogo : mainLogoImg}
-            alt="company logo"
-            className="w-full h-full rounded-full object-center"
-          />
-        </div>
-      </div>
+      <img
+        src={logoUrl}
+        alt="company logo"
+        className="w-full h-full object-cover rounded-full"
+      />
+
       {isHovered && user?.companyName && (
         <div
           className="fixed bg-white shadow-lg rounded-md px-3 py-2 z-[99999] whitespace-nowrap border"
@@ -157,9 +158,12 @@ const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
   });
 
   return (
-    <div className="h-screen text-primary w-16 z-[9998] flex flex-col relative">
+    <div className="h-screen text-primary w-16 p-1 z-40 flex flex-col relative">
       {/* Top Company Logo with Tooltip */}
-      <CompanyLogo />
+
+      <Avatar className="mt-2  rounded-full w-[55px] h-[55px]">
+        <CompanyLogo />
+      </Avatar>
 
       {/* Scrollable Icon Menu */}
       <div className="flex-1 overflow-y-auto py-2">

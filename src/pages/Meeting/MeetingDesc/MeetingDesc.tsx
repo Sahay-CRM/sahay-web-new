@@ -175,63 +175,65 @@ export default function MeetingDesc() {
                       </div>
 
                       {/* Accordion content (only if open) */}
-                      {isOpen && meetingStatus !== "NOT_STARTED" && (
-                        <div className="mt-3 pl-12 flex flex-col gap-2">
-                          {isTeamLeader && (
-                            <>
-                              {!item.isTeamLeader && (
-                                <button
-                                  onClick={() => handleAddTeamLeader(item)}
-                                  className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                >
-                                  Add Team Leader
-                                </button>
-                              )}
-
-                              {item.isTeamLeader && teamLeaderCount > 1 && (
-                                <button
-                                  onClick={() => handleAddTeamLeader(item)}
-                                  className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                >
-                                  Remove Team Leader
-                                </button>
-                              )}
-                            </>
-                          )}
-
-                          {item.attendanceMark ? (
-                            <>
-                              <button
-                                onClick={() => handleCheckOut(item.employeeId)}
-                                className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                              >
-                                Check Out
-                              </button>
-
-                              {item.isTeamLeader &&
-                                item.employeeId !== follow &&
-                                userId === follow &&
-                                follow && (
+                      {isOpen &&
+                        meetingStatus !== "NOT_STARTED" &&
+                        meetingStatus !== "ENDED" && (
+                          <div className="mt-3 pl-12 flex flex-col gap-2">
+                            {isTeamLeader && (
+                              <>
+                                {!item.isTeamLeader && (
                                   <button
-                                    onClick={() =>
-                                      handleFollow(item.employeeId)
-                                    }
+                                    onClick={() => handleAddTeamLeader(item)}
                                     className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
                                   >
-                                    Follow
+                                    Add Team Leader
                                   </button>
                                 )}
-                            </>
-                          ) : (
-                            <button
-                              onClick={() => handleCheckIn(item.employeeId)}
-                              className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                            >
-                              Check In
-                            </button>
-                          )}
-                        </div>
-                      )}
+
+                                {item.isTeamLeader && teamLeaderCount > 1 && (
+                                  <button
+                                    onClick={() => handleAddTeamLeader(item)}
+                                    className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                  >
+                                    Remove Team Leader
+                                  </button>
+                                )}
+                              </>
+                            )}
+
+                            {item.attendanceMark ? (
+                              <>
+                                <button
+                                  onClick={() =>
+                                    handleCheckOut(item.employeeId)
+                                  }
+                                  className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                >
+                                  Check Out
+                                </button>
+
+                                {item.isTeamLeader &&
+                                  item.employeeId === follow && (
+                                    <button
+                                      onClick={() =>
+                                        handleFollow(item.employeeId)
+                                      }
+                                      className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                    >
+                                      Follow
+                                    </button>
+                                  )}
+                              </>
+                            ) : (
+                              <button
+                                onClick={() => handleCheckIn(item.employeeId)}
+                                className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                              >
+                                Check In
+                              </button>
+                            )}
+                          </div>
+                        )}
                     </div>
                   );
                 })}
@@ -259,6 +261,8 @@ export default function MeetingDesc() {
                     detailMeetingId={meetingTiming?.detailMeetingId}
                     employeeId={userId}
                     className="min-h-[40%] mt-2 max-h-[calc(100vh-200px)] overflow-hidden"
+                    meetingName={meetingTiming.meetingName}
+                    meetingStatus={meetingStatus}
                   />
                 )}
               </div>
