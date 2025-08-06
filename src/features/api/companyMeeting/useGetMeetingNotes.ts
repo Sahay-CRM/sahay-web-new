@@ -4,17 +4,21 @@ import { useQuery } from "@tanstack/react-query";
 
 type DatePaging = CommonResponse<MeetingNotesRes>;
 
-export default function useGetMeetingNotes(meetingId: string) {
+export default function useGetMeetingNotes({
+  filter,
+  enable,
+}: FilterDataProps) {
   const query = useQuery({
-    queryKey: ["get-meeting-notes", meetingId],
+    queryKey: ["get-meeting-notes", filter],
     queryFn: async () => {
       const { data: resData } = await Api.post<DatePaging>({
-        url: Urls.getMeetingNots(meetingId),
+        url: Urls.getMeetingNots(filter.meetingId),
+        data: filter,
       });
 
       return resData;
     },
-    enabled: !!meetingId,
+    enabled: !!enable,
   });
   return query;
 }

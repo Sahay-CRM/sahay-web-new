@@ -7,6 +7,7 @@ import {
   addUpdateCompanyMeetingMutation,
   endMeetingMutation,
   updateDetailMeetingMutation,
+  useGetMeetingNotes,
   useGetMeetingTiming,
 } from "@/features/api/companyMeeting";
 import { queryClient } from "@/queryClient";
@@ -23,9 +24,15 @@ export default function useMeetingDesc() {
   const [openEmployeeId, setOpenEmployeeId] = useState<string | null>(null);
 
   const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
+  const { data: meetingNotes } = useGetMeetingNotes({
+    filter: {
+      meetingId: meetingTiming?.detailMeetingId,
+      noteType: activeTab === "updates" ? "UPDATES" : "APPRECIATION",
+    },
+    enable: !!meetingTiming?.detailMeetingId,
+  });
 
   const { mutate: endMeet } = endMeetingMutation();
-
   const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
   const { mutate: updateMeetingTeamLeader } = addUpdateCompanyMeetingMutation();
   const { mutate: updateTime } = addMeetingTimeMutation();
@@ -241,5 +248,6 @@ export default function useMeetingDesc() {
     follow: meetingResponse?.state.follow,
     handleFollow,
     handleCheckIn,
+    meetingNotes,
   };
 }

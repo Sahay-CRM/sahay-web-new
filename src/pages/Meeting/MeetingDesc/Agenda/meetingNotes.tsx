@@ -49,8 +49,6 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   const [noteInput, setNoteInput] = useState("");
   const [titleInput, setTitleInput] = useState("");
   const [isAddingNote, setIsAddingNote] = useState(false);
-  const { data: meetingNotes, refetch: refetchMeetingNotes } =
-    useGetMeetingNotes(detailMeetingId ?? "");
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -61,6 +59,13 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   >();
   const [isAdded, setIsAdded] = useState<string>();
 
+  const { data: meetingNotes, refetch: refetchMeetingNotes } =
+    useGetMeetingNotes({
+      filter: {
+        meetingId: detailMeetingId,
+      },
+      enable: !!detailMeetingId,
+    });
   const { mutate: addNote } = addMeetingNotesMutation();
   const deleteNoteMutation = deleteCompanyMeetingMutation();
 
@@ -90,10 +95,23 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
     setDrawerProj(true);
   };
 
-  const handleShare = (id: string) => {
-    // Implement share functionality
-    console.log("Share note with id:", id);
-    setDropdownOpen(null);
+  const handleUpdateNotes = (data: MeetingNotesRes, type: string) => {
+    const payload = {
+      meetingId,
+      employeeId,
+      note: data.note,
+      detailMeetingId,
+      noteType: type.toLocaleUpperCase(),
+      detailMeetingNoteId: data.detailMeetingNoteId,
+    };
+    addNote(payload, {
+      onSuccess: () => {
+        setTitleInput("");
+        setNoteInput("");
+        setIsAddingNote(false);
+        refetchMeetingNotes();
+      },
+    });
   };
 
   const handleStartAddNote = () => {
@@ -108,7 +126,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       note: noteInput,
       detailMeetingId,
       createdAt: new Date().toISOString(),
-      type: isAdded,
+      noteType: isAdded?.toLocaleUpperCase(),
     };
 
     addNote(payload, {
@@ -254,14 +272,19 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                     <span className="font-medium text-xs text-gray-600">
                       {author?.employeeName || "Unknown"}
                     </span>
-                    <span className="text-xs text-gray-400">
-                      {note?.createdAt
-                        ? new Date(note.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : ""}
-                    </span>
+                    <div>
+                      <span className="text-xs text-gray-600 mr-2 bg-gray-200/80 p-0.5 rounded-full px-2">
+                        {note.noteType}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {note?.createdAt
+                          ? new Date(note.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : ""}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="flex justify-between items-start gap-2 group">
@@ -302,13 +325,20 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                               Add Project
                             </DropdownMenuItem>
                             <DropdownMenuItem
+                              onClick={() => handleUpdateNotes(note, "updates")}
+                              className="px-2 py-1.5"
+                            >
+                              <Share2 className="h-4 w-4 mr-2" />
+                              Updates
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
                               onClick={() =>
-                                handleShare(note.detailMeetingNoteId)
+                                handleUpdateNotes(note, "appreciation")
                               }
                               className="px-2 py-1.5"
                             >
                               <Share2 className="h-4 w-4 mr-2" />
-                              Share
+                              Appreciation
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() =>

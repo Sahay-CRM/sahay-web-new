@@ -4,9 +4,9 @@ import { useSelector } from "react-redux";
 import {
   Crown,
   FileText,
-  Notebook,
+  RefreshCcw,
   Search,
-  Users,
+  ThumbsUp,
   UsersRound,
   X,
 } from "lucide-react";
@@ -19,8 +19,6 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import MeetingNotes from "./Agenda/meetingNotes";
 import { getUserId } from "@/features/selectors/auth.selector";
-// import { DropdownMenu } from "@/components/ui/dropdown-menu";
-// import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -30,7 +28,6 @@ import {
 } from "@/components/ui/tooltip";
 import { getInitials } from "@/features/utils/app.utils";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
-// import MeetingTimer from "./meetingTimer";
 
 export default function MeetingDesc() {
   const {
@@ -50,6 +47,7 @@ export default function MeetingDesc() {
     follow,
     handleFollow,
     handleCheckIn,
+    meetingNotes,
   } = useMeetingDesc();
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -240,7 +238,6 @@ export default function MeetingDesc() {
               </div>
             </div>
           )}
-
           {activeTab === "documents" && (
             <div>
               <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
@@ -268,8 +265,122 @@ export default function MeetingDesc() {
               </div>
             </div>
           )}
-          {activeTab === "participants" && <div>Participants List</div>}
-          {activeTab === "notes" && <div>Meeting Notes</div>}
+          {activeTab === "updates" && (
+            <div>
+              <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
+                <h3 className="p-0 text-base">Meeting Updates</h3>
+                <div className="flex items-center gap-2">
+                  <Search className="w-4 h-4 text-gray-500" />
+                  <X
+                    className="w-5 h-5 text-gray-500 cursor-pointer"
+                    onClick={() => setIsCardVisible(false)}
+                  />
+                </div>
+              </div>
+              <div className="px-3">
+                {Array.isArray(meetingNotes?.data) &&
+                  meetingNotes.data.map(
+                    (note: MeetingNotesRes, idx: number) => {
+                      const author = meetingTiming?.employeeList?.find(
+                        (j) => j.employeeId === note.employeeId,
+                      );
+
+                      return (
+                        <div
+                          key={note.detailMeetingNoteId || idx}
+                          className="flex items-start bg-white rounded-lg border px-3 mb-3 py-2 shadow-sm gap-2"
+                        >
+                          <div className="flex-1 text-sm text-black">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-medium text-xs text-gray-600">
+                                {author?.employeeName || "Unknown"}
+                              </span>
+                              <div>
+                                <span className="text-xs text-gray-600 mr-2 bg-gray-200/80 p-0.5 rounded-full px-2">
+                                  {note.noteType}
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                  {note?.createdAt
+                                    ? new Date(
+                                        note.createdAt,
+                                      ).toLocaleTimeString([], {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })
+                                    : ""}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex justify-between items-start gap-2 group">
+                              <p className="break-words">{note.note}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    },
+                  )}
+              </div>
+            </div>
+          )}
+          {activeTab === "appreciation" && (
+            <div>
+              <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
+                <h3 className="p-0 text-base">Meeting Appreciation</h3>
+                <div className="flex items-center gap-2">
+                  <Search className="w-4 h-4 text-gray-500" />
+                  <X
+                    className="w-5 h-5 text-gray-500 cursor-pointer"
+                    onClick={() => setIsCardVisible(false)}
+                  />
+                </div>
+              </div>
+              <div className="px-3">
+                {Array.isArray(meetingNotes?.data) &&
+                  meetingNotes.data.map(
+                    (note: MeetingNotesRes, idx: number) => {
+                      const author = meetingTiming?.employeeList?.find(
+                        (j) => j.employeeId === note.employeeId,
+                      );
+
+                      return (
+                        <div
+                          key={note.detailMeetingNoteId || idx}
+                          className="flex items-start bg-white rounded-lg border px-3 mb-3 py-2 shadow-sm gap-2"
+                        >
+                          <div className="flex-1 text-sm text-black">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-medium text-xs text-gray-600">
+                                {author?.employeeName || "Unknown"}
+                              </span>
+                              <div>
+                                <span className="text-xs text-gray-600 mr-2 bg-gray-200/80 p-0.5 rounded-full px-2">
+                                  {note.noteType}
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                  {note?.createdAt
+                                    ? new Date(
+                                        note.createdAt,
+                                      ).toLocaleTimeString([], {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })
+                                    : ""}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex justify-between items-start gap-2 group">
+                              <p className="break-words">{note.note}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    },
+                  )}
+              </div>
+            </div>
+          )}
         </Card>
       </div>
       <div
@@ -293,16 +404,16 @@ export default function MeetingDesc() {
 
           <Button
             className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center p-0" : "p-2"}`}
-            onClick={() => handleTabChange("participants")}
+            onClick={() => handleTabChange("updates")}
           >
-            <Users className="h-6 w-6" />
+            <RefreshCcw className="h-6 w-6" />
           </Button>
 
           <Button
             className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center p-0" : "p-2"}`}
-            onClick={() => handleTabChange("notes")}
+            onClick={() => handleTabChange("appreciation")}
           >
-            <Notebook className="h-6 w-6" />
+            <ThumbsUp className="h-6 w-6" />
           </Button>
         </nav>
       </div>

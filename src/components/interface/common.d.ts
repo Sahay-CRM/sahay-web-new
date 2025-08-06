@@ -1160,6 +1160,7 @@ interface MeetingNotesRes {
   note: string;
   detailMeetingNoteId: string;
   createdAt: string;
+  noteType?: string;
 }
 
 interface IssuesProps {
