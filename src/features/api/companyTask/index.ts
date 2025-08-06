@@ -1,4 +1,5 @@
 export { default as addUpdateCompanyTaskMutation } from "./useAddUpdateCompanyTask";
+export { default as addUpdateRepeatCompanyTaskMutation } from "./useAddUpdateRepeatCompanyTask";
 export { default as useDeleteCompanyTask } from "./useDeleteCompanyTask";
 export { default as useGetCompanyTask } from "./useGetCompanyTask";
 export { default as useGetCompanyTaskById } from "./useGetCompanyTaskById";

@@ -4,6 +4,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import DashboardLayout from "@/features/layouts/DashboardLayout/dashboardLayout";
 import AddCompanyEmployee from "@/pages/companyEmployee/AddEmployeeFormModal/addEmployee";
 import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
+import AddCompanyTaskListRepeat from "@/pages/CompanyTaskListRepeat/CompanyTaskFormModal/AddCompanyTaskList";
 import AddCompanyMeeting from "@/pages/Meeting/AddMeetingFormModal/addMeeting";
 import GroupKpisCreate from "@/pages/datapointList/GroupKpis/groupKpisCreateGroup";
 
@@ -11,30 +12,33 @@ const Theme = lazy(() => import("../pages/theme/Theme"));
 const Profile = lazy(() => import("../pages/profile/Profile"));
 
 const companydesignation = lazy(
-  () => import("../pages/companyDesignation/companyDesignation"),
+  () => import("../pages/companyDesignation/companyDesignation")
 );
 const companyemployee = lazy(
-  () => import("../pages/companyEmployee/companyEmployee"),
+  () => import("../pages/companyEmployee/companyEmployee")
 );
 const CompanyImportantDates = lazy(
-  () => import("../pages/companyImportantDates/CompanyImportantDates"),
+  () => import("../pages/companyImportantDates/CompanyImportantDates")
 );
 const CompanyMeeting = lazy(() => import("../pages/Meeting/MeetingList"));
 const CompanyTask = lazy(() => import("../pages/companyTask/CompanyTaskList"));
+const CompanyTaskRe = lazy(
+  () => import("../pages/CompanyTaskListRepeat/CompanyTaskListRe")
+);
 const CompanyProjects = lazy(
-  () => import("../pages/companyProjects/CompanyProjects"),
+  () => import("../pages/companyProjects/CompanyProjects")
 );
 const CompanyProjectView = lazy(
-  () => import("../pages/companyProjects/ViewProject/ViewProject"),
+  () => import("../pages/companyProjects/ViewProject/ViewProject")
 );
 const DatapointList = lazy(
-  () => import("../pages/datapointList/DatapointList"),
+  () => import("../pages/datapointList/DatapointList")
 );
 const userpermissionlist = lazy(
-  () => import("../pages/Roles/Userpermissionlist"),
+  () => import("../pages/Roles/Userpermissionlist")
 );
 const UserPermissionEdit = lazy(
-  () => import("../pages/Roles/userPermissionTable"),
+  () => import("../pages/Roles/userPermissionTable")
 );
 const Healthscore = lazy(() => import("../pages/healthScore"));
 
@@ -44,11 +48,11 @@ const CompanyLevelAssign = lazy(() => import("../pages/CompanyLevel"));
 const CompanyTaskView = lazy(() => import("../pages/companyTask/ViewProject"));
 
 const AddCompanyProjectList = lazy(
-  () => import("../pages/companyProjects/AddProject"),
+  () => import("../pages/companyProjects/AddProject")
 );
 
 const AddCompanyDatapoint = lazy(
-  () => import("../pages/datapointList/AddDatapointFormModal"),
+  () => import("../pages/datapointList/AddDatapointFormModal")
 );
 const AddGraph = lazy(() => import("../pages/homePage"));
 // const AddGraph = lazy(() => import("../pages/Graph/graph"));
@@ -63,7 +67,7 @@ const KPIDashboard = lazy(() => import("../pages/kpiDashboard/KpiDashboard"));
 
 const UserLog = lazy(() => import("../pages/UserLog"));
 const AllNotifications = lazy(
-  () => import("../pages/notification/AllNotifications"),
+  () => import("../pages/notification/AllNotifications")
 );
 const DetailMeeting = lazy(() => import("../pages/Meeting/MeetingDesc"));
 
@@ -99,8 +103,11 @@ export default function EmployeeRoutes() {
 
         <Route path="tasks" Component={CompanyTask} />
         <Route path="tasks/add" element={<AddCompanyTaskList />} />
+        <Route path="tasksrepet/add" element={<AddCompanyTaskListRepeat />} />
+        <Route path="tasksrepet" element={<CompanyTaskRe />} />
         <Route path="tasks/view/:id" element={<CompanyTaskView />} />
         <Route path="tasks/edit/:id" element={<AddCompanyTaskList />} />
+        <Route path="tasksrepeat/edit/:id" element={<AddCompanyTaskListRepeat />} />
         <Route path="projects" Component={CompanyProjects} />
         <Route path="projects/add" element={<AddCompanyProjectList />} />
         <Route path="projects/edit/:id" element={<AddCompanyProjectList />} />

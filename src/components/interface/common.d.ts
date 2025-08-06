@@ -576,6 +576,7 @@ interface TaskTypeData {
 
 interface AddUpdateTask {
   taskId?: string;
+  repetitiveTaskId?: string;
   taskName?: string;
   taskDescription?: string;
   taskStartDate?: Date | null;
@@ -594,6 +595,7 @@ interface AddUpdateTask {
 interface TaskGetPaging {
   employeeId: string;
   taskId: string;
+  repetitiveTaskId?: string;
   assigneeNames?: string;
   taskName: string;
   taskStatusId: string;

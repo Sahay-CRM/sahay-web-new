@@ -56,10 +56,14 @@ const Urls = {
 
   getAllCompanyTask: () => `${baseUrl}/company/task/get-all`,
   addCompanyTask: () => `${baseUrl}/company/task/create`,
+  addRepeatCompanyTask: () => `${baseUrl}/company/repetitive-task/create`,
   updateCompanyTask: (id: string) => `${baseUrl}/company/task/update/${id}`,
+  updateRepeatCompanyTask: (id: string) => `${baseUrl}/company/repetitive-task/update/${id}`,
   deleteCompanyTask: (id: string) => `${baseUrl}/company/task/delete/${id}`,
   getCompanyTaskById: (id: string) => `${baseUrl}/company/task/get/${id}`,
+  getRepeatCompanyTaskById: (id: string) => `${baseUrl}/company/repetitive-task/get/${id}`,
   getAllCompanyTaskByPage: () => `${baseUrl}/company/task/get`,
+  getAllRepeatCompanyTaskByPage: () => `${baseUrl}/company/repetitive-task/get-all`,
 
   dropdownDepartment: () => `${baseUrl}/department/get-all`,
   getDepartmentList: () => `${baseUrl}/department/get`,
