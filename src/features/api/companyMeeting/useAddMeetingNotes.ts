@@ -7,10 +7,11 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 interface MeetingNoteAdd {
-  meetingId: string;
-  employeeId: string;
-  note: string;
+  meetingId?: string;
+  employeeId?: string;
+  note?: string;
   detailMeetingNoteId?: string;
+  noteType?: string;
 }
 
 type DatePaging = CommonResponse<MeetingNotesRes>;

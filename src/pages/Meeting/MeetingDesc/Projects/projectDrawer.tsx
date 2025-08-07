@@ -13,6 +13,7 @@ import {
 } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
+import { addMeetingNotesMutation } from "@/features/api/companyMeeting";
 
 interface ProjectDrawerProps {
   open: boolean;
@@ -20,8 +21,6 @@ interface ProjectDrawerProps {
   projectData?: CompanyProjectDataProps | null;
   detailMeetingAgendaIssueId?: string;
   detailMeetingId?: string;
-  setIsAdded?: (type: string) => void;
-  noteTask?: boolean;
 }
 
 type ProjectFormData = {
@@ -41,8 +40,6 @@ export default function ProjectDrawer({
   projectData,
   detailMeetingAgendaIssueId,
   detailMeetingId,
-  setIsAdded,
-  noteTask,
 }: ProjectDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -52,6 +49,7 @@ export default function ProjectDrawer({
   const { data: coreParameterData } = useGetCorparameter({
     filter: { currentPage: 1, pageSize: 100 },
   });
+  const { mutate: addNote } = addMeetingNotesMutation();
   // Prepare options
   const projectStatusOption = projectStatusData
     ? projectStatusData.data.map((status) => ({
@@ -190,8 +188,18 @@ export default function ProjectDrawer({
       };
       addProject(payload, {
         onSuccess: () => {
-          if (noteTask && setIsAdded) {
-            setIsAdded("project");
+          if (projectData && projectData.detailMeetingNoteId) {
+            addNote(
+              {
+                detailMeetingNoteId: projectData?.detailMeetingNoteId,
+                noteType: "TASKS",
+              },
+              {
+                onSuccess: () => {
+                  onClose();
+                },
+              },
+            );
           }
           queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
           onClose();

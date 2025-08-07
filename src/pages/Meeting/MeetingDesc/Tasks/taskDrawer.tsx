@@ -11,6 +11,7 @@ import { useGetCompanyProjectAll } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import { useParams } from "react-router-dom";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
+import { addMeetingNotesMutation } from "@/features/api/companyMeeting";
 
 interface TaskDrawerProps {
   open: boolean;
@@ -18,8 +19,6 @@ interface TaskDrawerProps {
   taskData?: TaskGetPaging | null; // Use your TaskGetPaging type if available
   detailMeetingAgendaIssueId?: string;
   detailMeetingId?: string;
-  setIsAdded?: (type: string) => void;
-  noteTask?: boolean;
 }
 
 type TaskFormData = {
@@ -40,8 +39,6 @@ export default function TaskDrawer({
   taskData,
   detailMeetingAgendaIssueId,
   detailMeetingId,
-  setIsAdded,
-  noteTask,
 }: TaskDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -50,6 +47,7 @@ export default function TaskDrawer({
   const { data: taskTypeData } = useDdTaskType();
   const { data: employeedata } = useGetEmployeeDd();
   const { data: projectListdata } = useGetCompanyProjectAll();
+  const { mutate: addNote } = addMeetingNotesMutation();
 
   // Prepare options
   const taskTypeOption = taskTypeData
@@ -163,9 +161,10 @@ export default function TaskDrawer({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onClose, open]);
+  console.log(taskData);
 
   const onSubmit = (data: TaskFormData) => {
-    if (meetingId && detailMeetingAgendaIssueId && detailMeetingId) {
+    if (meetingId && detailMeetingId) {
       const { assignUsers, taskStartDate, taskDeadline, ...rest } = data;
       const payload: AddUpdateTask = {
         ...rest,
@@ -179,8 +178,18 @@ export default function TaskDrawer({
       };
       addUpdateTask(payload, {
         onSuccess: () => {
-          if (noteTask && setIsAdded) {
-            setIsAdded("task");
+          if (taskData && taskData.detailMeetingNoteId) {
+            addNote(
+              {
+                detailMeetingNoteId: taskData?.detailMeetingNoteId,
+                noteType: "TASKS",
+              },
+              {
+                onSuccess: () => {
+                  onClose();
+                },
+              },
+            );
           }
         },
       });
@@ -307,7 +316,7 @@ export default function TaskDrawer({
 
             <button
               type="submit"
-              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80"
+              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80 cursor-pointer"
             >
               Submit
             </button>

@@ -57,7 +57,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   const [selectedProject, setSelectedProject] = useState<
     CompanyProjectDataProps | TaskData
   >();
-  const [isAdded, setIsAdded] = useState<string>();
+  // const [isAdded, setIsAdded] = useState<string>();
 
   const { data: meetingNotes, refetch: refetchMeetingNotes } =
     useGetMeetingNotes({
@@ -81,6 +81,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       taskName: data.note,
       taskDescription: `${data.note} created in ${meetingName}`,
       taskDeadline: deadline.toISOString(),
+      detailMeetingNoteId: data.detailMeetingNoteId,
     };
     setSelectedTask(payload);
     setDrawerOpen(true);
@@ -90,6 +91,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
     const payload = {
       projectName: data.note,
       projectDescription: `${data.note} created in ${meetingName}`,
+      detailMeetingNoteId: data.detailMeetingNoteId,
     };
     setSelectedProject(payload);
     setDrawerProj(true);
@@ -126,7 +128,6 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       note: noteInput,
       detailMeetingId,
       createdAt: new Date().toISOString(),
-      noteType: isAdded?.toLocaleUpperCase(),
     };
 
     addNote(payload, {
@@ -273,9 +274,11 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                       {author?.employeeName || "Unknown"}
                     </span>
                     <div>
-                      <span className="text-xs text-gray-600 mr-2 bg-gray-200/80 p-0.5 rounded-full px-2">
-                        {note.noteType}
-                      </span>
+                      {note.noteType && (
+                        <span className="text-xs text-gray-600 mr-2 bg-gray-200/80 p-0.5 rounded-full px-2">
+                          {note.noteType}
+                        </span>
+                      )}
                       <span className="text-xs text-gray-400">
                         {note?.createdAt
                           ? new Date(note.createdAt).toLocaleTimeString([], {
@@ -309,37 +312,44 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                               <EllipsisVertical className="h-5 w-5" />
                             </button>
                           </DropdownMenuTrigger>
+
                           <DropdownMenuContent align="end" className="w-40">
-                            <DropdownMenuItem
-                              onClick={() => handleAddTask(note)}
-                              className="px-2 py-1.5"
-                            >
-                              <Edit className="h-4 w-4 mr-2" />
-                              Add Task
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleAddProject(note)}
-                              className="px-2 py-1.5"
-                            >
-                              <Edit className="h-4 w-4 mr-2" />
-                              Add Project
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleUpdateNotes(note, "updates")}
-                              className="px-2 py-1.5"
-                            >
-                              <Share2 className="h-4 w-4 mr-2" />
-                              Updates
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleUpdateNotes(note, "appreciation")
-                              }
-                              className="px-2 py-1.5"
-                            >
-                              <Share2 className="h-4 w-4 mr-2" />
-                              Appreciation
-                            </DropdownMenuItem>
+                            {!note.noteType && (
+                              <>
+                                <DropdownMenuItem
+                                  onClick={() => handleAddTask(note)}
+                                  className="px-2 py-1.5"
+                                >
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Add Task
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleAddProject(note)}
+                                  className="px-2 py-1.5"
+                                >
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Add Project
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleUpdateNotes(note, "updates")
+                                  }
+                                  className="px-2 py-1.5"
+                                >
+                                  <Share2 className="h-4 w-4 mr-2" />
+                                  Updates
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleUpdateNotes(note, "appreciation")
+                                  }
+                                  className="px-2 py-1.5"
+                                >
+                                  <Share2 className="h-4 w-4 mr-2" />
+                                  Appreciation
+                                </DropdownMenuItem>
+                              </>
+                            )}
                             <DropdownMenuItem
                               onClick={() =>
                                 handleDelete(note.detailMeetingNoteId)
@@ -364,10 +374,8 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           taskData={selectedTask as TaskGetPaging}
-          detailMeetingAgendaIssueId=""
+          // detailMeetingAgendaIssueId=""
           detailMeetingId={detailMeetingId}
-          setIsAdded={setIsAdded}
-          noteTask={true}
         />
       )}
       {drawerProj && (
@@ -377,8 +385,6 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
           projectData={selectedProject as CompanyProjectDataProps}
           // detailMeetingAgendaIssueId={meetingAgendaIssueId}
           detailMeetingId={detailMeetingId}
-          setIsAdded={setIsAdded}
-          noteTask={true}
         />
       )}
     </div>

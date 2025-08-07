@@ -167,7 +167,6 @@ export default function useMeetingDesc() {
     updateMeetingTeamLeader(payload, {
       onSuccess: () => {
         update(meetRef, {
-          follow: data.employeeId,
           updatedAt: new Date(),
         });
       },

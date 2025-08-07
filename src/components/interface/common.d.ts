@@ -361,6 +361,7 @@ interface CompanyProjectDataProps {
   coreParameterId?: string;
   coreParameterName?: string;
   detailMeetingProjectId?: string;
+  detailMeetingNoteId?: string;
 }
 
 interface ProjectParameters {
@@ -625,6 +626,7 @@ interface TaskGetPaging {
   projectId?: string;
   detailMeetingTaskId?: string;
   repetition?: string;
+  detailMeetingNoteId?: string;
 }
 
 interface TaskProject {

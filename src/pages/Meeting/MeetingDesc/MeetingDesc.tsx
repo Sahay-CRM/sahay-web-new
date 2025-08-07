@@ -5,7 +5,6 @@ import {
   Crown,
   FileText,
   RefreshCcw,
-  Search,
   ThumbsUp,
   UsersRound,
   X,
@@ -101,7 +100,7 @@ export default function MeetingDesc() {
         className={cn(
           "h-full rounded-lg mx-3",
           "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]",
-          isCardVisible ? "w-[400px] opacity-100" : "w-0 opacity-0",
+          isCardVisible ? "w-[350px] opacity-100" : "w-0 opacity-0",
         )}
       >
         <Card className="h-full w-full p-0">
@@ -109,8 +108,7 @@ export default function MeetingDesc() {
             <div>
               <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
                 <h3 className="p-0 text-base">Meeting Joiners</h3>
-                <div className="flex items-center gap-2">
-                  <Search className="w-4 h-4 text-gray-500" />
+                <div>
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
                     onClick={() => setIsCardVisible(false)}
@@ -177,30 +175,34 @@ export default function MeetingDesc() {
                         meetingStatus !== "NOT_STARTED" &&
                         meetingStatus !== "ENDED" && (
                           <div className="mt-3 pl-12 flex flex-col gap-2">
-                            {isTeamLeader && (
-                              <>
-                                {!item.isTeamLeader && (
-                                  <button
-                                    onClick={() => handleAddTeamLeader(item)}
-                                    className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                  >
-                                    Add Team Leader
-                                  </button>
-                                )}
-
-                                {item.isTeamLeader && teamLeaderCount > 1 && (
-                                  <button
-                                    onClick={() => handleAddTeamLeader(item)}
-                                    className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                  >
-                                    Remove Team Leader
-                                  </button>
-                                )}
-                              </>
-                            )}
-
                             {item.attendanceMark ? (
                               <>
+                                {isTeamLeader && (
+                                  <>
+                                    {!item.isTeamLeader && (
+                                      <button
+                                        onClick={() =>
+                                          handleAddTeamLeader(item)
+                                        }
+                                        className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                      >
+                                        Add Team Leader
+                                      </button>
+                                    )}
+
+                                    {item.isTeamLeader &&
+                                      teamLeaderCount > 1 && (
+                                        <button
+                                          onClick={() =>
+                                            handleAddTeamLeader(item)
+                                          }
+                                          className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                        >
+                                          Remove Team Leader
+                                        </button>
+                                      )}
+                                  </>
+                                )}
                                 <button
                                   onClick={() =>
                                     handleCheckOut(item.employeeId)
@@ -211,7 +213,7 @@ export default function MeetingDesc() {
                                 </button>
 
                                 {item.isTeamLeader &&
-                                  item.employeeId === follow && (
+                                  item.employeeId !== follow && (
                                     <button
                                       onClick={() =>
                                         handleFollow(item.employeeId)
@@ -242,8 +244,7 @@ export default function MeetingDesc() {
             <div>
               <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
                 <h3 className="p-0 text-base">Meeting Nots</h3>
-                <div className="flex items-center gap-2">
-                  <Search className="w-4 h-4 text-gray-500" />
+                <div>
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
                     onClick={() => setIsCardVisible(false)}
@@ -269,8 +270,7 @@ export default function MeetingDesc() {
             <div>
               <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
                 <h3 className="p-0 text-base">Meeting Updates</h3>
-                <div className="flex items-center gap-2">
-                  <Search className="w-4 h-4 text-gray-500" />
+                <div>
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
                     onClick={() => setIsCardVisible(false)}
@@ -327,8 +327,7 @@ export default function MeetingDesc() {
             <div>
               <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
                 <h3 className="p-0 text-base">Meeting Appreciation</h3>
-                <div className="flex items-center gap-2">
-                  <Search className="w-4 h-4 text-gray-500" />
+                <div>
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
                     onClick={() => setIsCardVisible(false)}

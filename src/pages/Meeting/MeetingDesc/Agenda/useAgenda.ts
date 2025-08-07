@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { get, getDatabase, off, onValue, ref, update } from "firebase/database";
+import { getDatabase, off, onValue, ref, update } from "firebase/database";
 
 import {
   addMeetingAgendaMutation,
@@ -77,6 +77,9 @@ export const useAgenda = ({
   const [addIssueModal, setAddIssueModal] = useState(false);
 
   const [isMeetingStart, setIsMeetingStart] = useState(false);
+  const [totalTaskLength, setTotalTaskLength] = useState<number>(0);
+  const [totalProjectLength, setTotalProjectLength] = useState<number>(0);
+  const [totalKpisLength, setTotalKpisLength] = useState<number>(0);
 
   useEffect(() => {
     if (meetingResponse) {
@@ -540,6 +543,7 @@ export const useAgenda = ({
                     queryClient.resetQueries({
                       queryKey: ["get-meeting-conclusion-res"],
                     });
+                    window.location.reload();
                     resolve();
                   });
                 },
@@ -635,15 +639,16 @@ export const useAgenda = ({
     const now = Date.now();
 
     // First check if the meeting exists
-    const meetingRef = ref(db, `meetings/${meetingId}`);
-    const snapshot = await get(meetingRef);
-    setIsSelectedAgenda(detailMeetingAgendaIssueId);
+    // const meetingRef = ref(db, `meetings/${meetingId}`);
+    // const snapshot = await get(meetingRef);
 
-    if (!snapshot.exists()) {
-      return;
-    }
+    // if (!snapshot.exists()) {
+    //   return;
+    // }
 
-    if (isSelectedAgenda && meetingStatus === "DISCUSSION") {
+    handleCheckMeetingExist();
+
+    if (isMeetingStart && isSelectedAgenda && meetingStatus === "DISCUSSION") {
       const prevElapsedSeconds =
         (now - Number(meetingResponse?.state.lastSwitchTimestamp)) / 1000;
       const prevObjectiveRef = ref(
@@ -653,20 +658,17 @@ export const useAgenda = ({
 
       const currentActualTime =
         meetingResponse?.timers.objectives?.[isSelectedAgenda]?.actualTime || 0;
-      handleCheckMeetingExist();
-      if (isMeetingStart) {
-        await update(prevObjectiveRef, {
-          actualTime: currentActualTime + prevElapsedSeconds,
-          lastSwitchTimestamp: now,
-        });
-      }
-    }
-    handleCheckMeetingExist();
-    if (isMeetingStart) {
+
+      await update(prevObjectiveRef, {
+        actualTime: currentActualTime + prevElapsedSeconds,
+        lastSwitchTimestamp: now,
+      });
+
       await update(ref(db, `meetings/${meetingId}/state`), {
         lastSwitchTimestamp: now,
         currentAgendaItemId: detailMeetingAgendaIssueId,
       });
+      setIsSelectedAgenda(detailMeetingAgendaIssueId);
     }
   };
 
@@ -720,11 +722,10 @@ export const useAgenda = ({
   const handleCloseMeetingWithLog = () => {
     const now = Date.now();
 
-    const prevElapsedSeconds =
-      meetingConclusionTime !== undefined
-        ? (now - meetingConclusionTime) / 1000
-        : undefined;
-    if (meetingId && detailMeetingId) {
+    const prevElapsedSeconds = meetingConclusionTime
+      ? (now - meetingConclusionTime) / 1000
+      : undefined;
+    if (meetingId && detailMeetingId && prevElapsedSeconds) {
       updateDetailMeeting(
         {
           meetingId: meetingId,
@@ -838,6 +839,12 @@ export const useAgenda = ({
     handleAddAgendaModal,
     addIssueModal,
     setAddIssueModal,
+    totalTaskLength,
+    setTotalTaskLength,
+    totalKpisLength,
+    setTotalKpisLength,
+    totalProjectLength,
+    setTotalProjectLength,
     // handleJoinMeeting,
   };
 };

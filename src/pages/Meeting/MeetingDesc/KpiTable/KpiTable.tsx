@@ -61,6 +61,7 @@ interface KpisProps {
   kpisFireBase: () => void;
   meetingAgendaIssueId: string | undefined;
   detailMeetingId: string | undefined;
+  kpisLength?: (length: number) => void;
 }
 
 function formatToThreeDecimals(value: string | number | null | undefined) {
@@ -78,6 +79,7 @@ export default function KPITable({
   meetingAgendaIssueId,
   kpisFireBase,
   detailMeetingId,
+  kpisLength,
 }: KpisProps) {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -110,6 +112,12 @@ export default function KPITable({
     () => (Array.isArray(selectedKpis) ? selectedKpis : []),
     [selectedKpis],
   );
+
+  useEffect(() => {
+    if (selectedKpisTyped && kpisLength) {
+      kpisLength(selectedKpisTyped.length);
+    }
+  }, [kpisLength, selectedKpisTyped]);
 
   // Tabs data
   const kpiStructure = useMemo(
