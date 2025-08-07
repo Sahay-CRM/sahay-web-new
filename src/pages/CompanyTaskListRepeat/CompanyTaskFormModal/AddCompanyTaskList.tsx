@@ -54,9 +54,10 @@ const ProjectSelectionStep = () => {
       <Controller
         name="project"
         control={control}
-        // rules={{ required: "Please select a Company Project" }}
+        rules={{ required: "Please select a Company Project" }}
         render={({ field }) => (
           <TableData
+            {...field}
             tableData={projectListdata?.data?.map((item, index) => ({
               ...item,
               srNo:
@@ -73,21 +74,27 @@ const ProjectSelectionStep = () => {
             primaryKey="projectId"
             multiSelect={false}
             selectedValue={
-              field.value
+              field.value?.projectId
                 ? (projectListdata?.data?.find(
-                    (item) => item.projectId === field.value
+                    (item) => item.projectId === field.value.projectId,
                   ) as Record<string, unknown> | undefined)
                 : undefined
             }
-            handleChange={(selected) => {
-              if (
-                selected &&
-                typeof selected === "object" &&
-                "projectId" in selected
-              ) {
-                field.onChange(selected.projectId);
+            //  selectedValue={
+            //   field.value
+            //     ? (projectListdata?.data?.find(
+            //         (item) => item.projectId === field.value
+            //       ) as Record<string, unknown> | undefined)
+            //     : undefined
+            // }
+
+            handleChange={(val) => {
+              if (!val || (Array.isArray(val) && val.length === 0)) {
+                field.onChange(undefined);
+              } else if (Array.isArray(val)) {
+                field.onChange(val[0]);
               } else {
-                field.onChange("");
+                field.onChange(val);
               }
             }}
             onCheckbox={() => true}
@@ -147,6 +154,7 @@ const MeetingSelectionStep = () => {
         rules={{ required: "Please select a meeting" }}
         render={({ field }) => (
           <TableData
+            {...field}
             tableData={meetingData?.data?.map((item, index) => ({
               ...item,
               srNo:
@@ -162,23 +170,39 @@ const MeetingSelectionStep = () => {
             primaryKey="meetingId"
             multiSelect={false}
             selectedValue={
-              field.value
+              field.value?.meetingId
                 ? (meetingData?.data?.find(
-                    (item) => item.meetingId === field.value
+                    (item) => item.meetingId === field.value.meetingId,
                   ) as Record<string, unknown> | undefined)
                 : undefined
             }
-            handleChange={(selected) => {
-              if (
-                selected &&
-                typeof selected === "object" &&
-                "meetingId" in selected
-              ) {
-                field.onChange(selected.meetingId);
+            // selectedValue={
+            //   field.value?.projectId
+            //     ? (projectListdata?.data?.find(
+            //         (item) => item.projectId === field.value.projectId
+            //       ) as Record<string, unknown> | undefined)
+            //     : undefined
+            // }
+            handleChange={(val) => {
+              if (!val || (Array.isArray(val) && val.length === 0)) {
+                field.onChange(undefined);
+              } else if (Array.isArray(val)) {
+                field.onChange(val[0]);
               } else {
-                field.onChange("");
+                field.onChange(val);
               }
             }}
+            // handleChange={(selected) => {
+            //   if (
+            //     selected &&
+            //     typeof selected === "object" &&
+            //     "meetingId" in selected
+            //   ) {
+            //     field.onChange(selected.meetingId);
+            //   } else {
+            //     field.onChange("");
+            //   }
+            // }}
             onCheckbox={() => true}
             paginationDetails={meetingData as PaginationFilter}
             setPaginationFilter={setPaginationFilterMeeting}
@@ -354,45 +378,33 @@ const AssignUserStep = () => {
         control={control}
         rules={{ required: "Please select a User" }}
         render={({ field }) => {
-          const selectedEmployees =
-            Array.isArray(field.value) && Array.isArray(employeedata?.data)
-              ? employeedata.data.filter((emp) =>
-                  field.value.includes(emp.employeeId)
-                )
-              : [];
           return (
-            <>
-              <TableData
-                tableData={employeedata?.data?.map((item, index) => ({
-                  ...item,
-                  srNo:
-                    (employeedata.currentPage - 1) * employeedata.pageSize +
-                    index +
-                    1,
-                }))}
-                isActionButton={() => false}
-                columns={{
-                  srNo: "srNo",
-                  employeeName: "User Name",
-                }}
-                primaryKey="employeeId"
-                multiSelect={true}
-                selectedValue={
-                  selectedEmployees as unknown as Record<string, unknown>[]
-                }
-                handleChange={(selected) => {
-                  const ids = Array.isArray(selected)
-                    ? selected.map((emp) => emp.employeeId)
-                    : [];
-                  field.onChange(ids);
-                }}
-                onCheckbox={() => true}
-                paginationDetails={employeedata as PaginationFilter}
-                setPaginationFilter={setPaginationFilterEmployee}
-                showActionsColumn={false}
-                isLoading={employeeLoading}
-              />
-            </>
+            <TableData
+              {...field}
+              tableData={employeedata?.data?.map((item, index) => ({
+                ...item,
+                srNo:
+                  (employeedata.currentPage - 1) * employeedata.pageSize +
+                  index +
+                  1,
+              }))}
+              isActionButton={() => false}
+              columns={{
+                srNo: "srNo",
+                employeeName: "User Name",
+              }}
+              primaryKey="employeeId"
+              multiSelect={true}
+              selectedValue={field.value || []} // whole employee objects
+              handleChange={(selected) => {
+                field.onChange(Array.isArray(selected) ? selected : []);
+              }}
+              onCheckbox={() => true}
+              paginationDetails={employeedata as PaginationFilter}
+              setPaginationFilter={setPaginationFilterEmployee}
+              showActionsColumn={false}
+              isLoading={employeeLoading}
+            />
           );
         }}
       />
@@ -434,14 +446,15 @@ export default function AddCompanyTask() {
     taskDataById,
     isPending,
   } = hookProps;
-
   const { setBreadcrumbs } = useBreadcrumbs();
 
   useEffect(() => {
     setBreadcrumbs([
       { label: "Company Repetition Task ", href: "/dashboard/tasksrepet" },
       {
-        label: repetitiveTaskId ? "Update Task" : "Add Repeat Task",
+        label: repetitiveTaskId
+          ? "Update Repetition Task"
+          : "Add Repetition Task",
         href: "",
       },
       ...(repetitiveTaskId
@@ -489,25 +502,18 @@ export default function AddCompanyTask() {
             back={prevStep}
             isFirstStep={step === 1} // ✅ add this
             isLastStep={step === totalSteps}
-            // isFirstStep={isFirstStep}
             next={nextStep}
-            // isLastStep={isLastStep}
             isPending={isPending}
-            // onFinish={handleSubmit(onSubmit)}
             onFinish={onFinish}
+            // onFinish={handleSubmit(onSubmit)}
             isUpdate={!!repetitiveTaskId}
           />
         </div>
         <div className="step-content w-full">{renderStepContent()}</div>{" "}
         {isModalOpen && (
           <AddDatapointModal
-            modalData={{
-              ...taskpreviewData,
-              taskStartDate: taskpreviewData.taskStartDate,
-              taskDeadline: taskpreviewData.taskDeadline
-                ? taskpreviewData.taskDeadline.toISOString()
-                : null,
-            }}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            modalData={taskpreviewData as any}
             isModalOpen={isModalOpen}
             modalClose={handleClose}
             onSubmit={handleSubmit(onSubmit)}

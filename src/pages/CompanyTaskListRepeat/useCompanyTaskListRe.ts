@@ -1,15 +1,15 @@
 import {
-  deleteCompanyTaskMutation,
+  deleteRepeatCompanyTaskMutation,
   useGetAllTaskStatus,
 } from "@/features/api/companyTask";
-import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
+import useAddUpdateRepeatCompanyTask from "@/features/api/companyTask/useAddUpdateRepeatCompanyTask";
 import useGetRepeatCompanyTask from "@/features/api/companyTask/useGetRepeatCompanyTask";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { AxiosError } from "axios";
+// import { AxiosError } from "axios";
 import { useCallback, useState } from "react";
 // import { DateRange } from "react-day-picker";
 import { useSelector } from "react-redux";
-import { toast } from "sonner";
+// import { toast } from "sonner";
 
 export default function useCompanyTaskList() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -26,33 +26,14 @@ export default function useCompanyTaskList() {
     {} as TaskGetPaging,
   );
 
-  // Calculate default 30-day range: 15 days before and after today
   const today = new Date();
   const before14 = new Date(today);
   before14.setDate(today.getDate() - 14);
   const after14 = new Date(today);
   after14.setDate(today.getDate() + 14);
 
-  // const [taskDateRange, setTaskDateRange] = useState<{
-  //   taskStartDate: Date | undefined;
-  //   taskDeadline: Date | undefined;
-  // }>({
-  //   taskStartDate: before14,
-  //   taskDeadline: after14,
-  // });
-
-  // const [appliedDateRange, setAppliedDateRange] = useState<{
-  //   taskStartDate: Date | undefined;
-  //   taskDeadline: Date | undefined;
-  // }>({
-  //   taskStartDate: before14,
-  //   taskDeadline: after14,
-  // });
-
-  // const [showOverdue, setShowOverdue] = useState(false);
-
-  const { mutate: updateCompanyTask } = useAddUpdateCompanyTask();
-  const { mutate: deleteTaskById } = deleteCompanyTaskMutation();
+  const { mutate: updateCompanyTask } = useAddUpdateRepeatCompanyTask();
+  const { mutate: deleteTaskById } = deleteRepeatCompanyTaskMutation();
 
   // Pagination Details and Filter
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
@@ -61,22 +42,6 @@ export default function useCompanyTaskList() {
     search: "",
   });
 
-  // const [filters, setFilters] = useState<{ taskStatusName: string[] }>({
-  //   taskStatusName: [],
-  // });
-
-  // Helper function to convert date to YYYY-MM-DD format
-  // const toLocalISOString = (date: Date | undefined) => {
-  //   if (!date) return undefined;
-
-  //   // Use local date methods to avoid timezone conversion
-  //   const year = date.getFullYear();
-  //   const month = String(date.getMonth() + 1).padStart(2, "0");
-  //   const day = String(date.getDate()).padStart(2, "0");
-
-  //   return `${year}-${month}-${day}`;
-  // };
-
   const {
     data: companyTaskData,
     // refetch,
@@ -84,40 +49,12 @@ export default function useCompanyTaskList() {
   } = useGetRepeatCompanyTask({
     filter: {
       ...paginationFilter,
-      // statusArray: filters.taskStatusName,
-      // ...(showOverdue
-      //   ? {}
-      //   : {
-      //       startDate: toLocalISOString(appliedDateRange.taskStartDate),
-      //       endDate: toLocalISOString(appliedDateRange.taskDeadline),
-      //     }),
-      // overDue: showOverdue,
     },
   });
-
-  // Force refetch when overdue state changes
-  // useEffect(() => {
-  //   refetch();
-  // }, [showOverdue, refetch]);
 
   const { data: taskStatus } = useGetAllTaskStatus({
     filter: {},
   });
-
-  // Filter status options based on showOverdue and winLostTask
-  // const statusOptions = (taskStatus?.data ?? [])
-  //   .filter((item) => {
-  //     if (showOverdue) {
-  //       // Exclude items where winLostTask is "0" or "1"
-  //       return item.winLostTask !== 0 && item.winLostTask !== 1;
-  //     }
-  //     return true;
-  //   })
-  //   .map((item) => ({
-  //     label: item.taskStatus,
-  //     value: item.taskStatusId,
-  //     color: item.color || "#2e3195",
-  //   }));
 
   const handleAdd = () => {
     setModalData({
@@ -132,6 +69,7 @@ export default function useCompanyTaskList() {
       taskTypeId: "",
       taskTypeName: "",
       companyId: "",
+      taskMaster: "",
     });
     setIsUserModalOpen(true);
   };
@@ -154,6 +92,7 @@ export default function useCompanyTaskList() {
       taskTypeId: "",
       taskTypeName: "",
       companyId: "",
+      taskMaster: "",
     });
     setIsUserModalOpen(false);
     setIsDeleteModalOpen(false);
@@ -167,28 +106,18 @@ export default function useCompanyTaskList() {
     setIsChildData("");
   }, []);
 
-  const conformDelete = async () => {
-    if (modalData && modalData.taskId) {
-      deleteTaskById(modalData.taskId, {
-        onSuccess: () => {
-          closeDeleteModal();
-        },
-        onError: (error: Error) => {
-          const axiosError = error as AxiosError<{
-            message?: string;
-            status: number;
-          }>;
-
-          if (axiosError.response?.data?.status === 417) {
-            setIsChildData(axiosError.response?.data?.message);
-          } else if (axiosError.response?.data.status !== 417) {
-            toast.error(
-              `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
-            );
-          }
-        },
-      });
+  const conformDelete = (isGroupDelete: boolean) => {
+    if (!modalData?.repetitiveTaskId) {
+      // Optionally show an error or just return
+      return;
     }
+    const payload = {
+      repetitiveTaskId: modalData.repetitiveTaskId,
+      groupDelete: isGroupDelete, // यह flag सीधे mutation को पास हो जाएगा
+    };
+
+    deleteTaskById(payload);
+    closeDeleteModal();
   };
 
   const openImportModal = useCallback(() => {
@@ -203,91 +132,11 @@ export default function useCompanyTaskList() {
   const handleStatusChange = (data: string, row: TaskGetPaging) => {
     const payload = {
       taskStatusId: data,
-      taskId: row?.taskId,
+      repetitiveTaskId: row?.repetitiveTaskId,
     };
 
     updateCompanyTask(payload);
   };
-
-  // Move handleFilterChange above the return statement
-  // const handleFilterChange = (col: string, selected: string[]) => {
-  //   setFilters((prev) => ({
-  //     ...prev,
-  //     [col]: selected,
-  //   }));
-  // };
-
-  // const handleDateRangeChange: HandleDateRangeChange = (range) => {
-  //   // Update taskDateRange for preview
-  //   if (range?.from && !range?.to) {
-  //     const newTaskDateRange = {
-  //       taskStartDate: range.from,
-  //       taskDeadline: range.from,
-  //     };
-  //     setTaskDateRange(newTaskDateRange);
-  //   } else if (range?.from && range?.to) {
-  //     const newTaskDateRange = {
-  //       taskStartDate: range.from,
-  //       taskDeadline: range.to,
-  //     };
-  //     setTaskDateRange(newTaskDateRange);
-  //   } else {
-  //     const newTaskDateRange = {
-  //       taskStartDate: undefined,
-  //       taskDeadline: undefined,
-  //     };
-  //     setTaskDateRange(newTaskDateRange);
-  //   }
-  // };
-
-  // const handleDateRangeApply = (range: DateRange | undefined) => {
-  //   // This is called when Apply button is clicked
-  //   if (range?.from && !range?.to) {
-  //     const newTaskDateRange = {
-  //       taskStartDate: range.from,
-  //       taskDeadline: range.from,
-  //     };
-  //     setTaskDateRange(newTaskDateRange);
-  //     setAppliedDateRange(newTaskDateRange);
-  //   } else if (range?.from && range?.to) {
-  //     const newTaskDateRange = {
-  //       taskStartDate: range.from,
-  //       taskDeadline: range.to,
-  //     };
-  //     setTaskDateRange(newTaskDateRange);
-  //     setAppliedDateRange(newTaskDateRange);
-  //   } else {
-  //     const newTaskDateRange = {
-  //       taskStartDate: undefined,
-  //       taskDeadline: undefined,
-  //     };
-  //     setTaskDateRange(newTaskDateRange);
-  //     setAppliedDateRange(newTaskDateRange);
-  //   }
-
-  //   // Reset pagination to first page
-  //   setPaginationFilter((prev) => ({
-  //     ...prev,
-  //     currentPage: 1,
-  //   }));
-  // };
-
-  // const handleOverdueToggle = () => {
-  //   const newOverdueState = !showOverdue;
-  //   // Reset date range when toggling overdue
-  //   if (newOverdueState) {
-  //     setAppliedDateRange({
-  //       taskStartDate: new Date(),
-  //       taskDeadline: new Date(),
-  //     });
-  //     setTaskDateRange({
-  //       taskStartDate: new Date(),
-  //       taskDeadline: new Date(),
-  //     });
-  //   }
-
-  //   setShowOverdue(newOverdueState);
-  // };
 
   const handleRowsModalOpen = (data: TaskGetPaging) => {
     setViewModalData(data);
@@ -312,19 +161,9 @@ export default function useCompanyTaskList() {
     isDeleteModalOpen,
     setIsImportExportModalOpen,
     isChildData,
-    // statusOptions,
     handleStatusChange,
     permission,
-    // filters,
-    // handleFilterChange,
-    // handleDateRangeChange,
-    // showOverdue,
-    // setShowOverdue,
-    // taskDateRange,
-    // setTaskDateRange,
-    // appliedDateRange,
-    // handleDateRangeApply,
-    // handleOverdueToggle,
+
     handleRowsModalOpen,
     isViewModalOpen,
     setIsViewModalOpen,

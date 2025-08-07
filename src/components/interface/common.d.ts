@@ -600,6 +600,8 @@ interface TaskGetPaging {
   taskName: string;
   taskStatusId: string;
   taskDescription: string;
+  taskMaster: string;
+  taskDescription: string;
   taskStatus: string;
   createdBy?: Employee;
   updatedBy?: string;

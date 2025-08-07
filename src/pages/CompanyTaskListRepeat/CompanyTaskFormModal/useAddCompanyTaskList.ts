@@ -30,9 +30,12 @@ interface FormValues {
 
 // Renamed hook
 export const useAddCompanyTask = () => {
-  const { mutate: addUpdateTask, isPending } = addUpdateRepeatCompanyTaskMutation();
+  const { mutate: addUpdateTask, isPending } =
+    addUpdateRepeatCompanyTaskMutation();
   const { id: repetitiveTaskId } = useParams();
-  const { data: taskDataById } = useGetRepeatCompanyTaskById(repetitiveTaskId || "");
+  const { data: taskDataById } = useGetRepeatCompanyTaskById(
+    repetitiveTaskId || "",
+  );
   const permission = useSelector(getUserPermission);
   const navigate = useNavigate();
   const [isModalOpen, setModalOpen] = useState(false);
@@ -77,7 +80,7 @@ export const useAddCompanyTask = () => {
           : [],
       });
     }
-  }, [ taskDataById, reset, repetitiveTaskId]);
+  }, [taskDataById, reset, repetitiveTaskId]);
 
   const [step, setStep] = useState(1);
 
@@ -116,7 +119,7 @@ export const useAddCompanyTask = () => {
   const { data: meetingData, isLoading: meetingLoading } = useGetCompanyMeeting(
     {
       filter: paginationFilterMeeting,
-    }
+    },
   );
 
   const taskStatusOptions = taskStatus
@@ -139,7 +142,8 @@ export const useAddCompanyTask = () => {
     { value: "daily", label: "Daily" },
     { value: "weekly", label: "Weekly" },
     { value: "monthly", label: "Monthly" },
-    { value: "annually", label: "Annually" },
+    { value: "yearly", label: "Yearly" },
+    { value: "quarterly", label: "Quarterly" },
   ];
 
   // Dynamically set steps based on taskId

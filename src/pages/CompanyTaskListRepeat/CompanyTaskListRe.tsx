@@ -21,6 +21,7 @@ import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
+import { Trash } from "lucide-react";
 
 export default function CompanyTaskListRe() {
   const {
@@ -75,15 +76,15 @@ export default function CompanyTaskListRe() {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>
+    {} as Record<string, string>,
   );
 
   // Toggle column visibility
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
 
@@ -194,12 +195,12 @@ export default function CompanyTaskListRe() {
                 taskDeadline: formatLocalDate(item.taskDeadline),
                 assigneeNames: item.TaskEmployeeJunction
                   ? item.TaskEmployeeJunction.map(
-                      (j) => j.Employee?.employeeName
+                      (j) => j.Employee?.employeeName,
                     )
                       .filter(Boolean)
                       .join(", ")
                   : "",
-              })
+              }),
             )}
             columns={visibleColumns}
             primaryKey="taskId"
@@ -210,12 +211,31 @@ export default function CompanyTaskListRe() {
             //       }
             //     : undefined
             // }
-            onDelete={(row) => {
-              onDelete(row);
-            }}
+            // onDelete={(row) => {
+            //   onDelete(row);
+            // }}
             onViewButton={(row) => {
               navigate(`/dashboard/tasks/view/${row.taskId}`);
             }}
+            customActions={(row) => {
+              return (
+                <div className="flex flex-col ">
+                  {/* Delete Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-red-600"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(row);
+                    }}
+                  >
+                    <Trash className="w-4 h-4" />
+                  </Button>
+                </div>
+              );
+            }}
+            isEditDeleteShow={false}
             paginationDetails={mapPaginationDetails(companyTaskData)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
@@ -238,20 +258,21 @@ export default function CompanyTaskListRe() {
               handleRowsModalOpen(row);
             }}
             sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
-            actionColumnWidth="w-[150px]"
+            actionColumnWidth="w-[100px]"
           />
         </div>
 
         {/* Modal Component */}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
-            title={"Delete Company Task"}
-            label={"taskName Name :"}
+            title="Delete Company Task"
+            label="Task Name:"
             modalData={`${modalData?.taskName}`}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
-            onSubmit={conformDelete}
+            onSubmit={(isGroupDelete) => conformDelete(isGroupDelete ?? false)}
             isChildData={isChildData}
+            showDeleteOptions={true}
           />
         )}
         <ViewMeetingModal

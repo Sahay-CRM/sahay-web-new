@@ -2,17 +2,21 @@ import ModalData from "@/components/shared/Modal/ModalData";
 
 interface CreateTaskPayload {
   taskId?: string;
-  project?: string;
-  meeting?: string;
+  project?: {
+    projectId: string;
+    projectName: string;
+    // other fields
+  };
   taskName?: string;
   taskDescription?: string;
-  taskStartDate: Date | null; // using Date object for date picker
-
-  taskDeadline?: string | null;
   repeatType?: string;
+
+  meeting?: {
+    meetingName?: string;
+  } | null;
+  assignUser?: Employee[];
   taskStatusId?: string;
   taskTypeId?: string;
-  assignUser: string[];
   comment?: string;
 }
 
@@ -34,7 +38,9 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
   return (
     <ModalData
       isModalOpen={isModalOpen}
-      modalTitle={modalData?.taskId ? "Update Task" : "Add Task"}
+      modalTitle={
+        modalData?.taskId ? "Update Repetition Task" : "Add Repetition Task"
+      }
       modalClose={modalClose}
       buttons={[
         {
@@ -52,34 +58,26 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
     >
       <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-700">
         <div>
-          <span className="font-medium text-gray-700">Task Name:</span>{" "}
-          <span className="text-black font-bold">
-            {modalData.taskName || "-"}
-          </span>
+          <span className="font-medium text-primary">Task Name:</span>{" "}
+          {modalData.taskName || "-"}
         </div>
 
         <div>
-          <span className="font-medium text-gray-700">Description:</span>{" "}
-          <span className="text-black font-bold">
-            {modalData.taskDescription || "-"}
-          </span>
+          <span className="font-medium text-primary">Description:</span>{" "}
+          {modalData.taskDescription || "-"}
         </div>
 
         <div>
-          <span className="font-medium text-gray-700">Meeting ID:</span>{" "}
-          <span className="text-black font-bold">
-            {modalData.meeting || "-"}
-          </span>
+          <span className="font-medium text-primary">Meeting Name:</span>{" "}
+          {modalData.meeting?.meetingName || "-"}
         </div>
 
         <div>
-          <span className="font-medium text-gray-700">Project ID:</span>{" "}
-          <span className="text-black font-bold">
-            {modalData.project || "-"}
-          </span>
+          <span className="font-medium text-primary">Project Name:</span>{" "}
+          {modalData.project?.projectName || "-"}
         </div>
 
-        <div>
+        {/* <div>
           <span className="font-medium text-gray-700">Start Date:</span>{" "}
           <span className="text-black font-bold">
             {modalData.taskStartDate
@@ -95,16 +93,14 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
               ? new Date(modalData.taskDeadline).toLocaleString()
               : "-"}
           </span>
-        </div>
+        </div> */}
 
         <div>
-          <span className="font-medium text-gray-700">Repeat Type:</span>{" "}
-          <span className="text-black font-bold">
-            {modalData.repeatType || "-"}
-          </span>
+          <span className="font-medium text-primary">Repeat Type:</span>{" "}
+          {modalData.repeatType || "-"}
         </div>
 
-        <div>
+        {/* <div>
           <span className="font-medium text-gray-700">Task Status ID:</span>{" "}
           <span className="text-black font-bold">
             {modalData.taskStatusId || "-"}
@@ -116,25 +112,23 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
           <span className="text-black font-bold">
             {modalData.taskTypeId || "-"}
           </span>
-        </div>
+        </div> */}
 
         <div className="col-span-2">
-          <span className="font-medium text-gray-700">Assigned Users:</span>{" "}
-          <span className="text-black font-bold">
-            {modalData.assignUser?.length > 0
-              ? modalData.assignUser.join(", ")
-              : "-"}
-          </span>
+          <span className="font-medium text-primary">Assigned Users:</span>{" "}
+          {modalData.assignUser && modalData.assignUser.length > 0
+            ? modalData.assignUser
+                .map((user: Employee) => user.employeeName)
+                .join(", ")
+            : "-"}
         </div>
 
-        {modalData.comment !== undefined && (
+        {modalData.comment ? (
           <div className="col-span-2">
-            <span className="font-medium text-gray-700">Comment:</span>{" "}
-            <span className="text-black font-bold">
-              {modalData.comment || "-"}
-            </span>
+            <span className="font-medium text-primary">Comment:</span>{" "}
+            {modalData.comment}
           </div>
-        )}
+        ) : null}
       </div>
     </ModalData>
   );
