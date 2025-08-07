@@ -179,12 +179,6 @@ export default function Agenda({
     handleAddAgendaModal,
     addIssueModal,
     setAddIssueModal,
-    totalTaskLength,
-    setTotalTaskLength,
-    totalKpisLength,
-    setTotalKpisLength,
-    totalProjectLength,
-    setTotalProjectLength,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -333,7 +327,9 @@ export default function Agenda({
                   }}
                 >
                   <List className="h-5 w-5" />
-                  <span className="ml-2">Tasks {totalTaskLength}</span>
+                  <span className="ml-2">
+                    Tasks {detailAgendaData?.noOfTasks}
+                  </span>
                 </Button>
                 <Button
                   className={`w-32 justify-start border border-b-0 shadow-border rounded-b-none hover:bg-white text-primary cursor-pointer flex items-center ${activeTab === "projects" ? "bg-white h-[50px] -mb-[4px] shadow-none" : "bg-gray-200 h-12"}`}
@@ -342,7 +338,9 @@ export default function Agenda({
                   }}
                 >
                   <CheckSquare className="h-5 w-5" />
-                  <span className="ml-2">Projects {totalProjectLength}</span>
+                  <span className="ml-2">
+                    Projects {detailAgendaData?.noOfProjects}
+                  </span>
                 </Button>
                 <Button
                   className={`w-32 justify-start border border-b-0 shadow-border rounded-b-none hover:bg-white text-primary cursor-pointer flex items-center ${activeTab === "kpis" ? "bg-white h-[50px] -mb-[4px] shadow-none" : "bg-gray-200 h-12"}`}
@@ -351,7 +349,9 @@ export default function Agenda({
                   }}
                 >
                   <BarChart2 className="h-5 w-5" />
-                  <span className="ml-2">KPIs {totalKpisLength}</span>
+                  <span className="ml-2">
+                    KPIs {detailAgendaData?.noOfKPIs}
+                  </span>
                 </Button>
               </div>
             </nav>
@@ -1181,7 +1181,6 @@ export default function Agenda({
                       tasksFireBase={tasksFireBase}
                       meetingAgendaIssueId={isSelectedAgenda}
                       detailMeetingId={detailMeetingId}
-                      taskLength={setTotalTaskLength}
                     />
                   )}
                   {activeTab === "projects" && (
@@ -1190,7 +1189,6 @@ export default function Agenda({
                       projectsFireBase={projectsFireBase}
                       meetingAgendaIssueId={isSelectedAgenda}
                       detailMeetingId={detailMeetingId}
-                      projectLength={setTotalProjectLength}
                     />
                   )}
                   {activeTab === "kpis" && (
@@ -1199,7 +1197,6 @@ export default function Agenda({
                       kpisFireBase={kpisFireBase}
                       meetingAgendaIssueId={isSelectedAgenda}
                       detailMeetingId={detailMeetingId}
-                      kpisLength={setTotalKpisLength}
                     />
                   )}
                 </div>

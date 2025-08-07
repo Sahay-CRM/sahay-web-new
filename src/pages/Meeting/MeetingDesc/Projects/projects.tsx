@@ -30,7 +30,6 @@ interface ProjectProps {
   projectsFireBase: () => void;
   meetingAgendaIssueId: string | undefined;
   detailMeetingId: string | undefined;
-  projectLength?: (length: number) => void;
 }
 
 export default function Projects({
@@ -38,7 +37,6 @@ export default function Projects({
   projectsFireBase,
   meetingAgendaIssueId,
   detailMeetingId,
-  projectLength,
 }: ProjectProps) {
   const { mutate: addMeetingProject } = addMeetingProjectDataMutation();
   const { mutate: deleteProjectById } = deleteMeetingProjectMutation();
@@ -59,12 +57,6 @@ export default function Projects({
   const [selected, setSelected] = useState<CompanyProjectDataProps | null>(
     null,
   );
-
-  useEffect(() => {
-    if (selectedProjects && projectLength) {
-      projectLength(selectedProjects.length);
-    }
-  }, [projectLength, selectedProjects]);
 
   const handleAdd = (data: IProjectFormData[]) => {
     if (meetingAgendaIssueId && detailMeetingId) {

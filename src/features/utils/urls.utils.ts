@@ -218,12 +218,12 @@ const Urls = {
   getConclusionByMeeting: (id: string) =>
     `${baseUrl}/company/detail-meeting/get-conclusion/${id}`,
 
-  addMeetingNots: () => `${baseUrl}/company/detail-meeting/note/create`,
+  addMeetingnotes: () => `${baseUrl}/company/detail-meeting/note/create`,
 
-  updateMeetingNots: (id: string) =>
+  updateMeetingnotes: (id: string) =>
     `${baseUrl}/company/detail-meeting/note/update/${id}`,
 
-  getMeetingNots: (id: string) =>
+  getMeetingnotes: (id: string) =>
     `${baseUrl}/company/detail-meeting/note/get/${id}`,
 
   addIssues: () => `${baseUrl}/company/issues/create`,

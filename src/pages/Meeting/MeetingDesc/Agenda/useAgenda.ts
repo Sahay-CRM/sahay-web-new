@@ -77,9 +77,6 @@ export const useAgenda = ({
   const [addIssueModal, setAddIssueModal] = useState(false);
 
   const [isMeetingStart, setIsMeetingStart] = useState(false);
-  const [totalTaskLength, setTotalTaskLength] = useState<number>(0);
-  const [totalProjectLength, setTotalProjectLength] = useState<number>(0);
-  const [totalKpisLength, setTotalKpisLength] = useState<number>(0);
 
   useEffect(() => {
     if (meetingResponse) {
@@ -839,12 +836,6 @@ export const useAgenda = ({
     handleAddAgendaModal,
     addIssueModal,
     setAddIssueModal,
-    totalTaskLength,
-    setTotalTaskLength,
-    totalKpisLength,
-    setTotalKpisLength,
-    totalProjectLength,
-    setTotalProjectLength,
     // handleJoinMeeting,
   };
 };

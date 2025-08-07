@@ -12,7 +12,7 @@ export default function useGetMeetingNotes({
     queryKey: ["get-meeting-notes", filter],
     queryFn: async () => {
       const { data: resData } = await Api.post<DatePaging>({
-        url: Urls.getMeetingNots(filter.meetingId),
+        url: Urls.getMeetingnotes(filter.meetingId),
         data: filter,
       });
 

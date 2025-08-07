@@ -11,7 +11,7 @@ interface MeetingNoteAdd {
   employeeId?: string;
   note?: string;
   detailMeetingNoteId?: string;
-  noteType?: string;
+  noteType?: string | null;
 }
 
 type DatePaging = CommonResponse<MeetingNotesRes>;
@@ -24,8 +24,8 @@ export default function useAddMeetingNotes() {
 
       const config = {
         url: isUpdate
-          ? Urls.updateMeetingNots(data.detailMeetingNoteId!)
-          : Urls.addMeetingNots(),
+          ? Urls.updateMeetingnotes(data.detailMeetingNoteId!)
+          : Urls.addMeetingnotes(),
         data: data,
       };
 

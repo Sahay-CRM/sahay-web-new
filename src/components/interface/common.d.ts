@@ -1203,6 +1203,9 @@ interface MeetingAgenda {
   actualTime: string | null;
   plannedTime: string | null;
   createdAt?: string | null;
+  noOfTasks: number;
+  noOfProjects: number;
+  noOfKPIs: number;
 }
 
 interface DetailMeetingAgendaIssue {
@@ -1214,6 +1217,9 @@ interface DetailMeetingAgendaIssue {
   isResolved: boolean;
   actualTime: string | null;
   plannedTime: string;
+  noOfTasks: number;
+  noOfProjects: number;
+  noOfKPIs: number;
 }
 
 interface GroupKpisProps {

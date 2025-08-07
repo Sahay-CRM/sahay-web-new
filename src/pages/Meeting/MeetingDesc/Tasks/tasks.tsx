@@ -29,14 +29,12 @@ interface TasksProps {
   tasksFireBase: () => void;
   meetingAgendaIssueId?: string | undefined;
   detailMeetingId: string | undefined;
-  taskLength?: (length: number) => void;
 }
 
 export default function Tasks({
   tasksFireBase,
   meetingAgendaIssueId,
   detailMeetingId,
-  taskLength,
 }: TasksProps) {
   const { id: meetingId } = useParams();
   const { data: taskStatus } = useGetAllTaskStatus({
@@ -57,12 +55,6 @@ export default function Tasks({
     },
     enable: !!detailMeetingId && !!meetingAgendaIssueId,
   });
-
-  useEffect(() => {
-    if (selectedTask && taskLength) {
-      taskLength(selectedTask.length);
-    }
-  }, [selectedTask, taskLength]);
 
   const handleAddTasks = (tasks: TaskGetPaging[]) => {
     if (meetingAgendaIssueId && detailMeetingId) {

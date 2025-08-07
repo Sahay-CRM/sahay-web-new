@@ -3,9 +3,11 @@ import { useSelector } from "react-redux";
 
 import {
   Crown,
+  EllipsisVertical,
   FileText,
   RefreshCcw,
   ThumbsUp,
+  Trash2,
   UsersRound,
   X,
 } from "lucide-react";
@@ -27,6 +29,13 @@ import {
 } from "@/components/ui/tooltip";
 import { getInitials } from "@/features/utils/app.utils";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 
 export default function MeetingDesc() {
   const {
@@ -42,11 +51,15 @@ export default function MeetingDesc() {
     openEmployeeId,
     setOpenEmployeeId,
     handleAddTeamLeader,
-    handleCheckOut,
+    // handleCheckOut,
     follow,
     handleFollow,
     handleCheckIn,
     meetingNotes,
+    handleUpdateNotes,
+    dropdownOpen,
+    setDropdownOpen,
+    handleDelete,
   } = useMeetingDesc();
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -99,15 +112,15 @@ export default function MeetingDesc() {
       <div
         className={cn(
           "h-full rounded-lg mx-3",
-          "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]",
+          // "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]",
           isCardVisible ? "w-[350px] opacity-100" : "w-0 opacity-0",
         )}
       >
         <Card className="h-full w-full p-0">
           {activeTab === "joiners" && (
             <div>
-              <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
-                <h3 className="p-0 text-base">Meeting Joiners</h3>
+              <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
+                <h3 className="p-0 text-base pl-4">Meeting Joiners</h3>
                 <div>
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
@@ -130,43 +143,58 @@ export default function MeetingDesc() {
                       key={index + item.employeeId}
                       className="rounded-md bg-white shadow-sm p-3"
                     >
-                      <div
-                        className="flex items-center gap-3 cursor-pointer"
-                        onClick={toggleOpen}
-                      >
-                        <div className="relative">
-                          {item.isTeamLeader && (
-                            <span className="absolute -top-1 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
-                              <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
-                            </span>
-                          )}
+                      <div className="flex items-center gap-3 cursor-pointer justify-between">
+                        <div
+                          className="flex items-center gap-3 cursor-pointer"
+                          onClick={toggleOpen}
+                        >
+                          <div className="relative">
+                            {item.isTeamLeader && (
+                              <span className="absolute -top-1 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                                <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
+                              </span>
+                            )}
 
-                          <Avatar className="h-10 w-10 relative">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  {item.employeeImage ? (
-                                    <img
-                                      src={`${ImageBaseURL}/share/company/profilePics/${item.employeeImage}`}
-                                      alt={item.employeeName}
-                                      className="w-full h-full rounded-full object-cover outline-2 outline-blue-400 bg-black"
-                                    />
-                                  ) : (
-                                    <AvatarFallback className="bg-gray-300 text-gray-700 font-semibold text-sm">
-                                      {getInitials(item.employeeName)}
-                                    </AvatarFallback>
-                                  )}
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {item.employeeName}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </Avatar>
+                            <Avatar className="h-10 w-10 relative">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    {item.employeeImage ? (
+                                      <img
+                                        src={`${ImageBaseURL}/share/company/profilePics/${item.employeeImage}`}
+                                        alt={item.employeeName}
+                                        className="w-full h-full rounded-full object-cover outline-2 outline-blue-400 bg-black"
+                                      />
+                                    ) : (
+                                      <AvatarFallback className="bg-gray-300 text-gray-700 font-semibold text-sm">
+                                        {getInitials(item.employeeName)}
+                                      </AvatarFallback>
+                                    )}
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {item.employeeName}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </Avatar>
+                          </div>
+
+                          <div className="text-sm font-medium text-gray-800">
+                            {item.employeeName}
+                          </div>
                         </div>
-
-                        <div className="text-sm font-medium text-gray-800">
-                          {item.employeeName}
+                        <div>
+                          <FormCheckbox
+                            id={`${item.employeeId}-checkbox`}
+                            className="w-[16px] h-[16px]"
+                            containerClass="p-0 ml-1"
+                            checked={item.attendanceMark}
+                            onChange={(e) => {
+                              const updatedAttendance = e.target.checked;
+                              handleCheckIn(item, updatedAttendance);
+                            }}
+                            disabled={!isTeamLeader}
+                          />
                         </div>
                       </div>
 
@@ -175,7 +203,7 @@ export default function MeetingDesc() {
                         meetingStatus !== "NOT_STARTED" &&
                         meetingStatus !== "ENDED" && (
                           <div className="mt-3 pl-12 flex flex-col gap-2">
-                            {item.attendanceMark ? (
+                            {item.attendanceMark && (
                               <>
                                 {isTeamLeader && (
                                   <>
@@ -203,14 +231,14 @@ export default function MeetingDesc() {
                                       )}
                                   </>
                                 )}
-                                <button
+                                {/* <button
                                   onClick={() =>
                                     handleCheckOut(item.employeeId)
                                   }
                                   className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
                                 >
                                   Check Out
-                                </button>
+                                </button> */}
 
                                 {item.isTeamLeader &&
                                   item.employeeId !== follow && (
@@ -224,13 +252,6 @@ export default function MeetingDesc() {
                                     </button>
                                   )}
                               </>
-                            ) : (
-                              <button
-                                onClick={() => handleCheckIn(item.employeeId)}
-                                className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                              >
-                                Check In
-                              </button>
                             )}
                           </div>
                         )}
@@ -242,8 +263,8 @@ export default function MeetingDesc() {
           )}
           {activeTab === "documents" && (
             <div>
-              <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
-                <h3 className="p-0 text-base">Meeting Nots</h3>
+              <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
+                <h3 className="p-0 text-base pl-4">Meeting Notes</h3>
                 <div>
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
@@ -268,8 +289,8 @@ export default function MeetingDesc() {
           )}
           {activeTab === "updates" && (
             <div>
-              <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
-                <h3 className="p-0 text-base">Meeting Updates</h3>
+              <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
+                <h3 className="p-0 text-base pl-1">Meeting Updates</h3>
                 <div>
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
@@ -314,6 +335,54 @@ export default function MeetingDesc() {
 
                             <div className="flex justify-between items-start gap-2 group">
                               <p className="break-words">{note.note}</p>
+                              <div>
+                                <DropdownMenu
+                                  open={
+                                    dropdownOpen === note.detailMeetingNoteId
+                                  }
+                                  onOpenChange={(open) =>
+                                    setDropdownOpen(
+                                      open ? note.detailMeetingNoteId : null,
+                                    )
+                                  }
+                                >
+                                  <DropdownMenuTrigger asChild>
+                                    <button
+                                      onClick={() =>
+                                        setDropdownOpen(
+                                          note.detailMeetingNoteId,
+                                        )
+                                      }
+                                      className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
+                                    >
+                                      <EllipsisVertical className="h-5 w-5" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+
+                                  <DropdownMenuContent
+                                    align="end"
+                                    className="w-full"
+                                  >
+                                    <DropdownMenuItem
+                                      onClick={() => handleUpdateNotes(note)}
+                                      className="px-2 py-1.5"
+                                    >
+                                      <X className="h-4 w-4 mr-2" />
+                                      Remove From Updates
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleDelete(note.detailMeetingNoteId)
+                                      }
+                                      className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -371,6 +440,53 @@ export default function MeetingDesc() {
 
                             <div className="flex justify-between items-start gap-2 group">
                               <p className="break-words">{note.note}</p>
+                              <div>
+                                <DropdownMenu
+                                  open={
+                                    dropdownOpen === note.detailMeetingNoteId
+                                  }
+                                  onOpenChange={(open) =>
+                                    setDropdownOpen(
+                                      open ? note.detailMeetingNoteId : null,
+                                    )
+                                  }
+                                >
+                                  <DropdownMenuTrigger asChild>
+                                    <button
+                                      onClick={() =>
+                                        setDropdownOpen(
+                                          note.detailMeetingNoteId,
+                                        )
+                                      }
+                                      className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
+                                    >
+                                      <EllipsisVertical className="h-5 w-5" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+
+                                  <DropdownMenuContent
+                                    align="end"
+                                    className="w-full"
+                                  >
+                                    <DropdownMenuItem
+                                      onClick={() => handleUpdateNotes(note)}
+                                      className="px-2 py-1.5"
+                                    >
+                                      <X className="h-4 w-4 mr-2" />
+                                      Remove From Appreciation
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleDelete(note.detailMeetingNoteId)
+                                      }
+                                      className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
                             </div>
                           </div>
                         </div>

@@ -124,9 +124,17 @@ export default function IssueAgendaAddModal({
         </div>
         <RadioGroup value={selectedType} onValueChange={setSelectedType}>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="issue" id="r1" />
+            <RadioGroupItem
+              value="issue"
+              id="r1"
+              className="border-black w-5 h-5"
+            />
             <label htmlFor="r1">Issue</label>
-            <RadioGroupItem value="objective" id="r2" className="ml-6" />
+            <RadioGroupItem
+              value="objective"
+              id="r2"
+              className="ml-6 border-black w-5 h-5"
+            />
             <label htmlFor="r2">Objective</label>
           </div>
         </RadioGroup>

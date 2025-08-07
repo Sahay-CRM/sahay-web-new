@@ -3,8 +3,10 @@ import { useParams } from "react-router-dom";
 import { getDatabase, off, onValue, ref, update } from "firebase/database";
 
 import {
+  addMeetingNotesMutation,
   addMeetingTimeMutation,
   addUpdateCompanyMeetingMutation,
+  deleteCompanyMeetingMutation,
   endMeetingMutation,
   updateDetailMeetingMutation,
   useGetMeetingNotes,
@@ -22,6 +24,7 @@ export default function useMeetingDesc() {
   const [activeTab, setActiveTab] = useState<string>();
   const [isCardVisible, setIsCardVisible] = useState(false);
   const [openEmployeeId, setOpenEmployeeId] = useState<string | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
 
   const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
   const { data: meetingNotes } = useGetMeetingNotes({
@@ -36,6 +39,8 @@ export default function useMeetingDesc() {
   const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
   const { mutate: updateMeetingTeamLeader } = addUpdateCompanyMeetingMutation();
   const { mutate: updateTime } = addMeetingTimeMutation();
+  const { mutate: addNote } = addMeetingNotesMutation();
+  const deleteNoteMutation = deleteCompanyMeetingMutation();
 
   const handleUpdatedRefresh = useCallback(async () => {
     await Promise.all([
@@ -172,27 +177,27 @@ export default function useMeetingDesc() {
       },
     });
   };
-  const handleCheckOut = (employeeId: string) => {
-    if (meetingId) {
-      updateTime(
-        {
-          meetingId: meetingId,
-          employeeId: employeeId,
-          attendanceMark: false,
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          onSuccess: () => {
-            if (meetingId) {
-              const db = getDatabase();
-              const meetRef = ref(db, `meetings/${meetingId}/state`);
-              update(meetRef, { updatedAt: new Date() });
-            }
-          },
-        },
-      );
-    }
-  };
+  // const handleCheckOut = (employeeId: string) => {
+  //   if (meetingId) {
+  //     updateTime(
+  //       {
+  //         meetingId: meetingId,
+  //         employeeId: employeeId,
+  //         attendanceMark: false,
+  //         updatedAt: new Date().toISOString(),
+  //       },
+  //       {
+  //         onSuccess: () => {
+  //           if (meetingId) {
+  //             const db = getDatabase();
+  //             const meetRef = ref(db, `meetings/${meetingId}/state`);
+  //             update(meetRef, { updatedAt: new Date() });
+  //           }
+  //         },
+  //       }
+  //     );
+  //   }
+  // };
 
   const handleFollow = (employeeId: string) => {
     if (meetingId) {
@@ -204,13 +209,13 @@ export default function useMeetingDesc() {
     }
   };
 
-  const handleCheckIn = (employeeId: string) => {
+  const handleCheckIn = (item: Joiners, attendanceMark: boolean) => {
     if (meetingId) {
       updateTime(
         {
           meetingId: meetingId,
-          employeeId: employeeId,
-          attendanceMark: true,
+          employeeId: item.employeeId,
+          attendanceMark: attendanceMark,
           updatedAt: new Date().toISOString(),
         },
         {
@@ -224,6 +229,20 @@ export default function useMeetingDesc() {
         },
       );
     }
+  };
+
+  const handleUpdateNotes = (data: MeetingNotesRes) => {
+    const payload = {
+      detailMeetingNoteId: data.detailMeetingNoteId,
+      noteType: null,
+    };
+    addNote(payload, {
+      onSuccess: () => {},
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    deleteNoteMutation.mutate(id);
   };
 
   return {
@@ -243,10 +262,14 @@ export default function useMeetingDesc() {
     openEmployeeId,
     setOpenEmployeeId,
     handleAddTeamLeader,
-    handleCheckOut,
+    // handleCheckOut,
     follow: meetingResponse?.state.follow,
     handleFollow,
     handleCheckIn,
     meetingNotes,
+    handleUpdateNotes,
+    dropdownOpen,
+    setDropdownOpen,
+    handleDelete,
   };
 }

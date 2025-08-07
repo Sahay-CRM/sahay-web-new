@@ -313,7 +313,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                             </button>
                           </DropdownMenuTrigger>
 
-                          <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuContent align="end" className="w-full">
                             {!note.noteType && (
                               <>
                                 <DropdownMenuItem
@@ -321,14 +321,14 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                   className="px-2 py-1.5"
                                 >
                                   <Edit className="h-4 w-4 mr-2" />
-                                  Add Task
+                                  Add to Task
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleAddProject(note)}
                                   className="px-2 py-1.5"
                                 >
                                   <Edit className="h-4 w-4 mr-2" />
-                                  Add Project
+                                  Add to Project
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
@@ -337,7 +337,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                   className="px-2 py-1.5"
                                 >
                                   <Share2 className="h-4 w-4 mr-2" />
-                                  Updates
+                                  Mark as Updates
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
@@ -346,7 +346,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                   className="px-2 py-1.5"
                                 >
                                   <Share2 className="h-4 w-4 mr-2" />
-                                  Appreciation
+                                  Mark as Appreciation
                                 </DropdownMenuItem>
                               </>
                             )}
