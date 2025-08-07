@@ -26,10 +26,25 @@ export const companyNavigationData = [
   {
     id: 4,
     icon: "Video",
-    label: "Meeting List",
-    link: "/dashboard/meeting",
+    label: "Meeting",
     permission: "View",
     moduleKey: "MEETING_LIST",
+    items: [
+      {
+        id: 1,
+        label: "Meeting List",
+        link: "/dashboard/meeting",
+        permission: "View",
+        moduleKey: "MEETING_LIST",
+      },
+      {
+        id: 2,
+        label: "Detail Meeting",
+        link: "/dashboard/meeting/detail",
+        permission: "View",
+        moduleKey: "MEETING_LIST",
+      },
+    ],
   },
   {
     id: 5,

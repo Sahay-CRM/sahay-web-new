@@ -21,7 +21,7 @@ const toLocalISOString = (date: Date | undefined) => {
   return `${year}-${month}-${day}`;
 };
 
-export default function useAdminUser() {
+export default function useDetailMeeting() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [modalData, setModalData] = useState<MeetingData>({} as MeetingData);
@@ -78,7 +78,7 @@ export default function useAdminUser() {
             endDate: toLocalISOString(appliedDateRange.taskDeadline),
           }),
       overDue: showOverdue,
-      parentType: "Show All Other",
+      parentType: "Show Detail",
     },
   });
 

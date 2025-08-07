@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
-import useMeeting from "./useMeeting";
+import useDetailMeeting from "./useDetailMeeting";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
@@ -24,7 +24,7 @@ import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
 import { getUserId } from "@/features/selectors/auth.selector";
 
-export default function MeetingList() {
+export default function DetailMeetingList() {
   const {
     meetingData,
     isLoading,
@@ -52,7 +52,7 @@ export default function MeetingList() {
     taskDateRange,
     // handleDetailToggle,
     // showDetail,
-  } = useMeeting();
+  } = useDetailMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
   const userId = useSelector(getUserId);
