@@ -722,7 +722,8 @@ export const useAgenda = ({
     const prevElapsedSeconds = meetingConclusionTime
       ? (now - meetingConclusionTime) / 1000
       : undefined;
-    if (meetingId && detailMeetingId && prevElapsedSeconds) {
+
+    if (meetingId && detailMeetingId) {
       updateDetailMeeting(
         {
           meetingId: meetingId,

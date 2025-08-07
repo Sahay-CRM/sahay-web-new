@@ -477,7 +477,7 @@ export default function Agenda({
                 {meetingStatus === "CONCLUSION" && (
                   <Button
                     variant="outline"
-                    className="bg-primary text-white px-4 hover:bg-primary py-5 text-sm hover:text-white sm:text-base md:text-lg"
+                    className="bg-primary text-white cursor-pointer px-4 hover:bg-primary py-5 text-sm hover:text-white sm:text-base md:text-lg"
                     onClick={handleCloseMeetingWithLog}
                     isLoading={endMeetingLoading}
                   >
