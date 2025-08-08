@@ -503,7 +503,7 @@ export default function UpdatedKpiTable() {
             <tbody>
               {groupedKpiRows.map((group) => (
                 <React.Fragment key={group.coreParameter.coreParameterId}>
-                  <tr className="sticky top-[50px] bg-blue-50 z-10">
+                  <tr className="sticky top-[50px] bg-blue-50 z-10 h-[39px]">
                     <td
                       colSpan={4}
                       className="p-2 text-blue-800 border font-bold"
@@ -608,7 +608,7 @@ export default function UpdatedKpiTable() {
         <div className="overflow-x-auto border shadow-sm flex-1 bg-white">
           <div ref={rightScrollRef} className="max-h-[78vh] overflow-y-auto">
             <table className="min-w-max border-collapse text-sm table-fixed">
-              <thead className="sticky top-0 z-10 bg-white">
+              <thead className="sticky top-0 z-20 bg-white h-[51px]">
                 <tr className="">
                   {headers.map((header, idx) => (
                     <th
@@ -630,7 +630,7 @@ export default function UpdatedKpiTable() {
               <tbody>
                 {groupedKpiRows.map((group) => (
                   <React.Fragment key={group.coreParameter.coreParameterId}>
-                    <tr className="sticky h-[39px] top-[51px] bg-blue-50 z-0">
+                    <tr className="sticky h-[39px] top-[50px] bg-blue-50 z-10">
                       <td
                         colSpan={headers.length}
                         className="p-2  border text-black font-bold"

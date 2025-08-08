@@ -74,7 +74,7 @@ const DashboardLayout = () => {
 
   // Collapse sidebar by default on MeetingDesc page
   const isMeetingDesc = /\/dashboard\/meeting\/detail\//.test(
-    location.pathname
+    location.pathname,
   );
 
   const [open, setOpen] = useState(!isMeetingDesc ? true : false);
@@ -129,7 +129,7 @@ const DashboardLayout = () => {
         setNotifications({
           data: notificationData.data,
           totalCount: notificationData.totalCount,
-        })
+        }),
       );
     }
   }, [dispatch, notificationData]);
@@ -168,7 +168,7 @@ const DashboardLayout = () => {
     updateNotification(updateData, {
       onSuccess: () => {
         const index = notifications.findIndex(
-          (n) => n.notificationId === notification.notificationId
+          (n) => n.notificationId === notification.notificationId,
         );
 
         if (index !== -1) {
@@ -196,7 +196,7 @@ const DashboardLayout = () => {
               token: response.data.token ?? null,
               isLoading: false,
               isAuthenticated: true,
-            })
+            }),
           );
           requestFirebaseNotificationPermission().then((firebaseToken) => {
             if (firebaseToken && typeof firebaseToken === "string") {
@@ -219,7 +219,7 @@ const DashboardLayout = () => {
                   window.location.reload();
                   setCompanyModalOpen(false);
                 },
-              }
+              },
             );
           });
           return;
@@ -301,11 +301,11 @@ const DashboardLayout = () => {
                   {isNotificationOpen && (
                     <div>
                       <div
-                        className="fixed inset-0 z-10"
+                        className="fixed inset-0"
                         onClick={() => setIsNotificationOpen(false)}
                         style={{ background: "transparent" }}
                       />
-                      <div className="absolute right-0 top-12 bg-white shadow-2xl border rounded-lg p-4 w-[400px] z-20">
+                      <div className="absolute right-0 top-12 bg-white shadow-2xl border rounded-lg p-4 w-[400px] z-50">
                         {notifications.length > 0 ? (
                           <>
                             <ul className="h-80 overflow-scroll">

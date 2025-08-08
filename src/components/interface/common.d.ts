@@ -1074,6 +1074,7 @@ interface MeetingResFire {
     follow: string;
     meetingTimestamp?: number;
     updatedAt: number | string;
+    conclusionTimestamp: number;
   };
   timers: {
     agenda?: TimerEntry;
