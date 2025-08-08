@@ -255,6 +255,7 @@ const Urls = {
 
   updateDetailMeetingKPIData: () =>
     `${baseUrl}/company/detail-meeting/kpi/update-data`,
+
 };
 
 export default Urls;

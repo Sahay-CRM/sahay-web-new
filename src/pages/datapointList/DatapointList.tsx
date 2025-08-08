@@ -169,7 +169,9 @@ export default function CompanyTaskList() {
                 index +
                 1,
               validationType: getValidationLabel(item.validationType),
+
               frequencyType: formatFrequencyType(item.frequencyType),
+
             }))}
             columns={visibleColumns}
             primaryKey="kpiId"

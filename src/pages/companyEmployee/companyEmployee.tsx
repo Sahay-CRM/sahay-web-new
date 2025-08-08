@@ -48,6 +48,8 @@ export default function CompanyDesignation() {
     handleRowsModalOpen,
     viewModalData,
     handleInactive,
+    onStatusChange,
+    currentStatus,
   } = useCompanyEmployee();
 
   //   const { setBreadcrumbs } = useBreadcrumbs();
@@ -101,12 +103,21 @@ export default function CompanyDesignation() {
 
   return (
     <FormProvider {...methods}>
+
        <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-5 justify-between items-center">
+
           <h1 className="font-semibold capitalize text-xl text-black">
             Employee List
           </h1>
-          <div className="flex items-center space-x-5 tb:space-x-7">
+          <div className="flex items-center space-x-5 tb:space-x-5">
+            <FormSelect
+              id="dataUserSelect"
+              options={statusOptions}
+              onChange={(e) => onStatusChange(Boolean(e))}
+              className="rounded-md py-2 focus-visible:ring-0"
+              value={currentStatus}
+            />
             {permission.Add && (
               <Link to="/dashboard/employees/add">
                 <Button className="py-2 w-fit">Add Employee</Button>
@@ -114,7 +125,7 @@ export default function CompanyDesignation() {
             )}
           </div>
         </div>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-2">
           <div>
             <SearchInput
               placeholder="Search..."
