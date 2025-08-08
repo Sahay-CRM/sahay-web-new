@@ -7,4 +7,4 @@ export { default as useDeleteDatapoint } from "./useDeleteDatapoint";
 export { default as addUpdateKpiMergeMutation } from "./useAddUpdateKPIMerge";
 
 export { default as useGetAvailableKpis } from "./useGetAvailableKpis";
-export { default as useGetKpiMergeById } from "./useGetKPIMergeById";
+export { default as useGetKpiMergeById } from "./useGetKpimergeById";
