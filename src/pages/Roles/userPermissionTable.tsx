@@ -342,7 +342,7 @@ export default function UserPermissionTableMerged() {
         href: "/dashboard/roles/user-permission",
       },
       { label: "Edit Permissions" },
-      { label: `${userName || ""}` },
+      { label: `${userName || ""}`, isHighlight: true },
     ]);
   }, [setBreadcrumbs, userName]);
 
@@ -398,8 +398,12 @@ export default function UserPermissionTableMerged() {
       <div className="flex justify-between items-center mb-4">
         <div>
           <h2 className="text-xl">
-            Editing permissions for:{" "}
-            {userName ? <span className="font-bold">{userName}</span> : "User"}
+            Editing permissions for :{" "}
+            {userName ? (
+              <span className="font-bold text-[#2e3090]">{userName}</span>
+            ) : (
+              "User"
+            )}
           </h2>
         </div>
         <Button

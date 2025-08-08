@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
+import { formatFrequencyType } from "@/features/utils/app.utils";
 
 const validationOptions = [
   { value: "EQUAL_TO", label: "= Equal to" },
@@ -67,6 +68,11 @@ export default function CompanyTaskList() {
       label: "KPI Name",
       visible: true,
     },
+    {
+      key: "tag",
+      label: "KPI Tag",
+      visible: true,
+    },
     { key: "KPILabel", label: "KPI Description (Tooltip)", visible: true },
     { key: "validationType", label: "Validation Type", visible: true },
     { key: "frequencyType", label: "Frequency", visible: true },
@@ -83,15 +89,15 @@ export default function CompanyTaskList() {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
 
   // Toggle column visibility
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   // Check if the number of columns is more than 3
@@ -105,7 +111,7 @@ export default function CompanyTaskList() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-5 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             KPI List
@@ -116,6 +122,9 @@ export default function CompanyTaskList() {
                 <Button className="py-2 w-fit">Add KPI</Button>
               </Link>
             )}
+            {/* <Link to="/dashboard/kpi/group-kpis">
+              <Button className="py-2 w-fit">Group KPIs</Button>
+            </Link> */}
           </div>
         </div>
         <div className="flex justify-between items-center mb-4">
@@ -150,7 +159,7 @@ export default function CompanyTaskList() {
           </div>
         </div>
 
-        <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
+        <div className="bg-white">
           <TableData
             key={datpointData?.currentPage}
             tableData={datpointData?.data.map((item, index) => ({
@@ -160,7 +169,9 @@ export default function CompanyTaskList() {
                 index +
                 1,
               validationType: getValidationLabel(item.validationType),
-              frequencyType: item.frequencyType,
+
+              frequencyType: formatFrequencyType(item.frequencyType),
+
             }))}
             columns={visibleColumns}
             primaryKey="kpiId"
@@ -190,6 +201,7 @@ export default function CompanyTaskList() {
               "validationType",
               "frequencyType",
             ]}
+            actionColumnWidth="w-[100px] overflow-hidden "
           />
         </div>
 

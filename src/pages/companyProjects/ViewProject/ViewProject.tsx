@@ -36,10 +36,10 @@ const ProjectView = () => {
 
   return (
     <FormProvider {...methods}>
-      <h1 className="font-semibold capitalize text-xl text-black mb-2">
-        Project Overview
-      </h1>
-      <div className="p-6 bg-gray-200">
+      <div className="p-4">
+        <h1 className="font-semibold capitalize text-xl text-black mb-2">
+          Project Overview
+        </h1>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left: Project Overview */}
           <div className="bg-white p-6 rounded-xl shadow-sm text-md">

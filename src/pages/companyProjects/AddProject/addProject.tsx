@@ -1,38 +1,34 @@
-import { Button } from "@/components/ui/button";
 import { FormProvider, useFormContext, Controller } from "react-hook-form"; // Added useFormContext, Controller
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import useAddProject from "./useAddProject";
 import AddProjectModal from "./addProjectModal";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { useEffect, useState } from "react"; // Added useState
+import { useEffect, useState } from "react";
 
-// Imports for components used within step components
 import { Card } from "@/components/ui/card";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
 
-// Imports for API hooks and functions used by step components
 import { getEmployee } from "@/features/api/companyEmployee";
 import {
   useGetCorparameter,
   useGetProjectStatus,
   useGetSubParaFilter,
 } from "@/features/api/companyProject";
-// Define CompanyProjectDataProps type if not already globally available
-// interface CompanyProjectDataProps { /* ... properties ... */ }
+import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 
-// --- ProjectInfo Component Definition ---
 const ProjectInfo = () => {
   const {
     register,
+    control,
     formState: { errors },
   } = useFormContext();
   return (
     <div className="grid grid-cols-2 gap-4">
-      <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
+      <Card className="col-span-2 px-4 py-4 grid grid-cols-2 mt-4 gap-4">
         <FormInputField
           label="Project Name"
           {...register("projectName", { required: "Name is required" })}
@@ -45,21 +41,41 @@ const ProjectInfo = () => {
           })}
           error={errors.projectDescription}
         />
-        <FormInputField
-          id="projectDeadline"
-          type="date"
-          label="Project Deadline"
-          {...register("projectDeadline", {
-            required: "Date & Time is required",
-          })}
-          error={errors.projectDeadline}
+        <Controller
+          control={control}
+          name="projectDeadline"
+          render={({ field }) => {
+            // Convert to local time for display
+            const localDate = field.value
+              ? new Date(
+                  new Date(field.value).getTime() +
+                    new Date().getTimezoneOffset() * 60000
+                )
+              : null;
+
+            return (
+              <FormDateTimePicker
+                label="Project Deadline"
+                value={localDate}
+                onChange={(date) => {
+                  // Convert back to UTC when saving
+                  const utcDate = date
+                    ? new Date(
+                        date.getTime() - date.getTimezoneOffset() * 60000
+                      )
+                    : null;
+                  field.onChange(utcDate);
+                }}
+                error={errors.projectDeadline}
+              />
+            );
+          }}
         />
       </Card>
     </div>
   );
 };
 
-// --- ProjectStatus Component Definition ---
 const ProjectStatus = () => {
   const {
     control,
@@ -70,7 +86,7 @@ const ProjectStatus = () => {
     pageSize: 25,
     search: "",
   });
-  const { data: projectStatusData } = useGetProjectStatus({
+  const { data: projectStatusData, isLoading } = useGetProjectStatus({
     filter: paginationFilter,
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -82,75 +98,80 @@ const ProjectStatus = () => {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
 
   return (
     <div>
-      <div className="mt-1 flex items-center justify-between mb-2">
-        <SearchInput
-          placeholder="Search Status..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-96"
-        />
+      <div className="mt-1 mb-4 flex items-center justify-between">
+        {/* Left side: Search + Error */}
+        <div className="flex items-center space-x-2">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
+          />
+
+          {errors?.projectStatusId && (
+            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] whitespace-nowrap before:content-['*']">
+              {String(errors?.projectStatusId?.message || "")}
+            </span>
+          )}
+        </div>
+
+        {/* Right side: Toggle */}
         {canToggleColumns && (
-          <div className="ml-4">
+          <div>
             <DropdownSearchMenu
               columns={columnToggleOptions}
               onToggleColumn={onToggleColumn}
+              columnIcon={true}
             />
           </div>
         )}
       </div>
+
       <Controller
         name="projectStatusId"
         control={control}
         rules={{ required: "Please select a project status" }}
         render={({ field }) => (
-          <>
-            {errors?.projectStatusId && (
-              <div className="mb-1">
-                <span className="text-red-600 text-sm">
-                  {String(errors?.projectStatusId?.message || "")}
-                </span>
-              </div>
-            )}
-            <TableData
-              tableData={projectStatusData?.data.map((item, index) => ({
-                ...item,
-                srNo:
-                  (projectStatusData.currentPage - 1) *
-                    projectStatusData.pageSize +
-                  index +
-                  1,
-              }))}
-              isActionButton={() => false}
-              columns={visibleColumns}
-              primaryKey="projectStatusId"
-              paginationDetails={projectStatusData as PaginationFilter}
-              setPaginationFilter={setPaginationFilter}
-              multiSelect={false}
-              selectedValue={field.value} // field.value might be an object or just ID
-              handleChange={(selected) => field.onChange(selected)} // Store the whole selected object or just ID based on what reset provides
-              onCheckbox={() => true}
-            />
-          </>
+          <TableData
+            tableData={projectStatusData?.data.map((item, index) => ({
+              ...item,
+              srNo:
+                (projectStatusData.currentPage - 1) *
+                  projectStatusData.pageSize +
+                index +
+                1,
+            }))}
+            isActionButton={() => false}
+            columns={visibleColumns}
+            primaryKey="projectStatusId"
+            paginationDetails={projectStatusData as PaginationFilter}
+            setPaginationFilter={setPaginationFilter}
+            multiSelect={false}
+            selectedValue={field.value}
+            handleChange={(selected) => field.onChange(selected)}
+            onCheckbox={() => true}
+            isLoading={isLoading}
+            showActionsColumn={false}
+          />
         )}
       />
     </div>
   );
 };
 
-// --- CoreParameter Component Definition ---
 const CoreParameter = () => {
   const {
     control,
@@ -161,7 +182,7 @@ const CoreParameter = () => {
     pageSize: 25,
     search: "",
   });
-  const { data: coreParameterData } = useGetCorparameter({
+  const { data: coreParameterData, isLoading } = useGetCorparameter({
     filter: paginationFilter,
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -173,31 +194,43 @@ const CoreParameter = () => {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
 
   return (
     <div>
-      <div className="mt-1 flex items-center justify-between mb-2">
-        <SearchInput
-          placeholder="Search Business Function..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-96"
-        />
+      <div className="mt-1 mb-4 flex items-center justify-between">
+        {/* Left side: Search + Error */}
+        <div className="flex items-center space-x-2">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
+          />
+          {errors?.coreParameterId && (
+            <div className="mb-1">
+              <span className="text-red-600 text-sm">
+                {String(errors?.coreParameterId?.message || "")}
+              </span>
+            </div>
+          )}
+        </div>
+
         {canToggleColumns && (
-          <div className="ml-4">
+          <div className="ml-3">
             <DropdownSearchMenu
               columns={columnToggleOptions}
               onToggleColumn={onToggleColumn}
+              columnIcon={true}
             />
           </div>
         )}
@@ -205,43 +238,34 @@ const CoreParameter = () => {
       <Controller
         name="coreParameterId"
         control={control}
-        // rules={{ required: "Please select a Business Function" }}
         render={({ field }) => (
-          <>
-            {errors?.coreParameterId && (
-              <div className="mb-1">
-                <span className="text-red-600 text-sm">
-                  {String(errors?.coreParameterId?.message || "")}
-                </span>
-              </div>
-            )}
-            <TableData
-              tableData={coreParameterData?.data.map((item, index) => ({
-                ...item,
-                srNo:
-                  (coreParameterData.currentPage - 1) *
-                    coreParameterData.pageSize +
-                  index +
-                  1,
-              }))}
-              isActionButton={() => false}
-              columns={visibleColumns}
-              primaryKey="coreParameterId"
-              paginationDetails={coreParameterData as PaginationFilter}
-              setPaginationFilter={setPaginationFilter}
-              multiSelect={false}
-              selectedValue={field.value}
-              handleChange={(selected) => field.onChange(selected)} // Store the whole selected object
-              onCheckbox={() => true}
-            />
-          </>
+          <TableData
+            tableData={coreParameterData?.data.map((item, index) => ({
+              ...item,
+              srNo:
+                (coreParameterData.currentPage - 1) *
+                  coreParameterData.pageSize +
+                index +
+                1,
+            }))}
+            isActionButton={() => false}
+            columns={visibleColumns}
+            primaryKey="coreParameterId"
+            paginationDetails={coreParameterData as PaginationFilter}
+            setPaginationFilter={setPaginationFilter}
+            multiSelect={false}
+            selectedValue={field.value}
+            handleChange={(selected) => field.onChange(selected)}
+            onCheckbox={() => true}
+            isLoading={isLoading}
+            showActionsColumn={false}
+          />
         )}
       />
     </div>
   );
 };
 
-// --- SubParameter Component Definition ---
 const SubParameter = () => {
   const {
     control,
@@ -265,7 +289,7 @@ const SubParameter = () => {
     }
   }, [coreParameterIdValue]);
 
-  const { data: subParameterData } = useGetSubParaFilter({
+  const { data: subParameterData, isLoading } = useGetSubParaFilter({
     filter: {
       ...paginationFilter,
       coreParameterId: coreParameterIdValue,
@@ -282,13 +306,13 @@ const SubParameter = () => {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
@@ -303,18 +327,30 @@ const SubParameter = () => {
 
   return (
     <div>
-      <div className="mt-1 flex items-center justify-between mb-2">
-        <SearchInput
-          placeholder="Search..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-96"
-        />
+      <div className="mt-1 mb-4 flex items-center justify-between">
+        {/* Left side: Search + Error */}
+        <div className="flex items-center space-x-2">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
+          />
+          {errors?.subParameterId && (
+            <div className="mb-1">
+              <span className="text-red-600 text-sm">
+                {String(errors?.subParameterId?.message || "")}
+              </span>
+            </div>
+          )}
+        </div>
+
         {canToggleColumns && (
-          <div className="ml-4">
+          <div className="ml-3">
             <DropdownSearchMenu
               columns={columnToggleOptions}
               onToggleColumn={onToggleColumn}
+              columnIcon={true}
             />
           </div>
         )}
@@ -323,48 +359,39 @@ const SubParameter = () => {
         name="subParameterId"
         control={control}
         render={({ field }) => (
-          <>
-            {errors?.subParameterId && (
-              <div className="mb-1">
-                <span className="text-red-600 text-sm">
-                  {String(errors?.subParameterId?.message || "")}
-                </span>
-              </div>
-            )}
-            <TableData
-              tableData={subParameterData?.data.map((item, index) => ({
-                ...item,
-                srNo:
-                  (subParameterData.currentPage - 1) *
-                    subParameterData.pageSize +
-                  index +
-                  1,
-              }))}
-              isActionButton={() => false}
-              columns={visibleColumns}
-              primaryKey="subParameterId"
-              paginationDetails={subParameterData as PaginationFilter}
-              setPaginationFilter={setPaginationFilter}
-              multiSelect={true}
-              selectedValue={field.value || []} // Expects array of IDs
-              handleChange={(selectedItems) => {
-                const ids = selectedItems.map((item: SubParameter | string) =>
-                  typeof item === "object" && item !== null
-                    ? item.subParameterId
-                    : item,
-                );
-                field.onChange(ids);
-              }}
-              onCheckbox={() => true}
-            />
-          </>
+          <TableData
+            tableData={subParameterData?.data.map((item, index) => ({
+              ...item,
+              srNo:
+                (subParameterData.currentPage - 1) * subParameterData.pageSize +
+                index +
+                1,
+            }))}
+            isActionButton={() => false}
+            columns={visibleColumns}
+            primaryKey="subParameterId"
+            paginationDetails={subParameterData as PaginationFilter}
+            setPaginationFilter={setPaginationFilter}
+            multiSelect={true}
+            selectedValue={field.value || []}
+            handleChange={(selectedItems) => {
+              const ids = selectedItems.map((item: SubParameter | string) =>
+                typeof item === "object" && item !== null
+                  ? item.subParameterId
+                  : item
+              );
+              field.onChange(ids);
+            }}
+            onCheckbox={() => true}
+            isLoading={isLoading}
+            showActionsColumn={false}
+          />
         )}
       />
     </div>
   );
 };
 
-// --- Employees Component Definition ---
 const Employees = () => {
   const {
     control,
@@ -375,7 +402,7 @@ const Employees = () => {
     pageSize: 25,
     search: "",
   });
-  const { data: employeeData } = getEmployee({
+  const { data: employeeData, isLoading } = getEmployee({
     filter: { ...paginationFilter, isDeactivated: false },
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -388,74 +415,79 @@ const Employees = () => {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
 
   return (
     <div>
-      <div className="mt-1 flex items-center justify-between mb-2">
-        <SearchInput
-          placeholder="Search Employees..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-96"
-        />
+      <div className="mt-1 mb-4 flex items-center justify-between">
+        {/* Left side: Search + Error */}
+        <div className="flex items-center space-x-2">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
+          />
+          {errors?.employeeId && (
+            <div className="mb-1">
+              <span className="text-red-600 text-sm">
+                {String(errors?.employeeId?.message || "")}
+              </span>
+            </div>
+          )}
+        </div>
+
         {canToggleColumns && (
-          <div className="ml-4">
+          <div className="ml-3">
             <DropdownSearchMenu
               columns={columnToggleOptions}
               onToggleColumn={onToggleColumn}
+              columnIcon={true}
             />
           </div>
         )}
       </div>
       <Controller
-        name="employeeId" // This should store an array of employee IDs
+        name="employeeId"
         control={control}
         rules={{ required: "Please select at least one employee" }}
         render={({ field }) => (
-          <>
-            {errors?.employeeId && (
-              <div className="mb-1">
-                <span className="text-red-600 text-sm">
-                  {String(errors?.employeeId?.message || "")}
-                </span>
-              </div>
-            )}
-            <TableData
-              tableData={employeeData?.data.map((item, index) => ({
-                ...item,
-                srNo:
-                  (employeeData.currentPage - 1) * employeeData.pageSize +
-                  index +
-                  1,
-              }))}
-              isActionButton={() => false}
-              columns={visibleColumns}
-              primaryKey="employeeId"
-              paginationDetails={employeeData as PaginationFilter}
-              setPaginationFilter={setPaginationFilter}
-              multiSelect={true}
-              selectedValue={field.value || []}
-              handleChange={(selectedItems) => {
-                const ids = selectedItems.map((item: Employee | string) =>
-                  typeof item === "object" && item !== null
-                    ? item.employeeId
-                    : item,
-                );
-                field.onChange(ids);
-              }}
-              onCheckbox={() => true}
-            />
-          </>
+          <TableData
+            tableData={employeeData?.data.map((item, index) => ({
+              ...item,
+              srNo:
+                (employeeData.currentPage - 1) * employeeData.pageSize +
+                index +
+                1,
+            }))}
+            isActionButton={() => false}
+            columns={visibleColumns}
+            primaryKey="employeeId"
+            paginationDetails={employeeData as PaginationFilter}
+            setPaginationFilter={setPaginationFilter}
+            multiSelect={true}
+            selectedValue={field.value || []}
+            handleChange={(selectedItems) => {
+              const ids = selectedItems.map((item: Employee | string) =>
+                typeof item === "object" && item !== null
+                  ? item.employeeId
+                  : item
+              );
+              field.onChange(ids);
+            }}
+            onCheckbox={() => true}
+            isLoading={isLoading}
+            showActionsColumn={false}
+          />
         )}
       />
     </div>
@@ -469,7 +501,7 @@ const AddProject = () => {
     handleClose,
     onSubmit,
     trigger,
-    projectPreview, // Renamed from meetingPreview and removed trailing comment
+    projectPreview,
     companyProjectId,
     isPending,
     methods,
@@ -480,7 +512,7 @@ const AddProject = () => {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Projects", href: "/dashboard/projects" }, // Corrected breadcrumb
+      { label: "Company Projects", href: "/dashboard/projects" },
       {
         label: companyProjectId
           ? "Update Company Project"
@@ -491,12 +523,12 @@ const AddProject = () => {
         ? [
             {
               label: `${
-                // typeof projectApiData?.KPIMaster === "object" &&
                 projectApiData?.data.projectName
                   ? projectApiData.data.projectName
                   : ""
               }`,
               href: `/dashboard/kpi/${companyProjectId}`,
+              isHighlight: true,
             },
           ]
         : []),
@@ -531,38 +563,19 @@ const AddProject = () => {
 
   return (
     <FormProvider {...methods}>
-      <div>
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <StepProgress
           currentStep={currentStep}
           stepNames={stepNames}
           totalSteps={totalSteps}
-          header={companyProjectId ? projectApiData?.data.projectName : null}
+          back={back}
+          isFirstStep={isFirstStep}
+          next={next}
+          isLastStep={isLastStep}
+          isPending={isPending}
+          onFinish={onFinish}
+          isUpdate={!!companyProjectId}
         />
-
-        <div className="flex justify-end gap-5 mb-5 ">
-          <Button
-            onClick={back}
-            disabled={isFirstStep || isPending}
-            className="w-fit"
-            type="button"
-          >
-            Previous
-          </Button>
-          <Button
-            onClick={isLastStep ? onFinish : next}
-            className="w-fit"
-            disabled={isPending}
-            isLoading={isPending}
-            type="button"
-          >
-            {isLastStep ? "Finish" : "Next"}
-          </Button>
-          {companyProjectId && !isLastStep && (
-            <Button onClick={onFinish} className="w-fit">
-              Submit
-            </Button>
-          )}
-        </div>
 
         <div className="step-content w-full">{stepContent}</div>
 
@@ -573,7 +586,7 @@ const AddProject = () => {
               projectStatusId:
                 projectPreview?.projectStatusId ??
                 methods.getValues("projectStatusId"),
-            }} // Ensure projectStatusId is present
+            }}
             isModalOpen={isModalOpen}
             modalClose={handleClose}
             onSubmit={onSubmit}

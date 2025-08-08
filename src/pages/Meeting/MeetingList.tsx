@@ -50,8 +50,8 @@ export default function MeetingList() {
     showOverdue,
     handleOverdueToggle,
     taskDateRange,
-    handleDetailToggle,
-    showDetail,
+    // handleDetailToggle,
+    // showDetail,
   } = useMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -99,7 +99,7 @@ export default function MeetingList() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-5 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             Meeting List
@@ -113,7 +113,7 @@ export default function MeetingList() {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
           <div>
             <SearchInput
               placeholder="Search..."
@@ -122,8 +122,8 @@ export default function MeetingList() {
               className="w-80"
             />
           </div>
-          <div className="flex gap-4">
-            <div className="z-10 relative flex items-center gap-2">
+          <div className="flex gap-4 flex-wrap">
+            <div className="relative flex items-center gap-2 ">
               {!showOverdue && (
                 <DateRangePicker
                   value={{
@@ -146,6 +146,13 @@ export default function MeetingList() {
                 multiSelect
               />
             </div>
+            {/* <Button
+              variant={showDetail ? "outline" : "destructive"}
+              onClick={handleDetailToggle}
+              className="py-2 w-fit"
+            >
+              {showDetail ? "Show Other Meetings" : "Show Detail Meetings"}
+            </Button> */}
             <Button
               variant={showDetail ? "outline" : "destructive"}
               onClick={handleDetailToggle}
@@ -247,7 +254,9 @@ export default function MeetingList() {
                     </div>
                   ) : (
                     <div>
-                      {isTeamLeader ? (
+                      {isTeamLeader &&
+                      row.detailMeetingStatus === "NOT_STARTED" ? (
+
                         <Button
                           variant="destructive"
                           size="sm"

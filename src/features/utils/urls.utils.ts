@@ -1,6 +1,6 @@
 export const baseUrl = import.meta.env.VITE_API_BASE;
 
-export const ImageBaseURL = import.meta.env.VITE_IMAGEURL;
+export const ImageBaseURL = import.meta.env.VITE_FILE_BASE_URL;
 
 const Urls = {
   loginSendOtp: () => `${baseUrl}/auth/login`,
@@ -47,6 +47,7 @@ const Urls = {
     `${baseUrl}/company/project/delete/${id}`,
   getCompanyProjectById: (id: string) => `${baseUrl}/company/project/get/${id}`,
   getAllCompanyProjectByPage: () => `${baseUrl}/company/project/get`,
+
   getAllCompanyProjectDropdown: () => `${baseUrl}/company/project/get-all`,
   getAllCorParameter: () => `${baseUrl}/core-param/get`,
   getAllSubParameter: () => `${baseUrl}/sub-param/get`,
@@ -150,6 +151,9 @@ const Urls = {
   detailMeetingCheckStatus: (id: string) =>
     `${baseUrl}/company/detail-meeting/start/${id}`,
 
+  updateDetailMeetingCheckStatus: (id: string) =>
+    `${baseUrl}/company/detail-meeting/update/${id}`,
+
   endMeeting: (id: string) => `${baseUrl}/company/detail-meeting/end/${id}`,
 
   getUserFireNotification: () =>
@@ -158,24 +162,37 @@ const Urls = {
   updateFireNotificationAsRead: () =>
     `${baseUrl}/company/employee/logs/notification-update`,
 
-  addMeetingAgendaIssue: () =>
-    `${baseUrl}/company/detail-meeting/agenda/issue/create`,
-  updateMeetingAgendaIssue: (id: string) =>
-    `${baseUrl}/company/detail-meeting/agenda/issue/update/${id}`,
-  deleteMeetingAgendaIssue: (id: string) =>
-    `${baseUrl}/company/detail-meeting/agenda/issue/delete/${id}`,
+  addMeetingAgenda: () =>
+    `${baseUrl}/company/detail-meeting/agenda/objectives/create`,
 
-  getMeetingAgendaIssue: () =>
-    `${baseUrl}/company/detail-meeting/agenda/issue/get`,
+  updateMeetingAgenda: (id: string) =>
+    `${baseUrl}/company/detail-meeting/agenda/objectives/update/${id}`,
+
   getMeetingAgendaObjective: () =>
-    `${baseUrl}/company/detail-meeting/agenda/objective/get`,
+    `${baseUrl}/company/detail-meeting/agenda/objectives/get`,
 
-  addMeetingAgendaObjective: () =>
-    `${baseUrl}/company/detail-meeting/agenda/objective/create`,
-  updateMeetingAgendaObjective: (id: string) =>
-    `${baseUrl}/company/detail-meeting/agenda/objective/update/${id}`,
   deleteMeetingAgendaObjective: (id: string) =>
-    `${baseUrl}/company/detail-meeting/agenda/objective/delete/${id}`,
+    `${baseUrl}/company/detail-meeting/agenda/objectives/delete/${id}`,
+
+  detailMeetingAgendaIssue: (id: string) =>
+    `${baseUrl}/company/detail-meeting/agenda/objectives/get/${id}`,
+
+  // updateMeetingAgenda: (id: string) =>
+  //   `${baseUrl}/company/detail-meeting/agenda/objectives/update/${id}`,
+  // deleteMeetingAgendaIssue: (id: string) =>
+  //   `${baseUrl}/company/detail-meeting/agenda/issue/delete/${id}`,
+
+  // getMeetingAgendaIssue: () =>
+  //   `${baseUrl}/company/detail-meeting/agenda/issue/get`,
+  // getMeetingAgendaObjective: () =>
+  //   `${baseUrl}/company/detail-meeting/agenda/objective/get`,
+
+  // addMeetingAgendaObjective: () =>
+  //   `${baseUrl}/company/detail-meeting/agenda/objective/create`,
+  // updateMeetingAgendaObjective: (id: string) =>
+  //   `${baseUrl}/company/detail-meeting/agenda/objective/update/${id}`,
+  // deleteMeetingAgendaObjective: (id: string) =>
+  //   `${baseUrl}/company/detail-meeting/agenda/objective/delete/${id}`,
 
   addMeetingTaskData: () => `${baseUrl}/company/detail-meeting/task/add`,
   getMeetingTaskData: () => `${baseUrl}/company/detail-meeting/task/get`,
@@ -195,22 +212,50 @@ const Urls = {
     `${baseUrl}/company/detail-meeting/kpi/remove/${id}`,
   allKpiList: () => `${baseUrl}/company/kpi/get-detail-meeting`,
 
-  timeUpdateByMeeting: (id: string) =>
-    `${baseUrl}/company/detail-meeting/update/${id}`,
   getTimeByMeeting: (id: string) =>
     `${baseUrl}/company/detail-meeting/get/${id}`,
 
   getConclusionByMeeting: (id: string) =>
     `${baseUrl}/company/detail-meeting/get-conclusion/${id}`,
 
-  addMeetingNots: (id: string) =>
-    `${baseUrl}/company/detail-meeting/note/create/${id}`,
+  addMeetingnotes: () => `${baseUrl}/company/detail-meeting/note/create`,
 
-  updateMeetingNots: (id: string) =>
+  updateMeetingnotes: (id: string) =>
     `${baseUrl}/company/detail-meeting/note/update/${id}`,
 
-  getMeetingNots: (id: string) =>
+  getMeetingnotes: (id: string) =>
     `${baseUrl}/company/detail-meeting/note/get/${id}`,
+
+  addIssues: () => `${baseUrl}/company/issues/create`,
+  updateIssues: (id: string) => `${baseUrl}/company/issues/update/${id}`,
+  getIssues: () => `${baseUrl}/company/issues/get`,
+  deleteIssues: (id: string) => `${baseUrl}/company/issues/delete/${id}`,
+
+  addObjective: () => `${baseUrl}/company/objectives/create`,
+  updateObjective: (id: string) => `${baseUrl}/company/objectives/update/${id}`,
+  getObjective: () => `${baseUrl}/company/objectives/get`,
+  deleteObjective: (id: string) => `${baseUrl}/company/objectives/delete/${id}`,
+
+  getDetailObjectivesIssue: () =>
+    `${baseUrl}/company/detail-meeting/get-objectives`,
+
+  updateDetailObjectivesIssue: () =>
+    `${baseUrl}/company/detail-meeting/agenda/update`,
+
+  getNonSelectKpiList: () => `${baseUrl}/company/kpi/non-select-for-merge`,
+  getKpiMergeById: (id: string) => `${baseUrl}/company/kpi-merge/get/${id}`,
+  createKPIMerge: () => `${baseUrl}/company/kpi-merge/create`,
+  updateKPIMerge: (id: string) => `${baseUrl}/company/kpi-merge/update/${id}`,
+
+  deleteCompanyMeetingNote: (id: string) =>
+    `${baseUrl}/company/detail-meeting/note/delete/${id}`,
+
+  timeUpdateByMeeting: (id: string) =>
+    `${baseUrl}/company/detail-meeting/update/${id}`,
+
+  updateDetailMeetingKPIData: () =>
+    `${baseUrl}/company/detail-meeting/kpi/update-data`,
+
 };
 
 export default Urls;

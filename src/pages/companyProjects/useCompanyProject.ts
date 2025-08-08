@@ -38,6 +38,7 @@ export default function useAdminUser() {
 
   const { data: projectlistdata, isLoading } = useGetCompanyProject({
     filter: { ...paginationFilter, statusArray: filters.selected },
+    enable: !!paginationFilter,
   });
 
   const { mutate: deleteProjectById } = useDeleteCompanyProject();

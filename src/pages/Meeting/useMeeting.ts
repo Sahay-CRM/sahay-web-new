@@ -29,7 +29,8 @@ export default function useAdminUser() {
   const [isImport, setIsImport] = useState(false);
   const [isChildData, setIsChildData] = useState<string | undefined>();
   const [showOverdue, setShowOverdue] = useState(false);
-  const [showDetail, setShowDetail] = useState(true);
+
+  // const [showDetail, setShowDetail] = useState(true);
 
   // Calculate default 30-day range: 15 days before and after today
   const today = new Date();
@@ -78,7 +79,7 @@ export default function useAdminUser() {
             endDate: toLocalISOString(appliedDateRange.taskDeadline),
           }),
       overDue: showOverdue,
-      parentType: showDetail ? "Show Detail" : "Show All Other",
+      parentType: "Show All Other",
     },
   });
 
@@ -251,27 +252,26 @@ export default function useAdminUser() {
 
   const handleOverdueToggle = () => {
     const newOverdueState = !showOverdue;
-    // Reset date range when toggling overdue
     if (newOverdueState) {
       setTaskDateRange({
-        taskStartDate: new Date(),
-        taskDeadline: new Date(),
+        taskStartDate: before14,
+        taskDeadline: after14,
       });
       setAppliedDateRange({
-        taskStartDate: new Date(),
-        taskDeadline: new Date(),
+        taskStartDate: before14,
+        taskDeadline: after14,
       });
     }
 
     setShowOverdue(newOverdueState);
   };
 
-  const handleDetailToggle = () => {
-    setShowDetail((prev) => {
-      const newValue = !prev;
-      return newValue;
-    });
-  };
+  // const handleDetailToggle = () => {
+  //   setShowDetail((prev) => {
+  //     const newValue = !prev;
+  //     return newValue;
+  //   });
+  // };
 
   return {
     isLoading,
@@ -307,7 +307,7 @@ export default function useAdminUser() {
     handleDateRangeApply,
     showOverdue,
     handleOverdueToggle,
-    handleDetailToggle,
-    showDetail,
+    // handleDetailToggle,
+    // showDetail,
   };
 }

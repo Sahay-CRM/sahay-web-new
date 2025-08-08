@@ -29,7 +29,7 @@ export default function useAddUpdateCompanyProject() {
     },
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
-      queryClient.resetQueries({ queryKey: ["get-project-list"] });
+      queryClient.resetQueries({ queryKey: ["get-project-list-meeting"] });
       queryClient.resetQueries({ queryKey: ["get-project-by-id"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {

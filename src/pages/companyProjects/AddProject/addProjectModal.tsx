@@ -1,4 +1,5 @@
 import ModalData from "@/components/shared/Modal/ModalData";
+import { convertToLocalDate } from "@/features/utils/app.utils";
 
 interface MeetingModalProps {
   modalData: CompanyProjectDataProps;
@@ -63,7 +64,7 @@ const AddProjectModal: React.FC<MeetingModalProps> = ({
         {modalData?.projectDeadline && (
           <div>
             <span className="font-medium text-primary">Project Deadline: </span>
-            {modalData.projectDeadline}
+            {convertToLocalDate(modalData.projectDeadline)}
           </div>
         )}
 

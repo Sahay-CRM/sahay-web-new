@@ -96,9 +96,18 @@ export default function CompanyTaskList() {
     return <PageNotAccess />;
   }
 
+  const formatLocalDate = (isoDate?: string): string => {
+    if (!isoDate) return "";
+
+    const date = new Date(isoDate);
+
+    // Format as YYYY-MM-DD in local time zone
+    return date.toLocaleDateString("en-CA"); // en-CA gives "yyyy-mm-dd"
+  };
+
   return (
     <FormProvider {...methods}>
-      <div className="w-full  overflow-x-auto">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-3 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             Company Task List
@@ -111,7 +120,7 @@ export default function CompanyTaskList() {
             )}
           </div>
         </div>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
           <div>
             <SearchInput
               placeholder="Search..."
@@ -120,8 +129,8 @@ export default function CompanyTaskList() {
               className="w-80"
             />
           </div>
-          <div className="flex gap-4">
-            <div className="z-10 relative flex items-center gap-2">
+          <div className="flex gap-4 flex-wrap">
+            <div className="z-15 relative flex items-center gap-2">
               {!showOverdue && (
                 <DateRangePicker
                   value={{
@@ -182,9 +191,7 @@ export default function CompanyTaskList() {
                   index +
                   1,
                 status: item.taskStatusId,
-                taskDeadline: item.taskDeadline
-                  ? new Date(item.taskDeadline).toISOString().split("T")[0]
-                  : "",
+                taskDeadline: formatLocalDate(item.taskDeadline),
                 assigneeNames: item.TaskEmployeeJunction
                   ? item.TaskEmployeeJunction.map(
                       (j) => j.Employee?.employeeName,
@@ -231,6 +238,7 @@ export default function CompanyTaskList() {
               handleRowsModalOpen(row);
             }}
             sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
+            actionColumnWidth="w-[150px]"
           />
         </div>
 

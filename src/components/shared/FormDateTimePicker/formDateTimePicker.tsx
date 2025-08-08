@@ -5,10 +5,11 @@ import { FormLabel } from "@/components/ui/form";
 
 interface Props {
   label: string;
-  value: Date | null;
+  value: Date | string | null;
   onChange: (date: Date | null) => void;
   error?: { message?: string };
   isMandatory?: boolean;
+  timeZone?: string; // Optional timezone prop
 }
 
 export default function FormDateTimePicker({
@@ -18,17 +19,18 @@ export default function FormDateTimePicker({
   error,
   isMandatory,
 }: Props) {
+  const dateValue = typeof value === "string" ? new Date(value) : value;
   return (
     <div className="w-full">
       {label && (
-        <FormLabel>
+        <FormLabel className="mb-5">
           {label}{" "}
           {isMandatory && <span className="text-red-500 text-[20px]">*</span>}
         </FormLabel>
       )}
       <div className="relative w-full min-w-0">
         <DatePicker
-          selected={value}
+          selected={dateValue}
           onChange={onChange}
           showTimeSelect
           dateFormat="Pp"
@@ -52,6 +54,9 @@ export default function FormDateTimePicker({
             width: auto;
             max-width: 95vw;
           }
+            .react-datepicker-wrapper {
+            width: 100%;
+            }
           @media (max-width: 640px) {
             .responsive-datepicker-popper .react-datepicker {
               font-size: 14px;

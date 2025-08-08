@@ -5,7 +5,6 @@ import {
   useGetCompanyProjectById,
 } from "@/features/api/companyProject";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { format, parseISO } from "date-fns";
 
 export default function useAddProject() {
   const { id: companyProjectId } = useParams();
@@ -34,12 +33,9 @@ export default function useAddProject() {
         projectId: companyProjectId || "",
         projectName: projectApiData?.data.projectName || "",
         projectDescription: projectApiData?.data.projectDescription || "",
-        projectDeadline: projectApiData?.data.projectDeadline
-          ? format(
-              parseISO(projectApiData?.data?.projectDeadline),
-              "yyyy-MM-dd",
-            )
-          : "",
+        projectDeadline: projectApiData.data.projectDeadline
+          ? new Date(projectApiData.data.projectDeadline).toISOString()
+          : null,
         projectStatusId: projectApiData?.data.projectStatus || "", // Store the whole object if API returns it
         subParameterId:
           projectApiData?.data.ProjectParameters?.subParameters?.map(

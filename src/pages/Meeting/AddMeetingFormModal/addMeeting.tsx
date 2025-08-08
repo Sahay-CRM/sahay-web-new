@@ -5,7 +5,7 @@ import { FormProvider, useFormContext, Controller } from "react-hook-form"; // A
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { useEffect, useState, useRef, ChangeEvent } from "react"; // Added useState, useRef, ChangeEvent
+import { useEffect, useState, useRef, ChangeEvent, useMemo } from "react"; // Added useState, useRef, ChangeEvent
 
 // Imports for components used within step components
 import { Card } from "@/components/ui/card";
@@ -13,135 +13,19 @@ import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 import { getEmployee } from "@/features/api/companyEmployee";
-import { useGetCompanyMeetingStatus } from "@/features/api/companyMeeting";
+// import { useGetCompanyMeetingStatus } from "@/features/api/companyMeeting";
 import { getMeetingType } from "@/features/api/meetingType";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import FormSelect from "@/components/shared/Form/FormSelect";
+import { useDdMeetingStatus } from "@/features/api/meetingStatus";
+import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 
-// --- MeetingInfo Component Definition ---
-const MeetingInfo = () => {
-  const {
-    register,
-    formState: { errors },
-  } = useFormContext();
-  return (
-    <div className="grid grid-cols-2 gap-4">
-      <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
-        <FormInputField
-          label="Meeting Name"
-          {...register("meetingName", { required: "Name is required" })}
-          error={errors.meetingName}
-          isMandatory
-        />
-        <FormInputField
-          label="Meeting Description"
-          {...register("meetingDescription", {
-            required: "Description is required",
-          })}
-          error={errors.meetingDescription}
-          isMandatory
-        />
-        <FormInputField
-          id="meetingDateTime"
-          type="date"
-          label="Meeting Date & Time"
-          {...register("meetingDateTime", {
-            required: "Date & Time is required",
-          })}
-          error={errors.meetingDateTime}
-          isMandatory
-        />
-      </Card>
-    </div>
-  );
-};
+interface MeetingInfoProps {
+  isUpdateMeeting: boolean;
+}
 
-// --- MeetingStatus Component Definition ---
-const MeetingStatus = () => {
-  const {
-    control,
-    formState: { errors },
-  } = useFormContext();
-  const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-    currentPage: 1,
-    pageSize: 25,
-    search: "",
-  });
-
-  const { data: meeetingStatusData } = useGetCompanyMeetingStatus({
-    filter: paginationFilter,
-  });
-
-  const [columnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "meetingStatus", label: "Meeting Status", visible: true },
-  ]);
-
-  const visibleColumns = columnToggleOptions.reduce(
-    (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
-
-  return (
-    <div>
-      <div className="mb-2">
-        <SearchInput
-          placeholder="Search Status..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-80"
-        />
-      </div>
-      {errors.meetingStatusId && (
-        <p className="text-red-500 text-sm mb-2">
-          {typeof errors.meetingStatusId?.message === "string"
-            ? errors.meetingStatusId.message
-            : ""}
-        </p>
-      )}
-      <Controller
-        name="meetingStatusId"
-        control={control}
-        rules={{ required: "Please select a meeting status" }}
-        render={({ field }) => (
-          <TableData
-            tableData={
-              meeetingStatusData?.data?.map((item, index) => ({
-                ...item,
-                srNo:
-                  (meeetingStatusData.currentPage - 1) *
-                    meeetingStatusData.pageSize +
-                  index +
-                  1,
-              })) || []
-            }
-            columns={visibleColumns}
-            primaryKey="meetingStatusId"
-            multiSelect={false}
-            onCheckbox={() => true}
-            selectedValue={field.value}
-            handleChange={field.onChange}
-            paginationDetails={mapPaginationDetails(meeetingStatusData)}
-            setPaginationFilter={setPaginationFilter}
-            isActionButton={() => false}
-          />
-        )}
-      />
-    </div>
-  );
-};
-
-// --- MeetingType Component Definition ---
 const MeetingType = () => {
   const {
     control,
@@ -153,12 +37,13 @@ const MeetingType = () => {
     search: "",
   });
 
-  const { data: meetingTypeData } = getMeetingType({
+  const { data: meetingTypeData, isLoading } = getMeetingType({
     filter: paginationFilter,
   });
-  const [columnToggleOptions] = useState([
+  const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "meetingTypeName", label: "Meeting Type Name", visible: true },
+    { key: "parentType", label: "Parent Type", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -168,24 +53,41 @@ const MeetingType = () => {
     },
     {} as Record<string, string>,
   );
-
+  const onToggleColumn = (key: string) => {
+    setColumnToggleOptions((prev) =>
+      prev.map((col) =>
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
+    );
+  };
+  const canToggleColumns = columnToggleOptions.length > 3;
   return (
     <div>
-      <div className="mb-2">
-        <SearchInput
-          placeholder="Search Type..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-80"
-        />
+      <div className="mt-1 mb-4 flex items-start justify-between">
+        <div className="flex items-center gap-2">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
+          />
+          {errors.meetingTypeId && (
+            <p className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] whitespace-nowrap before:content-['*']">
+              {typeof errors.meetingTypeId?.message === "string"
+                ? errors.meetingTypeId.message
+                : ""}
+            </p>
+          )}
+        </div>
+        {canToggleColumns && (
+          <div className="ml-4">
+            <DropdownSearchMenu
+              columns={columnToggleOptions}
+              onToggleColumn={onToggleColumn}
+            />
+          </div>
+        )}
       </div>
-      {errors.meetingTypeId && (
-        <p className="text-red-500 text-sm mb-2">
-          {typeof errors.meetingTypeId?.message === "string"
-            ? errors.meetingTypeId.message
-            : ""}
-        </p>
-      )}
       <Controller
         name="meetingTypeId"
         control={control}
@@ -210,6 +112,9 @@ const MeetingType = () => {
             setPaginationFilter={setPaginationFilter}
             onCheckbox={() => true}
             isActionButton={() => false}
+            moduleKey="type"
+            showActionsColumn={false}
+            isLoading={isLoading}
           />
         )}
       />
@@ -217,19 +122,118 @@ const MeetingType = () => {
   );
 };
 
-// --- Joiners Component Definition ---
+const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
+  const {
+    register,
+    formState: { errors },
+    control,
+    watch,
+    setValue,
+  } = useFormContext();
+
+  const meetingType = watch("meetingTypeId");
+
+  const { data: meetingStatusData } = useDdMeetingStatus();
+
+  const meetingStatusOptions = useMemo(() => {
+    return (
+      meetingStatusData?.map((status) => ({
+        label: status.meetingStatus,
+        value: status.meetingStatusId,
+        order: status.meetingStatusOrder,
+      })) || []
+    );
+  }, [meetingStatusData]);
+
+  const shouldHideStatus =
+    !isUpdateMeeting && meetingType?.parentType === "DETAIL";
+
+  useEffect(() => {
+    if (shouldHideStatus && meetingStatusOptions.length > 0) {
+      const defaultStatus = meetingStatusOptions.find((s) => s.order === 1);
+      if (defaultStatus) {
+        setValue("meetingStatusId", defaultStatus.value, {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+      }
+    }
+  }, [shouldHideStatus, meetingStatusOptions, setValue]);
+
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
+        <FormInputField
+          label="Meeting Name"
+          {...register("meetingName", { required: "Name is required" })}
+          error={errors.meetingName}
+          isMandatory
+        />
+        <FormInputField
+          label="Meeting Description"
+          {...register("meetingDescription", {
+            required: "Description is required",
+          })}
+          error={errors.meetingDescription}
+          isMandatory
+        />
+        <Controller
+          control={control}
+          name="meetingDateTime"
+          rules={{ required: "Date & Time is required" }}
+          render={({ field }) => {
+            const localDate = field.value ? new Date(field.value) : null;
+
+            return (
+              <FormDateTimePicker
+                label="Meeting Date & Time"
+                value={localDate}
+                onChange={(date) => {
+                  field.onChange(date?.toISOString());
+                }}
+                error={errors.meetingDateTime}
+              />
+            );
+          }}
+        />
+
+        {!shouldHideStatus && (
+          <Controller
+            name="meetingStatusId"
+            control={control}
+            rules={{ required: "Meeting Status is required" }}
+            render={({ field, fieldState }) => (
+              <FormSelect
+                {...field}
+                label="Meeting Status"
+                options={meetingStatusOptions}
+                error={fieldState.error}
+                isMandatory
+              />
+            )}
+          />
+        )}
+      </Card>
+    </div>
+  );
+};
+
 const Joiners = () => {
   const {
     control,
     formState: { errors },
+    watch,
   } = useFormContext();
+
+  const meetingType = watch("meetingTypeId");
+
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 25,
     search: "",
   });
 
-  const { data: employeedata } = getEmployee({
+  const { data: employeedata, isLoading } = getEmployee({
     filter: { ...paginationFilter, isDeactivated: false },
   });
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -257,64 +261,114 @@ const Joiners = () => {
 
   return (
     <div>
-      <div className="mt-1 mb-2 flex items-center justify-between">
-        <div>
+      <div className="mt-1 mb-4 flex items-start justify-between">
+        <div className="flex items-center gap-2">
           <SearchInput
-            placeholder="Search Joiners..."
+            placeholder="Search..."
             searchValue={paginationFilter?.search || ""}
             setPaginationFilter={setPaginationFilter}
             className="w-80"
           />
+
+          {errors?.employeeId && (
+            <div className="mb-1">
+              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] whitespace-nowrap before:content-['*']">
+                {String(errors?.employeeId?.message || "")}
+              </span>
+            </div>
+          )}
         </div>
         {canToggleColumns && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="ml-4">
-                  <DropdownSearchMenu
-                    columns={columnToggleOptions}
-                    onToggleColumn={onToggleColumn}
-                  />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs text-white">Toggle Visible Columns</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <div className="ml-4">
+            <DropdownSearchMenu
+              columns={columnToggleOptions}
+              onToggleColumn={onToggleColumn}
+            />
+          </div>
         )}
       </div>
-      {errors.employeeId && (
-        <p className="text-red-500 text-sm mb-2">
-          {typeof errors.employeeId?.message === "string"
-            ? errors.employeeId.message
-            : ""}
-        </p>
-      )}
       <Controller
-        name="employeeId" // This should be an array of selected employee objects
+        name="employeeId"
         control={control}
-        // rules={{ required: "Please select at least one joiner" }} // Optional: add validation
-        render={({ field }) => (
-          <TableData
-            tableData={employeedata?.data.map((item, index) => ({
-              ...item,
-              srNo:
-                (employeedata.currentPage - 1) * employeedata.pageSize +
-                index +
-                1,
-            }))}
-            columns={visibleColumns}
-            primaryKey="employeeId" // Key used to identify unique rows
-            paginationDetails={mapPaginationDetails(employeedata)}
-            setPaginationFilter={setPaginationFilter}
-            multiSelect={true}
-            selectedValue={field.value || []} // Ensure field.value is an array
-            handleChange={(selectedItems) => field.onChange(selectedItems)} // Pass array of selected items
-            isActionButton={() => false}
-            onCheckbox={() => true}
-          />
-        )}
+        rules={{
+          validate: (value) => {
+            if (meetingType.parentType === "DETAIL") {
+              if (!value || value.length === 0) {
+                return "Please select at least one joiner";
+              }
+              const hasTeamLeader = value.some(
+                (emp: EmployeeDetails) => emp.isTeamLeader,
+              );
+              if (!hasTeamLeader) {
+                return "At least one joiner must be marked as Team Leader";
+              }
+            }
+            return true;
+          },
+        }}
+        render={({ field }) => {
+          return (
+            <TableData
+              tableData={employeedata?.data.map((item, index) => {
+                const selected = (field.value || []).find(
+                  (emp: EmployeeDetails) => emp.employeeId === item.employeeId,
+                );
+                return {
+                  ...item,
+                  srNo:
+                    (employeedata.currentPage - 1) * employeedata.pageSize +
+                    index +
+                    1,
+                  isTeamLeader: selected?.isTeamLeader || false,
+                };
+              })}
+              columns={visibleColumns}
+              primaryKey="employeeId"
+              paginationDetails={mapPaginationDetails(employeedata)}
+              setPaginationFilter={setPaginationFilter}
+              multiSelect={true}
+              isEditDelete={() => false}
+              moduleKey="emp"
+              isActionButton={() => false}
+              showActionsColumn={meetingType?.parentType === "DETAIL"}
+              selectedValue={field.value || []}
+              handleChange={(selectedItems) => field.onChange(selectedItems)}
+              customActions={(row: EmployeeDetails) => {
+                if (!(meetingType.parentType === "DETAIL")) return;
+                const isSelected = (field.value || []).some(
+                  (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
+                );
+                if (!isSelected) return null;
+                const selectedEmp = (field.value || []).find(
+                  (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
+                );
+                const isTeamLeader = selectedEmp?.isTeamLeader;
+
+                return (
+                  <Button
+                    variant={isTeamLeader ? "secondary" : "outline"}
+                    className=" px-3 text-[12px]"
+                    onClick={() => {
+                      const updated = (field.value || []).map(
+                        (emp: EmployeeDetails) =>
+                          emp.employeeId === row.employeeId
+                            ? { ...emp, isTeamLeader: !emp.isTeamLeader }
+                            : emp,
+                      );
+                      field.onChange(updated);
+                    }}
+                  >
+                    {isTeamLeader ? "Remove" : "Set Team Leader"}
+                  </Button>
+                );
+              }}
+              additionalButton={() => false}
+              isEditDeleteShow={false}
+              isLoading={isLoading}
+              actionColumnWidth="w-40"
+            />
+          );
+        }}
       />
     </div>
   );
@@ -374,9 +428,6 @@ const UploadDoc = () => {
       (_, idx) => idx !== indexToRemove,
     );
     setDisplayFiles(newDisplayFiles);
-    // Update the meetingDocuments in the form state by filtering out the removed file
-    // This is important if the removed file was a new `File` object not yet having a `fileId`
-    // More directly, after updating displayFiles:
     setValue("meetingDocuments", newDisplayFiles);
   };
 
@@ -474,6 +525,7 @@ const AddMeeting = () => {
                   : ""
               }`,
               href: `/dashboard/kpi/${companyMeetingId}`,
+              isHighlight: true,
             },
           ]
         : []),
@@ -481,9 +533,9 @@ const AddMeeting = () => {
   }, [companyMeetingId, meetingApiData?.data?.meetingName, setBreadcrumbs]);
 
   const steps = [
-    <MeetingInfo key="meetingInfo" />,
-    <MeetingStatus key="meetingStatus" />,
     <MeetingType key="meetingType" />,
+    <MeetingInfo isUpdateMeeting={companyMeetingId ? true : false} />,
+    // <MeetingStatus key="meetingStatus" />,
     <Joiners key="joiners" />,
     <UploadDoc key="uploadDoc" />,
   ];
@@ -499,47 +551,27 @@ const AddMeeting = () => {
   } = useStepForm(steps, trigger);
 
   const stepNames = [
-    "Meeting Info",
-    "Meeting Status",
     "Meeting Type",
+    "Meeting Info",
     "Joiners",
     "Upload Document",
   ];
 
   return (
     <FormProvider {...methods}>
-      <div>
+     <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <StepProgress
           currentStep={currentStep}
           stepNames={stepNames}
           totalSteps={totalSteps}
-          header={companyMeetingId ? meetingApiData?.data?.meetingName : null}
+          back={back}
+          isFirstStep={isFirstStep}
+          next={next}
+          isLastStep={isLastStep}
+          isPending={isPending}
+          onFinish={onFinish}
+          isUpdate={!!companyMeetingId}
         />
-
-        <div className="flex justify-end gap-5 mb-5 ">
-          <Button
-            onClick={back}
-            disabled={isFirstStep || isPending}
-            className="w-fit"
-            type="button"
-          >
-            Previous
-          </Button>
-          <Button
-            onClick={isLastStep ? onFinish : next}
-            className="w-fit"
-            disabled={isPending}
-            isLoading={isPending}
-            type="button"
-          >
-            {isLastStep ? "Finish" : "Next"}
-          </Button>
-          {companyMeetingId && !isLastStep && (
-            <Button onClick={onFinish} className="w-fit">
-              Submit
-            </Button>
-          )}
-        </div>
 
         <div className="step-content w-full">{stepContent}</div>
 

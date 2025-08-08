@@ -24,7 +24,7 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { Label } from "recharts";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 
-export default function useAddEmployee() {
+export default function useAddDataPoint() {
   const { id: companykpimasterId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
 
@@ -50,6 +50,7 @@ export default function useAddEmployee() {
                   : ""
               }`,
               href: `/dashboard/kpi/${companykpimasterId}`,
+              isHighlight: true,
             },
           ]
         : []),
@@ -81,6 +82,7 @@ export default function useAddEmployee() {
   useEffect(() => {
     if (datapointApiData) {
       setValue("KPIMasterId", {
+        kpiId: datapointApiData.kpiId,
         KPIMasterId: datapointApiData.KPIMasterId,
         KPIName:
           datapointApiData.KPIMaster?.KPIName ||
@@ -93,6 +95,10 @@ export default function useAddEmployee() {
       setValue("frequencyType", datapointApiData.frequencyType);
       // Set validation type
       setValue("validationType", datapointApiData.validationType);
+      setValue(
+        "visualFrequencyAggregate",
+        datapointApiData.visualFrequencyAggregate,
+      );
       // Set unit
       setValue("employeeId", datapointApiData.employeeId);
       setValue("unit", datapointApiData.unit);
@@ -150,6 +156,7 @@ export default function useAddEmployee() {
           value2: data.value2,
           frequencyType: data.frequencyType,
           visualFrequencyTypes: visualFrequencyTypesStr,
+          visualFrequencyAggregate: data.visualFrequencyAggregate,
         }
       : {
           KPIMasterId: data.KPIMasterId.KPIMasterId,
@@ -163,6 +170,7 @@ export default function useAddEmployee() {
           value2: data.value2,
           frequencyType: data.frequencyType,
           visualFrequencyTypes: visualFrequencyTypesStr,
+          visualFrequencyAggregate: data.visualFrequencyAggregate,
         };
     addDatapoint(simplePayload, {
       onSuccess: () => {
@@ -187,7 +195,7 @@ export default function useAddEmployee() {
       pageSize: 25,
       search: "",
     });
-    const { data: kpidata } = useGetKpiNonSel({
+    const { data: kpidata, isLoading } = useGetKpiNonSel({
       filter: paginationFilter,
     });
 
@@ -224,33 +232,43 @@ export default function useAddEmployee() {
 
     return (
       <div>
-        <div className=" mt-1 flex items-center justify-end">
-          <div>
+        <div className="mt-1 mb-4 flex items-center justify-between">
+          {/* Search + Error Container */}
+          <div className="flex items-center gap-2 mr-4">
             <SearchInput
               placeholder="Search..."
               searchValue={paginationFilter?.search || ""}
               setPaginationFilter={setPaginationFilter}
               className="w-80"
             />
+            {errors?.KPIMasterId && (
+              <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] whitespace-nowrap">
+                {String(errors?.KPIMasterId?.message || "")}
+              </span>
+            )}
           </div>
-          {canToggleColumns && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div>
-                    <DropdownSearchMenu
-                      columns={columnToggleOptions}
-                      onToggleColumn={onToggleColumn}
-                      columnIcon={true}
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs text-white">Toggle Visible Columns</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+
+          {/* Column Toggle Icon */}
+          <div className="flex items-center">
+            {canToggleColumns && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="ml-3">
+                      <DropdownSearchMenu
+                        columns={columnToggleOptions}
+                        onToggleColumn={onToggleColumn}
+                        columnIcon={true}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs text-white">Toggle Visible Columns</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
         </div>
 
         <Controller
@@ -258,37 +276,177 @@ export default function useAddEmployee() {
           control={control}
           rules={{ required: "Please select a Kpi" }}
           render={({ field }) => (
-            <>
-              <div className="mb-4">
-                {errors?.KPIMasterId && (
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors?.KPIMasterId?.message || "")}
-                  </span>
-                )}
-              </div>
-              <TableData
-                {...field}
-                tableData={kpidata?.data.map((item, index) => ({
-                  ...item,
-                  srNo:
-                    (kpidata.currentPage - 1) * kpidata.pageSize + index + 1,
-                }))}
-                isActionButton={() => false}
-                columns={visibleColumns}
-                primaryKey="KPIMasterId"
-                paginationDetails={kpidata as PaginationFilter}
-                setPaginationFilter={setPaginationFilter}
-                multiSelect={false}
-                selectedValue={field.value}
-                handleChange={field.onChange}
-                onCheckbox={() => true}
-              />
-            </>
+            <TableData
+              {...field}
+              tableData={kpidata?.data.map((item, index) => ({
+                ...item,
+                srNo: (kpidata.currentPage - 1) * kpidata.pageSize + index + 1,
+              }))}
+              isActionButton={() => false}
+              columns={visibleColumns}
+              primaryKey="KPIMasterId"
+              paginationDetails={kpidata as PaginationFilter}
+              setPaginationFilter={setPaginationFilter}
+              multiSelect={false}
+              selectedValue={field.value}
+              handleChange={field.onChange}
+              onCheckbox={() => true}
+              showActionsColumn={false}
+              isLoading={isLoading}
+            />
           )}
         />
       </div>
     );
   };
+
+  // const Details = () => {
+  //   const frequenceOptions = [
+  //     { value: "DAILY", label: "Daily" },
+  //     { value: "WEEKLY", label: "Weekly" },
+  //     { value: "MONTHLY", label: "Monthly" },
+  //     { value: "QUARTERLY", label: "Quarterly" },
+  //     { value: "HALFYEARLY", label: "Half-Yearly" },
+  //     { value: "YEARLY", label: "Yearly" },
+  //   ];
+  //   // Get the selected frequency value
+  //   const selectedFrequency = useWatch({ name: "frequencyType", control });
+
+  //   // Filter visual frequency options based on selected frequency
+  //   const getFilteredVisualFrequencyOptions = () => {
+  //     if (!selectedFrequency) return frequenceOptions;
+
+  //     const frequencyIndex = frequenceOptions.findIndex(
+  //       (opt) => opt.value === selectedFrequency
+  //     );
+
+  //     if (frequencyIndex === -1) return frequenceOptions;
+
+  //     // Return only options that come after the selected frequency
+  //     return frequenceOptions.slice(frequencyIndex + 1);
+  //   };
+
+  //   // Check if visual frequency should be shown (not when YEARLY is selected)
+  //   const shouldShowVisualFrequency = selectedFrequency !== "YEARLY";
+
+  //   const validationOptions = [
+  //     { value: "EQUAL_TO", label: "= Equal to" },
+  //     {
+  //       value: "GREATER_THAN_OR_EQUAL_TO",
+  //       label: ">= Greater than or equal to",
+  //     },
+  //     { value: "GREATER_THAN", label: "> Greater than" },
+  //     { value: "LESS_THAN", label: "< Less than" },
+  //     { value: "LESS_THAN_OR_EQUAL_TO", label: "<= Less than or equal to" },
+  //     { value: "BETWEEN", label: "Between" },
+  //     { value: "YES_NO", label: "Yes/No" },
+  //   ];
+
+  //   const sumAveOptions = [
+  //     { value: "sum", label: "Sum" },
+  //     {
+  //       value: "average",
+  //       label: "Average",
+  //     },
+  //   ];
+
+  //   const hasData = datapointApiData?.hasData;
+
+  //   const vasualFre = watch("visualFrequencyTypes");
+
+  //   return (
+  //     <div className="grid grid-cols-2 gap-4">
+  //       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
+  //         <Controller
+  //           control={control}
+  //           name="frequencyType"
+  //           rules={{ required: "Frequency is required" }}
+  //           render={({ field }) => (
+  //             <FormSelect
+  //               label="Frequency"
+  //               value={field.value}
+  //               onChange={(value) => {
+  //                 field.onChange(value);
+  //                 // Clear visualFrequencyTypes immediately when frequency changes
+  //                 setValue("visualFrequencyTypes", []);
+  //               }}
+  //               options={frequenceOptions}
+  //               error={errors.frequencyType}
+  //               disabled={hasData}
+  //               className={hasData ? "bg-gray-100 p-2 rounded-md" : ""}
+  //               isMandatory
+  //             />
+  //           )}
+  //         />
+  //         <Controller
+  //           control={control}
+  //           name="validationType"
+  //           rules={{ required: "Validation Type is required" }}
+  //           render={({ field }) => (
+  //             <FormSelect
+  //               label="Validation Type"
+  //               value={field.value}
+  //               onChange={field.onChange}
+  //               options={validationOptions}
+  //               error={errors.validationType}
+  //               className="p-2 rounded-md"
+  //               isMandatory
+  //             />
+  //           )}
+  //         />
+
+  //         {shouldShowVisualFrequency && (
+  //           <div className="flex">
+  //             <div className="w-full">
+  //               <Controller
+  //                 control={control}
+  //                 name="visualFrequencyTypes"
+  //                 render={({ field }) => (
+  //                   <FormSelect
+  //                     label="Visual Frequency Types"
+  //                     value={field.value || []}
+  //                     onChange={field.onChange}
+  //                     options={getFilteredVisualFrequencyOptions()}
+  //                     error={errors.visualFrequencyTypes}
+  //                     isMulti={true}
+  //                     placeholder="Select visual frequency types"
+  //                     disabled={false}
+  //                     // className="text-[15px] "
+  //                     key={
+  //                       selectedFrequency +
+  //                       "-" +
+  //                       (watch("coreParameterId") || "")
+  //                     }
+  //                   />
+  //                 )}
+  //               />
+  //             </div>
+  //             {vasualFre && (
+  //               <div className="w-full ml-3">
+  //                 <Controller
+  //                   control={control}
+  //                   name="visualFrequencyAggregate"
+  //                   render={({ field }) => (
+  //                     <FormSelect
+  //                       label="Sum/Average"
+  //                       value={field.value || []}
+  //                       onChange={field.onChange}
+  //                       options={sumAveOptions}
+  //                       error={errors.visualFrequencyAggregate}
+  //                       placeholder="Select visual frequency Aggregate"
+  //                       disabled={false}
+  //                     />
+  //                   )}
+  //                 />
+  //               </div>
+  //             )}
+  //           </div>
+  //         )}
+  //         <FormInputField label="Unit" {...register(`unit`)} />
+  //       </Card>
+  //     </div>
+  //   );
+  // };
 
   const Details = () => {
     const frequenceOptions = [
@@ -301,6 +459,15 @@ export default function useAddEmployee() {
     ];
     // Get the selected frequency value
     const selectedFrequency = useWatch({ name: "frequencyType", control });
+    const validationType = useWatch({ name: "validationType", control });
+    const visualFrequencyTypes = useWatch({
+      name: "visualFrequencyTypes",
+      control,
+    });
+    const visualFrequencyAggregate = useWatch({
+      name: "visualFrequencyAggregate",
+      control,
+    });
 
     // Filter visual frequency options based on selected frequency
     const getFilteredVisualFrequencyOptions = () => {
@@ -319,6 +486,10 @@ export default function useAddEmployee() {
     // Check if visual frequency should be shown (not when YEARLY is selected)
     const shouldShowVisualFrequency = selectedFrequency !== "YEARLY";
 
+    // Check if sum/ave field should be shown
+    const shouldShowSumAveField =
+      validationType !== "YES_NO" && visualFrequencyTypes?.length > 0;
+
     const validationOptions = [
       { value: "EQUAL_TO", label: "= Equal to" },
       {
@@ -331,14 +502,24 @@ export default function useAddEmployee() {
       { value: "BETWEEN", label: "Between" },
       { value: "YES_NO", label: "Yes/No" },
     ];
-    // const unitTypeOptions = [
-    //   { value: "Number", label: "Number" },
-    //   { value: "Percentage", label: "Percentage (%)" },
-    //   { value: "Dollar", label: "Dollar ($)" },
-    //   { value: "Euro", label: "Euro (€)" },
-    //   { value: "Pounds", label: "Pounds (£)" },
-    //   { value: "INR", label: "INR (₹)" },
-    // ];
+
+    const sumAveOptions = [
+      { value: "sum", label: "Sum" },
+      {
+        value: "average",
+        label: "Average",
+      },
+    ];
+
+    useEffect(() => {
+      if (
+        validationType !== "YES_NO" &&
+        visualFrequencyTypes?.length > 0 &&
+        !visualFrequencyAggregate
+      ) {
+        setValue("visualFrequencyAggregate", "sum");
+      }
+    }, [validationType, visualFrequencyTypes, visualFrequencyAggregate]);
 
     const hasData = datapointApiData?.hasData;
 
@@ -355,7 +536,6 @@ export default function useAddEmployee() {
                 value={field.value}
                 onChange={(value) => {
                   field.onChange(value);
-                  // Clear visualFrequencyTypes immediately when frequency changes
                   setValue("visualFrequencyTypes", []);
                 }}
                 options={frequenceOptions}
@@ -384,26 +564,55 @@ export default function useAddEmployee() {
           />
 
           {shouldShowVisualFrequency && (
-            <Controller
-              control={control}
-              name="visualFrequencyTypes"
-              render={({ field }) => (
-                <FormSelect
-                  label="Visual Frequency Types"
-                  value={field.value || []}
-                  onChange={field.onChange}
-                  options={getFilteredVisualFrequencyOptions()}
-                  error={errors.visualFrequencyTypes}
-                  isMulti={true}
-                  placeholder="Select visual frequency types"
-                  disabled={false}
-                  // className="text-[15px] "
-                  key={
-                    selectedFrequency + "-" + (watch("coreParameterId") || "")
-                  }
+            <div className="flex">
+              <div className="w-full">
+                <Controller
+                  control={control}
+                  name="visualFrequencyTypes"
+                  render={({ field }) => (
+                    <FormSelect
+                      label="Visual Frequency Types"
+                      value={field.value || []}
+                      onChange={(value) => {
+                        field.onChange(value);
+                        if (value?.length > 0 && validationType !== "YES_NO") {
+                          setValue("visualFrequencyAggregate", "sum");
+                        }
+                      }}
+                      options={getFilteredVisualFrequencyOptions()}
+                      error={errors.visualFrequencyTypes}
+                      isMulti={true}
+                      placeholder="Select visual frequency types"
+                      disabled={false}
+                      key={
+                        selectedFrequency +
+                        "-" +
+                        (watch("coreParameterId") || "")
+                      }
+                    />
+                  )}
                 />
+              </div>
+              {shouldShowSumAveField && (
+                <div className="w-full ml-3 max-w-32">
+                  <Controller
+                    control={control}
+                    name="visualFrequencyAggregate"
+                    render={({ field }) => (
+                      <FormSelect
+                        label="Sum/Average"
+                        value={field.value || "sum"}
+                        onChange={field.onChange}
+                        options={sumAveOptions}
+                        error={errors.visualFrequencyAggregate}
+                        placeholder="Select visual frequency Aggregate"
+                        disabled={false}
+                      />
+                    )}
+                  />
+                </div>
               )}
-            />
+            </div>
           )}
           <FormInputField label="Unit" {...register(`unit`)} />
         </Card>
