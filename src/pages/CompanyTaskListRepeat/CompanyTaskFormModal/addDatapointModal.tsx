@@ -2,6 +2,7 @@ import ModalData from "@/components/shared/Modal/ModalData";
 
 interface CreateTaskPayload {
   taskId?: string;
+  repetitiveTaskId?: string;
   project?: {
     projectId: string;
     projectName: string;
@@ -35,11 +36,15 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
   onSubmit,
   isLoading,
 }) => {
+  console.log(modalData, "modalData");
+
   return (
     <ModalData
       isModalOpen={isModalOpen}
       modalTitle={
-        modalData?.taskId ? "Update Repetition Task" : "Add Repetition Task"
+        modalData?.repetitiveTaskId
+          ? "Update Repetition Task"
+          : "Add Repetition Task"
       }
       modalClose={modalClose}
       buttons={[

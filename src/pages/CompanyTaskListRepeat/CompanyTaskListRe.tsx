@@ -21,7 +21,7 @@ import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
-import { Trash } from "lucide-react";
+// import { Trash } from "lucide-react";
 
 export default function CompanyTaskListRe() {
   const {
@@ -35,7 +35,7 @@ export default function CompanyTaskListRe() {
     paginationFilter,
     isChildData,
     // statusOptions,
-    handleStatusChange,
+    // handleStatusChange,
     permission,
     // filters,
     // handleFilterChange,
@@ -48,7 +48,7 @@ export default function CompanyTaskListRe() {
     isViewModalOpen,
     setIsViewModalOpen,
     viewModalData,
-    taskStatus,
+    // taskStatus,
     // taskDateRange,
   } = useCompanyTaskList();
 
@@ -204,38 +204,40 @@ export default function CompanyTaskListRe() {
             )}
             columns={visibleColumns}
             primaryKey="taskId"
-            // onEdit={
-            //   permission.Edit
-            //     ? (row) => {
-            //         navigate(`/dashboard/tasksrepeat/edit/${row.repetitiveTaskId}`);
-            //       }
-            //     : undefined
-            // }
-            // onDelete={(row) => {
-            //   onDelete(row);
-            // }}
+            onEdit={
+              permission.Edit
+                ? (row) => {
+                    navigate(
+                      `/dashboard/tasksrepeat/edit/${row.repetitiveTaskId}`,
+                    );
+                  }
+                : undefined
+            }
+            onDelete={(row) => {
+              onDelete(row);
+            }}
             onViewButton={(row) => {
               navigate(`/dashboard/tasks/view/${row.taskId}`);
             }}
-            customActions={(row) => {
-              return (
-                <div className="flex flex-col ">
-                  {/* Delete Button */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 p-0 text-red-600"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(row);
-                    }}
-                  >
-                    <Trash className="w-4 h-4" />
-                  </Button>
-                </div>
-              );
-            }}
-            isEditDeleteShow={false}
+            // customActions={(row) => {
+            //   return (
+            //     <div className="flex flex-col ">
+            //       {/* Delete Button */}
+            //       <Button
+            //         variant="outline"
+            //         size="sm"
+            //         className="h-8 w-8 p-0 text-red-600"
+            //         onClick={(e) => {
+            //           e.stopPropagation();
+            //           onDelete(row);
+            //         }}
+            //       >
+            //         <Trash className="w-4 h-4" />
+            //       </Button>
+            //     </div>
+            //   );
+            // }}
+            isEditDeleteShow={true}
             paginationDetails={mapPaginationDetails(companyTaskData)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
@@ -244,16 +246,17 @@ export default function CompanyTaskListRe() {
             isActionButton={() => true}
             viewButton={true}
             permissionKey="users"
-            dropdownColumns={{
-              taskStatus: {
-                options: (taskStatus?.data ?? []).map((opt) => ({
-                  label: opt.taskStatus,
-                  value: opt.taskStatusId,
-                  color: opt.color || "#2e3195",
-                })),
-                onChange: (row, value) => handleStatusChange(value, row),
-              },
-            }}
+            // dropdownColumns={{
+            //   taskStatus: {
+            //     options: (taskStatus?.data ?? []).map((opt) => ({
+            //       label: opt.taskStatus,
+            //       value: opt.taskStatusId,
+            //       color: opt.color || "#2e3195",
+            //     })),
+            //     onChange: (row, value) => handleStatusChange(value, row),
+            //   },
+            // }}
+
             onRowClick={(row) => {
               handleRowsModalOpen(row);
             }}

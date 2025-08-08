@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { useState, useEffect, useCallback } from "react";
 import { useGetCompanyProject } from "@/features/api/companyProject";
 import {
-  useGetAllTaskStatus,
+  // useGetAllTaskStatus,
   useDdTaskType,
   addUpdateRepeatCompanyTaskMutation,
 } from "@/features/api/companyTask";
@@ -15,21 +15,23 @@ import useGetRepeatCompanyTaskById from "@/features/api/companyTask/useGetRepeat
 
 interface FormValues {
   taskId?: string;
-  project: string;
+  repetitiveTaskId?: string;
+  project?: CompanyProjectDataProps | string | null;
   taskName: string;
   taskDescription: string;
   taskStartDate: Date | null;
   taskDeadline: Date | null;
   repeatType: string;
   taskStatusId?: string;
+  isActive?: boolean;
   taskTypeId?: string;
-  meeting?: string;
+  meeting?: CompanyMeetingDataProps | string | null;
   assignUser: string[];
   comment?: string;
 }
 
 // Renamed hook
-export const useAddCompanyTask = () => {
+export const useAddCompanyTask = (taskDeadline?: string | Date) => {
   const { mutate: addUpdateTask, isPending } =
     addUpdateRepeatCompanyTaskMutation();
   const { id: repetitiveTaskId } = useParams();
@@ -49,6 +51,7 @@ export const useAddCompanyTask = () => {
       taskDeadline: null,
       repeatType: "",
       taskStatusId: "",
+      isActive: undefined,
       taskTypeId: "",
       assignUser: [],
       comment: "",
@@ -62,8 +65,16 @@ export const useAddCompanyTask = () => {
     if (repetitiveTaskId && taskDataById?.data) {
       reset({
         taskId: taskDataById.data.taskId || "",
-        project: taskDataById.data?.projectId || "",
-        meeting: taskDataById.data?.meetingId || "",
+        // repetitiveTaskId: taskDataById.data.repetitiveTaskId || "",
+        project:
+          projectListdata?.data?.find(
+            (p) => p.projectId === taskDataById.data?.projectId,
+          ) || null,
+        meeting:
+          meetingData?.data?.find(
+            (p) => p.meetingId === taskDataById.data?.meetingId,
+          ) || null,
+        // meeting: taskDataById.data?.meetingId || "",
         taskName: taskDataById.data.taskName || "",
         taskDescription: taskDataById.data.taskDescription || "",
         taskStartDate: taskDataById.data.taskStartDate
@@ -74,6 +85,7 @@ export const useAddCompanyTask = () => {
           : null,
         repeatType: taskDataById.data.repeatType?.toLocaleLowerCase(),
         taskStatusId: taskDataById.data.taskStatusId || "",
+        isActive: taskDataById.data.isActive || undefined,
         taskTypeId: taskDataById.data.taskTypeId || "",
         assignUser: taskDataById.data.assignUsers
           ? taskDataById.data.assignUsers.map((user) => user.employeeId)
@@ -103,9 +115,9 @@ export const useAddCompanyTask = () => {
       search: "",
     });
 
-  const { data: taskStatus, isLoading: statusLoading } = useGetAllTaskStatus({
-    filter: {},
-  });
+  // const { data: taskStatus, isLoading: statusLoading } = useGetAllTaskStatus({
+  //   filter: {},
+  // });
   const { data: taskTypeData, isLoading: typeLoading } = useDdTaskType();
 
   const { data: employeedata, isLoading: employeeLoading } = getEmployee({
@@ -122,12 +134,16 @@ export const useAddCompanyTask = () => {
     },
   );
 
-  const taskStatusOptions = taskStatus
-    ? taskStatus.data.map((status) => ({
-        label: status.taskStatus,
-        value: status.taskStatusId,
-      }))
-    : [];
+  // const taskStatusOptions = taskStatus
+  //   ? taskStatus.data.map((status) => ({
+  //       label: status.taskStatus,
+  //       value: status.taskStatusId,
+  //     }))
+  //   : [];
+  const taskStatusOptions = [
+    { label: "Active", value: "active" },
+    { label: "Inactive", value: "inactive" },
+  ];
 
   const taskTypeOptions = taskTypeData
     ? taskTypeData.data.map((status) => ({
@@ -136,15 +152,126 @@ export const useAddCompanyTask = () => {
       }))
     : [];
 
-  // Repetition options
-  const repetitionOptions = [
-    // { value: "none", label: "No Repetition" },
-    { value: "daily", label: "Daily" },
-    { value: "weekly", label: "Weekly" },
-    { value: "monthly", label: "Monthly" },
-    { value: "yearly", label: "Yearly" },
-    { value: "quarterly", label: "Quarterly" },
-  ];
+  const getDayName = (date: Date) =>
+    date.toLocaleDateString("en-US", { weekday: "long" });
+  function getOrdinalWeekday(date: Date) {
+    const day = date.getDay();
+    const dateOfMonth = date.getDate();
+    const lastDateOfMonth = new Date(
+      date.getFullYear(),
+      date.getMonth() + 1,
+      0,
+    ).getDate();
+
+    const weekdayNames = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    const ordinals = ["first", "second", "third", "fourth", "fifth"];
+
+    // Calculate week number in month (1-based)
+    const weekNumber = Math.ceil(dateOfMonth / 7);
+
+    // Check if date is in the last week of the month
+    const daysLeftInMonth = lastDateOfMonth - dateOfMonth;
+    const isLastWeek = daysLeftInMonth < 7;
+
+    const ordinalLabel = isLastWeek ? "last" : ordinals[weekNumber - 1];
+
+    return `${ordinalLabel} ${weekdayNames[day]}`;
+  }
+
+  // Format options dynamically based on taskDeadline
+  let repetitionOptions = [{}];
+
+  if (taskDeadline) {
+    try {
+      const dateObj = new Date(taskDeadline);
+      const dayName = getDayName(dateObj);
+      const ordinalWeekday = getOrdinalWeekday(dateObj);
+      const lastDateOfMonth = new Date(
+        dateObj.getFullYear(),
+        dateObj.getMonth() + 1,
+        0,
+      ).getDate();
+
+      const dateOfMonth = dateObj.getDate();
+      const daysLeftInMonth = lastDateOfMonth - dateOfMonth;
+      const isLastWeek = daysLeftInMonth < 7;
+      const monthName = dateObj.toLocaleDateString("en-US", { month: "long" }); // e.g., "March"
+      const isLastDayOfMonth = dateOfMonth === lastDateOfMonth;
+
+      repetitionOptions = [
+        { value: "DAILY", label: "Daily" },
+        { value: "DAILYALTERNATE", label: "Daily (Every Other Day)" },
+        { value: "WEEKLY", label: `Weekly on ${dayName}` },
+        // Conditionally include only one of these two:
+        ...(isLastWeek
+          ? [
+              {
+                value: "MONTHLYLASTWEEKDAY",
+                label: `Monthly on the last ${dayName}`,
+              },
+            ]
+          : [
+              {
+                value: "MONTHLYNWEEKDAY",
+                label: `Monthly on the ${ordinalWeekday}`,
+              },
+            ]),
+        {
+          value: "MONTHLYDATE",
+          label: `Monthly on the ${getOrdinalDate(dateOfMonth)} date `,
+        },
+        ...(isLastDayOfMonth
+          ? [
+              {
+                value: "MONTHLYLASTDAY",
+                label: `Monthly on the last day (${getOrdinalDate(lastDateOfMonth)})`,
+              },
+            ]
+          : []),
+
+        {
+          value: "YEARLYDATE",
+          label: `Yearly on ${monthName} ${getOrdinalDate(dateOfMonth)}`, // Yearly - Date (e.g., March 14th)
+        },
+        ...(!isLastDayOfMonth
+          ? [
+              {
+                value: "YEARLYMONTHNWEEKDAY",
+                label: `Yearly on the ${ordinalWeekday} of ${monthName}  `,
+              },
+            ]
+          : []),
+        ...(isLastDayOfMonth
+          ? [
+              {
+                value: "YEARLYMONTHLASTWEEKDAY",
+                label: `Yearly on the last ${dayName} of ${monthName}  `,
+              },
+            ]
+          : []),
+      ];
+    } catch {
+      // fallback if invalid date
+      repetitionOptions = [];
+    }
+  } else {
+    repetitionOptions = [];
+  }
+
+  // Helper to get ordinal string for day (1st, 2nd, 3rd...)
+  function getOrdinalDate(n: number) {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
 
   // Dynamically set steps based on taskId
   const steps = repetitiveTaskId
@@ -165,6 +292,7 @@ export const useAddCompanyTask = () => {
             "taskDescription",
             "repeatType",
             "taskDeadline",
+            "isActive",
             "taskStatusId",
             "taskTypeId",
           ],
@@ -184,6 +312,7 @@ export const useAddCompanyTask = () => {
             "taskDescription",
             "repeatType",
             "taskDeadline",
+            "isActive",
             "taskStatusId",
             "taskTypeId",
           ],
@@ -227,11 +356,19 @@ export const useAddCompanyTask = () => {
   }, [trigger]);
 
   const onSubmit = async (data: FormValues) => {
-    // console.log(data, "datadatadata");
+    console.log(data);
 
-    const assigneeIds = data.assignUser;
+    const isActiveValue =
+      typeof data?.isActive === "string"
+        ? data.isActive === "active"
+        : !!data.isActive;
 
-    const payload = data.taskId
+    const assigneeIds =
+      (data.assignUser as unknown as { employeeId: string }[])?.map(
+        (user) => user.employeeId,
+      ) ?? [];
+
+    const payload = data.repetitiveTaskId
       ? {
           repetitiveTaskId: repetitiveTaskId,
           taskName: data.taskName,
@@ -241,11 +378,18 @@ export const useAddCompanyTask = () => {
             : null,
           taskDeadline: data.taskDeadline ? new Date(data.taskDeadline) : null,
           taskStatusId: data?.taskStatusId,
+          isActive: isActiveValue,
+
           taskTypeId: data?.taskTypeId,
           comment: data.comment,
           employeeIds: assigneeIds,
-          projectId: data.project,
-          meetingId: data.meeting,
+          projectId:
+            (data.project as unknown as { projectId: string })?.projectId ??
+            null,
+          meetingId:
+            (data.meeting as unknown as { meetingId: string })?.meetingId ??
+            null,
+
           repeatType: data.repeatType.toUpperCase(),
         }
       : {
@@ -256,11 +400,17 @@ export const useAddCompanyTask = () => {
             : null,
           taskDeadline: data.taskDeadline ? new Date(data.taskDeadline) : null,
           taskStatusId: data?.taskStatusId,
+          isActive: isActiveValue,
+
           taskTypeId: data?.taskTypeId,
           comment: data.comment,
           employeeIds: assigneeIds,
-          projectId: data.project,
-          meetingId: data.meeting,
+          projectId:
+            (data.project as unknown as { projectId: string })?.projectId ??
+            null,
+          meetingId:
+            (data.meeting as unknown as { meetingId: string })?.meetingId ??
+            null,
           repeatType: data.repeatType.toUpperCase(),
         };
 
@@ -295,7 +445,7 @@ export const useAddCompanyTask = () => {
     isPending,
     taskDataById,
     projectLoading,
-    statusLoading,
+    // statusLoading,
     typeLoading,
     employeeLoading,
     meetingLoading,

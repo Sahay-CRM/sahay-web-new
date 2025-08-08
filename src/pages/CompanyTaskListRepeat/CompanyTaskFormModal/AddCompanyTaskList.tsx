@@ -222,11 +222,13 @@ const TaskDetailsStep = () => {
     formState: { errors },
     watch: watchForm,
   } = useFormContext();
+  const taskDeadline = watchForm("taskDeadline"); // 👈 This is where we watch the date
+
   const { repetitionOptions, taskStatusOptions, taskTypeOptions } =
-    useAddCompanyTask();
+    useAddCompanyTask(taskDeadline);
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid mb-10 grid-cols-2 gap-4">
       <Card className="col-span-2 mt-4 px-4 py-4 grid grid-cols-2 gap-4">
         <div>
           <FormInputField
@@ -255,23 +257,6 @@ const TaskDetailsStep = () => {
           </div>
         </div>
         <div className="space-y-4">
-          <Controller
-            control={control}
-            name="repeatType"
-            rules={{ required: "Please select Repetition Type" }}
-            render={({ field }) => (
-              <FormSelect
-                label="Repetition"
-                options={repetitionOptions}
-                placeholder="Select Repetition"
-                {...field}
-                // value={field.value || ""}
-                // onChange={field.onChange}
-                error={errors.repeatType}
-                isMandatory={true}
-              />
-            )}
-          />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {watchForm("repetition") === "none" && (
               <Controller
@@ -301,17 +286,35 @@ const TaskDetailsStep = () => {
               )}
             />
           </div>
+          <Controller
+            control={control}
+            name="repeatType"
+            rules={{ required: "Please select Repetition Type" }}
+            render={({ field }) => (
+              <FormSelect
+                label="Repetition"
+                options={repetitionOptions}
+                placeholder="Select Repetition"
+                {...field}
+                // value={field.value || ""}
+                // onChange={field.onChange}
+                error={errors.repeatType}
+                isMandatory={true}
+                disabled={!taskDeadline}
+              />
+            )}
+          />
           <div className="flex gap-4">
             <div className="w-1/2">
               <Controller
                 control={control}
-                name="taskStatusId"
-                rules={{ required: "Please select Task Status" }}
+                name="isActive"
+                rules={{ required: "Please select Any One Status" }}
                 render={({ field }) => (
                   <FormSelect
-                    label="Task Status"
+                    label="Active/InActive"
                     options={taskStatusOptions}
-                    error={errors.taskStatusId}
+                    error={errors.isActive}
                     {...field}
                     isMandatory={true}
                   />
@@ -447,6 +450,7 @@ export default function AddCompanyTask() {
     isPending,
   } = hookProps;
   const { setBreadcrumbs } = useBreadcrumbs();
+  // console.log(taskpreviewData, "taskpreviewDatataskpreviewDatataskpreviewData");
 
   useEffect(() => {
     setBreadcrumbs([

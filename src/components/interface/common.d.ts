@@ -697,9 +697,11 @@ interface TaskMeeting {
 
 interface Task {
   taskId: string;
+  repetitiveTaskId?: string;
   taskName: string;
   taskDescription: string;
   taskStatusId: string;
+  isActive: boolean;
   taskStatusName: string;
   taskTypeId: string;
   taskTypeName: string;
