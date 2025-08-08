@@ -59,6 +59,9 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
         {
           onSuccess: () => {
             queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] });
+            queryClient.resetQueries({
+              queryKey: ["get-detailMeetingAgendaIssue"],
+            });
             onClose();
           },
         },

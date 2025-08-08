@@ -868,7 +868,9 @@ export default function KPITable({
     };
     addKpiList(payload, {
       onSuccess: () => {
-        queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] });
+        queryClient.resetQueries({
+          queryKey: ["get-detailMeetingAgendaIssue"],
+        });
         kpisFireBase();
       },
     });

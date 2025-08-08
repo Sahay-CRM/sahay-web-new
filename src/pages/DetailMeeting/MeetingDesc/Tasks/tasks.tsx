@@ -65,7 +65,9 @@ export default function Tasks({
       };
       addMeetingTask(payload, {
         onSuccess: () => {
-          queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
+          queryClient.resetQueries({
+            queryKey: ["get-detailMeetingAgendaIssue"],
+          });
           tasksFireBase();
         },
       });
@@ -82,6 +84,9 @@ export default function Tasks({
     onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
         queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
+        // queryClient.resetQueries({
+        //   queryKey: ["get-detail-meeting-agenda-issue-obj"],
+        // });
       }
     });
 
@@ -138,7 +143,9 @@ export default function Tasks({
         // };
         deleteTaskById(data.detailMeetingTaskId, {
           onSuccess: () => {
-            queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
+            queryClient.resetQueries({
+              queryKey: ["get-detailMeetingAgendaIssue"],
+            });
             tasksFireBase();
           },
           onError: (error: Error) => {

@@ -70,8 +70,10 @@ export default function Projects({
       };
       addMeetingProject(payload, {
         onSuccess: () => {
-          queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
           projectsFireBase();
+          queryClient.resetQueries({
+            queryKey: ["get-detailMeetingAgendaIssue"],
+          });
         },
       });
     }
@@ -115,7 +117,6 @@ export default function Projects({
     addProject(payload, {
       onSuccess: () => {
         projectsFireBase();
-        queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
       },
     });
   };
@@ -131,7 +132,9 @@ export default function Projects({
         deleteProjectById(payload, {
           onSuccess: () => {
             projectsFireBase();
-            queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
+            queryClient.resetQueries({
+              queryKey: ["get-detailMeetingAgendaIssue"],
+            });
           },
           onError: (error: Error) => {
             const axiosError = error as AxiosError<{
@@ -159,6 +162,9 @@ export default function Projects({
     onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
         queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
+        // queryClient.resetQueries({
+        //   queryKey: ["get-detail-meeting-agenda-issue-obj"],
+        // });
       }
     });
 

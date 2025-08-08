@@ -157,12 +157,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   }, []);
 
   return (
-    <div
-      className={cn(
-        "overflow-y-auto max-h-[calc(100vh-250px)] px-2",
-        className,
-      )}
-    >
+    <div className={cn("px-2", className)}>
       {meetingStatus !== "ENDED" && (
         <>
           {!isAddingNote ? (
@@ -256,7 +251,9 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
         </>
       )}
 
-      <div className={`px-2 space-y-2 pb-2 overflow-y-auto ${className}`}>
+      <div
+        className={`px-2 space-y-2 h-[calc(100vh-230px)] overflow-auto pb-2 overflow-y-auto ${className}`}
+      >
         {Array.isArray(meetingNotes?.data) &&
           meetingNotes.data.map((note: MeetingNotesRes, idx: number) => {
             const author = joiners.find(

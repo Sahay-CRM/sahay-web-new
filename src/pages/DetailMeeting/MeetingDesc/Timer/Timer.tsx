@@ -17,18 +17,24 @@ export default function Timer({
   onTimeUpdate,
   className,
 }: TimerProps) {
-  const [displayTime, setDisplayTime] = useState(actualTime || defaultTime);
+  const safeActualTime = Number.isFinite(actualTime) ? actualTime : 0;
+  const safeDefaultTime = Number.isFinite(defaultTime) ? defaultTime : 0;
+
+  // const [displayTime, setDisplayTime] = useState(actualTime || defaultTime);
+  const [displayTime, setDisplayTime] = useState(
+    safeActualTime || safeDefaultTime,
+  );
 
   useEffect(() => {
     if (!isActive || !lastSwitchTimestamp) {
-      setDisplayTime(actualTime || defaultTime);
+      setDisplayTime(safeActualTime || safeDefaultTime);
       return;
     }
 
     const interval = setInterval(() => {
       const now = Date.now();
       const elapsedSeconds = (now - lastSwitchTimestamp) / 1000;
-      const currentTime = (actualTime || 0) + elapsedSeconds;
+      const currentTime = safeActualTime + elapsedSeconds;
 
       setDisplayTime(currentTime);
 
@@ -38,7 +44,13 @@ export default function Timer({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [actualTime, lastSwitchTimestamp, isActive, defaultTime, onTimeUpdate]);
+  }, [
+    safeActualTime,
+    lastSwitchTimestamp,
+    isActive,
+    safeDefaultTime,
+    onTimeUpdate,
+  ]);
 
   const formatTime = (totalSeconds: number) => {
     const minutes = Math.floor(totalSeconds / 60);
