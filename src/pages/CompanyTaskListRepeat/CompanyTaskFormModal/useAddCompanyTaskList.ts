@@ -14,7 +14,7 @@ import { getUserPermission } from "@/features/selectors/auth.selector";
 import useGetRepeatCompanyTaskById from "@/features/api/companyTask/useGetRepeatCompanyTaskById";
 
 interface FormValues {
-  taskId?: string;
+  // taskId?: string;
   repetitiveTaskId?: string;
   project?: CompanyProjectDataProps | string | null;
   taskName: string;
@@ -23,10 +23,10 @@ interface FormValues {
   taskDeadline: Date | null;
   repeatType: string;
   taskStatusId?: string;
-  isActive?: boolean;
+  isActive?: boolean | string;
   taskTypeId?: string;
   meeting?: CompanyMeetingDataProps | string | null;
-  assignUser: string[];
+  assignUser: EmployeeDetails[];
   comment?: string;
 }
 
@@ -38,12 +38,14 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
   const { data: taskDataById } = useGetRepeatCompanyTaskById(
     repetitiveTaskId || "",
   );
+
   const permission = useSelector(getUserPermission);
   const navigate = useNavigate();
   const [isModalOpen, setModalOpen] = useState(false);
   const methods = useForm<FormValues>({
     defaultValues: {
-      taskId: "",
+      // taskId: "",
+      repetitiveTaskId: "",
       project: "",
       taskName: "",
       taskDescription: "",
@@ -60,42 +62,7 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
     mode: "onChange",
   });
   const { reset, trigger, getValues } = methods;
-
-  useEffect(() => {
-    if (repetitiveTaskId && taskDataById?.data) {
-      reset({
-        taskId: taskDataById.data.taskId || "",
-        // repetitiveTaskId: taskDataById.data.repetitiveTaskId || "",
-        project:
-          projectListdata?.data?.find(
-            (p) => p.projectId === taskDataById.data?.projectId,
-          ) || null,
-        meeting:
-          meetingData?.data?.find(
-            (p) => p.meetingId === taskDataById.data?.meetingId,
-          ) || null,
-        // meeting: taskDataById.data?.meetingId || "",
-        taskName: taskDataById.data.taskName || "",
-        taskDescription: taskDataById.data.taskDescription || "",
-        taskStartDate: taskDataById.data.taskStartDate
-          ? new Date(taskDataById.data.taskStartDate)
-          : null,
-        taskDeadline: taskDataById.data.taskDeadline
-          ? new Date(taskDataById.data.taskDeadline)
-          : null,
-        repeatType: taskDataById.data.repeatType?.toLocaleLowerCase(),
-        taskStatusId: taskDataById.data.taskStatusId || "",
-        isActive: taskDataById.data.isActive || undefined,
-        taskTypeId: taskDataById.data.taskTypeId || "",
-        assignUser: taskDataById.data.assignUsers
-          ? taskDataById.data.assignUsers.map((user) => user.employeeId)
-          : [],
-      });
-    }
-  }, [taskDataById, reset, repetitiveTaskId]);
-
-  const [step, setStep] = useState(1);
-
+  const { data: taskTypeData, isLoading: typeLoading } = useDdTaskType();
   const [paginationFilterEmployee, setPaginationFilterEmployee] =
     useState<PaginationFilter>({
       currentPage: 1,
@@ -114,12 +81,6 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
       pageSize: 25,
       search: "",
     });
-
-  // const { data: taskStatus, isLoading: statusLoading } = useGetAllTaskStatus({
-  //   filter: {},
-  // });
-  const { data: taskTypeData, isLoading: typeLoading } = useDdTaskType();
-
   const { data: employeedata, isLoading: employeeLoading } = getEmployee({
     filter: { ...paginationFilterEmployee, isDeactivated: false },
   });
@@ -133,6 +94,67 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
       filter: paginationFilterMeeting,
     },
   );
+
+  useEffect(() => {
+    if (
+      repetitiveTaskId &&
+      taskDataById?.data &&
+      projectListdata &&
+      meetingData &&
+      employeedata
+    ) {
+      // Safely parse the taskDeadline string into a Date object
+      const deadlineString = taskDataById.data.taskDeadline;
+      const taskDeadlineDate = deadlineString ? new Date(deadlineString) : null;
+
+      // Check if the date is valid before setting it
+      const validTaskDeadline =
+        taskDeadlineDate && !isNaN(taskDeadlineDate.getTime())
+          ? taskDeadlineDate
+          : null;
+      const employeeIds = taskDataById?.data?.employeeIds ?? [];
+      reset({
+        repetitiveTaskId: taskDataById.data.repetitiveTaskId || "",
+        project:
+          projectListdata?.data?.find(
+            (p) => p.projectId === taskDataById.data?.projectId,
+          ) || null,
+        meeting:
+          meetingData?.data?.find(
+            (p) => p.meetingId === taskDataById.data?.meetingId,
+          ) || null,
+        taskName: taskDataById.data.taskName || "",
+        taskDescription: taskDataById.data.taskDescription || "",
+        taskStartDate: taskDataById.data.taskStartDate
+          ? new Date(taskDataById.data.taskStartDate)
+          : null,
+
+        // Use the validated date here
+        taskDeadline: validTaskDeadline,
+
+        repeatType: taskDataById.data.repeatType || "",
+        isActive: taskDataById.data.isActive ? "active" : "inactive",
+        taskTypeId: taskDataById.data.taskTypeId || "",
+        assignUser:
+          employeedata?.data?.filter((emp) =>
+            employeeIds.includes(emp.employeeId),
+          ) ?? [],
+      });
+    }
+  }, [
+    taskDataById,
+    reset,
+    repetitiveTaskId,
+    projectListdata,
+    meetingData,
+    employeedata,
+  ]);
+
+  const [step, setStep] = useState(1);
+
+  // const { data: taskStatus, isLoading: statusLoading } = useGetAllTaskStatus({
+  //   filter: {},
+  // });
 
   // const taskStatusOptions = taskStatus
   //   ? taskStatus.data.map((status) => ({
@@ -273,7 +295,6 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
 
-  // Dynamically set steps based on taskId
   const steps = repetitiveTaskId
     ? ["Project", "Meeting", "Basic Info", "Assign User"]
     : ["Project", "Meeting", "Basic Info", "AssignUser", "Comment"];
@@ -300,7 +321,6 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
         },
         // Adjusted step numbers to be contiguous for array indexing if needed,
         // but direct object key access is fine.
-        // Assuming step numbers are 1, 2, 3, 4, (5 if not taskId)
         4: { required: ["assignUser"], optional: [] }, // Was 7
       }
     : {
@@ -356,8 +376,6 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
   }, [trigger]);
 
   const onSubmit = async (data: FormValues) => {
-    console.log(data);
-
     const isActiveValue =
       typeof data?.isActive === "string"
         ? data.isActive === "active"

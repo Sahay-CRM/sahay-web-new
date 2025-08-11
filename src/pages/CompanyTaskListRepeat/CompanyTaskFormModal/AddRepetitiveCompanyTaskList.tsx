@@ -12,7 +12,7 @@ import { useAddCompanyTask } from "./useAddCompanyTaskList";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import SearchInput from "@/components/shared/SearchInput";
-import AddDatapointModal from "./addDatapointModal";
+import AddDatapointModal from "./addRepetitiveTaskModal";
 
 const ProjectSelectionStep = () => {
   const {
@@ -450,7 +450,6 @@ export default function AddCompanyTask() {
     isPending,
   } = hookProps;
   const { setBreadcrumbs } = useBreadcrumbs();
-  // console.log(taskpreviewData, "taskpreviewDatataskpreviewDatataskpreviewData");
 
   useEffect(() => {
     setBreadcrumbs([

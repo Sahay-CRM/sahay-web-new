@@ -343,6 +343,7 @@ interface CompanyMeetingTypeDataProps {
 interface CompanyProjectDataProps {
   projectId?: string;
   projectName?: string;
+  assignUsers: Employee[];
   projectDescription?: string;
   projectActualEndDate?: string | null;
   projectDeadline?: Date | string | null;
@@ -610,6 +611,7 @@ interface TaskGetPaging {
   updatedDatetime?: string;
   taskTypeId: string;
   taskTypeName?: string;
+  employees?: string;
   taskActualEndDate?: string | null;
   companyId?: string;
   taskDeadline?: string;
@@ -701,6 +703,7 @@ interface Task {
   taskName: string;
   taskDescription: string;
   taskStatusId: string;
+  employeeIds: string;
   isActive: boolean;
   taskStatusName: string;
   taskTypeId: string;

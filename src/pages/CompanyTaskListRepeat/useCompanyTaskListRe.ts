@@ -108,12 +108,11 @@ export default function useCompanyTaskList() {
 
   const conformDelete = (isGroupDelete: boolean) => {
     if (!modalData?.repetitiveTaskId) {
-      // Optionally show an error or just return
       return;
     }
     const payload = {
       repetitiveTaskId: modalData.repetitiveTaskId,
-      groupDelete: isGroupDelete, // यह flag सीधे mutation को पास हो जाएगा
+      groupDelete: isGroupDelete,
     };
 
     deleteTaskById(payload);

@@ -26,7 +26,7 @@ export default function useAddUpdateRepeatCompanyTask() {
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["get-task-listrepeat"] });
-      queryClient.resetQueries({ queryKey: ["get-task-by-id"] });
+      queryClient.resetQueries({ queryKey: ["get-repeattask-by-id"] });
       queryClient.resetQueries({ queryKey: ["dd-task-type"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {

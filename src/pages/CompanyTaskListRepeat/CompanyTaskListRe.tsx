@@ -16,7 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import ViewMeetingModal from "../companyTask/ViewMeetingModal";
+import ViewRepeatTaskModal from "./ViewRepeatTaskModal";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
@@ -67,8 +67,7 @@ export default function CompanyTaskListRe() {
       visible: true,
     },
     { key: "taskDeadline", label: "Task Deadline", visible: true },
-    { key: "assigneeNames", label: "Assignees", visible: true },
-    { key: "taskStatus", label: "Status", visible: true },
+    { key: "employees", label: "Assignees", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -131,36 +130,6 @@ export default function CompanyTaskListRe() {
             />
           </div>
           <div className="flex gap-4 flex-wrap">
-            {/* <div className="z-15 relative flex items-center gap-2">
-              {!showOverdue && (
-                <DateRangePicker
-                  value={{
-                    from: taskDateRange.taskStartDate,
-                    to: taskDateRange.taskDeadline,
-                  }}
-                  onChange={handleDateRangeChange}
-                  onApply={handleDateRangeApply}
-                />
-              )}
-            </div>
-            <div>
-              <DropdownSearchMenu
-                label="Status"
-                options={statusOptions}
-                selected={filters.taskStatusName || []}
-                onChange={(selected) => {
-                  handleFilterChange("taskStatusName", selected);
-                }}
-                multiSelect
-              />
-            </div>
-            <Button
-              variant={showOverdue ? "destructive" : "outline"}
-              onClick={handleOverdueToggle}
-              className="py-2 w-fit"
-            >
-              {showOverdue ? "Show All Tasks" : "Show Overdue"}
-            </Button> */}
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>
@@ -198,12 +167,12 @@ export default function CompanyTaskListRe() {
                       (j) => j.Employee?.employeeName,
                     )
                       .filter(Boolean)
-                      .join(", ")
-                  : "",
+                      .join(" , ")
+                  : " ",
               }),
             )}
             columns={visibleColumns}
-            primaryKey="taskId"
+            primaryKey="repetitiveTaskId"
             onEdit={
               permission.Edit
                 ? (row) => {
@@ -216,9 +185,9 @@ export default function CompanyTaskListRe() {
             onDelete={(row) => {
               onDelete(row);
             }}
-            onViewButton={(row) => {
-              navigate(`/dashboard/tasks/view/${row.taskId}`);
-            }}
+            // onViewButton={(row) => {
+            //   navigate(`/dashboard/tasksrepeat/view/${row.repetitiveTaskId}`);
+            // }}
             // customActions={(row) => {
             //   return (
             //     <div className="flex flex-col ">
@@ -244,7 +213,7 @@ export default function CompanyTaskListRe() {
             moduleKey="TASK"
             showIndexColumn={false}
             isActionButton={() => true}
-            viewButton={true}
+            // viewButton={true}
             permissionKey="users"
             // dropdownColumns={{
             //   taskStatus: {
@@ -268,17 +237,17 @@ export default function CompanyTaskListRe() {
         {/* Modal Component */}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
-            title="Delete Company Task"
-            label="Task Name:"
+            title="Delete Repetitive Task"
+            label="Repetitive Task Name:"
             modalData={`${modalData?.taskName}`}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={(isGroupDelete) => conformDelete(isGroupDelete ?? false)}
             isChildData={isChildData}
-            showDeleteOptions={true}
+            // showDeleteOptions={true}
           />
         )}
-        <ViewMeetingModal
+        <ViewRepeatTaskModal
           isModalOpen={isViewModalOpen}
           modalData={viewModalData}
           modalClose={() => setIsViewModalOpen(false)}

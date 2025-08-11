@@ -36,8 +36,6 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
   onSubmit,
   isLoading,
 }) => {
-  console.log(modalData, "modalData");
-
   return (
     <ModalData
       isModalOpen={isModalOpen}
