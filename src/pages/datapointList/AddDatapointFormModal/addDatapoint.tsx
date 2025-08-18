@@ -1,9 +1,9 @@
+import { FormProvider, useForm } from "react-hook-form";
+
 import AddDatapointModal from "./addDatapointModal";
 import useAddDatapoint from "./useAddDatapoint";
-import { FormProvider, useForm } from "react-hook-form";
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
-import Loader from "@/components/shared/Loader/Loader";
 
 const AddDatapoint = () => {
   const {
@@ -17,27 +17,16 @@ const AddDatapoint = () => {
     // GoalValue,
     trigger,
     KpiPreview,
-    isLoading,
     isPending,
-    companykpimasterId,
     Details,
   } = useAddDatapoint();
 
   const methods = useForm({ mode: "onChange" });
 
-  let steps = [];
   let stepNames = [];
 
-  if (companykpimasterId) {
-    // Hide KPI step
-    steps = [<Details />];
-    stepNames = ["Details"];
-    steps.push(<AssignUser />);
-    stepNames.push("Assign User");
-  } else {
-    steps = [<Kpi />, <Details />, <AssignUser />];
-    stepNames = ["KPI", "Details", "Assign User", "Goal Value"];
-  }
+  const steps = [<Kpi />, <Details />, <AssignUser />];
+  stepNames = ["KPI", "Details", "Assign User", "Goal Value"];
 
   const {
     back,
@@ -48,10 +37,6 @@ const AddDatapoint = () => {
     isFirstStep,
     isLastStep,
   } = useStepForm(steps, trigger);
-
-  if (isLoading) {
-    return <Loader />;
-  }
 
   return (
     <FormProvider {...methods}>
@@ -67,7 +52,6 @@ const AddDatapoint = () => {
             isLastStep={isLastStep}
             isPending={isPending}
             onFinish={onFinish}
-            isUpdate={!!companykpimasterId}
           />
         </div>
 

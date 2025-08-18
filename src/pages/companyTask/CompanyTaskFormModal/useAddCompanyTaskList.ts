@@ -44,7 +44,7 @@ export const useAddCompanyTask = () => {
       taskDescription: "",
       taskStartDate: null,
       taskDeadline: null,
-      repeatType: "none",
+      // repeatType: "none",
       taskStatusId: "",
       taskTypeId: "",
       assignUser: [],
@@ -68,7 +68,7 @@ export const useAddCompanyTask = () => {
         taskDeadline: taskDataById.data.taskDeadline
           ? new Date(taskDataById.data.taskDeadline)
           : null,
-        repeatType: taskDataById.data.repeatType?.toLocaleLowerCase(),
+        // repeatType: taskDataById.data.repeatType?.toLocaleLowerCase(),
         taskStatusId: taskDataById.data.taskStatusId || "",
         taskTypeId: taskDataById.data.taskTypeId || "",
         assignUser: taskDataById.data.assignUsers
@@ -133,18 +133,17 @@ export const useAddCompanyTask = () => {
     : [];
 
   // Repetition options
-  const repetitionOptions = [
-    { value: "none", label: "No Repetition" },
-    { value: "daily", label: "Daily" },
-    { value: "weekly", label: "Weekly" },
-    { value: "monthly", label: "Monthly" },
-    { value: "annually", label: "Annually" },
-  ];
+  // const repetitionOptions = [
+  //   { value: "none", label: "No Repetition" },
+  //   { value: "daily", label: "Daily" },
+  //   { value: "weekly", label: "Weekly" },
+  //   { value: "monthly", label: "Monthly" },
+  //   { value: "annually", label: "Annually" },
+  // ];
 
   // Dynamically set steps based on taskId
-  const steps = taskId
-    ? ["Project", "Meeting", "Basic Info", "Assign User"]
-    : ["Project", "Meeting", "Basic Info", "AssignUser", "Comment"];
+  const steps = ["Project", "Meeting", "Basic Info", "Assign User"];
+  // : ["Project", "Meeting", "Basic Info", "AssignUser", "Comment"];
 
   // Define required and optional fields for each step
   const stepFieldConfig: Record<
@@ -162,7 +161,7 @@ export const useAddCompanyTask = () => {
             "taskStatusId",
             "taskTypeId",
           ],
-          optional: ["taskStartDate", "repeatType"],
+          optional: ["taskStartDate"],
         },
         // Adjusted step numbers to be contiguous for array indexing if needed,
         // but direct object key access is fine.
@@ -180,10 +179,10 @@ export const useAddCompanyTask = () => {
             "taskStatusId",
             "taskTypeId",
           ],
-          optional: ["taskStartDate", "repeatType"],
+          optional: ["taskStartDate"],
         },
         4: { required: ["assignUser"], optional: [] }, // Was 7
-        5: { required: [], optional: ["comment"] }, // Was 8
+        // 5: { required: [], optional: ["comment"] }, // Was 8
       };
 
   const validateStep = async (): Promise<boolean> => {
@@ -231,7 +230,7 @@ export const useAddCompanyTask = () => {
           employeeIds: assigneeIds,
           projectId: data.project,
           meetingId: data.meeting,
-          repeatType: data.repeatType.toUpperCase(),
+          // repeatType: data.repeatType.toUpperCase(),
         }
       : {
           taskName: data.taskName,
@@ -246,7 +245,7 @@ export const useAddCompanyTask = () => {
           employeeIds: assigneeIds,
           projectId: data.project,
           meetingId: data.meeting,
-          repeatType: data.repeatType.toUpperCase(),
+          // repeatType: data.repeatType.toUpperCase(),
         };
 
     addUpdateTask(payload, {
@@ -263,7 +262,7 @@ export const useAddCompanyTask = () => {
     prevStep,
     onSubmit,
     methods,
-    repetitionOptions,
+    // repetitionOptions,
     employeedata,
     projectListdata,
     setPaginationFilterEmployee,

@@ -604,7 +604,6 @@ export default function UpdatedKpiTable() {
           </table>
         </div>
 
-        {/* RIGHT TABLE */}
         <div className="overflow-x-auto border shadow-sm flex-1 bg-white">
           <div ref={rightScrollRef} className="max-h-[78vh] overflow-y-auto">
             <table className="min-w-max border-collapse text-sm table-fixed">

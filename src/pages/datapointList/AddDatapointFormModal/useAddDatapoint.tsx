@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Controller, useForm, useWatch } from "react-hook-form";
+
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
-import { useNavigate, useParams } from "react-router-dom";
 
 import FormSelect from "@/components/shared/Form/FormSelect";
 import {
   useAddUpdateDatapoint,
-  useGetDatapointById,
   useGetKpiNonSel,
 } from "@/features/api/companyDatapoint";
 // import { useGetProduct } from "@/features/api/Product";
@@ -25,37 +25,16 @@ import { Label } from "recharts";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 
 export default function useAddDataPoint() {
-  const { id: companykpimasterId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
 
   const { mutate: addDatapoint, isPending } = useAddUpdateDatapoint();
   const navigate = useNavigate();
 
-  const { data: datapointApiData, isLoading: isDatapointLoading } =
-    useGetDatapointById(companykpimasterId || "");
-
   const { setBreadcrumbs } = useBreadcrumbs();
 
   useEffect(() => {
-    setBreadcrumbs([
-      { label: "KPI List", href: "/dashboard/kpi" },
-      { label: companykpimasterId ? "Update KPI" : "Add KPI", href: "" },
-      ...(companykpimasterId
-        ? [
-            {
-              label: `${
-                typeof datapointApiData?.KPIMaster === "object" &&
-                datapointApiData?.KPIMaster
-                  ? datapointApiData.KPIMaster.KPIName
-                  : ""
-              }`,
-              href: `/dashboard/kpi/${companykpimasterId}`,
-              isHighlight: true,
-            },
-          ]
-        : []),
-    ]);
-  }, [companykpimasterId, datapointApiData, setBreadcrumbs]);
+    setBreadcrumbs([{ label: "KPI List", href: "/dashboard/kpi" }]);
+  }, [setBreadcrumbs]);
 
   const {
     register,
@@ -72,60 +51,13 @@ export default function useAddDataPoint() {
   });
 
   const watchedFrequency = useWatch({ name: "frequencyType", control });
+  const selectedKpi = watch("KPIMasterId");
 
   useEffect(() => {
-    if (watchedFrequency && !datapointApiData) {
+    if (watchedFrequency) {
       setValue("visualFrequencyTypes", []);
     }
-  }, [watchedFrequency, setValue, datapointApiData]);
-
-  useEffect(() => {
-    if (datapointApiData) {
-      setValue("KPIMasterId", {
-        kpiId: datapointApiData.kpiId,
-        KPIMasterId: datapointApiData.KPIMasterId,
-        KPIName:
-          datapointApiData.KPIMaster?.KPIName ||
-          datapointApiData.dataPointLabel,
-        KPILabel:
-          datapointApiData.KPIMaster?.KPILabel ||
-          datapointApiData.dataPointName,
-      });
-      // Set frequency
-      setValue("frequencyType", datapointApiData.frequencyType);
-      // Set validation type
-      setValue("validationType", datapointApiData.validationType);
-      setValue(
-        "visualFrequencyAggregate",
-        datapointApiData.visualFrequencyAggregate,
-      );
-      // Set unit
-      setValue("employeeId", datapointApiData.employeeId);
-      setValue("unit", datapointApiData.unit);
-      setValue("value1", datapointApiData.value1);
-      setValue("value2", datapointApiData.value2);
-      setValue("tag", datapointApiData.tag);
-      if (
-        datapointApiData.validationType === "YES_NO" &&
-        datapointApiData.employeeId
-      ) {
-        setValue(
-          `yesno_${datapointApiData.employeeId}`,
-          datapointApiData.value1 === "1"
-            ? { value: "1", label: "Yes" }
-            : { value: "0", label: "No" },
-        );
-      }
-      // Set core parameter
-      setValue("coreParameterId", datapointApiData.coreParameterId);
-      if (datapointApiData.visualFrequencyTypes) {
-        const visualFrequencyArray = datapointApiData.visualFrequencyTypes
-          .split(",")
-          .map((type) => type.trim());
-        setValue("visualFrequencyTypes", visualFrequencyArray);
-      }
-    }
-  }, [datapointApiData, setValue]);
+  }, [watchedFrequency, setValue]);
 
   const handleClose = () => setModalOpen(false);
 
@@ -142,36 +74,20 @@ export default function useAddDataPoint() {
       ? data.visualFrequencyTypes.join(",")
       : data.visualFrequencyTypes;
 
-    const simplePayload = companykpimasterId
-      ? {
-          kpiId: companykpimasterId,
-          KPIMasterId: data.KPIMasterId.KPIMasterId,
-          coreParameterId: data.coreParameterId,
-          employeeId: data.employeeId,
-          // frequencyType: data.frequencyType,
-          tag: data.tag,
-          unit: data.unit,
-          validationType: data.validationType,
-          value1: data.value1,
-          value2: data.value2,
-          frequencyType: data.frequencyType,
-          visualFrequencyTypes: visualFrequencyTypesStr,
-          visualFrequencyAggregate: data.visualFrequencyAggregate,
-        }
-      : {
-          KPIMasterId: data.KPIMasterId.KPIMasterId,
-          coreParameterId: data.coreParameterId,
-          employeeId: data.employeeId,
-          // frequencyType: data.frequencyType,
-          tag: data.tag,
-          unit: data.unit,
-          validationType: data.validationType,
-          value1: data.value1,
-          value2: data.value2,
-          frequencyType: data.frequencyType,
-          visualFrequencyTypes: visualFrequencyTypesStr,
-          visualFrequencyAggregate: data.visualFrequencyAggregate,
-        };
+    const simplePayload = {
+      KPIMasterId: data.KPIMasterId.KPIMasterId,
+      coreParameterId: data.coreParameterId,
+      employeeId: data.employeeId,
+      // frequencyType: data.frequencyType,
+      tag: data.tag,
+      unit: data.unit,
+      validationType: data.validationType,
+      value1: data.value1,
+      value2: data.value2,
+      frequencyType: data.frequencyType,
+      visualFrequencyTypes: visualFrequencyTypesStr,
+      visualFrequencyAggregate: data.visualFrequencyAggregate,
+    };
     addDatapoint(simplePayload, {
       onSuccess: () => {
         handleModalClose();
@@ -184,10 +100,6 @@ export default function useAddDataPoint() {
     reset();
     setModalOpen(false);
   };
-
-  // Go to GoalValue step directly if hasData is true
-  const isUpdateMode = !!datapointApiData?.hasData;
-  const isUpdateModeforFalse = datapointApiData?.hasData === false;
 
   const Kpi = () => {
     const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
@@ -521,11 +433,18 @@ export default function useAddDataPoint() {
       }
     }, [validationType, visualFrequencyTypes, visualFrequencyAggregate]);
 
-    const hasData = datapointApiData?.hasData;
-
     return (
       <div className="grid grid-cols-2 gap-4">
         <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
+          {selectedKpi && selectedKpi.KPIName && (
+            <FormInputField
+              label="Selected Kpi"
+              value={selectedKpi.KPIName}
+              disabled
+              className="h-[44px] border-gray-300"
+            />
+          )}
+
           <Controller
             control={control}
             name="frequencyType"
@@ -540,8 +459,6 @@ export default function useAddDataPoint() {
                 }}
                 options={frequenceOptions}
                 error={errors.frequencyType}
-                disabled={hasData}
-                className={hasData ? "bg-gray-100 p-2 rounded-md" : ""}
                 isMandatory
               />
             )}
@@ -557,8 +474,9 @@ export default function useAddDataPoint() {
                 onChange={field.onChange}
                 options={validationOptions}
                 error={errors.validationType}
-                className="p-2 rounded-md"
+                className="rounded-md"
                 isMandatory
+                labelClass="mb-2"
               />
             )}
           />
@@ -621,9 +539,11 @@ export default function useAddDataPoint() {
   };
 
   const AssignUser = () => {
-    const { data: employeedata } = useGetEmployeeDd();
+    const { data: employeeData } = useGetEmployeeDd({
+      filter: { isDeactivated: false },
+    });
 
-    const allOptions = (employeedata?.data || [])
+    const allOptions = (employeeData?.data || [])
       .filter((item) => !item.isDeactivated)
       .map((emp) => ({
         value: emp.employeeId,
@@ -634,7 +554,7 @@ export default function useAddDataPoint() {
 
     const getEmployeeName = (emp: DataPointEmployee) => {
       if (emp?.employeeName) return emp.employeeName;
-      const found = employeedata?.data?.find(
+      const found = employeeData?.data?.find(
         (e: EmployeeDetails) => e.employeeId === emp.employeeId,
       );
       return found?.employeeName || emp.employeeId || "";
@@ -668,7 +588,6 @@ export default function useAddDataPoint() {
                 options={allOptions}
                 error={errors.employeeId}
                 isMandatory
-                disabled={!!datapointApiData?.hasData}
               />
             )}
           />
@@ -760,10 +679,6 @@ export default function useAddDataPoint() {
     AssignUser,
     KpiPreview: getValues(),
     trigger,
-    skipToStep: isUpdateMode ? 5 : isUpdateModeforFalse ? 1 : 0,
-    isLoading: isDatapointLoading,
-    companykpimasterId,
     isPending,
-    datapointApiData,
   };
 }

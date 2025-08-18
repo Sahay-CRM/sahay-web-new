@@ -45,7 +45,9 @@ export default function TaskDrawer({
   const { data: taskStatus } = useGetAllTaskStatus({ filter: {} });
   const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
   const { data: taskTypeData } = useDdTaskType();
-  const { data: employeedata } = useGetEmployeeDd();
+  const { data: employeedata } = useGetEmployeeDd({
+    filter: { isDeactivated: false },
+  });
   const { data: projectListdata } = useGetCompanyProjectAll();
   const { mutate: addNote } = addMeetingNotesMutation();
 

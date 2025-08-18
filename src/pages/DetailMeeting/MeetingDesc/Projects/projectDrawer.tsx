@@ -45,7 +45,9 @@ export default function ProjectDrawer({
   const drawerRef = useRef<HTMLDivElement>(null);
   const { mutate: addProject } = useAddUpdateCompanyProject();
   const { data: projectStatusData } = useGetAllProjectStatus();
-  const { data: employeeData } = useGetEmployeeDd();
+  const { data: employeeData } = useGetEmployeeDd({
+    filter: { isDeactivated: false },
+  });
   const { data: coreParameterData } = useGetCorparameter({
     filter: { currentPage: 1, pageSize: 100 },
   });

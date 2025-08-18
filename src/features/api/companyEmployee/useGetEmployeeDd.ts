@@ -4,14 +4,16 @@ import { useQuery } from "@tanstack/react-query";
 
 // type EmployeeRes = BaseResponse<EmployeeDetails>;
 
-export default function useGetEmployeeDd() {
+export default function useGetEmployeeDd({ filter }: FilterDataProps) {
   return useQuery({
     queryKey: ["get-employee-list-dd"],
     queryFn: async () => {
       const { data } = await Api.post<{ data: EmployeeDetails[] }>({
         url: Urls.getAllEmployeeDd(),
+        data: filter,
       });
       return data;
     },
+    enabled: !!filter,
   });
 }
