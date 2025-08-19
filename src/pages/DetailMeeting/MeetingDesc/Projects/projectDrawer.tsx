@@ -13,6 +13,7 @@ import {
 } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
+import { addMeetingNotesMutation } from "@/features/api/companyMeeting";
 
 interface ProjectDrawerProps {
   open: boolean;
@@ -44,10 +45,13 @@ export default function ProjectDrawer({
   const drawerRef = useRef<HTMLDivElement>(null);
   const { mutate: addProject } = useAddUpdateCompanyProject();
   const { data: projectStatusData } = useGetAllProjectStatus();
-  const { data: employeeData } = useGetEmployeeDd();
+  const { data: employeeData } = useGetEmployeeDd({
+    filter: { isDeactivated: false },
+  });
   const { data: coreParameterData } = useGetCorparameter({
     filter: { currentPage: 1, pageSize: 100 },
   });
+  const { mutate: addNote } = addMeetingNotesMutation();
   // Prepare options
   const projectStatusOption = projectStatusData
     ? projectStatusData.data.map((status) => ({
@@ -105,9 +109,18 @@ export default function ProjectDrawer({
     reset,
     watch,
     formState: { errors },
+    setValue,
   } = useForm<ProjectFormData>({
     defaultValues,
   });
+
+  useEffect(() => {
+    if (!projectData || !projectData.projectStatusId) {
+      if (projectStatusData?.data?.[0]?.projectStatusId) {
+        setValue("projectStatusId", projectStatusData.data[0].projectStatusId);
+      }
+    }
+  }, [setValue, projectData, projectStatusData?.data]);
 
   const watchedCoreParameterId = watch("coreParameterId");
   const { data: subParameterData } = useGetSubParaFilter({
@@ -177,6 +190,19 @@ export default function ProjectDrawer({
       };
       addProject(payload, {
         onSuccess: () => {
+          if (projectData && projectData.detailMeetingNoteId) {
+            addNote(
+              {
+                detailMeetingNoteId: projectData?.detailMeetingNoteId,
+                noteType: "TASKS",
+              },
+              {
+                onSuccess: () => {
+                  onClose();
+                },
+              },
+            );
+          }
           queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
           onClose();
         },
@@ -186,9 +212,7 @@ export default function ProjectDrawer({
 
   return (
     <>
-      {open && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-black/30 z-50 transition-opacity" />
-      )}
+      {open && <div className="fixed inset-0 bg-black/60 z-50" />}
       {/* Drawer */}
       <div
         ref={drawerRef}
@@ -226,7 +250,6 @@ export default function ProjectDrawer({
               control={control}
               name="projectDeadline"
               render={({ field }) => {
-                // Convert to local time for display
                 const localDate = field.value
                   ? new Date(
                       new Date(field.value).getTime() +
@@ -236,10 +259,9 @@ export default function ProjectDrawer({
 
                 return (
                   <FormDateTimePicker
-                    label="Project Deadline (Local Time)"
+                    label="Project Deadline"
                     value={localDate}
                     onChange={(date) => {
-                      // Convert back to UTC when saving
                       const utcDate = date
                         ? new Date(
                             date.getTime() - date.getTimezoneOffset() * 60000,

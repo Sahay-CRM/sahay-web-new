@@ -35,7 +35,7 @@ export default function HealthScoreDashboard() {
     }));
 
   return (
-    <div className="flex flex-col items-center space-y-8">
+    <div className="flex flex-col items-center space-y-8 pt-4">
       <div className="flex flex-col items-center">
         <h2 className="text-xl mb-4 text-black font-semibold">
           Overall Company Health

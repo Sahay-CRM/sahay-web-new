@@ -26,7 +26,9 @@ const AnimatedDigit = ({ value, className }: AnimatedDigitProps) => {
   };
 
   return (
-    <span className={`relative h-8 overflow-hidden inline-block ${className}`}>
+    <span
+      className={`relative h-8 overflow-hidden inline-block transition-all duration-1000 ease-in-out ${className}`}
+    >
       <span
         className={`absolute inset-0 flex flex-col transition-transform duration-500 ease-in-out`}
         style={{

@@ -11,6 +11,7 @@ import { useGetCompanyProjectAll } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import { useParams } from "react-router-dom";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
+import { addMeetingNotesMutation } from "@/features/api/companyMeeting";
 
 interface TaskDrawerProps {
   open: boolean;
@@ -41,11 +42,14 @@ export default function TaskDrawer({
 }: TaskDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
-  const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
   const { data: taskStatus } = useGetAllTaskStatus({ filter: {} });
+  const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
   const { data: taskTypeData } = useDdTaskType();
-  const { data: employeedata } = useGetEmployeeDd();
+  const { data: employeedata } = useGetEmployeeDd({
+    filter: { isDeactivated: false },
+  });
   const { data: projectListdata } = useGetCompanyProjectAll();
+  const { mutate: addNote } = addMeetingNotesMutation();
 
   // Prepare options
   const taskTypeOption = taskTypeData
@@ -75,31 +79,28 @@ export default function TaskDrawer({
       : []
     : [];
 
-  // Default values from taskData
   const defaultValues = taskData
     ? {
         taskName: taskData.taskName || "",
         taskDescription: taskData.taskDescription || "",
-        taskStatusId: taskData.taskStatusId || "",
+        taskStatusId: taskData.taskStatusId || taskStatus?.data[0].taskStatusId,
         taskTypeId: taskData.taskTypeId || "",
         projectId: taskData.projectId || "",
         assignUsers: Array.isArray(taskData.assignUsers)
           ? taskData.assignUsers.map((u) => u.employeeId)
           : [],
-        taskStartDate: taskData.taskStartDate || null,
         taskDeadline: taskData.taskDeadline || null,
-        repetition: taskData.repetition || "",
       }
     : {
         taskName: "",
         taskDescription: "",
-        taskStatusId: "",
+        taskStatusId:
+          taskStatusOption.length > 0 ? taskStatusOption[0].value : "",
         taskTypeId: "",
         projectId: "",
         assignUsers: [],
         taskStartDate: null,
         taskDeadline: null,
-        repetition: "",
       };
 
   const {
@@ -108,17 +109,18 @@ export default function TaskDrawer({
     handleSubmit,
     reset,
     formState: { errors },
+    setValue,
   } = useForm<TaskFormData>({
     defaultValues,
   });
 
-  const repetitionOptions = [
-    { value: "none", label: "No Repetition" },
-    { value: "daily", label: "Daily" },
-    { value: "weekly", label: "Weekly" },
-    { value: "monthly", label: "Monthly" },
-    { value: "annually", label: "Annually" },
-  ];
+  useEffect(() => {
+    if (!taskData || !taskData.taskStatusId) {
+      if (taskStatus?.data?.[0]?.taskStatusId) {
+        setValue("taskStatusId", taskStatus.data[0].taskStatusId);
+      }
+    }
+  }, [setValue, taskData, taskStatus?.data]);
 
   // Reset form when taskData changes
   useEffect(() => {
@@ -161,9 +163,10 @@ export default function TaskDrawer({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onClose, open]);
+  console.log(taskData);
 
   const onSubmit = (data: TaskFormData) => {
-    if (meetingId && detailMeetingAgendaIssueId && detailMeetingId) {
+    if (meetingId && detailMeetingId) {
       const { assignUsers, taskStartDate, taskDeadline, ...rest } = data;
       const payload: AddUpdateTask = {
         ...rest,
@@ -175,7 +178,23 @@ export default function TaskDrawer({
         detailMeetingAgendaIssueId: detailMeetingAgendaIssueId,
         detailMeetingId: detailMeetingId,
       };
-      addUpdateTask(payload);
+      addUpdateTask(payload, {
+        onSuccess: () => {
+          if (taskData && taskData.detailMeetingNoteId) {
+            addNote(
+              {
+                detailMeetingNoteId: taskData?.detailMeetingNoteId,
+                noteType: "TASKS",
+              },
+              {
+                onSuccess: () => {
+                  onClose();
+                },
+              },
+            );
+          }
+        },
+      });
     }
   };
 
@@ -183,7 +202,7 @@ export default function TaskDrawer({
     <>
       {/* Overlay */}
       {open && (
-        <div className="fixed inset-0  bg-black/60 z-50 transition-opacity" />
+        <div className="fixed inset-0 bg-black/60 z-50 transition-opacity" />
       )}
       <div
         ref={drawerRef}
@@ -209,6 +228,7 @@ export default function TaskDrawer({
                 required: "Task Name is required",
               })}
               error={errors.taskName}
+              isMandatory
             />
             <Controller
               control={control}
@@ -220,6 +240,7 @@ export default function TaskDrawer({
             <Controller
               control={control}
               name="taskStatusId"
+              rules={{ required: "Task Status is Required" }}
               render={({ field }) => (
                 <FormSelect
                   label="Task Status"
@@ -228,12 +249,14 @@ export default function TaskDrawer({
                   options={taskStatusOption}
                   error={errors.taskStatusId}
                   placeholder="Select status"
+                  isMandatory
                 />
               )}
             />
             <Controller
               control={control}
               name="taskTypeId"
+              rules={{ required: "Task Type is Required" }}
               render={({ field }) => (
                 <FormSelect
                   label="Task Type"
@@ -242,12 +265,14 @@ export default function TaskDrawer({
                   options={taskTypeOption}
                   error={errors.taskTypeId}
                   placeholder="Select type"
+                  isMandatory
                 />
               )}
             />
             <Controller
               control={control}
               name="projectId"
+              rules={{ required: "Project is Required" }}
               render={({ field }) => (
                 <FormSelect
                   label="Project"
@@ -256,12 +281,14 @@ export default function TaskDrawer({
                   options={projectListOption}
                   error={errors.projectId}
                   placeholder="Select project"
+                  isMandatory
                 />
               )}
             />
             <Controller
               control={control}
               name="assignUsers"
+              rules={{ required: "Select User is Required" }}
               render={({ field }) => (
                 <FormSelect
                   label="Assign Employees"
@@ -271,6 +298,7 @@ export default function TaskDrawer({
                   error={errors.assignUsers}
                   isMulti={true}
                   placeholder="Select employees"
+                  isMandatory
                 />
               )}
             />
@@ -288,22 +316,9 @@ export default function TaskDrawer({
               )}
             />
 
-            <Controller
-              control={control}
-              name="repetition"
-              render={({ field }) => (
-                <FormSelect
-                  label="Repetition"
-                  value={field.value}
-                  onChange={field.onChange}
-                  options={repetitionOptions}
-                  placeholder="Select repetition"
-                />
-              )}
-            />
             <button
               type="submit"
-              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80"
+              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80 cursor-pointer"
             >
               Submit
             </button>

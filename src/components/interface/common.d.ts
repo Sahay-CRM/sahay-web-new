@@ -362,6 +362,7 @@ interface CompanyProjectDataProps {
   coreParameterId?: string;
   coreParameterName?: string;
   detailMeetingProjectId?: string;
+  detailMeetingNoteId?: string;
 }
 
 interface ProjectParameters {
@@ -631,6 +632,7 @@ interface TaskGetPaging {
   projectId?: string;
   detailMeetingTaskId?: string;
   repetition?: string;
+  detailMeetingNoteId?: string;
 }
 
 interface TaskProject {
@@ -1081,6 +1083,7 @@ interface MeetingResFire {
     follow: string;
     meetingTimestamp?: number;
     updatedAt: number | string;
+    conclusionTimestamp: number;
   };
   timers: {
     agenda?: TimerEntry;
@@ -1169,6 +1172,7 @@ interface MeetingNotesRes {
   note: string;
   detailMeetingNoteId: string;
   createdAt: string;
+  noteType?: string;
 }
 
 interface IssuesProps {
@@ -1209,6 +1213,9 @@ interface MeetingAgenda {
   actualTime: string | null;
   plannedTime: string | null;
   createdAt?: string | null;
+  noOfTasks: number;
+  noOfProjects: number;
+  noOfKPIs: number;
 }
 
 interface DetailMeetingAgendaIssue {
@@ -1220,6 +1227,9 @@ interface DetailMeetingAgendaIssue {
   isResolved: boolean;
   actualTime: string | null;
   plannedTime: string;
+  noOfTasks: number;
+  noOfProjects: number;
+  noOfKPIs: number;
 }
 
 interface GroupKpisProps {

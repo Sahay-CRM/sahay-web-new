@@ -3,10 +3,13 @@ import { useParams } from "react-router-dom";
 import { getDatabase, off, onValue, ref, update } from "firebase/database";
 
 import {
+  addMeetingNotesMutation,
   addMeetingTimeMutation,
   addUpdateCompanyMeetingMutation,
+  deleteCompanyMeetingMutation,
   endMeetingMutation,
   updateDetailMeetingMutation,
+  useGetMeetingNotes,
   useGetMeetingTiming,
 } from "@/features/api/companyMeeting";
 import { queryClient } from "@/queryClient";
@@ -21,14 +24,23 @@ export default function useMeetingDesc() {
   const [activeTab, setActiveTab] = useState<string>();
   const [isCardVisible, setIsCardVisible] = useState(false);
   const [openEmployeeId, setOpenEmployeeId] = useState<string | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
 
   const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
+  const { data: meetingNotes } = useGetMeetingNotes({
+    filter: {
+      meetingId: meetingTiming?.detailMeetingId,
+      noteType: activeTab === "updates" ? "UPDATES" : "APPRECIATION",
+    },
+    enable: !!meetingTiming?.detailMeetingId,
+  });
 
   const { mutate: endMeet } = endMeetingMutation();
-
   const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
   const { mutate: updateMeetingTeamLeader } = addUpdateCompanyMeetingMutation();
   const { mutate: updateTime } = addMeetingTimeMutation();
+  const { mutate: addNote } = addMeetingNotesMutation();
+  const deleteNoteMutation = deleteCompanyMeetingMutation();
 
   const handleUpdatedRefresh = useCallback(async () => {
     await Promise.all([
@@ -58,35 +70,28 @@ export default function useMeetingDesc() {
   }, [db, handleUpdatedRefresh, meetingId]);
 
   useEffect(() => {
-    if (!meetingId) return;
+    if (!meetingId || !meetingResponse) return;
 
     const meetingRef = ref(db, `meetings/${meetingId}/state/activeTab`);
 
     const unsubscribe = onValue(meetingRef, (snapshot) => {
-      try {
-        if (snapshot.exists()) {
-          const activeTab = snapshot.val();
-          handleUpdatedRefresh();
+      if (snapshot.exists()) {
+        const activeTab = snapshot.val();
 
-          if (activeTab === "CONCLUSION") {
-            queryClient.resetQueries({
-              queryKey: ["get-meeting-conclusion-res"],
-            });
-          }
+        handleUpdatedRefresh();
+        if (activeTab === "CONCLUSION") {
+          queryClient.resetQueries({
+            queryKey: ["get-meeting-conclusion-res"],
+          });
         }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error in activeTab listener:", error);
       }
     });
 
-    return () => {
-      unsubscribe();
-    };
-  }, [db, handleUpdatedRefresh, meetingId]);
+    return () => unsubscribe();
+  }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
 
   useEffect(() => {
-    if (!meetingId) return;
+    if (!meetingId || !meetingResponse) return; // ✅ don't run if meeting deleted
 
     const meetingRef = ref(db, `meetings/${meetingId}/state/updatedAt`);
 
@@ -96,10 +101,8 @@ export default function useMeetingDesc() {
       }
     });
 
-    return () => {
-      unsubscribe();
-    };
-  }, [db, handleUpdatedRefresh, meetingId]);
+    return () => unsubscribe();
+  }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
 
   const handleTabChange = (tab: string) => {
     if (activeTab === tab) {
@@ -160,33 +163,32 @@ export default function useMeetingDesc() {
     updateMeetingTeamLeader(payload, {
       onSuccess: () => {
         update(meetRef, {
-          follow: data.employeeId,
           updatedAt: new Date(),
         });
       },
     });
   };
-  const handleCheckOut = (employeeId: string) => {
-    if (meetingId) {
-      updateTime(
-        {
-          meetingId: meetingId,
-          employeeId: employeeId,
-          attendanceMark: false,
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          onSuccess: () => {
-            if (meetingId) {
-              const db = getDatabase();
-              const meetRef = ref(db, `meetings/${meetingId}/state`);
-              update(meetRef, { updatedAt: new Date() });
-            }
-          },
-        },
-      );
-    }
-  };
+  // const handleCheckOut = (employeeId: string) => {
+  //   if (meetingId) {
+  //     updateTime(
+  //       {
+  //         meetingId: meetingId,
+  //         employeeId: employeeId,
+  //         attendanceMark: false,
+  //         updatedAt: new Date().toISOString(),
+  //       },
+  //       {
+  //         onSuccess: () => {
+  //           if (meetingId) {
+  //             const db = getDatabase();
+  //             const meetRef = ref(db, `meetings/${meetingId}/state`);
+  //             update(meetRef, { updatedAt: new Date() });
+  //           }
+  //         },
+  //       }
+  //     );
+  //   }
+  // };
 
   const handleFollow = (employeeId: string) => {
     if (meetingId) {
@@ -198,13 +200,13 @@ export default function useMeetingDesc() {
     }
   };
 
-  const handleCheckIn = (employeeId: string) => {
+  const handleCheckIn = (item: Joiners, attendanceMark: boolean) => {
     if (meetingId) {
       updateTime(
         {
           meetingId: meetingId,
-          employeeId: employeeId,
-          attendanceMark: true,
+          employeeId: item.employeeId,
+          attendanceMark: attendanceMark,
           updatedAt: new Date().toISOString(),
         },
         {
@@ -218,6 +220,20 @@ export default function useMeetingDesc() {
         },
       );
     }
+  };
+
+  const handleUpdateNotes = (data: MeetingNotesRes) => {
+    const payload = {
+      detailMeetingNoteId: data.detailMeetingNoteId,
+      noteType: null,
+    };
+    addNote(payload, {
+      onSuccess: () => {},
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    deleteNoteMutation.mutate(id);
   };
 
   return {
@@ -237,9 +253,14 @@ export default function useMeetingDesc() {
     openEmployeeId,
     setOpenEmployeeId,
     handleAddTeamLeader,
-    handleCheckOut,
+    // handleCheckOut,
     follow: meetingResponse?.state.follow,
     handleFollow,
     handleCheckIn,
+    meetingNotes,
+    handleUpdateNotes,
+    dropdownOpen,
+    setDropdownOpen,
+    handleDelete,
   };
 }

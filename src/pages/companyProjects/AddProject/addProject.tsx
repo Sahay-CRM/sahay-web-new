@@ -49,7 +49,7 @@ const ProjectInfo = () => {
             const localDate = field.value
               ? new Date(
                   new Date(field.value).getTime() +
-                    new Date().getTimezoneOffset() * 60000
+                    new Date().getTimezoneOffset() * 60000,
                 )
               : null;
 
@@ -61,7 +61,7 @@ const ProjectInfo = () => {
                   // Convert back to UTC when saving
                   const utcDate = date
                     ? new Date(
-                        date.getTime() - date.getTimezoneOffset() * 60000
+                        date.getTime() - date.getTimezoneOffset() * 60000,
                       )
                     : null;
                   field.onChange(utcDate);
@@ -98,13 +98,13 @@ const ProjectStatus = () => {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>
+    {} as Record<string, string>,
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
@@ -194,13 +194,13 @@ const CoreParameter = () => {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>
+    {} as Record<string, string>,
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
@@ -306,13 +306,13 @@ const SubParameter = () => {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>
+    {} as Record<string, string>,
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
@@ -378,7 +378,7 @@ const SubParameter = () => {
               const ids = selectedItems.map((item: SubParameter | string) =>
                 typeof item === "object" && item !== null
                   ? item.subParameterId
-                  : item
+                  : item,
               );
               field.onChange(ids);
             }}
@@ -409,19 +409,21 @@ const Employees = () => {
     { key: "srNo", label: "Sr No", visible: true },
     { key: "employeeName", label: "Employee Name", visible: true },
     { key: "employeeMobile", label: "Mobile", visible: true },
+    { key: "employeeType", label: "Employee Type", visible: true },
+    { key: "designationName", label: "Designation", visible: true },
   ]);
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>
+    {} as Record<string, string>,
   );
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
   const canToggleColumns = columnToggleOptions.length > 3;
@@ -480,7 +482,7 @@ const Employees = () => {
               const ids = selectedItems.map((item: Employee | string) =>
                 typeof item === "object" && item !== null
                   ? item.employeeId
-                  : item
+                  : item,
               );
               field.onChange(ids);
             }}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyTaskList from "./useDatapointList";
@@ -18,6 +18,7 @@ import {
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
 import { formatFrequencyType } from "@/features/utils/app.utils";
+import EditDatapointAddFormModal from "./EditDatapointFormModal/editDatapointAddFormModal";
 
 const validationOptions = [
   { value: "EQUAL_TO", label: "= Equal to" },
@@ -53,6 +54,10 @@ export default function CompanyTaskList() {
     setIsViewModalOpen,
     viewModalData,
     onForceSubmit,
+    isEditModalOpen,
+    isEditKpiId,
+    setIsEditKpiId,
+    setIsEditModalOpen,
   } = useCompanyTaskList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -89,21 +94,21 @@ export default function CompanyTaskList() {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>
+    {} as Record<string, string>,
   );
 
   // Toggle column visibility
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
   // Check if the number of columns is more than 3
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   if (permission && permission.View === false) {
     return <PageNotAccess />;
@@ -179,7 +184,10 @@ export default function CompanyTaskList() {
             onEdit={
               permission.Edit
                 ? (row) => {
-                    navigate(`/dashboard/kpi/edit/${row.kpiId}`);
+                    if (row.kpiId) {
+                      setIsEditModalOpen(true);
+                      setIsEditKpiId(row.kpiId);
+                    }
                   }
                 : undefined
             }
@@ -216,6 +224,15 @@ export default function CompanyTaskList() {
             onForceSubmit={onForceSubmit}
           />
         )}
+
+        {isEditModalOpen && (
+          <EditDatapointAddFormModal
+            modalClose={closeDeleteModal}
+            kpiId={isEditKpiId}
+            isModalOpen={isEditModalOpen}
+          />
+        )}
+
         <ViewKPIDetailModal
           isModalOpen={isViewModalOpen}
           modalData={viewModalData}

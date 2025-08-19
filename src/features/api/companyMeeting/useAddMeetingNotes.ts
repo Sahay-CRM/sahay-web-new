@@ -7,10 +7,11 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 interface MeetingNoteAdd {
-  meetingId: string;
-  employeeId: string;
-  note: string;
+  meetingId?: string;
+  employeeId?: string;
+  note?: string;
   detailMeetingNoteId?: string;
+  noteType?: string | null;
 }
 
 type DatePaging = CommonResponse<MeetingNotesRes>;
@@ -23,8 +24,8 @@ export default function useAddMeetingNotes() {
 
       const config = {
         url: isUpdate
-          ? Urls.updateMeetingNots(data.detailMeetingNoteId!)
-          : Urls.addMeetingNots(),
+          ? Urls.updateMeetingnotes(data.detailMeetingNoteId!)
+          : Urls.addMeetingnotes(),
         data: data,
       };
 

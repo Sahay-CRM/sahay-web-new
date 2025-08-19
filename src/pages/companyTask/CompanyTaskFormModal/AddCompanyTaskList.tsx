@@ -74,7 +74,7 @@ const ProjectSelectionStep = () => {
             selectedValue={
               field.value
                 ? (projectListdata?.data?.find(
-                    (item) => item.projectId === field.value
+                    (item) => item.projectId === field.value,
                   ) as Record<string, unknown> | undefined)
                 : undefined
             }
@@ -163,7 +163,7 @@ const MeetingSelectionStep = () => {
             selectedValue={
               field.value
                 ? (meetingData?.data?.find(
-                    (item) => item.meetingId === field.value
+                    (item) => item.meetingId === field.value,
                   ) as Record<string, unknown> | undefined)
                 : undefined
             }
@@ -190,62 +190,46 @@ const MeetingSelectionStep = () => {
   );
 };
 
-const TaskDetailsStep = () => {
+const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
   const {
     register,
     control,
     formState: { errors },
-    watch: watchForm,
+    // watch: watchForm,
   } = useFormContext();
-  const { repetitionOptions, taskStatusOptions, taskTypeOptions } =
-    useAddCompanyTask();
+  const { taskStatusOptions, taskTypeOptions } = useAddCompanyTask();
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      <Card className="col-span-2 mt-4 px-4 py-4 grid grid-cols-2 gap-4">
-        <div>
+      <Card className="col-span-2 mt-4 px-6 py-6 grid grid-cols-6 gap-4">
+        {/* Row 1 */}
+        <div className="col-span-3">
           <FormInputField
             label="Task Name"
-            {...register("taskName", {
-              required: "Task Name is required",
-            })}
+            className="p-5"
+            {...register("taskName", { required: "Task Name is required" })}
             error={errors.taskName}
           />
-          <div className="mt-2">
-            <label className="block mb-1 font-medium">
-              Task Description <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              className="w-full border rounded-md p-2 text-base min-h-[40px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={5}
-              {...register("taskDescription", {
-                required: "Please Enter Task Description",
-              })}
-            />
-            {errors.taskDescription && (
-              <span className="text-red-600 text-sm">
-                {errors.taskDescription?.message as string}
-              </span>
-            )}
-          </div>
         </div>
-        <div className="space-y-4">
+        <div className="col-span-3">
           <Controller
             control={control}
-            name="repeatType"
+            name="taskDeadline"
+            rules={{ required: "Task Deadline is required" }}
             render={({ field }) => (
-              <FormSelect
-                label="Repetition"
-                options={repetitionOptions}
-                placeholder="Select Repetition"
+              <FormDateTimePicker
+                label="Task Deadline"
                 value={field.value}
                 onChange={field.onChange}
-                error={errors.repeatType}
+                error={errors.taskDeadline}
               />
             )}
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {watchForm("repetition") === "none" && (
+        </div>
+
+        {/* Row 2 */}
+        {/* <div className="col-span-2"> */}
+        {/* {watchForm("repetition") === "none" && (
               <Controller
                 control={control}
                 name="taskStartDate"
@@ -258,55 +242,69 @@ const TaskDetailsStep = () => {
                   />
                 )}
               />
+            )} */}
+        {/*
+        </div> */}
+        <div className="col-span-3">
+          <Controller
+            control={control}
+            name="taskTypeId"
+            rules={{ required: "Please select Task Type" }}
+            render={({ field }) => (
+              <FormSelect
+                label="Task Type"
+                options={taskTypeOptions}
+                error={errors.taskTypeId}
+                {...field}
+                isMandatory={true}
+              />
             )}
-            <Controller
-              control={control}
-              name="taskDeadline"
-              rules={{ required: "Task Deadline is required" }}
-              render={({ field }) => (
-                <FormDateTimePicker
-                  label="Task Deadline"
-                  value={field.value}
-                  onChange={field.onChange}
-                  error={errors.taskDeadline}
-                />
-              )}
-            />
-          </div>
-          <div className="flex gap-4">
-            <div className="w-1/2">
-              <Controller
-                control={control}
-                name="taskStatusId"
-                rules={{ required: "Please select Task Status" }}
-                render={({ field }) => (
-                  <FormSelect
-                    label="Task Status"
-                    options={taskStatusOptions}
-                    error={errors.taskStatusId}
-                    {...field}
-                    isMandatory={true}
-                  />
-                )}
+          />
+        </div>
+        <div className="col-span-3">
+          <Controller
+            control={control}
+            name="taskStatusId"
+            rules={{ required: "Please select Task Status" }}
+            render={({ field }) => (
+              <FormSelect
+                label="Task Status"
+                options={taskStatusOptions}
+                error={errors.taskStatusId}
+                {...field}
+                isMandatory={true}
               />
-            </div>
-            <div className="w-1/2">
-              <Controller
-                control={control}
-                name="taskTypeId"
-                rules={{ required: "Please select Task Type" }}
-                render={({ field }) => (
-                  <FormSelect
-                    label="Task Type"
-                    options={taskTypeOptions}
-                    error={errors.taskTypeId}
-                    {...field}
-                    isMandatory={true}
-                  />
-                )}
-              />
-            </div>
-          </div>
+            )}
+          />
+        </div>
+
+        {/* Row 3 */}
+        <div className="col-span-3">
+          <label className="block mb-1 font-medium">
+            Task Description <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            className="w-full border rounded-md p-2 text-base h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+            {...register("taskDescription", {
+              required: "Please Enter Task Description",
+            })}
+          />
+          {errors.taskDescription && (
+            <span className="text-red-600 text-sm">
+              {errors.taskDescription?.message as string}
+            </span>
+          )}
+        </div>
+
+        <div className="col-span-3">
+          <label className="block mb-1 font-medium" hidden={!!taskId}>
+            Comment
+          </label>
+          <textarea
+            className="w-full border rounded-md p-2 text-base h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+            {...register("comment")}
+            hidden={!!taskId}
+          />
         </div>
       </Card>
     </div>
@@ -353,7 +351,7 @@ const AssignUserStep = () => {
           const selectedEmployees =
             Array.isArray(field.value) && Array.isArray(employeedata?.data)
               ? employeedata.data.filter((emp) =>
-                  field.value.includes(emp.employeeId)
+                  field.value.includes(emp.employeeId),
                 )
               : [];
           return (
@@ -396,23 +394,24 @@ const AssignUserStep = () => {
   );
 };
 
-const CommentStep = () => {
-  const {
-    register,
-    formState: { errors },
-  } = useFormContext();
-  return (
-    <Card className="px-4 py-4">
-      <FormInputField
-        label="Comment"
-        {...register("comment")}
-        error={errors.comment}
-      />
-    </Card>
-  );
-};
+// const CommentStep = () => {
+//   const {
+//     register,
+//     formState: { errors },
+//   } = useFormContext();
+//   return (
+//     <Card className="px-4 py-4">
+//       <FormInputField
+//         label="Comment"
+//         {...register("comment")}
+//         error={errors.comment}
+//       />
+//     </Card>
+//   );
+// };
 
 // Renamed main component
+
 export default function AddCompanyTask() {
   const hookProps = useAddCompanyTask();
   const {
@@ -457,12 +456,12 @@ export default function AddCompanyTask() {
       case 2:
         return <MeetingSelectionStep key="meetingStep" />;
       case 3:
-        return <TaskDetailsStep key="detailsStep" />;
+        return <TaskDetailsStep key="detailsStep" taskId={taskId!} />;
       case 4:
         return <AssignUserStep key="assignUserStep" />;
-      case 5:
-        if (!taskId) return <CommentStep key="commentStep" />; // Conditional step
-        return null;
+      // case 5:
+      //   if (!taskId) return <CommentStep key="commentStep" />; // Conditional step
+      //   return null;
       default:
         return null;
     }

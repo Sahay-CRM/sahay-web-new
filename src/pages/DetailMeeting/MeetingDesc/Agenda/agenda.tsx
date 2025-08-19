@@ -11,6 +11,7 @@ import {
   Crown,
   FileText,
   List,
+  Plus,
   SquarePen,
   Target,
   Trash2,
@@ -40,6 +41,7 @@ import {
 } from "@/components/ui/tooltip";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
+import IssueAgendaAddModal from "./issueAgendaAddModal";
 
 function IssueModal({
   open,
@@ -174,6 +176,9 @@ export default function Agenda({
     hasChanges,
     selectedItem,
     handleCheckIn,
+    handleAddAgendaModal,
+    addIssueModal,
+    setAddIssueModal,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -282,107 +287,202 @@ export default function Agenda({
         defaultType=""
         onSubmit={handleModalSubmit}
       />
-      <div className="flex gap-3 ">
-        <div className="w-full">
-          {meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? (
-            <div className="w-full flex h-[40px] border border-gray-300 rounded-[10px] items-center px-4">
-              <div className="flex-1 text-lg  w-[30%] text-primary ml-3 font-semibold truncate">
-                {meetingName}
-              </div>
+      <IssueAgendaAddModal
+        isModalOpen={addIssueModal}
+        modalClose={() => setAddIssueModal(false)}
+        onSubmit={handleModalSubmit}
+        isLoading={isPending}
+        issueInput={issueInput}
+        setIssueInput={setIssueInput}
+        setDropdownVisible={setDropdownVisible}
+        handleAddIssue={handleAddIssue}
+        dropdownVisible={dropdownVisible}
+        filteredIssues={filteredIssues}
+        searchOptions={searchOptions}
+        handleUpdateSelectedObjective={handleUpdateSelectedObjective}
+      />
 
-              <div className="hidden md:block w-[50%] text-gray-500  text-lg truncate ml-4">
-                Meeting Agenda
-              </div>
+      <div className="flex justify-between">
+        {meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? (
+          <div className="w-full flex h-[40px] border border-gray-300 rounded-[10px] items-center px-4 mr-4">
+            <div className="flex-1 text-lg  w-[30%] text-primary ml-3 font-semibold truncate">
+              {meetingName}
             </div>
-          ) : meetingStatus === "DISCUSSION" ? (
-            <div className="flex gap-4">
-              <div className="hidden md:block w-[488px] text-gray-500  text-lg truncate ml-4">
-                Meeting Agenda
+
+            <div className="hidden md:block w-[50%] text-gray-500  text-lg truncate ml-4">
+              Meeting Agenda
+            </div>
+          </div>
+        ) : meetingStatus === "DISCUSSION" ? (
+          <div className="flex gap-4">
+            <div className="hidden md:block w-[362px] text-gray-500  text-lg truncate">
+              Meeting Agenda
+            </div>
+            <nav className="z-20 flex">
+              <div className="mr-5 flex gap-3 items-center rounded-2xl px-1">
+                <Button
+                  className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white cursor-pointer flex items-center ${
+                    activeTab === "tasks"
+                      ? "bg-white h-[50px] shadow-none border-t-4 border-l-1 border-r-1 border-primary z-10"
+                      : "bg-gray-100 h-12"
+                  }`}
+                  style={
+                    activeTab === "tasks"
+                      ? {
+                          marginBottom: "-2px",
+                          color: "#2f318e",
+                        }
+                      : { marginBottom: "1px", color: "gray" }
+                  }
+                  onClick={() => {
+                    handleTabChange("tasks");
+                  }}
+                >
+                  <List className="h-5 w-5" />
+                  <span>Tasks ({detailAgendaData?.noOfTasks})</span>
+                </Button>
+                <Button
+                  className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white  cursor-pointer flex items-center ${
+                    activeTab === "projects"
+                      ? "bg-white h-[50px] shadow-none border-t-4 border-l-1 border-r-1 border-primary z-10"
+                      : "bg-gray-100 h-12"
+                  }`}
+                  style={
+                    activeTab === "projects"
+                      ? { marginBottom: "-2px", color: "#2f318e" }
+                      : { marginBottom: "1px", color: "gray" }
+                  }
+                  onClick={() => {
+                    handleTabChange("projects");
+                  }}
+                >
+                  <CheckSquare className="h-5 w-5" />
+                  <span>Projects ({detailAgendaData?.noOfProjects})</span>
+                </Button>
+                <Button
+                  className={`w-32 mx-auto border border-b-0 rounded-b-none hover:bg-white  cursor-pointer flex items-center ${
+                    activeTab === "kpis"
+                      ? "bg-white h-[50px] border-t-4 border-l-1 border-r-1 border-primary z-10"
+                      : "bg-gray-100 h-12"
+                  }`}
+                  style={
+                    activeTab === "kpis"
+                      ? { marginBottom: "-2px", color: "#2f318e" }
+                      : { marginBottom: "1px", color: "gray" }
+                  }
+                  onClick={() => {
+                    handleTabChange("kpis");
+                  }}
+                >
+                  <BarChart2 className="h-5 w-5" />
+                  <span>KPIs ({detailAgendaData?.noOfKPIs})</span>
+                </Button>
               </div>
-              <nav className="w-full z-20 flex">
-                <div className="mr-5 flex gap-3 items-center rounded-2xl px-1">
-                  <Button
-                    className={`w-40 justify-start border border-b-0 shadow-border rounded-b-none hover:bg-white text-primary cursor-pointer flex items-center ${activeTab === "tasks" ? "bg-white h-[50px] -mb-1 shadow-none" : "bg-gray-200 h-12"}`}
-                    onClick={() => {
-                      handleTabChange("tasks");
-                    }}
-                  >
-                    <List className="h-5 w-5" />
-                    <span className="ml-2">Tasks</span>
-                  </Button>
-                  <Button
-                    className={`w-40 justify-start border border-b-0 rounded-b-none hover:bg-white text-primary cursor-pointer flex items-center ${activeTab === "projects" ? "bg-white h-[50px] -mb-1 shadow-none" : "bg-gray-200 h-12"}`}
-                    onClick={() => {
-                      handleTabChange("projects");
-                    }}
-                  >
-                    <CheckSquare className="h-5 w-5" />
-                    <span className="ml-2">Projects</span>
-                  </Button>
-                  <Button
-                    className={`w-40 justify-start border border-b-0 rounded-b-none hover:bg-white text-primary cursor-pointer flex items-center ${activeTab === "kpis" ? "bg-white h-[50px] -mb-1 shadow-none" : "bg-gray-200 h-12"}`}
-                    onClick={() => {
-                      handleTabChange("kpis");
-                    }}
-                  >
-                    <BarChart2 className="h-5 w-5" />
-                    <span className="ml-2">KPIs</span>
-                  </Button>
+            </nav>
+            {/* <nav className="z-20 flex">
+              <div className="mr-5 flex gap-3 items-center rounded-2xl px-1">
+                <Button
+                  className={`w-32 justify-start border border-b-0 shadow-border rounded-b-none hover:bg-white text-primary cursor-pointer flex items-center ${activeTab === "tasks" ? "bg-white h-[50px] -mb-[4px] shadow-none" : "bg-gray-200 h-12"}`}
+                  onClick={() => {
+                    handleTabChange("tasks");
+                  }}
+                >
+                  <List className="h-5 w-5" />
+                  <span className="ml-2">
+                    Tasks {detailAgendaData?.noOfTasks}
+                  </span>
+                </Button>
+                <Button
+                  className={`w-32 justify-start border border-b-0 shadow-border rounded-b-none hover:bg-white text-primary cursor-pointer flex items-center ${activeTab === "projects" ? "bg-white h-[50px] -mb-[4px] shadow-none" : "bg-gray-200 h-12"}`}
+                  onClick={() => {
+                    handleTabChange("projects");
+                  }}
+                >
+                  <CheckSquare className="h-5 w-5" />
+                  <span className="ml-2">
+                    Projects {detailAgendaData?.noOfProjects}
+                  </span>
+                </Button>
+                <Button
+                  className={`w-32 justify-start border border-b-0 shadow-border rounded-b-none hover:bg-white text-primary cursor-pointer flex items-center ${activeTab === "kpis" ? "bg-white h-[50px] -mb-[4px] shadow-none" : "bg-gray-200 h-12"}`}
+                  onClick={() => {
+                    handleTabChange("kpis");
+                  }}
+                >
+                  <BarChart2 className="h-5 w-5" />
+                  <span className="ml-2">
+                    KPIs {detailAgendaData?.noOfKPIs}
+                  </span>
+                </Button>
+              </div>
+            </nav> */}
+          </div>
+        ) : (
+          <div className="flex gap-4 items-center flex-wrap">
+            <div className="hidden md:block w-[370px] text-gray-500  text-lg truncate">
+              Meeting Agenda
+            </div>
+            <div className="">
+              <div className="flex gap-4 items-center mb-2">
+                <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                  <Clock className="w-4 h-4 text-green-600" />
+                  <span className="font-medium text-sm">Agenda Actual:</span>
+                  <span className="font-bold">
+                    {formatTime(Number(conclusionData?.agendaActual))}m
+                  </span>
                 </div>
-              </nav>
-            </div>
-          ) : (
-            <div className="flex gap-4 items-center flex-wrap">
-              <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
-                <Clock className="w-4 h-4 text-green-600" />
-                <span className="font-medium text-sm">Agenda Actual:</span>
-                <span className="font-bold">
-                  {formatTime(Number(conclusionData?.agendaActual))}m
-                </span>
-              </div>
 
-              <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
-                <Clock className="w-4 h-4 text-green-600" />
-                <span className="font-medium text-sm">Discussion Actual:</span>
-                <span className="font-bold">
-                  {formatTime(Number(conclusionData?.agendaTotalActual))}m
-                </span>
-              </div>
-
-              {conclusionData?.conclusionActual != null && (
                 <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
                   <Clock className="w-4 h-4 text-green-600" />
                   <span className="font-medium text-sm">
-                    Conclusion Actual:
+                    Discussion Actual:
                   </span>
                   <span className="font-bold">
-                    {formatTime(Number(conclusionData.conclusionActual))}m
+                    {formatTime(Number(conclusionData?.agendaTotalActual))}m
                   </span>
                 </div>
-              )}
 
-              {conclusionData?.meetingPlanned != null && (
-                <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
-                  <Clock className="w-4 h-4 text-green-600" />
-                  <span className="font-medium text-sm">Meeting Planned:</span>
-                  <span className="font-bold">
-                    {formatSecondsToHHMM(Number(conclusionData.meetingPlanned))}
-                  </span>
-                </div>
-              )}
-
-              {conclusionData?.meetingActual != null &&
-                conclusionData?.meetingActual != "0" && (
+                {conclusionData?.conclusionActual != null && (
                   <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
                     <Clock className="w-4 h-4 text-green-600" />
-                    <span className="font-medium text-sm">Meeting Actual:</span>
+                    <span className="font-medium text-sm">
+                      Conclusion Actual:
+                    </span>
+                    <span className="font-bold">
+                      {formatTime(Number(conclusionData.conclusionActual))}m
+                    </span>
+                  </div>
+                )}
+
+                {conclusionData?.meetingPlanned != null && (
+                  <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                    <Clock className="w-4 h-4 text-green-600" />
+                    <span className="font-medium text-sm">
+                      Meeting Planned:
+                    </span>
                     <span className="font-bold">
                       {formatSecondsToHHMM(
-                        Number(conclusionData.meetingActual),
+                        Number(conclusionData.meetingPlanned),
                       )}
                     </span>
                   </div>
                 )}
+
+                {conclusionData?.meetingActual != null &&
+                  conclusionData?.meetingActual != "0" && (
+                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                      <Clock className="w-4 h-4 text-green-600" />
+                      <span className="font-medium text-sm">
+                        Meeting Actual:
+                      </span>
+                      <span className="font-bold">
+                        {formatSecondsToHHMM(
+                          Number(conclusionData.meetingActual),
+                        )}
+                      </span>
+                    </div>
+                  )}
+              </div>
               <div className="flex gap-4 items-center">
                 <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
                   <span className="font-medium text-sm">Total Tasks:</span>
@@ -400,10 +500,10 @@ export default function Agenda({
                 </div>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
         {meetingStatus !== "ENDED" && (
-          <div className="flex flex-wrap md:flex-nowrap items-center gap-3 w-[30%] md:w-auto">
+          <div className="flex flex-wrap md:flex-nowrap items-center gap-3 md:w-auto">
             {meetingStatus === "NOT_STARTED" && isTeamLeader && (
               <Button
                 variant="outline"
@@ -445,7 +545,7 @@ export default function Agenda({
                 {meetingStatus === "DISCUSSION" && (
                   <Button
                     variant="outline"
-                    className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
+                    className="w-[180px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
                     onClick={handleConclusionMeeting}
                   >
                     Go To Conclusion
@@ -465,7 +565,7 @@ export default function Agenda({
             )}
 
             {meetingStatus !== "ENDED" && (
-              <div className="w-fit px-2 pl-4 h-[40px] border-gray-300 rounded-[10px] flex items-center justify-center">
+              <div className="w-fit pr-2 h-[40px] border-gray-300 rounded-[10px] flex items-center justify-center">
                 <MeetingTimer
                   meetingTime={Number(meetingTime)}
                   actualTime={0}
@@ -482,12 +582,13 @@ export default function Agenda({
           </div>
         )}
       </div>
-      <div className="flex gap-3 transition-all duration-1000">
+      <div className="flex gap-3">
         <div
           className={cn(
-            // "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]",
-            "ease-out",
-            isSideBar ? "w-[370px] min-w-[370px]" : "w-[65%]",
+            // "ease-out duration-1000",
+            isSideBar
+              ? "w-[370px] min-w-[370px] ease-out duration-1000"
+              : "w-[65%]",
           )}
         >
           <div className="flex gap-2 relative">
@@ -554,263 +655,284 @@ export default function Agenda({
               </div>
             )}
           </div>
-          <div className="mt-2 h-[calc(100vh-250px)] pr-1 w-full overflow-auto">
-            {agendaList && agendaList.length > 0 ? (
-              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                {agendaList.map((item, idx) => (
-                  <li
-                    key={item.issueObjectiveId}
-                    className={`group px-2 flex w-full 
+          <div className="relative">
+            <div className="mt-2 h-[calc(100vh-215px)] pr-1 w-full overflow-auto">
+              {agendaList && agendaList.length > 0 ? (
+                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                  {agendaList.map((item, idx) => (
+                    <li
+                      key={item.issueObjectiveId}
+                      className={`group px-2 flex w-full 
                 ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-14" : "h-20"}
                 ${isSelectedAgenda === item.detailMeetingAgendaIssueId ? "bg-primary text-white" : ""}
                 mb-2 rounded-md shadow
                 ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "cursor-pointer" : ""}`}
-                    draggable={
-                      meetingStatus === "STARTED" ||
-                      meetingStatus === "NOT_STARTED"
-                    }
-                    onDragStart={() => {
-                      if (
+                      draggable={
                         meetingStatus === "STARTED" ||
                         meetingStatus === "NOT_STARTED"
-                      ) {
-                        handleDragStart(idx);
                       }
-                    }}
-                    onDragOver={(e) => {
-                      if (
-                        meetingStatus === "STARTED" ||
-                        meetingStatus === "NOT_STARTED"
-                      ) {
-                        handleDragOver(e, idx);
-                      }
-                    }}
-                    onDragLeave={() => {
-                      if (
-                        meetingStatus === "STARTED" ||
-                        meetingStatus === "NOT_STARTED"
-                      ) {
-                        handleDragLeave();
-                      }
-                    }}
-                    onDrop={() => {
-                      if (
-                        meetingStatus === "STARTED" ||
-                        meetingStatus === "NOT_STARTED"
-                      ) {
-                        handleDrop(idx);
-                      }
-                    }}
-                    onClick={() => {
-                      if (
-                        meetingStatus !== "STARTED" &&
-                        meetingStatus !== "NOT_STARTED"
-                      ) {
-                        handleListClick(item.detailMeetingAgendaIssueId ?? "");
-                      }
-                    }}
-                    style={{
-                      opacity: draggedIndex === idx ? 0.5 : 1,
-                      cursor:
-                        meetingStatus === "STARTED" ||
-                        meetingStatus === "NOT_STARTED"
-                          ? "move"
-                          : "default",
-                      border:
-                        hoverIndex === idx &&
-                        (meetingStatus === "STARTED" ||
-                          meetingStatus === "NOT_STARTED")
-                          ? "2px dashed #3b82f6"
-                          : "1px solid #eee",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      transition: "border 0.2s ease",
-                      position: "relative",
-                    }}
-                  >
-                    <div className="flex items-center w-full">
-                      {(meetingStatus === "STARTED" ||
-                        meetingStatus === "NOT_STARTED") && (
+                      onDragStart={() => {
+                        if (
+                          meetingStatus === "STARTED" ||
+                          meetingStatus === "NOT_STARTED"
+                        ) {
+                          handleDragStart(idx);
+                        }
+                      }}
+                      onDragOver={(e) => {
+                        if (
+                          meetingStatus === "STARTED" ||
+                          meetingStatus === "NOT_STARTED"
+                        ) {
+                          handleDragOver(e, idx);
+                        }
+                      }}
+                      onDragLeave={() => {
+                        if (
+                          meetingStatus === "STARTED" ||
+                          meetingStatus === "NOT_STARTED"
+                        ) {
+                          handleDragLeave();
+                        }
+                      }}
+                      onDrop={() => {
+                        if (
+                          meetingStatus === "STARTED" ||
+                          meetingStatus === "NOT_STARTED"
+                        ) {
+                          handleDrop(idx);
+                        }
+                      }}
+                      onClick={() => {
+                        if (
+                          meetingStatus !== "STARTED" &&
+                          meetingStatus !== "NOT_STARTED"
+                        ) {
+                          handleListClick(
+                            item.detailMeetingAgendaIssueId ?? "",
+                          );
+                        }
+                      }}
+                      style={{
+                        opacity: draggedIndex === idx ? 0.5 : 1,
+                        cursor:
+                          meetingStatus === "STARTED" ||
+                          meetingStatus === "NOT_STARTED"
+                            ? "move"
+                            : "default",
+                        border:
+                          hoverIndex === idx &&
+                          (meetingStatus === "STARTED" ||
+                            meetingStatus === "NOT_STARTED")
+                            ? "2px dashed #3b82f6"
+                            : "1px solid #eee",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        transition: "border 0.2s ease",
+                        position: "relative",
+                      }}
+                    >
+                      <div className="flex items-center w-full">
+                        {(meetingStatus === "STARTED" ||
+                          meetingStatus === "NOT_STARTED") && (
+                          <span
+                            style={{ cursor: "grab" }}
+                            className="w-5 flex-shrink-0"
+                          >
+                            ⋮⋮
+                          </span>
+                        )}
+
                         <span
-                          style={{ cursor: "grab" }}
-                          className="w-5 flex-shrink-0"
+                          className={`w-10 mr-3 text-4xl text-primary text-center ${isSelectedAgenda === item.detailMeetingAgendaIssueId ? "bg-primary text-white" : "text-primary"}`}
                         >
-                          ⋮⋮
+                          {idx + 1}
                         </span>
-                      )}
 
-                      <span
-                        className={`w-10 mr-3 text-4xl text-primary text-center ${isSelectedAgenda === item.detailMeetingAgendaIssueId ? "bg-primary text-white" : "text-primary"}`}
-                      >
-                        {idx + 1}
-                      </span>
-
-                      {editing.type === item.agendaType &&
-                      editing.id === item.issueObjectiveId &&
-                      canEdit ? (
-                        <div className="w-full flex items-center gap-1">
-                          <div className="relative w-full flex gap-2 items-center">
-                            <Input
-                              value={editing.value}
-                              onChange={(e) => setEditingValue(e.target.value)}
-                              className="mr-2"
-                              autoFocus
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  updateEdit();
+                        {editing.type === item.agendaType &&
+                        editing.id === item.issueObjectiveId &&
+                        canEdit ? (
+                          <div className="w-full flex items-center gap-1">
+                            <div className="relative w-full flex gap-2 items-center">
+                              <Input
+                                value={editing.value}
+                                onChange={(e) =>
+                                  setEditingValue(e.target.value)
                                 }
-                              }}
-                            />
-                            <span className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
-                              <CornerDownLeft className="text-gray-400 w-4" />
-                            </span>
+                                className="mr-2"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    updateEdit();
+                                  }
+                                }}
+                              />
+                              <span className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
+                                <CornerDownLeft className="text-gray-400 w-4" />
+                              </span>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={cancelEdit}
+                            >
+                              <CircleX />
+                            </Button>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={cancelEdit}
-                          >
-                            <CircleX />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="w-full flex items-center">
-                          <div
-                            className={`text-sm ${
-                              meetingStatus === "STARTED" ||
-                              meetingStatus === "NOT_STARTED"
-                                ? "w-full pr-8 h-14 flex items-center"
-                                : "w-full min-w-52"
-                            } overflow-hidden line-clamp-3`}
-                          >
-                            {item.name}
+                        ) : (
+                          <div className="w-full flex items-center">
+                            <div
+                              className={`text-sm ${
+                                meetingStatus === "STARTED" ||
+                                meetingStatus === "NOT_STARTED"
+                                  ? "w-full pr-8 h-14 flex items-center"
+                                  : "w-full min-w-52"
+                              } overflow-hidden line-clamp-3`}
+                            >
+                              {item.name}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2 relative">
-                      <div className="text-xs text-center w-20 text-gray-500 absolute top-0 right-0">
-                        <Badge variant="secondary" className="mb-1.5">
-                          {item.agendaType}
-                        </Badge>
+                        )}
                       </div>
 
-                      {(meetingStatus === "STARTED" ||
-                        meetingStatus === "NOT_STARTED") &&
-                        canEdit && (
-                          <div className="flex-shrink-0 opacity-0 z-30 pl-5 bg-white w-20 text-left group-hover:opacity-100 transition-opacity">
-                            {!(
-                              editing.type === item.agendaType &&
-                              editing.id === item.issueObjectiveId
-                            ) && (
-                              <div className="flex gap-1">
-                                <Button
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    startEdit(
-                                      item.agendaType === "objective"
-                                        ? "objective"
-                                        : "issue",
-                                      item.issueObjectiveId,
-                                      item.name,
-                                      item.plannedTime || "0",
-                                      String(item.detailMeetingAgendaIssueId),
-                                    );
-                                  }}
-                                  className="w-5"
-                                >
-                                  <SquarePen className="h-4 w-4 text-primary" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDelete(item);
-                                  }}
-                                  className="w-5"
-                                >
-                                  <Trash2 className="h-4 w-4 text-red-500" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                      <div className="flex items-center gap-2 relative">
+                        <div className="text-xs text-center w-20 text-gray-500 absolute top-0 right-0">
+                          <Badge variant="secondary" className="mb-1.5">
+                            {item.agendaType}
+                          </Badge>
+                        </div>
 
-                      {meetingStatus !== "STARTED" &&
-                        meetingStatus !== "NOT_STARTED" &&
-                        item.detailMeetingAgendaIssueId && (
-                          <div className="text-sm text-center ml-2 font-medium text-primary">
-                            <div className="text-xs text-center w-20 text-gray-500">
-                              <Badge variant="secondary" className="mb-1.5">
-                                {item.agendaType}
-                              </Badge>
+                        {(meetingStatus === "STARTED" ||
+                          meetingStatus === "NOT_STARTED") &&
+                          canEdit && (
+                            <div className="flex-shrink-0 opacity-0 z-30 pl-5 bg-white w-20 text-left group-hover:opacity-100 transition-opacity">
+                              {!(
+                                editing.type === item.agendaType &&
+                                editing.id === item.issueObjectiveId
+                              ) && (
+                                <div className="flex gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      startEdit(
+                                        item.agendaType === "objective"
+                                          ? "objective"
+                                          : "issue",
+                                        item.issueObjectiveId,
+                                        item.name,
+                                        item.plannedTime || "0",
+                                        String(item.detailMeetingAgendaIssueId),
+                                      );
+                                    }}
+                                    className="w-5"
+                                  >
+                                    <SquarePen className="h-4 w-4 text-primary" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDelete(item);
+                                    }}
+                                    className="w-5"
+                                  >
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                  </Button>
+                                </div>
+                              )}
                             </div>
-                            {meetingStatus === "DISCUSSION" ? (
-                              <Timer
-                                actualTime={Number(
-                                  meetingResponse?.timers.objectives?.[
-                                    item.detailMeetingAgendaIssueId ?? ""
-                                  ]?.actualTime || 0,
-                                )}
-                                defaultTime={Number(
-                                  meetingResponse?.timers.objectives?.[
-                                    item.detailMeetingAgendaIssueId ?? ""
-                                  ]?.actualTime || 0,
-                                )}
-                                lastSwitchTimestamp={
-                                  isSelectedAgenda ===
-                                  item.detailMeetingAgendaIssueId
-                                    ? Number(
-                                        meetingResponse?.state
-                                          .lastSwitchTimestamp || Date.now(),
-                                      )
-                                    : 0
-                                }
-                                isActive={
-                                  isSelectedAgenda ===
-                                  item.detailMeetingAgendaIssueId
-                                }
-                                className={`text-xl ${
-                                  isSelectedAgenda ===
-                                  item.detailMeetingAgendaIssueId
-                                    ? "text-white"
-                                    : ""
-                                }`}
-                              />
-                            ) : (
-                              <div
-                                className={`text-xl ${
-                                  isSelectedAgenda ===
-                                  item.detailMeetingAgendaIssueId
-                                    ? "text-white"
-                                    : ""
-                                }`}
-                              >
-                                {formatTime(
-                                  Number(
-                                    conclusionData?.agenda.find(
-                                      (con) =>
-                                        con.detailMeetingAgendaIssueId ===
-                                        item.detailMeetingAgendaIssueId,
-                                    )?.actualTime,
-                                  ),
-                                )}
+                          )}
+
+                        {meetingStatus !== "STARTED" &&
+                          meetingStatus !== "NOT_STARTED" &&
+                          item.detailMeetingAgendaIssueId && (
+                            <div className="text-sm text-center ml-2 font-medium text-primary">
+                              <div className="text-xs text-center w-20 text-gray-500">
+                                <Badge variant="secondary" className="mb-1.5">
+                                  {item.agendaType}
+                                </Badge>
                               </div>
-                            )}
-                          </div>
-                        )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500 text-sm">No issues added</p>
-            )}
+                              {meetingStatus === "DISCUSSION" ? (
+                                <Timer
+                                  actualTime={Number(
+                                    meetingResponse &&
+                                      meetingResponse?.timers.objectives?.[
+                                        item.detailMeetingAgendaIssueId
+                                      ]?.actualTime,
+                                  )}
+                                  defaultTime={Number(
+                                    meetingResponse &&
+                                      meetingResponse?.timers.objectives?.[
+                                        item.detailMeetingAgendaIssueId
+                                      ]?.actualTime,
+                                  )}
+                                  lastSwitchTimestamp={
+                                    isSelectedAgenda ===
+                                    item.detailMeetingAgendaIssueId
+                                      ? Number(
+                                          meetingResponse?.state
+                                            .lastSwitchTimestamp || Date.now(),
+                                        )
+                                      : 0
+                                  }
+                                  isActive={
+                                    isSelectedAgenda ===
+                                    item.detailMeetingAgendaIssueId
+                                  }
+                                  className={`text-xl ${
+                                    isSelectedAgenda ===
+                                    item.detailMeetingAgendaIssueId
+                                      ? "text-white"
+                                      : ""
+                                  }`}
+                                />
+                              ) : (
+                                <div
+                                  className={`text-xl ${
+                                    isSelectedAgenda ===
+                                    item.detailMeetingAgendaIssueId
+                                      ? "text-white"
+                                      : ""
+                                  }`}
+                                >
+                                  {formatTime(
+                                    Number(
+                                      conclusionData
+                                        ? conclusionData?.agenda.find(
+                                            (con) =>
+                                              con.detailMeetingAgendaIssueId ===
+                                              item.detailMeetingAgendaIssueId,
+                                          )?.actualTime
+                                        : 0,
+                                    ),
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500 text-sm">No issues added</p>
+              )}
+              {meetingStatus === "DISCUSSION" && (
+                <div
+                  className="absolute bottom-0 right-0 border rounded-full p-2 bg-white shadow-2xl shadow-primary border-primary"
+                  onClick={handleAddAgendaModal}
+                >
+                  <Plus />
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        <div style={{ width: contentWidth }}>
+        <div
+          style={{ width: contentWidth }}
+          className={`${meetingStatus !== "DISCUSSION" && "mt-6"}`}
+        >
           {/* <div className="flex gap-3 mb-4">
             <div className="w-full">
               {meetingStatus === "STARTED" ||
@@ -1028,7 +1150,24 @@ export default function Agenda({
               </div>
             )}
           </div> */}
-          <div className="border rounded-md flex justify-center w-full h-[calc(100vh-200px)] overflow-scroll">
+          <div className="flex justify-center w-full h-[calc(100vh-200px)] overflow-scroll relative border-l-1 border-r-1 border-b-1 border-primary rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]">
+            <div className="absolute top-0 left-0 right-0 h-0.5 flex">
+              <div
+                className="border-t-1 border-primary h-0"
+                style={{
+                  width:
+                    activeTab === "tasks"
+                      ? "0px"
+                      : activeTab === "projects"
+                        ? "140px"
+                        : activeTab === "kpis"
+                          ? "280px"
+                          : "0px",
+                }}
+              />
+              <div style={{ width: "124px" }} />
+              <div className="border-t-1 border-primary h-0 flex-1" />
+            </div>
             {meetingStatus === "NOT_STARTED" ? (
               <div className="max-w-3xl">
                 <div className="bg-white rounded-lg shadow-lg p-6">
@@ -1072,63 +1211,67 @@ export default function Agenda({
                 </div>
               </div>
             ) : meetingStatus === "STARTED" ? (
-              <div className="flex gap-6 text-center mt-48">
-                {joiners &&
-                  joiners.map((item) => {
-                    return (
-                      <div
-                        key={item.employeeId}
-                        className="flex flex-col w-full items-center"
-                      >
-                        <div className="relative">
-                          {item.isTeamLeader && (
-                            <span className="absolute -top-4 right-2 z-10 bg-white shadow-2xl rounded-full p-0.5">
-                              <Crown className="w-5 h-5 text-[#303290] drop-shadow" />
-                            </span>
-                          )}
-                          <div className="w-10 h-10 rounded-lg overflow-hidden">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  {item.employeeImage !== null ? (
-                                    <img
-                                      src={`${ImageBaseURL}/share/company/profilePics/${item.employeeImage}`}
-                                      alt={item.employeeName}
-                                      className="w-full h-full rounded-md object-cover outline-2 outline-blue-400 bg-black"
-                                    />
-                                  ) : (
-                                    <div className="bg-gray-300 text-gray-700 w-full h-full content-center font-semibold text-sm">
-                                      {getInitials(item.employeeName)}
-                                    </div>
-                                  )}
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {item.employeeName}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+              <div>
+                <div className="grid grid-cols-4 gap-8 text-center mt-40">
+                  {joiners &&
+                    joiners.map((item) => {
+                      return (
+                        <div
+                          key={item.employeeId}
+                          className="flex items-center"
+                        >
+                          <div className="flex items-center gap-2 w-40">
+                            <div className="relative">
+                              {item.isTeamLeader && (
+                                <span className="absolute -top-4 right-2 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                                  <Crown className="w-5 h-5 text-[#303290] drop-shadow" />
+                                </span>
+                              )}
+                              <div className="w-10 h-10 rounded-lg overflow-hidden">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      {item.employeeImage !== null ? (
+                                        <img
+                                          src={`${ImageBaseURL}/share/company/profilePics/${item.employeeImage}`}
+                                          alt={item.employeeName}
+                                          className="w-full h-full rounded-md object-cover outline-2 outline-blue-400 bg-black"
+                                        />
+                                      ) : (
+                                        <div className="bg-gray-300 text-gray-700 w-full h-full content-center font-semibold text-sm">
+                                          {getInitials(item.employeeName)}
+                                        </div>
+                                      )}
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {item.employeeName}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            </div>
+
+                            <div className="text-sm font-medium text-gray-800 mt-2">
+                              {item.employeeName}
+                            </div>
+                          </div>
+                          <div>
+                            <FormCheckbox
+                              id={`${item.employeeId}-checkbox`}
+                              className="w-[16px] h-[16px]"
+                              containerClass="p-0 ml-1"
+                              checked={item.attendanceMark}
+                              onChange={(e) => {
+                                const updatedAttendance = e.target.checked;
+                                handleCheckIn(item, updatedAttendance);
+                              }}
+                              disabled={!isTeamLeader}
+                            />
                           </div>
                         </div>
-
-                        <div className="text-sm font-medium text-gray-800 mt-2">
-                          {item.employeeName}
-                        </div>
-                        <div>
-                          <FormCheckbox
-                            id={`${item.employeeId}-checkbox`}
-                            className="w-[16px] h-[16px]"
-                            containerClass="p-0 ml-1"
-                            checked={item.attendanceMark}
-                            onChange={(e) => {
-                              const updatedAttendance = e.target.checked;
-                              handleCheckIn(item, updatedAttendance);
-                            }}
-                            disabled={!isTeamLeader}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                </div>
               </div>
             ) : meetingStatus === "DISCUSSION" ? (
               detailAgendaData && (

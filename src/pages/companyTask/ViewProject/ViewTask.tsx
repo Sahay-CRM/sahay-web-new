@@ -58,10 +58,10 @@ export default function CompanyTaskView() {
 
   return (
     <FormProvider {...methods}>
-      <h1 className="font-semibold capitalize text-xl text-black mb-2">
-        Company Task Overview
-      </h1>
-      <div className="p-6 bg-gray-200">
+      <div className="p-6">
+        <h1 className="font-semibold capitalize text-xl text-black mb-2">
+          Company Task Overview
+        </h1>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white p-6 rounded-xl shadow-sm text-md">
             <div className="flex items-center justify-between mb-2">
