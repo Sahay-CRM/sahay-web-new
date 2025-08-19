@@ -246,7 +246,7 @@ const TableData = <T extends Record<string, unknown>>({
 
   return (
     <Card className="p-0 gap-0">
-      <div className="flex h-[calc(100vh-330px)] flex-col overflow-hidden">
+      <div className="flex h-[calc(100vh-350px)] flex-col overflow-hidden">
         <Table className="min-w-full h-full table-fixed">
           <TableHeader className="sticky top-0 z-10 bg-primary shadow-sm">
             <TableRow>

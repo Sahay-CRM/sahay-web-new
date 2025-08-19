@@ -207,6 +207,7 @@ export default function CompanyTaskList() {
               "KPILabel",
               "validationType",
               "frequencyType",
+              "coreParameterName",
             ]}
             actionColumnWidth="w-[100px] overflow-hidden "
           />

@@ -15,7 +15,7 @@ import {
 import TableData from "@/components/shared/DataTable/DataTable";
 
 import useCompanyTaskList from "./useCompanyTaskListRe";
-import ViewRepeatTaskModal from "./ViewRepeatTaskModal";
+// import ViewRepeatTaskModal from "./ViewRepeatTaskModal";
 
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 // import DateRangePicker from "@/components/shared/DateRange";
@@ -46,9 +46,9 @@ export default function CompanyTaskListRe() {
     // handleOverdueToggle,
     handleRowsModalOpen,
     isLoading,
-    isViewModalOpen,
-    setIsViewModalOpen,
-    viewModalData,
+    // isViewModalOpen,
+    // setIsViewModalOpen,
+    // viewModalData,
     // taskStatus,
     // taskDateRange,
   } = useCompanyTaskList();
@@ -248,11 +248,11 @@ export default function CompanyTaskListRe() {
             // showDeleteOptions={true}
           />
         )}
-        <ViewRepeatTaskModal
+        {/* <ViewRepeatTaskModal
           isModalOpen={isViewModalOpen}
           modalData={viewModalData}
           modalClose={() => setIsViewModalOpen(false)}
-        />
+        /> */}
       </div>
     </FormProvider>
   );

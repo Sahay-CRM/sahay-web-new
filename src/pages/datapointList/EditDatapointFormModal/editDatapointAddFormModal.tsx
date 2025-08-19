@@ -6,6 +6,7 @@ import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import useEditDatapointFormModal from "./useEditDatapointFormModal";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { Label } from "@radix-ui/react-label";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 
 interface UseEditDatapointFormModalProps {
   modalClose: () => void;
@@ -53,6 +54,7 @@ export default function EditDatapointAddFormModal({
         isModalOpen={isModalOpen}
         modalTitle="Update KPI"
         modalClose={handleClose}
+        containerClass="min-w-[50%]"
         buttons={[
           {
             btnText: "Submit",
@@ -165,17 +167,17 @@ export default function EditDatapointAddFormModal({
             name="employeeId"
             rules={{ required: "Employee is required" }}
             render={({ field }) => (
-              <FormSelect
-                label="Employee"
-                value={field.value}
-                onChange={(value) => {
-                  field.onChange(value);
-                  setValue("employeeId", value);
-                }}
+              <SearchDropdown
                 options={allOptions}
+                selectedValues={field.value ? [field.value] : []} // Ensure it's an array
+                onSelect={(value) => {
+                  field.onChange(value.value);
+                  setValue("employeeId", value.value);
+                }}
+                placeholder="Select an employee..."
+                label="Employee"
                 error={errors.employeeId}
                 isMandatory
-                disabled={!!datapointApiData?.hasData}
               />
             )}
           />

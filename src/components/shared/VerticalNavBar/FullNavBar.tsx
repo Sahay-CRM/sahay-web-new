@@ -27,8 +27,10 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
     }
     // For items without children, check the item's own permission
     const moduleKeys = Array.isArray(item.moduleKey)
-      ? item.moduleKey
-      : [item.moduleKey];
+      ? item.moduleKey.filter((k): k is string => !!k)
+      : item.moduleKey
+        ? [item.moduleKey]
+        : [];
     return moduleKeys.some((key) => permissions?.[key]?.View);
   });
 

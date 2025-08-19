@@ -3,15 +3,14 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
-import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import { useAddCompanyTask } from "./useAddCompanyTaskList";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import SearchInput from "@/components/shared/SearchInput";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 
 const ProjectSelectionStep = () => {
   const {
@@ -195,13 +194,14 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
     register,
     control,
     formState: { errors },
+    setValue,
     // watch: watchForm,
   } = useFormContext();
   const { taskStatusOptions, taskTypeOptions } = useAddCompanyTask();
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      <Card className="col-span-2 mt-4 px-6 py-6 grid grid-cols-6 gap-4">
+      <div className="col-span-2 mt-4 px-6 py-6 grid grid-cols-6 gap-4 h-[calc(100vh-250px)] content-start">
         {/* Row 1 */}
         <div className="col-span-3">
           <FormInputField
@@ -251,12 +251,17 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
             name="taskTypeId"
             rules={{ required: "Please select Task Type" }}
             render={({ field }) => (
-              <FormSelect
-                label="Task Type"
+              <SearchDropdown
                 options={taskTypeOptions}
+                selectedValues={field.value ? [field.value] : []}
+                onSelect={(value) => {
+                  field.onChange(value.value);
+                  setValue("taskTypeId", value.value);
+                }}
+                placeholder="Select Task Type..."
+                label="Task Type"
                 error={errors.taskTypeId}
-                {...field}
-                isMandatory={true}
+                isMandatory
               />
             )}
           />
@@ -267,12 +272,17 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
             name="taskStatusId"
             rules={{ required: "Please select Task Status" }}
             render={({ field }) => (
-              <FormSelect
-                label="Task Status"
+              <SearchDropdown
                 options={taskStatusOptions}
+                selectedValues={field.value ? [field.value] : []}
+                onSelect={(value) => {
+                  field.onChange(value.value);
+                  setValue("taskStatusId", value.value);
+                }}
+                placeholder="Select Task Status..."
+                label="Task Status"
                 error={errors.taskStatusId}
-                {...field}
-                isMandatory={true}
+                isMandatory
               />
             )}
           />
@@ -306,7 +316,7 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
             hidden={!!taskId}
           />
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
