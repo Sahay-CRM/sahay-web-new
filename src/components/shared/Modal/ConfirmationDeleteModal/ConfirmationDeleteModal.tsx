@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import ModalData from "../ModalData";
 import { getUserDetail } from "@/features/selectors/auth.selector";
@@ -8,9 +9,10 @@ interface DeleteModalProps {
   title: string;
   isModalOpen: boolean;
   modalClose: () => void;
-  onSubmit: () => void;
-  isChildData?: string | undefined;
-  onForceSubmit?: () => void; // added
+  onSubmit: (isGroupDelete?: boolean) => void;
+  isChildData?: string;
+  onForceSubmit?: () => void;
+  showDeleteOptions?: boolean; // ✅ New prop
 }
 
 const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
@@ -21,9 +23,14 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
   modalClose,
   onSubmit,
   isChildData,
-  onForceSubmit, // added
+  onForceSubmit,
+  showDeleteOptions = false, // ✅ Default to false
 }) => {
   const userData = useSelector(getUserDetail);
+  const [deleteOption, setDeleteOption] = useState<"single" | "group">(
+    "single",
+  );
+
   return (
     <div>
       <ModalData
@@ -39,31 +46,60 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
           {
             btnText: "Submit",
             buttonCss: "py-1.5 px-5",
-            btnClick: onSubmit,
+            btnClick: () => onSubmit(deleteOption === "group"),
           },
-          // Add Force delete button if isChildData exists
           ...(isChildData && userData.isSuperAdmin
             ? [
                 {
                   btnText: "Force delete",
                   buttonCss:
                     "py-1.5 px-5 bg-red-600 text-white hover:bg-red-400",
-                  btnClick: onForceSubmit ? onForceSubmit : onSubmit, // use onForceSubmit if provided
+                  btnClick: onForceSubmit
+                    ? onForceSubmit
+                    : () => onSubmit(deleteOption === "group"),
                 },
               ]
             : []),
         ]}
       >
-        <div>
+        <div className="space-y-3">
           <div>
-            <div>
-              <span className="font-semibold">{label}</span>{" "}
-              <span>{modalData}</span>
-            </div>
+            <span className="font-semibold">{label}</span>{" "}
+            <span>{modalData}</span>
           </div>
+
           {isChildData && (
-            <div className="border-t mt-2 pt-2">
+            <div className="border-t pt-2">
               <span className="font-bold text-black">{isChildData}</span>
+            </div>
+          )}
+
+          {/* ✅ Conditionally render Delete Options */}
+          {showDeleteOptions && (
+            <div className="mt-4 space-y-2">
+              <label className="font-medium">Delete Options</label>
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="deleteOption"
+                    value="single"
+                    checked={deleteOption === "single"}
+                    onChange={() => setDeleteOption("single")}
+                  />
+                  <span>Delete only this task</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="deleteOption"
+                    value="group"
+                    checked={deleteOption === "group"}
+                    onChange={() => setDeleteOption("group")}
+                  />
+                  <span>Delete the whole group</span>
+                </label>
+              </div>
             </div>
           )}
         </div>

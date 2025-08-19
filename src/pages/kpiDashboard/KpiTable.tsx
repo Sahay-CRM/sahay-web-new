@@ -501,8 +501,10 @@ export default function UpdatedKpiTable() {
               </tr>
             </thead>
             <tbody>
-              {groupedKpiRows.map((group) => (
-                <React.Fragment key={group.coreParameter.coreParameterId}>
+              {groupedKpiRows.map((group, idx) => (
+                <React.Fragment
+                  key={(group.coreParameter.coreParameterId, idx)}
+                >
                   <tr className="sticky top-[50px] bg-blue-50 z-10 h-[39px]">
                     <td
                       colSpan={4}
@@ -609,26 +611,33 @@ export default function UpdatedKpiTable() {
             <table className="min-w-max border-collapse text-sm table-fixed">
               <thead className="sticky top-0 z-20 bg-white h-[51px]">
                 <tr className="">
-                  {headers.map((header, idx) => (
-                    <th
-                      key={idx}
-                      className="border p-2 min-w-[80px] font-semibold text-gray text-center h-[43px]"
-                    >
-                      <div className="flex flex-col items-center leading-tight">
-                        <span>{header.label}</span>
-                        {header.year && (
-                          <span className="text-xs text-muted-foreground">
-                            {header.year}
-                          </span>
+                  {headers.map((header, idx) => {
+                    return (
+                      <th
+                        key={idx}
+                        className={clsx(
+                          "border p-2 min-w-[80px] font-semibold text-gray text-center h-[43px]",
+                          header.isSunday && "bg-gray-100",
                         )}
-                      </div>
-                    </th>
-                  ))}
+                      >
+                        <div className="flex flex-col items-center leading-tight">
+                          <span>{header.label}</span>
+                          {header.year && (
+                            <span className="text-xs text-muted-foreground">
+                              {header.year}
+                            </span>
+                          )}
+                        </div>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
-                {groupedKpiRows.map((group) => (
-                  <React.Fragment key={group.coreParameter.coreParameterId}>
+                {groupedKpiRows.map((group, idx) => (
+                  <React.Fragment
+                    key={(group.coreParameter.coreParameterId, idx)}
+                  >
                     <tr className="sticky h-[39px] top-[50px] bg-blue-50 z-10">
                       <td
                         colSpan={headers.length}
@@ -672,7 +681,10 @@ export default function UpdatedKpiTable() {
                               return (
                                 <td
                                   key={colIdx}
-                                  className="p-2 border text-center w-[80px] h-[42px]"
+                                  className={clsx(
+                                    "p-2 border text-center w-[80px] h-[42px]",
+                                    headers[colIdx].isSunday && "bg-gray-100",
+                                  )}
                                 >
                                   <TooltipProvider>
                                     <Tooltip>
@@ -722,7 +734,10 @@ export default function UpdatedKpiTable() {
                             return (
                               <td
                                 key={colIdx}
-                                className="p-2 border text-center w-[80px] h-[42px]"
+                                className={clsx(
+                                  "p-2 border text-center w-[80px] h-[42px]",
+                                  headers[colIdx].isSunday && "bg-gray-100",
+                                )}
                               >
                                 <TooltipProvider>
                                   <Tooltip>

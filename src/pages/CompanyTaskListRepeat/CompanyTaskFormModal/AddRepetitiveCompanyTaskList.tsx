@@ -12,6 +12,7 @@ import { useAddCompanyTask } from "./useAddCompanyTaskList";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import SearchInput from "@/components/shared/SearchInput";
+import AddDatapointModal from "./addRepetitiveTaskModal";
 
 const ProjectSelectionStep = () => {
   const {
@@ -56,6 +57,7 @@ const ProjectSelectionStep = () => {
         rules={{ required: "Please select a Company Project" }}
         render={({ field }) => (
           <TableData
+            {...field}
             tableData={projectListdata?.data?.map((item, index) => ({
               ...item,
               srNo:
@@ -72,21 +74,27 @@ const ProjectSelectionStep = () => {
             primaryKey="projectId"
             multiSelect={false}
             selectedValue={
-              field.value
+              field.value?.projectId
                 ? (projectListdata?.data?.find(
-                    (item) => item.projectId === field.value,
+                    (item) => item.projectId === field.value.projectId,
                   ) as Record<string, unknown> | undefined)
                 : undefined
             }
-            handleChange={(selected) => {
-              if (
-                selected &&
-                typeof selected === "object" &&
-                "projectId" in selected
-              ) {
-                field.onChange(selected.projectId);
+            //  selectedValue={
+            //   field.value
+            //     ? (projectListdata?.data?.find(
+            //         (item) => item.projectId === field.value
+            //       ) as Record<string, unknown> | undefined)
+            //     : undefined
+            // }
+
+            handleChange={(val) => {
+              if (!val || (Array.isArray(val) && val.length === 0)) {
+                field.onChange(undefined);
+              } else if (Array.isArray(val)) {
+                field.onChange(val[0]);
               } else {
-                field.onChange("");
+                field.onChange(val);
               }
             }}
             onCheckbox={() => true}
@@ -146,6 +154,7 @@ const MeetingSelectionStep = () => {
         rules={{ required: "Please select a meeting" }}
         render={({ field }) => (
           <TableData
+            {...field}
             tableData={meetingData?.data?.map((item, index) => ({
               ...item,
               srNo:
@@ -161,23 +170,39 @@ const MeetingSelectionStep = () => {
             primaryKey="meetingId"
             multiSelect={false}
             selectedValue={
-              field.value
+              field.value?.meetingId
                 ? (meetingData?.data?.find(
-                    (item) => item.meetingId === field.value,
+                    (item) => item.meetingId === field.value.meetingId,
                   ) as Record<string, unknown> | undefined)
                 : undefined
             }
-            handleChange={(selected) => {
-              if (
-                selected &&
-                typeof selected === "object" &&
-                "meetingId" in selected
-              ) {
-                field.onChange(selected.meetingId);
+            // selectedValue={
+            //   field.value?.projectId
+            //     ? (projectListdata?.data?.find(
+            //         (item) => item.projectId === field.value.projectId
+            //       ) as Record<string, unknown> | undefined)
+            //     : undefined
+            // }
+            handleChange={(val) => {
+              if (!val || (Array.isArray(val) && val.length === 0)) {
+                field.onChange(undefined);
+              } else if (Array.isArray(val)) {
+                field.onChange(val[0]);
               } else {
-                field.onChange("");
+                field.onChange(val);
               }
             }}
+            // handleChange={(selected) => {
+            //   if (
+            //     selected &&
+            //     typeof selected === "object" &&
+            //     "meetingId" in selected
+            //   ) {
+            //     field.onChange(selected.meetingId);
+            //   } else {
+            //     field.onChange("");
+            //   }
+            // }}
             onCheckbox={() => true}
             paginationDetails={meetingData as PaginationFilter}
             setPaginationFilter={setPaginationFilterMeeting}
@@ -190,46 +215,50 @@ const MeetingSelectionStep = () => {
   );
 };
 
-const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
+const TaskDetailsStep = () => {
   const {
     register,
     control,
     formState: { errors },
-    // watch: watchForm,
+    watch: watchForm,
   } = useFormContext();
-  const { taskStatusOptions, taskTypeOptions } = useAddCompanyTask();
+  const taskDeadline = watchForm("taskDeadline"); // 👈 This is where we watch the date
+
+  const { repetitionOptions, taskStatusOptions, taskTypeOptions } =
+    useAddCompanyTask(taskDeadline);
 
   return (
-    <div className="grid grid-cols-2 gap-4">
-      <Card className="col-span-2 mt-4 px-6 py-6 grid grid-cols-6 gap-4">
-        {/* Row 1 */}
-        <div className="col-span-3">
+    <div className="grid mb-10 grid-cols-2 gap-4">
+      <Card className="col-span-2 mt-4 px-4 py-4 grid grid-cols-2 gap-4">
+        <div>
           <FormInputField
             label="Task Name"
-            className="p-5"
-            {...register("taskName", { required: "Task Name is required" })}
+            {...register("taskName", {
+              required: "Task Name is required",
+            })}
             error={errors.taskName}
           />
-        </div>
-        <div className="col-span-3">
-          <Controller
-            control={control}
-            name="taskDeadline"
-            rules={{ required: "Task Deadline is required" }}
-            render={({ field }) => (
-              <FormDateTimePicker
-                label="Task Deadline"
-                value={field.value}
-                onChange={field.onChange}
-                error={errors.taskDeadline}
-              />
+          <div className="mt-2">
+            <label className="block mb-1 font-medium">
+              Task Description <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              className="w-full border rounded-md p-2 text-base min-h-[40px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={5}
+              {...register("taskDescription", {
+                required: "Please Enter Task Description",
+              })}
+            />
+            {errors.taskDescription && (
+              <span className="text-red-600 text-sm">
+                {errors.taskDescription?.message as string}
+              </span>
             )}
-          />
+          </div>
         </div>
-
-        {/* Row 2 */}
-        {/* <div className="col-span-2"> */}
-        {/* {watchForm("repetition") === "none" && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {watchForm("repetition") === "none" && (
               <Controller
                 control={control}
                 name="taskStartDate"
@@ -242,69 +271,73 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
                   />
                 )}
               />
-            )} */}
-        {/*
-        </div> */}
-        <div className="col-span-3">
+            )}
+            <Controller
+              control={control}
+              name="taskDeadline"
+              rules={{ required: "Task Deadline is required" }}
+              render={({ field }) => (
+                <FormDateTimePicker
+                  label="Task Deadline"
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.taskDeadline}
+                />
+              )}
+            />
+          </div>
           <Controller
             control={control}
-            name="taskTypeId"
-            rules={{ required: "Please select Task Type" }}
+            name="repeatType"
+            rules={{ required: "Please select Repetition Type" }}
             render={({ field }) => (
               <FormSelect
-                label="Task Type"
-                options={taskTypeOptions}
-                error={errors.taskTypeId}
+                label="Repetition"
+                options={repetitionOptions}
+                placeholder="Select Repetition"
                 {...field}
+                // value={field.value || ""}
+                // onChange={field.onChange}
+                error={errors.repeatType}
                 isMandatory={true}
+                disabled={!taskDeadline}
               />
             )}
           />
-        </div>
-        <div className="col-span-3">
-          <Controller
-            control={control}
-            name="taskStatusId"
-            rules={{ required: "Please select Task Status" }}
-            render={({ field }) => (
-              <FormSelect
-                label="Task Status"
-                options={taskStatusOptions}
-                error={errors.taskStatusId}
-                {...field}
-                isMandatory={true}
+          <div className="flex gap-4">
+            <div className="w-1/2">
+              <Controller
+                control={control}
+                name="isActive"
+                rules={{ required: "Please select Any One Status" }}
+                render={({ field }) => (
+                  <FormSelect
+                    label="Active/InActive"
+                    options={taskStatusOptions}
+                    error={errors.isActive}
+                    {...field}
+                    isMandatory={true}
+                  />
+                )}
               />
-            )}
-          />
-        </div>
-
-        {/* Row 3 */}
-        <div className="col-span-3">
-          <label className="block mb-1 font-medium">
-            Task Description <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            className="w-full border rounded-md p-2 text-base h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-            {...register("taskDescription", {
-              required: "Please Enter Task Description",
-            })}
-          />
-          {errors.taskDescription && (
-            <span className="text-red-600 text-sm">
-              {errors.taskDescription?.message as string}
-            </span>
-          )}
-        </div>
-
-        <div className="col-span-3">
-          <label className="block mb-1 font-medium" hidden={!!taskId}>
-            Comment
-          </label>
-          <textarea
-            className="w-full border rounded-md p-2 text-base h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-            {...register("comment")}
-            hidden={!!taskId}
-          />
+            </div>
+            <div className="w-1/2">
+              <Controller
+                control={control}
+                name="taskTypeId"
+                rules={{ required: "Please select Task Type" }}
+                render={({ field }) => (
+                  <FormSelect
+                    label="Task Type"
+                    options={taskTypeOptions}
+                    error={errors.taskTypeId}
+                    {...field}
+                    isMandatory={true}
+                  />
+                )}
+              />
+            </div>
+          </div>
         </div>
       </Card>
     </div>
@@ -348,47 +381,33 @@ const AssignUserStep = () => {
         control={control}
         rules={{ required: "Please select a User" }}
         render={({ field }) => {
-          const selectedEmployees =
-            Array.isArray(field.value) && Array.isArray(employeedata?.data)
-              ? employeedata.data.filter((emp) =>
-                  field.value.includes(emp.employeeId),
-                )
-              : [];
           return (
-            <>
-              <TableData
-                tableData={employeedata?.data?.map((item, index) => ({
-                  ...item,
-                  srNo:
-                    (employeedata.currentPage - 1) * employeedata.pageSize +
-                    index +
-                    1,
-                }))}
-                isActionButton={() => false}
-                columns={{
-                  srNo: "srNo",
-                  employeeName: "User Name",
-                  designationName: "Designation",
-                  employeeType: "Employee Type",
-                }}
-                primaryKey="employeeId"
-                multiSelect={true}
-                selectedValue={
-                  selectedEmployees as unknown as Record<string, unknown>[]
-                }
-                handleChange={(selected) => {
-                  const ids = Array.isArray(selected)
-                    ? selected.map((emp) => emp.employeeId)
-                    : [];
-                  field.onChange(ids);
-                }}
-                onCheckbox={() => true}
-                paginationDetails={employeedata as PaginationFilter}
-                setPaginationFilter={setPaginationFilterEmployee}
-                showActionsColumn={false}
-                isLoading={employeeLoading}
-              />
-            </>
+            <TableData
+              {...field}
+              tableData={employeedata?.data?.map((item, index) => ({
+                ...item,
+                srNo:
+                  (employeedata.currentPage - 1) * employeedata.pageSize +
+                  index +
+                  1,
+              }))}
+              isActionButton={() => false}
+              columns={{
+                srNo: "srNo",
+                employeeName: "User Name",
+              }}
+              primaryKey="employeeId"
+              multiSelect={true}
+              selectedValue={field.value || []} // whole employee objects
+              handleChange={(selected) => {
+                field.onChange(Array.isArray(selected) ? selected : []);
+              }}
+              onCheckbox={() => true}
+              paginationDetails={employeedata as PaginationFilter}
+              setPaginationFilter={setPaginationFilterEmployee}
+              showActionsColumn={false}
+              isLoading={employeeLoading}
+            />
           );
         }}
       />
@@ -396,24 +415,23 @@ const AssignUserStep = () => {
   );
 };
 
-// const CommentStep = () => {
-//   const {
-//     register,
-//     formState: { errors },
-//   } = useFormContext();
-//   return (
-//     <Card className="px-4 py-4">
-//       <FormInputField
-//         label="Comment"
-//         {...register("comment")}
-//         error={errors.comment}
-//       />
-//     </Card>
-//   );
-// };
+const CommentStep = () => {
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext();
+  return (
+    <Card className="px-4 py-4">
+      <FormInputField
+        label="Comment"
+        {...register("comment")}
+        error={errors.comment}
+      />
+    </Card>
+  );
+};
 
 // Renamed main component
-
 export default function AddCompanyTask() {
   const hookProps = useAddCompanyTask();
   const {
@@ -421,33 +439,38 @@ export default function AddCompanyTask() {
     nextStep,
     prevStep,
     onSubmit,
+    onFinish,
+    isModalOpen,
+    handleClose,
+    taskpreviewData,
     steps: stepNamesArray, // Renamed to avoid conflict with step components
     methods,
-    taskId,
+    repetitiveTaskId,
     taskDataById,
     isPending,
   } = hookProps;
-
   const { setBreadcrumbs } = useBreadcrumbs();
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Task", href: "/dashboard/tasks" },
+      { label: "Company Repetition Task ", href: "/dashboard/tasksrepet" },
       {
-        label: taskId ? "Update Task" : "Add Task",
+        label: repetitiveTaskId
+          ? "Update Repetition Task"
+          : "Add Repetition Task",
         href: "",
       },
-      ...(taskId
+      ...(repetitiveTaskId
         ? [
             {
               label: taskDataById?.data.taskName || "",
-              href: `/dashboard/kpi/${taskId}`,
+              href: `/dashboard/kpi/${repetitiveTaskId}`,
               isHighlight: true,
             },
           ]
         : []),
     ]);
-  }, [setBreadcrumbs, taskDataById?.data.taskName, taskId]);
+  }, [setBreadcrumbs, taskDataById?.data.taskName, repetitiveTaskId]);
 
   const { handleSubmit } = methods;
 
@@ -458,38 +481,48 @@ export default function AddCompanyTask() {
       case 2:
         return <MeetingSelectionStep key="meetingStep" />;
       case 3:
-        return <TaskDetailsStep key="detailsStep" taskId={taskId!} />;
+        return <TaskDetailsStep key="detailsStep" />;
       case 4:
         return <AssignUserStep key="assignUserStep" />;
-      // case 5:
-      //   if (!taskId) return <CommentStep key="commentStep" />; // Conditional step
-      //   return null;
+      case 5:
+        if (!repetitiveTaskId) return <CommentStep key="commentStep" />; // Conditional step
+        return null;
       default:
         return null;
     }
   };
 
-  const totalSteps = 4;
+  const totalSteps = repetitiveTaskId ? 4 : 5;
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-        <StepProgress
-          currentStep={step}
-          totalSteps={totalSteps}
-          stepNames={stepNamesArray}
-          back={prevStep}
-          isFirstStep={step === 1}
-          isLastStep={step === totalSteps}
-          // isFirstStep={isFirstStep}
-          next={nextStep}
-          // isLastStep={isLastStep}
-          isPending={isPending}
-          onFinish={handleSubmit(onSubmit)}
-          isUpdate={!!taskId}
-        />
-
-        {renderStepContent()}
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
+        <div className="flex items-center gap-5 mb-3">
+          <StepProgress
+            currentStep={step}
+            totalSteps={totalSteps} // Use adjusted totalSteps
+            stepNames={stepNamesArray}
+            back={prevStep}
+            isFirstStep={step === 1} // ✅ add this
+            isLastStep={step === totalSteps}
+            next={nextStep}
+            isPending={isPending}
+            onFinish={onFinish}
+            // onFinish={handleSubmit(onSubmit)}
+            isUpdate={!!repetitiveTaskId}
+          />
+        </div>
+        <div className="step-content w-full">{renderStepContent()}</div>{" "}
+        {isModalOpen && (
+          <AddDatapointModal
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            modalData={taskpreviewData as any}
+            isModalOpen={isModalOpen}
+            modalClose={handleClose}
+            onSubmit={handleSubmit(onSubmit)}
+            isLoading={isPending}
+          />
+        )}
       </div>
     </FormProvider>
   );

@@ -18,7 +18,9 @@ export default function useEditDatapointFormModal({
   const { mutate: addDatapoint, isPending } = useAddUpdateDatapoint();
 
   const { data: datapointApiData } = useGetDatapointById(kpiId);
-  const { data: employeeData } = useGetEmployeeDd();
+  const { data: employeeData } = useGetEmployeeDd({
+    filter: { isDeactivated: false },
+  });
 
   const {
     register,

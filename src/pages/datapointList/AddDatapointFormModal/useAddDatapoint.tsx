@@ -1,18 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Controller, useForm, useWatch } from "react-hook-form";
+import { Label } from "recharts";
 
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-import { useGetEmployeeDd } from "@/features/api/companyEmployee";
-
 import FormSelect from "@/components/shared/Form/FormSelect";
-import {
-  useAddUpdateDatapoint,
-  useGetKpiNonSel,
-} from "@/features/api/companyDatapoint";
-// import { useGetProduct } from "@/features/api/Product";
-import { Card } from "@/components/ui/card";
 import {
   Tooltip,
   TooltipContent,
@@ -20,9 +13,16 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import SearchInput from "@/components/shared/SearchInput";
-import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { Label } from "recharts";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+
+import { useGetEmployeeDd } from "@/features/api/companyEmployee";
+import {
+  useAddUpdateDatapoint,
+  useGetKpiNonSel,
+} from "@/features/api/companyDatapoint";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+// import { useGetProduct } from "@/features/api/Product";
 
 export default function useAddDataPoint() {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -361,6 +361,10 @@ export default function useAddDataPoint() {
   // };
 
   const Details = () => {
+    const { data: employeeData } = useGetEmployeeDd({
+      filter: { isDeactivated: false },
+    });
+
     const frequenceOptions = [
       { value: "DAILY", label: "Daily" },
       { value: "WEEKLY", label: "Weekly" },
@@ -433,116 +437,6 @@ export default function useAddDataPoint() {
       }
     }, [validationType, visualFrequencyTypes, visualFrequencyAggregate]);
 
-    return (
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
-          {selectedKpi && selectedKpi.KPIName && (
-            <FormInputField
-              label="Selected Kpi"
-              value={selectedKpi.KPIName}
-              disabled
-              className="h-[44px] border-gray-300"
-            />
-          )}
-
-          <Controller
-            control={control}
-            name="frequencyType"
-            rules={{ required: "Frequency is required" }}
-            render={({ field }) => (
-              <FormSelect
-                label="Frequency"
-                value={field.value}
-                onChange={(value) => {
-                  field.onChange(value);
-                  setValue("visualFrequencyTypes", []);
-                }}
-                options={frequenceOptions}
-                error={errors.frequencyType}
-                isMandatory
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="validationType"
-            rules={{ required: "Validation Type is required" }}
-            render={({ field }) => (
-              <FormSelect
-                label="Validation Type"
-                value={field.value}
-                onChange={field.onChange}
-                options={validationOptions}
-                error={errors.validationType}
-                className="rounded-md"
-                isMandatory
-                labelClass="mb-2"
-              />
-            )}
-          />
-
-          {shouldShowVisualFrequency && (
-            <div className="flex">
-              <div className="w-full">
-                <Controller
-                  control={control}
-                  name="visualFrequencyTypes"
-                  render={({ field }) => (
-                    <FormSelect
-                      label="Visual Frequency Types"
-                      value={field.value || []}
-                      onChange={(value) => {
-                        field.onChange(value);
-                        if (value?.length > 0 && validationType !== "YES_NO") {
-                          setValue("visualFrequencyAggregate", "sum");
-                        }
-                      }}
-                      options={getFilteredVisualFrequencyOptions()}
-                      error={errors.visualFrequencyTypes}
-                      isMulti={true}
-                      placeholder="Select visual frequency types"
-                      disabled={false}
-                      key={
-                        selectedFrequency +
-                        "-" +
-                        (watch("coreParameterId") || "")
-                      }
-                    />
-                  )}
-                />
-              </div>
-              {shouldShowSumAveField && (
-                <div className="w-full ml-3 max-w-32">
-                  <Controller
-                    control={control}
-                    name="visualFrequencyAggregate"
-                    render={({ field }) => (
-                      <FormSelect
-                        label="Sum/Average"
-                        value={field.value || "sum"}
-                        onChange={field.onChange}
-                        options={sumAveOptions}
-                        error={errors.visualFrequencyAggregate}
-                        placeholder="Select visual frequency Aggregate"
-                        disabled={false}
-                      />
-                    )}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-          <FormInputField label="Unit" {...register(`unit`)} />
-        </Card>
-      </div>
-    );
-  };
-
-  const AssignUser = () => {
-    const { data: employeeData } = useGetEmployeeDd({
-      filter: { isDeactivated: false },
-    });
-
     const allOptions = (employeeData?.data || [])
       .filter((item) => !item.isDeactivated)
       .map((emp) => ({
@@ -560,7 +454,7 @@ export default function useAddDataPoint() {
       return found?.employeeName || emp.employeeId || "";
     };
 
-    const validationType = useWatch({ name: "validationType", control });
+    // const validationType = useWatch({ name: "validationType", control });
 
     const showBoth = validationType === "6" || validationType === "BETWEEN";
     const showYesNo = validationType === "7" || validationType === "YES_NO";
@@ -571,103 +465,350 @@ export default function useAddDataPoint() {
     ];
 
     return (
-      <div>
-        <div className="w-fit min-w-96">
+      <div className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4 h-[calc(100vh-200px)] content-start">
+        {selectedKpi && selectedKpi.KPIName && (
+          <FormInputField
+            label="Selected Kpi"
+            value={selectedKpi.KPIName}
+            disabled
+            className="h-[44px] border-gray-300"
+          />
+        )}
+
+        <Controller
+          control={control}
+          name="frequencyType"
+          rules={{ required: "Frequency is required" }}
+          render={({ field }) => (
+            <FormSelect
+              label="Frequency"
+              value={field.value}
+              onChange={(value) => {
+                field.onChange(value);
+                setValue("visualFrequencyTypes", []);
+              }}
+              options={frequenceOptions}
+              error={errors.frequencyType}
+              isMandatory
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="validationType"
+          rules={{ required: "Validation Type is required" }}
+          render={({ field }) => (
+            <FormSelect
+              label="Validation Type"
+              value={field.value}
+              onChange={field.onChange}
+              options={validationOptions}
+              error={errors.validationType}
+              className="rounded-md"
+              isMandatory
+              labelClass="mb-2"
+            />
+          )}
+        />
+
+        {shouldShowVisualFrequency && (
+          <div className="flex">
+            <div className="w-full">
+              <Controller
+                control={control}
+                name="visualFrequencyTypes"
+                render={({ field }) => (
+                  <FormSelect
+                    label="Visual Frequency Types"
+                    value={field.value || []}
+                    onChange={(value) => {
+                      field.onChange(value);
+                      if (value?.length > 0 && validationType !== "YES_NO") {
+                        setValue("visualFrequencyAggregate", "sum");
+                      }
+                    }}
+                    options={getFilteredVisualFrequencyOptions()}
+                    error={errors.visualFrequencyTypes}
+                    isMulti={true}
+                    placeholder="Select visual frequency types"
+                    disabled={false}
+                    key={
+                      selectedFrequency + "-" + (watch("coreParameterId") || "")
+                    }
+                  />
+                )}
+              />
+            </div>
+            {shouldShowSumAveField && (
+              <div className="w-full ml-3 max-w-32">
+                <Controller
+                  control={control}
+                  name="visualFrequencyAggregate"
+                  render={({ field }) => (
+                    <FormSelect
+                      label="Sum/Average"
+                      value={field.value || "sum"}
+                      onChange={field.onChange}
+                      options={sumAveOptions}
+                      error={errors.visualFrequencyAggregate}
+                      placeholder="Select visual frequency Aggregate"
+                      disabled={false}
+                    />
+                  )}
+                />
+              </div>
+            )}
+          </div>
+        )}
+        <FormInputField
+          label="Unit"
+          {...register(`unit`)}
+          className="h-[41px] mt-0"
+        />
+
+        <div className="">
           <Controller
             control={control}
             name="employeeId"
             rules={{ required: "Employee is required" }}
             render={({ field }) => (
-              <FormSelect
-                label="Employee"
-                value={field.value}
-                onChange={(value) => {
-                  field.onChange(value);
-                  setValue("employeeId", value);
-                }}
+              <SearchDropdown
                 options={allOptions}
-                error={errors.employeeId}
+                selectedValues={field.value ? [field.value] : []} // Ensure it's an array
+                onSelect={(value) => {
+                  field.onChange(value.value);
+                  setValue("employeeId", value.value);
+                }}
+                placeholder="Select an employee..."
+                label="Employee"
                 isMandatory
               />
             )}
           />
+          {/* <Controller
+                control={control}
+                name="employeeId"
+                rules={{ required: "Employee is required" }}
+                render={({ field }) => (
+                  <FormSelect
+                    label="Employee"
+                    value={field.value}
+                    onChange={(value) => {
+                      field.onChange(value);
+                      setValue("employeeId", value);
+                    }}
+                    options={allOptions}
+                    error={errors.employeeId}
+                    isMandatory
+                  />
+                )}
+              /> */}
         </div>
-        <div className="mt-5">
-          {employee && (
-            <div>
-              <div key={employee} className="flex flex-col gap-2">
-                <Label className="text-[18px] mb-0">
-                  {getEmployeeName(employee)}
-                </Label>
-                <div
-                  className={`grid ${
-                    showBoth ? "grid-cols-2" : "grid-cols-1"
-                  } gap-4 mt-0`}
-                >
-                  {!showYesNo && (
-                    <>
+        {employee && (
+          <div>
+            <div key={employee} className="flex flex-col gap-2">
+              <Label className="text-[18px] mb-0">
+                {getEmployeeName(employee)}
+              </Label>
+              <div
+                className={`grid ${
+                  showBoth ? "grid-cols-2" : "grid-cols-1"
+                } gap-4 mt-0`}
+              >
+                {!showYesNo && (
+                  <>
+                    <FormInputField
+                      label="Goal Value 1"
+                      isMandatory
+                      {...register(`value1`, {
+                        required: "Please enter Goal Value 1",
+                      })}
+                      error={errors?.value1}
+                      // disabled={isDisabled}
+                      // readOnly={isDisabled}
+                    />
+                    {showBoth && (
                       <FormInputField
-                        label="Goal Value 1"
                         isMandatory
-                        {...register(`value1`, {
-                          required: "Please enter Goal Value 1",
+                        label="Goal Value 2"
+                        {...register(`value2`, {
+                          required: "Please enter Goal Value 2",
                         })}
-                        error={errors?.value1}
+                        error={errors?.value2}
                         // disabled={isDisabled}
                         // readOnly={isDisabled}
                       />
-                      {showBoth && (
-                        <FormInputField
-                          isMandatory
-                          label="Goal Value 2"
-                          {...register(`value2`, {
-                            required: "Please enter Goal Value 2",
-                          })}
-                          error={errors?.value2}
-                          // disabled={isDisabled}
-                          // readOnly={isDisabled}
+                    )}
+                  </>
+                )}
+                {showYesNo && (
+                  <Controller
+                    name={`value1`}
+                    control={control}
+                    rules={{ required: "Please select Yes or No" }}
+                    render={({ field, fieldState }) => {
+                      const selectedOption =
+                        field.value?.value ?? field.value ?? "";
+                      return (
+                        <FormSelect
+                          {...field}
+                          label="Yes/No"
+                          options={yesnoOptions}
+                          error={fieldState.error}
+                          isMandatory={true}
+                          value={selectedOption}
+                          onChange={field.onChange}
                         />
-                      )}
-                    </>
-                  )}
-                  {showYesNo && (
-                    <Controller
-                      name={`value1`}
-                      control={control}
-                      rules={{ required: "Please select Yes or No" }}
-                      render={({ field, fieldState }) => {
-                        const selectedOption =
-                          field.value?.value ?? field.value ?? "";
-                        return (
-                          <FormSelect
-                            {...field}
-                            label="Yes/No"
-                            options={yesnoOptions}
-                            error={fieldState.error}
-                            isMandatory={true}
-                            value={selectedOption}
-                            onChange={field.onChange}
-                          />
-                        );
-                      }}
-                    />
-                  )}
-                </div>
-                <FormInputField
-                  label="Tag"
-                  // isMandatory
-                  {...register(`tag`)}
-                  error={errors?.tag}
-                  // disabled={isDisabled}
-                  // readOnly={isDisabled}
-                />
+                      );
+                    }}
+                  />
+                )}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+        <FormInputField
+          label="Tag"
+          // isMandatory
+          {...register(`tag`)}
+          error={errors?.tag}
+          // disabled={isDisabled}
+          // readOnly={isDisabled}
+        />
       </div>
     );
   };
+
+  // const AssignUser = () => {
+  //   const { data: employeeData } = useGetEmployeeDd({
+  //     filter: { isDeactivated: false },
+  //   });
+
+  //   const allOptions = (employeeData?.data || [])
+  //     .filter((item) => !item.isDeactivated)
+  //     .map((emp) => ({
+  //       value: emp.employeeId,
+  //       label: emp.employeeName,
+  //     }));
+
+  //   const employee = watch("employeeId");
+
+  //   const getEmployeeName = (emp: DataPointEmployee) => {
+  //     if (emp?.employeeName) return emp.employeeName;
+  //     const found = employeeData?.data?.find(
+  //       (e: EmployeeDetails) => e.employeeId === emp.employeeId
+  //     );
+  //     return found?.employeeName || emp.employeeId || "";
+  //   };
+
+  //   const validationType = useWatch({ name: "validationType", control });
+
+  //   const showBoth = validationType === "6" || validationType === "BETWEEN";
+  //   const showYesNo = validationType === "7" || validationType === "YES_NO";
+
+  //   const yesnoOptions = [
+  //     { label: "Yes", value: "1" },
+  //     { label: "No", value: "0" },
+  //   ];
+
+  //   return (
+  //     <div>
+  //       <div className="w-fit min-w-96">
+  //         <Controller
+  //           control={control}
+  //           name="employeeId"
+  //           rules={{ required: "Employee is required" }}
+  //           render={({ field }) => (
+  //             <FormSelect
+  //               label="Employee"
+  //               value={field.value}
+  //               onChange={(value) => {
+  //                 field.onChange(value);
+  //                 setValue("employeeId", value);
+  //               }}
+  //               options={allOptions}
+  //               error={errors.employeeId}
+  //               isMandatory
+  //             />
+  //           )}
+  //         />
+  //       </div>
+  //       <div className="mt-5">
+  //         {employee && (
+  //           <div>
+  //             <div key={employee} className="flex flex-col gap-2">
+  //               <Label className="text-[18px] mb-0">
+  //                 {getEmployeeName(employee)}
+  //               </Label>
+  //               <div
+  //                 className={`grid ${
+  //                   showBoth ? "grid-cols-2" : "grid-cols-1"
+  //                 } gap-4 mt-0`}
+  //               >
+  //                 {!showYesNo && (
+  //                   <>
+  //                     <FormInputField
+  //                       label="Goal Value 1"
+  //                       isMandatory
+  //                       {...register(`value1`, {
+  //                         required: "Please enter Goal Value 1",
+  //                       })}
+  //                       error={errors?.value1}
+  //                       // disabled={isDisabled}
+  //                       // readOnly={isDisabled}
+  //                     />
+  //                     {showBoth && (
+  //                       <FormInputField
+  //                         isMandatory
+  //                         label="Goal Value 2"
+  //                         {...register(`value2`, {
+  //                           required: "Please enter Goal Value 2",
+  //                         })}
+  //                         error={errors?.value2}
+  //                         // disabled={isDisabled}
+  //                         // readOnly={isDisabled}
+  //                       />
+  //                     )}
+  //                   </>
+  //                 )}
+  //                 {showYesNo && (
+  //                   <Controller
+  //                     name={`value1`}
+  //                     control={control}
+  //                     rules={{ required: "Please select Yes or No" }}
+  //                     render={({ field, fieldState }) => {
+  //                       const selectedOption =
+  //                         field.value?.value ?? field.value ?? "";
+  //                       return (
+  //                         <FormSelect
+  //                           {...field}
+  //                           label="Yes/No"
+  //                           options={yesnoOptions}
+  //                           error={fieldState.error}
+  //                           isMandatory={true}
+  //                           value={selectedOption}
+  //                           onChange={field.onChange}
+  //                         />
+  //                       );
+  //                     }}
+  //                   />
+  //                 )}
+  //               </div>
+  //               <FormInputField
+  //                 label="Tag"
+  //                 // isMandatory
+  //                 {...register(`tag`)}
+  //                 error={errors?.tag}
+  //                 // disabled={isDisabled}
+  //                 // readOnly={isDisabled}
+  //               />
+  //             </div>
+  //           </div>
+  //         )}
+  //       </div>
+  //     </div>
+  //   );
+  // };
 
   return {
     isModalOpen,
@@ -676,7 +817,7 @@ export default function useAddDataPoint() {
     onSubmit,
     Kpi,
     Details,
-    AssignUser,
+    // AssignUser,
     KpiPreview: getValues(),
     trigger,
     isPending,

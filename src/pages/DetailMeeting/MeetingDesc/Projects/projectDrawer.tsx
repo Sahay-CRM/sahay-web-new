@@ -61,7 +61,7 @@ export default function ProjectDrawer({
     : [];
   const employeeOption = employeeData
     ? employeeData.data.map((status) => ({
-        label: status.employeeName,
+        label: `${status.employeeName} ${status.designationName} ${status.employeeType}`,
         value: status.employeeId,
       }))
     : [];

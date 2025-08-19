@@ -51,7 +51,7 @@ export const companyNavigationData = [
     icon: "Heart",
     label: "Objective",
     permission: "View",
-    moduleKey: "OBJECTIVE",
+    // moduleKey: "OBJECTIVE",
     items: [
       {
         id: 1,
@@ -98,21 +98,21 @@ export const companyNavigationData = [
     icon: "BarChart3",
     label: "KPI List",
     permission: "View",
-    moduleKey: "DATAPOINT_LIST",
+    // moduleKey: "DATAPOINT_LIST",
     items: [
       {
         id: 1,
         label: "KPI List",
         link: "/dashboard/kpi",
         permission: "View",
-        moduleKey: "ISSUES",
+        moduleKey: "DATAPOINT_LIST",
       },
       {
         id: 2,
         label: "KPI Group",
         link: "/dashboard/kpi/group-kpis",
         permission: "View",
-        moduleKey: "OBJECTIVE",
+        moduleKey: "DATAPOINT_LIST",
       },
     ],
   },
@@ -137,7 +137,7 @@ export const companyNavigationData = [
     icon: "Heart",
     label: "Business Health",
     permission: "View",
-    moduleKey: "BUSINESS_HEALTH",
+    // moduleKey: "BUSINESS_HEALTH",
     items: [
       {
         id: 1,
