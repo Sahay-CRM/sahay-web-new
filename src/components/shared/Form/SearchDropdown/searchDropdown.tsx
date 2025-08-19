@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
+import { FormLabel } from "@/components/ui/form";
+import { twMerge } from "tailwind-merge";
 
 type Option = {
   value: string;
@@ -12,22 +14,38 @@ interface SearchDropdownProps {
   onSelect: (item: Option) => void;
   placeholder?: string;
   className?: string;
+  label?: string;
+  labelClass?: string;
+  isMandatory?: boolean;
 }
 
 const SearchDropdown = ({
   options,
-  selectedValues,
+  selectedValues = [],
   onSelect,
   placeholder = "Search...",
   className = "",
+  label,
+  labelClass,
+  isMandatory,
 }: SearchDropdownProps) => {
   const [query, setQuery] = useState("");
   const [showList, setShowList] = useState(false);
   const [filteredOptions, setFilteredOptions] = useState<Option[]>([]);
 
+  // Compute the selected label(s) from selectedValues and options
+  const getSelectedLabel = () => {
+    if (selectedValues.length === 0) return placeholder;
+    const selectedOption = options.find((opt) =>
+      selectedValues.includes(opt.value),
+    );
+    return selectedOption ? selectedOption.label : placeholder;
+  };
+
   useEffect(() => {
     const filtered = options.filter(
       (opt) =>
+        Array.isArray(selectedValues) &&
         !selectedValues.includes(opt.value) &&
         opt.label.toLowerCase().includes(query.toLowerCase()),
     );
@@ -36,15 +54,21 @@ const SearchDropdown = ({
 
   return (
     <div className={`relative ${className}`}>
+      {label && (
+        <FormLabel className={twMerge("mb-4", labelClass)}>
+          {label}{" "}
+          {isMandatory && <span className="text-red-500 text-[20px]">*</span>}
+        </FormLabel>
+      )}
       <Input
         value={query}
         onFocus={() => setShowList(true)}
         onBlur={() => setTimeout(() => setShowList(false), 150)}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder={placeholder}
+        placeholder={getSelectedLabel()} // Show selected label or default placeholder
       />
       {showList && filteredOptions.length > 0 && (
-        <ul className="absolute z-10 mt-1 w-full border bg-white rounded shadow max-h-60 overflow-y-auto">
+        <ul className="absolute z-30 mt-1 w-full border bg-white rounded shadow max-h-60 overflow-y-auto">
           {filteredOptions.map((item) => (
             <li
               key={item.value}

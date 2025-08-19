@@ -4,7 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 
 type DatePaging = BaseResponse<TaskGetPaging>;
 
-export default function useGetRepeatCompanyTask({ filter, enable }: FilterDataProps) {
+export default function useGetRepeatCompanyTask({
+  filter,
+  enable,
+}: FilterDataProps) {
   const query = useQuery({
     queryKey: ["get-task-listrepeat", filter],
     queryFn: async () => {

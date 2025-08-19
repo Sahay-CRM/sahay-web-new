@@ -66,7 +66,7 @@ export default function TaskDrawer({
     : [];
   const employeeOption = employeedata
     ? employeedata.data.map((status) => ({
-        label: status.employeeName,
+        label: `${status.employeeName} ${status.designationName} ${status.employeeType}`,
         value: status.employeeId,
       }))
     : [];
@@ -163,7 +163,6 @@ export default function TaskDrawer({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onClose, open]);
-  console.log(taskData);
 
   const onSubmit = (data: TaskFormData) => {
     if (meetingId && detailMeetingId) {

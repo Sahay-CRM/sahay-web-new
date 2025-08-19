@@ -13,7 +13,7 @@ const AddDatapoint = () => {
     onSubmit,
     Kpi,
     // Product,
-    AssignUser,
+    // AssignUser,
     // GoalValue,
     trigger,
     KpiPreview,
@@ -25,7 +25,7 @@ const AddDatapoint = () => {
 
   let stepNames = [];
 
-  const steps = [<Kpi />, <Details />, <AssignUser />];
+  const steps = [<Kpi />, <Details />];
   stepNames = ["KPI", "Details", "Assign User", "Goal Value"];
 
   const {

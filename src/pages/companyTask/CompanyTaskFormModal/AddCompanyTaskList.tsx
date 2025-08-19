@@ -368,6 +368,8 @@ const AssignUserStep = () => {
                 columns={{
                   srNo: "srNo",
                   employeeName: "User Name",
+                  designationName: "Designation",
+                  employeeType: "Employee Type",
                 }}
                 primaryKey="employeeId"
                 multiSelect={true}
@@ -467,17 +469,17 @@ export default function AddCompanyTask() {
     }
   };
 
-  const totalSteps = taskId ? 4 : 5;
+  const totalSteps = 4;
 
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <StepProgress
           currentStep={step}
-          totalSteps={totalSteps} // Use adjusted totalSteps
+          totalSteps={totalSteps}
           stepNames={stepNamesArray}
           back={prevStep}
-          isFirstStep={step === 1} // ✅ add this
+          isFirstStep={step === 1}
           isLastStep={step === totalSteps}
           // isFirstStep={isFirstStep}
           next={nextStep}

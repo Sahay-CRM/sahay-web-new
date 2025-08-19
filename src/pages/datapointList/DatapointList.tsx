@@ -78,6 +78,7 @@ export default function CompanyTaskList() {
       label: "KPI Tag",
       visible: true,
     },
+    { key: "employeeName", label: "Employee Name", visible: true },
     { key: "KPILabel", label: "KPI Description (Tooltip)", visible: true },
     { key: "validationType", label: "Validation Type", visible: true },
     { key: "frequencyType", label: "Frequency", visible: true },
@@ -185,8 +186,8 @@ export default function CompanyTaskList() {
               permission.Edit
                 ? (row) => {
                     if (row.kpiId) {
-                      setIsEditModalOpen(true);
                       setIsEditKpiId(row.kpiId);
+                      setIsEditModalOpen(true);
                     }
                   }
                 : undefined
