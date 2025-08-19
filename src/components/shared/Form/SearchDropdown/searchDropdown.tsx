@@ -68,6 +68,7 @@ const SearchDropdown = ({
         onBlur={() => setTimeout(() => setShowList(false), 150)}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={getSelectedLabel()} // Show selected label or default placeholder
+        className=" placeholder:text-black"
       />
       {showList && filteredOptions.length > 0 && (
         <ul className="absolute z-30 mt-1 w-full border bg-white rounded shadow max-h-60 overflow-y-auto">
