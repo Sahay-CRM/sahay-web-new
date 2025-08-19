@@ -17,6 +17,7 @@ interface SearchDropdownProps {
   label?: string;
   labelClass?: string;
   isMandatory?: boolean;
+  error?: { message?: string };
 }
 
 const SearchDropdown = ({
@@ -28,6 +29,7 @@ const SearchDropdown = ({
   label,
   labelClass,
   isMandatory,
+  error,
 }: SearchDropdownProps) => {
   const [query, setQuery] = useState("");
   const [showList, setShowList] = useState(false);
@@ -82,6 +84,11 @@ const SearchDropdown = ({
             </li>
           ))}
         </ul>
+      )}
+      {error?.message && (
+        <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+          {error.message}
+        </span>
       )}
     </div>
   );
