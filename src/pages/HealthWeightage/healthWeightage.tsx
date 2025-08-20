@@ -72,8 +72,7 @@ export default function HealthWeightage() {
       onEdit();
     }
   };
-
-  if (permission && permission.View === false) {
+  if (!permission || permission.View === false) {
     return <PageNotAccess />;
   }
 

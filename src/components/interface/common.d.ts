@@ -614,6 +614,7 @@ interface AddUpdateTask {
   meetingId?: string;
   detailMeetingAgendaIssueId?: string;
   detailMeetingId?: string;
+  repetitiveTaskId?: string;
 }
 
 interface TaskGetPaging {
@@ -651,6 +652,7 @@ interface TaskGetPaging {
   detailMeetingTaskId?: string;
   repetition?: string;
   detailMeetingNoteId?: string;
+  repetitiveTaskId?: string;
 }
 
 interface TaskProject {
@@ -736,6 +738,9 @@ interface Task {
   comments: TaskComment[];
   createdBy: CreatedBy;
   repeatType?: string;
+  repetitiveTaskId?: string;
+  employeeIds?: string | string[];
+  isActive?: boolean;
 }
 
 interface ProjectTask {
@@ -1098,6 +1103,7 @@ interface MeetingResFire {
     follow: string;
     meetingTimestamp?: number;
     updatedAt: number | string;
+    conclusionTimestamp: number;
   };
   timers: {
     agenda?: TimerEntry;

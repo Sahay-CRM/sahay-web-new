@@ -256,6 +256,14 @@ const Urls = {
   updateDetailMeetingKPIData: () =>
     `${baseUrl}/company/detail-meeting/kpi/update-data`,
 
+  addRepeatCompanyTask: () => `${baseUrl}/company/repetitive-task/create`,
+  updateRepeatCompanyTask: (id: string) =>
+    `${baseUrl}/company/repetitive-task/update/${id}`,
+  deleteRepeatCompanyTask: (id: string) =>
+    `${baseUrl}/company/repetitive-task/delete/${id}`,
+  getAllRepeatCompanyTaskByPage: () => `${baseUrl}/company/repetitive-task/get`,
+  getRepeatCompanyTaskById: (id: string) =>
+    `${baseUrl}/company/repetitive-task/get/${id}`,
 };
 
 export default Urls;

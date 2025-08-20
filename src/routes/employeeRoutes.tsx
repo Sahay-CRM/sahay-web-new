@@ -65,8 +65,8 @@ const KPIDashboard = lazy(() => import("../pages/kpiDashboard/KpiDashboard"));
 const AllNotifications = lazy(
   () => import("../pages/notification/AllNotifications"),
 );
-const StartMeeting = lazy(() => import("../pages/DetailMeeting/MeetingDesc"));
-const DetailMeeting = lazy(() => import("../pages/DetailMeeting"));
+// const StartMeeting = lazy(() => import("../pages/DetailMeeting/MeetingDesc"));
+// const DetailMeeting = lazy(() => import("../pages/DetailMeeting"));
 
 const Issues = lazy(() => import("../pages/Obj/Issues"));
 const Objective = lazy(() => import("../pages/Obj/Objective"));
@@ -93,8 +93,8 @@ export default function EmployeeRoutes() {
         <Route path="meeting/add" element={<AddCompanyMeeting />} />
         <Route path="meeting/edit/:id" element={<AddCompanyMeeting />} />
 
-        <Route path="meeting/detail/:id" Component={StartMeeting} />
-        <Route path="meeting/detail" Component={DetailMeeting} />
+        {/* <Route path="meeting/detail/:id" Component={StartMeeting} />
+        <Route path="meeting/detail" Component={DetailMeeting} /> */}
 
         <Route path="issues" Component={Issues} />
         <Route path="objective" Component={Objective} />

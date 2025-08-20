@@ -14,6 +14,7 @@ import { FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { CheckIcon } from "lucide-react";
+import { twMerge } from "tailwind-merge";
 
 interface Option {
   id?: string | number;
@@ -36,6 +37,7 @@ interface FormSelectProps {
   isMandatory?: boolean;
   isSearchable?: boolean;
   triggerClassName?: string;
+  labelClass?: string;
 }
 
 export default function FormSelect({
@@ -52,6 +54,7 @@ export default function FormSelect({
   isMandatory = false,
   isSearchable = false,
   triggerClassName = "",
+  labelClass,
 }: FormSelectProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
@@ -92,7 +95,7 @@ export default function FormSelect({
   return (
     <div className={className}>
       {label && (
-        <FormLabel className="mb-4" htmlFor={id}>
+        <FormLabel className={twMerge("mb-4", labelClass)} htmlFor={id}>
           {label}{" "}
           {isMandatory && <span className="text-red-500 text-[20px]">*</span>}
         </FormLabel>

@@ -28,6 +28,15 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
     }
   };
 
+  const formatLocalDate = (isoDate?: string): string => {
+    if (!isoDate) return "";
+
+    const date = new Date(isoDate);
+
+    // Format as YYYY-MM-DD in local time zone
+    return date.toLocaleDateString("en-CA"); // en-CA gives "yyyy-mm-dd"
+  };
+
   return (
     <ModalData
       isModalOpen={isModalOpen}
@@ -72,7 +81,7 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
         {modalData?.taskStartDate && (
           <div>
             <span className="font-medium text-primary">Task Start Date: </span>
-            {modalData.taskStartDate}
+            {formatLocalDate(modalData.taskStartDate)}
           </div>
         )}
         {modalData?.taskDeadline && (

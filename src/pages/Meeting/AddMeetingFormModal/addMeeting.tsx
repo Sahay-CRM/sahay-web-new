@@ -43,7 +43,7 @@ const MeetingType = () => {
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "meetingTypeName", label: "Meeting Type Name", visible: true },
-    { key: "parentType", label: "Parent Type", visible: true },
+    // { key: "parentType", label: "Parent Type", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -240,6 +240,8 @@ const Joiners = () => {
     { key: "srNo", label: "Sr No", visible: true },
     { key: "employeeName", label: "Joiners", visible: true },
     { key: "employeeMobile", label: "Mobile", visible: true },
+    { key: "employeeType", label: "Employee Type", visible: true },
+    { key: "designationName", label: "Designation", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -330,7 +332,7 @@ const Joiners = () => {
               isEditDelete={() => false}
               moduleKey="emp"
               isActionButton={() => false}
-              showActionsColumn={meetingType?.parentType === "DETAIL"}
+              showActionsColumn={false}
               selectedValue={field.value || []}
               handleChange={(selectedItems) => field.onChange(selectedItems)}
               customActions={(row: EmployeeDetails) => {
@@ -559,7 +561,7 @@ const AddMeeting = () => {
 
   return (
     <FormProvider {...methods}>
-     <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <StepProgress
           currentStep={currentStep}
           stepNames={stepNames}

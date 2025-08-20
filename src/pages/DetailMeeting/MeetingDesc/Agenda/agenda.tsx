@@ -321,6 +321,67 @@ export default function Agenda({
             <nav className="z-20 flex">
               <div className="mr-5 flex gap-3 items-center rounded-2xl px-1">
                 <Button
+                  className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white cursor-pointer flex items-center ${
+                    activeTab === "tasks"
+                      ? "bg-white h-[50px] shadow-none border-t-4 border-l-1 border-r-1 border-primary z-10"
+                      : "bg-gray-100 h-12"
+                  }`}
+                  style={
+                    activeTab === "tasks"
+                      ? {
+                          marginBottom: "-2px",
+                          color: "#2f318e",
+                        }
+                      : { marginBottom: "1px", color: "gray" }
+                  }
+                  onClick={() => {
+                    handleTabChange("tasks");
+                  }}
+                >
+                  <List className="h-5 w-5" />
+                  <span>Tasks ({detailAgendaData?.noOfTasks})</span>
+                </Button>
+                <Button
+                  className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white  cursor-pointer flex items-center ${
+                    activeTab === "projects"
+                      ? "bg-white h-[50px] shadow-none border-t-4 border-l-1 border-r-1 border-primary z-10"
+                      : "bg-gray-100 h-12"
+                  }`}
+                  style={
+                    activeTab === "projects"
+                      ? { marginBottom: "-2px", color: "#2f318e" }
+                      : { marginBottom: "1px", color: "gray" }
+                  }
+                  onClick={() => {
+                    handleTabChange("projects");
+                  }}
+                >
+                  <CheckSquare className="h-5 w-5" />
+                  <span>Projects ({detailAgendaData?.noOfProjects})</span>
+                </Button>
+                <Button
+                  className={`w-32 mx-auto border border-b-0 rounded-b-none hover:bg-white  cursor-pointer flex items-center ${
+                    activeTab === "kpis"
+                      ? "bg-white h-[50px] border-t-4 border-l-1 border-r-1 border-primary z-10"
+                      : "bg-gray-100 h-12"
+                  }`}
+                  style={
+                    activeTab === "kpis"
+                      ? { marginBottom: "-2px", color: "#2f318e" }
+                      : { marginBottom: "1px", color: "gray" }
+                  }
+                  onClick={() => {
+                    handleTabChange("kpis");
+                  }}
+                >
+                  <BarChart2 className="h-5 w-5" />
+                  <span>KPIs ({detailAgendaData?.noOfKPIs})</span>
+                </Button>
+              </div>
+            </nav>
+            {/* <nav className="z-20 flex">
+              <div className="mr-5 flex gap-3 items-center rounded-2xl px-1">
+                <Button
                   className={`w-32 justify-start border border-b-0 shadow-border rounded-b-none hover:bg-white text-primary cursor-pointer flex items-center ${activeTab === "tasks" ? "bg-white h-[50px] -mb-[4px] shadow-none" : "bg-gray-200 h-12"}`}
                   onClick={() => {
                     handleTabChange("tasks");
@@ -354,73 +415,89 @@ export default function Agenda({
                   </span>
                 </Button>
               </div>
-            </nav>
+            </nav> */}
           </div>
         ) : (
           <div className="flex gap-4 items-center flex-wrap">
-            <div className="hidden md:block w-[330px] text-gray-500  text-lg truncate">
+            <div className="hidden md:block w-[370px] text-gray-500  text-lg truncate">
               Meeting Agenda
             </div>
-            <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
-              <Clock className="w-4 h-4 text-green-600" />
-              <span className="font-medium text-sm">Agenda Actual:</span>
-              <span className="font-bold">
-                {formatTime(Number(conclusionData?.agendaActual))}m
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
-              <Clock className="w-4 h-4 text-green-600" />
-              <span className="font-medium text-sm">Discussion Actual:</span>
-              <span className="font-bold">
-                {formatTime(Number(conclusionData?.agendaTotalActual))}m
-              </span>
-            </div>
-
-            {conclusionData?.conclusionActual != null && (
-              <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
-                <Clock className="w-4 h-4 text-green-600" />
-                <span className="font-medium text-sm">Conclusion Actual:</span>
-                <span className="font-bold">
-                  {formatTime(Number(conclusionData.conclusionActual))}m
-                </span>
-              </div>
-            )}
-
-            {conclusionData?.meetingPlanned != null && (
-              <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
-                <Clock className="w-4 h-4 text-green-600" />
-                <span className="font-medium text-sm">Meeting Planned:</span>
-                <span className="font-bold">
-                  {formatSecondsToHHMM(Number(conclusionData.meetingPlanned))}
-                </span>
-              </div>
-            )}
-
-            {conclusionData?.meetingActual != null &&
-              conclusionData?.meetingActual != "0" && (
+            <div className="">
+              <div className="flex gap-4 items-center mb-2">
                 <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
                   <Clock className="w-4 h-4 text-green-600" />
-                  <span className="font-medium text-sm">Meeting Actual:</span>
+                  <span className="font-medium text-sm">Agenda Actual:</span>
                   <span className="font-bold">
-                    {formatSecondsToHHMM(Number(conclusionData.meetingActual))}
+                    {formatTime(Number(conclusionData?.agendaActual))}m
                   </span>
                 </div>
-              )}
-            <div className="flex gap-4 items-center">
-              <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
-                <span className="font-medium text-sm">Total Tasks:</span>
-                <span className="font-bold">{conclusionData?.noOfTasks}</span>
+
+                <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                  <Clock className="w-4 h-4 text-green-600" />
+                  <span className="font-medium text-sm">
+                    Discussion Actual:
+                  </span>
+                  <span className="font-bold">
+                    {formatTime(Number(conclusionData?.agendaTotalActual))}m
+                  </span>
+                </div>
+
+                {conclusionData?.conclusionActual != null && (
+                  <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                    <Clock className="w-4 h-4 text-green-600" />
+                    <span className="font-medium text-sm">
+                      Conclusion Actual:
+                    </span>
+                    <span className="font-bold">
+                      {formatTime(Number(conclusionData.conclusionActual))}m
+                    </span>
+                  </div>
+                )}
+
+                {conclusionData?.meetingPlanned != null && (
+                  <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                    <Clock className="w-4 h-4 text-green-600" />
+                    <span className="font-medium text-sm">
+                      Meeting Planned:
+                    </span>
+                    <span className="font-bold">
+                      {formatSecondsToHHMM(
+                        Number(conclusionData.meetingPlanned),
+                      )}
+                    </span>
+                  </div>
+                )}
+
+                {conclusionData?.meetingActual != null &&
+                  conclusionData?.meetingActual != "0" && (
+                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
+                      <Clock className="w-4 h-4 text-green-600" />
+                      <span className="font-medium text-sm">
+                        Meeting Actual:
+                      </span>
+                      <span className="font-bold">
+                        {formatSecondsToHHMM(
+                          Number(conclusionData.meetingActual),
+                        )}
+                      </span>
+                    </div>
+                  )}
               </div>
-              <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
-                <span className="font-medium text-sm">Total Projects:</span>
-                <span className="font-bold">
-                  {conclusionData?.noOfProjects}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
-                <span className="font-medium text-sm">Total KPIs:</span>
-                <span className="font-bold">{conclusionData?.noOfKPIs}</span>
+              <div className="flex gap-4 items-center">
+                <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
+                  <span className="font-medium text-sm">Total Tasks:</span>
+                  <span className="font-bold">{conclusionData?.noOfTasks}</span>
+                </div>
+                <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
+                  <span className="font-medium text-sm">Total Projects:</span>
+                  <span className="font-bold">
+                    {conclusionData?.noOfProjects}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
+                  <span className="font-medium text-sm">Total KPIs:</span>
+                  <span className="font-bold">{conclusionData?.noOfKPIs}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -477,7 +554,7 @@ export default function Agenda({
                 {meetingStatus === "CONCLUSION" && (
                   <Button
                     variant="outline"
-                    className="bg-primary text-white cursor-pointer px-4 hover:bg-primary py-5 text-sm hover:text-white sm:text-base md:text-lg"
+                    className="bg-primary text-white px-4 hover:bg-primary py-5 text-sm hover:text-white sm:text-base md:text-lg"
                     onClick={handleCloseMeetingWithLog}
                     isLoading={endMeetingLoading}
                   >
@@ -821,11 +898,13 @@ export default function Agenda({
                                 >
                                   {formatTime(
                                     Number(
-                                      conclusionData?.agenda.find(
-                                        (con) =>
-                                          con.detailMeetingAgendaIssueId ===
-                                          item.detailMeetingAgendaIssueId,
-                                      )?.actualTime,
+                                      conclusionData
+                                        ? conclusionData?.agenda.find(
+                                            (con) =>
+                                              con.detailMeetingAgendaIssueId ===
+                                              item.detailMeetingAgendaIssueId,
+                                          )?.actualTime
+                                        : 0,
                                     ),
                                   )}
                                 </div>
@@ -1071,7 +1150,24 @@ export default function Agenda({
               </div>
             )}
           </div> */}
-          <div className="border rounded-md flex justify-center w-full h-[calc(100vh-200px)] overflow-scroll">
+          <div className="flex justify-center w-full h-[calc(100vh-200px)] overflow-scroll relative border-l-1 border-r-1 border-b-1 border-primary rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]">
+            <div className="absolute top-0 left-0 right-0 h-0.5 flex">
+              <div
+                className="border-t-1 border-primary h-0"
+                style={{
+                  width:
+                    activeTab === "tasks"
+                      ? "0px"
+                      : activeTab === "projects"
+                        ? "140px"
+                        : activeTab === "kpis"
+                          ? "280px"
+                          : "0px",
+                }}
+              />
+              <div style={{ width: "124px" }} />
+              <div className="border-t-1 border-primary h-0 flex-1" />
+            </div>
             {meetingStatus === "NOT_STARTED" ? (
               <div className="max-w-3xl">
                 <div className="bg-white rounded-lg shadow-lg p-6">
@@ -1115,63 +1211,67 @@ export default function Agenda({
                 </div>
               </div>
             ) : meetingStatus === "STARTED" ? (
-              <div className="flex gap-6 text-center mt-48">
-                {joiners &&
-                  joiners.map((item) => {
-                    return (
-                      <div
-                        key={item.employeeId}
-                        className="flex flex-col w-full items-center"
-                      >
-                        <div className="relative">
-                          {item.isTeamLeader && (
-                            <span className="absolute -top-4 right-2 z-10 bg-white shadow-2xl rounded-full p-0.5">
-                              <Crown className="w-5 h-5 text-[#303290] drop-shadow" />
-                            </span>
-                          )}
-                          <div className="w-10 h-10 rounded-lg overflow-hidden">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  {item.employeeImage !== null ? (
-                                    <img
-                                      src={`${ImageBaseURL}/share/company/profilePics/${item.employeeImage}`}
-                                      alt={item.employeeName}
-                                      className="w-full h-full rounded-md object-cover outline-2 outline-blue-400 bg-black"
-                                    />
-                                  ) : (
-                                    <div className="bg-gray-300 text-gray-700 w-full h-full content-center font-semibold text-sm">
-                                      {getInitials(item.employeeName)}
-                                    </div>
-                                  )}
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {item.employeeName}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+              <div>
+                <div className="grid grid-cols-4 gap-8 text-center mt-40">
+                  {joiners &&
+                    joiners.map((item) => {
+                      return (
+                        <div
+                          key={item.employeeId}
+                          className="flex items-center"
+                        >
+                          <div className="flex items-center gap-2 w-40">
+                            <div className="relative">
+                              {item.isTeamLeader && (
+                                <span className="absolute -top-4 right-2 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                                  <Crown className="w-5 h-5 text-[#303290] drop-shadow" />
+                                </span>
+                              )}
+                              <div className="w-10 h-10 rounded-lg overflow-hidden">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      {item.employeeImage !== null ? (
+                                        <img
+                                          src={`${ImageBaseURL}/share/company/profilePics/${item.employeeImage}`}
+                                          alt={item.employeeName}
+                                          className="w-full h-full rounded-md object-cover outline-2 outline-blue-400 bg-black"
+                                        />
+                                      ) : (
+                                        <div className="bg-gray-300 text-gray-700 w-full h-full content-center font-semibold text-sm">
+                                          {getInitials(item.employeeName)}
+                                        </div>
+                                      )}
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {item.employeeName}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            </div>
+
+                            <div className="text-sm font-medium text-gray-800 mt-2">
+                              {item.employeeName}
+                            </div>
+                          </div>
+                          <div>
+                            <FormCheckbox
+                              id={`${item.employeeId}-checkbox`}
+                              className="w-[16px] h-[16px]"
+                              containerClass="p-0 ml-1"
+                              checked={item.attendanceMark}
+                              onChange={(e) => {
+                                const updatedAttendance = e.target.checked;
+                                handleCheckIn(item, updatedAttendance);
+                              }}
+                              disabled={!isTeamLeader}
+                            />
                           </div>
                         </div>
-
-                        <div className="text-sm font-medium text-gray-800 mt-2">
-                          {item.employeeName}
-                        </div>
-                        <div>
-                          <FormCheckbox
-                            id={`${item.employeeId}-checkbox`}
-                            className="w-[16px] h-[16px]"
-                            containerClass="p-0 ml-1"
-                            checked={item.attendanceMark}
-                            onChange={(e) => {
-                              const updatedAttendance = e.target.checked;
-                              handleCheckIn(item, updatedAttendance);
-                            }}
-                            disabled={!isTeamLeader}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                </div>
               </div>
             ) : meetingStatus === "DISCUSSION" ? (
               detailAgendaData && (

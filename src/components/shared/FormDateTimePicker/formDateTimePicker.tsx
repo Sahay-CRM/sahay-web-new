@@ -36,6 +36,7 @@ export default function FormDateTimePicker({
           dateFormat="Pp"
           placeholderText="Select date and time"
           className="border px-10 py-2 rounded-md w-full text-sm sm:text-base"
+          portalId="root"
           popperClassName="responsive-datepicker-popper"
         />
         <CalendarIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />

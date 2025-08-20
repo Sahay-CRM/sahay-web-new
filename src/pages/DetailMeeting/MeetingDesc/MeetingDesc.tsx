@@ -344,54 +344,64 @@ export default function MeetingDesc() {
 
                             <div className="flex justify-between items-start gap-2 group">
                               <p className="break-words">{note.note}</p>
-                              <div>
-                                <DropdownMenu
-                                  open={
-                                    dropdownOpen === note.detailMeetingNoteId
-                                  }
-                                  onOpenChange={(open) =>
-                                    setDropdownOpen(
-                                      open ? note.detailMeetingNoteId : null,
-                                    )
-                                  }
-                                >
-                                  <DropdownMenuTrigger asChild>
-                                    <button
-                                      onClick={() =>
+                              {meetingStatus !== "NOT_STARTED" &&
+                                meetingStatus !== "ENDED" && (
+                                  <div>
+                                    <DropdownMenu
+                                      open={
+                                        dropdownOpen ===
+                                        note.detailMeetingNoteId
+                                      }
+                                      onOpenChange={(open) =>
                                         setDropdownOpen(
-                                          note.detailMeetingNoteId,
+                                          open
+                                            ? note.detailMeetingNoteId
+                                            : null,
                                         )
                                       }
-                                      className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
                                     >
-                                      <EllipsisVertical className="h-5 w-5" />
-                                    </button>
-                                  </DropdownMenuTrigger>
+                                      <DropdownMenuTrigger asChild>
+                                        <button
+                                          onClick={() =>
+                                            setDropdownOpen(
+                                              note.detailMeetingNoteId,
+                                            )
+                                          }
+                                          className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
+                                        >
+                                          <EllipsisVertical className="h-5 w-5" />
+                                        </button>
+                                      </DropdownMenuTrigger>
 
-                                  <DropdownMenuContent
-                                    align="end"
-                                    className="w-full"
-                                  >
-                                    <DropdownMenuItem
-                                      onClick={() => handleUpdateNotes(note)}
-                                      className="px-2 py-1.5"
-                                    >
-                                      <X className="h-4 w-4 mr-2" />
-                                      Remove From Updates
-                                    </DropdownMenuItem>
+                                      <DropdownMenuContent
+                                        align="end"
+                                        className="w-full"
+                                      >
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            handleUpdateNotes(note)
+                                          }
+                                          className="px-2 py-1.5"
+                                        >
+                                          <X className="h-4 w-4 mr-2" />
+                                          Remove From Updates
+                                        </DropdownMenuItem>
 
-                                    <DropdownMenuItem
-                                      onClick={() =>
-                                        handleDelete(note.detailMeetingNoteId)
-                                      }
-                                      className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
-                                    >
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            handleDelete(
+                                              note.detailMeetingNoteId,
+                                            )
+                                          }
+                                          className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
+                                        >
+                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          Delete
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+                                )}
                             </div>
                           </div>
                         </div>
@@ -449,53 +459,63 @@ export default function MeetingDesc() {
 
                             <div className="flex justify-between items-start gap-2 group">
                               <p className="break-words">{note.note}</p>
-                              <div>
-                                <DropdownMenu
-                                  open={
-                                    dropdownOpen === note.detailMeetingNoteId
-                                  }
-                                  onOpenChange={(open) =>
-                                    setDropdownOpen(
-                                      open ? note.detailMeetingNoteId : null,
-                                    )
-                                  }
-                                >
-                                  <DropdownMenuTrigger asChild>
-                                    <button
-                                      onClick={() =>
+                              {meetingStatus !== "NOT_STARTED" &&
+                                meetingStatus !== "ENDED" && (
+                                  <div>
+                                    <DropdownMenu
+                                      open={
+                                        dropdownOpen ===
+                                        note.detailMeetingNoteId
+                                      }
+                                      onOpenChange={(open) =>
                                         setDropdownOpen(
-                                          note.detailMeetingNoteId,
+                                          open
+                                            ? note.detailMeetingNoteId
+                                            : null,
                                         )
                                       }
-                                      className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
                                     >
-                                      <EllipsisVertical className="h-5 w-5" />
-                                    </button>
-                                  </DropdownMenuTrigger>
+                                      <DropdownMenuTrigger asChild>
+                                        <button
+                                          onClick={() =>
+                                            setDropdownOpen(
+                                              note.detailMeetingNoteId,
+                                            )
+                                          }
+                                          className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
+                                        >
+                                          <EllipsisVertical className="h-5 w-5" />
+                                        </button>
+                                      </DropdownMenuTrigger>
 
-                                  <DropdownMenuContent
-                                    align="end"
-                                    className="w-full"
-                                  >
-                                    <DropdownMenuItem
-                                      onClick={() => handleUpdateNotes(note)}
-                                      className="px-2 py-1.5"
-                                    >
-                                      <X className="h-4 w-4 mr-2" />
-                                      Remove From Appreciation
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() =>
-                                        handleDelete(note.detailMeetingNoteId)
-                                      }
-                                      className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
-                                    >
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
+                                      <DropdownMenuContent
+                                        align="end"
+                                        className="w-full"
+                                      >
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            handleUpdateNotes(note)
+                                          }
+                                          className="px-2 py-1.5"
+                                        >
+                                          <X className="h-4 w-4 mr-2" />
+                                          Remove From Appreciation
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            handleDelete(
+                                              note.detailMeetingNoteId,
+                                            )
+                                          }
+                                          className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
+                                        >
+                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          Delete
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+                                )}
                             </div>
                           </div>
                         </div>

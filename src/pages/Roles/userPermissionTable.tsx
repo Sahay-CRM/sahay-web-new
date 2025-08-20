@@ -21,6 +21,10 @@ import {
 import { ChevronDown, ChevronRight } from "lucide-react";
 import React from "react";
 import { SpinnerIcon } from "@/components/shared/Icons";
+import WarningDialog from "../kpiDashboard/WarningModal";
+import PageNotAccess from "../PageNoAccess";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 
 // Interfaces
 interface Permission {
@@ -325,7 +329,6 @@ function PermissionTableInner({ data, onChange }: PermissionTableProps) {
   );
 }
 
-// Main merged component
 export default function UserPermissionTableMerged() {
   const { id: employeeId } = useParams();
   const [permissions, setPermissions] = useState<Permission[]>([]);
@@ -334,6 +337,14 @@ export default function UserPermissionTableMerged() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const location = useLocation();
   const userName = location.state?.userName;
+  const [hasChange, setHasChange] = useState(false);
+
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(
+    null,
+  );
+  const [showWarning, setShowWarning] = useState(false);
+
+  const permission = useSelector(getUserPermission).ROLES_PERMISSION;
 
   useEffect(() => {
     setBreadcrumbs([
@@ -381,17 +392,136 @@ export default function UserPermissionTableMerged() {
 
   const handlePermissionChange = (newPermissions: Permission[]) => {
     setPermissions(newPermissions);
+    setHasChange(true);
   };
 
   const handleSavePermissions = () => {
     if (!employeeId) {
       return;
     }
-    updatePermission.mutate({
-      employeeId,
-      permissions,
-    });
+    updatePermission.mutate(
+      {
+        employeeId,
+        permissions,
+      },
+      {
+        onSuccess: () => {
+          setHasChange(false);
+        },
+      },
+    );
   };
+
+  const handleWarningSubmit = () => {
+    handleSavePermissions();
+    setShowWarning(false);
+    setPendingNavigation(null);
+    // if (pendingNavigation) {
+    //   window.location.href = pendingNavigation;
+    // }
+  };
+
+  const handleWarningDiscard = () => {
+    if (pendingNavigation) {
+      window.location.href = pendingNavigation;
+    }
+    setShowWarning(false);
+    setPendingNavigation(null);
+  };
+
+  const handleWarningClose = () => {
+    setShowWarning(false);
+    setPendingNavigation(null);
+  };
+
+  useEffect(() => {
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+
+    const interceptNavigation = (
+      originalFn: typeof history.pushState | typeof history.replaceState,
+    ) => {
+      return function (
+        this: History,
+        data: unknown,
+        title: string,
+        url?: string | URL | null,
+      ) {
+        if (hasChange && url && url !== location.pathname) {
+          setPendingNavigation(
+            typeof url === "string" ? url : url?.toString() || null,
+          );
+          setShowWarning(true);
+          return;
+        }
+        return originalFn.call(this, data, title, url);
+      };
+    };
+
+    history.pushState = interceptNavigation(originalPushState);
+    history.replaceState = interceptNavigation(originalReplaceState);
+
+    const handleClick = (event: Event) => {
+      if (!hasChange) return;
+
+      const target = event.target as HTMLElement;
+
+      const isDrawerNavigation =
+        target.closest("a[href]") ||
+        target.closest('li[class*="cursor-pointer"]') ||
+        target.closest('button[class*="hover:text-primary"]') ||
+        target.closest('li[class*="hover:text-primary"]') ||
+        target.closest('div[class*="cursor-pointer"]') ||
+        target.closest('[data-sidebar="menu-button"]') ||
+        target.closest('[data-slot="sidebar-menu-button"]');
+
+      if (isDrawerNavigation) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        let href = target.closest("a")?.getAttribute("href") ?? null;
+
+        if (!href) {
+          const textContent = target.textContent?.toLowerCase().trim();
+          const routeMap: { [key: string]: string } = {
+            "company designation": "/dashboard/company-designation",
+            "company employee": "/dashboard/company-employee",
+            calendar: "/dashboard/calendar",
+            "meeting list": "/dashboard/meeting",
+            "company task list": "/dashboard/tasks",
+            "company project list": "/dashboard/projects",
+            "kpi list": "/dashboard/kpi",
+            "kpi dashboard": "/dashboard/kpi-dashboard",
+            "health weightage": "/dashboard/business/health-weightage",
+            "health score": "/dashboard/business/healthscore-achieve",
+            "company level assign": "/dashboard/business/company-level-assign",
+            "role & permission": "/dashboard/roles/user-permission",
+            brand: "/dashboard/brand",
+            product: "/dashboard/product",
+            "user log": "/dashboard/user-log",
+          };
+          if (textContent) href = routeMap[textContent] || null;
+        }
+
+        if (href && href !== location.pathname) {
+          setPendingNavigation(href);
+          setShowWarning(true);
+        }
+      }
+    };
+
+    document.addEventListener("click", handleClick, true);
+
+    return () => {
+      history.pushState = originalPushState;
+      history.replaceState = originalReplaceState;
+      document.removeEventListener("click", handleClick, true);
+    };
+  }, [hasChange, location.pathname]);
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <div className="p-6">
@@ -408,7 +538,7 @@ export default function UserPermissionTableMerged() {
         </div>
         <Button
           onClick={handleSavePermissions}
-          disabled={updatePermission.isPending}
+          disabled={updatePermission.isPending || !hasChange}
         >
           {updatePermission.isPending ? "Saving..." : "Save Permissions"}
         </Button>
@@ -419,6 +549,12 @@ export default function UserPermissionTableMerged() {
           onChange={handlePermissionChange}
         />
       </div>
+      <WarningDialog
+        open={showWarning}
+        onSubmit={handleWarningSubmit}
+        onDiscard={handleWarningDiscard}
+        onClose={handleWarningClose}
+      />
     </div>
   );
 }

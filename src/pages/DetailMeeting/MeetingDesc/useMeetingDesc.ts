@@ -70,35 +70,28 @@ export default function useMeetingDesc() {
   }, [db, handleUpdatedRefresh, meetingId]);
 
   useEffect(() => {
-    if (!meetingId) return;
+    if (!meetingId || !meetingResponse) return;
 
     const meetingRef = ref(db, `meetings/${meetingId}/state/activeTab`);
 
     const unsubscribe = onValue(meetingRef, (snapshot) => {
-      try {
-        if (snapshot.exists()) {
-          const activeTab = snapshot.val();
-          handleUpdatedRefresh();
+      if (snapshot.exists()) {
+        const activeTab = snapshot.val();
 
-          if (activeTab === "CONCLUSION") {
-            queryClient.resetQueries({
-              queryKey: ["get-meeting-conclusion-res"],
-            });
-          }
+        handleUpdatedRefresh();
+        if (activeTab === "CONCLUSION") {
+          queryClient.resetQueries({
+            queryKey: ["get-meeting-conclusion-res"],
+          });
         }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error in activeTab listener:", error);
       }
     });
 
-    return () => {
-      unsubscribe();
-    };
-  }, [db, handleUpdatedRefresh, meetingId]);
+    return () => unsubscribe();
+  }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
 
   useEffect(() => {
-    if (!meetingId) return;
+    if (!meetingId || !meetingResponse) return; // ✅ don't run if meeting deleted
 
     const meetingRef = ref(db, `meetings/${meetingId}/state/updatedAt`);
 
@@ -108,10 +101,8 @@ export default function useMeetingDesc() {
       }
     });
 
-    return () => {
-      unsubscribe();
-    };
-  }, [db, handleUpdatedRefresh, meetingId]);
+    return () => unsubscribe();
+  }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
 
   const handleTabChange = (tab: string) => {
     if (activeTab === tab) {
