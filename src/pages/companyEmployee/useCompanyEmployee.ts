@@ -21,6 +21,8 @@ export default function useAdminUser() {
   const [viewModalData, setViewModalData] = useState<EmployeeData>(
     {} as EmployeeData,
   );
+  const [currentStatus, setCurrentStatus] = useState<boolean>(false);
+
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 25,
@@ -28,12 +30,21 @@ export default function useAdminUser() {
   });
 
   const { data: employeedata, isLoading } = getEmployee({
-    filter: paginationFilter,
+    filter: { ...paginationFilter, isDeactivated: currentStatus },
   });
 
   const { mutate: addEmployee } = useAddOrUpdateEmployee();
 
   const { mutate: deleteEmployeeById } = deleteEmployee();
+
+  const onStatusChange = (val: boolean) => {
+    setCurrentStatus(val);
+    setPaginationFilter((prev) => ({
+      ...prev,
+      isDeactivated: val,
+      currentPage: 1,
+    }));
+  };
 
   const handleAdd = () => {
     setModalData({
@@ -177,5 +188,7 @@ export default function useAdminUser() {
     setIsViewModalOpen,
     viewModalData,
     handleInactive,
+    onStatusChange,
+    currentStatus,
   };
 }

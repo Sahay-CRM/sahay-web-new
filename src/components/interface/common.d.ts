@@ -364,6 +364,30 @@ interface CompanyProjectDataProps {
   detailMeetingNoteId?: string;
 }
 
+interface CompanyMeetingDataProps {
+  meetingId?: string;
+  meetingName?: string;
+  meetingDescription?: string;
+  meetingDateTime?: string;
+  meetingTypeId?: string;
+  parentType?: string;
+  meetingStatusId?: string;
+  companyMeetingId?: string;
+  joiners?: string[] | Joiners[];
+  meetingStatus?: CompanyMeetingStatusDataProps;
+  meetingType?: CompanyMeetingTypeDataProps;
+  files?: [
+    {
+      fileId: string;
+      fileName: string;
+    },
+  ];
+  teamLeaders?: string[];
+  employeeId?: string;
+  attendanceMark?: boolean;
+  detailMeetingStatus?: string;
+}
+
 interface ProjectParameters {
   coreParameter: CoreParameter;
   subParameters: SubParameter[];
