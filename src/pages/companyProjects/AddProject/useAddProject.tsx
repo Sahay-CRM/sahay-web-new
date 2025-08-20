@@ -5,6 +5,8 @@ import {
   useGetCompanyProjectById,
 } from "@/features/api/companyProject";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 
 export default function useAddProject() {
   const { id: companyProjectId } = useParams();
@@ -13,6 +15,8 @@ export default function useAddProject() {
   const [isModalOpen, setModalOpen] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [hasInitializedData, setHasInitializedData] = useState(false);
+
+  const permission = useSelector(getUserPermission).PROJECT_LIST;
 
   const { mutate: addProject, isPending } = useAddUpdateCompanyProject();
   const { data: projectApiData } = useGetCompanyProjectById(
@@ -162,5 +166,6 @@ export default function useAddProject() {
     isInitialLoad,
     hasInitializedData,
     projectApiData,
+    permission,
   };
 }

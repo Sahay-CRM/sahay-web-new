@@ -22,6 +22,8 @@ import {
   useGetKpiNonSel,
 } from "@/features/api/companyDatapoint";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 // import { useGetProduct } from "@/features/api/Product";
 
 export default function useAddDataPoint() {
@@ -31,6 +33,8 @@ export default function useAddDataPoint() {
   const navigate = useNavigate();
 
   const { setBreadcrumbs } = useBreadcrumbs();
+
+  const permission = useSelector(getUserPermission).DATAPOINT_LIST;
 
   useEffect(() => {
     setBreadcrumbs([{ label: "KPI List", href: "/dashboard/kpi" }]);
@@ -826,5 +830,6 @@ export default function useAddDataPoint() {
     KpiPreview: getValues(),
     trigger,
     isPending,
+    permission,
   };
 }

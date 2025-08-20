@@ -71,7 +71,7 @@ const SearchDropdown = ({
         className=" placeholder:text-black"
       />
       {showList && filteredOptions.length > 0 && (
-        <ul className="absolute z-30 mt-1 w-full border bg-white rounded shadow max-h-60 overflow-y-auto">
+        <ul className="absolute z-50 mt-1 w-full border bg-white rounded shadow max-h-60 overflow-y-auto">
           {filteredOptions.map((item) => (
             <li
               key={item.value}

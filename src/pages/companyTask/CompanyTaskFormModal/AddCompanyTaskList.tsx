@@ -11,6 +11,7 @@ import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import SearchInput from "@/components/shared/SearchInput";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import PageNotAccess from "@/pages/PageNoAccess";
 
 const ProjectSelectionStep = () => {
   const {
@@ -436,6 +437,7 @@ export default function AddCompanyTask() {
     taskId,
     taskDataById,
     isPending,
+    taskPermission,
   } = hookProps;
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -480,6 +482,10 @@ export default function AddCompanyTask() {
   };
 
   const totalSteps = 4;
+
+  if (!taskPermission || taskPermission.Add === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...methods}>

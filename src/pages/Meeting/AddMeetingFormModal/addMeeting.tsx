@@ -43,7 +43,7 @@ const MeetingType = () => {
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "meetingTypeName", label: "Meeting Type Name", visible: true },
-    { key: "parentType", label: "Parent Type", visible: true },
+    // { key: "parentType", label: "Parent Type", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(

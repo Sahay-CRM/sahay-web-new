@@ -19,6 +19,7 @@ import {
   useGetSubParaFilter,
 } from "@/features/api/companyProject";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
+import PageNotAccess from "@/pages/PageNoAccess";
 
 const ProjectInfo = () => {
   const {
@@ -508,6 +509,7 @@ const AddProject = () => {
     isPending,
     methods,
     projectApiData,
+    permission,
   } = useAddProject();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -562,6 +564,10 @@ const AddProject = () => {
     "Key Result Area",
     "Employees",
   ];
+
+  if (permission && permission.Add === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...methods}>

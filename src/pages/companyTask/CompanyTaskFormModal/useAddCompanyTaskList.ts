@@ -283,5 +283,6 @@ export const useAddCompanyTask = () => {
     typeLoading,
     employeeLoading,
     meetingLoading,
+    taskPermission: permission.TASK,
   };
 };

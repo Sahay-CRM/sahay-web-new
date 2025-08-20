@@ -4,6 +4,7 @@ import AddDatapointModal from "./addDatapointModal";
 import useAddDatapoint from "./useAddDatapoint";
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
+import PageNotAccess from "@/pages/PageNoAccess";
 
 const AddDatapoint = () => {
   const {
@@ -19,6 +20,7 @@ const AddDatapoint = () => {
     KpiPreview,
     isPending,
     Details,
+    permission,
   } = useAddDatapoint();
 
   const methods = useForm({ mode: "onChange" });
@@ -37,6 +39,10 @@ const AddDatapoint = () => {
     isFirstStep,
     isLastStep,
   } = useStepForm(steps, trigger);
+
+  if (permission && permission.Add === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...methods}>

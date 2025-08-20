@@ -1,6 +1,5 @@
 import ModalData from "@/components/shared/Modal/ModalData";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { formatDate } from "@/features/utils/app.utils";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -27,6 +26,15 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
     if (modalData?.taskId) {
       navigate(`/dashboard/tasks/view/${modalData.taskId}`);
     }
+  };
+
+  const formatLocalDate = (isoDate?: string): string => {
+    if (!isoDate) return "";
+
+    const date = new Date(isoDate);
+
+    // Format as YYYY-MM-DD in local time zone
+    return date.toLocaleDateString("en-CA"); // en-CA gives "yyyy-mm-dd"
   };
 
   return (
@@ -73,7 +81,7 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
         {modalData?.taskStartDate && (
           <div>
             <span className="font-medium text-primary">Task Start Date: </span>
-            {formatDate(modalData.taskStartDate)}
+            {formatLocalDate(modalData.taskStartDate)}
           </div>
         )}
         {modalData?.taskDeadline && (
