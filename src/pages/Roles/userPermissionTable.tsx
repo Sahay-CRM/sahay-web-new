@@ -22,6 +22,9 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import React from "react";
 import { SpinnerIcon } from "@/components/shared/Icons";
 import WarningDialog from "../kpiDashboard/WarningModal";
+import PageNotAccess from "../PageNoAccess";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 
 // Interfaces
 interface Permission {
@@ -341,6 +344,8 @@ export default function UserPermissionTableMerged() {
   );
   const [showWarning, setShowWarning] = useState(false);
 
+  const permission = useSelector(getUserPermission).ROLES_PERMISSION;
+
   useEffect(() => {
     setBreadcrumbs([
       {
@@ -513,6 +518,10 @@ export default function UserPermissionTableMerged() {
       document.removeEventListener("click", handleClick, true);
     };
   }, [hasChange, location.pathname]);
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <div className="p-6">

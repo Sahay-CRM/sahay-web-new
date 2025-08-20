@@ -21,8 +21,8 @@ import { format } from "date-fns";
 import DateRangePicker from "@/components/shared/DateRange";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
-import { useSelector } from "react-redux";
-import { getUserId } from "@/features/selectors/auth.selector";
+// import { useSelector } from "react-redux";
+// import { getUserId } from "@/features/selectors/auth.selector";
 
 export default function MeetingList() {
   const {
@@ -55,7 +55,7 @@ export default function MeetingList() {
   } = useMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
-  const userId = useSelector(getUserId);
+  // const userId = useSelector(getUserId);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -215,91 +215,91 @@ export default function MeetingList() {
                   }
                 : undefined
             }
-            customActions={(row) => {
-              if (row.parentType !== "DETAIL") return null;
-              const isTeamLeader = Array.isArray(row.joiners)
-                ? row.joiners.some(
-                    (emp) =>
-                      emp &&
-                      typeof emp === "object" &&
-                      emp.employeeId === userId &&
-                      emp.isTeamLeader === true,
-                  )
-                : false;
+            // customActions={(row) => {
+            //   if (row.parentType !== "DETAIL") return null;
+            //   const isTeamLeader = Array.isArray(row.joiners)
+            //     ? row.joiners.some(
+            //         (emp) =>
+            //           emp &&
+            //           typeof emp === "object" &&
+            //           emp.employeeId === userId &&
+            //           emp.isTeamLeader === true,
+            //       )
+            //     : false;
 
-              return (
-                <>
-                  {row.detailMeetingStatus === "ENDED" ? (
-                    <div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="py-1 px-3 w-[150px] cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(
-                            `/dashboard/meeting/detail/${row.meetingId}`,
-                          );
-                        }}
-                      >
-                        Meeting Details
-                      </Button>
-                    </div>
-                  ) : (
-                    <div>
-                      {isTeamLeader &&
-                      row.detailMeetingStatus === "NOT_STARTED" ? (
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="py-1 w-[150px] px-3 cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(
-                              `/dashboard/meeting/detail/${row.meetingId}`,
-                            );
-                          }}
-                        >
-                          Start Meeting
-                        </Button>
-                      ) : (
-                        <div>
-                          {row.detailMeetingStatus === "NOT STARTED" ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="py-1 w-[150px] px-3 cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(
-                                  `/dashboard/meeting/detail/${row.meetingId}`,
-                                );
-                              }}
-                            >
-                              Not Started
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="py-1 w-[150px] px-3 cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(
-                                  `/dashboard/meeting/detail/${row.meetingId}`,
-                                );
-                              }}
-                            >
-                              Join Meeting
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              );
-            }}
+            //   return (
+            //     <>
+            //       {row.detailMeetingStatus === "ENDED" ? (
+            //         <div>
+            //           <Button
+            //             variant="outline"
+            //             size="sm"
+            //             className="py-1 px-3 w-[150px] cursor-pointer"
+            //             onClick={(e) => {
+            //               e.stopPropagation();
+            //               navigate(
+            //                 `/dashboard/meeting/detail/${row.meetingId}`,
+            //               );
+            //             }}
+            //           >
+            //             Meeting Details
+            //           </Button>
+            //         </div>
+            //       ) : (
+            //         <div>
+            //           {isTeamLeader &&
+            //           row.detailMeetingStatus === "NOT_STARTED" ? (
+            //             <Button
+            //               variant="destructive"
+            //               size="sm"
+            //               className="py-1 w-[150px] px-3 cursor-pointer"
+            //               onClick={(e) => {
+            //                 e.stopPropagation();
+            //                 navigate(
+            //                   `/dashboard/meeting/detail/${row.meetingId}`,
+            //                 );
+            //               }}
+            //             >
+            //               Start Meeting
+            //             </Button>
+            //           ) : (
+            //             <div>
+            //               {row.detailMeetingStatus === "NOT STARTED" ? (
+            //                 <Button
+            //                   variant="outline"
+            //                   size="sm"
+            //                   className="py-1 w-[150px] px-3 cursor-pointer"
+            //                   onClick={(e) => {
+            //                     e.stopPropagation();
+            //                     navigate(
+            //                       `/dashboard/meeting/detail/${row.meetingId}`,
+            //                     );
+            //                   }}
+            //                 >
+            //                   Not Started
+            //                 </Button>
+            //               ) : (
+            //                 <Button
+            //                   variant="outline"
+            //                   size="sm"
+            //                   className="py-1 w-[150px] px-3 cursor-pointer"
+            //                   onClick={(e) => {
+            //                     e.stopPropagation();
+            //                     navigate(
+            //                       `/dashboard/meeting/detail/${row.meetingId}`,
+            //                     );
+            //                   }}
+            //                 >
+            //                   Join Meeting
+            //                 </Button>
+            //               )}
+            //             </div>
+            //           )}
+            //         </div>
+            //       )}
+            //     </>
+            //   );
+            // }}
             isActionButton={() => true}
             onDelete={(row) => {
               onDelete(row as unknown as MeetingData);
@@ -313,6 +313,7 @@ export default function MeetingList() {
             permissionKey="users"
             localStorageId="MeetingList"
             moduleKey="MEETING_LIST"
+            actionColumnWidth="w-24"
             sortableColumns={[
               "meetingName",
               "meetingDateTime",

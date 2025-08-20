@@ -38,7 +38,7 @@ export default function useAddMeeting() {
         meetingDateTime: data.meetingDateTime
           ? new Date(data.meetingDateTime).toISOString()
           : null,
-        meetingStatusId: data.meetingStatus || undefined,
+        meetingStatusId: data.meetingStatus?.meetingStatusId || undefined,
         meetingTypeId: data.meetingType || undefined,
         employeeId: data.joiners,
         meetingDocuments: Array.isArray(data.files)

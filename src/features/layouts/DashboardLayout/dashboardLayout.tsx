@@ -305,7 +305,7 @@ const DashboardLayout = () => {
                         onClick={() => setIsNotificationOpen(false)}
                         style={{ background: "transparent" }}
                       />
-                      <div className="absolute right-0 top-12 bg-white shadow-2xl border rounded-lg p-4 w-[400px] z-20">
+                      <div className="absolute right-0 top-12 bg-white shadow-2xl border rounded-lg p-4 w-[400px] z-50">
                         {notifications.length > 0 ? (
                           <>
                             <ul className="h-80 overflow-scroll">

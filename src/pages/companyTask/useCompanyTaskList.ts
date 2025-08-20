@@ -275,16 +275,16 @@ export default function useCompanyTaskList() {
   const handleOverdueToggle = () => {
     const newOverdueState = !showOverdue;
     // Reset date range when toggling overdue
-    if (newOverdueState) {
-      setAppliedDateRange({
-        taskStartDate: new Date(),
-        taskDeadline: new Date(),
-      });
-      setTaskDateRange({
-        taskStartDate: new Date(),
-        taskDeadline: new Date(),
-      });
-    }
+    // if (newOverdueState) {
+    setAppliedDateRange({
+      taskStartDate: new Date(),
+      taskDeadline: new Date(),
+    });
+    setTaskDateRange({
+      taskStartDate: before14,
+      taskDeadline: after14,
+    });
+    // }
 
     setShowOverdue(newOverdueState);
   };
