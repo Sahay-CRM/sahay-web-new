@@ -17,6 +17,7 @@ interface SearchDropdownProps {
   label?: string;
   labelClass?: string;
   isMandatory?: boolean;
+  error?: { message?: string };
 }
 
 const SearchDropdown = ({
@@ -28,6 +29,7 @@ const SearchDropdown = ({
   label,
   labelClass,
   isMandatory,
+  error,
 }: SearchDropdownProps) => {
   const [query, setQuery] = useState("");
   const [showList, setShowList] = useState(false);
@@ -66,6 +68,7 @@ const SearchDropdown = ({
         onBlur={() => setTimeout(() => setShowList(false), 150)}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={getSelectedLabel()} // Show selected label or default placeholder
+        className=" placeholder:text-black"
       />
       {showList && filteredOptions.length > 0 && (
         <ul className="absolute z-30 mt-1 w-full border bg-white rounded shadow max-h-60 overflow-y-auto">
@@ -82,6 +85,11 @@ const SearchDropdown = ({
             </li>
           ))}
         </ul>
+      )}
+      {error?.message && (
+        <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+          {error.message}
+        </span>
       )}
     </div>
   );

@@ -152,8 +152,10 @@ const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
       return item.items.some((child) => permissions?.[child.moduleKey]?.View);
     }
     const moduleKeys = Array.isArray(item.moduleKey)
-      ? item.moduleKey
-      : [item.moduleKey];
+      ? item.moduleKey.filter((k): k is string => !!k)
+      : item.moduleKey
+        ? [item.moduleKey]
+        : [];
     return moduleKeys.some((key) => permissions?.[key]?.View);
   });
 

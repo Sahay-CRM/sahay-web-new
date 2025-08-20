@@ -127,8 +127,8 @@ export const useAddCompanyTask = () => {
 
   const taskTypeOptions = taskTypeData
     ? taskTypeData.data.map((status) => ({
-        label: status.taskTypeName,
-        value: status.taskTypeId,
+        label: status.taskTypeName || "Unnamed",
+        value: status.taskTypeId || "", // Fallback to empty string
       }))
     : [];
 

@@ -332,7 +332,7 @@ const Joiners = () => {
               isEditDelete={() => false}
               moduleKey="emp"
               isActionButton={() => false}
-              showActionsColumn={meetingType?.parentType === "DETAIL"}
+              showActionsColumn={false}
               selectedValue={field.value || []}
               handleChange={(selectedItems) => field.onChange(selectedItems)}
               customActions={(row: EmployeeDetails) => {

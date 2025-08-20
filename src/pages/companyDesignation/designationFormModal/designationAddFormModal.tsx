@@ -10,6 +10,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useMemo } from "react";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 
 function DesignationAddFormModal({
   isModalOpen,
@@ -69,15 +70,21 @@ function DesignationAddFormModal({
             control={methods.control}
             rules={{ required: "Department is required" }}
             render={({ field, fieldState }) => (
-              <FormSelect
+              <SearchDropdown
+                options={DepartmentOptions}
+                selectedValues={field.value ? [field.value] : []} // Ensure it's an array
+                onSelect={(value) => {
+                  field.onChange(value.value);
+                }}
                 {...field}
                 label="Department"
-                options={DepartmentOptions}
+                placeholder="Select an Department..."
                 error={fieldState.error}
                 isMandatory={true}
               />
             )}
           />
+
           <div>
             <FormInputField
               id="designationName"

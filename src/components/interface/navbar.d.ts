@@ -12,7 +12,7 @@ interface NavItem {
   label: string;
   link?: string;
   permission: string;
-  moduleKey: string | string[];
+  moduleKey?: string | string[];
   items?: NavItemChild[];
   moduleKey: string;
 }

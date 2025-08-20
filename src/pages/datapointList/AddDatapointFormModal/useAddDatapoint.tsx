@@ -465,127 +465,131 @@ export default function useAddDataPoint() {
     ];
 
     return (
-      <div className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4 h-[calc(100vh-200px)] content-start">
-        {selectedKpi && selectedKpi.KPIName && (
-          <FormInputField
-            label="Selected Kpi"
-            value={selectedKpi.KPIName}
-            disabled
-            className="h-[44px] border-gray-300"
-          />
-        )}
-
-        <Controller
-          control={control}
-          name="frequencyType"
-          rules={{ required: "Frequency is required" }}
-          render={({ field }) => (
-            <FormSelect
-              label="Frequency"
-              value={field.value}
-              onChange={(value) => {
-                field.onChange(value);
-                setValue("visualFrequencyTypes", []);
-              }}
-              options={frequenceOptions}
-              error={errors.frequencyType}
-              isMandatory
+      <div className="h-[calc(100vh-200px)]">
+        <div className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
+          {selectedKpi && selectedKpi.KPIName && (
+            <FormInputField
+              label="Selected Kpi"
+              value={selectedKpi.KPIName}
+              disabled
+              className="h-[44px] border-gray-300"
             />
           )}
-        />
-        <Controller
-          control={control}
-          name="validationType"
-          rules={{ required: "Validation Type is required" }}
-          render={({ field }) => (
-            <FormSelect
-              label="Validation Type"
-              value={field.value}
-              onChange={field.onChange}
-              options={validationOptions}
-              error={errors.validationType}
-              className="rounded-md"
-              isMandatory
-              labelClass="mb-2"
-            />
-          )}
-        />
 
-        {shouldShowVisualFrequency && (
-          <div className="flex">
-            <div className="w-full">
-              <Controller
-                control={control}
-                name="visualFrequencyTypes"
-                render={({ field }) => (
-                  <FormSelect
-                    label="Visual Frequency Types"
-                    value={field.value || []}
-                    onChange={(value) => {
-                      field.onChange(value);
-                      if (value?.length > 0 && validationType !== "YES_NO") {
-                        setValue("visualFrequencyAggregate", "sum");
-                      }
-                    }}
-                    options={getFilteredVisualFrequencyOptions()}
-                    error={errors.visualFrequencyTypes}
-                    isMulti={true}
-                    placeholder="Select visual frequency types"
-                    disabled={false}
-                    key={
-                      selectedFrequency + "-" + (watch("coreParameterId") || "")
-                    }
-                  />
-                )}
-              />
-            </div>
-            {shouldShowSumAveField && (
-              <div className="w-full ml-3 max-w-32">
-                <Controller
-                  control={control}
-                  name="visualFrequencyAggregate"
-                  render={({ field }) => (
-                    <FormSelect
-                      label="Sum/Average"
-                      value={field.value || "sum"}
-                      onChange={field.onChange}
-                      options={sumAveOptions}
-                      error={errors.visualFrequencyAggregate}
-                      placeholder="Select visual frequency Aggregate"
-                      disabled={false}
-                    />
-                  )}
-                />
-              </div>
-            )}
-          </div>
-        )}
-        <FormInputField
-          label="Unit"
-          {...register(`unit`)}
-          className="h-[41px] mt-0"
-        />
-
-        <div className="">
           <Controller
             control={control}
-            name="employeeId"
-            rules={{ required: "Employee is required" }}
+            name="frequencyType"
+            rules={{ required: "Frequency is required" }}
             render={({ field }) => (
-              <SearchDropdown
-                options={allOptions}
-                selectedValues={field.value ? [field.value] : []} // Ensure it's an array
-                onSelect={(value) => {
-                  field.onChange(value.value);
-                  setValue("employeeId", value.value);
+              <FormSelect
+                label="Frequency"
+                value={field.value}
+                onChange={(value) => {
+                  field.onChange(value);
+                  setValue("visualFrequencyTypes", []);
                 }}
-                placeholder="Select an employee..."
-                label="Employee"
+                options={frequenceOptions}
+                error={errors.frequencyType}
                 isMandatory
               />
             )}
           />
-          {/* <Controller
+          <Controller
+            control={control}
+            name="validationType"
+            rules={{ required: "Validation Type is required" }}
+            render={({ field }) => (
+              <FormSelect
+                label="Validation Type"
+                value={field.value}
+                onChange={field.onChange}
+                options={validationOptions}
+                error={errors.validationType}
+                className="rounded-md"
+                isMandatory
+                labelClass="mb-2"
+              />
+            )}
+          />
+
+          {shouldShowVisualFrequency && (
+            <div className="flex">
+              <div className="w-full">
+                <Controller
+                  control={control}
+                  name="visualFrequencyTypes"
+                  render={({ field }) => (
+                    <FormSelect
+                      label="Visual Frequency Types"
+                      value={field.value || []}
+                      onChange={(value) => {
+                        field.onChange(value);
+                        if (value?.length > 0 && validationType !== "YES_NO") {
+                          setValue("visualFrequencyAggregate", "sum");
+                        }
+                      }}
+                      options={getFilteredVisualFrequencyOptions()}
+                      error={errors.visualFrequencyTypes}
+                      isMulti={true}
+                      placeholder="Select visual frequency types"
+                      disabled={false}
+                      key={
+                        selectedFrequency +
+                        "-" +
+                        (watch("coreParameterId") || "")
+                      }
+                    />
+                  )}
+                />
+              </div>
+              {shouldShowSumAveField && (
+                <div className="w-full ml-3 max-w-32">
+                  <Controller
+                    control={control}
+                    name="visualFrequencyAggregate"
+                    render={({ field }) => (
+                      <FormSelect
+                        label="Sum/Average"
+                        value={field.value || "sum"}
+                        onChange={field.onChange}
+                        options={sumAveOptions}
+                        error={errors.visualFrequencyAggregate}
+                        placeholder="Select visual frequency Aggregate"
+                        disabled={false}
+                      />
+                    )}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+          <FormInputField
+            label="Unit"
+            {...register(`unit`)}
+            className="h-[41px] mt-0"
+          />
+        </div>
+        <div className="px-4 py-4 border-t-2">
+          <div className="mb-2">
+            <Controller
+              control={control}
+              name="employeeId"
+              rules={{ required: "Employee is required" }}
+              render={({ field }) => (
+                <SearchDropdown
+                  options={allOptions}
+                  selectedValues={field.value ? [field.value] : []}
+                  onSelect={(value) => {
+                    field.onChange(value.value);
+                    setValue("employeeId", value.value);
+                  }}
+                  placeholder="Select an employee..."
+                  label="Employee"
+                  isMandatory
+                />
+              )}
+            />
+            {/* <Controller
                 control={control}
                 name="employeeId"
                 rules={{ required: "Employee is required" }}
@@ -603,78 +607,79 @@ export default function useAddDataPoint() {
                   />
                 )}
               /> */}
-        </div>
-        {employee && (
-          <div>
-            <div key={employee} className="flex flex-col gap-2">
-              <Label className="text-[18px] mb-0">
-                {getEmployeeName(employee)}
-              </Label>
-              <div
-                className={`grid ${
-                  showBoth ? "grid-cols-2" : "grid-cols-1"
-                } gap-4 mt-0`}
-              >
-                {!showYesNo && (
-                  <>
-                    <FormInputField
-                      label="Goal Value 1"
-                      isMandatory
-                      {...register(`value1`, {
-                        required: "Please enter Goal Value 1",
-                      })}
-                      error={errors?.value1}
-                      // disabled={isDisabled}
-                      // readOnly={isDisabled}
-                    />
-                    {showBoth && (
+          </div>
+          {employee && (
+            <div>
+              <div key={employee} className="flex flex-col gap-2">
+                <Label className="text-[18px] mb-0">
+                  {getEmployeeName(employee)}
+                </Label>
+                <div
+                  className={`grid ${
+                    showBoth ? "grid-cols-2" : "grid-cols-1"
+                  } gap-4 mt-0`}
+                >
+                  {!showYesNo && (
+                    <>
                       <FormInputField
+                        label="Goal Value 1"
                         isMandatory
-                        label="Goal Value 2"
-                        {...register(`value2`, {
-                          required: "Please enter Goal Value 2",
+                        {...register(`value1`, {
+                          required: "Please enter Goal Value 1",
                         })}
-                        error={errors?.value2}
+                        error={errors?.value1}
                         // disabled={isDisabled}
                         // readOnly={isDisabled}
                       />
-                    )}
-                  </>
-                )}
-                {showYesNo && (
-                  <Controller
-                    name={`value1`}
-                    control={control}
-                    rules={{ required: "Please select Yes or No" }}
-                    render={({ field, fieldState }) => {
-                      const selectedOption =
-                        field.value?.value ?? field.value ?? "";
-                      return (
-                        <FormSelect
-                          {...field}
-                          label="Yes/No"
-                          options={yesnoOptions}
-                          error={fieldState.error}
-                          isMandatory={true}
-                          value={selectedOption}
-                          onChange={field.onChange}
+                      {showBoth && (
+                        <FormInputField
+                          isMandatory
+                          label="Goal Value 2"
+                          {...register(`value2`, {
+                            required: "Please enter Goal Value 2",
+                          })}
+                          error={errors?.value2}
+                          // disabled={isDisabled}
+                          // readOnly={isDisabled}
                         />
-                      );
-                    }}
-                  />
-                )}
+                      )}
+                    </>
+                  )}
+                  {showYesNo && (
+                    <Controller
+                      name={`value1`}
+                      control={control}
+                      rules={{ required: "Please select Yes or No" }}
+                      render={({ field, fieldState }) => {
+                        const selectedOption =
+                          field.value?.value ?? field.value ?? "";
+                        return (
+                          <FormSelect
+                            {...field}
+                            label="Yes/No"
+                            options={yesnoOptions}
+                            error={fieldState.error}
+                            isMandatory={true}
+                            value={selectedOption}
+                            onChange={field.onChange}
+                          />
+                        );
+                      }}
+                    />
+                  )}
+                </div>
               </div>
+              <FormInputField
+                label="Tag"
+                // isMandatory
+                {...register(`tag`)}
+                error={errors?.tag}
+                // disabled={isDisabled}
+                // readOnly={isDisabled}
+              />
             </div>
-          </div>
-        )}
-        <FormInputField
-          label="Tag"
-          // isMandatory
-          {...register(`tag`)}
-          error={errors?.tag}
-          // disabled={isDisabled}
-          // readOnly={isDisabled}
-        />
+          )}
+        </div>
       </div>
     );
   };
