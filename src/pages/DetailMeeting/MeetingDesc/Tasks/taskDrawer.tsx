@@ -19,6 +19,7 @@ interface TaskDrawerProps {
   taskData?: TaskGetPaging | null; // Use your TaskGetPaging type if available
   detailMeetingAgendaIssueId?: string;
   detailMeetingId?: string;
+  tasksFireBase: () => void;
 }
 
 type TaskFormData = {
@@ -39,6 +40,7 @@ export default function TaskDrawer({
   taskData,
   detailMeetingAgendaIssueId,
   detailMeetingId,
+  tasksFireBase,
 }: TaskDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -132,38 +134,44 @@ export default function TaskDrawer({
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      // If click is inside the drawer, do nothing
+      const target = event.target as HTMLElement;
+
+      // ✅ If click is inside drawer, do nothing
+      if (drawerRef.current && drawerRef.current.contains(target)) {
+        return;
+      }
+
+      // ✅ If click is inside a select/popover (Radix UI, shadcn, etc.), do nothing
       if (
-        drawerRef.current &&
-        drawerRef.current.contains(event.target as Node)
+        target.closest('[data-slot="select-content"]') ||
+        target.closest('[data-slot="popover-content"]') ||
+        target.closest("[data-radix-popper-content-wrapper]")
       ) {
         return;
       }
-      // If click is inside a select or popover menu, do nothing
+
+      // ✅ If click is inside react-datepicker popper, do nothing
       if (
-        (event.target as HTMLElement).closest('[data-slot="select-content"]') ||
-        (event.target as HTMLElement).closest(
-          '[data-slot="popover-content"]',
-        ) ||
-        (event.target as HTMLElement).closest(
-          "[data-radix-popper-content-wrapper]",
-        )
+        target.closest(".react-datepicker") ||
+        target.closest(".react-datepicker-popper")
       ) {
         return;
       }
-      // Otherwise, close the drawer
+
+      // ❌ Otherwise, close drawer
       onClose();
     }
+
     if (open) {
       document.addEventListener("mousedown", handleClickOutside);
     } else {
       document.removeEventListener("mousedown", handleClickOutside);
     }
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onClose, open]);
-  console.log(taskData);
 
   const onSubmit = (data: TaskFormData) => {
     if (meetingId && detailMeetingId) {
@@ -188,6 +196,7 @@ export default function TaskDrawer({
               },
               {
                 onSuccess: () => {
+                  tasksFireBase();
                   onClose();
                 },
               },

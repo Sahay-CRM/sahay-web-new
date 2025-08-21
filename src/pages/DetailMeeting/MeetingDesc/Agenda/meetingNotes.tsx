@@ -373,6 +373,9 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
           taskData={selectedTask as TaskGetPaging}
           // detailMeetingAgendaIssueId=""
           detailMeetingId={detailMeetingId}
+          tasksFireBase={function (): void {
+            throw new Error("Function not implemented.");
+          }}
         />
       )}
       {drawerProj && (
@@ -382,6 +385,9 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
           projectData={selectedProject as CompanyProjectDataProps}
           // detailMeetingAgendaIssueId={meetingAgendaIssueId}
           detailMeetingId={detailMeetingId}
+          projectsFireBase={function (): void {
+            throw new Error("Function not implemented.");
+          }}
         />
       )}
     </div>

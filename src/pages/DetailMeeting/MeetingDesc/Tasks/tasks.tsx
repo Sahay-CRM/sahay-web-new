@@ -262,6 +262,7 @@ export default function Tasks({
           taskData={selected}
           detailMeetingAgendaIssueId={meetingAgendaIssueId}
           detailMeetingId={detailMeetingId}
+          tasksFireBase={tasksFireBase}
         />
       )}
     </div>

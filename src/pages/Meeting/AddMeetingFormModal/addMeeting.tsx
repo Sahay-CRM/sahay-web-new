@@ -43,7 +43,7 @@ const MeetingType = () => {
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "meetingTypeName", label: "Meeting Type Name", visible: true },
-    // { key: "parentType", label: "Parent Type", visible: true },
+    { key: "parentType", label: "Parent Type", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -332,7 +332,7 @@ const Joiners = () => {
               isEditDelete={() => false}
               moduleKey="emp"
               isActionButton={() => false}
-              showActionsColumn={false}
+              // showActionsColumn={false}
               selectedValue={field.value || []}
               handleChange={(selectedItems) => field.onChange(selectedItems)}
               customActions={(row: EmployeeDetails) => {
@@ -367,7 +367,7 @@ const Joiners = () => {
               additionalButton={() => false}
               isEditDeleteShow={false}
               isLoading={isLoading}
-              actionColumnWidth="w-40"
+              // actionColumnWidth="w-40"
             />
           );
         }}

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 
 import {
+  CircleCheckBig,
   Crown,
   EllipsisVertical,
   FileText,
@@ -145,7 +146,7 @@ export default function MeetingDesc() {
                       >
                         <div className="flex items-center gap-3 cursor-pointer justify-between">
                           <div
-                            className="flex items-center gap-3 cursor-pointer"
+                            className="flex items-center gap-3 cursor-pointer w-full"
                             onClick={() => {
                               if (isTeamLeader && item.employeeId !== follow) {
                                 toggleOpen();
@@ -181,6 +182,11 @@ export default function MeetingDesc() {
                                   </Tooltip>
                                 </TooltipProvider>
                               </Avatar>
+                              {item.employeeId === follow && (
+                                <span className="absolute -bottom-0 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                                  <CircleCheckBig className="w-4 h-4 text-[#303290] drop-shadow" />
+                                </span>
+                              )}
                             </div>
 
                             <div className="text-sm font-medium text-gray-800">
@@ -249,7 +255,8 @@ export default function MeetingDesc() {
                                 </button> */}
 
                                   {item.isTeamLeader &&
-                                    item.employeeId !== follow && (
+                                    item.employeeId !== follow &&
+                                    userId === follow && (
                                       <button
                                         onClick={() =>
                                           handleFollow(item.employeeId)

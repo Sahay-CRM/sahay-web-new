@@ -14,6 +14,7 @@ interface KpiDrawerProps {
   kpiId?: string;
   meetingId: string;
   detailMeetingKPIId?: string;
+  kpisFireBase: () => void;
 }
 
 const frequenceOptions = [
@@ -41,6 +42,7 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
   kpiId,
   meetingId,
   detailMeetingKPIId,
+  kpisFireBase,
 }) => {
   const drawerRef = useRef<HTMLDivElement>(null);
   const { data: kpiData } = useGetDatapointById(kpiId || "");
@@ -62,6 +64,7 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
             queryClient.resetQueries({
               queryKey: ["get-detailMeetingAgendaIssue"],
             });
+            kpisFireBase();
             onClose();
           },
         },

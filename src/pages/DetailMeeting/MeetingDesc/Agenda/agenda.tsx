@@ -179,6 +179,7 @@ export default function Agenda({
     handleAddAgendaModal,
     addIssueModal,
     setAddIssueModal,
+    isUpdatingTime,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -335,7 +336,9 @@ export default function Agenda({
                       : { marginBottom: "1px", color: "gray" }
                   }
                   onClick={() => {
-                    handleTabChange("tasks");
+                    if (follow) {
+                      handleTabChange("tasks");
+                    }
                   }}
                 >
                   <List className="h-5 w-5" />
@@ -353,7 +356,9 @@ export default function Agenda({
                       : { marginBottom: "1px", color: "gray" }
                   }
                   onClick={() => {
-                    handleTabChange("projects");
+                    if (follow) {
+                      handleTabChange("projects");
+                    }
                   }}
                 >
                   <CheckSquare className="h-5 w-5" />
@@ -371,7 +376,9 @@ export default function Agenda({
                       : { marginBottom: "1px", color: "gray" }
                   }
                   onClick={() => {
-                    handleTabChange("kpis");
+                    if (follow) {
+                      handleTabChange("kpis");
+                    }
                   }}
                 >
                   <BarChart2 className="h-5 w-5" />
@@ -576,6 +583,8 @@ export default function Agenda({
                   className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
                   onTimeUpdate={handleTimeUpdate}
                   isEditMode={meetingStatus === "NOT_STARTED" && isTeamLeader}
+                  meetingStatus={meetingStatus}
+                  isUpdating={isUpdatingTime}
                 />
               </div>
             )}
@@ -706,7 +715,8 @@ export default function Agenda({
                       onClick={() => {
                         if (
                           meetingStatus !== "STARTED" &&
-                          meetingStatus !== "NOT_STARTED"
+                          meetingStatus !== "NOT_STARTED" &&
+                          follow
                         ) {
                           handleListClick(
                             item.detailMeetingAgendaIssueId ?? "",
@@ -933,244 +943,31 @@ export default function Agenda({
           style={{ width: contentWidth }}
           className={`${meetingStatus !== "DISCUSSION" && "mt-6"}`}
         >
-          {/* <div className="flex gap-3 mb-4">
-            <div className="w-full">
-              {meetingStatus === "STARTED" ||
-              meetingStatus === "NOT_STARTED" ? (
-                <div className="w-full flex h-[40px] border border-gray-300 rounded-[10px] items-center px-4">
-                  <div className="flex-1 text-lg  w-[30%] text-primary ml-3 font-semibold truncate">
-                    {meetingName}
-                  </div>
-
-                  <div className="hidden md:block w-[50%] text-gray-500  text-lg truncate ml-4">
-                    Meeting Agenda
-                  </div>
-                </div>
-              ) : meetingStatus === "DISCUSSION" ? (
-                <div className="w-fit">
-                  <nav className="space-y-1 w-full ">
-                    <div className="mr-5 flex gap-3 items-center rounded-2xl px-1">
-                      <Button
-                        variant={activeTab === "tasks" ? "default" : "ghost"}
-                        className={`w-40 h-12 justify-start border cursor-pointer flex items-center`}
-                        onClick={() => {
-                          handleTabChange("tasks");
-                        }}
-                      >
-                        <List className="h-5 w-5" />
-                        <span className="ml-2">Tasks</span>
-                      </Button>
-                      <Button
-                        variant={activeTab === "projects" ? "default" : "ghost"}
-                        className={`w-40 h-12 justify-start border cursor-pointer flex items-center `}
-                        onClick={() => {
-                          handleTabChange("projects");
-                        }}
-                      >
-                        <CheckSquare className="h-5 w-5" />
-                        <span className="ml-2">Projects</span>
-                      </Button>
-                      <Button
-                        variant={activeTab === "kpis" ? "default" : "ghost"}
-                        className={`w-40 h-12 justify-start border cursor-pointer flex items-center`}
-                        onClick={() => {
-                          handleTabChange("kpis");
-                        }}
-                      >
-                        <BarChart2 className="h-5 w-5" />
-                        <span className="ml-2">KPIs</span>
-                      </Button>
-                    </div>
-                  </nav>
-                </div>
-              ) : (
-                <div className="flex gap-4 items-center flex-wrap">
-                  <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
-                    <Clock className="w-4 h-4 text-green-600" />
-                    <span className="font-medium text-sm">Agenda Actual:</span>
-                    <span className="font-bold">
-                      {formatTime(Number(conclusionData?.agendaActual))}m
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
-                    <Clock className="w-4 h-4 text-green-600" />
-                    <span className="font-medium text-sm">
-                      Discussion Actual:
-                    </span>
-                    <span className="font-bold">
-                      {formatTime(Number(conclusionData?.agendaTotalActual))}m
-                    </span>
-                  </div>
-
-                  {conclusionData?.conclusionActual != null && (
-                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
-                      <Clock className="w-4 h-4 text-green-600" />
-                      <span className="font-medium text-sm">
-                        Conclusion Actual:
-                      </span>
-                      <span className="font-bold">
-                        {formatTime(Number(conclusionData.conclusionActual))}m
-                      </span>
-                    </div>
-                  )}
-
-                  {conclusionData?.meetingPlanned != null && (
-                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
-                      <Clock className="w-4 h-4 text-green-600" />
-                      <span className="font-medium text-sm">
-                        Meeting Planned:
-                      </span>
-                      <span className="font-bold">
-                        {formatSecondsToHHMM(
-                          Number(conclusionData.meetingPlanned)
-                        )}
-                      </span>
-                    </div>
-                  )}
-
-                  {conclusionData?.meetingActual != null &&
-                    conclusionData?.meetingActual != "0" && (
-                      <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
-                        <Clock className="w-4 h-4 text-green-600" />
-                        <span className="font-medium text-sm">
-                          Meeting Actual:
-                        </span>
-                        <span className="font-bold">
-                          {formatSecondsToHHMM(
-                            Number(conclusionData.meetingActual)
-                          )}
-                        </span>
-                      </div>
-                    )}
-                  <div className="flex gap-4 items-center">
-                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
-                      <span className="font-medium text-sm">Total Tasks:</span>
-                      <span className="font-bold">
-                        {conclusionData?.noOfTasks}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
-                      <span className="font-medium text-sm">
-                        Total Projects:
-                      </span>
-                      <span className="font-bold">
-                        {conclusionData?.noOfProjects}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
-                      <span className="font-medium text-sm">Total KPIs:</span>
-                      <span className="font-bold">
-                        {conclusionData?.noOfKPIs}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            {meetingStatus !== "ENDED" && (
-              <div className="flex flex-wrap md:flex-nowrap items-center gap-3 w-[30%] md:w-auto">
-                {meetingStatus === "NOT_STARTED" && isTeamLeader && (
-                  <Button
-                    variant="outline"
-                    className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
-                    onClick={handleStartMeeting}
-                    isLoading={isPending}
-                  >
-                    Start Meeting
-                  </Button>
-                )}
-
-                {meetingStatus === "NOT_STARTED" ||
-                  ((!isTeamLeader || !follow) && (
-                    <Button
-                      variant="outline"
-                      className="w-[200px] h-[40px] cursor-not-allowed hover:bg-primary hover:text-white bg-primary text-white rounded-[10px] text-lg font-semibold"
-                      // onClick={handleJoinMeeting}
-                    >
-                      {
-                        meetingStatusLabels[
-                          meetingStatus as keyof typeof meetingStatusLabels
-                        ]
-                      }
-                    </Button>
-                  ))}
-
-                {isTeamLeader && isCheckIn && follow && (
-                  <>
-                    {meetingStatus === "STARTED" && (
-                      <Button
-                        variant="outline"
-                        className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
-                        onClick={handleDesc}
-                        isLoading={isPending}
-                      >
-                        Start Discussion
-                      </Button>
-                    )}
-                    {meetingStatus === "DISCUSSION" && (
-                      <Button
-                        variant="outline"
-                        className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
-                        onClick={handleConclusionMeeting}
-                      >
-                        Go To Conclusion
-                      </Button>
-                    )}
-                    {meetingStatus === "CONCLUSION" && (
-                      <Button
-                        variant="outline"
-                        className="bg-primary text-white px-4 hover:bg-primary py-5 text-sm hover:text-white sm:text-base md:text-lg"
-                        onClick={handleCloseMeetingWithLog}
-                        isLoading={endMeetingLoading}
-                      >
-                        End Meeting
-                      </Button>
-                    )}
-                  </>
-                )}
-
-                {meetingStatus !== "ENDED" && (
-                  <div className="w-fit px-2 pl-4 h-[40px] border-gray-300 rounded-[10px] flex items-center justify-center">
-                    <MeetingTimer
-                      meetingTime={Number(meetingTime)}
-                      actualTime={0}
-                      lastSwitchTimestamp={Number(
-                        meetingResponse?.state.meetingTimestamp
-                      )}
-                      meetingStart={meetingStatus !== "NOT_STARTED"}
-                      className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
-                      onTimeUpdate={handleTimeUpdate}
-                      isEditMode={
-                        meetingStatus === "NOT_STARTED" && isTeamLeader
-                      }
-                    />
-                  </div>
-                )}
+          <div
+            className={`flex justify-center w-full relative  border-primary ${meetingStatus !== "DISCUSSION" ? "p-4" : "border-l-1 border-r-1 border-b-1 rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"}`}
+          >
+            {meetingStatus === "DISCUSSION" && (
+              <div className="absolute top-0 left-0 right-0 h-0.5 flex">
+                <div
+                  className="border-t-1 border-primary h-0"
+                  style={{
+                    width:
+                      activeTab === "tasks"
+                        ? "0px"
+                        : activeTab === "projects"
+                          ? "140px"
+                          : activeTab === "kpis"
+                            ? "280px"
+                            : "0px",
+                  }}
+                />
+                <div style={{ width: "124px" }} />
+                <div className="border-t-1 border-primary h-0 flex-1" />
               </div>
             )}
-          </div> */}
-          <div className="flex justify-center w-full h-[calc(100vh-200px)] overflow-scroll relative border-l-1 border-r-1 border-b-1 border-primary rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]">
-            <div className="absolute top-0 left-0 right-0 h-0.5 flex">
-              <div
-                className="border-t-1 border-primary h-0"
-                style={{
-                  width:
-                    activeTab === "tasks"
-                      ? "0px"
-                      : activeTab === "projects"
-                        ? "140px"
-                        : activeTab === "kpis"
-                          ? "280px"
-                          : "0px",
-                }}
-              />
-              <div style={{ width: "124px" }} />
-              <div className="border-t-1 border-primary h-0 flex-1" />
-            </div>
             {meetingStatus === "NOT_STARTED" ? (
-              <div className="max-w-3xl">
-                <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="max-w-3xl border rounded-sm overflow-y-scroll h-fit">
+                <div className="p-6">
                   <div className="text-center mb-6">
                     <h1
                       className="text-2xl font-bold text-navy-900 mb-2"
@@ -1187,11 +984,9 @@ export default function Agenda({
                     <div className="w-20 h-1 bg-orange-400 mx-auto"></div>
                   </div>
 
-                  {/* Tips List */}
                   <div className="space-y-6">
                     {tips.map((tip, index) => (
                       <div key={index} className="flex items-start space-x-6">
-                        {/* Icon Container */}
                         <div className="flex-shrink-0 w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
                           {tip.icon}
                         </div>
@@ -1275,7 +1070,7 @@ export default function Agenda({
               </div>
             ) : meetingStatus === "DISCUSSION" ? (
               detailAgendaData && (
-                <div className="max-h-full h-auto mt-8 px-2 w-full">
+                <div className="max-h-full h-auto mt-5 px-2 w-full">
                   {activeTab === "tasks" && (
                     <Tasks
                       tasksFireBase={tasksFireBase}

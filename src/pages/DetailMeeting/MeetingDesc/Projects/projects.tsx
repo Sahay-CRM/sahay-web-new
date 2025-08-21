@@ -264,6 +264,7 @@ export default function Projects({
           projectData={selected}
           detailMeetingAgendaIssueId={meetingAgendaIssueId}
           detailMeetingId={detailMeetingId}
+          projectsFireBase={projectsFireBase}
         />
       )}
     </div>

@@ -21,6 +21,7 @@ interface ProjectDrawerProps {
   projectData?: CompanyProjectDataProps | null;
   detailMeetingAgendaIssueId?: string;
   detailMeetingId?: string;
+  projectsFireBase: () => void;
 }
 
 type ProjectFormData = {
@@ -40,6 +41,7 @@ export default function ProjectDrawer({
   projectData,
   detailMeetingAgendaIssueId,
   detailMeetingId,
+  projectsFireBase,
 }: ProjectDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -146,30 +148,36 @@ export default function ProjectDrawer({
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+
+      if (drawerRef.current && drawerRef.current.contains(target)) {
+        return;
+      }
+
       if (
-        drawerRef.current &&
-        drawerRef.current.contains(event.target as Node)
+        target.closest('[data-slot="select-content"]') ||
+        target.closest('[data-slot="popover-content"]') ||
+        target.closest("[data-radix-popper-content-wrapper]")
       ) {
         return;
       }
+
       if (
-        (event.target as HTMLElement).closest('[data-slot="select-content"]') ||
-        (event.target as HTMLElement).closest(
-          '[data-slot="popover-content"]',
-        ) ||
-        (event.target as HTMLElement).closest(
-          "[data-radix-popper-content-wrapper]",
-        )
+        target.closest(".react-datepicker") ||
+        target.closest(".react-datepicker-popper")
       ) {
         return;
       }
+
       onClose();
     }
+
     if (open) {
       document.addEventListener("mousedown", handleClickOutside);
     } else {
       document.removeEventListener("mousedown", handleClickOutside);
     }
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -198,6 +206,7 @@ export default function ProjectDrawer({
               },
               {
                 onSuccess: () => {
+                  projectsFireBase();
                   onClose();
                 },
               },

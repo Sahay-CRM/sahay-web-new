@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { getDatabase, off, onValue, ref, update } from "firebase/database";
+import { get, getDatabase, off, onValue, ref, update } from "firebase/database";
 
 import {
   addMeetingAgendaMutation,
@@ -370,7 +370,11 @@ export const useAgenda = ({
     type: item.type,
   }));
 
-  const handleUpdateSelectedObjective = (data: DetailMeetingObjectives) => {
+  const handleUpdateSelectedObjective = async (
+    data: DetailMeetingObjectives,
+  ) => {
+    const meetingRef = ref(db, `meetings/${meetingId}`);
+    const meetingSnapshot = await get(meetingRef);
     const payload = {
       detailMeetingId: detailMeetingId,
       issueObjectiveId: data.id,
@@ -379,12 +383,12 @@ export const useAgenda = ({
     };
     addIssueAgenda(payload, {
       onSuccess: () => {
-        handleCheckMeetingExist();
-        if (isMeetingStart) {
+        if (meetingSnapshot.exists()) {
           update(meetStateRef, {
             updatedAt: Date.now(),
           });
         }
+
         setIssueInput("");
         setAddIssueModal(false);
       },
@@ -458,26 +462,57 @@ export const useAgenda = ({
       );
     }
   };
+  const [isUpdatingTime, setIsUpdatingTime] = useState(false);
+  // const handleTimeUpdate = (newTime: number) => {
+  //   if (meetingId) {
+  //     updateDetailMeeting(
+  //       {
+  //         meetingId: meetingId,
+  //         detailMeetingId: detailMeetingId,
+  //         meetingTimePlanned: String(newTime),
+  //       },
+  //       {
+  //         onSuccess: () => {
+  //           queryClient.resetQueries({
+  //             queryKey: ["get-meeting-details-timing"],
+  //           });
+  //         },
+  //       }
+  //     );
+  //   }
+  // };
+  const handleTimeUpdate = async (newTime: number) => {
+    if (!meetingId || !detailMeetingId) return;
 
-  const handleTimeUpdate = (newTime: number) => {
-    if (meetingId) {
-      updateDetailMeeting(
-        {
-          meetingId: meetingId,
-          detailMeetingId: detailMeetingId,
-          meetingTimePlanned: String(newTime),
-        },
-        {
-          onSuccess: () => {
-            queryClient.resetQueries({
-              queryKey: ["get-meeting-details-timing"],
-            });
+    setIsUpdatingTime(true);
+
+    try {
+      await new Promise((resolve, reject) => {
+        updateDetailMeeting(
+          {
+            meetingId: meetingId,
+            detailMeetingId: detailMeetingId,
+            meetingTimePlanned: String(newTime),
           },
-        },
-      );
+          {
+            onSuccess: () => {
+              // Invalidate and refetch queries
+              queryClient.invalidateQueries({
+                queryKey: ["get-meeting-details-timing"],
+              });
+              resolve(undefined);
+            },
+            onError: reject,
+          },
+        );
+      });
+      // eslint-disable-next-line no-useless-catch
+    } catch (error) {
+      throw error; // Re-throw to let the component handle it
+    } finally {
+      setIsUpdatingTime(false);
     }
   };
-
   const handleConclusionMeeting = async () => {
     if (!meetingId) return;
 
@@ -624,9 +659,13 @@ export const useAgenda = ({
     const db = getDatabase();
     const now = Date.now();
 
-    handleCheckMeetingExist();
+    const meetingRef = ref(db, `meetings/${meetingId}`);
+    const meetingSnapshot = await get(meetingRef);
 
-    if (isMeetingStart && isSelectedAgenda && meetingStatus === "DISCUSSION") {
+    if (isSelectedAgenda && meetingStatus === "DISCUSSION") {
+      if (!meetingSnapshot.exists()) {
+        return;
+      }
       const prevElapsedSeconds =
         (now - Number(meetingResponse?.state.lastSwitchTimestamp)) / 1000;
       const prevObjectiveRef = ref(
@@ -648,10 +687,10 @@ export const useAgenda = ({
       });
       setIsSelectedAgenda(detailMeetingAgendaIssueId);
     } else {
-      await update(ref(db, `meetings/${meetingId}/state`), {
-        lastSwitchTimestamp: now,
-        currentAgendaItemId: detailMeetingAgendaIssueId,
-      });
+      // await update(ref(db, `meetings/${meetingId}/state`), {
+      //   lastSwitchTimestamp: now,
+      //   currentAgendaItemId: detailMeetingAgendaIssueId,
+      // });
       setIsSelectedAgenda(detailMeetingAgendaIssueId);
     }
   };
@@ -713,7 +752,11 @@ export const useAgenda = ({
     //   ? (now - meetingConclusionTime) / 1000
     //   : undefined;
     if (meetingId && detailMeetingId) {
-      endMeet(meetingId);
+      endMeet(meetingId, {
+        onSuccess: () => {
+          window.location.reload();
+        },
+      });
     }
   };
 
@@ -736,7 +779,9 @@ export const useAgenda = ({
     setSelectedItem(foundItem);
   }, [conclusionData, isSelectedAgenda]);
 
-  const handleCheckIn = (item: Joiners, attendanceMark: boolean) => {
+  const handleCheckIn = async (item: Joiners, attendanceMark: boolean) => {
+    const meetingRef = ref(db, `meetings/${meetingId}`);
+    const meetingSnapshot = await get(meetingRef);
     if (meetingId) {
       updateTime(
         {
@@ -747,12 +792,12 @@ export const useAgenda = ({
         },
         {
           onSuccess: () => {
-            handleCheckMeetingExist();
-            if (isMeetingStart) {
-              const db = getDatabase();
-              const meetRef = ref(db, `meetings/${meetingId}/state`);
-              update(meetRef, { updatedAt: new Date() });
+            if (!meetingSnapshot.exists()) {
+              return;
             }
+            const db = getDatabase();
+            const meetRef = ref(db, `meetings/${meetingId}/state`);
+            update(meetRef, { updatedAt: new Date() });
           },
         },
       );
@@ -815,6 +860,7 @@ export const useAgenda = ({
     handleAddAgendaModal,
     addIssueModal,
     setAddIssueModal,
+    isUpdatingTime,
     // handleJoinMeeting,
   };
 };

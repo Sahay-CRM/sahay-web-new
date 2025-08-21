@@ -78,7 +78,7 @@ export default function useAdminUser() {
             endDate: toLocalISOString(appliedDateRange.taskDeadline),
           }),
       overDue: showOverdue,
-      // parentType: "Show All Other",
+      parentType: "Show All Other",
     },
   });
 

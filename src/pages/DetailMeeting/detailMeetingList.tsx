@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useDetailMeeting from "./useDetailMeeting";
@@ -59,7 +59,7 @@ export default function DetailMeetingList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Company Meeting", href: "" }]);
+    setBreadcrumbs([{ label: "Company Detail Meeting", href: "" }]);
   }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -72,7 +72,7 @@ export default function DetailMeetingList() {
     },
     { key: "meetingDateTime", label: "Meeting TIme", visible: true },
     { key: "joinerNames", label: "Joiners", visible: true },
-    { key: "meetingStatus", label: "Status", visible: true }, // <-- add this line
+    { key: "meetingStatus", label: "Status", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -102,15 +102,15 @@ export default function DetailMeetingList() {
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-5 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
-            Meeting List
+            Detail Meeting
           </h1>
-          <div className="flex items-center space-x-5 tb:space-x-7">
+          {/* <div className="flex items-center space-x-5 tb:space-x-7">
             {permission.Add && (
               <Link to="/dashboard/meeting/add">
                 <Button className="py-2 w-fit">Add Meeting</Button>
               </Link>
             )}
-          </div>
+          </div> */}
         </div>
 
         <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
