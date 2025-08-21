@@ -52,7 +52,7 @@ export default function EditDatapointAddFormModal({
     <FormProvider {...methods}>
       <ModalData
         isModalOpen={isModalOpen}
-        modalTitle="Update KPI"
+        modalTitle={datapointApiData?.KPIMaster?.KPIName}
         modalClose={handleClose}
         containerClass="min-w-[50%]"
         buttons={[
@@ -65,14 +65,7 @@ export default function EditDatapointAddFormModal({
         ]}
       >
         <div className="grid grid-cols-2 gap-4">
-          {/* <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4"> */}
-          <FormInputField
-            label="Selected Kpi"
-            value={datapointApiData?.KPIMaster?.KPIName}
-            disabled
-            className="h-[44px] border-gray-300 cursor-not-allowed"
-          />
-
+          {/* Frequency */}
           <Controller
             control={control}
             name="frequencyType"
@@ -94,6 +87,8 @@ export default function EditDatapointAddFormModal({
               />
             )}
           />
+
+          {/* Validation Type */}
           <Controller
             control={control}
             name="validationType"
@@ -107,13 +102,13 @@ export default function EditDatapointAddFormModal({
                 error={errors.validationType}
                 className="rounded-md"
                 isMandatory
-                labelClass="mb-2"
               />
             )}
           />
 
+          {/* Visual Frequency + Sum/Average */}
           {shouldShowVisualFrequency && (
-            <div>
+            <div className="col-span-2 grid grid-cols-2 gap-4">
               <Controller
                 control={control}
                 name="visualFrequencyTypes"
@@ -138,30 +133,31 @@ export default function EditDatapointAddFormModal({
                   />
                 )}
               />
+
               {shouldShowSumAveField && (
-                <div className="">
-                  <Controller
-                    control={control}
-                    name="visualFrequencyAggregate"
-                    render={({ field }) => (
-                      <FormSelect
-                        label="Sum/Average"
-                        value={field.value || "sum"}
-                        onChange={field.onChange}
-                        options={sumAveOptions}
-                        error={errors.visualFrequencyAggregate}
-                        placeholder="Select visual frequency Aggregate"
-                        disabled={false}
-                      />
-                    )}
-                  />
-                </div>
+                <Controller
+                  control={control}
+                  name="visualFrequencyAggregate"
+                  render={({ field }) => (
+                    <FormSelect
+                      label="Sum/Average"
+                      value={field.value || "sum"}
+                      onChange={field.onChange}
+                      options={sumAveOptions}
+                      error={errors.visualFrequencyAggregate}
+                      placeholder="Select visual frequency Aggregate"
+                      disabled={false}
+                    />
+                  )}
+                />
               )}
             </div>
           )}
 
+          {/* Unit */}
           <FormInputField label="Unit" {...register(`unit`)} />
 
+          {/* Employee */}
           <Controller
             control={control}
             name="employeeId"
@@ -169,7 +165,7 @@ export default function EditDatapointAddFormModal({
             render={({ field }) => (
               <SearchDropdown
                 options={allOptions}
-                selectedValues={field.value ? [field.value] : []} // Ensure it's an array
+                selectedValues={field.value ? [field.value] : []}
                 onSelect={(value) => {
                   field.onChange(value.value);
                   setValue("employeeId", value.value);
@@ -182,13 +178,14 @@ export default function EditDatapointAddFormModal({
             )}
           />
 
+          {/* Goal Values */}
           {employee && (
-            <div key={employee} className="flex gap-2 w-full">
+            <div className="col-span-2 flex flex-col gap-2">
               <Label className="text-[18px] mb-0">
                 {getEmployeeName(employee)}
               </Label>
               <div
-                className={`grid w-1/2 ${
+                className={`grid w-full ${
                   showBoth ? "grid-cols-2" : "grid-cols-1"
                 } gap-4 mt-0`}
               >
@@ -201,19 +198,15 @@ export default function EditDatapointAddFormModal({
                         required: "Please enter Goal Value 1",
                       })}
                       error={errors?.value1}
-                      // disabled={isDisabled}
-                      // readOnly={isDisabled}
                     />
                     {showBoth && (
                       <FormInputField
-                        isMandatory
                         label="Goal Value 2"
+                        isMandatory
                         {...register(`value2`, {
                           required: "Please enter Goal Value 2",
                         })}
                         error={errors?.value2}
-                        // disabled={isDisabled}
-                        // readOnly={isDisabled}
                       />
                     )}
                   </>
@@ -232,7 +225,7 @@ export default function EditDatapointAddFormModal({
                           label="Yes/No"
                           options={yesnoOptions}
                           error={fieldState.error}
-                          isMandatory={true}
+                          isMandatory
                           value={selectedOption}
                           onChange={field.onChange}
                         />
@@ -243,14 +236,18 @@ export default function EditDatapointAddFormModal({
               </div>
             </div>
           )}
-          <div className="">
-            <label className="block mb-1 font-medium">Tags</label>
-            <textarea
+
+          {/* Tags */}
+          <div className="col-span-2">
+            <FormInputField
+              label="Tag"
+              // isMandatory
               {...register(`tag`)}
-              className="w-full border rounded-md p-2 text-base h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              error={errors?.tag}
+              // disabled={isDisabled}
+              // readOnly={isDisabled}
             />
           </div>
-          {/* </Card> */}
         </div>
       </ModalData>
     </FormProvider>

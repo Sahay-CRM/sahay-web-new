@@ -471,14 +471,14 @@ export default function useAddDataPoint() {
     return (
       <div className="h-[calc(100vh-200px)]">
         <div className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
-          {selectedKpi && selectedKpi.KPIName && (
+          {/* {selectedKpi && selectedKpi.KPIName && (
             <FormInputField
               label="Selected Kpi"
               value={selectedKpi.KPIName}
               disabled
               className="h-[44px] border-gray-300"
             />
-          )}
+          )} */}
 
           <Controller
             control={control}
@@ -511,7 +511,7 @@ export default function useAddDataPoint() {
                 error={errors.validationType}
                 className="rounded-md"
                 isMandatory
-                labelClass="mb-2"
+                // labelClass="mb-2"
               />
             )}
           />
@@ -547,7 +547,7 @@ export default function useAddDataPoint() {
                 />
               </div>
               {shouldShowSumAveField && (
-                <div className="w-full ml-3 max-w-32">
+                <div className="w-full ml-3 max-w-40">
                   <Controller
                     control={control}
                     name="visualFrequencyAggregate"
@@ -560,6 +560,7 @@ export default function useAddDataPoint() {
                         error={errors.visualFrequencyAggregate}
                         placeholder="Select visual frequency Aggregate"
                         disabled={false}
+                        triggerClassName="w-full mb-0 border rounded-md px-3 text-left text-sm py-4"
                       />
                     )}
                   />
@@ -570,7 +571,7 @@ export default function useAddDataPoint() {
           <FormInputField
             label="Unit"
             {...register(`unit`)}
-            className="h-[41px] mt-0"
+            className="h-[38px] mt-2"
           />
         </div>
         <div className="px-4 py-4 border-t-2">
@@ -589,6 +590,7 @@ export default function useAddDataPoint() {
                   }}
                   placeholder="Select an employee..."
                   label="Employee"
+                  error={errors.employeeId}
                   isMandatory
                 />
               )}
@@ -614,7 +616,7 @@ export default function useAddDataPoint() {
           </div>
           {employee && (
             <div>
-              <div key={employee} className="flex flex-col gap-2">
+              <div key={employee} className="flex mb-2 flex-col gap-2">
                 <Label className="text-[18px] mb-0">
                   {getEmployeeName(employee)}
                 </Label>
@@ -831,5 +833,6 @@ export default function useAddDataPoint() {
     trigger,
     isPending,
     permission,
+    selectedKpi,
   };
 }
