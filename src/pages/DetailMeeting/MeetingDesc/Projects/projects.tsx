@@ -239,6 +239,8 @@ export default function Projects({
             setDrawerOpen(true);
           }
         }}
+        // actionColumnWidth="w-24"
+        showActionsColumn={false}
         // viewButton={true}
         permissionKey="users"
         dropdownColumns={{

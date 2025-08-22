@@ -13,6 +13,7 @@ import {
   useGetDetailMeetingAgenda,
   useGetDetailMeetingAgendaIssue,
   useGetDetailMeetingObj,
+  useGetMeetingConclusionTime,
 } from "@/features/api/companyMeeting";
 import { addUpdateIssues } from "@/features/api/Issues";
 import { addUpdateObjective } from "@/features/api/Objective";
@@ -119,6 +120,13 @@ export const useAgenda = ({
       },
       enable: !!meetingId && !!isConclusion,
     });
+
+  const { data: conclusionTime } = useGetMeetingConclusionTime({
+    filter: {
+      meetingId: meetingId,
+    },
+    enable: !!meetingId,
+  });
 
   // Mutations
   const { mutate: deleteObjective } = deleteMeetingObjectiveMutation();
@@ -861,6 +869,7 @@ export const useAgenda = ({
     addIssueModal,
     setAddIssueModal,
     isUpdatingTime,
+    conclusionTime,
     // handleJoinMeeting,
   };
 };

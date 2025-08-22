@@ -180,6 +180,7 @@ export default function Agenda({
     addIssueModal,
     setAddIssueModal,
     isUpdatingTime,
+    conclusionTime,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -435,7 +436,7 @@ export default function Agenda({
                   <Clock className="w-4 h-4 text-green-600" />
                   <span className="font-medium text-sm">Agenda Actual:</span>
                   <span className="font-bold">
-                    {formatTime(Number(conclusionData?.agendaActual))}m
+                    {formatTime(Number(conclusionTime?.agendaActual))}m
                   </span>
                 </div>
 
@@ -445,23 +446,23 @@ export default function Agenda({
                     Discussion Actual:
                   </span>
                   <span className="font-bold">
-                    {formatTime(Number(conclusionData?.agendaTotalActual))}m
+                    {formatTime(Number(conclusionTime?.agendaTotalActual))}m
                   </span>
                 </div>
 
-                {conclusionData?.conclusionActual != null && (
+                {conclusionTime?.conclusionActual != null && (
                   <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
                     <Clock className="w-4 h-4 text-green-600" />
                     <span className="font-medium text-sm">
                       Conclusion Actual:
                     </span>
                     <span className="font-bold">
-                      {formatTime(Number(conclusionData.conclusionActual))}m
+                      {formatTime(Number(conclusionTime.conclusionActual))}m
                     </span>
                   </div>
                 )}
 
-                {conclusionData?.meetingPlanned != null && (
+                {conclusionTime?.meetingPlanned != null && (
                   <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
                     <Clock className="w-4 h-4 text-green-600" />
                     <span className="font-medium text-sm">
@@ -469,14 +470,14 @@ export default function Agenda({
                     </span>
                     <span className="font-bold">
                       {formatSecondsToHHMM(
-                        Number(conclusionData.meetingPlanned),
+                        Number(conclusionTime.meetingPlanned),
                       )}
                     </span>
                   </div>
                 )}
 
-                {conclusionData?.meetingActual != null &&
-                  conclusionData?.meetingActual != "0" && (
+                {conclusionTime?.meetingActual != null &&
+                  conclusionTime?.meetingActual != "0" && (
                     <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
                       <Clock className="w-4 h-4 text-green-600" />
                       <span className="font-medium text-sm">
@@ -484,7 +485,7 @@ export default function Agenda({
                       </span>
                       <span className="font-bold">
                         {formatSecondsToHHMM(
-                          Number(conclusionData.meetingActual),
+                          Number(conclusionTime.meetingActual),
                         )}
                       </span>
                     </div>
@@ -493,17 +494,17 @@ export default function Agenda({
               <div className="flex gap-4 items-center">
                 <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
                   <span className="font-medium text-sm">Total Tasks:</span>
-                  <span className="font-bold">{conclusionData?.noOfTasks}</span>
+                  <span className="font-bold">{conclusionTime?.noOfTasks}</span>
                 </div>
                 <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
                   <span className="font-medium text-sm">Total Projects:</span>
                   <span className="font-bold">
-                    {conclusionData?.noOfProjects}
+                    {conclusionTime?.noOfProjects}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
                   <span className="font-medium text-sm">Total KPIs:</span>
-                  <span className="font-bold">{conclusionData?.noOfKPIs}</span>
+                  <span className="font-bold">{conclusionTime?.noOfKPIs}</span>
                 </div>
               </div>
             </div>
@@ -713,11 +714,7 @@ export default function Agenda({
                         }
                       }}
                       onClick={() => {
-                        if (
-                          meetingStatus !== "STARTED" &&
-                          meetingStatus !== "NOT_STARTED" &&
-                          follow
-                        ) {
+                        if (meetingStatus !== "NOT_STARTED" || follow) {
                           handleListClick(
                             item.detailMeetingAgendaIssueId ?? "",
                           );
@@ -944,10 +941,10 @@ export default function Agenda({
           className={`${meetingStatus !== "DISCUSSION" && "mt-6"}`}
         >
           <div
-            className={`flex justify-center w-full relative  border-primary ${meetingStatus !== "DISCUSSION" ? "p-4" : "border-l-1 border-r-1 border-b-1 rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"}`}
+            className={`flex justify-center w-full relative border-primary ${meetingStatus !== "DISCUSSION" ? "p-4" : "border-l-1 border-r-1 border-b-1 rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"} ${(meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") && "border "}`}
           >
             {meetingStatus === "DISCUSSION" && (
-              <div className="absolute top-0 left-0 right-0 h-0.5 flex">
+              <div className="absolute top-0 left-0 right-1 h-0.5 flex">
                 <div
                   className="border-t-1 border-primary h-0"
                   style={{
@@ -1103,7 +1100,7 @@ export default function Agenda({
                 </div>
               </div>
             ) : (
-              <div className="flex-1 h-[calc(100vh-230px)] overflow-x-scroll w-full">
+              <div className="flex-1 h-[calc(100vh-280px)] overflow-x-scroll w-full">
                 <div>
                   {!selectedItem || !hasChanges(selectedItem) ? (
                     <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg mt-6 p-8 text-center">

@@ -121,7 +121,7 @@ const SearchDropdown = ({
 
       {/* Error */}
       {error?.message && (
-        <span className="text-red-600 text-xs mt-1 block before:content-['*']">
+        <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
           {error.message}
         </span>
       )}

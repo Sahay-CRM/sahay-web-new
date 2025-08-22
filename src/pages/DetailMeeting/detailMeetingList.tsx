@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useDetailMeeting from "./useDetailMeeting";
@@ -104,13 +104,13 @@ export default function DetailMeetingList() {
           <h1 className="font-semibold capitalize text-xl text-black">
             Detail Meeting
           </h1>
-          {/* <div className="flex items-center space-x-5 tb:space-x-7">
+          <div className="flex items-center space-x-5 tb:space-x-7">
             {permission.Add && (
               <Link to="/dashboard/meeting/add">
                 <Button className="py-2 w-fit">Add Meeting</Button>
               </Link>
             )}
-          </div> */}
+          </div>
         </div>
 
         <div className="flex justify-between items-center mb-4 flex-wrap gap-4">

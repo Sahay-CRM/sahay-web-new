@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getDatabase, off, onValue, ref, update } from "firebase/database";
+import { get, getDatabase, off, onValue, ref, update } from "firebase/database";
 
 import {
   addMeetingNotesMutation,
@@ -9,6 +9,7 @@ import {
   deleteCompanyMeetingMutation,
   endMeetingMutation,
   updateDetailMeetingMutation,
+  useAddUpdateCompanyMeeting,
   useGetMeetingNotes,
   useGetMeetingTiming,
 } from "@/features/api/companyMeeting";
@@ -25,6 +26,7 @@ export default function useMeetingDesc() {
   const [isCardVisible, setIsCardVisible] = useState(false);
   const [openEmployeeId, setOpenEmployeeId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+  const [isEmpModalOpen, setIsEmpModalOpen] = useState(false);
 
   const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
   const { data: meetingNotes } = useGetMeetingNotes({
@@ -41,6 +43,7 @@ export default function useMeetingDesc() {
   const { mutate: updateTime } = addMeetingTimeMutation();
   const { mutate: addNote } = addMeetingNotesMutation();
   const deleteNoteMutation = deleteCompanyMeetingMutation();
+  const { mutate: addMeeting } = useAddUpdateCompanyMeeting();
 
   const handleUpdatedRefresh = useCallback(async () => {
     await Promise.all([
@@ -91,7 +94,7 @@ export default function useMeetingDesc() {
   }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
 
   useEffect(() => {
-    if (!meetingId || !meetingResponse) return; // ✅ don't run if meeting deleted
+    if (!meetingId || !meetingResponse) return;
 
     const meetingRef = ref(db, `meetings/${meetingId}/state/updatedAt`);
 
@@ -236,6 +239,35 @@ export default function useMeetingDesc() {
     deleteNoteMutation.mutate(id);
   };
 
+  const handleAddEmp = async (data: EmployeeDetails[]) => {
+    const meetingRef = ref(db, `meetings/${meetingId}`);
+    const meetingSnapshot = await get(meetingRef);
+    const meetStateRef = ref(db, `meetings/${meetingId}/state`);
+
+    if (meetingId && meetingTiming?.detailMeetingId) {
+      const payload = {
+        companyMeetingId: meetingId,
+        joiners: [
+          ...(data?.map((item) => item.employeeId) || []),
+          ...(meetingTiming.employeeList?.map((em) => em.employeeId) || []),
+        ],
+      };
+      addMeeting(payload, {
+        onSuccess: () => {
+          // queryClient.resetQueries({
+          //   queryKey: ["get-meeting-details-timing"],
+          // });
+          if (!meetingSnapshot.exists()) {
+            return;
+          }
+          update(meetStateRef, {
+            updatedAt: Date.now(),
+          });
+        },
+      });
+    }
+  };
+
   return {
     meetingStatus: meetingTiming?.status,
     meetingId,
@@ -262,5 +294,8 @@ export default function useMeetingDesc() {
     dropdownOpen,
     setDropdownOpen,
     handleDelete,
+    isEmpModalOpen,
+    setIsEmpModalOpen,
+    handleAddEmp,
   };
 }

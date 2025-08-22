@@ -237,7 +237,7 @@ export default function Tasks({
         onDelete={(row) => {
           conformDelete(row as unknown as TaskGetPaging);
         }}
-        showActionsColumn={true}
+        showActionsColumn={false}
         isEditDeleteShow={true}
         dropdownColumns={{
           taskStatus: {

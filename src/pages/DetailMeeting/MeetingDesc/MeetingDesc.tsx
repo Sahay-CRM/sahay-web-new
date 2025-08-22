@@ -6,6 +6,7 @@ import {
   Crown,
   EllipsisVertical,
   FileText,
+  Plus,
   RefreshCcw,
   ThumbsUp,
   Trash2,
@@ -37,6 +38,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
+import EmployeeSearchDropdown from "./EmployeeSearchDropdown";
 
 export default function MeetingDesc() {
   const {
@@ -61,6 +63,9 @@ export default function MeetingDesc() {
     dropdownOpen,
     setDropdownOpen,
     handleDelete,
+    isEmpModalOpen,
+    setIsEmpModalOpen,
+    handleAddEmp,
   } = useMeetingDesc();
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -121,7 +126,11 @@ export default function MeetingDesc() {
             <div>
               <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
                 <h3 className="p-0 text-base pl-4">Meeting Joiners</h3>
-                <div>
+                <div className="flex gap-2 items-center">
+                  <Plus
+                    className="border rounded-full p-1 w-7 h-7 cursor-pointer"
+                    onClick={() => setIsEmpModalOpen((prev) => !prev)}
+                  />
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
                     onClick={() => setIsCardVisible(false)}
@@ -129,7 +138,16 @@ export default function MeetingDesc() {
                 </div>
               </div>
               <div className="h-[calc(100vh-170px)] overflow-auto">
-                <div className="flex flex-col gap-3">
+                {isEmpModalOpen && (
+                  <div className="px-4">
+                    <EmployeeSearchDropdown
+                      onAdd={handleAddEmp}
+                      minSearchLength={2}
+                      filterProps={{ pageSize: 20 }}
+                    />
+                  </div>
+                )}
+                <div className="flex flex-col gap-3 px-3">
                   {(meetingTiming?.employeeList || []).map((item, index) => {
                     const isOpen = openEmployeeId === item.employeeId;
                     const toggleOpen = () =>

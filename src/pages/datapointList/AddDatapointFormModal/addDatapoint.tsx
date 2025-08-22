@@ -21,6 +21,7 @@ const AddDatapoint = () => {
     isPending,
     Details,
     permission,
+    selectedKpi,
   } = useAddDatapoint();
 
   const methods = useForm({ mode: "onChange" });
@@ -28,7 +29,6 @@ const AddDatapoint = () => {
   let stepNames = [];
 
   const steps = [<Kpi />, <Details />];
-  stepNames = ["KPI", "Details", "Assign User", "Goal Value"];
 
   const {
     back,
@@ -42,6 +42,14 @@ const AddDatapoint = () => {
 
   if (permission && permission.Add === false) {
     return <PageNotAccess />;
+  }
+
+  // Build step names dynamically
+  stepNames = ["KPI", "Details", "Assign User", "Goal Value"];
+
+  // 👉 If user is on 2nd step or later, append KPIName to first step
+  if (currentStep > 1 && selectedKpi?.KPIName) {
+    stepNames[0] = `KPI (${selectedKpi.KPIName})`;
   }
 
   return (
