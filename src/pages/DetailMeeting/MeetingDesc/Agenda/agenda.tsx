@@ -42,6 +42,7 @@ import {
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import IssueAgendaAddModal from "./issueAgendaAddModal";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function IssueModal({
   open,
@@ -446,7 +447,7 @@ export default function Agenda({
                     Discussion Actual:
                   </span>
                   <span className="font-bold">
-                    {formatTime(Number(conclusionTime?.agendaTotalActual))}m
+                    {formatTime(Number(conclusionTime?.discussionTotalActual))}m
                   </span>
                 </div>
 
@@ -667,264 +668,545 @@ export default function Agenda({
           </div>
           <div className="relative">
             <div className="mt-2 h-[calc(100vh-215px)] pr-1 w-full overflow-auto">
-              {agendaList && agendaList.length > 0 ? (
-                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                  {agendaList.map((item, idx) => (
-                    <li
-                      key={item.issueObjectiveId}
-                      className={`group px-2 flex w-full 
+              <Tabs defaultValue="account">
+                <TabsList>
+                  <TabsTrigger value="unSolved">UnSolved</TabsTrigger>
+                  <TabsTrigger value="solved">Solved</TabsTrigger>
+                </TabsList>
+                <TabsContent value="unSolved">
+                  {agendaList && agendaList.length > 0 ? (
+                    <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                      {agendaList.map((item, idx) => (
+                        <li
+                          key={item.issueObjectiveId}
+                          className={`group px-2 flex w-full 
                 ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-14" : "h-20"}
                 ${isSelectedAgenda === item.detailMeetingAgendaIssueId ? "bg-primary text-white" : ""}
                 mb-2 rounded-md shadow
                 ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "cursor-pointer" : ""}`}
-                      draggable={
-                        meetingStatus === "STARTED" ||
-                        meetingStatus === "NOT_STARTED"
-                      }
-                      onDragStart={() => {
-                        if (
-                          meetingStatus === "STARTED" ||
-                          meetingStatus === "NOT_STARTED"
-                        ) {
-                          handleDragStart(idx);
-                        }
-                      }}
-                      onDragOver={(e) => {
-                        if (
-                          meetingStatus === "STARTED" ||
-                          meetingStatus === "NOT_STARTED"
-                        ) {
-                          handleDragOver(e, idx);
-                        }
-                      }}
-                      onDragLeave={() => {
-                        if (
-                          meetingStatus === "STARTED" ||
-                          meetingStatus === "NOT_STARTED"
-                        ) {
-                          handleDragLeave();
-                        }
-                      }}
-                      onDrop={() => {
-                        if (
-                          meetingStatus === "STARTED" ||
-                          meetingStatus === "NOT_STARTED"
-                        ) {
-                          handleDrop(idx);
-                        }
-                      }}
-                      onClick={() => {
-                        if (meetingStatus !== "NOT_STARTED" || follow) {
-                          handleListClick(
-                            item.detailMeetingAgendaIssueId ?? "",
-                          );
-                        }
-                      }}
-                      style={{
-                        opacity: draggedIndex === idx ? 0.5 : 1,
-                        cursor:
-                          meetingStatus === "STARTED" ||
-                          meetingStatus === "NOT_STARTED"
-                            ? "move"
-                            : "default",
-                        border:
-                          hoverIndex === idx &&
-                          (meetingStatus === "STARTED" ||
-                            meetingStatus === "NOT_STARTED")
-                            ? "2px dashed #3b82f6"
-                            : "1px solid #eee",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        transition: "border 0.2s ease",
-                        position: "relative",
-                      }}
-                    >
-                      <div className="flex items-center w-full">
-                        {(meetingStatus === "STARTED" ||
-                          meetingStatus === "NOT_STARTED") && (
-                          <span
-                            style={{ cursor: "grab" }}
-                            className="w-5 flex-shrink-0"
-                          >
-                            ⋮⋮
-                          </span>
-                        )}
-
-                        <span
-                          className={`w-10 mr-3 text-4xl text-primary text-center ${isSelectedAgenda === item.detailMeetingAgendaIssueId ? "bg-primary text-white" : "text-primary"}`}
+                          draggable={
+                            meetingStatus === "STARTED" ||
+                            meetingStatus === "NOT_STARTED"
+                          }
+                          onDragStart={() => {
+                            if (
+                              meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED"
+                            ) {
+                              handleDragStart(idx);
+                            }
+                          }}
+                          onDragOver={(e) => {
+                            if (
+                              meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED"
+                            ) {
+                              handleDragOver(e, idx);
+                            }
+                          }}
+                          onDragLeave={() => {
+                            if (
+                              meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED"
+                            ) {
+                              handleDragLeave();
+                            }
+                          }}
+                          onDrop={() => {
+                            if (
+                              meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED"
+                            ) {
+                              handleDrop(idx);
+                            }
+                          }}
+                          onClick={() => {
+                            if (meetingStatus !== "NOT_STARTED" || follow) {
+                              handleListClick(
+                                item.detailMeetingAgendaIssueId ?? "",
+                              );
+                            }
+                          }}
+                          style={{
+                            opacity: draggedIndex === idx ? 0.5 : 1,
+                            cursor:
+                              meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED"
+                                ? "move"
+                                : "default",
+                            border:
+                              hoverIndex === idx &&
+                              (meetingStatus === "STARTED" ||
+                                meetingStatus === "NOT_STARTED")
+                                ? "2px dashed #3b82f6"
+                                : "1px solid #eee",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            transition: "border 0.2s ease",
+                            position: "relative",
+                          }}
                         >
-                          {idx + 1}
-                        </span>
-
-                        {editing.type === item.agendaType &&
-                        editing.id === item.issueObjectiveId &&
-                        canEdit ? (
-                          <div className="w-full flex items-center gap-1">
-                            <div className="relative w-full flex gap-2 items-center">
-                              <Input
-                                value={editing.value}
-                                onChange={(e) =>
-                                  setEditingValue(e.target.value)
-                                }
-                                className="mr-2"
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") {
-                                    updateEdit();
-                                  }
-                                }}
-                              />
-                              <span className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
-                                <CornerDownLeft className="text-gray-400 w-4" />
+                          <div className="flex items-center w-full">
+                            {(meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED") && (
+                              <span
+                                style={{ cursor: "grab" }}
+                                className="w-5 flex-shrink-0"
+                              >
+                                ⋮⋮
                               </span>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={cancelEdit}
-                            >
-                              <CircleX />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="w-full flex items-center">
-                            <div
-                              className={`text-sm ${
-                                meetingStatus === "STARTED" ||
-                                meetingStatus === "NOT_STARTED"
-                                  ? "w-full pr-8 h-14 flex items-center"
-                                  : "w-full min-w-52"
-                              } overflow-hidden line-clamp-3`}
-                            >
-                              {item.name}
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                            )}
 
-                      <div className="flex items-center gap-2 relative">
-                        <div className="text-xs text-center w-20 text-gray-500 absolute top-0 right-0">
-                          <Badge variant="secondary" className="mb-1.5">
-                            {item.agendaType}
-                          </Badge>
-                        </div>
+                            <span
+                              className={`w-10 mr-3 text-4xl text-primary text-center ${isSelectedAgenda === item.detailMeetingAgendaIssueId ? "bg-primary text-white" : "text-primary"}`}
+                            >
+                              {idx + 1}
+                            </span>
 
-                        {(meetingStatus === "STARTED" ||
-                          meetingStatus === "NOT_STARTED") &&
-                          canEdit && (
-                            <div className="flex-shrink-0 opacity-0 z-30 pl-5 bg-white w-20 text-left group-hover:opacity-100 transition-opacity">
-                              {!(
-                                editing.type === item.agendaType &&
-                                editing.id === item.issueObjectiveId
-                              ) && (
-                                <div className="flex gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      startEdit(
-                                        item.agendaType === "objective"
-                                          ? "objective"
-                                          : "issue",
-                                        item.issueObjectiveId,
-                                        item.name,
-                                        item.plannedTime || "0",
-                                        String(item.detailMeetingAgendaIssueId),
-                                      );
+                            {editing.type === item.agendaType &&
+                            editing.id === item.issueObjectiveId &&
+                            canEdit ? (
+                              <div className="w-full flex items-center gap-1">
+                                <div className="relative w-full flex gap-2 items-center">
+                                  <Input
+                                    value={editing.value}
+                                    onChange={(e) =>
+                                      setEditingValue(e.target.value)
+                                    }
+                                    className="mr-2"
+                                    autoFocus
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        updateEdit();
+                                      }
                                     }}
-                                    className="w-5"
-                                  >
-                                    <SquarePen className="h-4 w-4 text-primary" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDelete(item);
-                                    }}
-                                    className="w-5"
-                                  >
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                  </Button>
+                                  />
+                                  <span className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
+                                    <CornerDownLeft className="text-gray-400 w-4" />
+                                  </span>
                                 </div>
-                              )}
-                            </div>
-                          )}
-
-                        {meetingStatus !== "STARTED" &&
-                          meetingStatus !== "NOT_STARTED" &&
-                          item.detailMeetingAgendaIssueId && (
-                            <div className="text-sm text-center ml-2 font-medium text-primary">
-                              <div className="text-xs text-center w-20 text-gray-500">
-                                <Badge variant="secondary" className="mb-1.5">
-                                  {item.agendaType}
-                                </Badge>
-                              </div>
-                              {meetingStatus === "DISCUSSION" ? (
-                                <Timer
-                                  actualTime={Number(
-                                    meetingResponse &&
-                                      meetingResponse?.timers.objectives?.[
-                                        item.detailMeetingAgendaIssueId
-                                      ]?.actualTime,
-                                  )}
-                                  defaultTime={Number(
-                                    meetingResponse &&
-                                      meetingResponse?.timers.objectives?.[
-                                        item.detailMeetingAgendaIssueId
-                                      ]?.actualTime,
-                                  )}
-                                  lastSwitchTimestamp={
-                                    isSelectedAgenda ===
-                                    item.detailMeetingAgendaIssueId
-                                      ? Number(
-                                          meetingResponse?.state
-                                            .lastSwitchTimestamp || Date.now(),
-                                        )
-                                      : 0
-                                  }
-                                  isActive={
-                                    isSelectedAgenda ===
-                                    item.detailMeetingAgendaIssueId
-                                  }
-                                  className={`text-xl ${
-                                    isSelectedAgenda ===
-                                    item.detailMeetingAgendaIssueId
-                                      ? "text-white"
-                                      : ""
-                                  }`}
-                                />
-                              ) : (
-                                <div
-                                  className={`text-xl ${
-                                    isSelectedAgenda ===
-                                    item.detailMeetingAgendaIssueId
-                                      ? "text-white"
-                                      : ""
-                                  }`}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={cancelEdit}
                                 >
-                                  {formatTime(
-                                    Number(
-                                      conclusionData
-                                        ? conclusionData?.agenda.find(
-                                            (con) =>
-                                              con.detailMeetingAgendaIssueId ===
+                                  <CircleX />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="w-full flex items-center">
+                                <div
+                                  className={`text-sm ${
+                                    meetingStatus === "STARTED" ||
+                                    meetingStatus === "NOT_STARTED"
+                                      ? "w-full pr-8 h-14 flex items-center"
+                                      : "w-full min-w-52"
+                                  } overflow-hidden line-clamp-3`}
+                                >
+                                  {item.name}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 relative">
+                            <div className="text-xs text-center w-20 text-gray-500 absolute top-0 right-0">
+                              <Badge variant="secondary" className="mb-1.5">
+                                {item.agendaType}
+                              </Badge>
+                            </div>
+
+                            {(meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED") &&
+                              canEdit && (
+                                <div className="flex-shrink-0 opacity-0 z-30 pl-5 bg-white w-20 text-left group-hover:opacity-100 transition-opacity">
+                                  {!(
+                                    editing.type === item.agendaType &&
+                                    editing.id === item.issueObjectiveId
+                                  ) && (
+                                    <div className="flex gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          startEdit(
+                                            item.agendaType === "objective"
+                                              ? "objective"
+                                              : "issue",
+                                            item.issueObjectiveId,
+                                            item.name,
+                                            item.plannedTime || "0",
+                                            String(
                                               item.detailMeetingAgendaIssueId,
-                                          )?.actualTime
-                                        : 0,
-                                    ),
+                                            ),
+                                          );
+                                        }}
+                                        className="w-5"
+                                      >
+                                        <SquarePen className="h-4 w-4 text-primary" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDelete(item);
+                                        }}
+                                        className="w-5"
+                                      >
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                      </Button>
+                                    </div>
                                   )}
                                 </div>
                               )}
+
+                            {meetingStatus !== "STARTED" &&
+                              meetingStatus !== "NOT_STARTED" &&
+                              item.detailMeetingAgendaIssueId && (
+                                <div className="text-sm text-center ml-2 font-medium text-primary">
+                                  <div className="text-xs text-center w-20 text-gray-500">
+                                    <Badge
+                                      variant="secondary"
+                                      className="mb-1.5"
+                                    >
+                                      {item.agendaType}
+                                    </Badge>
+                                  </div>
+                                  {meetingStatus === "DISCUSSION" ? (
+                                    <Timer
+                                      actualTime={Number(
+                                        meetingResponse &&
+                                          meetingResponse?.timers.objectives?.[
+                                            item.detailMeetingAgendaIssueId
+                                          ]?.actualTime,
+                                      )}
+                                      defaultTime={Number(
+                                        meetingResponse &&
+                                          meetingResponse?.timers.objectives?.[
+                                            item.detailMeetingAgendaIssueId
+                                          ]?.actualTime,
+                                      )}
+                                      lastSwitchTimestamp={
+                                        isSelectedAgenda ===
+                                        item.detailMeetingAgendaIssueId
+                                          ? Number(
+                                              meetingResponse?.state
+                                                .lastSwitchTimestamp ||
+                                                Date.now(),
+                                            )
+                                          : 0
+                                      }
+                                      isActive={
+                                        isSelectedAgenda ===
+                                        item.detailMeetingAgendaIssueId
+                                      }
+                                      className={`text-xl ${
+                                        isSelectedAgenda ===
+                                        item.detailMeetingAgendaIssueId
+                                          ? "text-white"
+                                          : ""
+                                      }`}
+                                    />
+                                  ) : (
+                                    <div
+                                      className={`text-xl ${
+                                        isSelectedAgenda ===
+                                        item.detailMeetingAgendaIssueId
+                                          ? "text-white"
+                                          : ""
+                                      }`}
+                                    >
+                                      {formatTime(
+                                        Number(
+                                          conclusionData
+                                            ? conclusionData?.agenda.find(
+                                                (con) =>
+                                                  con.detailMeetingAgendaIssueId ===
+                                                  item.detailMeetingAgendaIssueId,
+                                              )?.actualTime
+                                            : 0,
+                                        ),
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 text-sm">No issues added</p>
+                  )}
+                </TabsContent>
+                <TabsContent value="solved">
+                  {agendaList && agendaList.length > 0 ? (
+                    <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                      {agendaList.map((item, idx) => (
+                        <li
+                          key={item.issueObjectiveId}
+                          className={`group px-2 flex w-full 
+                ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-14" : "h-20"}
+                ${isSelectedAgenda === item.detailMeetingAgendaIssueId ? "bg-primary text-white" : ""}
+                mb-2 rounded-md shadow
+                ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "cursor-pointer" : ""}`}
+                          draggable={
+                            meetingStatus === "STARTED" ||
+                            meetingStatus === "NOT_STARTED"
+                          }
+                          onDragStart={() => {
+                            if (
+                              meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED"
+                            ) {
+                              handleDragStart(idx);
+                            }
+                          }}
+                          onDragOver={(e) => {
+                            if (
+                              meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED"
+                            ) {
+                              handleDragOver(e, idx);
+                            }
+                          }}
+                          onDragLeave={() => {
+                            if (
+                              meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED"
+                            ) {
+                              handleDragLeave();
+                            }
+                          }}
+                          onDrop={() => {
+                            if (
+                              meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED"
+                            ) {
+                              handleDrop(idx);
+                            }
+                          }}
+                          onClick={() => {
+                            if (meetingStatus !== "NOT_STARTED" || follow) {
+                              handleListClick(
+                                item.detailMeetingAgendaIssueId ?? "",
+                              );
+                            }
+                          }}
+                          style={{
+                            opacity: draggedIndex === idx ? 0.5 : 1,
+                            cursor:
+                              meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED"
+                                ? "move"
+                                : "default",
+                            border:
+                              hoverIndex === idx &&
+                              (meetingStatus === "STARTED" ||
+                                meetingStatus === "NOT_STARTED")
+                                ? "2px dashed #3b82f6"
+                                : "1px solid #eee",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            transition: "border 0.2s ease",
+                            position: "relative",
+                          }}
+                        >
+                          <div className="flex items-center w-full">
+                            {(meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED") && (
+                              <span
+                                style={{ cursor: "grab" }}
+                                className="w-5 flex-shrink-0"
+                              >
+                                ⋮⋮
+                              </span>
+                            )}
+
+                            <span
+                              className={`w-10 mr-3 text-4xl text-primary text-center ${isSelectedAgenda === item.detailMeetingAgendaIssueId ? "bg-primary text-white" : "text-primary"}`}
+                            >
+                              {idx + 1}
+                            </span>
+
+                            {editing.type === item.agendaType &&
+                            editing.id === item.issueObjectiveId &&
+                            canEdit ? (
+                              <div className="w-full flex items-center gap-1">
+                                <div className="relative w-full flex gap-2 items-center">
+                                  <Input
+                                    value={editing.value}
+                                    onChange={(e) =>
+                                      setEditingValue(e.target.value)
+                                    }
+                                    className="mr-2"
+                                    autoFocus
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        updateEdit();
+                                      }
+                                    }}
+                                  />
+                                  <span className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
+                                    <CornerDownLeft className="text-gray-400 w-4" />
+                                  </span>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={cancelEdit}
+                                >
+                                  <CircleX />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="w-full flex items-center">
+                                <div
+                                  className={`text-sm ${
+                                    meetingStatus === "STARTED" ||
+                                    meetingStatus === "NOT_STARTED"
+                                      ? "w-full pr-8 h-14 flex items-center"
+                                      : "w-full min-w-52"
+                                  } overflow-hidden line-clamp-3`}
+                                >
+                                  {item.name}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 relative">
+                            <div className="text-xs text-center w-20 text-gray-500 absolute top-0 right-0">
+                              <Badge variant="secondary" className="mb-1.5">
+                                {item.agendaType}
+                              </Badge>
                             </div>
-                          )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-500 text-sm">No issues added</p>
-              )}
+
+                            {(meetingStatus === "STARTED" ||
+                              meetingStatus === "NOT_STARTED") &&
+                              canEdit && (
+                                <div className="flex-shrink-0 opacity-0 z-30 pl-5 bg-white w-20 text-left group-hover:opacity-100 transition-opacity">
+                                  {!(
+                                    editing.type === item.agendaType &&
+                                    editing.id === item.issueObjectiveId
+                                  ) && (
+                                    <div className="flex gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          startEdit(
+                                            item.agendaType === "objective"
+                                              ? "objective"
+                                              : "issue",
+                                            item.issueObjectiveId,
+                                            item.name,
+                                            item.plannedTime || "0",
+                                            String(
+                                              item.detailMeetingAgendaIssueId,
+                                            ),
+                                          );
+                                        }}
+                                        className="w-5"
+                                      >
+                                        <SquarePen className="h-4 w-4 text-primary" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDelete(item);
+                                        }}
+                                        className="w-5"
+                                      >
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                            {meetingStatus !== "STARTED" &&
+                              meetingStatus !== "NOT_STARTED" &&
+                              item.detailMeetingAgendaIssueId && (
+                                <div className="text-sm text-center ml-2 font-medium text-primary">
+                                  <div className="text-xs text-center w-20 text-gray-500">
+                                    <Badge
+                                      variant="secondary"
+                                      className="mb-1.5"
+                                    >
+                                      {item.agendaType}
+                                    </Badge>
+                                  </div>
+                                  {meetingStatus === "DISCUSSION" ? (
+                                    <Timer
+                                      actualTime={Number(
+                                        meetingResponse &&
+                                          meetingResponse?.timers.objectives?.[
+                                            item.detailMeetingAgendaIssueId
+                                          ]?.actualTime,
+                                      )}
+                                      defaultTime={Number(
+                                        meetingResponse &&
+                                          meetingResponse?.timers.objectives?.[
+                                            item.detailMeetingAgendaIssueId
+                                          ]?.actualTime,
+                                      )}
+                                      lastSwitchTimestamp={
+                                        isSelectedAgenda ===
+                                        item.detailMeetingAgendaIssueId
+                                          ? Number(
+                                              meetingResponse?.state
+                                                .lastSwitchTimestamp ||
+                                                Date.now(),
+                                            )
+                                          : 0
+                                      }
+                                      isActive={
+                                        isSelectedAgenda ===
+                                        item.detailMeetingAgendaIssueId
+                                      }
+                                      className={`text-xl ${
+                                        isSelectedAgenda ===
+                                        item.detailMeetingAgendaIssueId
+                                          ? "text-white"
+                                          : ""
+                                      }`}
+                                    />
+                                  ) : (
+                                    <div
+                                      className={`text-xl ${
+                                        isSelectedAgenda ===
+                                        item.detailMeetingAgendaIssueId
+                                          ? "text-white"
+                                          : ""
+                                      }`}
+                                    >
+                                      {formatTime(
+                                        Number(
+                                          conclusionData
+                                            ? conclusionData?.agenda.find(
+                                                (con) =>
+                                                  con.detailMeetingAgendaIssueId ===
+                                                  item.detailMeetingAgendaIssueId,
+                                              )?.actualTime
+                                            : 0,
+                                        ),
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 text-sm">No issues added</p>
+                  )}
+                </TabsContent>
+              </Tabs>
+
               {meetingStatus === "DISCUSSION" && (
                 <div
                   className="absolute bottom-0 right-0 border rounded-full p-2 bg-white shadow-2xl shadow-primary border-primary"

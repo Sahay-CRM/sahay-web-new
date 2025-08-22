@@ -295,9 +295,7 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
 
-  const steps = repetitiveTaskId
-    ? ["Project", "Meeting", "Basic Info", "Assign User"]
-    : ["Project", "Meeting", "Basic Info", "AssignUser", "Comment"];
+  const steps = ["Project", "Meeting", "Basic Info", "Assign User"];
 
   // Define required and optional fields for each step
   const stepFieldConfig: Record<

@@ -26,7 +26,6 @@ export default function useMeetingDesc() {
   const [isCardVisible, setIsCardVisible] = useState(false);
   const [openEmployeeId, setOpenEmployeeId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
-  const [isEmpModalOpen, setIsEmpModalOpen] = useState(false);
 
   const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
   const { data: meetingNotes } = useGetMeetingNotes({
@@ -254,10 +253,40 @@ export default function useMeetingDesc() {
       };
       addMeeting(payload, {
         onSuccess: () => {
-          // queryClient.resetQueries({
-          //   queryKey: ["get-meeting-details-timing"],
-          // });
           if (!meetingSnapshot.exists()) {
+            queryClient.invalidateQueries({
+              queryKey: ["get-meeting-details-timing"],
+            });
+            return;
+          }
+          update(meetStateRef, {
+            updatedAt: Date.now(),
+          });
+        },
+      });
+    }
+  };
+
+  const handleDeleteEmp = async (employeeId: string) => {
+    const meetingRef = ref(db, `meetings/${meetingId}`);
+    const meetingSnapshot = await get(meetingRef);
+    const meetStateRef = ref(db, `meetings/${meetingId}/state`);
+
+    const joiners = meetingTiming?.employeeList
+      ?.filter((item) => item.employeeId !== employeeId)
+      ?.map((item) => item.employeeId);
+
+    if (meetingId && meetingTiming?.detailMeetingId) {
+      const payload = {
+        companyMeetingId: meetingId,
+        joiners: joiners,
+      };
+      addMeeting(payload, {
+        onSuccess: () => {
+          if (!meetingSnapshot.exists()) {
+            queryClient.invalidateQueries({
+              queryKey: ["get-meeting-details-timing"],
+            });
             return;
           }
           update(meetStateRef, {
@@ -294,8 +323,7 @@ export default function useMeetingDesc() {
     dropdownOpen,
     setDropdownOpen,
     handleDelete,
-    isEmpModalOpen,
-    setIsEmpModalOpen,
     handleAddEmp,
+    handleDeleteEmp,
   };
 }

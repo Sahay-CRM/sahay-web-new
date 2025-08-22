@@ -72,6 +72,16 @@ const Issues = lazy(() => import("../pages/Obj/Issues"));
 const Objective = lazy(() => import("../pages/Obj/Objective"));
 const GroupKpis = lazy(() => import("../pages/datapointList/GroupKpis"));
 
+const AddCompanyTaskListRepeat = lazy(
+  () =>
+    import(
+      "../pages/CompanyTaskListRepeat/CompanyTaskFormModal/AddRepetitiveCompanyTaskList"
+    ),
+);
+const CompanyTaskRe = lazy(
+  () => import("../pages/CompanyTaskListRepeat/CompanyTaskListRe"),
+);
+
 export default function EmployeeRoutes() {
   return (
     <Routes>
@@ -102,7 +112,16 @@ export default function EmployeeRoutes() {
         <Route path="tasks" Component={CompanyTask} />
         <Route path="tasks/add" element={<AddCompanyTaskList />} />
         <Route path="tasks/view/:id" element={<CompanyTaskView />} />
+
         <Route path="tasks/edit/:id" element={<AddCompanyTaskList />} />
+        <Route path="tasksrepet/add" element={<AddCompanyTaskListRepeat />} />
+        <Route
+          path="tasksrepeat/edit/:id"
+          element={<AddCompanyTaskListRepeat />}
+        />
+        <Route path="tasksrepet/add" element={<AddCompanyTaskListRepeat />} />
+        <Route path="tasksrepet" element={<CompanyTaskRe />} />
+
         <Route path="projects" Component={CompanyProjects} />
         <Route path="projects/add" element={<AddCompanyProjectList />} />
         <Route path="projects/edit/:id" element={<AddCompanyProjectList />} />

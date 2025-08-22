@@ -629,6 +629,7 @@ interface TaskGetPaging {
   repetition?: string;
   detailMeetingNoteId?: string;
   repetitiveTaskId?: string;
+  employeeName?: string;
 }
 
 interface TaskProject {

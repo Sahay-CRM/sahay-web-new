@@ -6,7 +6,6 @@ import {
   Crown,
   EllipsisVertical,
   FileText,
-  Plus,
   RefreshCcw,
   ThumbsUp,
   Trash2,
@@ -63,9 +62,8 @@ export default function MeetingDesc() {
     dropdownOpen,
     setDropdownOpen,
     handleDelete,
-    isEmpModalOpen,
-    setIsEmpModalOpen,
     handleAddEmp,
+    handleDeleteEmp,
   } = useMeetingDesc();
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -127,10 +125,6 @@ export default function MeetingDesc() {
               <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
                 <h3 className="p-0 text-base pl-4">Meeting Joiners</h3>
                 <div className="flex gap-2 items-center">
-                  <Plus
-                    className="border rounded-full p-1 w-7 h-7 cursor-pointer"
-                    onClick={() => setIsEmpModalOpen((prev) => !prev)}
-                  />
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
                     onClick={() => setIsCardVisible(false)}
@@ -138,8 +132,8 @@ export default function MeetingDesc() {
                 </div>
               </div>
               <div className="h-[calc(100vh-170px)] overflow-auto">
-                {isEmpModalOpen && (
-                  <div className="px-4">
+                {meetingStatus !== "ENDED" && (
+                  <div className="px-4 mb-2">
                     <EmployeeSearchDropdown
                       onAdd={handleAddEmp}
                       minSearchLength={2}
@@ -147,6 +141,7 @@ export default function MeetingDesc() {
                     />
                   </div>
                 )}
+
                 <div className="flex flex-col gap-3 px-3">
                   {(meetingTiming?.employeeList || []).map((item, index) => {
                     const isOpen = openEmployeeId === item.employeeId;
@@ -228,6 +223,14 @@ export default function MeetingDesc() {
                               }
                             />
                           </div>
+                          {/* <div> */}
+                          {meetingStatus === "NOT_STARTED" && (
+                            <Trash2
+                              className="w-6 h-6 mt-1.5"
+                              onClick={() => handleDeleteEmp(item.employeeId)}
+                            />
+                          )}
+                          {/* </div> */}
                         </div>
 
                         {/* Accordion content (only if open) */}

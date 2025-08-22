@@ -1,4 +1,5 @@
 import ModalData from "@/components/shared/Modal/ModalData";
+import { format } from "date-fns";
 
 interface CreateTaskPayload {
   taskId?: string;
@@ -19,6 +20,7 @@ interface CreateTaskPayload {
   taskStatusId?: string;
   taskTypeId?: string;
   comment?: string;
+  taskDeadline: string;
 }
 
 interface DatapointModalProps {
@@ -87,16 +89,15 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
               ? new Date(modalData.taskStartDate).toLocaleString()
               : "-"}
           </span>
-        </div>
-
-        <div>
-          <span className="font-medium text-gray-700">Deadline:</span>{" "}
-          <span className="text-black font-bold">
-            {modalData.taskDeadline
-              ? new Date(modalData.taskDeadline).toLocaleString()
-              : "-"}
-          </span>
         </div> */}
+        {modalData.taskDeadline && (
+          <div>
+            <span className="font-medium text-gray-700">Deadline:</span>{" "}
+            <span className="text-black font-bold">
+              {format(new Date(modalData.taskDeadline), "dd/MM/yyyy h:mm aa")}
+            </span>
+          </div>
+        )}
 
         <div>
           <span className="font-medium text-primary">Repeat Type:</span>{" "}

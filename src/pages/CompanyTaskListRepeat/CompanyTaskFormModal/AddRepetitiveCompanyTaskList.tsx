@@ -282,6 +282,7 @@ const TaskDetailsStep = () => {
                   value={field.value}
                   onChange={field.onChange}
                   error={errors.taskDeadline}
+                  disableDaysFromToday={5}
                 />
               )}
             />
@@ -415,22 +416,6 @@ const AssignUserStep = () => {
   );
 };
 
-const CommentStep = () => {
-  const {
-    register,
-    formState: { errors },
-  } = useFormContext();
-  return (
-    <Card className="px-4 py-4">
-      <FormInputField
-        label="Comment"
-        {...register("comment")}
-        error={errors.comment}
-      />
-    </Card>
-  );
-};
-
 // Renamed main component
 export default function AddCompanyTask() {
   const hookProps = useAddCompanyTask();
@@ -484,15 +469,13 @@ export default function AddCompanyTask() {
         return <TaskDetailsStep key="detailsStep" />;
       case 4:
         return <AssignUserStep key="assignUserStep" />;
-      case 5:
-        if (!repetitiveTaskId) return <CommentStep key="commentStep" />; // Conditional step
-        return null;
+
       default:
         return null;
     }
   };
 
-  const totalSteps = repetitiveTaskId ? 4 : 5;
+  const totalSteps = 4;
 
   return (
     <FormProvider {...methods}>

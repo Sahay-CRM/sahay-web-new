@@ -22,6 +22,7 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import PageNotAccess from "../PageNoAccess";
+import { format } from "date-fns";
 // import { Trash } from "lucide-react";
 
 export default function CompanyTaskListRe() {
@@ -68,7 +69,7 @@ export default function CompanyTaskListRe() {
       visible: true,
     },
     { key: "taskDeadline", label: "Task Deadline", visible: true },
-    { key: "employees", label: "Assignees", visible: true },
+    { key: "employeeName", label: "Assignees", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -96,15 +97,6 @@ export default function CompanyTaskListRe() {
   if (permission && permission.View === false) {
     return <PageNotAccess />;
   }
-
-  const formatLocalDate = (isoDate?: string): string => {
-    if (!isoDate) return "";
-
-    const date = new Date(isoDate);
-
-    // Format as YYYY-MM-DD in local time zone
-    return date.toLocaleDateString("en-CA"); // en-CA gives "yyyy-mm-dd"
-  };
 
   return (
     <FormProvider {...methods}>
@@ -162,14 +154,9 @@ export default function CompanyTaskListRe() {
                   index +
                   1,
                 status: item.taskStatusId,
-                taskDeadline: formatLocalDate(item.taskDeadline),
-                assigneeNames: item.TaskEmployeeJunction
-                  ? item.TaskEmployeeJunction.map(
-                      (j) => j.Employee?.employeeName,
-                    )
-                      .filter(Boolean)
-                      .join(" , ")
-                  : " ",
+                taskDeadline: item.taskDeadline
+                  ? format(new Date(item.taskDeadline), "dd/MM/yyyy h:mm aa")
+                  : "",
               }),
             )}
             columns={visibleColumns}
