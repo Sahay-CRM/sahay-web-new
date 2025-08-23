@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 
 import {
   Trash2,
@@ -8,6 +8,7 @@ import {
   Edit,
   Copy,
   Share2,
+  Check,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -28,7 +29,6 @@ interface MeetingNotesProps {
   joiners: Joiners[];
   employeeId: string;
   meetingId: string;
-  detailMeetingId?: string;
   className?: string;
   meetingName?: string;
   meetingStatus?: string;
@@ -42,7 +42,6 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   joiners,
   employeeId,
   meetingId,
-  detailMeetingId,
   className,
   meetingName,
   meetingStatus,
@@ -51,27 +50,35 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   const [titleInput, setTitleInput] = useState("");
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerProj, setDrawerProj] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskGetPaging | TaskData>();
   const [selectedProject, setSelectedProject] = useState<
     CompanyProjectDataProps | TaskData
   >();
-  // const [isAdded, setIsAdded] = useState<string>();
+
+  // New states for editing notes
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingNoteText, setEditingNoteText] = useState("");
 
   const { data: meetingNotes, refetch: refetchMeetingNotes } =
     useGetMeetingNotes({
       filter: {
-        meetingId: detailMeetingId,
+        meetingId: meetingId,
       },
-      enable: !!detailMeetingId,
+      enable: !!meetingId,
     });
   const { mutate: addNote } = addMeetingNotesMutation();
   const deleteNoteMutation = deleteCompanyMeetingMutation();
 
+  // Toggle dropdown function
+  const toggleDropdown = (noteId: string) => {
+    setDropdownOpen(dropdownOpen === noteId ? null : noteId);
+  };
+
   const handleDelete = (id: string) => {
     deleteNoteMutation.mutate(id);
+    setDropdownOpen(null); // Close dropdown after action
   };
 
   const handleAddTask = (data: MeetingNotesRes) => {
@@ -82,39 +89,68 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       taskName: data.note,
       taskDescription: `${data.note} created in ${meetingName}`,
       taskDeadline: deadline.toISOString(),
-      detailMeetingNoteId: data.detailMeetingNoteId,
+      meetingNoteId: data.meetingNoteId,
     };
     setSelectedTask(payload);
     setDrawerOpen(true);
+    setDropdownOpen(null); // Close dropdown after action
   };
 
   const handleAddProject = (data: MeetingNotesRes) => {
     const payload = {
       projectName: data.note,
       projectDescription: `${data.note} created in ${meetingName}`,
-      detailMeetingNoteId: data.detailMeetingNoteId,
+      meetingNoteId: data.meetingNoteId,
     };
     setSelectedProject(payload);
     setDrawerProj(true);
+    setDropdownOpen(null); // Close dropdown after action
   };
 
-  const handleUpdateNotes = (data: MeetingNotesRes, type: string) => {
+  const handleMarkNotes = (data: MeetingNotesRes, type: string) => {
     const payload = {
       meetingId,
       employeeId,
       note: data.note,
-      detailMeetingId,
-      noteType: type.toLocaleUpperCase(),
-      detailMeetingNoteId: data.detailMeetingNoteId,
+      noteType: type.toUpperCase(),
+      meetingNoteId: data.meetingNoteId,
     };
     addNote(payload, {
       onSuccess: () => {
-        setTitleInput("");
-        setNoteInput("");
-        setIsAddingNote(false);
+        refetchMeetingNotes();
+        setDropdownOpen(null); // Close dropdown after action
+      },
+    });
+  };
+
+  // New function to handle note editing
+  const handleEditNote = (note: MeetingNotesRes) => {
+    setEditingNoteId(note.meetingNoteId);
+    setEditingNoteText(note.note);
+    setDropdownOpen(null); // Close dropdown when editing starts
+  };
+
+  // New function to submit the updated note
+  const handleSubmitUpdate = (noteId: string) => {
+    const payload = {
+      meetingId,
+      employeeId,
+      note: editingNoteText,
+      meetingNoteId: noteId,
+    };
+
+    addNote(payload, {
+      onSuccess: () => {
+        setEditingNoteId(null);
+        setEditingNoteText("");
         refetchMeetingNotes();
       },
     });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingNoteId(null);
+    setEditingNoteText("");
   };
 
   const handleStartAddNote = () => {
@@ -127,7 +163,6 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       employeeId,
       title: titleInput,
       note: noteInput,
-      detailMeetingId,
       createdAt: new Date().toISOString(),
     };
 
@@ -140,22 +175,6 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       },
     });
   };
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setDropdownOpen(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   return (
     <div className={cn("px-2", className)}>
@@ -210,8 +229,11 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                 >
                   <DropdownMenuTrigger asChild>
                     <button
-                      onClick={() => setDropdownOpen("new")}
-                      className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
+                      className="text-gray-500 items-center text-sm w-fit py-1.5 px-2 cursor-pointer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleDropdown("new");
+                      }}
                     >
                       <EllipsisVertical className="h-5 w-5" />
                     </button>
@@ -222,6 +244,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                         setNoteInput("");
                         setTitleInput("");
                         setIsAddingNote(false);
+                        setDropdownOpen(null);
                       }}
                       className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
                     >
@@ -263,7 +286,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
 
             return (
               <div
-                key={note.detailMeetingNoteId || idx}
+                key={note.meetingNoteId || idx}
                 className="flex items-start bg-white rounded-lg border px-3 py-2 shadow-sm gap-2"
               >
                 <div className="flex-1 text-sm text-black">
@@ -289,77 +312,129 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                   </div>
 
                   <div className="flex justify-between items-start gap-2 group">
-                    <p className="break-words">{note.note}</p>
-                    {meetingStatus !== "ENDED" && (
-                      <div>
-                        <DropdownMenu
-                          open={dropdownOpen === note.detailMeetingNoteId}
-                          onOpenChange={(open) =>
-                            setDropdownOpen(
-                              open ? note.detailMeetingNoteId : null,
-                            )
-                          }
-                        >
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              onClick={() =>
-                                setDropdownOpen(note.detailMeetingNoteId)
-                              }
-                              className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
-                            >
-                              <EllipsisVertical className="h-5 w-5" />
-                            </button>
-                          </DropdownMenuTrigger>
-
-                          <DropdownMenuContent align="end" className="w-full">
-                            {!note.noteType && (
-                              <>
-                                <DropdownMenuItem
-                                  onClick={() => handleAddTask(note)}
-                                  className="px-2 py-1.5"
-                                >
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Add to Task
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleAddProject(note)}
-                                  className="px-2 py-1.5"
-                                >
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Add to Project
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleUpdateNotes(note, "updates")
-                                  }
-                                  className="px-2 py-1.5"
-                                >
-                                  <Share2 className="h-4 w-4 mr-2" />
-                                  Mark as Updates
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleUpdateNotes(note, "appreciation")
-                                  }
-                                  className="px-2 py-1.5"
-                                >
-                                  <Share2 className="h-4 w-4 mr-2" />
-                                  Mark as Appreciation
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleDelete(note.detailMeetingNoteId)
-                              }
-                              className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                    {/* Conditional rendering for editing mode */}
+                    {editingNoteId === note.meetingNoteId ? (
+                      <div className="flex-1 relative">
+                        <textarea
+                          className="w-full border border-gray-300 rounded px-2 py-1 text-black resize-none focus:outline-none focus:border-blue-500"
+                          value={editingNoteText}
+                          onChange={(e) => setEditingNoteText(e.target.value)}
+                          autoFocus
+                          rows={2}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSubmitUpdate(note.meetingNoteId);
+                            } else if (e.key === "Escape") {
+                              handleCancelEdit();
+                            }
+                          }}
+                        />
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() =>
+                              handleSubmitUpdate(note.meetingNoteId)
+                            }
+                            className="text-xs bg-primary text-white px-2 py-1 rounded hover:bg-primary flex items-center gap-1"
+                          >
+                            <Check className="h-3 w-3" />
+                            Save
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            className="text-xs bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600 flex items-center gap-1"
+                          >
+                            <X className="h-3 w-3" />
+                            Cancel
+                          </button>
+                        </div>
                       </div>
+                    ) : (
+                      <>
+                        <p className="break-words">{note.note}</p>
+                        {meetingStatus !== "ENDED" && (
+                          <div>
+                            <DropdownMenu
+                              open={dropdownOpen === note.meetingNoteId}
+                              onOpenChange={(open) =>
+                                setDropdownOpen(
+                                  open ? note.meetingNoteId : null,
+                                )
+                              }
+                            >
+                              <DropdownMenuTrigger asChild>
+                                <button
+                                  className="text-gray-500 items-center text-sm w-fit py-1.5 px-2 cursor-pointer"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    toggleDropdown(note.meetingNoteId);
+                                  }}
+                                >
+                                  <EllipsisVertical className="h-5 w-5" />
+                                </button>
+                              </DropdownMenuTrigger>
+
+                              <DropdownMenuContent
+                                align="end"
+                                className="w-full"
+                              >
+                                <DropdownMenuItem
+                                  onClick={() => handleEditNote(note)}
+                                  className="px-2 py-1.5"
+                                >
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Update Notes
+                                </DropdownMenuItem>
+                                {!note.noteType && (
+                                  <>
+                                    <DropdownMenuItem
+                                      onClick={() => handleAddTask(note)}
+                                      className="px-2 py-1.5"
+                                    >
+                                      <Plus className="h-4 w-4 mr-2" />
+                                      Add to Task
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleAddProject(note)}
+                                      className="px-2 py-1.5"
+                                    >
+                                      <Plus className="h-4 w-4 mr-2" />
+                                      Add to Project
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleMarkNotes(note, "updates")
+                                      }
+                                      className="px-2 py-1.5"
+                                    >
+                                      <Share2 className="h-4 w-4 mr-2" />
+                                      Mark as Updates
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleMarkNotes(note, "appreciation")
+                                      }
+                                      className="px-2 py-1.5"
+                                    >
+                                      <Share2 className="h-4 w-4 mr-2" />
+                                      Mark as Appreciation
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleDelete(note.meetingNoteId)
+                                  }
+                                  className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -372,8 +447,6 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           taskData={selectedTask as TaskGetPaging}
-          // detailMeetingAgendaIssueId=""
-          detailMeetingId={detailMeetingId}
           tasksFireBase={function (): void {
             throw new Error("Function not implemented.");
           }}
@@ -384,8 +457,6 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
           open={drawerProj}
           onClose={() => setDrawerProj(false)}
           projectData={selectedProject as CompanyProjectDataProps}
-          // detailMeetingAgendaIssueId={meetingAgendaIssueId}
-          detailMeetingId={detailMeetingId}
           projectsFireBase={function (): void {
             throw new Error("Function not implemented.");
           }}

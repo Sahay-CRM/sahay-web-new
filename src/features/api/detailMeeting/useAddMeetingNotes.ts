@@ -10,7 +10,7 @@ interface MeetingNoteAdd {
   meetingId?: string;
   employeeId?: string;
   note?: string;
-  detailMeetingNoteId?: string;
+  meetingNoteId?: string;
   noteType?: string | null;
 }
 
@@ -20,11 +20,11 @@ export default function useAddMeetingNotes() {
   const addMeetingNotesMutation = useMutation({
     mutationKey: ["add-meeting-note-data-1"],
     mutationFn: async (data: MeetingNoteAdd) => {
-      const isUpdate = Boolean(data?.detailMeetingNoteId);
+      const isUpdate = Boolean(data?.meetingNoteId);
 
       const config = {
         url: isUpdate
-          ? Urls.updateMeetingnotes(data.detailMeetingNoteId!)
+          ? Urls.updateMeetingnotes(data.meetingNoteId!)
           : Urls.addMeetingnotes(),
         data: data,
       };

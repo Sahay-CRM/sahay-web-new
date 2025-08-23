@@ -20,7 +20,6 @@ interface ProjectDrawerProps {
   onClose: () => void;
   projectData?: CompanyProjectDataProps | null;
   detailMeetingAgendaIssueId?: string;
-  detailMeetingId?: string;
   projectsFireBase: () => void;
 }
 
@@ -40,7 +39,6 @@ export default function ProjectDrawer({
   onClose,
   projectData,
   detailMeetingAgendaIssueId,
-  detailMeetingId,
   projectsFireBase,
 }: ProjectDrawerProps) {
   const { id: meetingId } = useParams();
@@ -190,7 +188,7 @@ export default function ProjectDrawer({
         ...rest,
         projectId: projectData?.projectId,
         otherProjectEmployees: employeeId,
-        detailMeetingId: detailMeetingId,
+        meetingId: meetingId,
         projectDeadline: projectDeadline
           ? new Date(projectDeadline).toISOString()
           : null,

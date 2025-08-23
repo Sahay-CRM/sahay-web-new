@@ -60,14 +60,14 @@ interface KpisProps {
   meetingId: string;
   kpisFireBase: () => void;
   meetingAgendaIssueId: string | undefined;
-  detailMeetingId: string | undefined;
+  ioType?: string;
 }
 
 export default function KPITable({
   meetingId,
   meetingAgendaIssueId,
   kpisFireBase,
-  detailMeetingId,
+  ioType,
 }: KpisProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -89,10 +89,11 @@ export default function KPITable({
   const { data: selectedKpis, isLoading: meetingLoading } =
     useGetMeetingSelectedKpis({
       filter: {
-        detailMeetingAgendaIssueId: meetingAgendaIssueId,
-        detailMeetingId: detailMeetingId,
+        meetingId: meetingId,
+        issueObjectiveId: meetingAgendaIssueId,
+        ioType: ioType,
       },
-      enable: !!meetingAgendaIssueId || !!detailMeetingId,
+      enable: !!meetingId && !!meetingAgendaIssueId && !!ioType,
     });
 
   const selectedKpisTyped = useMemo(
@@ -483,7 +484,6 @@ export default function KPITable({
       meetingId: meetingId,
       kpiIds: tasks.map((item) => item.kpiId),
       detailMeetingAgendaIssueId: meetingAgendaIssueId,
-      detailMeetingId: detailMeetingId,
     };
     addKpiList(payload, {
       onSuccess: () => {

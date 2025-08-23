@@ -8,7 +8,6 @@ import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import TableData from "@/components/shared/DataTable/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
-import FormSelect from "@/components/shared/Form/FormSelect";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 
@@ -27,10 +26,7 @@ interface MeetingInfoProps {
 }
 
 const MeetingType = () => {
-  const {
-    control,
-    formState: { errors },
-  } = useFormContext();
+  const { control } = useFormContext();
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 25,
@@ -43,7 +39,6 @@ const MeetingType = () => {
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "meetingTypeName", label: "Meeting Type Name", visible: true },
-    { key: "parentType", label: "Parent Type", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -71,13 +66,6 @@ const MeetingType = () => {
             setPaginationFilter={setPaginationFilter}
             className="w-80"
           />
-          {errors.meetingTypeId && (
-            <p className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] whitespace-nowrap before:content-['*']">
-              {typeof errors.meetingTypeId?.message === "string"
-                ? errors.meetingTypeId.message
-                : ""}
-            </p>
-          )}
         </div>
         {canToggleColumns && (
           <div className="ml-4">
@@ -115,6 +103,7 @@ const MeetingType = () => {
             moduleKey="type"
             showActionsColumn={false}
             isLoading={isLoading}
+            actionColumnWidth="w-0"
           />
         )}
       />
@@ -196,23 +185,6 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
             );
           }}
         />
-
-        {!shouldHideStatus && (
-          <Controller
-            name="meetingStatusId"
-            control={control}
-            rules={{ required: "Meeting Status is required" }}
-            render={({ field, fieldState }) => (
-              <FormSelect
-                {...field}
-                label="Meeting Status"
-                options={meetingStatusOptions}
-                error={fieldState.error}
-                isMandatory
-              />
-            )}
-          />
-        )}
       </Card>
     </div>
   );
@@ -222,10 +194,7 @@ const Joiners = () => {
   const {
     control,
     formState: { errors },
-    watch,
   } = useFormContext();
-
-  const meetingType = watch("meetingTypeId");
 
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
@@ -291,7 +260,19 @@ const Joiners = () => {
         name="employeeId"
         control={control}
         rules={{
-          required: "At least one joiner must be marked as Team Leader",
+          validate: (value) => {
+            if (!value || value.length === 0) {
+              return "Please select at least one joiner";
+            }
+            const hasTeamLeader = value.some(
+              (emp: EmployeeDetails) => emp.isTeamLeader,
+            );
+            if (!hasTeamLeader) {
+              return "At least one joiner must be marked as Team Leader";
+            }
+
+            return true;
+          },
         }}
         render={({ field }) => {
           return (
@@ -317,7 +298,6 @@ const Joiners = () => {
               isEditDelete={() => false}
               moduleKey="emp"
               isActionButton={() => false}
-              showActionsColumn={meetingType?.parentType === "DETAIL"}
               selectedValue={field.value || []}
               handleChange={(selectedItems) => field.onChange(selectedItems)}
               customActions={(row: EmployeeDetails) => {
@@ -499,7 +479,7 @@ const AddDetailMeeting = () => {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Meeting", href: "/dashboard/meeting" },
+      { label: "Company Meeting", href: "/dashboard/meeting/detail" },
       {
         label: companyMeetingId
           ? "Update Detail Meeting"
@@ -510,9 +490,7 @@ const AddDetailMeeting = () => {
         ? [
             {
               label: `${
-                meetingApiData?.data?.meetingName
-                  ? meetingApiData?.data?.meetingName
-                  : ""
+                meetingApiData?.meetingName ? meetingApiData?.meetingName : ""
               }`,
               href: `/dashboard/kpi/${companyMeetingId}`,
               isHighlight: true,
@@ -520,7 +498,7 @@ const AddDetailMeeting = () => {
           ]
         : []),
     ]);
-  }, [companyMeetingId, meetingApiData?.data?.meetingName, setBreadcrumbs]);
+  }, [companyMeetingId, meetingApiData?.meetingName, setBreadcrumbs]);
 
   const steps = [
     <MeetingType key="meetingType" />,

@@ -297,6 +297,8 @@ interface CompanyMeetingDataProps {
   employeeId?: string;
   attendanceMark?: boolean;
   detailMeetingStatus?: string;
+  isDetailMeeting?: boolean;
+  meetingTimePlanned?: string;
 }
 
 interface Joiners {
@@ -589,7 +591,6 @@ interface AddUpdateTask {
   projectId?: string;
   meetingId?: string;
   detailMeetingAgendaIssueId?: string;
-  detailMeetingId?: string;
   repetitiveTaskId?: string;
 }
 
@@ -623,7 +624,6 @@ interface TaskGetPaging {
   taskStartDate?: string;
   color?: string;
   detailMeetingTaskId?: string;
-  detailMeetingId?: string;
   projectId?: string;
   detailMeetingTaskId?: string;
   repetition?: string;
@@ -1148,27 +1148,27 @@ interface SelectedKpisData {
   count: number;
 }
 
-interface MeetingDetailsTiming {
-  detailMeetingId?: string;
-  meetingId: string;
-  employeeId?: string;
-  attendanceMark?: boolean;
-  agendaTimePlanned?: string;
-  agendaTimeActual?: string;
-  employeeList?: Joiners[];
-  status?: string;
-  updatedAt?: string;
-  meetingName?: string;
-  conclusionTime?: string;
-  meetingTimeActual?: string;
-  meetingTimePlanned?: string;
-  conclusionTimeActual?: string;
-}
+// interface MeetingDetailsTiming {
+//   detailMeetingId?: string;
+//   meetingId: string;
+//   employeeId?: string;
+//   attendanceMark?: boolean;
+//   agendaTimePlanned?: string;
+//   agendaTimeActual?: string;
+//   employeeList?: Joiners[];
+//   status?: string;
+//   updatedAt?: string;
+//   meetingName?: string;
+//   conclusionTime?: string;
+//   meetingTimeActual?: string;
+//   meetingTimePlanned?: string;
+//   conclusionTimeActual?: string;
+// }
 
 interface MeetingNotesRes {
   employeeId: string;
   note: string;
-  detailMeetingNoteId: string;
+  meetingNoteId: string;
   createdAt: string;
   noteType?: string;
 }
@@ -1200,13 +1200,13 @@ interface ObjectiveProps {
 interface DetailMeetingObjectives {
   id: string;
   name: string;
-  type: string;
+  ioType: string;
 }
 
 interface MeetingAgenda {
   detailMeetingAgendaIssueId?: string;
   issueObjectiveId: string;
-  agendaType: string;
+  ioType: string;
   name: string;
   actualTime: string | null;
   plannedTime: string | null;
@@ -1214,6 +1214,9 @@ interface MeetingAgenda {
   noOfTasks: number;
   noOfProjects: number;
   noOfKPIs: number;
+  isResolved?: boolean;
+  issueId?: string;
+  objectiveId?: string;
 }
 
 interface DetailMeetingAgendaIssue {

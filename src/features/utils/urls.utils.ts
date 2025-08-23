@@ -162,20 +162,19 @@ const Urls = {
   updateFireNotificationAsRead: () =>
     `${baseUrl}/company/employee/logs/notification-update`,
 
-  addMeetingAgenda: () =>
-    `${baseUrl}/company/detail-meeting/agenda/objectives/create`,
+  addMeetingAgenda: () => `${baseUrl}/company/detail-meeting/agenda/io/add`,
 
   updateMeetingAgenda: (id: string) =>
-    `${baseUrl}/company/detail-meeting/agenda/objectives/update/${id}`,
+    `${baseUrl}/company/detail-meeting/agenda/io/update/${id}`,
 
   getMeetingAgendaObjective: () =>
-    `${baseUrl}/company/detail-meeting/agenda/objectives/get`,
+    `${baseUrl}/company/detail-meeting/agenda/io/get`,
 
   deleteMeetingAgendaObjective: (id: string) =>
-    `${baseUrl}/company/detail-meeting/agenda/objectives/delete/${id}`,
+    `${baseUrl}/company/detail-meeting/agenda/io/delete/${id}`,
 
   detailMeetingAgendaIssue: (id: string) =>
-    `${baseUrl}/company/detail-meeting/agenda/objectives/get/${id}`,
+    `${baseUrl}/company/detail-meeting/agenda/io/get/${id}`,
 
   // updateMeetingAgenda: (id: string) =>
   //   `${baseUrl}/company/detail-meeting/agenda/objectives/update/${id}`,
@@ -246,7 +245,7 @@ const Urls = {
   deleteObjective: (id: string) => `${baseUrl}/company/objective/delete/${id}`,
 
   getDetailObjectivesIssue: () =>
-    `${baseUrl}/company/detail-meeting/get-objectives`,
+    `${baseUrl}/company/detail-meeting/get-non-select-io`,
 
   updateDetailObjectivesIssue: () =>
     `${baseUrl}/company/detail-meeting/agenda/update`,
@@ -270,6 +269,8 @@ const Urls = {
   getAllRepeatCompanyTaskByPage: () => `${baseUrl}/company/repetitive-task/get`,
   getRepeatCompanyTaskById: (id: string) =>
     `${baseUrl}/company/repetitive-task/get/${id}`,
+
+  createIo: () => `${baseUrl}/company/detail-meeting/agenda/io/create-add`,
 };
 
 export default Urls;

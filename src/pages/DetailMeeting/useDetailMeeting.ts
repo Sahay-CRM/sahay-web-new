@@ -1,19 +1,18 @@
 import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
 import { DateRange } from "react-day-picker";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 import { useDeleteCompanyMeeting } from "@/features/api/companyMeeting";
-import useGetCompanyMeeting from "@/features/api/companyMeeting/useGetCompanyMeeting";
 import { useAddUpdateCompanyMeetingStatus } from "@/features/api/companyMeeting/useAddUpdateCompanyMeetingStatus";
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { AxiosError } from "axios";
-import { toast } from "sonner";
+import { useGetDetailMeeting } from "@/features/api/detailMeeting";
 
 const toLocalISOString = (date: Date | undefined) => {
   if (!date) return undefined;
 
-  // Use local date methods to avoid timezone conversion
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -28,10 +27,7 @@ export default function useDetailMeeting() {
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
   const [isChildData, setIsChildData] = useState<string | undefined>();
-  const [showOverdue, setShowOverdue] = useState(false);
-  // const [showDetail, setShowDetail] = useState(true);
 
-  // Calculate default 30-day range: 15 days before and after today
   const today = new Date();
   const before14 = new Date(today);
   before14.setDate(today.getDate() - 14);
@@ -67,18 +63,11 @@ export default function useDetailMeeting() {
     search: "",
   });
   const permission = useSelector(getUserPermission).MEETING_LIST;
-  const { data: meetingData } = useGetCompanyMeeting({
+  const { data: meetingData } = useGetDetailMeeting({
     filter: {
       ...paginationFilter,
-      statusArray: filters.selected,
-      ...(showOverdue
-        ? {}
-        : {
-            startDate: toLocalISOString(appliedDateRange.taskStartDate),
-            endDate: toLocalISOString(appliedDateRange.taskDeadline),
-          }),
-      overDue: showOverdue,
-      parentType: "Show Detail",
+      startDate: toLocalISOString(appliedDateRange.taskStartDate),
+      endDate: toLocalISOString(appliedDateRange.taskDeadline),
     },
   });
 
@@ -160,19 +149,11 @@ export default function useDetailMeeting() {
   }, []);
 
   // Filter status options based on showOverdue and winLostMeeting
-  const statusOptions = (meetingStatus ?? [])
-    .filter((item) => {
-      if (showOverdue) {
-        // Exclude items where winLostMeeting is "0" or "1" (string or number)
-        return item.winLostMeeting !== 0 && item.winLostMeeting !== 1;
-      }
-      return true;
-    })
-    .map((item) => ({
-      label: item.meetingStatus,
-      value: item.meetingStatusId,
-      color: item.color || "#2e3195",
-    }));
+  const statusOptions = (meetingStatus ?? []).map((item) => ({
+    label: item.meetingStatus,
+    value: item.meetingStatusId,
+    color: item.color || "#2e3195",
+  }));
 
   const handleFilterChange = (selected: string[]) => {
     setFilters({
@@ -242,35 +223,11 @@ export default function useDetailMeeting() {
       setAppliedDateRange(newTaskDateRange);
     }
 
-    // Reset pagination to first page
     setPaginationFilter((prev) => ({
       ...prev,
       currentPage: 1,
     }));
   };
-
-  const handleOverdueToggle = () => {
-    const newOverdueState = !showOverdue;
-    if (newOverdueState) {
-      setTaskDateRange({
-        taskStartDate: before14,
-        taskDeadline: after14,
-      });
-      setAppliedDateRange({
-        taskStartDate: before14,
-        taskDeadline: after14,
-      });
-    }
-
-    setShowOverdue(newOverdueState);
-  };
-
-  // const handleDetailToggle = () => {
-  //   setShowDetail((prev) => {
-  //     const newValue = !prev;
-  //     return newValue;
-  //   });
-  // };
 
   return {
     isLoading,
@@ -304,9 +261,5 @@ export default function useDetailMeeting() {
     setTaskDateRange,
     handleDateRangeChange,
     handleDateRangeApply,
-    showOverdue,
-    handleOverdueToggle,
-    // handleDetailToggle,
-    // showDetail,
   };
 }

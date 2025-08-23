@@ -297,7 +297,7 @@ const TableData = <T extends Record<string, unknown>>({
                   Actions
                 </TableHead>
               ) : (
-                <TableHead />
+                <TableHead className="w-1" />
               )}
             </TableRow>
           </TableHeader>

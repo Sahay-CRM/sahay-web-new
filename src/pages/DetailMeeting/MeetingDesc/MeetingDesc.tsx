@@ -76,7 +76,7 @@ export default function MeetingDesc() {
     ]);
   }, [meetingTiming?.meetingName, setBreadcrumbs]);
 
-  const isTeamLeader = meetingTiming?.employeeList?.find(
+  const isTeamLeader = (meetingTiming?.joiners as Joiners[])?.find(
     (item) => item.employeeId === userId,
   )?.isTeamLeader;
 
@@ -94,17 +94,15 @@ export default function MeetingDesc() {
             meetingId={meetingId ?? ""}
             meetingStatus={meetingStatus}
             meetingResponse={meetingResponse}
-            agendaPlannedTime={meetingTiming?.agendaTimePlanned}
-            detailMeetingId={meetingTiming?.detailMeetingId}
-            joiners={meetingTiming?.employeeList ?? []}
+            joiners={meetingTiming?.joiners as Joiners[]}
             meetingTime={meetingTiming?.meetingTimePlanned}
             isTeamLeader={
-              meetingTiming?.employeeList?.find(
+              (meetingTiming?.joiners as Joiners[])?.find(
                 (item) => item.employeeId === userId,
               )?.isTeamLeader
             }
             isCheckIn={
-              meetingTiming?.employeeList?.find(
+              (meetingTiming?.joiners as Joiners[])?.find(
                 (item) => item.employeeId === userId,
               )?.attendanceMark
             }
@@ -143,13 +141,13 @@ export default function MeetingDesc() {
                 )}
 
                 <div className="flex flex-col gap-3 px-3">
-                  {(meetingTiming?.employeeList || []).map((item, index) => {
+                  {(meetingTiming?.joiners as Joiners[]).map((item, index) => {
                     const isOpen = openEmployeeId === item.employeeId;
                     const toggleOpen = () =>
                       setOpenEmployeeId(isOpen ? null : item.employeeId);
 
                     const teamLeaderCount = (
-                      meetingTiming?.employeeList || []
+                      meetingTiming?.joiners as Joiners[]
                     ).filter((emp) => emp.isTeamLeader).length;
 
                     return (
@@ -211,10 +209,13 @@ export default function MeetingDesc() {
                               id={`${item.employeeId}-checkbox`}
                               className="w-[16px] h-[16px]"
                               containerClass="p-0 ml-1"
-                              checked={item.attendanceMark}
+                              checked={item.attendanceMark as boolean}
                               onChange={(e) => {
                                 const updatedAttendance = e.target.checked;
-                                handleCheckIn(item, updatedAttendance);
+                                handleCheckIn(
+                                  item.employeeId,
+                                  updatedAttendance,
+                                );
                               }}
                               disabled={
                                 meetingStatus === "NOT_STARTED" ||
@@ -310,14 +311,14 @@ export default function MeetingDesc() {
                 </div>
               </div>
               <div className="px-2">
-                {meetingId && meetingTiming?.employeeList && (
+                {meetingId && (meetingTiming?.joiners as Joiners[]) && (
                   <MeetingNotes
-                    joiners={meetingTiming?.employeeList}
+                    joiners={meetingTiming?.joiners as Joiners[]}
                     meetingId={meetingId}
-                    detailMeetingId={meetingTiming?.detailMeetingId}
+                    // detailMeetingId={meetingTiming?.detailMeetingId}
                     employeeId={userId}
                     className="mt-2"
-                    meetingName={meetingTiming.meetingName}
+                    meetingName={meetingTiming?.meetingName}
                     meetingStatus={meetingStatus}
                   />
                 )}
@@ -339,13 +340,13 @@ export default function MeetingDesc() {
                 {Array.isArray(meetingNotes?.data) &&
                   meetingNotes.data.map(
                     (note: MeetingNotesRes, idx: number) => {
-                      const author = meetingTiming?.employeeList?.find(
-                        (j) => j.employeeId === note.employeeId,
-                      );
+                      const author = (
+                        meetingTiming?.joiners as Joiners[]
+                      )?.find((j) => j.employeeId === note.employeeId);
 
                       return (
                         <div
-                          key={note.detailMeetingNoteId || idx}
+                          key={note.meetingNoteId || idx}
                           className="flex items-start bg-white rounded-lg border px-3 mb-3 py-2 shadow-sm gap-2"
                         >
                           <div className="flex-1 text-sm text-black">
@@ -376,24 +377,17 @@ export default function MeetingDesc() {
                                 meetingStatus !== "ENDED" && (
                                   <div>
                                     <DropdownMenu
-                                      open={
-                                        dropdownOpen ===
-                                        note.detailMeetingNoteId
-                                      }
+                                      open={dropdownOpen === note.meetingNoteId}
                                       onOpenChange={(open) =>
                                         setDropdownOpen(
-                                          open
-                                            ? note.detailMeetingNoteId
-                                            : null,
+                                          open ? note.meetingNoteId : null,
                                         )
                                       }
                                     >
                                       <DropdownMenuTrigger asChild>
                                         <button
                                           onClick={() =>
-                                            setDropdownOpen(
-                                              note.detailMeetingNoteId,
-                                            )
+                                            setDropdownOpen(note.meetingNoteId)
                                           }
                                           className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
                                         >
@@ -417,9 +411,7 @@ export default function MeetingDesc() {
 
                                         <DropdownMenuItem
                                           onClick={() =>
-                                            handleDelete(
-                                              note.detailMeetingNoteId,
-                                            )
+                                            handleDelete(note.meetingNoteId)
                                           }
                                           className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
                                         >
@@ -454,13 +446,13 @@ export default function MeetingDesc() {
                 {Array.isArray(meetingNotes?.data) &&
                   meetingNotes.data.map(
                     (note: MeetingNotesRes, idx: number) => {
-                      const author = meetingTiming?.employeeList?.find(
-                        (j) => j.employeeId === note.employeeId,
-                      );
+                      const author = (
+                        meetingTiming?.joiners as Joiners[]
+                      )?.find((j) => j.employeeId === note.employeeId);
 
                       return (
                         <div
-                          key={note.detailMeetingNoteId || idx}
+                          key={note.meetingNoteId || idx}
                           className="flex items-start bg-white rounded-lg border px-3 mb-3 py-2 shadow-sm gap-2"
                         >
                           <div className="flex-1 text-sm text-black">
@@ -491,24 +483,17 @@ export default function MeetingDesc() {
                                 meetingStatus !== "ENDED" && (
                                   <div>
                                     <DropdownMenu
-                                      open={
-                                        dropdownOpen ===
-                                        note.detailMeetingNoteId
-                                      }
+                                      open={dropdownOpen === note.meetingNoteId}
                                       onOpenChange={(open) =>
                                         setDropdownOpen(
-                                          open
-                                            ? note.detailMeetingNoteId
-                                            : null,
+                                          open ? note.meetingNoteId : null,
                                         )
                                       }
                                     >
                                       <DropdownMenuTrigger asChild>
                                         <button
                                           onClick={() =>
-                                            setDropdownOpen(
-                                              note.detailMeetingNoteId,
-                                            )
+                                            setDropdownOpen(note.meetingNoteId)
                                           }
                                           className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
                                         >
@@ -531,9 +516,7 @@ export default function MeetingDesc() {
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                           onClick={() =>
-                                            handleDelete(
-                                              note.detailMeetingNoteId,
-                                            )
+                                            handleDelete(note.meetingNoteId)
                                           }
                                           className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
                                         >

@@ -14,7 +14,8 @@ export default function useGetDetailMeetingAgendaIssue({
       const { data: resData } = await Api.post<{
         data: DetailMeetingAgendaIssue;
       }>({
-        url: Urls.detailMeetingAgendaIssue(filter.detailMeetingAgendaIssueId),
+        url: Urls.detailMeetingAgendaIssue(filter.issueObjectiveId),
+        data: filter,
       });
 
       return resData.data;

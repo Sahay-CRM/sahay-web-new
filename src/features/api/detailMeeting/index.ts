@@ -8,6 +8,8 @@ export { default as updateDetailMeetingMutation } from "./useUpdateDetailMeeting
 export { default as editAgendaTimingMeetingMutation } from "./useUpdateAgendaMeeting";
 export { default as addMeetingTimeMutation } from "./useUpdateMeetingTime";
 export { default as updateKPIDataMutation } from "./useUpdateKPIData";
+export { default as addUpdateDetailMeetingMutation } from "./useAddUpdateDetailMeeting";
+export { default as createIoMutation } from "./useCreateIo";
 
 export { default as endMeetingMutation } from "./useEndMeeting";
 
@@ -27,3 +29,4 @@ export { default as useGetDetailMeetingObj } from "./useGetDetailMeetingObj";
 export { default as useGetDetailMeetingAgenda } from "./useGetDetailMeetingAgenda";
 export { default as useGetDetailMeetingAgendaIssue } from "./useGetDetailMeetingAgendaIssue";
 export { default as useGetMeetingConclusionTime } from "./useGetMeetingConclusionTime";
+export { default as useGetDetailMeeting } from "./useGetDetailMeeting";

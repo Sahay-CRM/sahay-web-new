@@ -17,9 +17,8 @@ import { addMeetingNotesMutation } from "@/features/api/detailMeeting";
 interface TaskDrawerProps {
   open: boolean;
   onClose: () => void;
-  taskData?: TaskGetPaging | null; // Use your TaskGetPaging type if available
+  taskData?: TaskGetPaging | null;
   detailMeetingAgendaIssueId?: string;
-  detailMeetingId?: string;
   tasksFireBase: () => void;
 }
 
@@ -40,7 +39,6 @@ export default function TaskDrawer({
   onClose,
   taskData,
   detailMeetingAgendaIssueId,
-  detailMeetingId,
   tasksFireBase,
 }: TaskDrawerProps) {
   const { id: meetingId } = useParams();
@@ -175,7 +173,7 @@ export default function TaskDrawer({
   }, [onClose, open]);
 
   const onSubmit = (data: TaskFormData) => {
-    if (meetingId && detailMeetingId) {
+    if (meetingId) {
       const { assignUsers, taskStartDate, taskDeadline, ...rest } = data;
       const payload: AddUpdateTask = {
         ...rest,
@@ -185,7 +183,6 @@ export default function TaskDrawer({
         taskDeadline: taskDeadline ? new Date(taskDeadline) : null,
         meetingId: meetingId,
         detailMeetingAgendaIssueId: detailMeetingAgendaIssueId,
-        detailMeetingId: detailMeetingId,
       };
       addUpdateTask(payload, {
         onSuccess: () => {

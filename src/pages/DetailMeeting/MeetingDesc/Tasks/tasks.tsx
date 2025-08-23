@@ -29,13 +29,13 @@ import {
 interface TasksProps {
   tasksFireBase: () => void;
   meetingAgendaIssueId?: string | undefined;
-  detailMeetingId: string | undefined;
+  ioType?: string;
 }
 
 export default function Tasks({
   tasksFireBase,
   meetingAgendaIssueId,
-  detailMeetingId,
+  ioType,
 }: TasksProps) {
   const { id: meetingId } = useParams();
   const { data: taskStatus } = useGetAllTaskStatus({
@@ -51,18 +51,20 @@ export default function Tasks({
 
   const { data: selectedTask } = useGetMeetingTask({
     filter: {
-      detailMeetingId: detailMeetingId,
-      detailMeetingAgendaIssueId: meetingAgendaIssueId,
+      meetingId: meetingId,
+      issueObjectiveId: meetingAgendaIssueId,
+      ioType: ioType,
     },
-    enable: !!detailMeetingId && !!meetingAgendaIssueId,
+    enable: !!meetingId && !!meetingAgendaIssueId && !!ioType,
   });
 
-  const handleAddTasks = (tasks: TaskGetPaging[]) => {
-    if (meetingAgendaIssueId && detailMeetingId) {
+  const handleAddTasks = (tasks: TaskGetPaging) => {
+    if (meetingAgendaIssueId && meetingId) {
       const payload = {
-        detailMeetingId: detailMeetingId,
-        taskIds: tasks.map((item) => item.taskId),
-        detailMeetingAgendaIssueId: meetingAgendaIssueId,
+        meetingId: meetingId,
+        taskId: tasks.taskId,
+        issueObjectiveId: meetingAgendaIssueId,
+        ioType: ioType,
       };
       addMeetingTask(payload, {
         onSuccess: () => {
@@ -262,7 +264,6 @@ export default function Tasks({
           onClose={() => setDrawerOpen(false)}
           taskData={selected}
           detailMeetingAgendaIssueId={meetingAgendaIssueId}
-          detailMeetingId={detailMeetingId}
           tasksFireBase={tasksFireBase}
         />
       )}

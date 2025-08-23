@@ -26,29 +26,30 @@ import {
   deleteMeetingProjectMutation,
   useGetMeetingProject,
 } from "@/features/api/detailMeeting";
+import { useParams } from "react-router-dom";
 
 interface ProjectProps {
-  meetingId: string;
   projectsFireBase: () => void;
   meetingAgendaIssueId: string | undefined;
-  detailMeetingId: string | undefined;
+  ioType?: string;
 }
 
 export default function Projects({
-  meetingId,
   projectsFireBase,
   meetingAgendaIssueId,
-  detailMeetingId,
+  ioType,
 }: ProjectProps) {
+  const { id: meetingId } = useParams();
   const { mutate: addMeetingProject } = addMeetingProjectDataMutation();
   const { mutate: deleteProjectById } = deleteMeetingProjectMutation();
 
   const { data: selectedProjects } = useGetMeetingProject({
     filter: {
-      detailMeetingId: detailMeetingId,
-      detailMeetingAgendaIssueId: meetingAgendaIssueId,
+      meetingId: meetingId,
+      issueObjectiveId: meetingAgendaIssueId,
+      ioType: ioType,
     },
-    enable: !!detailMeetingId && !!meetingAgendaIssueId,
+    enable: !!meetingId && !!meetingAgendaIssueId && !!ioType,
   });
 
   const { mutate: addProject } = useAddUpdateCompanyProject();
@@ -60,15 +61,13 @@ export default function Projects({
     null,
   );
 
-  const handleAdd = (data: IProjectFormData[]) => {
-    if (meetingAgendaIssueId && detailMeetingId) {
+  const handleAdd = (data: IProjectFormData) => {
+    if (meetingAgendaIssueId && meetingId) {
       const payload = {
         meetingId: meetingId,
-        detailMeetingAgendaIssueId: meetingAgendaIssueId,
-        detailMeetingId: detailMeetingId,
-        projectIds: data
-          .map((item) => item.projectId)
-          .filter((id): id is string => typeof id === "string"),
+        issueObjectiveId: meetingAgendaIssueId,
+        projectId: data.projectId,
+        ioType: ioType,
       };
       addMeetingProject(payload, {
         onSuccess: () => {
@@ -125,7 +124,7 @@ export default function Projects({
 
   const conformDelete = useCallback(
     async (data: IProjectFormData) => {
-      if (data && data.detailMeetingProjectId && data.projectId) {
+      if (data && data.detailMeetingProjectId && data.projectId && meetingId) {
         const payload = {
           projectId: data.projectId,
           meetingId: meetingId,
@@ -267,7 +266,6 @@ export default function Projects({
           onClose={() => setDrawerOpen(false)}
           projectData={selected}
           detailMeetingAgendaIssueId={meetingAgendaIssueId}
-          detailMeetingId={detailMeetingId}
           projectsFireBase={projectsFireBase}
         />
       )}

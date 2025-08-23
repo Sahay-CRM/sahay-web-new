@@ -8,7 +8,9 @@ import { toast } from "sonner";
 
 interface MeetingProjectAdd {
   meetingId: string;
-  projectIds: string[];
+  projectId: string | undefined;
+  ioType: string | undefined;
+  issueObjectiveId: string;
 }
 
 export default function useAddMeetingProjectData() {

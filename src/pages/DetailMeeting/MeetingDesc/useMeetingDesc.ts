@@ -2,14 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { get, getDatabase, off, onValue, ref, update } from "firebase/database";
 
-import {
-  addUpdateCompanyMeetingMutation,
-  useAddUpdateCompanyMeeting,
-} from "@/features/api/companyMeeting";
+import { useAddUpdateCompanyMeeting } from "@/features/api/companyMeeting";
 import { queryClient } from "@/queryClient";
 import {
   addMeetingNotesMutation,
-  addMeetingTimeMutation,
+  addUpdateDetailMeetingMutation,
   deleteCompanyMeetingMutation,
   endMeetingMutation,
   updateDetailMeetingMutation,
@@ -32,19 +29,21 @@ export default function useMeetingDesc() {
   const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
   const { data: meetingNotes } = useGetMeetingNotes({
     filter: {
-      meetingId: meetingTiming?.detailMeetingId,
+      meetingId: meetingTiming?.meetingId,
       noteType: activeTab === "updates" ? "UPDATES" : "APPRECIATION",
     },
-    enable: !!meetingTiming?.detailMeetingId,
+    enable: !!meetingTiming?.meetingId,
   });
 
   const { mutate: endMeet } = endMeetingMutation();
   const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
-  const { mutate: updateMeetingTeamLeader } = addUpdateCompanyMeetingMutation();
-  const { mutate: updateTime } = addMeetingTimeMutation();
+  // const { mutate: updateMeetingTeamLeader } = addUpdateCompanyMeetingMutation();
+  // const { mutate: updateTime } = addMeetingTimeMutation();
   const { mutate: addNote } = addMeetingNotesMutation();
   const deleteNoteMutation = deleteCompanyMeetingMutation();
   const { mutate: addMeeting } = useAddUpdateCompanyMeeting();
+
+  const { mutate: addDetailMeeting } = addUpdateDetailMeetingMutation();
 
   const handleUpdatedRefresh = useCallback(async () => {
     await Promise.all([
@@ -148,7 +147,7 @@ export default function useMeetingDesc() {
 
   const handleAddTeamLeader = (data: Joiners) => {
     const meetRef = ref(db, `meetings/${meetingId}/state`);
-    const meetingJoiners = meetingTiming?.employeeList;
+    const meetingJoiners = meetingTiming?.joiners;
     const teamLeader = (meetingJoiners as Joiners[])
       ?.filter((da) => da.isTeamLeader)
       .map((item) => item.employeeId);
@@ -161,10 +160,10 @@ export default function useMeetingDesc() {
     }
 
     const payload = {
-      companyMeetingId: meetingId,
+      meetingId: meetingId,
       teamLeaders: updatedTeamLeaders,
     };
-    updateMeetingTeamLeader(payload, {
+    addDetailMeeting(payload, {
       onSuccess: () => {
         update(meetRef, {
           updatedAt: new Date(),
@@ -204,14 +203,14 @@ export default function useMeetingDesc() {
     }
   };
 
-  const handleCheckIn = (item: Joiners, attendanceMark: boolean) => {
+  const handleCheckIn = (employeeId: string, attendanceMark: boolean) => {
     if (meetingId) {
-      updateTime(
+      // console.log(attendanceMark, meetingId, employeeId);
+      addDetailMeeting(
         {
           meetingId: meetingId,
-          employeeId: item.employeeId,
+          employeeId: employeeId,
           attendanceMark: attendanceMark,
-          updatedAt: new Date().toISOString(),
         },
         {
           onSuccess: () => {
@@ -228,7 +227,7 @@ export default function useMeetingDesc() {
 
   const handleUpdateNotes = (data: MeetingNotesRes) => {
     const payload = {
-      detailMeetingNoteId: data.detailMeetingNoteId,
+      meetingNoteId: data.meetingNoteId,
       noteType: null,
     };
     addNote(payload, {
@@ -245,15 +244,17 @@ export default function useMeetingDesc() {
     const meetingSnapshot = await get(meetingRef);
     const meetStateRef = ref(db, `meetings/${meetingId}/state`);
 
-    if (meetingId && meetingTiming?.detailMeetingId) {
+    if (meetingId && meetingTiming?.meetingId) {
       const payload = {
-        companyMeetingId: meetingId,
+        meetingId: meetingId,
         joiners: [
           ...(data?.map((item) => item.employeeId) || []),
-          ...(meetingTiming.employeeList?.map((em) => em.employeeId) || []),
+          ...((meetingTiming.joiners as Joiners[])?.map(
+            (em) => em.employeeId,
+          ) || []),
         ],
       };
-      addMeeting(payload, {
+      addDetailMeeting(payload, {
         onSuccess: () => {
           if (!meetingSnapshot.exists()) {
             queryClient.invalidateQueries({
@@ -274,11 +275,11 @@ export default function useMeetingDesc() {
     const meetingSnapshot = await get(meetingRef);
     const meetStateRef = ref(db, `meetings/${meetingId}/state`);
 
-    const joiners = meetingTiming?.employeeList
+    const joiners = (meetingTiming?.joiners as Joiners[])
       ?.filter((item) => item.employeeId !== employeeId)
       ?.map((item) => item.employeeId);
 
-    if (meetingId && meetingTiming?.detailMeetingId) {
+    if (meetingId && meetingTiming?.meetingId) {
       const payload = {
         companyMeetingId: meetingId,
         joiners: joiners,
@@ -300,7 +301,7 @@ export default function useMeetingDesc() {
   };
 
   return {
-    meetingStatus: meetingTiming?.status,
+    meetingStatus: meetingTiming?.detailMeetingStatus,
     meetingId,
     meetingResponse,
     meetingTiming,

@@ -1,26 +1,22 @@
 import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import {
-  useAddUpdateCompanyMeeting,
-  useGetCompanyMeetingById,
-} from "@/features/api/companyMeeting";
-import { docUploadMutation } from "@/features/api/file";
-import { queryClient } from "@/queryClient";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+
+import {
+  addUpdateDetailMeetingMutation,
+  useGetMeetingTiming,
+} from "@/features/api/detailMeeting";
 
 // Renamed function
 export default function useAddDetailMeeting() {
   const { id: companyMeetingId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
 
-  const { mutate: addMeeting, isPending } = useAddUpdateCompanyMeeting();
+  const { mutate: addDetailMeeting, isPending } =
+    addUpdateDetailMeetingMutation();
   const navigate = useNavigate();
-  const { data: meetingApiData } = useGetCompanyMeetingById(
-    companyMeetingId || "",
-  );
-
-  const { mutate: docUpload } = docUploadMutation();
+  const { data: meetingApiData } = useGetMeetingTiming(companyMeetingId || "");
 
   const methods = useForm({
     mode: "onChange",
@@ -29,8 +25,8 @@ export default function useAddDetailMeeting() {
   const { handleSubmit, trigger, reset, getValues, setValue } = methods;
 
   useEffect(() => {
-    if (meetingApiData?.data) {
-      const data = meetingApiData.data;
+    if (meetingApiData) {
+      const data = meetingApiData;
       reset({
         meetingId: companyMeetingId || "",
         meetingName: data.meetingName || "",
@@ -38,16 +34,8 @@ export default function useAddDetailMeeting() {
         meetingDateTime: data.meetingDateTime
           ? new Date(data.meetingDateTime).toISOString()
           : null,
-        meetingStatusId: data.meetingStatus || undefined,
         meetingTypeId: data.meetingType || undefined,
         employeeId: data.joiners,
-        meetingDocuments: Array.isArray(data.files)
-          ? data.files.map((f: { fileId: string; fileName: string }) => ({
-              fileId: f.fileId,
-              fileName: f.fileName,
-            }))
-          : [],
-        removedFileIdsArray: [],
       });
     }
   }, [meetingApiData, reset, companyMeetingId, setValue]);
@@ -64,96 +52,57 @@ export default function useAddDetailMeeting() {
   const [searchParams] = useSearchParams();
 
   const onSubmit = handleSubmit(async (data) => {
-    const payload = {
-      meetingName: data?.meetingName,
-      meetingDescription: data?.meetingDescription,
-      meetingDateTime:
-        data.meetingDateTime instanceof Date
-          ? data.meetingDateTime.toISOString()
-          : data.meetingDateTime,
-      meetingTypeId: data?.meetingTypeId?.meetingTypeId,
-      meetingStatusId:
-        data?.meetingStatusId?.meetingStatusId || data?.meetingStatusId,
-      joiners: data?.employeeId?.map(
-        (ele: { employeeId: string }) => ele?.employeeId,
-      ),
-      companyMeetingId: companyMeetingId || "",
-      teamLeaders: Array.isArray(data?.employeeId)
-        ? data.employeeId
-            .filter((emp: EmployeeDetails) => emp.isTeamLeader)
-            .map((emp: EmployeeDetails) => emp.employeeId)
-        : [],
-    };
-
-    addMeeting(payload, {
-      onSuccess: (response) => {
-        const meetingId = Array.isArray(response?.data)
-          ? response?.data[0]?.companyMeetingId || companyMeetingId
-          : (response?.data as { companyMeetingId?: string })
-              ?.companyMeetingId || companyMeetingId;
-
-        if (typeof meetingId === "string" && meetingId) {
-          handleFileOperations(
-            meetingId,
-            data.meetingDocuments || [],
-            data.removedFileIdsArray || [],
-          );
+    const payload = companyMeetingId
+      ? {
+          meetingName: data?.meetingName,
+          meetingDescription: data?.meetingDescription,
+          meetingDateTime:
+            data.meetingDateTime instanceof Date
+              ? data.meetingDateTime.toISOString()
+              : data.meetingDateTime,
+          meetingTypeId: data?.meetingTypeId?.meetingTypeId,
+          joiners: data?.employeeId?.map(
+            (ele: { employeeId: string }) => ele?.employeeId,
+          ),
+          meetingId: companyMeetingId || "",
+          teamLeaders: Array.isArray(data?.employeeId)
+            ? data.employeeId
+                .filter((emp: EmployeeDetails) => emp.isTeamLeader)
+                .map((emp: EmployeeDetails) => emp.employeeId)
+            : [],
+          isDetailMeeting: true,
         }
+      : {
+          meetingName: data?.meetingName,
+          meetingDescription: data?.meetingDescription,
+          meetingDateTime:
+            data.meetingDateTime instanceof Date
+              ? data.meetingDateTime.toISOString()
+              : data.meetingDateTime,
+          meetingTypeId: data?.meetingTypeId?.meetingTypeId,
+          joiners: data?.employeeId?.map(
+            (ele: { employeeId: string }) => ele?.employeeId,
+          ),
+          teamLeaders: Array.isArray(data?.employeeId)
+            ? data.employeeId
+                .filter((emp: EmployeeDetails) => emp.isTeamLeader)
+                .map((emp: EmployeeDetails) => emp.employeeId)
+            : [],
+          isDetailMeeting: true,
+        };
 
+    addDetailMeeting(payload, {
+      onSuccess: () => {
         handleModalClose();
         if (searchParams.get("from") === "task") {
           navigate("/dashboard/tasks/add");
           window.location.reload();
         } else {
-          navigate("/dashboard/meeting");
+          navigate("/dashboard/meeting/detail");
         }
       },
     });
   });
-
-  const handleFileOperations = async (
-    meetingId: string,
-    currentFiles: (File | string | { fileId: string; fileName: string })[],
-    removedIds: string[],
-  ) => {
-    const uploadMeetingFile = (
-      file: File | string,
-      fileType: string = "2040",
-    ) => {
-      const formData = new FormData();
-      formData.append("refId", meetingId);
-      formData.append("imageType", "MEETING");
-      formData.append("isMaster", "0");
-      formData.append("fileType", fileType);
-      if (file instanceof File || typeof file === "string") {
-        formData.append("files", file);
-        docUpload(formData, {
-          onSuccess: () => {
-            queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
-            queryClient.resetQueries({ queryKey: ["get-meeting-dropdown"] });
-            queryClient.resetQueries({ queryKey: ["get-meeting-list-by-id"] });
-          },
-        });
-      }
-    };
-
-    const newFilesToUpload = currentFiles.filter(
-      (file) => file instanceof File || typeof file === "string",
-    ) as (File | string)[];
-
-    newFilesToUpload.forEach((file) => {
-      uploadMeetingFile(file);
-    });
-
-    if (removedIds.length > 0) {
-      const formData = new FormData();
-      formData.append("refId", meetingId);
-      formData.append("imageType", "MEETING");
-      formData.append("isMaster", "0");
-      formData.append("removedFiles", removedIds.join(",")); // Send as comma-separated string
-      docUpload(formData);
-    }
-  };
 
   const handleModalClose = () => {
     reset();
@@ -165,9 +114,9 @@ export default function useAddDetailMeeting() {
     handleClose,
     onFinish,
     onSubmit,
-    meetingPreview: getValues(), // This can still be used for the modal preview
+    meetingPreview: getValues(),
     trigger,
-    methods, // Export methods for FormProvider
+    methods,
     companyMeetingId,
     isPending,
     meetingApiData,

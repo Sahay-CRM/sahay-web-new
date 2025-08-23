@@ -7,9 +7,9 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 interface MeetingTaskAdd {
-  detailMeetingId: string;
-  taskIds: string[];
-  detailMeetingAgendaIssueId: string;
+  meetingId: string;
+  taskId: string;
+  issueObjectiveId: string;
 }
 
 export default function useAddMeetingTaskData() {

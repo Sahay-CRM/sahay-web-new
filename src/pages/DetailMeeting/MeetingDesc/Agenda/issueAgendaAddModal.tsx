@@ -8,7 +8,7 @@ import { useState } from "react";
 interface DetailMeetingObjectives {
   id: string;
   name: string;
-  type: string;
+  ioType: string;
 }
 
 interface IssueAgendaAddModalProps {
@@ -116,7 +116,7 @@ export default function IssueAgendaAddModal({
                     handleUpdateSelectedObjective(item);
                   }}
                 >
-                  {item.name} ({item.type})
+                  {item.name} ({item.ioType})
                 </li>
               ))}
             </ul>

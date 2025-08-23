@@ -4,15 +4,23 @@ import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { queryClient } from "@/queryClient";
 
+interface DeleteProps {
+  ioType: string;
+  issueObjectiveId?: string;
+}
+
 export default function useDeleteMeetingObjective() {
   const deleteMeetingObjectiveMutation = useMutation({
     mutationKey: ["delete-meeting-objective"],
-    mutationFn: async (detailMeetingAgendaIssueId: string) => {
-      if (!detailMeetingAgendaIssueId) {
+    mutationFn: async (data: DeleteProps) => {
+      if (!data.issueObjectiveId) {
         throw new Error("Something Went Wrong");
       }
-      const { data: resData } = await Api.delete({
-        url: Urls.deleteMeetingAgendaObjective(detailMeetingAgendaIssueId),
+      const { data: resData } = await Api.post({
+        url: Urls.deleteMeetingAgendaObjective(data.issueObjectiveId),
+        data: {
+          ioType: data.ioType,
+        },
       });
       return resData;
     },

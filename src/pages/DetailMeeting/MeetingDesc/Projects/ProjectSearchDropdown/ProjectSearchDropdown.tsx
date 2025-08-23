@@ -5,7 +5,7 @@ import { useGetCompanyProject } from "@/features/api/companyProject";
 import { CornerDownLeft } from "lucide-react";
 
 interface ProjectSearchDropdownProps {
-  onAdd: (selectedTasks: IProjectFormData[]) => void;
+  onAdd: (selectedTasks: IProjectFormData) => void;
   filterProps?: Partial<FilterDataProps["filter"]>;
   minSearchLength?: number;
   renderData?: (task: IProjectFormData, checked: boolean) => React.ReactNode;
@@ -58,7 +58,7 @@ export default function ProjectSearchDropdown({
 
   // Add button logic (now on item click)
   const handleSelect = (item: IProjectFormData) => {
-    onAdd([item]);
+    onAdd(item);
     setShowDropdown(false);
     setSearchValue("");
   };

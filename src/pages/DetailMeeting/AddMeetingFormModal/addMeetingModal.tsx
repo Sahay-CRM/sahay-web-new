@@ -1,4 +1,5 @@
 import ModalData from "@/components/shared/Modal/ModalData";
+import { format } from "date-fns";
 
 interface MeetingModalProps {
   modalData: MeetingData;
@@ -62,7 +63,7 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
             <span className="font-medium text-primary">
               Meeting Date & Time:{" "}
             </span>
-            {modalData.meetingDateTime}
+            {format(new Date(modalData.meetingDateTime), "dd/MM/yyyy h:mm aa")}
           </div>
         )}
         {modalData?.meetingStatus && (
@@ -79,10 +80,10 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
             {modalData.meetingTypeName}
           </div>
         )}
-        {/* {joiners && (
+        {/* {modalData.joiners && (
           <div className="col-span-2">
             <span className="font-medium text-primary">Joiners: </span>
-            {joiners}
+            {modalData.joiners.map((item) => item.employeeName)}
           </div>
         )} */}
       </div>
