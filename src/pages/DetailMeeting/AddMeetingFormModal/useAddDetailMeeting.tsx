@@ -10,7 +10,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 
 // Renamed function
-export default function useAddMeeting() {
+export default function useAddDetailMeeting() {
   const { id: companyMeetingId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
 
@@ -20,7 +20,7 @@ export default function useAddMeeting() {
     companyMeetingId || "",
   );
 
-  const { mutate: docUpload } = docUploadMutation(); // Renamed for clarity
+  const { mutate: docUpload } = docUploadMutation();
 
   const methods = useForm({
     mode: "onChange",

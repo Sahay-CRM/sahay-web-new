@@ -13,7 +13,7 @@ import {
 } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
-import { addMeetingNotesMutation } from "@/features/api/companyMeeting";
+import { addMeetingNotesMutation } from "@/features/api/detailMeeting";
 
 interface ProjectDrawerProps {
   open: boolean;

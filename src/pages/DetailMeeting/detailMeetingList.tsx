@@ -106,7 +106,7 @@ export default function DetailMeetingList() {
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
             {permission.Add && (
-              <Link to="/dashboard/meeting/add">
+              <Link to="/dashboard/meeting/detail/add">
                 <Button className="py-2 w-fit">Add Meeting</Button>
               </Link>
             )}
@@ -211,7 +211,9 @@ export default function DetailMeetingList() {
             onEdit={
               permission.Edit
                 ? (row) => {
-                    navigate(`/dashboard/meeting/edit/${row.meetingId}`);
+                    navigate(
+                      `/dashboard/meeting/detail/update/${row.meetingId}`,
+                    );
                   }
                 : undefined
             }

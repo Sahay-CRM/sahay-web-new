@@ -1,26 +1,26 @@
-import { Button } from "@/components/ui/button";
-import AddMeetingModal from "./addMeetingModal"; // Renamed import
-import useAddMeeting from "./useAddMeeting"; // Renamed import
+import { useEffect, useState, useMemo } from "react"; // Added useState, useRef, ChangeEvent
 import { FormProvider, useFormContext, Controller } from "react-hook-form"; // Added useFormContext, Controller
+
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
-import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { useEffect, useState, useRef, ChangeEvent, useMemo } from "react"; // Added useState, useRef, ChangeEvent
-
-// Imports for components used within step components
-import { Card } from "@/components/ui/card";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import TableData from "@/components/shared/DataTable/DataTable";
-import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
-
-import { getEmployee } from "@/features/api/companyEmployee";
-// import { useGetCompanyMeetingStatus } from "@/features/api/companyMeeting";
-import { getMeetingType } from "@/features/api/meetingType";
-import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import FormSelect from "@/components/shared/Form/FormSelect";
-import { useDdMeetingStatus } from "@/features/api/meetingStatus";
+import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
+
+import AddMeetingModal from "./addMeetingModal"; // Renamed import
+import useAddDetailMeeting from "./useAddDetailMeeting"; // Renamed import
+
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { getEmployee } from "@/features/api/companyEmployee";
+import { getMeetingType } from "@/features/api/meetingType";
+import { useDdMeetingStatus } from "@/features/api/meetingStatus";
+
+import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 
 interface MeetingInfoProps {
   isUpdateMeeting: boolean;
@@ -91,7 +91,7 @@ const MeetingType = () => {
       <Controller
         name="meetingTypeId"
         control={control}
-        rules={{ required: "Please select a meeting type" }}
+        // rules={{ required: "Please select a meeting type" }}
         render={({ field }) => (
           <TableData
             tableData={
@@ -291,20 +291,7 @@ const Joiners = () => {
         name="employeeId"
         control={control}
         rules={{
-          validate: (value) => {
-            if (meetingType.parentType === "DETAIL") {
-              if (!value || value.length === 0) {
-                return "Please select at least one joiner";
-              }
-              const hasTeamLeader = value.some(
-                (emp: EmployeeDetails) => emp.isTeamLeader,
-              );
-              if (!hasTeamLeader) {
-                return "At least one joiner must be marked as Team Leader";
-              }
-            }
-            return true;
-          },
+          required: "At least one joiner must be marked as Team Leader",
         }}
         render={({ field }) => {
           return (
@@ -334,7 +321,6 @@ const Joiners = () => {
               selectedValue={field.value || []}
               handleChange={(selectedItems) => field.onChange(selectedItems)}
               customActions={(row: EmployeeDetails) => {
-                if (!(meetingType.parentType === "DETAIL")) return;
                 const isSelected = (field.value || []).some(
                   (emp: EmployeeDetails) => emp.employeeId === row.employeeId,
                 );
@@ -374,129 +360,128 @@ const Joiners = () => {
   );
 };
 
-// --- UploadDoc Component Definition ---
-const UploadDoc = () => {
-  const { watch, setValue } = useFormContext();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+// const UploadDoc = () => {
+//   const { watch, setValue } = useFormContext();
+//   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Local state for UI representation of files, synced with form state
-  const [displayFiles, setDisplayFiles] = useState<
-    (File | string | { fileId: string; fileName: string })[]
-  >([]);
+//   // Local state for UI representation of files, synced with form state
+//   const [displayFiles, setDisplayFiles] = useState<
+//     (File | string | { fileId: string; fileName: string })[]
+//   >([]);
 
-  // Watch form state for initial files and updates
-  const formFiles = watch("meetingDocuments");
+//   // Watch form state for initial files and updates
+//   const formFiles = watch("meetingDocuments");
 
-  useEffect(() => {
-    // Sync local displayFiles with formFiles when formFiles changes (e.g., on reset)
-    if (formFiles) {
-      setDisplayFiles(formFiles);
-    }
-  }, [formFiles]);
+//   useEffect(() => {
+//     // Sync local displayFiles with formFiles when formFiles changes (e.g., on reset)
+//     if (formFiles) {
+//       setDisplayFiles(formFiles);
+//     }
+//   }, [formFiles]);
 
-  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    if (!files.length) return;
+//   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+//     const files = Array.from(e.target.files ?? []);
+//     if (!files.length) return;
 
-    const currentFormFiles = watch("meetingDocuments") || [];
-    const newFormFiles = [...currentFormFiles, ...files];
-    setValue("meetingDocuments", newFormFiles);
-    setDisplayFiles(newFormFiles); // Update local display
+//     const currentFormFiles = watch("meetingDocuments") || [];
+//     const newFormFiles = [...currentFormFiles, ...files];
+//     setValue("meetingDocuments", newFormFiles);
+//     setDisplayFiles(newFormFiles); // Update local display
 
-    if (e.target) e.target.value = ""; // Reset file input
-  };
+//     if (e.target) e.target.value = ""; // Reset file input
+//   };
 
-  const handleRemoveFile = (indexToRemove: number) => {
-    const fileToRemove = displayFiles[indexToRemove];
+//   const handleRemoveFile = (indexToRemove: number) => {
+//     const fileToRemove = displayFiles[indexToRemove];
 
-    const currentRemovedIds = watch("removedFileIdsArray") || [];
-    const updatedRemovedIds = [...currentRemovedIds];
+//     const currentRemovedIds = watch("removedFileIdsArray") || [];
+//     const updatedRemovedIds = [...currentRemovedIds];
 
-    if (
-      typeof fileToRemove === "object" &&
-      "fileId" in fileToRemove &&
-      !(fileToRemove instanceof File)
-    ) {
-      // This is an existing file, add its ID to removedFileIdsArray if not already there
-      if (!updatedRemovedIds.includes(fileToRemove.fileId)) {
-        updatedRemovedIds.push(fileToRemove.fileId);
-      }
-    }
-    setValue("removedFileIdsArray", updatedRemovedIds);
+//     if (
+//       typeof fileToRemove === "object" &&
+//       "fileId" in fileToRemove &&
+//       !(fileToRemove instanceof File)
+//     ) {
+//       // This is an existing file, add its ID to removedFileIdsArray if not already there
+//       if (!updatedRemovedIds.includes(fileToRemove.fileId)) {
+//         updatedRemovedIds.push(fileToRemove.fileId);
+//       }
+//     }
+//     setValue("removedFileIdsArray", updatedRemovedIds);
 
-    const newDisplayFiles = displayFiles.filter(
-      (_, idx) => idx !== indexToRemove,
-    );
-    setDisplayFiles(newDisplayFiles);
-    setValue("meetingDocuments", newDisplayFiles);
-  };
+//     const newDisplayFiles = displayFiles.filter(
+//       (_, idx) => idx !== indexToRemove
+//     );
+//     setDisplayFiles(newDisplayFiles);
+//     setValue("meetingDocuments", newDisplayFiles);
+//   };
 
-  return (
-    <div className="flex flex-col gap-4">
-      <label className="font-semibold mb-2">
-        Upload Documents (Image, Doc, Video, etc.)
-      </label>
-      <button
-        type="button"
-        className="w-fit px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          fileInputRef.current?.click();
-        }}
-      >
-        Choose Files
-      </button>
-      <input
-        type="file"
-        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.avi,.mov,.mkv"
-        ref={fileInputRef}
-        onChange={handleFileUpload}
-        className="hidden"
-        multiple
-        style={{ display: "none" }}
-      />
-      {displayFiles.length > 0 && (
-        <div className="mt-3 flex flex-col gap-2">
-          <p className="text-sm text-gray-600 mb-2">
-            {displayFiles.length} file(s) selected
-          </p>
-          {displayFiles.map((file, idx) => (
-            <div
-              key={idx} // Using index as key is okay if list order doesn't change unpredictably or items don't have stable IDs
-              className="flex items-center justify-between p-2 bg-gray-50 rounded"
-            >
-              <span className="font-medium truncate">
-                {typeof file === "string"
-                  ? file.substring(0, 30) + (file.length > 30 ? "..." : "")
-                  : "fileName" in file && !(file instanceof File) // Check it's not a File object
-                    ? file.fileName
-                    : (file as File).name}
-              </span>
-              <button
-                type="button"
-                className="ml-2 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleRemoveFile(idx);
-                }}
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-      {displayFiles.length === 0 && (
-        <p className="text-sm text-gray-500 italic">No files selected</p>
-      )}
-    </div>
-  );
-};
+//   return (
+//     <div className="flex flex-col gap-4">
+//       <label className="font-semibold mb-2">
+//         Upload Documents (Image, Doc, Video, etc.)
+//       </label>
+//       <button
+//         type="button"
+//         className="w-fit px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+//         onClick={(e) => {
+//           e.preventDefault();
+//           e.stopPropagation();
+//           fileInputRef.current?.click();
+//         }}
+//       >
+//         Choose Files
+//       </button>
+//       <input
+//         type="file"
+//         accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.avi,.mov,.mkv"
+//         ref={fileInputRef}
+//         onChange={handleFileUpload}
+//         className="hidden"
+//         multiple
+//         style={{ display: "none" }}
+//       />
+//       {displayFiles.length > 0 && (
+//         <div className="mt-3 flex flex-col gap-2">
+//           <p className="text-sm text-gray-600 mb-2">
+//             {displayFiles.length} file(s) selected
+//           </p>
+//           {displayFiles.map((file, idx) => (
+//             <div
+//               key={idx} // Using index as key is okay if list order doesn't change unpredictably or items don't have stable IDs
+//               className="flex items-center justify-between p-2 bg-gray-50 rounded"
+//             >
+//               <span className="font-medium truncate">
+//                 {typeof file === "string"
+//                   ? file.substring(0, 30) + (file.length > 30 ? "..." : "")
+//                   : "fileName" in file && !(file instanceof File) // Check it's not a File object
+//                     ? file.fileName
+//                     : (file as File).name}
+//               </span>
+//               <button
+//                 type="button"
+//                 className="ml-2 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition"
+//                 onClick={(e) => {
+//                   e.preventDefault();
+//                   e.stopPropagation();
+//                   handleRemoveFile(idx);
+//                 }}
+//               >
+//                 Remove
+//               </button>
+//             </div>
+//           ))}
+//         </div>
+//       )}
+//       {displayFiles.length === 0 && (
+//         <p className="text-sm text-gray-500 italic">No files selected</p>
+//       )}
+//     </div>
+//   );
+// };
 
 // Renamed main component
-const AddMeeting = () => {
+const AddDetailMeeting = () => {
   const {
     onFinish,
     isModalOpen,
@@ -504,18 +489,23 @@ const AddMeeting = () => {
     onSubmit,
     trigger,
     meetingPreview,
-    methods, // This is the methods object from useForm in useAddMeeting
+    methods,
     companyMeetingId,
     isPending,
     meetingApiData,
-  } = useAddMeeting();
+  } = useAddDetailMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
 
   useEffect(() => {
     setBreadcrumbs([
       { label: "Company Meeting", href: "/dashboard/meeting" },
-      { label: companyMeetingId ? "Update Meeting" : "Add Meeting", href: "" },
+      {
+        label: companyMeetingId
+          ? "Update Detail Meeting"
+          : "Add Detail Meeting",
+        href: "",
+      },
       ...(companyMeetingId
         ? [
             {
@@ -535,9 +525,7 @@ const AddMeeting = () => {
   const steps = [
     <MeetingType key="meetingType" />,
     <MeetingInfo isUpdateMeeting={companyMeetingId ? true : false} />,
-    // <MeetingStatus key="meetingStatus" />,
     <Joiners key="joiners" />,
-    <UploadDoc key="uploadDoc" />,
   ];
 
   const {
@@ -550,12 +538,7 @@ const AddMeeting = () => {
     isLastStep,
   } = useStepForm(steps, trigger);
 
-  const stepNames = [
-    "Meeting Type",
-    "Meeting Info",
-    "Joiners",
-    "Upload Document",
-  ];
+  const stepNames = ["Meeting Type", "Meeting Info", "Joiners"];
 
   return (
     <FormProvider {...methods}>
@@ -577,7 +560,7 @@ const AddMeeting = () => {
 
         {isModalOpen && (
           <AddMeetingModal
-            modalData={meetingPreview as MeetingData} // Ensure correct type for modalData
+            modalData={meetingPreview as MeetingData}
             isModalOpen={isModalOpen}
             modalClose={handleClose}
             onSubmit={onSubmit}
@@ -589,4 +572,4 @@ const AddMeeting = () => {
   );
 };
 
-export default AddMeeting;
+export default AddDetailMeeting;

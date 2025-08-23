@@ -244,6 +244,16 @@ const TableData = <T extends Record<string, unknown>>({
     return activeToggleKey ? item[activeToggleKey] : undefined;
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-20">
+        <div className="animate-spin">
+          <SpinnerIcon />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Card className="p-0 gap-0">
       <div className="flex h-[calc(100vh-350px)] flex-col overflow-hidden">
@@ -251,13 +261,13 @@ const TableData = <T extends Record<string, unknown>>({
           <TableHeader className="sticky top-0 z-10 bg-primary shadow-sm">
             <TableRow>
               {showCheckboxes && (
-                <TableHead className="w-[40px] sticky left-0 z-40 bg-primary pl-6">
+                <TableHead className="w-[40px] bg-transparent sticky left-0 z-40 pl-6">
                   {/* Checkbox Header */}
                 </TableHead>
               )}
 
               {showIndexColumn && (
-                <TableHead className="w-[80px] sticky left-[40px] z-20 bg-primary text-center">
+                <TableHead className="w-[80px] bg-transparent sticky left-[40px] z-20 text-center">
                   #
                 </TableHead>
               )}
@@ -280,36 +290,20 @@ const TableData = <T extends Record<string, unknown>>({
                 </TableHead>
               ))}
 
-              {showActionsColumn && (
+              {showActionsColumn ? (
                 <TableHead
-                  className={`w-fit sticky right-0 z-50 text-right bg-primary pr-2 ${actionColumnWidth}`}
+                  className={`w-fit sticky right-0 z-50 bg-transparent text-left pr-2 ${actionColumnWidth}`}
                 >
                   Actions
                 </TableHead>
+              ) : (
+                <TableHead />
               )}
             </TableRow>
           </TableHeader>
 
           <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={
-                    columnKeys.length +
-                    (showCheckboxes ? 1 : 0) +
-                    (showIndexColumn ? 1 : 0) +
-                    1
-                  }
-                  className="py-6 w-full"
-                >
-                  <div className="flex justify-center items-center h-20">
-                    <div className="animate-spin">
-                      <SpinnerIcon />
-                    </div>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : tableData.length ? (
+            {tableData.length ? (
               tableData.map((item, index) => (
                 <TableRow
                   key={item[primaryKey] as React.Key}

@@ -170,6 +170,7 @@ export default function MeetingTimer({
     } catch (error) {
       // Revert local state on error
       setCurrentTime(initialPlannedTime);
+      // eslint-disable-next-line no-console
       console.error("Failed to update time:", error);
     } finally {
       setLocalUpdating(false);

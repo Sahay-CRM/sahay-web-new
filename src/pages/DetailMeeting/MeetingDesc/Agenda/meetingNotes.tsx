@@ -1,8 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  addMeetingNotesMutation,
-  useGetMeetingNotes,
-} from "@/features/api/companyMeeting";
+
 import {
   Trash2,
   Plus,
@@ -12,7 +9,6 @@ import {
   Copy,
   Share2,
 } from "lucide-react";
-import { deleteCompanyMeetingMutation } from "@/features/api/companyMeeting";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +18,11 @@ import {
 import { cn } from "@/lib/utils";
 import TaskDrawer from "../Tasks/taskDrawer";
 import ProjectDrawer from "../Projects/projectDrawer";
+import {
+  addMeetingNotesMutation,
+  deleteCompanyMeetingMutation,
+  useGetMeetingNotes,
+} from "@/features/api/detailMeeting";
 
 interface MeetingNotesProps {
   joiners: Joiners[];

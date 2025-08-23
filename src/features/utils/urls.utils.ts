@@ -212,8 +212,14 @@ const Urls = {
     `${baseUrl}/company/detail-meeting/kpi/remove/${id}`,
   allKpiList: () => `${baseUrl}/company/kpi/get-detail-meeting`,
 
-  getTimeByMeeting: (id: string) =>
+  getDetailMeetingById: (id: string) =>
     `${baseUrl}/company/detail-meeting/get/${id}`,
+  updateDetailMeetingById: (id: string) =>
+    `${baseUrl}/company/detail-meeting/update/${id}`,
+  detailMeetingAdd: () => `${baseUrl}/company/detail-meeting/add`,
+  detailMeetingGet: () => `${baseUrl}/company/detail-meeting/get`,
+  detailMeetingDelete: (id: string) =>
+    `${baseUrl}/company/detail-meeting/delete/${id}`,
 
   getConclusionByMeeting: (id: string) =>
     `${baseUrl}/company/detail-meeting/get-conclusion/${id}`,
@@ -229,15 +235,15 @@ const Urls = {
   getMeetingnotes: (id: string) =>
     `${baseUrl}/company/detail-meeting/note/get/${id}`,
 
-  addIssues: () => `${baseUrl}/company/issues/create`,
-  updateIssues: (id: string) => `${baseUrl}/company/issues/update/${id}`,
-  getIssues: () => `${baseUrl}/company/issues/get`,
-  deleteIssues: (id: string) => `${baseUrl}/company/issues/delete/${id}`,
+  addIssues: () => `${baseUrl}/company/issue/create`,
+  updateIssues: (id: string) => `${baseUrl}/company/issue/update/${id}`,
+  getIssues: () => `${baseUrl}/company/issue/get`,
+  deleteIssues: (id: string) => `${baseUrl}/company/issue/delete/${id}`,
 
-  addObjective: () => `${baseUrl}/company/objectives/create`,
-  updateObjective: (id: string) => `${baseUrl}/company/objectives/update/${id}`,
-  getObjective: () => `${baseUrl}/company/objectives/get`,
-  deleteObjective: (id: string) => `${baseUrl}/company/objectives/delete/${id}`,
+  addObjective: () => `${baseUrl}/company/objective/create`,
+  updateObjective: (id: string) => `${baseUrl}/company/objective/update/${id}`,
+  getObjective: () => `${baseUrl}/company/objective/get`,
+  deleteObjective: (id: string) => `${baseUrl}/company/objective/delete/${id}`,
 
   getDetailObjectivesIssue: () =>
     `${baseUrl}/company/detail-meeting/get-objectives`,
@@ -252,9 +258,6 @@ const Urls = {
 
   deleteCompanyMeetingNote: (id: string) =>
     `${baseUrl}/company/detail-meeting/note/delete/${id}`,
-
-  timeUpdateByMeeting: (id: string) =>
-    `${baseUrl}/company/detail-meeting/update/${id}`,
 
   updateDetailMeetingKPIData: () =>
     `${baseUrl}/company/detail-meeting/kpi/update-data`,

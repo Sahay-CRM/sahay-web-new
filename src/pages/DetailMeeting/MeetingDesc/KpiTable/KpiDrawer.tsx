@@ -6,7 +6,7 @@ import React, { useRef, useEffect, useState } from "react";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { queryClient } from "@/queryClient";
-import { deleteMeetingKpisMutation } from "@/features/api/companyMeeting";
+import { deleteMeetingKpisMutation } from "@/features/api/detailMeeting";
 
 interface KpiDrawerProps {
   open: boolean;

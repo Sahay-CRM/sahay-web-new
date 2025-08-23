@@ -24,14 +24,15 @@ import { Button } from "@/components/ui/button";
 import TabsSection from "./TabSection";
 import WarningDialog from "./WarningModal";
 import KpisSearchDropdown from "./KpiSearchDropdown";
+
+import KpiDrawer from "./KpiDrawer";
+import { queryClient } from "@/queryClient";
+import { getDatabase, off, onValue, ref } from "firebase/database";
 import {
   addMeetingKpisDataMutation,
   updateKPIDataMutation,
   useGetMeetingSelectedKpis,
-} from "@/features/api/companyMeeting";
-import KpiDrawer from "./KpiDrawer";
-import { queryClient } from "@/queryClient";
-import { getDatabase, off, onValue, ref } from "firebase/database";
+} from "@/features/api/detailMeeting";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -82,6 +83,8 @@ export default function KPITable({
   const location = useLocation();
   const leftScrollRef = useRef<HTMLDivElement>(null);
   const rightScrollRef = useRef<HTMLDivElement>(null);
+
+  const { mutate: addUpdateKpiData } = updateKPIDataMutation();
 
   const { data: selectedKpis, isLoading: meetingLoading } =
     useGetMeetingSelectedKpis({
@@ -328,8 +331,6 @@ export default function KPITable({
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [tempValues]);
-
-  const { mutate: addUpdateKpiData } = updateKPIDataMutation();
 
   useEffect(() => {
     if (isKpiDataCellArrayArray(selectedKpisTyped)) {

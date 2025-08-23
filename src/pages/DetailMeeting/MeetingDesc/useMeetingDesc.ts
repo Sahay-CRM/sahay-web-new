@@ -3,17 +3,19 @@ import { useParams } from "react-router-dom";
 import { get, getDatabase, off, onValue, ref, update } from "firebase/database";
 
 import {
+  addUpdateCompanyMeetingMutation,
+  useAddUpdateCompanyMeeting,
+} from "@/features/api/companyMeeting";
+import { queryClient } from "@/queryClient";
+import {
   addMeetingNotesMutation,
   addMeetingTimeMutation,
-  addUpdateCompanyMeetingMutation,
   deleteCompanyMeetingMutation,
   endMeetingMutation,
   updateDetailMeetingMutation,
-  useAddUpdateCompanyMeeting,
   useGetMeetingNotes,
   useGetMeetingTiming,
-} from "@/features/api/companyMeeting";
-import { queryClient } from "@/queryClient";
+} from "@/features/api/detailMeeting";
 
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();

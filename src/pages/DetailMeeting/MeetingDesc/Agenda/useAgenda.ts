@@ -2,6 +2,12 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { get, getDatabase, off, onValue, ref, update } from "firebase/database";
 
+import { addUpdateIssues } from "@/features/api/Issues";
+import { addUpdateObjective } from "@/features/api/Objective";
+import { queryClient } from "@/queryClient";
+import { setMeeting } from "@/features/reducers/common.reducer";
+import useGetMeetingConclusion from "@/features/api/detailMeeting/useGetMeetingConclusion";
+import SidebarControlContext from "@/features/layouts/DashboardLayout/SidebarControlContext";
 import {
   addMeetingAgendaMutation,
   addMeetingTimeMutation,
@@ -14,13 +20,7 @@ import {
   useGetDetailMeetingAgendaIssue,
   useGetDetailMeetingObj,
   useGetMeetingConclusionTime,
-} from "@/features/api/companyMeeting";
-import { addUpdateIssues } from "@/features/api/Issues";
-import { addUpdateObjective } from "@/features/api/Objective";
-import { queryClient } from "@/queryClient";
-import { setMeeting } from "@/features/reducers/common.reducer";
-import useGetMeetingConclusion from "@/features/api/companyMeeting/useGetMeetingConclusion";
-import SidebarControlContext from "@/features/layouts/DashboardLayout/SidebarControlContext";
+} from "@/features/api/detailMeeting";
 // import { getUserId } from "@/features/selectors/auth.selector";
 
 interface UseAgendaProps {

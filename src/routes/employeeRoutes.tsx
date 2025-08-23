@@ -67,6 +67,9 @@ const AllNotifications = lazy(
 );
 const StartMeeting = lazy(() => import("../pages/DetailMeeting/MeetingDesc"));
 const DetailMeeting = lazy(() => import("../pages/DetailMeeting"));
+const AddDetailMeeting = lazy(
+  () => import("../pages/DetailMeeting/AddMeetingFormModal"),
+);
 
 const Issues = lazy(() => import("../pages/Obj/Issues"));
 const Objective = lazy(() => import("../pages/Obj/Objective"));
@@ -105,6 +108,8 @@ export default function EmployeeRoutes() {
 
         <Route path="meeting/detail/:id" Component={StartMeeting} />
         <Route path="meeting/detail" Component={DetailMeeting} />
+        <Route path="meeting/detail/add" Component={AddDetailMeeting} />
+        <Route path="meeting/detail/update/:id" Component={AddDetailMeeting} />
 
         <Route path="issues" Component={Issues} />
         <Route path="objective" Component={Objective} />
