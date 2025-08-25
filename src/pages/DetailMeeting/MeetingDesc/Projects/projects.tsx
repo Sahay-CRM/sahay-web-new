@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
+import { useParams } from "react-router-dom";
+import { getDatabase, off, onValue, ref } from "firebase/database";
 import { toast } from "sonner";
+import { queryClient } from "@/queryClient";
 
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
@@ -10,34 +13,34 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+
 import ProjectSearchDropdown from "./ProjectSearchDropdown";
+import ProjectDrawer from "./projectDrawer";
+
 import {
   useAddUpdateCompanyProject,
   useGetAllProjectStatus,
 } from "@/features/api/companyProject";
-
-import { queryClient } from "@/queryClient";
-import ProjectDrawer from "./projectDrawer";
-import { Button } from "@/components/ui/button";
-
-import { getDatabase, off, onValue, ref } from "firebase/database";
 import {
   addMeetingProjectDataMutation,
   deleteMeetingProjectMutation,
   useGetMeetingProject,
 } from "@/features/api/detailMeeting";
-import { useParams } from "react-router-dom";
+import { Trash } from "lucide-react";
 
 interface ProjectProps {
   projectsFireBase: () => void;
-  meetingAgendaIssueId: string | undefined;
+  issueId: string | undefined;
   ioType?: string;
+  selectedIssueId?: string;
 }
 
 export default function Projects({
   projectsFireBase,
-  meetingAgendaIssueId,
+  issueId,
   ioType,
+  selectedIssueId,
 }: ProjectProps) {
   const { id: meetingId } = useParams();
   const { mutate: addMeetingProject } = addMeetingProjectDataMutation();
@@ -46,10 +49,10 @@ export default function Projects({
   const { data: selectedProjects } = useGetMeetingProject({
     filter: {
       meetingId: meetingId,
-      issueObjectiveId: meetingAgendaIssueId,
+      ...(ioType === "ISSUE" ? { issueId: issueId } : { objectiveId: issueId }),
       ioType: ioType,
     },
-    enable: !!meetingId && !!meetingAgendaIssueId && !!ioType,
+    enable: !!meetingId && !!issueId && !!ioType,
   });
 
   const { mutate: addProject } = useAddUpdateCompanyProject();
@@ -62,11 +65,13 @@ export default function Projects({
   );
 
   const handleAdd = (data: IProjectFormData) => {
-    if (meetingAgendaIssueId && meetingId) {
+    if (issueId && meetingId) {
       const payload = {
         meetingId: meetingId,
-        issueObjectiveId: meetingAgendaIssueId,
         projectId: data.projectId,
+        ...(ioType === "ISSUE"
+          ? { issueId: issueId }
+          : { objectiveId: issueId }),
         ioType: ioType,
       };
       addMeetingProject(payload, {
@@ -124,11 +129,18 @@ export default function Projects({
 
   const conformDelete = useCallback(
     async (data: IProjectFormData) => {
-      if (data && data.detailMeetingProjectId && data.projectId && meetingId) {
+      if (data && data.projectId && meetingId) {
         const payload = {
           projectId: data.projectId,
           meetingId: meetingId,
-          detailMeetingProjectId: data.detailMeetingProjectId ?? "",
+          ioType: ioType,
+          ...(ioType === "ISSUE"
+            ? {
+                issueProjectId: data.issueProjectId,
+              }
+            : {
+                objectiveProjectId: data.objectiveProjectId,
+              }),
         };
         deleteProjectById(payload, {
           onSuccess: () => {
@@ -150,29 +162,26 @@ export default function Projects({
         });
       }
     },
-    [deleteProjectById, meetingId, projectsFireBase],
+    [deleteProjectById, ioType, meetingId, projectsFireBase],
   );
 
   useEffect(() => {
     const db = getDatabase();
     const meetingRef = ref(
       db,
-      `meetings/${meetingId}/timers/objectives/${meetingAgendaIssueId}/projects`,
+      `meetings/${meetingId}/timers/objectives/${selectedIssueId}/projects`,
     );
 
     onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
         queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
-        // queryClient.resetQueries({
-        //   queryKey: ["get-detail-meeting-agenda-issue-obj"],
-        // });
       }
     });
 
     return () => {
       off(meetingRef);
     };
-  }, [meetingAgendaIssueId, meetingId]);
+  }, [selectedIssueId, meetingId]);
 
   const handleAddProject = () => {
     setDrawerOpen(true);
@@ -225,25 +234,18 @@ export default function Projects({
         }
         columns={visibleColumns}
         primaryKey="projectId"
-        // onEdit={navigate(`/dashboard/tasks/edit/${row.taskId}`)}
-        // onViewButton={(row) => {
-        //   navigate(`/dashboard/tasks/view/${row.taskId}`);
-        // }}
         showIndexColumn={false}
         isActionButton={() => true}
-        onDelete={(row) => {
-          conformDelete(row as unknown as IProjectFormData);
-        }}
+        isEditDelete={() => false}
+        isEditDeleteShow={false}
         onRowClick={(row) => {
           if (row) {
             setSelected(row);
             setDrawerOpen(true);
           }
         }}
-        // actionColumnWidth="w-24"
-        showActionsColumn={false}
-        // viewButton={true}
         permissionKey="users"
+        actionColumnWidth="w-22"
         dropdownColumns={{
           projectStatus: {
             options: (projectStatusList?.data ?? []).map((opt) => ({
@@ -254,9 +256,20 @@ export default function Projects({
             onChange: (row, value) => handleStatusChange(value, row),
           },
         }}
-        // onRowClick={(row) => {
-        //   handleRowsModalOpen(row);
-        // }}
+        customActions={(row) => {
+          return (
+            <>
+              <Button
+                className="py-1 px-3 bg-transparent cursor-pointer hover:bg-transparent"
+                onClick={() => {
+                  conformDelete(row as unknown as IProjectFormData);
+                }}
+              >
+                <Trash className="w-4 h-4 text-red-700" />
+              </Button>
+            </>
+          );
+        }}
         sortableColumns={["projectName", "projectDeadline"]}
       />
 
@@ -265,8 +278,9 @@ export default function Projects({
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           projectData={selected}
-          detailMeetingAgendaIssueId={meetingAgendaIssueId}
+          issueId={issueId}
           projectsFireBase={projectsFireBase}
+          ioType={ioType}
         />
       )}
     </div>

@@ -82,6 +82,7 @@ export const useAgenda = ({
   const [resolutionFilter, setResolutionFilter] = useState<
     "unsolved" | "solved"
   >("unsolved");
+  const [selectedIoType, setSelectedIoType] = useState("issue");
 
   useEffect(() => {
     if (meetingResponse) {
@@ -104,8 +105,20 @@ export const useAgenda = ({
   const { data: detailAgendaData } = useGetDetailMeetingAgendaIssue({
     filter: {
       issueObjectiveId: meetingResponse?.state.currentAgendaItemId,
+      ...(ioType === "ISSUE"
+        ? {
+            issueId: selectedAgenda?.find(
+              (item) => item.issueObjectiveId === isSelectedAgenda,
+            )?.issueId,
+          }
+        : {
+            objectiveId: selectedAgenda?.find(
+              (item) => item.issueObjectiveId === isSelectedAgenda,
+            )?.objectiveId,
+          }),
       ioType: ioType,
     },
+
     enable: !!meetingResponse?.state.currentAgendaItemId && !!ioType,
   });
 
@@ -125,8 +138,9 @@ export const useAgenda = ({
     filter: {
       search: issueInput,
       meetingId: meetingId,
+      ioType: selectedIoType,
     },
-    enable: !!shouldFetch && !!meetingId,
+    enable: !!shouldFetch && !!meetingId && !!selectedIoType,
   });
 
   const isConclusion =
@@ -145,7 +159,7 @@ export const useAgenda = ({
     filter: {
       meetingId: meetingId,
     },
-    enable: !!meetingId,
+    enable: meetingResponse?.state.activeTab === "CONCLUSION" || !!meetingId,
   });
 
   // Mutations
@@ -600,7 +614,7 @@ export const useAgenda = ({
       updateDetailMeeting(
         {
           meetingId: meetingId,
-          status: "CONCLUSION",
+          detailMeetingStatus: "CONCLUSION",
         },
         {
           onSuccess: () => {
@@ -684,9 +698,8 @@ export const useAgenda = ({
       update(meetTimersRef, {
         activeTab: tab,
       });
+      setActiveTab(tab);
     }
-
-    setActiveTab(tab);
   };
 
   useEffect(() => {
@@ -919,6 +932,7 @@ export const useAgenda = ({
     conclusionTime,
     setResolutionFilter,
     ioType,
+    setSelectedIoType,
     // handleJoinMeeting,
   };
 };

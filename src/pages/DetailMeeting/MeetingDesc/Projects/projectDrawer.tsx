@@ -4,7 +4,8 @@ import { useForm, Controller } from "react-hook-form";
 
 import FormSelect from "@/components/shared/Form/FormSelect";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
-import { queryClient } from "@/queryClient";
+import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
+
 import {
   useAddUpdateCompanyProject,
   useGetAllProjectStatus,
@@ -12,16 +13,7 @@ import {
   useGetSubParaFilter,
 } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
-import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import { addMeetingNotesMutation } from "@/features/api/detailMeeting";
-
-interface ProjectDrawerProps {
-  open: boolean;
-  onClose: () => void;
-  projectData?: CompanyProjectDataProps | null;
-  detailMeetingAgendaIssueId?: string;
-  projectsFireBase: () => void;
-}
 
 type ProjectFormData = {
   projectId: string;
@@ -33,13 +25,22 @@ type ProjectFormData = {
   subParameterId: string[];
   employeeId: string[];
 };
+interface ProjectDrawerProps {
+  open: boolean;
+  onClose: () => void;
+  projectData?: CompanyProjectDataProps | null;
+  issueId?: string;
+  projectsFireBase: () => void;
+  ioType?: string;
+}
 
 export default function ProjectDrawer({
   open,
   onClose,
   projectData,
-  detailMeetingAgendaIssueId,
+  issueId,
   projectsFireBase,
+  ioType,
 }: ProjectDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -73,7 +74,6 @@ export default function ProjectDrawer({
       }))
     : [];
 
-  // Default values from projectData
   const defaultValues = projectData
     ? {
         projectId: projectData.projectId || "",
@@ -182,7 +182,7 @@ export default function ProjectDrawer({
   }, [onClose, open]);
 
   const onSubmit = (data: ProjectFormData) => {
-    if (meetingId && detailMeetingAgendaIssueId) {
+    if (meetingId && issueId) {
       const { employeeId, projectDeadline, ...rest } = data;
       const payload = {
         ...rest,
@@ -192,14 +192,17 @@ export default function ProjectDrawer({
         projectDeadline: projectDeadline
           ? new Date(projectDeadline).toISOString()
           : null,
-        detailMeetingAgendaIssueId: detailMeetingAgendaIssueId,
+        ...(ioType === "ISSUE"
+          ? { issueId: issueId }
+          : { objectiveId: issueId }),
+        ioType,
       };
       addProject(payload, {
         onSuccess: () => {
           if (projectData && projectData.detailMeetingNoteId) {
             addNote(
               {
-                detailMeetingNoteId: projectData?.detailMeetingNoteId,
+                meetingNoteId: projectData?.detailMeetingNoteId,
                 noteType: "TASKS",
               },
               {
@@ -209,9 +212,10 @@ export default function ProjectDrawer({
                 },
               },
             );
+          } else {
+            projectsFireBase();
+            onClose();
           }
-          queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
-          onClose();
         },
       });
     }

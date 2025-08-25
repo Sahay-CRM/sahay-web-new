@@ -15,6 +15,9 @@ interface KpiDrawerProps {
   meetingId: string;
   detailMeetingKPIId?: string;
   kpisFireBase: () => void;
+  issueId?: string;
+  ioType?: string;
+  ioKPIId?: string | null;
 }
 
 const frequenceOptions = [
@@ -41,8 +44,10 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
   onClose,
   kpiId,
   meetingId,
-  detailMeetingKPIId,
   kpisFireBase,
+  ioType,
+  issueId,
+  ioKPIId,
 }) => {
   const drawerRef = useRef<HTMLDivElement>(null);
   const { data: kpiData } = useGetDatapointById(kpiId || "");
@@ -51,12 +56,16 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
   const { mutate: deleteKpi } = deleteMeetingKpisMutation();
 
   const handleDeleteKpi = () => {
-    if (kpiId && meetingId && detailMeetingKPIId) {
+    if (kpiId && ioType && ioKPIId) {
       deleteKpi(
         {
           kpiId: kpiId,
           meetingId: meetingId,
-          detailMeetingKPIId: detailMeetingKPIId,
+          ...(ioType === "ISSUE"
+            ? { issueId: issueId }
+            : { objectiveId: issueId }),
+          ioType: ioType,
+          ioKPIId: ioKPIId,
         },
         {
           onSuccess: () => {
@@ -76,6 +85,9 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
     const payload = {
       ...data,
       kpiId: kpiId,
+      visualFrequencyTypes: Array.isArray(data.visualFrequencyTypes)
+        ? data.visualFrequencyTypes.filter(Boolean).join(",")
+        : data.visualFrequencyTypes,
     };
     addDatapoint(payload, {
       onSuccess: () => {
@@ -98,7 +110,11 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
         validationType: kpiData.validationType,
         value1: kpiData.value1,
         value2: kpiData.value2,
-        visualFrequencyTypes: kpiData.visualFrequencyTypes,
+        visualFrequencyTypes: Array.isArray(kpiData.visualFrequencyTypes)
+          ? kpiData.visualFrequencyTypes
+          : kpiData.visualFrequencyTypes
+            ? kpiData.visualFrequencyTypes.split(",")
+            : [],
         employeeId: kpiData.employeeId || "",
         visualFrequencyAggregate: "",
       });
@@ -212,7 +228,7 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
                 type="number"
                 onChange={(e) => handleChange("value1", e.target.value)}
               />
-              {editableData.validationType === "EQUAL_TO" && (
+              {editableData.validationType === "BETWEEN" && (
                 <FormInputField
                   label="Value 2"
                   type="number"

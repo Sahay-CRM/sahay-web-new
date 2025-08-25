@@ -18,6 +18,7 @@ interface IssueAgendaAddModalProps {
   isLoading?: boolean;
   issueInput: string;
   setIssueInput: (value: string) => void;
+  setSelectedIoType: (value: string) => void;
   setDropdownVisible: (visible: boolean) => void;
   handleAddIssue: () => void;
   dropdownVisible: boolean;
@@ -39,15 +40,30 @@ export default function IssueAgendaAddModal({
   filteredIssues,
   searchOptions,
   handleUpdateSelectedObjective,
+  setSelectedIoType,
 }: IssueAgendaAddModalProps) {
-  const [selectedType, setSelectedType] = useState("");
+  // Set default value to "issue"
+  const [selectedType, setSelectedType] = useState("issue");
 
   const handleSubmit = () => {
-    if (!onSubmit) return; // or throw an error if preferred
+    if (!onSubmit) return;
     onSubmit({
       type: selectedType,
       value: issueInput,
     });
+  };
+
+  const handleListItemSelect = (item: DetailMeetingObjectives) => {
+    handleUpdateSelectedObjective(item);
+    setDropdownVisible(false);
+    // Optionally trigger add immediately after selection
+    // setTimeout(() => handleAddIssue(), 0);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleAddIssue();
+    }
   };
 
   return (
@@ -65,6 +81,31 @@ export default function IssueAgendaAddModal({
       ]}
     >
       <div className="space-y-4">
+        {/* Radio Group moved to top */}
+        <RadioGroup
+          value={selectedType}
+          onValueChange={(e) => {
+            setSelectedType(e);
+            setSelectedIoType(e);
+          }}
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem
+              value="issue"
+              id="r1"
+              className="border-black w-5 h-5"
+            />
+            <label htmlFor="r1">Issue</label>
+            <RadioGroupItem
+              value="objective"
+              id="r2"
+              className="ml-6 border-black w-5 h-5"
+            />
+            <label htmlFor="r2">Objective</label>
+          </div>
+        </RadioGroup>
+
+        {/* Input field */}
         <div className="flex gap-2 relative w-full">
           <Input
             value={issueInput}
@@ -75,11 +116,7 @@ export default function IssueAgendaAddModal({
             placeholder="Add or Create Agenda (Issue or Objective)"
             onFocus={() => setDropdownVisible(true)}
             onBlur={() => setTimeout(() => setDropdownVisible(false), 150)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleAddIssue();
-              }
-            }}
+            onKeyDown={handleKeyDown}
             className="w-full h-[45px] sm:h-[50px] border-0 border-b-2 border-gray-300 rounded-none pr-10 text-sm sm:text-base focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[0px] "
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
@@ -111,9 +148,14 @@ export default function IssueAgendaAddModal({
                     padding: "8px 12px",
                     cursor: "pointer",
                     fontSize: "14px",
+                    transition: "background-color 0.2s",
                   }}
-                  onMouseDown={() => {
-                    handleUpdateSelectedObjective(item);
+                  onMouseDown={() => handleListItemSelect(item)}
+                  onMouseEnter={(e) => {
+                    (e.target as HTMLElement).style.backgroundColor = "#f3f4f6";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.target as HTMLElement).style.backgroundColor = "white";
                   }}
                 >
                   {item.name} ({item.ioType})
@@ -122,22 +164,6 @@ export default function IssueAgendaAddModal({
             </ul>
           )}
         </div>
-        <RadioGroup value={selectedType} onValueChange={setSelectedType}>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem
-              value="issue"
-              id="r1"
-              className="border-black w-5 h-5"
-            />
-            <label htmlFor="r1">Issue</label>
-            <RadioGroupItem
-              value="objective"
-              id="r2"
-              className="ml-6 border-black w-5 h-5"
-            />
-            <label htmlFor="r2">Objective</label>
-          </div>
-        </RadioGroup>
       </div>
     </ModalData>
   );

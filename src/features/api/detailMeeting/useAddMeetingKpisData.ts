@@ -8,7 +8,10 @@ import { toast } from "sonner";
 
 interface MeetingKpisAdd {
   meetingId: string;
-  kpiIds: string[];
+  kpiId: string;
+  issueId?: string;
+  objectiveId?: string;
+  ioType?: string;
 }
 
 export default function useAddMeetingKpisData() {

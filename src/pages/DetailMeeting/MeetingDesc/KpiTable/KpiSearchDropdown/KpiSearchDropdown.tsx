@@ -5,7 +5,7 @@ import { useDdAllMeetingKpis } from "@/features/api/KpiList";
 import { CornerDownLeft } from "lucide-react";
 
 interface KpisSearchDropdownProps {
-  onAdd: (selectedTasks: KpiAllList[]) => void;
+  onAdd: (selectedTasks: KpiAllList) => void;
   filterProps?: Partial<FilterDataProps["filter"]>;
   minSearchLength?: number;
   renderData?: (task: KpiAllList, checked: boolean) => React.ReactNode;
@@ -57,7 +57,7 @@ const KpisSearchDropdown: React.FC<KpisSearchDropdownProps> = ({
 
   // On item click logic
   const handleSelect = (item: KpiAllList) => {
-    onAdd([item]);
+    onAdd(item);
     setShowDropdown(false);
     setSearchValue("");
   };

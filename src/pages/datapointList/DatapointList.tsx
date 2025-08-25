@@ -239,6 +239,11 @@ export default function CompanyTaskList() {
           isModalOpen={isViewModalOpen}
           modalData={viewModalData}
           modalClose={() => setIsViewModalOpen(false)}
+          onEdit={(kpiId) => {
+            setIsViewModalOpen(false);
+            setIsEditKpiId(kpiId);
+            setIsEditModalOpen(true);
+          }}
         />
       </div>
     </FormProvider>

@@ -181,6 +181,7 @@ export default function Agenda({
     conclusionTime,
     setResolutionFilter,
     ioType,
+    setSelectedIoType,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -210,9 +211,16 @@ export default function Agenda({
   const canEdit = true;
 
   const formatTime = (totalSeconds: number) => {
+    if (!totalSeconds || isNaN(totalSeconds)) {
+      return "00:00";
+    }
+
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = Math.floor(totalSeconds % 60);
-    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   const formatLocalDate = (dateString: string | null | undefined) => {
@@ -301,6 +309,7 @@ export default function Agenda({
         filteredIssues={filteredIssues}
         searchOptions={searchOptions}
         handleUpdateSelectedObjective={handleUpdateSelectedObjective}
+        setSelectedIoType={setSelectedIoType}
       />
 
       <div className="flex justify-between">
@@ -939,7 +948,7 @@ export default function Agenda({
                                   {formatTime(
                                     Number(
                                       conclusionData
-                                        ? conclusionData?.agenda.find(
+                                        ? conclusionData?.agenda?.find(
                                             (con) =>
                                               con.issueObjectiveId ===
                                               item.issueObjectiveId,
@@ -1101,25 +1110,60 @@ export default function Agenda({
               </div>
             ) : meetingStatus === "DISCUSSION" ? (
               detailAgendaData && (
-                <div className="max-h-full h-auto mt-5 px-2 w-full">
+                <div className="max-h-full h-[calc(100vh-200px)] overflow-scroll mt-5 px-2 w-full">
                   {activeTab === "tasks" && (
                     <Tasks
                       tasksFireBase={tasksFireBase}
-                      meetingAgendaIssueId={isSelectedAgenda}
+                      issueId={
+                        ioType === "ISSUE"
+                          ? agendaList.find(
+                              (Item) =>
+                                Item.issueObjectiveId === isSelectedAgenda,
+                            )?.issueId
+                          : agendaList.find(
+                              (obj) =>
+                                obj.issueObjectiveId === isSelectedAgenda,
+                            )?.objectiveId
+                      }
                       ioType={ioType}
+                      selectedIssueId={isSelectedAgenda}
                     />
                   )}
                   {activeTab === "projects" && (
                     <Projects
                       projectsFireBase={projectsFireBase}
-                      meetingAgendaIssueId={isSelectedAgenda}
+                      issueId={
+                        ioType === "ISSUE"
+                          ? agendaList.find(
+                              (Item) =>
+                                Item.issueObjectiveId === isSelectedAgenda,
+                            )?.issueId
+                          : agendaList.find(
+                              (obj) =>
+                                obj.issueObjectiveId === isSelectedAgenda,
+                            )?.objectiveId
+                      }
+                      ioType={ioType}
+                      selectedIssueId={isSelectedAgenda}
                     />
                   )}
                   {activeTab === "kpis" && (
                     <KPITable
                       meetingId={meetingId}
                       kpisFireBase={kpisFireBase}
-                      meetingAgendaIssueId={isSelectedAgenda}
+                      ioId={
+                        ioType === "ISSUE"
+                          ? agendaList.find(
+                              (Item) =>
+                                Item.issueObjectiveId === isSelectedAgenda,
+                            )?.issueId
+                          : agendaList.find(
+                              (obj) =>
+                                obj.issueObjectiveId === isSelectedAgenda,
+                            )?.objectiveId
+                      }
+                      ioType={ioType}
+                      selectedIssueId={isSelectedAgenda}
                     />
                   )}
                 </div>

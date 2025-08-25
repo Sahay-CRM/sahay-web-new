@@ -195,20 +195,18 @@ const Urls = {
 
   addMeetingTaskData: () => `${baseUrl}/company/detail-meeting/task/add`,
   getMeetingTaskData: () => `${baseUrl}/company/detail-meeting/task/get`,
-  deleteMeetingTaskData: (id: string) =>
-    `${baseUrl}/company/detail-meeting/task/remove/${id}`,
+  deleteMeetingTaskData: () => `${baseUrl}/company/detail-meeting/task/remove`,
 
   addMeetingProjectData: () => `${baseUrl}/company/detail-meeting/project/add`,
   getMeetingProjectData: () => `${baseUrl}/company/detail-meeting/project/get`,
-  deleteMeetingProjectData: (id: string) =>
-    `${baseUrl}/company/detail-meeting/project/remove/${id}`,
+  deleteMeetingProjectData: () =>
+    `${baseUrl}/company/detail-meeting/project/remove/`,
 
   addMeetingKpisData: () => `${baseUrl}/company/detail-meeting/kpi/add`,
   getMeetingKpisData: () => `${baseUrl}/company/detail-meeting/kpi/get`,
   getMeetingSelectedKpisData: () =>
     `${baseUrl}/company/detail-meeting/kpi/get-data`,
-  deleteMeetingKpisData: (id: string) =>
-    `${baseUrl}/company/detail-meeting/kpi/remove/${id}`,
+  deleteMeetingKpisData: () => `${baseUrl}/company/detail-meeting/kpi/remove`,
   allKpiList: () => `${baseUrl}/company/kpi/get-detail-meeting`,
 
   getDetailMeetingById: (id: string) =>

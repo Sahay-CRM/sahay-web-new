@@ -4,6 +4,8 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { RefreshCcw } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import clsx from "clsx";
+import { getDatabase, off, onValue, ref } from "firebase/database";
+
 import {
   formatCompactNumber,
   formatTempValuesMeetingToPayload,
@@ -11,6 +13,13 @@ import {
   getKpiHeadersFromData,
   isValidInput,
 } from "@/features/utils/formatting.utils";
+import { queryClient } from "@/queryClient";
+import {
+  addMeetingKpisDataMutation,
+  updateKPIDataMutation,
+  useGetMeetingSelectedKpis,
+} from "@/features/api/detailMeeting";
+
 import {
   Tooltip,
   TooltipContent,
@@ -21,18 +30,11 @@ import FormSelect from "@/components/shared/Form/FormSelect";
 import Loader from "@/components/shared/Loader/Loader";
 import { FormDatePicker } from "@/components/shared/Form/FormDatePicker/FormDatePicker";
 import { Button } from "@/components/ui/button";
+
 import TabsSection from "./TabSection";
 import WarningDialog from "./WarningModal";
 import KpisSearchDropdown from "./KpiSearchDropdown";
-
 import KpiDrawer from "./KpiDrawer";
-import { queryClient } from "@/queryClient";
-import { getDatabase, off, onValue, ref } from "firebase/database";
-import {
-  addMeetingKpisDataMutation,
-  updateKPIDataMutation,
-  useGetMeetingSelectedKpis,
-} from "@/features/api/detailMeeting";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -59,15 +61,17 @@ function formatToThreeDecimals(value: string | number | null | undefined) {
 interface KpisProps {
   meetingId: string;
   kpisFireBase: () => void;
-  meetingAgendaIssueId: string | undefined;
+  ioId: string | undefined;
   ioType?: string;
+  selectedIssueId?: string;
 }
 
 export default function KPITable({
   meetingId,
-  meetingAgendaIssueId,
+  ioId,
   kpisFireBase,
   ioType,
+  selectedIssueId,
 }: KpisProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -90,10 +94,10 @@ export default function KPITable({
     useGetMeetingSelectedKpis({
       filter: {
         meetingId: meetingId,
-        issueObjectiveId: meetingAgendaIssueId,
+        ...(ioType === "ISSUE" ? { issueId: ioId } : { objectiveId: ioId }),
         ioType: ioType,
       },
-      enable: !!meetingId && !!meetingAgendaIssueId && !!ioType,
+      enable: !!meetingId && !!ioId && !!ioType,
     });
 
   const selectedKpisTyped = useMemo(
@@ -133,7 +137,7 @@ export default function KPITable({
     const db = getDatabase();
     const meetingRef = ref(
       db,
-      `meetings/${meetingId}/timers/objectives/${meetingAgendaIssueId}/kpis`,
+      `meetings/${meetingId}/timers/objectives/${selectedIssueId}/kpis`,
     );
 
     onValue(meetingRef, (snapshot) => {
@@ -146,7 +150,7 @@ export default function KPITable({
     return () => {
       off(meetingRef);
     };
-  }, [meetingAgendaIssueId, meetingId]);
+  }, [selectedIssueId, meetingId]);
 
   useEffect(() => {
     const originalPushState = history.pushState;
@@ -403,9 +407,11 @@ export default function KPITable({
   }
 
   const handleSubmit = () => {
-    if (meetingAgendaIssueId) {
+    if (ioId && ioType) {
+      console.log(ioId, ioType);
+
       addUpdateKpiData(
-        formatTempValuesMeetingToPayload(tempValues, meetingAgendaIssueId),
+        formatTempValuesMeetingToPayload(tempValues, ioId, ioType),
         {
           onSuccess: () => {
             queryClient.resetQueries({ queryKey: ["get-kpi-dashboard-data"] });
@@ -479,11 +485,12 @@ export default function KPITable({
     setShowWarning(false);
   };
 
-  const handleAddKpis = (tasks: KpiAllList[]) => {
+  const handleAddKpis = (tasks: KpiAllList) => {
     const payload = {
       meetingId: meetingId,
-      kpiIds: tasks.map((item) => item.kpiId),
-      detailMeetingAgendaIssueId: meetingAgendaIssueId,
+      kpiId: tasks.kpiId,
+      ...(ioType === "ISSUE" ? { issueId: ioId } : { objectiveId: ioId }),
+      ioType: ioType,
     };
     addKpiList(payload, {
       onSuccess: () => {
@@ -911,8 +918,9 @@ export default function KPITable({
         onClose={() => setDrawerOpen(false)}
         kpiId={selectedKpi?.kpiId}
         meetingId={meetingId}
-        detailMeetingKPIId={selectedKpi?.detailMeetingKPIId}
         kpisFireBase={kpisFireBase}
+        ioKPIId={selectedKpi && selectedKpi.ioKPIId}
+        ioType={ioType}
       />
     </FormProvider>
   );

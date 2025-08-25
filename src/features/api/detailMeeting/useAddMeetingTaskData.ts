@@ -9,7 +9,8 @@ import { toast } from "sonner";
 interface MeetingTaskAdd {
   meetingId: string;
   taskId: string;
-  issueObjectiveId: string;
+  objectiveId?: string;
+  issueId?: string;
 }
 
 export default function useAddMeetingTaskData() {

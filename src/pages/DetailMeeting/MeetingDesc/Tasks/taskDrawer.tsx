@@ -14,14 +14,6 @@ import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import { addMeetingNotesMutation } from "@/features/api/detailMeeting";
 
-interface TaskDrawerProps {
-  open: boolean;
-  onClose: () => void;
-  taskData?: TaskGetPaging | null;
-  detailMeetingAgendaIssueId?: string;
-  tasksFireBase: () => void;
-}
-
 type TaskFormData = {
   taskName: string;
   taskDescription: string;
@@ -33,13 +25,22 @@ type TaskFormData = {
   taskDeadline?: string | Date | null;
   repetition?: string;
 };
+interface TaskDrawerProps {
+  open: boolean;
+  onClose: () => void;
+  taskData?: TaskGetPaging | null;
+  issueId?: string;
+  tasksFireBase: () => void;
+  ioType?: string;
+}
 
 export default function TaskDrawer({
   open,
   onClose,
   taskData,
-  detailMeetingAgendaIssueId,
+  issueId,
   tasksFireBase,
+  ioType,
 }: TaskDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -134,13 +135,9 @@ export default function TaskDrawer({
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as HTMLElement;
-
-      // ✅ If click is inside drawer, do nothing
       if (drawerRef.current && drawerRef.current.contains(target)) {
         return;
       }
-
-      // ✅ If click is inside a select/popover (Radix UI, shadcn, etc.), do nothing
       if (
         target.closest('[data-slot="select-content"]') ||
         target.closest('[data-slot="popover-content"]') ||
@@ -148,16 +145,12 @@ export default function TaskDrawer({
       ) {
         return;
       }
-
-      // ✅ If click is inside react-datepicker popper, do nothing
       if (
         target.closest(".react-datepicker") ||
         target.closest(".react-datepicker-popper")
       ) {
         return;
       }
-
-      // ❌ Otherwise, close drawer
       onClose();
     }
 
@@ -182,14 +175,17 @@ export default function TaskDrawer({
         taskStartDate: taskStartDate ? new Date(taskStartDate) : null,
         taskDeadline: taskDeadline ? new Date(taskDeadline) : null,
         meetingId: meetingId,
-        detailMeetingAgendaIssueId: detailMeetingAgendaIssueId,
+        ...(ioType === "ISSUE"
+          ? { issueId: issueId }
+          : { objectiveId: issueId }),
+        ioType: ioType,
       };
       addUpdateTask(payload, {
         onSuccess: () => {
           if (taskData && taskData.detailMeetingNoteId) {
             addNote(
               {
-                detailMeetingNoteId: taskData?.detailMeetingNoteId,
+                meetingNoteId: taskData?.detailMeetingNoteId,
                 noteType: "TASKS",
               },
               {
@@ -199,6 +195,9 @@ export default function TaskDrawer({
                 },
               },
             );
+          } else {
+            tasksFireBase();
+            onClose();
           }
         },
       });

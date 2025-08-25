@@ -25,17 +25,20 @@ import {
   deleteMeetingTaskMutation,
   useGetMeetingTask,
 } from "@/features/api/detailMeeting";
+import { Trash } from "lucide-react";
 
 interface TasksProps {
   tasksFireBase: () => void;
-  meetingAgendaIssueId?: string | undefined;
+  issueId?: string | undefined;
   ioType?: string;
+  selectedIssueId?: string;
 }
 
 export default function Tasks({
   tasksFireBase,
-  meetingAgendaIssueId,
+  issueId,
   ioType,
+  selectedIssueId,
 }: TasksProps) {
   const { id: meetingId } = useParams();
   const { data: taskStatus } = useGetAllTaskStatus({
@@ -52,18 +55,20 @@ export default function Tasks({
   const { data: selectedTask } = useGetMeetingTask({
     filter: {
       meetingId: meetingId,
-      issueObjectiveId: meetingAgendaIssueId,
+      ...(ioType === "ISSUE" ? { issueId: issueId } : { objectiveId: issueId }),
       ioType: ioType,
     },
-    enable: !!meetingId && !!meetingAgendaIssueId && !!ioType,
+    enable: !!meetingId && !!issueId && !!ioType,
   });
 
   const handleAddTasks = (tasks: TaskGetPaging) => {
-    if (meetingAgendaIssueId && meetingId) {
+    if (issueId && meetingId) {
       const payload = {
         meetingId: meetingId,
         taskId: tasks.taskId,
-        issueObjectiveId: meetingAgendaIssueId,
+        ...(ioType === "ISSUE"
+          ? { issueId: issueId }
+          : { objectiveId: issueId }),
         ioType: ioType,
       };
       addMeetingTask(payload, {
@@ -81,7 +86,7 @@ export default function Tasks({
     const db = getDatabase();
     const meetingRef = ref(
       db,
-      `meetings/${meetingId}/timers/objectives/${meetingAgendaIssueId}/tasks`,
+      `meetings/${meetingId}/timers/objectives/${selectedIssueId}/tasks`,
     );
 
     onValue(meetingRef, (snapshot) => {
@@ -96,7 +101,7 @@ export default function Tasks({
     return () => {
       off(meetingRef);
     };
-  }, [meetingAgendaIssueId, meetingId]);
+  }, [selectedIssueId, meetingId]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -139,12 +144,19 @@ export default function Tasks({
 
   const conformDelete = useCallback(
     async (data: TaskGetPaging) => {
-      if (data && data.detailMeetingTaskId) {
-        // const payload = {
-        //   taskId: data.taskId,
-        //   meetingId: meetingId,
-        // };
-        deleteTaskById(data.detailMeetingTaskId, {
+      if (data && ioType) {
+        const payload = {
+          taskId: data.taskId,
+          ioType: ioType,
+          ...(ioType === "ISSUE"
+            ? {
+                issueTaskId: data.issueTaskId,
+              }
+            : {
+                objectiveTaskId: data.objectiveTaskId,
+              }),
+        };
+        deleteTaskById(payload, {
           onSuccess: () => {
             queryClient.resetQueries({
               queryKey: ["get-detailMeetingAgendaIssue"],
@@ -164,7 +176,7 @@ export default function Tasks({
         });
       }
     },
-    [deleteTaskById, tasksFireBase],
+    [deleteTaskById, ioType, tasksFireBase],
   );
 
   const handleAddTask = () => {
@@ -233,15 +245,27 @@ export default function Tasks({
           }
         }}
         showIndexColumn={false}
-        isActionButton={() => true}
-        isEditDelete={() => true}
         // viewButton={true}
         permissionKey="users"
         onDelete={(row) => {
           conformDelete(row as unknown as TaskGetPaging);
         }}
-        showActionsColumn={false}
-        isEditDeleteShow={true}
+        customActions={(row) => {
+          return (
+            <>
+              <Button
+                className="py-1 px-3 bg-transparent cursor-pointer hover:bg-transparent"
+                onClick={() => {
+                  conformDelete(row as unknown as TaskGetPaging);
+                }}
+              >
+                <Trash className="w-4 h-4 text-red-700" />
+              </Button>
+            </>
+          );
+        }}
+        // showActionsColumn={false}
+        isEditDeleteShow={false}
         dropdownColumns={{
           taskStatus: {
             options: (taskStatus?.data ?? []).map((opt) => ({
@@ -252,10 +276,7 @@ export default function Tasks({
             onChange: (row, value) => handleStatusChange(value, row),
           },
         }}
-        // onRowClick={(row) => {
-        //   handleRowsModalOpen(row);
-        // }}
-
+        actionColumnWidth="w-22"
         sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
       />
       {drawerOpen && (
@@ -263,8 +284,9 @@ export default function Tasks({
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           taskData={selected}
-          detailMeetingAgendaIssueId={meetingAgendaIssueId}
+          issueId={issueId}
           tasksFireBase={tasksFireBase}
+          ioType={ioType}
         />
       )}
     </div>

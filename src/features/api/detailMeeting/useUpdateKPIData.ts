@@ -13,7 +13,8 @@ type KpiUpdateData = {
 
 interface MeetingKpiData {
   data: KpiUpdateData[];
-  detailMeetingAgendaIssueId: string;
+  ioId: string;
+  ioType: string;
 }
 
 export default function useUpdateKPIData() {
