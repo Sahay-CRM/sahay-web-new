@@ -202,6 +202,7 @@ export function formatTempValuesMeetingToPayload(
   tempValues: Record<string, string>,
   ioId: string,
   ioType: string,
+  ioKPIId: string,
 ) {
   const data = Object.entries(tempValues).map(([key, value]) => {
     const [kpiId, startDate, endDate] = key.split("/");
@@ -217,5 +218,6 @@ export function formatTempValuesMeetingToPayload(
     data,
     ioId,
     ioType,
+    ioKPIId,
   };
 }

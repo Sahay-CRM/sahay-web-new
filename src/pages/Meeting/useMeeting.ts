@@ -10,7 +10,7 @@ import { getUserPermission } from "@/features/selectors/auth.selector";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-const toLocalISOString = (date: Date | undefined) => {
+export const toLocalISOString = (date: Date | undefined) => {
   if (!date) return undefined;
 
   // Use local date methods to avoid timezone conversion

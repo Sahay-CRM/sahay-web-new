@@ -169,7 +169,6 @@ export default function Agenda({
     handleStartMeeting,
     handleCloseMeetingWithLog,
     endMeetingLoading,
-    conclusionData,
     conclusionLoading,
     hasChanges,
     selectedItem,
@@ -289,6 +288,7 @@ export default function Agenda({
 
   return (
     <div>
+      {/* radio button modal */}
       <IssueModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -296,6 +296,7 @@ export default function Agenda({
         defaultType=""
         onSubmit={handleModalSubmit}
       />
+      {/* meeting status is not a NOT_STARTED or started then plus icon click to open modal */}
       <IssueAgendaAddModal
         isModalOpen={addIssueModal}
         modalClose={() => setAddIssueModal(false)}
@@ -947,8 +948,8 @@ export default function Agenda({
                                 >
                                   {formatTime(
                                     Number(
-                                      conclusionData
-                                        ? conclusionData?.agenda?.find(
+                                      conclusionTime
+                                        ? conclusionTime?.agenda?.find(
                                             (con) =>
                                               con.issueObjectiveId ===
                                               item.issueObjectiveId,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
+import { format } from "date-fns";
 
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
@@ -14,20 +15,20 @@ import {
 } from "@/components/ui/tooltip";
 import TableData from "@/components/shared/DataTable/DataTable";
 
-import useCompanyTaskList from "./useCompanyTaskListRe";
+import useRepeatMeetingList from "./useRepeatMeetingList";
 // import ViewRepeatTaskModal from "./ViewRepeatTaskModal";
 
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 // import DateRangePicker from "@/components/shared/DateRange";
 
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
-import PageNotAccess from "../PageNoAccess";
-import { format } from "date-fns";
+import PageNotAccess from "../../PageNoAccess";
+import DateRangePicker from "@/components/shared/DateRange";
 // import { Trash } from "lucide-react";
 
-export default function CompanyTaskListRe() {
+export default function RepeatMeetingList() {
   const {
-    companyTaskData,
+    repeatMeetingData,
     closeDeleteModal,
     setPaginationFilter,
     onDelete,
@@ -36,41 +37,31 @@ export default function CompanyTaskListRe() {
     isDeleteModalOpen,
     paginationFilter,
     isChildData,
-    handleStopRepeat,
     permission,
     handleRowsModalOpen,
     isLoading,
-    // statusOptions,
-    // handleStatusChange,
-    // filters,
-    // handleFilterChange,
-    // handleDateRangeChange,
-    // handleDateRangeApply,
-    // showOverdue,
-    // handleOverdueToggle,
-    // isViewModalOpen,
-    // setIsViewModalOpen,
-    // viewModalData,
-    // taskStatus,
-    // taskDateRange,
-  } = useCompanyTaskList();
+    handleStopRepeat,
+    taskDateRange,
+    handleDateRangeApply,
+    handleDateRangeChange,
+  } = useRepeatMeetingList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Company Task Repetition", href: "" }]);
+    setBreadcrumbs([{ label: "Repeat Meeting Repetition", href: "" }]);
   }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
-    { key: "taskName", label: "Task Name", visible: true },
+    { key: "meetingName", label: "Meeting Name", visible: true },
     {
-      key: "taskDescription",
-      label: "Task Description",
+      key: "meetingDescription",
+      label: "Meeting Description",
       visible: true,
     },
-    { key: "taskDeadline", label: "Task Deadline", visible: true },
-    { key: "employeeName", label: "Assignees", visible: true },
+    { key: "meetingDateTime", label: "Meeting TIme", visible: true },
+    { key: "joinerName", label: "Joiners", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -104,12 +95,12 @@ export default function CompanyTaskListRe() {
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-3 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
-            Company Repetition Task List
+            Meeting Repetition List
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
             {permission.Add && (
-              <Link to="/dashboard/tasksrepet/add">
-                <Button className="py-2 w-fit">Add Company Repeat Task</Button>
+              <Link to="/dashboard/repeat-meeting/add">
+                <Button className="py-2 w-fit">Add Repeat Meeting</Button>
               </Link>
             )}
           </div>
@@ -124,6 +115,16 @@ export default function CompanyTaskListRe() {
             />
           </div>
           <div className="flex gap-4 flex-wrap">
+            <div className="relative flex items-center gap-2 ">
+              <DateRangePicker
+                value={{
+                  from: taskDateRange.taskStartDate,
+                  to: taskDateRange.taskDeadline,
+                }}
+                onChange={handleDateRangeChange}
+                onApply={handleDateRangeApply}
+              />
+            </div>
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>
@@ -147,26 +148,25 @@ export default function CompanyTaskListRe() {
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            tableData={companyTaskData?.data.map(
-              (item: TaskGetPaging, index: number) => ({
-                ...item,
-                srNo:
-                  (companyTaskData.currentPage - 1) * companyTaskData.pageSize +
-                  index +
-                  1,
-                status: item.taskStatusId,
-                taskDeadline: item.taskDeadline
-                  ? format(new Date(item.taskDeadline), "dd/MM/yyyy h:mm aa")
-                  : "",
-              }),
-            )}
+            tableData={repeatMeetingData?.data.map((item, index) => ({
+              ...item,
+              srNo:
+                (repeatMeetingData.currentPage - 1) *
+                  repeatMeetingData.pageSize +
+                index +
+                1,
+              meetingDateTime: format(
+                new Date(item.meetingDateTime ?? 0),
+                "dd/MM/yyyy hh:mm a",
+              ),
+            }))}
             columns={visibleColumns}
-            primaryKey="repetitiveTaskId"
+            primaryKey="repetitiveMeetingId"
             onEdit={
               permission.Edit
                 ? (row) => {
                     navigate(
-                      `/dashboard/tasksrepeat/edit/${row.repetitiveTaskId}`,
+                      `/dashboard/repeat-meeting/update/${row.repetitiveMeetingId}`,
                     );
                   }
                 : undefined
@@ -174,36 +174,6 @@ export default function CompanyTaskListRe() {
             onDelete={(row) => {
               onDelete(row);
             }}
-            // onViewButton={(row) => {
-            //   navigate(`/dashboard/tasksrepeat/view/${row.repetitiveTaskId}`);
-            // }}
-            // customActions={(row) => {
-            //   return (
-            //     <div className="flex flex-col ">
-            //       {/* Delete Button */}
-            //       <Button
-            //         variant="outline"
-            //         size="sm"
-            //         className="h-8 w-8 p-0 text-red-600"
-            //         onClick={(e) => {
-            //           e.stopPropagation();
-            //           onDelete(row);
-            //         }}
-            //       >
-            //         <Trash className="w-4 h-4" />
-            //       </Button>
-            //     </div>
-            //   );
-            // }}
-            isEditDeleteShow={true}
-            paginationDetails={mapPaginationDetails(companyTaskData)}
-            setPaginationFilter={setPaginationFilter}
-            isLoading={isLoading}
-            moduleKey="TASK"
-            showIndexColumn={false}
-            isActionButton={() => true}
-            // viewButton={true}
-            permissionKey="users"
             customActions={(row) => {
               return (
                 <>
@@ -216,21 +186,18 @@ export default function CompanyTaskListRe() {
                 </>
               );
             }}
-            // dropdownColumns={{
-            //   taskStatus: {
-            //     options: (taskStatus?.data ?? []).map((opt) => ({
-            //       label: opt.taskStatus,
-            //       value: opt.taskStatusId,
-            //       color: opt.color || "#2e3195",
-            //     })),
-            //     onChange: (row, value) => handleStatusChange(value, row),
-            //   },
-            // }}
-
+            isEditDeleteShow={true}
+            paginationDetails={mapPaginationDetails(repeatMeetingData)}
+            setPaginationFilter={setPaginationFilter}
+            isLoading={isLoading}
+            moduleKey="TASK"
+            showIndexColumn={false}
+            isActionButton={() => true}
+            permissionKey="users"
             onRowClick={(row) => {
               handleRowsModalOpen(row);
             }}
-            sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
+            sortableColumns={["meetingName"]}
             actionColumnWidth="w-[100px]"
           />
         </div>
@@ -238,21 +205,15 @@ export default function CompanyTaskListRe() {
         {/* Modal Component */}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
-            title="Delete Repetitive Task"
-            label="Repetitive Task Name:"
-            modalData={`${modalData?.taskName}`}
+            title="Delete Repetitive Meeting"
+            label="Repetitive Meeting Name:"
+            modalData={`${modalData?.meetingName}`}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={(isGroupDelete) => conformDelete(isGroupDelete ?? false)}
             isChildData={isChildData}
-            // showDeleteOptions={true}
           />
         )}
-        {/* <ViewRepeatTaskModal
-          isModalOpen={isViewModalOpen}
-          modalData={viewModalData}
-          modalClose={() => setIsViewModalOpen(false)}
-        /> */}
       </div>
     </FormProvider>
   );

@@ -630,6 +630,7 @@ interface TaskGetPaging {
   detailMeetingNoteId?: string;
   repetitiveTaskId?: string;
   employeeName?: string;
+  isActive?: boolean;
 }
 
 interface TaskProject {
@@ -1255,4 +1256,28 @@ interface KpiMergeRes {
   visualFrequencyTypes: string;
   visualFrequencyAggregate: string;
   isDelete: boolean;
+}
+
+interface RepeatMeeting {
+  repetitiveMeetingId?: string;
+  meetingName?: string;
+  meetingDescription?: string;
+  meetingTypeId?: string;
+  meetingTimePlanned?: string;
+  repeatType?: string;
+  joinerIds?: string[];
+  teamLeaderIds?: string[];
+  createdBy?: string;
+  updatedBy?: string;
+  createdDatetime?: string;
+  updatedDatetime?: string;
+  nextDate?: string;
+  isActive?: boolean;
+  meetingDateTime?: string;
+  joinerName?: string;
+  meetingType?: {
+    meetingTypeName: string;
+  };
+  isDetailMeeting?: boolean;
+  // meetingStatusId?: string;
 }

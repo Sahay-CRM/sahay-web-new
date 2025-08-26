@@ -44,9 +44,10 @@ export default function GroupKpisFormModal({
         "visualFrequencyAggregate",
         fetchedGroupData.visualFrequencyAggregate || "sum",
       );
-      const visualTypes = fetchedGroupData.visualFrequencyTypes
-        ? fetchedGroupData.visualFrequencyTypes.split(",")
-        : [];
+      const visualTypes =
+        typeof fetchedGroupData.visualFrequencyTypes === "string"
+          ? fetchedGroupData.visualFrequencyTypes.split(",")
+          : fetchedGroupData.visualFrequencyTypes || [];
 
       setValue("visualFrequencyTypes", visualTypes);
 

@@ -40,7 +40,6 @@ interface MeetingDrawerProps {
   setSidebarOpen: (isOpen: boolean) => void;
   meetingId: string;
   meetingStart: boolean;
-  detailMeetingId?: string;
   follow?: string;
   height?: string;
   show?: boolean; // optional prop, default true
@@ -51,7 +50,6 @@ interface MeetingDrawerProps {
 const MeetingDrawer: React.FC<MeetingDrawerProps> = ({
   joiners = [],
   meetingId,
-  detailMeetingId,
   employeeId,
   sidebarOpen,
   meetingStart,
@@ -220,7 +218,6 @@ const MeetingDrawer: React.FC<MeetingDrawerProps> = ({
               <MeetingNotes
                 joiners={joiners}
                 meetingId={meetingId}
-                detailMeetingId={detailMeetingId}
                 employeeId={employeeId}
               />
             </TabsContent>

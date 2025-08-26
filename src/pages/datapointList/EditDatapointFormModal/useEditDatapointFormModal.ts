@@ -72,9 +72,15 @@ export default function useEditDatapointFormModal({
       // Set core parameter
       setValue("coreParameterId", datapointApiData.coreParameterId);
       if (datapointApiData.visualFrequencyTypes) {
-        const visualFrequencyArray = datapointApiData.visualFrequencyTypes
-          .split(",")
-          .map((type) => type.trim());
+        const visualFrequencyArray =
+          typeof datapointApiData.visualFrequencyTypes === "string"
+            ? datapointApiData.visualFrequencyTypes
+                .split(",")
+                .map((type: string) => type.trim()) // explicit type here
+            : datapointApiData.visualFrequencyTypes.map((type: string) =>
+                type.trim(),
+              );
+
         setValue("visualFrequencyTypes", visualFrequencyArray);
       }
     }

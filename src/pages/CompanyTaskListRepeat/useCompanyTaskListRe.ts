@@ -8,9 +8,6 @@ import {
 import useAddUpdateRepeatCompanyTask from "@/features/api/companyTask/useAddUpdateRepeatCompanyTask";
 import useGetRepeatCompanyTask from "@/features/api/companyTask/useGetRepeatCompanyTask";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-// import { AxiosError } from "axios";
-// import { DateRange } from "react-day-picker";
-// import { toast } from "sonner";
 
 export default function useCompanyTaskList() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -141,6 +138,14 @@ export default function useCompanyTaskList() {
     setIsViewModalOpen(true);
   };
 
+  const handleStopRepeat = (data: TaskGetPaging) => {
+    const payload = {
+      isActive: !data.isActive,
+      repetitiveTaskId: data.repetitiveTaskId,
+    };
+    updateCompanyTask(payload);
+  };
+
   return {
     companyTaskData,
     closeDeleteModal,
@@ -161,7 +166,7 @@ export default function useCompanyTaskList() {
     isChildData,
     handleStatusChange,
     permission,
-
+    handleStopRepeat,
     handleRowsModalOpen,
     isViewModalOpen,
     setIsViewModalOpen,

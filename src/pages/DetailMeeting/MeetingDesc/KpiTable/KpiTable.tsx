@@ -132,6 +132,7 @@ export default function KPITable({
   const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
     {},
   );
+  const [ioKPIId, setIoKPIId] = useState("");
 
   useEffect(() => {
     const db = getDatabase();
@@ -348,6 +349,7 @@ export default function KPITable({
       });
       setInputValues(initialValues);
       setTempValues({});
+      setIoKPIId("");
     }
   }, [selectedKpisTyped]);
 
@@ -408,10 +410,8 @@ export default function KPITable({
 
   const handleSubmit = () => {
     if (ioId && ioType) {
-      console.log(ioId, ioType);
-
       addUpdateKpiData(
-        formatTempValuesMeetingToPayload(tempValues, ioId, ioType),
+        formatTempValuesMeetingToPayload(tempValues, ioId, ioType, ioKPIId),
         {
           onSuccess: () => {
             queryClient.resetQueries({ queryKey: ["get-kpi-dashboard-data"] });
@@ -438,6 +438,7 @@ export default function KPITable({
   const handleWarningSubmit = () => {
     handleSubmit();
     setTempValues({});
+    setIoKPIId("");
     setShowWarning(false);
 
     if (pendingPeriod) {
@@ -458,6 +459,7 @@ export default function KPITable({
 
   const handleWarningDiscard = () => {
     setTempValues({});
+    setIoKPIId("");
     setShowWarning(false);
 
     const nextPeriod = pendingPeriod;
@@ -495,6 +497,9 @@ export default function KPITable({
     addKpiList(payload, {
       onSuccess: () => {
         queryClient.resetQueries({ queryKey: ["get-meeting-kpis-res"] });
+        queryClient.resetQueries({
+          queryKey: ["get-detailMeetingAgendaIssue"],
+        });
         kpisFireBase();
       },
     });
@@ -794,6 +799,9 @@ export default function KPITable({
                                                         ? val.join(", ")
                                                         : String(val),
                                                     }));
+                                                    if (kpi.ioKPIId) {
+                                                      setIoKPIId(kpi.ioKPIId);
+                                                    }
                                                   }
                                                 : () => {}
                                             }
@@ -863,6 +871,9 @@ export default function KPITable({
                                                   ...prev,
                                                   [key]: e?.target.value,
                                                 }));
+                                                if (kpi.ioKPIId) {
+                                                  setIoKPIId(kpi.ioKPIId);
+                                                }
                                               }
                                             : undefined
                                         }

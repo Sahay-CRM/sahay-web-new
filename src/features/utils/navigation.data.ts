@@ -45,6 +45,13 @@ export const companyNavigationData = [
         permission: "View",
         moduleKey: "MEETING_LIST",
       },
+      {
+        id: 3,
+        label: "Repeat Meeting",
+        link: "/dashboard/repeat-meeting",
+        permission: "View",
+        moduleKey: "MEETING_LIST",
+      },
     ],
   },
   {

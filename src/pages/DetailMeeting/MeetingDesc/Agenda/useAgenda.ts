@@ -82,7 +82,7 @@ export const useAgenda = ({
   const [resolutionFilter, setResolutionFilter] = useState<
     "unsolved" | "solved"
   >("unsolved");
-  const [selectedIoType, setSelectedIoType] = useState("issue");
+  const [selectedIoType, setSelectedIoType] = useState("ISSUE");
 
   useEffect(() => {
     if (meetingResponse) {
@@ -98,13 +98,21 @@ export const useAgenda = ({
     },
     enable: !!meetingId,
   });
-  const ioType = selectedAgenda?.find(
-    (item) =>
-      item.issueObjectiveId === meetingResponse?.state.currentAgendaItemId,
-  )?.ioType;
+
+  const ioType =
+    meetingStatus !== "ENDED"
+      ? selectedAgenda?.find(
+          (item) =>
+            item.issueObjectiveId ===
+            meetingResponse?.state.currentAgendaItemId,
+        )?.ioType
+      : selectedAgenda?.find((age) => age.issueObjectiveId === isSelectedAgenda)
+          ?.ioType;
+
   const { data: detailAgendaData } = useGetDetailMeetingAgendaIssue({
     filter: {
-      issueObjectiveId: meetingResponse?.state.currentAgendaItemId,
+      issueObjectiveId:
+        meetingResponse?.state.currentAgendaItemId || isSelectedAgenda,
       ...(ioType === "ISSUE"
         ? {
             issueId: selectedAgenda?.find(
@@ -119,7 +127,10 @@ export const useAgenda = ({
       ioType: ioType,
     },
 
-    enable: !!meetingResponse?.state.currentAgendaItemId && !!ioType,
+    enable:
+      !!meetingResponse?.state.currentAgendaItemId &&
+      !!ioType &&
+      !!isSelectedAgenda,
   });
 
   useEffect(() => {
@@ -138,9 +149,11 @@ export const useAgenda = ({
     filter: {
       search: issueInput,
       meetingId: meetingId,
-      ioType: selectedIoType,
+      ...(meetingStatus !== "NOT_STARTED" && meetingStatus !== "STARTED"
+        ? { ioType: selectedIoType }
+        : {}),
     },
-    enable: !!shouldFetch && !!meetingId && !!selectedIoType,
+    enable: !!shouldFetch && !!meetingId,
   });
 
   const isConclusion =
@@ -730,19 +743,23 @@ export const useAgenda = ({
     const meetingRef = ref(db, `meetings/${meetingId}`);
     const meetingSnapshot = await get(meetingRef);
 
-    if (isSelectedAgenda && meetingStatus === "DISCUSSION") {
+    if (
+      (issueObjectiveId && meetingStatus === "DISCUSSION") ||
+      meetingStatus === "CONCLUSION"
+    ) {
       if (!meetingSnapshot.exists()) {
         return;
       }
+
       const prevElapsedSeconds =
         (now - Number(meetingResponse?.state.lastSwitchTimestamp)) / 1000;
       const prevObjectiveRef = ref(
         db,
-        `meetings/${meetingId}/timers/objectives/${isSelectedAgenda}`,
+        `meetings/${meetingId}/timers/objectives/${issueObjectiveId}`,
       );
 
       const currentActualTime =
-        meetingResponse?.timers.objectives?.[isSelectedAgenda]?.actualTime || 0;
+        meetingResponse?.timers.objectives?.[issueObjectiveId]?.actualTime || 0;
 
       await update(prevObjectiveRef, {
         actualTime: currentActualTime + prevElapsedSeconds,

@@ -269,6 +269,15 @@ const Urls = {
     `${baseUrl}/company/repetitive-task/get/${id}`,
 
   createIo: () => `${baseUrl}/company/detail-meeting/agenda/io/create-add`,
+  // Repeat Meeting Api
+  getRepeatMeetingList: () => `${baseUrl}/company/repetitive-meeting/get`,
+  getByIdRepeatMeetingList: (id: string) =>
+    `${baseUrl}/company/repetitive-meeting/get/${id}`,
+  addRepeatMeetingList: () => `${baseUrl}/company/repetitive-meeting/create`,
+  updateRepeatMeetingList: (id: string) =>
+    `${baseUrl}/company/repetitive-meeting/update/${id}`,
+  deleteRepeatMeetingList: (id: string) =>
+    `${baseUrl}/company/repetitive-meeting/delete/${id}`,
 };
 
 export default Urls;

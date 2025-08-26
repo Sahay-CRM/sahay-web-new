@@ -124,7 +124,7 @@ export default function useMeetingDesc() {
       updateDetailMeeting(
         {
           meetingId: meetingId,
-          status: "CONCLUSION",
+          detailMeetingStatus: "CONCLUSION",
         },
         {
           onSuccess: () => {

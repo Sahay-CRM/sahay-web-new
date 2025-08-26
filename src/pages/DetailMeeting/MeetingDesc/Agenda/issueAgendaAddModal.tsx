@@ -43,7 +43,7 @@ export default function IssueAgendaAddModal({
   setSelectedIoType,
 }: IssueAgendaAddModalProps) {
   // Set default value to "issue"
-  const [selectedType, setSelectedType] = useState("issue");
+  const [selectedType, setSelectedType] = useState("ISSUE");
 
   const handleSubmit = () => {
     if (!onSubmit) return;
@@ -71,6 +71,7 @@ export default function IssueAgendaAddModal({
       isModalOpen={isModalOpen}
       modalTitle="Add or Create Issue Objective"
       modalClose={modalClose}
+      containerClass="h-[350px]"
       buttons={[
         {
           btnText: "Submit",
@@ -91,13 +92,13 @@ export default function IssueAgendaAddModal({
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem
-              value="issue"
+              value="ISSUE"
               id="r1"
               className="border-black w-5 h-5"
             />
             <label htmlFor="r1">Issue</label>
             <RadioGroupItem
-              value="objective"
+              value="OBJECTIVE"
               id="r2"
               className="ml-6 border-black w-5 h-5"
             />
