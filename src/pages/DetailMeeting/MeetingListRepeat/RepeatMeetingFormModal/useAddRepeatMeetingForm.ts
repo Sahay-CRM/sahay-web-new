@@ -34,11 +34,12 @@ export default function useAddRepeatMeetingForm() {
         repetitiveMeetingId: repetitiveMeetingId || "",
         meetingName: data.meetingName || "",
         meetingDescription: data.meetingDescription || "",
+        meetingTypeId: data.meetingTypeId,
         meetingDateTime: data.meetingDateTime
           ? new Date(data.meetingDateTime).toISOString()
           : null,
-        meetingTypeId: data.meetingType || undefined,
         employeeId: data.joinerIds,
+        repeatType: data.repeatType,
       });
     }
   }, [meetingApiData, reset, repetitiveMeetingId, setValue]);

@@ -27,7 +27,11 @@ const AddRepeatMeetingModal: React.FC<MeetingModalProps> = ({
   return (
     <ModalData
       isModalOpen={isModalOpen}
-      modalTitle={modalData.meetingId ? "Update Meeting" : "Add Meeting"}
+      modalTitle={
+        modalData.repetitiveMeetingId
+          ? "Update Repetitive Meeting"
+          : "Add Meeting"
+      }
       modalClose={modalClose}
       buttons={[
         {

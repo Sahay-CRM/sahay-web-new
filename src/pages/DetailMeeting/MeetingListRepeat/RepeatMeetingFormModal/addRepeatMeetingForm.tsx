@@ -27,7 +27,10 @@ interface MeetingInfoProps {
 }
 
 const MeetingType = () => {
-  const { control } = useFormContext();
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext();
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 25,
@@ -67,6 +70,13 @@ const MeetingType = () => {
             setPaginationFilter={setPaginationFilter}
             className="w-80"
           />
+          {errors.meetingTypeId && (
+            <p className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] whitespace-nowrap before:content-['*']">
+              {typeof errors.meetingTypeId?.message === "string"
+                ? errors.meetingTypeId.message
+                : ""}
+            </p>
+          )}
         </div>
         {canToggleColumns && (
           <div className="ml-4">
@@ -80,7 +90,7 @@ const MeetingType = () => {
       <Controller
         name="meetingTypeId"
         control={control}
-        // rules={{ required: "Please select a meeting type" }}
+        rules={{ required: "Please select a meeting type" }}
         render={({ field }) => (
           <TableData
             tableData={
@@ -104,7 +114,6 @@ const MeetingType = () => {
             moduleKey="type"
             showActionsColumn={false}
             isLoading={isLoading}
-            actionColumnWidth="w-0"
           />
         )}
       />

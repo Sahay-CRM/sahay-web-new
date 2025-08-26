@@ -20,7 +20,7 @@ export default function useAddUpdateRepeatMeeting() {
         data: data,
       };
       const { data: resData } = isUpdate
-        ? await Api.put<EmpRes>(config)
+        ? await Api.post<EmpRes>(config)
         : await Api.post<EmpRes>(config);
 
       return resData;
