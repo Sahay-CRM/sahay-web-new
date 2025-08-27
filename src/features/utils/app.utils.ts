@@ -117,3 +117,9 @@ export const getInitials = (name: string) => {
   const secondInitial = names.length > 1 ? names[1]?.charAt(0) || "" : "";
   return (firstInitial + secondInitial).toUpperCase();
 };
+
+export const formatIndianNumber = (value: string | number) => {
+  if (!value) return "";
+  const num = value.toString().replace(/,/g, ""); // strip old commas
+  return new Intl.NumberFormat("en-IN").format(Number(num));
+};

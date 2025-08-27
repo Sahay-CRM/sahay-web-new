@@ -75,8 +75,6 @@ export default function useRepeatMeetingList() {
       meetingDateTime: "",
       meetingTypeId: "",
       repetitiveMeetingId: "",
-      joinerIds: [],
-      teamLeaderIds: [],
     });
     setIsUserModalOpen(true);
   };
@@ -93,8 +91,6 @@ export default function useRepeatMeetingList() {
       meetingDateTime: "",
       meetingTypeId: "",
       repetitiveMeetingId: "",
-      joinerIds: [],
-      teamLeaderIds: [],
     });
     setIsUserModalOpen(false);
     setIsDeleteModalOpen(false);

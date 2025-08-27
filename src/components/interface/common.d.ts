@@ -1265,8 +1265,8 @@ interface RepeatMeeting {
   meetingTypeId?: string;
   meetingTimePlanned?: string;
   repeatType?: string;
-  joinerIds?: string[];
-  teamLeaderIds?: string[];
+  joiners?: Joiners[] | string[];
+  teamLeaderName?: string[];
   createdBy?: string;
   updatedBy?: string;
   createdDatetime?: string;
@@ -1274,10 +1274,15 @@ interface RepeatMeeting {
   nextDate?: string;
   isActive?: boolean;
   meetingDateTime?: string;
-  joinerName?: string;
   meetingType?: {
+    meetingTypeId: string;
     meetingTypeName: string;
   };
   isDetailMeeting?: boolean;
   // meetingStatusId?: string;
+}
+
+interface FileType {
+  fileId: string;
+  fileName: string;
 }

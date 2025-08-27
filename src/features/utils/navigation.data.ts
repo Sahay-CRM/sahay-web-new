@@ -25,8 +25,8 @@ export const companyNavigationData = [
   },
   {
     id: 4,
-    icon: "Video",
-    label: "Meeting",
+    icon: "Presentation",
+    label: "Meetings",
     permission: "View",
     // moduleKey: "MEETING_LIST",
     // link: "/dashboard/meeting",
@@ -40,14 +40,14 @@ export const companyNavigationData = [
       },
       {
         id: 2,
-        label: "Detail Meeting",
+        label: "Detail Meetings",
         link: "/dashboard/meeting/detail",
         permission: "View",
         moduleKey: "MEETING_LIST",
       },
       {
         id: 3,
-        label: "Repeat Meeting",
+        label: "Repeat Meetings",
         link: "/dashboard/repeat-meeting",
         permission: "View",
         moduleKey: "MEETING_LIST",
@@ -56,8 +56,8 @@ export const companyNavigationData = [
   },
   {
     id: 5,
-    icon: "Heart",
-    label: "Objective",
+    icon: "Target",
+    label: "Agenda",
     permission: "View",
     // moduleKey: "OBJECTIVE",
     items: [

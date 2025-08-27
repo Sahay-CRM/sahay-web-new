@@ -78,6 +78,9 @@ const AddRepeatDetailMeeting = lazy(
   () =>
     import("../pages/DetailMeeting/MeetingListRepeat/RepeatMeetingFormModal"),
 );
+const RepeatMeetingData = lazy(
+  () => import("../pages/DetailMeeting/MeetingListRepeat/DetailRepeatMeeting"),
+);
 
 const Issues = lazy(() => import("../pages/Obj/Issues"));
 const Objective = lazy(() => import("../pages/Obj/Objective"));
@@ -123,6 +126,7 @@ export default function EmployeeRoutes() {
           <Route index Component={RepeatDetailMeeting} />
           <Route path="add" Component={AddRepeatDetailMeeting} />
           <Route path="update/:id" Component={AddRepeatDetailMeeting} />
+          <Route path="detail/:id" Component={RepeatMeetingData} />
         </Route>
 
         <Route path="issues" Component={Issues} />

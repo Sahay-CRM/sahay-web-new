@@ -801,7 +801,8 @@ export default function Agenda({
                           {idx + 1}
                         </span>
 
-                        {editing.type === item.ioType && canEdit ? (
+                        {editing.issueObjectiveId === item.issueObjectiveId &&
+                        canEdit ? (
                           <div className="w-full flex items-center gap-1">
                             <div className="relative w-full flex gap-2 items-center">
                               <Input
@@ -862,7 +863,10 @@ export default function Agenda({
                           meetingStatus === "NOT_STARTED") &&
                           canEdit && (
                             <div className="flex-shrink-0 opacity-0 z-30 pl-5 bg-white w-20 text-left group-hover:opacity-100 transition-opacity">
-                              {!(editing.type === item.ioType) && (
+                              {!(
+                                editing.issueObjectiveId ===
+                                item.issueObjectiveId
+                              ) && (
                                 <div className="flex gap-1">
                                   <Button
                                     variant="ghost"

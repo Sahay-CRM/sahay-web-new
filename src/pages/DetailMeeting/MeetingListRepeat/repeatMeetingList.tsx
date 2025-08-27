@@ -60,8 +60,9 @@ export default function RepeatMeetingList() {
       label: "Meeting Description",
       visible: true,
     },
-    { key: "meetingDateTime", label: "Meeting TIme", visible: true },
-    { key: "joinerName", label: "Joiners", visible: true },
+    { key: "meetingDateTime", label: "Next Meeting Time", visible: true },
+    { key: "joinerNames", label: "Joiners", visible: true },
+    { key: "teamLeaderName", label: "Team Leaders", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -159,6 +160,16 @@ export default function RepeatMeetingList() {
                 new Date(item.meetingDateTime ?? 0),
                 "dd/MM/yyyy hh:mm a",
               ),
+              joinerNames:
+                item.joiners
+                  ?.map((emp) =>
+                    typeof emp === "object" &&
+                    emp !== null &&
+                    "employeeName" in emp
+                      ? (emp as { employeeName: string }).employeeName
+                      : String(emp),
+                  )
+                  .join(", ") || "",
             }))}
             columns={visibleColumns}
             primaryKey="repetitiveMeetingId"
@@ -177,6 +188,16 @@ export default function RepeatMeetingList() {
             customActions={(row) => {
               return (
                 <>
+                  <Button
+                    className={`w-fit mr-1`}
+                    onClick={() => {
+                      navigate(
+                        `/dashboard/repeat-meeting/detail/${row.repetitiveMeetingId}?meetingName=${encodeURIComponent(row.meetingName || "")}`,
+                      );
+                    }}
+                  >
+                    Details
+                  </Button>
                   <Button
                     className={`w-fit ${row.isActive && "bg-red-500 text-white hover:bg-red-400"}`}
                     onClick={() => handleStopRepeat(row)}
@@ -198,7 +219,7 @@ export default function RepeatMeetingList() {
               handleRowsModalOpen(row);
             }}
             sortableColumns={["meetingName"]}
-            actionColumnWidth="w-[100px]"
+            actionColumnWidth="w-60"
           />
         </div>
 

@@ -269,6 +269,7 @@ const Urls = {
     `${baseUrl}/company/repetitive-task/get/${id}`,
 
   createIo: () => `${baseUrl}/company/detail-meeting/agenda/io/create-add`,
+
   // Repeat Meeting Api
   getRepeatMeetingList: () => `${baseUrl}/company/repetitive-meeting/get`,
   getByIdRepeatMeetingList: (id: string) =>
@@ -278,6 +279,18 @@ const Urls = {
     `${baseUrl}/company/repetitive-meeting/update/${id}`,
   deleteRepeatMeetingList: (id: string) =>
     `${baseUrl}/company/repetitive-meeting/delete/${id}`,
+
+  ddRepeatMeetingIo: () =>
+    `${baseUrl}/company/repetitive-meeting/get-non-select-io`,
+  addRepeatMeetingIo: () => `${baseUrl}/company/repetitive-meeting/add-io`,
+
+  createRepeatMeetingIo: () =>
+    `${baseUrl}/company/repetitive-meeting/agenda/io/create-add`,
+
+  getRepeatMeetingAgendaIo: () =>
+    `${baseUrl}/company/repetitive-meeting/agenda/io/get`,
+  deleteRepeatMeetingAgendaIo: () =>
+    `${baseUrl}/company/repetitive-meeting/remove-io`,
 };
 
 export default Urls;

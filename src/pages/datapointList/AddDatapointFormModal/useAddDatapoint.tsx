@@ -24,6 +24,7 @@ import {
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { formatIndianNumber } from "@/features/utils/app.utils";
 // import { useGetProduct } from "@/features/api/Product";
 
 export default function useAddDataPoint() {
@@ -86,8 +87,8 @@ export default function useAddDataPoint() {
       tag: data.tag,
       unit: data.unit,
       validationType: data.validationType,
-      value1: data.value1,
-      value2: data.value2,
+      value1: formatIndianNumber(data.value1),
+      value2: formatIndianNumber(data.value2),
       frequencyType: data.frequencyType,
       visualFrequencyTypes: visualFrequencyTypesStr,
       visualFrequencyAggregate: data.visualFrequencyAggregate,
@@ -630,23 +631,31 @@ export default function useAddDataPoint() {
                       <FormInputField
                         label="Goal Value 1"
                         isMandatory
-                        {...register(`value1`, {
+                        {...register("value1", {
                           required: "Please enter Goal Value 1",
+                          onChange: (e) => {
+                            const rawValue = e.target.value.replace(/,/g, ""); // store unformatted
+                            setValue("value1", rawValue); // keep clean numeric in form state
+                            e.target.value = formatIndianNumber(rawValue); // show formatted
+                          },
                         })}
                         error={errors?.value1}
-                        // disabled={isDisabled}
-                        // readOnly={isDisabled}
                       />
+
                       {showBoth && (
                         <FormInputField
-                          isMandatory
                           label="Goal Value 2"
-                          {...register(`value2`, {
+                          type="number"
+                          isMandatory
+                          {...register("value2", {
                             required: "Please enter Goal Value 2",
+                            onChange: (e) => {
+                              const rawValue = e.target.value.replace(/,/g, "");
+                              setValue("value2", rawValue);
+                              e.target.value = formatIndianNumber(rawValue);
+                            },
                           })}
                           error={errors?.value2}
-                          // disabled={isDisabled}
-                          // readOnly={isDisabled}
                         />
                       )}
                     </>

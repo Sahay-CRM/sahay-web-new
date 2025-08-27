@@ -88,9 +88,8 @@ export default function useAddMeeting() {
     addMeeting(payload, {
       onSuccess: (response) => {
         const meetingId = Array.isArray(response?.data)
-          ? response?.data[0]?.companyMeetingId || companyMeetingId
-          : (response?.data as { companyMeetingId?: string })
-              ?.companyMeetingId || companyMeetingId;
+          ? response?.data[0]?.meetingId
+          : (response?.data as { meetingId?: string })?.meetingId;
 
         if (typeof meetingId === "string" && meetingId) {
           handleFileOperations(

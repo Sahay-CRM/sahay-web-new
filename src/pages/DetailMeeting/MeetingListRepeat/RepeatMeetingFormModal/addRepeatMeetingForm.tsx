@@ -21,6 +21,7 @@ import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import FormSelect from "@/components/shared/Form/FormSelect";
+import DatePicker from "react-datepicker";
 
 interface MeetingInfoProps {
   isUpdateMeeting: boolean;
@@ -330,6 +331,21 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
               error={errors.repeatType}
               isMandatory={true}
               disabled={!meetingDateTime}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="meetingTimePlanned"
+          render={({ field }) => (
+            <DatePicker
+              // selected={selectedDateTime}
+              onChange={field.onChange}
+              showTimeSelect
+              showTimeSelectOnly
+              timeIntervals={15}
+              timeCaption="Time"
+              dateFormat="h:mm aa"
             />
           )}
         />

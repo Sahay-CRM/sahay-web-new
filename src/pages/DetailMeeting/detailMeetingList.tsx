@@ -66,7 +66,7 @@ export default function DetailMeetingList() {
       label: "Meeting Description",
       visible: true,
     },
-    { key: "meetingDateTime", label: "Meeting TIme", visible: true },
+    { key: "meetingDateTime", label: "Meeting Time", visible: true },
     { key: "joinerNames", label: "Joiners", visible: true },
   ]);
 
@@ -293,6 +293,7 @@ export default function DetailMeetingList() {
             permissionKey="users"
             localStorageId="MeetingList"
             moduleKey="MEETING_LIST"
+            actionColumnWidth="w-64"
             sortableColumns={[
               "meetingName",
               "meetingDateTime",

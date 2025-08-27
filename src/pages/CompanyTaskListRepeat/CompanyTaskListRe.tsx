@@ -69,7 +69,7 @@ export default function CompanyTaskListRe() {
       label: "Task Description",
       visible: true,
     },
-    { key: "taskDeadline", label: "Task Deadline", visible: true },
+    { key: "taskDeadline", label: "Next Date", visible: true },
     { key: "employeeName", label: "Assignees", visible: true },
   ]);
 

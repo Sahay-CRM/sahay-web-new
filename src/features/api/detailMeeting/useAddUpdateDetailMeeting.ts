@@ -27,7 +27,7 @@ export default function useAddUpdateDetailMeeting() {
     },
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
-      queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
+      queryClient.resetQueries({ queryKey: ["get-detail-meeting-list"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

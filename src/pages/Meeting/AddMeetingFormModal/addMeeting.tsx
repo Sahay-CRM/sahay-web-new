@@ -21,6 +21,7 @@ import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
+import { ImageBaseURL } from "@/features/utils/urls.utils";
 
 interface MeetingInfoProps {
   isUpdateMeeting: boolean;
@@ -334,6 +335,7 @@ const Joiners = () => {
               // showActionsColumn={false}
               selectedValue={field.value || []}
               handleChange={(selectedItems) => field.onChange(selectedItems)}
+              showActionsColumn={false}
               customActions={(row: EmployeeDetails) => {
                 if (!(meetingType.parentType === "DETAIL")) return;
                 const isSelected = (field.value || []).some(
@@ -375,15 +377,12 @@ const Joiners = () => {
   );
 };
 
-// --- UploadDoc Component Definition ---
 const UploadDoc = () => {
   const { watch, setValue } = useFormContext();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Local state for UI representation of files, synced with form state
-  const [displayFiles, setDisplayFiles] = useState<
-    (File | string | { fileId: string; fileName: string })[]
-  >([]);
+  const [displayFiles, setDisplayFiles] = useState<FileType[]>([]);
 
   // Watch form state for initial files and updates
   const formFiles = watch("meetingDocuments");
@@ -467,24 +466,32 @@ const UploadDoc = () => {
               key={idx} // Using index as key is okay if list order doesn't change unpredictably or items don't have stable IDs
               className="flex items-center justify-between p-2 bg-gray-50 rounded"
             >
-              <span className="font-medium truncate">
-                {typeof file === "string"
-                  ? file.substring(0, 30) + (file.length > 30 ? "..." : "")
-                  : "fileName" in file && !(file instanceof File) // Check it's not a File object
-                    ? file.fileName
-                    : (file as File).name}
-              </span>
-              <button
-                type="button"
-                className="ml-2 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleRemoveFile(idx);
-                }}
-              >
-                Remove
-              </button>
+              <span className="font-medium truncate">{file.fileName}</span>
+              <div>
+                <button
+                  type="button"
+                  className="ml-2 px-2 py-1 bg-primary text-white rounded text-xs hover:bg-red-600 transition"
+                  onClick={() => {
+                    window.open(
+                      `${ImageBaseURL}/share/mDocs/${file.fileName}`,
+                      "_blank",
+                    );
+                  }}
+                >
+                  Download
+                </button>
+                <button
+                  type="button"
+                  className="ml-2 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleRemoveFile(idx);
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
             </div>
           ))}
         </div>

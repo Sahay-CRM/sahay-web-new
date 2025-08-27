@@ -302,10 +302,10 @@ export default function MeetingList() {
             // }}
             isActionButton={() => true}
             onDelete={(row) => {
-              onDelete(row as unknown as MeetingData);
+              onDelete(row as unknown as CompanyMeetingDataProps);
             }}
             onRowClick={(row) => {
-              handleRowsModalOpen(row as unknown as MeetingData);
+              handleRowsModalOpen(row as unknown as CompanyMeetingDataProps);
             }}
             paginationDetails={mapPaginationDetails(meetingData)}
             setPaginationFilter={setPaginationFilter}

@@ -645,6 +645,9 @@ export const useAgenda = ({
                     conclusionTimestamp: Date.now(),
                   }).then(() => {
                     queryClient.resetQueries({
+                      queryKey: ["get-meeting-conclusion-time-by-meetingId"],
+                    });
+                    queryClient.resetQueries({
                       queryKey: ["get-meeting-conclusion-res"],
                     });
                     resolve();
@@ -735,6 +738,7 @@ export const useAgenda = ({
   }, [isSelectedAgenda, meetingId]);
 
   const handleListClick = async (issueObjectiveId: string) => {
+    const ioId = meetingResponse?.state.currentAgendaItemId;
     if (!issueObjectiveId || !meetingId) return;
 
     const db = getDatabase();
@@ -744,8 +748,8 @@ export const useAgenda = ({
     const meetingSnapshot = await get(meetingRef);
 
     if (
-      (issueObjectiveId && meetingStatus === "DISCUSSION") ||
-      meetingStatus === "CONCLUSION"
+      ioId &&
+      (meetingStatus === "DISCUSSION" || meetingStatus === "CONCLUSION")
     ) {
       if (!meetingSnapshot.exists()) {
         return;
@@ -755,11 +759,11 @@ export const useAgenda = ({
         (now - Number(meetingResponse?.state.lastSwitchTimestamp)) / 1000;
       const prevObjectiveRef = ref(
         db,
-        `meetings/${meetingId}/timers/objectives/${issueObjectiveId}`,
+        `meetings/${meetingId}/timers/objectives/${ioId}`,
       );
 
       const currentActualTime =
-        meetingResponse?.timers.objectives?.[issueObjectiveId]?.actualTime || 0;
+        meetingResponse?.timers.objectives?.[ioId]?.actualTime || 0;
 
       await update(prevObjectiveRef, {
         actualTime: currentActualTime + prevElapsedSeconds,

@@ -24,7 +24,9 @@ export const toLocalISOString = (date: Date | undefined) => {
 export default function useAdminUser() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [modalData, setModalData] = useState<MeetingData>({} as MeetingData);
+  const [modalData, setModalData] = useState<CompanyMeetingDataProps>(
+    {} as CompanyMeetingDataProps,
+  );
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
   const [isChildData, setIsChildData] = useState<string | undefined>();
@@ -55,8 +57,8 @@ export default function useAdminUser() {
 
   // Add state for view modal
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [viewModalData, setViewModalData] = useState<MeetingData>(
-    {} as MeetingData,
+  const [viewModalData, setViewModalData] = useState<CompanyMeetingDataProps>(
+    {} as CompanyMeetingDataProps,
   );
 
   const [filters, setFilters] = useState<{ selected?: string[] }>({});
@@ -99,7 +101,7 @@ export default function useAdminUser() {
     setIsUserModalOpen(true);
   };
 
-  const openModal = useCallback((data: MeetingData) => {
+  const openModal = useCallback((data: CompanyMeetingDataProps) => {
     setModalData(data); // Set the data for the modal
     setIsUserModalOpen(true);
   }, []);
@@ -119,7 +121,7 @@ export default function useAdminUser() {
     setIsChildData("");
   };
 
-  const onDelete = useCallback((data: MeetingData) => {
+  const onDelete = useCallback((data: CompanyMeetingDataProps) => {
     setIsDeleteModalOpen(true);
     setModalData(data);
     setIsUserModalOpen(false);
@@ -180,7 +182,7 @@ export default function useAdminUser() {
     });
   };
 
-  const handleRowsModalOpen = (data: MeetingData) => {
+  const handleRowsModalOpen = (data: CompanyMeetingDataProps) => {
     setViewModalData(data);
     setIsViewModalOpen(true);
   };
