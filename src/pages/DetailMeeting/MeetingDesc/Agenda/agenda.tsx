@@ -718,7 +718,7 @@ export default function Agenda({
                 ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-14 bg-white text-black" : "h-20"}
                 ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : ""}
                 mb-2 rounded-md shadow
-                ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "cursor-pointer" : ""}`}
+                ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "cursor-default" : "cursor-pointer"}`}
                       // draggable={
                       //   meetingStatus === "STARTED" ||
                       //   meetingStatus === "NOT_STARTED"
@@ -767,11 +767,7 @@ export default function Agenda({
                       }}
                       style={{
                         // opacity: draggedIndex === idx ? 0.5 : 1,
-                        cursor:
-                          meetingStatus === "STARTED" ||
-                          meetingStatus === "NOT_STARTED"
-                            ? "move"
-                            : "default",
+
                         border:
                           hoverIndex === idx &&
                           (meetingStatus === "STARTED" ||
@@ -882,7 +878,9 @@ export default function Agenda({
                                       }}
                                       className="w-fit cursor-pointer"
                                     >
-                                      Mark As Solved
+                                      {item.isResolved
+                                        ? "Mark As Unsolved"
+                                        : "Mark As Solved"}
                                     </Button>
                                   )}
                                   <Button
@@ -996,7 +994,9 @@ export default function Agenda({
                                 onClick={() => handleMarkAsSolved(item)}
                                 className="w-fit cursor-pointer border border-gray-200 rounded-sm"
                               >
-                                Mark As Solved
+                                {item.isResolved
+                                  ? "Mark As Unsolved"
+                                  : "Mark As Solved"}
                               </Button>
                             </div>
                           )}

@@ -111,6 +111,9 @@ export default function useMeetingDesc() {
         queryClient.resetQueries({
           queryKey: ["get-meeting-notes"],
         });
+        queryClient.resetQueries({
+          queryKey: ["get-detail-meeting-obj-issue"],
+        });
         handleUpdatedRefresh();
       }
     });

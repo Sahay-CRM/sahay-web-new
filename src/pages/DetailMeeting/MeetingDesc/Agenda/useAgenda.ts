@@ -918,6 +918,9 @@ export const useAgenda = ({
         {
           onSuccess: () => {
             if (!meetingSnapshot.exists()) {
+              queryClient.resetQueries({
+                queryKey: ["get-detail-meeting-agenda-issue-obj"],
+              });
               return;
             }
             update(ref(db, `meetings/${meetingId}/state`), {
@@ -936,6 +939,9 @@ export const useAgenda = ({
         {
           onSuccess: () => {
             if (!meetingSnapshot.exists()) {
+              queryClient.resetQueries({
+                queryKey: ["get-detail-meeting-agenda-issue-obj"],
+              });
               return;
             }
             update(ref(db, `meetings/${meetingId}/state`), {
@@ -952,15 +958,16 @@ export const useAgenda = ({
 
     const meetingRef = ref(db, `meetings/${meetingId}`);
     const meetingSnapshot = await get(meetingRef);
-    if (!meetingSnapshot.exists()) {
-      return;
-    }
-    await update(ref(db, `meetings/${meetingId}/state`), {
-      agendaActiveTab: data,
-      updatedAt: Date.now(),
-    });
 
-    setResolutionFilter(data);
+    if (!meetingSnapshot.exists()) {
+      setResolutionFilter(data);
+      return;
+    } else {
+      await update(ref(db, `meetings/${meetingId}/state`), {
+        agendaActiveTab: data,
+        updatedAt: Date.now(),
+      });
+    }
   };
 
   useEffect(() => {

@@ -198,15 +198,15 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       onSuccess: async () => {
         const meetingSnapshot = await get(meetingRef);
         if (!meetingSnapshot.exists()) {
+          refetchMeetingNotes();
+          setTitleInput("");
+          setNoteInput("");
+          setIsAddingNote(false);
           return;
         }
         update(ref(db, `meetings/${meetingId}/state`), {
           updatedAt: Date.now(),
         });
-        refetchMeetingNotes();
-        setTitleInput("");
-        setNoteInput("");
-        setIsAddingNote(false);
       },
     });
   };

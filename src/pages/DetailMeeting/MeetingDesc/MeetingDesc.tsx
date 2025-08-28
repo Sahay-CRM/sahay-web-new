@@ -8,6 +8,7 @@ import {
   FileText,
   RefreshCcw,
   ThumbsUp,
+  Trash2,
   Unlink,
   UsersRound,
   X,
@@ -96,11 +97,7 @@ export default function MeetingDesc() {
             meetingResponse={meetingResponse}
             joiners={meetingTiming?.joiners as Joiners[]}
             meetingTime={meetingTiming?.meetingTimePlanned}
-            isTeamLeader={
-              (meetingTiming?.joiners as Joiners[])?.find(
-                (item) => item.employeeId === userId,
-              )?.isTeamLeader
-            }
+            isTeamLeader={isTeamLeader}
             // isCheckIn={
             //   (meetingTiming?.joiners as Joiners[])?.find(
             //     (item) => item.employeeId === userId
@@ -205,32 +202,35 @@ export default function MeetingDesc() {
                             </div>
                           </div>
                           <div>
-                            <FormCheckbox
-                              id={`${item.employeeId}-checkbox`}
-                              className="w-[16px] h-[16px]"
-                              containerClass="p-0 ml-1"
-                              checked={item.attendanceMark as boolean}
-                              onChange={(e) => {
-                                const updatedAttendance = e.target.checked;
-                                handleCheckIn(
-                                  item.employeeId,
-                                  updatedAttendance,
-                                );
-                              }}
-                              disabled={
-                                meetingStatus === "NOT_STARTED" ||
-                                meetingStatus === "ENDED" ||
-                                !isTeamLeader
-                              }
-                            />
+                            {meetingStatus !== "NOT_STARTED" && (
+                              <FormCheckbox
+                                id={`${item.employeeId}-checkbox`}
+                                className="w-[16px] h-[16px]"
+                                containerClass="p-0 ml-1"
+                                checked={item.attendanceMark as boolean}
+                                onChange={(e) => {
+                                  const updatedAttendance = e.target.checked;
+                                  handleCheckIn(
+                                    item.employeeId,
+                                    updatedAttendance,
+                                  );
+                                }}
+                                disabled={
+                                  meetingStatus === "NOT_STARTED" ||
+                                  meetingStatus === "ENDED" ||
+                                  !isTeamLeader
+                                }
+                              />
+                            )}
                           </div>
                           {/* <div> */}
-                          {meetingStatus === "NOT_STARTED" && isTeamLeader && (
-                            <Unlink
-                              className="w-6 h-6 mt-1.5"
-                              onClick={() => handleDeleteEmp(item.employeeId)}
-                            />
-                          )}
+                          {meetingStatus === "NOT_STARTED" &&
+                            item.employeeId !== userId && (
+                              <Trash2
+                                className="w-6 h-6 mt-1.5"
+                                onClick={() => handleDeleteEmp(item.employeeId)}
+                              />
+                            )}
                           {/* </div> */}
                         </div>
 
