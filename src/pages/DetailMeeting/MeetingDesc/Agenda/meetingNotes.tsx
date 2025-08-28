@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import {
-  Trash2,
+  Unlink,
   Plus,
   EllipsisVertical,
   X,
@@ -420,7 +420,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                   }
                                   className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
                                 >
-                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  <Unlink className="h-4 w-4 mr-2" />
                                   Delete
                                 </DropdownMenuItem>
                               </DropdownMenuContent>

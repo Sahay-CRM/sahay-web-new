@@ -86,6 +86,12 @@ export default function useMeetingDesc() {
           queryClient.resetQueries({
             queryKey: ["get-meeting-conclusion-res"],
           });
+          queryClient.resetQueries({
+            queryKey: ["get-meeting-conclusion-res"],
+          });
+          queryClient.resetQueries({
+            queryKey: ["get-meeting-conclusion-time-by-meetingId"],
+          });
         } else if (activeTab === "ENDED") {
           handleUpdatedRefresh();
         }

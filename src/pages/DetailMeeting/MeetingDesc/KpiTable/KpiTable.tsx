@@ -35,6 +35,7 @@ import TabsSection from "./TabSection";
 import WarningDialog from "./WarningModal";
 import KpisSearchDropdown from "./KpiSearchDropdown";
 import KpiDrawer from "./KpiDrawer";
+import { format } from "date-fns";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -96,6 +97,7 @@ export default function KPITable({
         meetingId: meetingId,
         ...(ioType === "ISSUE" ? { issueId: ioId } : { objectiveId: ioId }),
         ioType: ioType,
+        selectDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : null,
       },
       enable: !!meetingId && !!ioId && !!ioType,
     });

@@ -27,7 +27,7 @@ import {
   deleteMeetingProjectMutation,
   useGetMeetingProject,
 } from "@/features/api/detailMeeting";
-import { Trash } from "lucide-react";
+import { Unlink } from "lucide-react";
 
 interface ProjectProps {
   projectsFireBase: () => void;
@@ -265,7 +265,7 @@ export default function Projects({
                   conformDelete(row as unknown as IProjectFormData);
                 }}
               >
-                <Trash className="w-4 h-4 text-red-700" />
+                <Unlink className="w-4 h-4 text-red-700" />
               </Button>
             </>
           );

@@ -465,7 +465,9 @@ export const useAgenda = ({
     });
   };
 
-  const handleModalSubmit = (data: { type: string; value: string }) => {
+  const handleModalSubmit = async (data: { type: string; value: string }) => {
+    const meetingRef = ref(db, `meetings/${meetingId}`);
+    const meetingSnapshot = await get(meetingRef);
     const payload = {
       meetingId: meetingId,
       name: data.value,
@@ -473,10 +475,17 @@ export const useAgenda = ({
     };
     ioCreate(payload, {
       onSuccess: () => {
+        if (!meetingSnapshot.exists()) {
+          return;
+        }
+        const db = getDatabase();
+        const meetRef = ref(db, `meetings/${meetingId}/state`);
+        update(meetRef, { updatedAt: new Date() });
+        setModalOpen(false);
+        setAddIssueModal(false);
         queryClient.resetQueries({
           queryKey: ["get-detail-meeting-agenda-issue-obj"],
         });
-        setModalOpen(false);
       },
     });
     // if (data.type === "ISSUE") {
@@ -645,9 +654,7 @@ export const useAgenda = ({
                     queryClient.resetQueries({
                       queryKey: ["get-meeting-conclusion-time-by-meetingId"],
                     });
-                    queryClient.resetQueries({
-                      queryKey: ["get-meeting-conclusion-res"],
-                    });
+
                     resolve();
                   });
                 },
@@ -963,8 +970,6 @@ export const useAgenda = ({
     onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        console.log("agendaActiveTab:", data);
-
         setResolutionFilter(data);
       }
     });

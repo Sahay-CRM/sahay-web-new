@@ -25,7 +25,7 @@ import {
   deleteMeetingTaskMutation,
   useGetMeetingTask,
 } from "@/features/api/detailMeeting";
-import { Trash } from "lucide-react";
+import { Unlink } from "lucide-react";
 
 interface TasksProps {
   tasksFireBase: () => void;
@@ -259,7 +259,7 @@ export default function Tasks({
                   conformDelete(row as unknown as TaskGetPaging);
                 }}
               >
-                <Trash className="w-4 h-4 text-red-700" />
+                <Unlink className="w-4 h-4 text-red-700" />
               </Button>
             </>
           );

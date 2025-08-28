@@ -8,7 +8,7 @@ import {
   FileText,
   RefreshCcw,
   ThumbsUp,
-  Trash2,
+  Unlink,
   UsersRound,
   X,
 } from "lucide-react";
@@ -226,7 +226,7 @@ export default function MeetingDesc() {
                           </div>
                           {/* <div> */}
                           {meetingStatus === "NOT_STARTED" && isTeamLeader && (
-                            <Trash2
+                            <Unlink
                               className="w-6 h-6 mt-1.5"
                               onClick={() => handleDeleteEmp(item.employeeId)}
                             />
@@ -407,7 +407,7 @@ export default function MeetingDesc() {
                                           }
                                           className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
                                         >
-                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          <Unlink className="h-4 w-4 mr-2" />
                                           Delete
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>
@@ -512,7 +512,7 @@ export default function MeetingDesc() {
                                           }
                                           className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
                                         >
-                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          <Unlink className="h-4 w-4 mr-2" />
                                           Delete
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>

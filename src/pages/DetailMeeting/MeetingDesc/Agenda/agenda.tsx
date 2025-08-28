@@ -14,7 +14,7 @@ import {
   Plus,
   SquarePen,
   Target,
-  Trash2,
+  Unlink,
   User,
 } from "lucide-react";
 
@@ -681,9 +681,11 @@ export default function Agenda({
               <div className="mb-3">
                 <Tabs
                   defaultValue="unsolved"
-                  onValueChange={(value) =>
-                    handleAgendaTabFilter(value as "solved" | "unsolved")
-                  }
+                  onValueChange={(value) => {
+                    if (isTeamLeader) {
+                      handleAgendaTabFilter(value as "solved" | "unsolved");
+                    }
+                  }}
                   value={resolutionFilter}
                   className="w-full"
                 >
@@ -872,15 +874,17 @@ export default function Agenda({
                                 item.issueObjectiveId
                               ) && (
                                 <div className="flex gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    onClick={() => {
-                                      handleMarkAsSolved(item);
-                                    }}
-                                    className="w-fit cursor-pointer"
-                                  >
-                                    Mark As Solved
-                                  </Button>
+                                  {isTeamLeader && (
+                                    <Button
+                                      variant="ghost"
+                                      onClick={() => {
+                                        handleMarkAsSolved(item);
+                                      }}
+                                      className="w-fit cursor-pointer"
+                                    >
+                                      Mark As Solved
+                                    </Button>
+                                  )}
                                   <Button
                                     variant="ghost"
                                     onClick={(e) => {
@@ -908,7 +912,7 @@ export default function Agenda({
                                     }}
                                     className="w-5"
                                   >
-                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                    <Unlink className="h-4 w-4 text-red-500" />
                                   </Button>
                                 </div>
                               )}
@@ -983,17 +987,19 @@ export default function Agenda({
                             )}
 
                           {/* Hover button */}
-                          <div
-                            className={`absolute -right-2 opacity-0 group-hover:opacity-100 transition-opacity h-[75px] content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
-                          >
-                            <Button
-                              variant="ghost"
-                              onClick={() => handleMarkAsSolved(item)}
-                              className="w-fit cursor-pointer border border-gray-200 rounded-sm"
+                          {isTeamLeader && (
+                            <div
+                              className={`absolute right-2 opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-10" : "h-[75px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
                             >
-                              Mark As Solved
-                            </Button>
-                          </div>
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleMarkAsSolved(item)}
+                                className="w-fit cursor-pointer border border-gray-200 rounded-sm"
+                              >
+                                Mark As Solved
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </li>
@@ -1464,46 +1470,42 @@ export default function Agenda({
                                       ...Object.keys(kpi.oldValues),
                                       ...Object.keys(kpi.newValues),
                                     ]),
-                                  ] as Array<keyof typeof kpi.oldValues>;
+                                  ].filter((key) => key !== "kpiId") as Array<
+                                    keyof typeof kpi.oldValues
+                                  >; // 🚀 filter out kpiId
 
                                   return (
                                     <div
                                       key={idx}
-                                      className="flex overflow-hidden border-b py-2"
+                                      className="overflow-hidden border-b py-3"
                                     >
-                                      <div className="w-1/3 pl-4">
-                                        <h4 className="font-medium text-gray-800">
-                                          {kpi.oldValues.kpiName !==
-                                          kpi.newValues.kpiName ? (
-                                            <>
-                                              <span className="text-red-500 line-through">
-                                                {kpi.oldValues.kpiName}
-                                              </span>
-                                              <span className="text-green-600 ml-2">
-                                                {kpi.newValues.kpiName}
-                                              </span>
-                                            </>
-                                          ) : (
-                                            kpi.newValues.kpiName
-                                          )}
-                                        </h4>
-                                      </div>
-                                      <div className="w-2/3">
-                                        <div className="space-y-1">
-                                          {allKeys.map((key) => {
-                                            const oldValue = kpi.oldValues[key];
-                                            const newValue = kpi.newValues[key];
+                                      {/* KPI Name */}
+                                      <h4 className="font-medium text-gray-800 pl-4">
+                                        {kpi.oldValues.kpiName !==
+                                        kpi.newValues.kpiName ? (
+                                          <>
+                                            <span className="text-red-500 line-through">
+                                              {kpi.oldValues.kpiName}
+                                            </span>
+                                            <span className="text-green-600 ml-2">
+                                              {kpi.newValues.kpiName}
+                                            </span>
+                                          </>
+                                        ) : (
+                                          kpi.newValues.kpiName
+                                        )}
+                                      </h4>
 
-                                            // Skip if values are the same
-                                            if (oldValue === newValue)
-                                              return null;
-
-                                            return (
-                                              <div
-                                                key={String(key)}
-                                                className="text-sm"
-                                              >
-                                                <span className="font-medium text-gray-600 capitalize">
+                                      <div className="mt-2 grid grid-cols-2 gap-4 px-4">
+                                        {/* Old Values */}
+                                        <div>
+                                          <p className="font-medium text-gray-600 mb-1">
+                                            Old Values
+                                          </p>
+                                          <div className="space-y-1 text-sm">
+                                            {allKeys.map((key) => (
+                                              <div key={String(key)}>
+                                                <span className="capitalize">
                                                   {key
                                                     .toString()
                                                     .replace("kpi", "")
@@ -1511,63 +1513,66 @@ export default function Agenda({
                                                     .trim()}
                                                   :
                                                 </span>{" "}
-                                                <span className="text-red-500 line-through">
-                                                  {oldValue?.toString() ||
-                                                    "N/A"}
-                                                </span>
-                                                <span className="mx-2 text-gray-400">
-                                                  →
-                                                </span>
-                                                <span className="text-green-600">
-                                                  {newValue?.toString() ||
-                                                    "N/A"}
-                                                </span>
+                                                {kpi.oldValues[
+                                                  key
+                                                ]?.toString() || "N/A"}
                                               </div>
-                                            );
-                                          })}
+                                            ))}
 
-                                          {kpi.newData &&
-                                            kpi.newData.length > 0 && (
-                                              <div className="mt-2">
-                                                <div className="mt-1 space-y-2">
-                                                  {kpi.newData.map(
-                                                    (
-                                                      newDataItem: KpiRecordedData,
-                                                      dataIdx: number,
-                                                    ) => {
-                                                      const oldDataItem = kpi
-                                                        .oldData?.[dataIdx] || {
-                                                        data: null,
-                                                      };
-                                                      return (
-                                                        <div
-                                                          key={dataIdx}
-                                                          className="text-sm"
-                                                        >
-                                                          <span className="font-medium text-gray-600">
-                                                            {formatDate(
-                                                              newDataItem.startDate,
-                                                            )}
-                                                            :
-                                                          </span>{" "}
-                                                          <span className="text-red-500 line-through">
-                                                            {oldDataItem.data ||
-                                                              "N/A"}
-                                                          </span>
-                                                          <span className="mx-2 text-gray-400">
-                                                            →
-                                                          </span>
-                                                          <span className="text-green-600">
-                                                            {newDataItem.data ||
-                                                              "N/A"}
-                                                          </span>
-                                                        </div>
-                                                      );
-                                                    },
-                                                  )}
-                                                </div>
+                                            {kpi.oldData
+                                              ? kpi.oldData.map(
+                                                  (oldDataItem, i) => (
+                                                    <div key={i}>
+                                                      {formatDate(
+                                                        oldDataItem.startDate,
+                                                      )}{" "}
+                                                      :{" "}
+                                                      {oldDataItem.data ||
+                                                        "N/A"}
+                                                    </div>
+                                                  ),
+                                                )
+                                              : null}
+                                          </div>
+                                        </div>
+
+                                        {/* New Values */}
+                                        <div>
+                                          <p className="font-medium text-gray-600 mb-1">
+                                            New Values
+                                          </p>
+                                          <div className="space-y-1 text-sm">
+                                            {allKeys.map((key) => (
+                                              <div key={String(key)}>
+                                                <span className="capitalize">
+                                                  {key
+                                                    .toString()
+                                                    .replace("kpi", "")
+                                                    .replace(/([A-Z])/g, " $1")
+                                                    .trim()}
+                                                  :
+                                                </span>{" "}
+                                                {kpi.newValues[
+                                                  key
+                                                ]?.toString() || "N/A"}
                                               </div>
-                                            )}
+                                            ))}
+
+                                            {kpi.newData
+                                              ? kpi.newData.map(
+                                                  (newDataItem, i) => (
+                                                    <div key={i}>
+                                                      {formatDate(
+                                                        newDataItem.startDate,
+                                                      )}{" "}
+                                                      :{" "}
+                                                      {newDataItem.data ||
+                                                        "N/A"}
+                                                    </div>
+                                                  ),
+                                                )
+                                              : null}
+                                          </div>
                                         </div>
                                       </div>
                                     </div>
