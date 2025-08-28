@@ -301,7 +301,13 @@ export default function MeetingTimer({
             <Button
               size="sm"
               variant="ghost"
-              onClick={handleEditClick}
+              onClick={() => {
+                if (isEditMode) {
+                  console.log(isEditMode);
+
+                  handleEditClick();
+                }
+              }}
               title="Edit time"
               className="text-muted-foreground hover:text-primary"
               disabled={isLoading}

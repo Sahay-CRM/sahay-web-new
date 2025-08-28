@@ -112,7 +112,7 @@ interface AgendaProps {
   joiners: Joiners[];
   meetingTime?: string;
   isTeamLeader: boolean | undefined;
-  isCheckIn?: boolean;
+  // isCheckIn?: boolean;
   follow?: boolean;
 }
 
@@ -123,7 +123,7 @@ export default function Agenda({
   meetingResponse,
   meetingTime,
   isTeamLeader,
-  isCheckIn,
+  // isCheckIn,
   follow,
   joiners,
 }: AgendaProps) {
@@ -178,9 +178,11 @@ export default function Agenda({
     setAddIssueModal,
     isUpdatingTime,
     conclusionTime,
-    setResolutionFilter,
+    handleAgendaTabFilter,
     ioType,
     setSelectedIoType,
+    handleMarkAsSolved,
+    resolutionFilter,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -533,7 +535,7 @@ export default function Agenda({
             )}
 
             {meetingStatus === "NOT_STARTED" ||
-              ((!isTeamLeader || !follow) && (
+              (!isTeamLeader && (
                 <Button
                   variant="outline"
                   className="w-[200px] h-[40px] cursor-not-allowed hover:bg-primary hover:text-white bg-primary text-white rounded-[10px] text-lg font-semibold"
@@ -547,7 +549,7 @@ export default function Agenda({
                 </Button>
               ))}
 
-            {isTeamLeader && isCheckIn && follow && (
+            {isTeamLeader && (
               <>
                 {meetingStatus === "STARTED" && (
                   <Button
@@ -680,8 +682,9 @@ export default function Agenda({
                 <Tabs
                   defaultValue="unsolved"
                   onValueChange={(value) =>
-                    setResolutionFilter(value as "solved" | "unsolved")
+                    handleAgendaTabFilter(value as "solved" | "unsolved")
                   }
+                  value={resolutionFilter}
                   className="w-full"
                 >
                   <TabsList className="grid w-64 grid-cols-2">
@@ -753,8 +756,9 @@ export default function Agenda({
                       onClick={() => {
                         if (
                           (meetingStatus !== "NOT_STARTED" &&
-                            meetingStatus !== "STARTED") ||
-                          follow
+                            meetingStatus !== "STARTED" &&
+                            follow) ||
+                          meetingStatus === "ENDED"
                         ) {
                           handleListClick(item.issueObjectiveId ?? "");
                         }
@@ -851,7 +855,7 @@ export default function Agenda({
                           </div>
                         )}
                       </div>
-                      {}
+
                       <div className="flex items-center gap-2 relative">
                         <div className="text-xs text-center w-20 text-gray-500 absolute top-0 right-0">
                           <Badge variant="secondary" className="mb-1.5">
@@ -862,12 +866,21 @@ export default function Agenda({
                         {(meetingStatus === "STARTED" ||
                           meetingStatus === "NOT_STARTED") &&
                           canEdit && (
-                            <div className="flex-shrink-0 opacity-0 z-30 pl-5 bg-white w-20 text-left group-hover:opacity-100 transition-opacity">
+                            <div className="flex-shrink-0 opacity-0 z-30 pl-5 bg-white w-fit text-left group-hover:opacity-100 transition-opacity">
                               {!(
                                 editing.issueObjectiveId ===
                                 item.issueObjectiveId
                               ) && (
                                 <div className="flex gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    onClick={() => {
+                                      handleMarkAsSolved(item);
+                                    }}
+                                    className="w-fit cursor-pointer"
+                                  >
+                                    Mark As Solved
+                                  </Button>
                                   <Button
                                     variant="ghost"
                                     onClick={(e) => {
@@ -902,69 +915,86 @@ export default function Agenda({
                             </div>
                           )}
 
-                        {meetingStatus !== "STARTED" &&
-                          meetingStatus !== "NOT_STARTED" &&
-                          item.issueObjectiveId && (
-                            <div className="text-sm text-center ml-2 font-medium text-primary">
-                              <div className="text-xs text-center w-20 text-gray-500">
-                                <Badge variant="secondary" className="mb-1.5">
-                                  {item.ioType}
-                                </Badge>
-                              </div>
-                              {meetingStatus === "DISCUSSION" ? (
-                                <Timer
-                                  actualTime={Number(
-                                    meetingResponse &&
-                                      meetingResponse?.timers.objectives?.[
-                                        item.issueObjectiveId
-                                      ]?.actualTime,
-                                  )}
-                                  defaultTime={Number(
-                                    meetingResponse &&
-                                      meetingResponse?.timers.objectives?.[
-                                        item.issueObjectiveId
-                                      ]?.actualTime,
-                                  )}
-                                  lastSwitchTimestamp={
-                                    isSelectedAgenda === item.issueObjectiveId
-                                      ? Number(
-                                          meetingResponse?.state
-                                            .lastSwitchTimestamp || Date.now(),
-                                        )
-                                      : 0
-                                  }
-                                  isActive={
-                                    isSelectedAgenda === item.issueObjectiveId
-                                  }
-                                  className={`text-xl ${
-                                    isSelectedAgenda === item.issueObjectiveId
-                                      ? "text-white"
-                                      : ""
-                                  }`}
-                                />
-                              ) : (
-                                <div
-                                  className={`text-xl ${
-                                    isSelectedAgenda === item.issueObjectiveId
-                                      ? "text-white"
-                                      : ""
-                                  }`}
-                                >
-                                  {formatTime(
-                                    Number(
-                                      conclusionTime
-                                        ? conclusionTime?.agenda?.find(
-                                            (con) =>
-                                              con.issueObjectiveId ===
-                                              item.issueObjectiveId,
-                                          )?.actualTime
-                                        : 0,
-                                    ),
-                                  )}
+                        <div className="relative group flex items-center">
+                          {/* Existing content */}
+                          {meetingStatus !== "STARTED" &&
+                            meetingStatus !== "NOT_STARTED" &&
+                            item.issueObjectiveId && (
+                              <div className="text-sm text-center ml-2 font-medium text-primary">
+                                <div className="text-xs text-center w-20 text-gray-500">
+                                  <Badge variant="secondary" className="mb-1.5">
+                                    {item.ioType}
+                                  </Badge>
                                 </div>
-                              )}
-                            </div>
-                          )}
+                                {meetingStatus === "DISCUSSION" ? (
+                                  <Timer
+                                    actualTime={Number(
+                                      meetingResponse &&
+                                        meetingResponse?.timers.objectives?.[
+                                          item.issueObjectiveId
+                                        ]?.actualTime,
+                                    )}
+                                    defaultTime={Number(
+                                      meetingResponse &&
+                                        meetingResponse?.timers.objectives?.[
+                                          item.issueObjectiveId
+                                        ]?.actualTime,
+                                    )}
+                                    lastSwitchTimestamp={
+                                      isSelectedAgenda === item.issueObjectiveId
+                                        ? Number(
+                                            meetingResponse?.state
+                                              .lastSwitchTimestamp ||
+                                              Date.now(),
+                                          )
+                                        : 0
+                                    }
+                                    isActive={
+                                      isSelectedAgenda === item.issueObjectiveId
+                                    }
+                                    className={`text-xl ${
+                                      isSelectedAgenda === item.issueObjectiveId
+                                        ? "text-white"
+                                        : ""
+                                    }`}
+                                  />
+                                ) : (
+                                  <div
+                                    className={`text-xl ${
+                                      isSelectedAgenda === item.issueObjectiveId
+                                        ? "text-white"
+                                        : ""
+                                    }`}
+                                  >
+                                    {formatTime(
+                                      Number(
+                                        conclusionTime
+                                          ? conclusionTime?.agenda?.find(
+                                              (con) =>
+                                                con.issueObjectiveId ===
+                                                item.issueObjectiveId,
+                                            )?.actualTime
+                                          : 0,
+                                      ),
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                          {/* Hover button */}
+                          <div
+                            className={`absolute -right-2 opacity-0 group-hover:opacity-100 transition-opacity h-[75px] content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
+                          >
+                            <Button
+                              variant="ghost"
+                              onClick={() => handleMarkAsSolved(item)}
+                              className="w-fit cursor-pointer border border-gray-200 rounded-sm"
+                            >
+                              Mark As Solved
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     </li>
                   ))}

@@ -86,6 +86,8 @@ export default function useMeetingDesc() {
           queryClient.resetQueries({
             queryKey: ["get-meeting-conclusion-res"],
           });
+        } else if (activeTab === "ENDED") {
+          handleUpdatedRefresh();
         }
       }
     });
@@ -100,6 +102,9 @@ export default function useMeetingDesc() {
 
     const unsubscribe = onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
+        queryClient.resetQueries({
+          queryKey: ["get-meeting-notes"],
+        });
         handleUpdatedRefresh();
       }
     });

@@ -79,9 +79,7 @@ export const useAgenda = ({
   const [addIssueModal, setAddIssueModal] = useState(false);
   const [debouncedInput, setDebouncedInput] = useState(issueInput);
   const [isMeetingStart, setIsMeetingStart] = useState(false);
-  const [resolutionFilter, setResolutionFilter] = useState<
-    "unsolved" | "solved"
-  >("unsolved");
+  const [resolutionFilter, setResolutionFilter] = useState<string>("unsolved");
   const [selectedIoType, setSelectedIoType] = useState("ISSUE");
 
   useEffect(() => {
@@ -897,6 +895,85 @@ export const useAgenda = ({
     setAddIssueModal(true);
   };
 
+  const handleMarkAsSolved = async (data: MeetingAgenda) => {
+    const db = getDatabase();
+
+    const meetingRef = ref(db, `meetings/${meetingId}`);
+    const meetingSnapshot = await get(meetingRef);
+
+    if (data.ioType === "ISSUE") {
+      addIssue(
+        {
+          issueId: data.issueId,
+          issueName: data.name,
+          isResolved: !data.isResolved,
+        },
+        {
+          onSuccess: () => {
+            if (!meetingSnapshot.exists()) {
+              return;
+            }
+            update(ref(db, `meetings/${meetingId}/state`), {
+              updatedAt: Date.now(),
+            });
+          },
+        },
+      );
+    } else if (data.ioType === "OBJECTIVE") {
+      addObjective(
+        {
+          objectiveId: data.objectiveId,
+          objectiveName: data.name,
+          isResolved: !data.isResolved,
+        },
+        {
+          onSuccess: () => {
+            if (!meetingSnapshot.exists()) {
+              return;
+            }
+            update(ref(db, `meetings/${meetingId}/state`), {
+              updatedAt: Date.now(),
+            });
+          },
+        },
+      );
+    }
+  };
+
+  const handleAgendaTabFilter = async (data: string) => {
+    const db = getDatabase();
+
+    const meetingRef = ref(db, `meetings/${meetingId}`);
+    const meetingSnapshot = await get(meetingRef);
+    if (!meetingSnapshot.exists()) {
+      return;
+    }
+    await update(ref(db, `meetings/${meetingId}/state`), {
+      agendaActiveTab: data,
+      updatedAt: Date.now(),
+    });
+
+    setResolutionFilter(data);
+  };
+
+  useEffect(() => {
+    const db = getDatabase();
+    const meetingRef = ref(db, `meetings/${meetingId}/state/agendaActiveTab`);
+
+    onValue(meetingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        console.log("agendaActiveTab:", data);
+
+        setResolutionFilter(data);
+      }
+    });
+
+    return () => {
+      off(meetingRef);
+    };
+  }, [meetingId]);
+
   return {
     issueInput,
     editing,
@@ -951,9 +1028,11 @@ export const useAgenda = ({
     setAddIssueModal,
     isUpdatingTime,
     conclusionTime,
-    setResolutionFilter,
     ioType,
     setSelectedIoType,
+    handleMarkAsSolved,
+    handleAgendaTabFilter,
+    resolutionFilter,
     // handleJoinMeeting,
   };
 };

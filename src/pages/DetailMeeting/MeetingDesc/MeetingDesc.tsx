@@ -101,11 +101,11 @@ export default function MeetingDesc() {
                 (item) => item.employeeId === userId,
               )?.isTeamLeader
             }
-            isCheckIn={
-              (meetingTiming?.joiners as Joiners[])?.find(
-                (item) => item.employeeId === userId,
-              )?.attendanceMark
-            }
+            // isCheckIn={
+            //   (meetingTiming?.joiners as Joiners[])?.find(
+            //     (item) => item.employeeId === userId
+            //   )?.attendanceMark
+            // }
             follow={meetingResponse?.state.follow === userId}
           />
         </div>
@@ -130,7 +130,7 @@ export default function MeetingDesc() {
                 </div>
               </div>
               <div className="h-[calc(100vh-170px)] overflow-auto">
-                {meetingStatus !== "ENDED" && (
+                {meetingStatus !== "ENDED" && isTeamLeader && (
                   <div className="px-4 mb-2">
                     <EmployeeSearchDropdown
                       onAdd={handleAddEmp}
@@ -225,7 +225,7 @@ export default function MeetingDesc() {
                             />
                           </div>
                           {/* <div> */}
-                          {meetingStatus === "NOT_STARTED" && (
+                          {meetingStatus === "NOT_STARTED" && isTeamLeader && (
                             <Trash2
                               className="w-6 h-6 mt-1.5"
                               onClick={() => handleDeleteEmp(item.employeeId)}
@@ -235,38 +235,30 @@ export default function MeetingDesc() {
                         </div>
 
                         {/* Accordion content (only if open) */}
-                        {isOpen &&
-                          meetingStatus !== "NOT_STARTED" &&
-                          meetingStatus !== "ENDED" && (
-                            <div className="mt-3 pl-12 flex flex-col gap-2">
-                              {item.attendanceMark && (
-                                <>
-                                  {isTeamLeader && (
-                                    <>
-                                      {!item.isTeamLeader && (
-                                        <button
-                                          onClick={() =>
-                                            handleAddTeamLeader(item)
-                                          }
-                                          className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                        >
-                                          Add Team Leader
-                                        </button>
-                                      )}
+                        {isOpen && meetingStatus !== "ENDED" && (
+                          <div className="mt-3 pl-12 flex flex-col gap-2">
+                            <>
+                              {!item.isTeamLeader && (
+                                <button
+                                  onClick={() => handleAddTeamLeader(item)}
+                                  className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                >
+                                  Add Team Leader
+                                </button>
+                              )}
 
-                                      {item.isTeamLeader &&
-                                        teamLeaderCount > 1 && (
-                                          <button
-                                            onClick={() =>
-                                              handleAddTeamLeader(item)
-                                            }
-                                            className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                          >
-                                            Remove Team Leader
-                                          </button>
-                                        )}
-                                    </>
-                                  )}
+                              {item.isTeamLeader && teamLeaderCount > 1 && (
+                                <button
+                                  onClick={() => handleAddTeamLeader(item)}
+                                  className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                >
+                                  Remove Team Leader
+                                </button>
+                              )}
+                            </>
+                            {meetingStatus !== "NOT_STARTED" &&
+                              item.attendanceMark && (
+                                <>
                                   {/* <button
                                   onClick={() =>
                                     handleCheckOut(item.employeeId)
@@ -290,8 +282,8 @@ export default function MeetingDesc() {
                                     )}
                                 </>
                               )}
-                            </div>
-                          )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

@@ -176,23 +176,6 @@ const Urls = {
   detailMeetingAgendaIssue: (id: string) =>
     `${baseUrl}/company/detail-meeting/agenda/io/get/${id}`,
 
-  // updateMeetingAgenda: (id: string) =>
-  //   `${baseUrl}/company/detail-meeting/agenda/objectives/update/${id}`,
-  // deleteMeetingAgendaIssue: (id: string) =>
-  //   `${baseUrl}/company/detail-meeting/agenda/issue/delete/${id}`,
-
-  // getMeetingAgendaIssue: () =>
-  //   `${baseUrl}/company/detail-meeting/agenda/issue/get`,
-  // getMeetingAgendaObjective: () =>
-  //   `${baseUrl}/company/detail-meeting/agenda/objective/get`,
-
-  // addMeetingAgendaObjective: () =>
-  //   `${baseUrl}/company/detail-meeting/agenda/objective/create`,
-  // updateMeetingAgendaObjective: (id: string) =>
-  //   `${baseUrl}/company/detail-meeting/agenda/objective/update/${id}`,
-  // deleteMeetingAgendaObjective: (id: string) =>
-  //   `${baseUrl}/company/detail-meeting/agenda/objective/delete/${id}`,
-
   addMeetingTaskData: () => `${baseUrl}/company/detail-meeting/task/add`,
   getMeetingTaskData: () => `${baseUrl}/company/detail-meeting/task/get`,
   deleteMeetingTaskData: () => `${baseUrl}/company/detail-meeting/task/remove`,

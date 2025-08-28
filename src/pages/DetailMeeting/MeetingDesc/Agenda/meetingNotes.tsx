@@ -6,7 +6,6 @@ import {
   EllipsisVertical,
   X,
   Edit,
-  Copy,
   Share2,
   Check,
 } from "lucide-react";
@@ -24,6 +23,7 @@ import {
   deleteCompanyMeetingMutation,
   useGetMeetingNotes,
 } from "@/features/api/detailMeeting";
+import { get, getDatabase, ref, update } from "firebase/database";
 
 interface MeetingNotesProps {
   joiners: Joiners[];
@@ -61,6 +61,10 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingNoteText, setEditingNoteText] = useState("");
 
+  const db = getDatabase();
+
+  const meetingRef = ref(db, `meetings/${meetingId}`);
+
   const { data: meetingNotes, refetch: refetchMeetingNotes } =
     useGetMeetingNotes({
       filter: {
@@ -77,7 +81,17 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   };
 
   const handleDelete = (id: string) => {
-    deleteNoteMutation.mutate(id);
+    deleteNoteMutation.mutate(id, {
+      onSuccess: async () => {
+        const meetingSnapshot = await get(meetingRef);
+        if (!meetingSnapshot.exists()) {
+          return;
+        }
+        update(ref(db, `meetings/${meetingId}/state`), {
+          updatedAt: Date.now(),
+        });
+      },
+    });
     setDropdownOpen(null); // Close dropdown after action
   };
 
@@ -116,7 +130,14 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       meetingNoteId: data.meetingNoteId,
     };
     addNote(payload, {
-      onSuccess: () => {
+      onSuccess: async () => {
+        const meetingSnapshot = await get(meetingRef);
+        if (!meetingSnapshot.exists()) {
+          return;
+        }
+        update(ref(db, `meetings/${meetingId}/state`), {
+          updatedAt: Date.now(),
+        });
         refetchMeetingNotes();
         setDropdownOpen(null); // Close dropdown after action
       },
@@ -140,10 +161,17 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
     };
 
     addNote(payload, {
-      onSuccess: () => {
+      onSuccess: async () => {
+        const meetingSnapshot = await get(meetingRef);
+        if (!meetingSnapshot.exists()) {
+          return;
+        }
+        update(ref(db, `meetings/${meetingId}/state`), {
+          updatedAt: Date.now(),
+        });
+        refetchMeetingNotes();
         setEditingNoteId(null);
         setEditingNoteText("");
-        refetchMeetingNotes();
       },
     });
   };
@@ -167,11 +195,18 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
     };
 
     addNote(payload, {
-      onSuccess: () => {
+      onSuccess: async () => {
+        const meetingSnapshot = await get(meetingRef);
+        if (!meetingSnapshot.exists()) {
+          return;
+        }
+        update(ref(db, `meetings/${meetingId}/state`), {
+          updatedAt: Date.now(),
+        });
+        refetchMeetingNotes();
         setTitleInput("");
         setNoteInput("");
         setIsAddingNote(false);
-        refetchMeetingNotes();
       },
     });
   };
@@ -223,48 +258,6 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                 </button>
               </div>
               <div className="absolute top-2 right-2 flex items-center">
-                <DropdownMenu
-                  open={dropdownOpen === "new"}
-                  onOpenChange={(open) => setDropdownOpen(open ? "new" : null)}
-                >
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className="text-gray-500 items-center text-sm w-fit py-1.5 px-2 cursor-pointer"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        toggleDropdown("new");
-                      }}
-                    >
-                      <EllipsisVertical className="h-5 w-5" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setNoteInput("");
-                        setTitleInput("");
-                        setIsAddingNote(false);
-                        setDropdownOpen(null);
-                      }}
-                      className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="px-2 py-1.5">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="px-2 py-1.5">
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="px-2 py-1.5">
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Share
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
                 <X
                   className="w-5 h-5 text-gray-500 cursor-pointer"
                   onClick={() => setIsAddingNote(false)}

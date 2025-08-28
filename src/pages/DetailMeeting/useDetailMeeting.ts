@@ -9,6 +9,7 @@ import { useAddUpdateCompanyMeetingStatus } from "@/features/api/companyMeeting/
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useGetDetailMeeting } from "@/features/api/detailMeeting";
+import { queryClient } from "@/queryClient";
 
 const toLocalISOString = (date: Date | undefined) => {
   if (!date) return undefined;
@@ -119,6 +120,7 @@ export default function useDetailMeeting() {
     if (modalData && modalData.meetingId) {
       deleteMeetingById(modalData.meetingId, {
         onSuccess: () => {
+          queryClient.resetQueries({ queryKey: ["get-detail-meeting-list"] });
           closeDeleteModal();
         },
         onError: (error: Error) => {
