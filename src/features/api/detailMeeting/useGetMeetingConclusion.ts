@@ -2,6 +2,10 @@ import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export default function useGetMeetingConclusion({
   filter,
   enable,
@@ -9,6 +13,9 @@ export default function useGetMeetingConclusion({
   const query = useQuery({
     queryKey: ["get-meeting-conclusion-res", filter],
     queryFn: async () => {
+      // wait 2 seconds before calling API
+      await delay(2000);
+
       const { data: resData } = await Api.post<{
         data: MeetingConclusionData;
       }>({
@@ -19,5 +26,6 @@ export default function useGetMeetingConclusion({
     },
     enabled: !!enable,
   });
+
   return query;
 }

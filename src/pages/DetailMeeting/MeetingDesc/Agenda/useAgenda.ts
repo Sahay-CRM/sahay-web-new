@@ -79,7 +79,7 @@ export const useAgenda = ({
   const [addIssueModal, setAddIssueModal] = useState(false);
   const [debouncedInput, setDebouncedInput] = useState(issueInput);
   const [isMeetingStart, setIsMeetingStart] = useState(false);
-  const [resolutionFilter, setResolutionFilter] = useState<string>("unsolved");
+  const [resolutionFilter, setResolutionFilter] = useState<string>("UNSOLVED");
   const [selectedIoType, setSelectedIoType] = useState("ISSUE");
 
   useEffect(() => {
@@ -92,7 +92,7 @@ export const useAgenda = ({
   const { data: selectedAgenda } = useGetDetailMeetingAgenda({
     filter: {
       meetingId: meetingId,
-      isResolved: resolutionFilter === "solved" ? true : false,
+      isResolved: resolutionFilter === "SOLVED" ? true : false,
     },
     enable: !!meetingId,
   });
@@ -651,9 +651,9 @@ export const useAgenda = ({
                     status: "CONCLUSION",
                     conclusionTimestamp: Date.now(),
                   }).then(() => {
-                    queryClient.resetQueries({
-                      queryKey: ["get-meeting-conclusion-time-by-meetingId"],
-                    });
+                    // queryClient.resetQueries({
+                    //   queryKey: ["get-meeting-conclusion-time-by-meetingId"],
+                    // });
 
                     resolve();
                   });
@@ -828,16 +828,16 @@ export const useAgenda = ({
     }
   };
 
-  useEffect(() => {
-    if (meetingStatus === "CONCLUSION" && meetingResponse === null) {
-      handleCheckMeetingExist();
-      if (isMeetingStart) {
-        queryClient.resetQueries({
-          queryKey: ["get-meeting-details-timing"],
-        });
-      }
-    }
-  }, [handleCheckMeetingExist, isMeetingStart, meetingResponse, meetingStatus]);
+  // useEffect(() => {
+  //   if (meetingStatus === "CONCLUSION" && meetingResponse === null) {
+  //     handleCheckMeetingExist();
+  //     if (isMeetingStart) {
+  //       queryClient.resetQueries({
+  //         queryKey: ["get-meeting-details-timing"],
+  //       });
+  //     }
+  //   }
+  // }, [handleCheckMeetingExist, isMeetingStart, meetingResponse, meetingStatus]);
 
   const handleCloseMeetingWithLog = () => {
     // const now = Date.now();

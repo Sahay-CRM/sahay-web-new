@@ -72,8 +72,34 @@ export default function useMeetingDesc() {
     };
   }, [db, handleUpdatedRefresh, meetingId]);
 
+  // useEffect(() => {
+  //   if (!meetingId || !meetingResponse) return;
+
+  //   const meetingRef = ref(db, `meetings/${meetingId}/state/activeTab`);
+
+  //   const unsubscribe = onValue(meetingRef, (snapshot) => {
+  //     if (snapshot.exists()) {
+  //       const activeTab = snapshot.val();
+
+  //       handleUpdatedRefresh();
+  //       if (activeTab === "CONCLUSION") {
+  //         queryClient.resetQueries({
+  //           queryKey: ["get-meeting-conclusion-res"],
+  //         });
+  //         queryClient.resetQueries({
+  //           queryKey: ["get-meeting-conclusion-time-by-meetingId"],
+  //         });
+  //       } else if (activeTab === "ENDED") {
+  //         handleUpdatedRefresh();
+  //       }
+  //     }
+  //   });
+
+  //   return () => unsubscribe();
+  // }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
+
   useEffect(() => {
-    if (!meetingId || !meetingResponse) return;
+    if (!meetingId) return;
 
     const meetingRef = ref(db, `meetings/${meetingId}/state/activeTab`);
 
@@ -82,44 +108,36 @@ export default function useMeetingDesc() {
         const activeTab = snapshot.val();
 
         handleUpdatedRefresh();
-        if (activeTab === "CONCLUSION") {
-          queryClient.resetQueries({
-            queryKey: ["get-meeting-conclusion-res"],
-          });
-          queryClient.resetQueries({
-            queryKey: ["get-meeting-conclusion-res"],
-          });
-          queryClient.resetQueries({
-            queryKey: ["get-meeting-conclusion-time-by-meetingId"],
-          });
-        } else if (activeTab === "ENDED") {
+
+        const timer = setTimeout(() => {
+          if (activeTab === "CONCLUSION") {
+            queryClient.resetQueries({
+              queryKey: ["get-meeting-conclusion-res"],
+            });
+            queryClient.resetQueries({
+              queryKey: ["get-meeting-conclusion-time-by-meetingId"],
+            });
+          } else if (activeTab === "ENDED") {
+            handleUpdatedRefresh();
+          }
+        }, 2000);
+
+        return () => clearTimeout(timer);
+      } else {
+        // ❌ Meeting deleted → treat as ENDED
+        const timer = setTimeout(() => {
           handleUpdatedRefresh();
-        }
+          queryClient.resetQueries({
+            queryKey: ["get-meeting-conclusion-res"],
+          });
+        }, 1000);
+
+        return () => clearTimeout(timer);
       }
     });
 
     return () => unsubscribe();
-  }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
-
-  useEffect(() => {
-    if (!meetingId || !meetingResponse) return;
-
-    const meetingRef = ref(db, `meetings/${meetingId}/state/updatedAt`);
-
-    const unsubscribe = onValue(meetingRef, (snapshot) => {
-      if (snapshot.exists()) {
-        queryClient.resetQueries({
-          queryKey: ["get-meeting-notes"],
-        });
-        queryClient.resetQueries({
-          queryKey: ["get-detail-meeting-obj-issue"],
-        });
-        handleUpdatedRefresh();
-      }
-    });
-
-    return () => unsubscribe();
-  }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
+  }, [db, handleUpdatedRefresh, meetingId]);
 
   const handleTabChange = (tab: string) => {
     if (activeTab === tab) {

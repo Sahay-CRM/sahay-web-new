@@ -7,6 +7,8 @@ import {
   CheckSquare,
   CircleX,
   Clock,
+  CopyCheck,
+  CopyX,
   CornerDownLeft,
   Crown,
   FileText,
@@ -437,12 +439,12 @@ export default function Agenda({
             </nav> */}
           </div>
         ) : (
-          <div className="flex gap-4 items-center flex-wrap">
-            <div className="hidden md:block w-[370px] text-gray-500  text-lg truncate">
+          <div className="flex gap-4 items-center">
+            <div className="hidden md:block w-[370px] min-w-[370px] text-gray-500  text-lg truncate">
               Meeting Agenda
             </div>
             <div className="">
-              <div className="flex gap-4 items-center mb-2">
+              <div className="flex gap-4 items-center break-all mb-2 flex-wrap">
                 <div className="flex items-center gap-2 border px-3 py-1 rounded-lg">
                   <Clock className="w-4 h-4 text-green-600" />
                   <span className="font-medium text-sm">Agenda Actual:</span>
@@ -502,7 +504,7 @@ export default function Agenda({
                     </div>
                   )}
               </div>
-              <div className="flex gap-4 items-center">
+              <div className="flex gap-4 items-center flex-wrap">
                 <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
                   <span className="font-medium text-sm">Total Tasks:</span>
                   <span className="font-bold">{conclusionTime?.noOfTasks}</span>
@@ -516,6 +518,22 @@ export default function Agenda({
                 <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
                   <span className="font-medium text-sm">Total KPIs:</span>
                   <span className="font-bold">{conclusionTime?.noOfKPIs}</span>
+                </div>
+                <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
+                  <span className="font-medium text-sm">
+                    Total Solved Agenda:
+                  </span>
+                  <span className="font-bold">
+                    {conclusionTime?.noOfSolvedIOs}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
+                  <span className="font-medium text-sm">
+                    Total Unsolved Agenda:
+                  </span>
+                  <span className="font-bold">
+                    {conclusionTime?.noOfUnsolvedIOs}
+                  </span>
                 </div>
               </div>
             </div>
@@ -677,13 +695,13 @@ export default function Agenda({
             )}
           </div>
           <div className="relative">
-            <div className="mt-2 h-[calc(100vh-215px)] pr-1 w-full overflow-auto">
+            <div className="mt-2 h-[calc(100vh-250px)] pr-1 w-full overflow-auto">
               <div className="mb-3">
                 <Tabs
-                  defaultValue="unsolved"
+                  defaultValue="UNSOLVED"
                   onValueChange={(value) => {
                     if (isTeamLeader) {
-                      handleAgendaTabFilter(value as "solved" | "unsolved");
+                      handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
                     }
                   }}
                   value={resolutionFilter}
@@ -691,21 +709,21 @@ export default function Agenda({
                 >
                   <TabsList className="grid w-64 grid-cols-2">
                     <TabsTrigger
-                      value="unsolved"
+                      value="UNSOLVED"
                       className="data-[state=active]:bg-primary data-[state=active]:text-white"
                     >
                       Unsolved
                     </TabsTrigger>
                     <TabsTrigger
-                      value="solved"
+                      value="SOLVED"
                       className="data-[state=active]:bg-primary data-[state=active]:text-white"
                     >
                       Solved
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="unsolved" className="mt-0"></TabsContent>
-                  <TabsContent value="solved" className="mt-0"></TabsContent>
+                  <TabsContent value="UNSOLVED" className="mt-0"></TabsContent>
+                  <TabsContent value="SOLVED" className="mt-0"></TabsContent>
                 </Tabs>
               </div>
 
@@ -871,17 +889,32 @@ export default function Agenda({
                               ) && (
                                 <div className="flex gap-1">
                                   {isTeamLeader && (
-                                    <Button
-                                      variant="ghost"
-                                      onClick={() => {
-                                        handleMarkAsSolved(item);
-                                      }}
-                                      className="w-fit cursor-pointer"
-                                    >
-                                      {item.isResolved
-                                        ? "Mark As Unsolved"
-                                        : "Mark As Solved"}
-                                    </Button>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            onClick={() =>
+                                              handleMarkAsSolved(item)
+                                            }
+                                            className="w-fit cursor-pointer"
+                                          >
+                                            {item.isResolved ? (
+                                              <CopyX className="w-5 h-5 text-green-600" />
+                                            ) : (
+                                              <CopyCheck className="w-5 h-5 text-red-600" />
+                                            )}
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>
+                                            {item.isResolved
+                                              ? "Mark As Unsolved"
+                                              : "Mark As Solved"}
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
                                   )}
                                   <Button
                                     variant="ghost"
@@ -987,17 +1020,32 @@ export default function Agenda({
                           {/* Hover button */}
                           {isTeamLeader && (
                             <div
-                              className={`absolute right-2 opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-10" : "h-[75px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
+                              className={`absolute -right-[2px] rounded-md w-20 flex flex-col justify-center items-end opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-10" : "h-[75px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
                             >
-                              <Button
-                                variant="ghost"
-                                onClick={() => handleMarkAsSolved(item)}
-                                className="w-fit cursor-pointer border border-gray-200 rounded-sm"
-                              >
-                                {item.isResolved
-                                  ? "Mark As Unsolved"
-                                  : "Mark As Solved"}
-                              </Button>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      onClick={() => handleMarkAsSolved(item)}
+                                      className="w-fit cursor-pointer"
+                                    >
+                                      {item.isResolved ? (
+                                        <CopyX className="w-5 h-5 text-green-600" />
+                                      ) : (
+                                        <CopyCheck className="w-5 h-5 text-red-600" />
+                                      )}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>
+                                      {item.isResolved
+                                        ? "Mark As Unsolved"
+                                        : "Mark As Solved"}
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </div>
                           )}
                         </div>
@@ -1269,7 +1317,8 @@ export default function Agenda({
                                             </>
                                           ) : (
                                             task.newValues.taskName
-                                          )}
+                                          )}{" "}
+                                          &nbsp; DISCUSSION
                                         </h4>
                                       </div>
                                       <div className="w-2/3">

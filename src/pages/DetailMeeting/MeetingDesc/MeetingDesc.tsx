@@ -174,7 +174,7 @@ export default function MeetingDesc() {
                                     <TooltipTrigger asChild>
                                       {item.employeeImage ? (
                                         <img
-                                          src={`${ImageBaseURL}/share/company/profilePics/${item.employeeImage}`}
+                                          src={`${ImageBaseURL}/share/profilePics/${item.employeeImage}`}
                                           alt={item.employeeName}
                                           className="w-full h-full rounded-full object-cover outline-2 outline-blue-400 bg-black"
                                         />
