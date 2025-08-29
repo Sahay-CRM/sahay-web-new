@@ -1,12 +1,12 @@
 import { FormProvider, Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import ScoreDataTable from "@/components/shared/DataTable/HealthScore/ScoreDataTable";
-import FormSelect from "@/components/shared/Form/FormSelect";
 import useHealthWeightage from "./useHealthWeightage";
 import useUpdateHealthWeightage from "@/features/api/Business/useUpdateHealthWeightage";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect } from "react";
 import PageNotAccess from "../PageNoAccess";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 
 export default function HealthWeightage() {
   const {
@@ -33,7 +33,7 @@ export default function HealthWeightage() {
 
   const { mutate: updateHealthWeightage } = useUpdateHealthWeightage();
 
-  const { control, reset } = formMethods;
+  const { control, reset, setValue } = formMethods;
 
   const isCoreSelected = !!coreParameterId;
 
@@ -103,8 +103,8 @@ export default function HealthWeightage() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-10">
-          <div className="mb-4">
-            <Controller
+          <div className="mb-4 w-[19%]">
+            {/* <Controller
               control={control}
               name="coreParameterId"
               render={({ field }) => (
@@ -120,12 +120,37 @@ export default function HealthWeightage() {
                   placeholder="Select Business Function"
                 />
               )}
+            /> */}
+            <Controller
+              name="coreParameterId"
+              control={control}
+              rules={{ required: "Business Function is required" }}
+              render={({ field, fieldState }) => (
+                <SearchDropdown
+                  {...field}
+                  label="Business Function"
+                  options={
+                    coreParams?.data.map((param) => ({
+                      label: param.coreParameterName,
+                      value: param.coreParameterId,
+                    })) ?? []
+                  }
+                  error={fieldState.error}
+                  isMandatory
+                  placeholder="Select Business Function..."
+                  selectedValues={field.value ? [field.value] : []} // Ensure it's an array
+                  onSelect={(value) => {
+                    field.onChange(value.value);
+                    setValue("coreParameterId", value.value);
+                  }}
+                />
+              )}
             />
           </div>
 
           {isCoreSelected && (
-            <div className="max-w-xs mb-4">
-              <Controller
+            <div className="w-[10%] mb-4">
+              {/* <Controller
                 control={control}
                 name="level"
                 render={({ field }) => (
@@ -139,6 +164,31 @@ export default function HealthWeightage() {
                       })) ?? []
                     }
                     placeholder="Select Level"
+                  />
+                )}
+              /> */}
+              <Controller
+                name="level"
+                control={control}
+                rules={{ required: "Level is required" }}
+                render={({ field, fieldState }) => (
+                  <SearchDropdown
+                    {...field}
+                    label="Level"
+                    options={
+                      companyLevel?.data?.map((level: CompanyLevelRes) => ({
+                        label: level.levelName,
+                        value: level.levelId,
+                      })) ?? []
+                    }
+                    error={fieldState.error}
+                    isMandatory
+                    placeholder="Select Level..."
+                    selectedValues={field.value ? [field.value] : []} // Ensure it's an array
+                    onSelect={(value) => {
+                      field.onChange(value.value);
+                      setValue("level", value.value);
+                    }}
                   />
                 )}
               />

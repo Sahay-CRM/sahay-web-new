@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { Label } from "recharts";
@@ -28,7 +28,7 @@ import { formatIndianNumber } from "@/features/utils/app.utils";
 // import { useGetProduct } from "@/features/api/Product";
 
 export default function useAddDataPoint() {
-  const [isModalOpen, setModalOpen] = useState(false);
+  // const [isModalOpen, setModalOpen] = useState(false);
 
   const { mutate: addDatapoint, isPending } = useAddUpdateDatapoint();
   const navigate = useNavigate();
@@ -38,7 +38,10 @@ export default function useAddDataPoint() {
   const permission = useSelector(getUserPermission).DATAPOINT_LIST;
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "KPI List", href: "/dashboard/kpi" }]);
+    setBreadcrumbs([
+      { label: "KPI List", href: "/dashboard/kpi" },
+      { label: "Add KPI", href: "/dashboard/kpi" },
+    ]);
   }, [setBreadcrumbs]);
 
   const {
@@ -48,7 +51,7 @@ export default function useAddDataPoint() {
     handleSubmit,
     trigger,
     reset,
-    getValues,
+    // getValues,
     setValue,
     watch,
   } = useForm({
@@ -64,14 +67,14 @@ export default function useAddDataPoint() {
     }
   }, [watchedFrequency, setValue]);
 
-  const handleClose = () => setModalOpen(false);
+  // const handleClose = () => setModalOpen(false);
 
-  const onFinish = useCallback(async () => {
-    const isValid = await trigger();
-    if (isValid) {
-      setModalOpen(true);
-    }
-  }, [trigger]);
+  // const onFinish = useCallback(async () => {
+  //   const isValid = await trigger();
+  //   if (isValid) {
+  //     setModalOpen(true);
+  //   }
+  // }, [trigger]);
 
   const onSubmit = handleSubmit(async (data) => {
     // Convert visualFrequencyTypes array to comma-separated string if it's an array
@@ -87,8 +90,8 @@ export default function useAddDataPoint() {
       tag: data.tag,
       unit: data.unit,
       validationType: data.validationType,
-      value1: formatIndianNumber(data.value1),
-      value2: formatIndianNumber(data.value2),
+      value1: data.value1,
+      value2: data.value2,
       frequencyType: data.frequencyType,
       visualFrequencyTypes: visualFrequencyTypesStr,
       visualFrequencyAggregate: data.visualFrequencyAggregate,
@@ -103,7 +106,7 @@ export default function useAddDataPoint() {
 
   const handleModalClose = () => {
     reset();
-    setModalOpen(false);
+    // setModalOpen(false);
   };
 
   const Kpi = () => {
@@ -495,6 +498,7 @@ export default function useAddDataPoint() {
                 }}
                 options={frequenceOptions}
                 error={errors.frequencyType}
+                triggerClassName="py-4"
                 isMandatory
               />
             )}
@@ -506,6 +510,7 @@ export default function useAddDataPoint() {
             render={({ field }) => (
               <FormSelect
                 label="Validation Type"
+                triggerClassName="py-4"
                 value={field.value}
                 onChange={field.onChange}
                 options={validationOptions}
@@ -571,6 +576,7 @@ export default function useAddDataPoint() {
           )}
           <FormInputField
             label="Unit"
+            placeholder="Enter Unit"
             {...register(`unit`)}
             className="h-[38px] mt-2"
           />
@@ -628,34 +634,43 @@ export default function useAddDataPoint() {
                 >
                   {!showYesNo && (
                     <>
-                      <FormInputField
-                        label="Goal Value 1"
-                        isMandatory
-                        {...register("value1", {
-                          required: "Please enter Goal Value 1",
-                          onChange: (e) => {
-                            const rawValue = e.target.value.replace(/,/g, ""); // store unformatted
-                            setValue("value1", rawValue); // keep clean numeric in form state
-                            e.target.value = formatIndianNumber(rawValue); // show formatted
-                          },
-                        })}
-                        error={errors?.value1}
+                      <Controller
+                        name="value1"
+                        control={control}
+                        rules={{ required: "Please enter Goal Value 1" }}
+                        render={({ field, fieldState }) => (
+                          <FormInputField
+                            label="Goal Value 1"
+                            placeholder="Enter Goal Value 1"
+                            isMandatory
+                            value={formatIndianNumber(field.value)}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/,/g, "");
+                              field.onChange(raw);
+                            }}
+                            error={fieldState.error}
+                          />
+                        )}
                       />
 
                       {showBoth && (
-                        <FormInputField
-                          label="Goal Value 2"
-                          type="number"
-                          isMandatory
-                          {...register("value2", {
-                            required: "Please enter Goal Value 2",
-                            onChange: (e) => {
-                              const rawValue = e.target.value.replace(/,/g, "");
-                              setValue("value2", rawValue);
-                              e.target.value = formatIndianNumber(rawValue);
-                            },
-                          })}
-                          error={errors?.value2}
+                        <Controller
+                          name="value2"
+                          control={control}
+                          rules={{ required: "Please enter Goal Value 2" }}
+                          render={({ field, fieldState }) => (
+                            <FormInputField
+                              label="Goal Value 2"
+                              placeholder="Enter Goal Value 2"
+                              isMandatory
+                              value={formatIndianNumber(field.value)}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/,/g, "");
+                                field.onChange(raw);
+                              }}
+                              error={fieldState.error}
+                            />
+                          )}
                         />
                       )}
                     </>
@@ -686,6 +701,7 @@ export default function useAddDataPoint() {
               </div>
               <FormInputField
                 label="Tag"
+                placeholder="Enter Tag"
                 // isMandatory
                 {...register(`tag`)}
                 error={errors?.tag}
@@ -831,14 +847,14 @@ export default function useAddDataPoint() {
   // };
 
   return {
-    isModalOpen,
-    handleClose,
-    onFinish,
+    // isModalOpen,
+    // handleClose,
+    // onFinish,
     onSubmit,
     Kpi,
     Details,
     // AssignUser,
-    KpiPreview: getValues(),
+    // KpiPreview: getValues(),
     trigger,
     isPending,
     permission,

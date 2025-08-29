@@ -522,11 +522,11 @@ const AddRepeatMeeting = () => {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Repeat Meeting", href: "/dashboard/repeat-meeting" },
+      { label: "Live Meeting Templates", href: "/dashboard/repeat-meeting" },
       {
         label: repetitiveMeetingId
-          ? "Update Repeat Meeting"
-          : "Add Repeat Meeting",
+          ? "Update Live Meeting Templates"
+          : "Add Live Meeting Templates",
         href: "",
       },
       ...(repetitiveMeetingId

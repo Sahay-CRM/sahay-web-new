@@ -7,6 +7,7 @@ import useEditDatapointFormModal from "./useEditDatapointFormModal";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { Label } from "@radix-ui/react-label";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import { formatIndianNumber } from "@/features/utils/app.utils";
 
 interface UseEditDatapointFormModalProps {
   modalClose: () => void;
@@ -46,6 +47,7 @@ export default function EditDatapointAddFormModal({
     showYesNo,
     showBoth,
     yesnoOptions,
+    allKpi,
   } = useEditDatapointFormModal({ modalClose, kpiId });
 
   return (
@@ -64,6 +66,37 @@ export default function EditDatapointAddFormModal({
           },
         ]}
       >
+        {!hasData && (
+          <Controller
+            control={control}
+            name="KPIMasterId"
+            rules={{ required: "KPIMasterId is required" }}
+            render={({ field }) => (
+              <SearchDropdown
+                options={allKpi}
+                selectedValues={field.value ? [field.value] : []}
+                onSelect={(selected) => {
+                  field.onChange(selected);
+                  setValue("KPIMasterId", selected.value);
+                  setValue("selectedKpi", selected);
+                }}
+                placeholder="Select KPI..."
+                label="Selected KPI"
+                error={errors.KPIMasterId}
+                isMandatory
+                className="mb-2"
+              />
+            )}
+          />
+        )}
+
+        {/* <FormInputField
+          label="Selected Kpi"
+          value={datapointApiData?.KPIMaster?.KPIName}
+          disabled
+          className="h-[44px] border-gray-300 cursor-not-allowed"
+        /> */}
+
         <div className="grid grid-cols-2 gap-4">
           {/* Frequency */}
           <Controller
@@ -84,10 +117,10 @@ export default function EditDatapointAddFormModal({
                 disabled={hasData}
                 className={hasData ? "rounded-md" : ""}
                 isMandatory
+                triggerClassName="py-4"
               />
             )}
           />
-
           {/* Validation Type */}
           <Controller
             control={control}
@@ -102,10 +135,10 @@ export default function EditDatapointAddFormModal({
                 error={errors.validationType}
                 className="rounded-md"
                 isMandatory
+                triggerClassName="py-4"
               />
             )}
           />
-
           {/* Visual Frequency + Sum/Average */}
           {shouldShowVisualFrequency && (
             <div className="col-span-2 grid grid-cols-2 gap-4">
@@ -147,16 +180,13 @@ export default function EditDatapointAddFormModal({
                       error={errors.visualFrequencyAggregate}
                       placeholder="Select visual frequency Aggregate"
                       disabled={false}
+                      triggerClassName="py-4"
                     />
                   )}
                 />
               )}
             </div>
           )}
-
-          {/* Unit */}
-          <FormInputField label="Unit" {...register(`unit`)} />
-
           {/* Employee */}
           <Controller
             control={control}
@@ -177,77 +207,136 @@ export default function EditDatapointAddFormModal({
               />
             )}
           />
-
-          {/* Goal Values */}
+          <FormInputField
+            label="Tag"
+            placeholder="Enter Tag"
+            // isMandatory
+            {...register(`tag`)}
+            error={errors?.tag}
+            // disabled={isDisabled}
+            // readOnly={isDisabled}
+          />
           {employee && (
             <div className="col-span-2 flex flex-col gap-2">
               <Label className="text-[18px] mb-0">
                 {getEmployeeName(employee)}
               </Label>
-              <div
-                className={`grid w-full ${
-                  showBoth ? "grid-cols-2" : "grid-cols-1"
-                } gap-4 mt-0`}
-              >
-                {!showYesNo && (
-                  <>
-                    <FormInputField
-                      label="Goal Value 1"
-                      isMandatory
-                      {...register(`value1`, {
-                        required: "Please enter Goal Value 1",
-                      })}
-                      error={errors?.value1}
+
+              <div className="grid w-full gap-4 mt-0">
+                {!showYesNo && !showBoth && (
+                  // Case: Only Goal Value 1 -> side by side with Unit
+                  <div className="grid grid-cols-2 gap-4">
+                    <Controller
+                      name="value1"
+                      control={control}
+                      rules={{ required: "Please enter Goal Value 1" }}
+                      render={({ field, fieldState }) => (
+                        <FormInputField
+                          label="Goal Value 1"
+                          isMandatory
+                          // value={field.value || ""}
+                          // onChange={(e) => field.onChange(e.target.value)} // store raw input
+                          // onBlur={() => {
+                          //   const formatted = formatIndianNumber(field.value);
+                          //   field.onChange(formatted);
+                          // }}
+                          placeholder="Enter Goal Value 1"
+                          value={formatIndianNumber(field.value)}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/,/g, "");
+                            field.onChange(raw);
+                          }}
+                          error={fieldState.error}
+                        />
+                      )}
                     />
-                    {showBoth && (
-                      <FormInputField
-                        label="Goal Value 2"
-                        isMandatory
-                        {...register(`value2`, {
-                          required: "Please enter Goal Value 2",
-                        })}
-                        error={errors?.value2}
+                    <FormInputField
+                      label="Unit"
+                      placeholder="Enter Unit"
+                      {...register(`unit`)}
+                    />
+                  </div>
+                )}
+
+                {!showYesNo && showBoth && (
+                  // Case: Goal Value 1 + Goal Value 2
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Controller
+                        name="value1"
+                        control={control}
+                        rules={{ required: "Please enter Goal Value 1" }}
+                        render={({ field, fieldState }) => (
+                          <FormInputField
+                            label="Goal Value 1"
+                            isMandatory
+                            placeholder="Enter Goal Value 1"
+                            value={formatIndianNumber(field.value)}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/,/g, "");
+                              field.onChange(raw);
+                            }}
+                            error={fieldState.error}
+                          />
+                        )}
                       />
-                    )}
+
+                      <Controller
+                        name="value2"
+                        control={control}
+                        rules={{ required: "Please enter Goal Value 2" }}
+                        render={({ field, fieldState }) => (
+                          <FormInputField
+                            label="Goal Value 2"
+                            isMandatory
+                            placeholder="Enter Goal Value 2"
+                            value={formatIndianNumber(field.value)}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/,/g, "");
+                              field.onChange(raw);
+                            }}
+                            error={fieldState.error}
+                          />
+                        )}
+                      />
+                    </div>
+                    <FormInputField
+                      label="Unit"
+                      placeholder="Enter Unit"
+                      {...register(`unit`)}
+                    />
                   </>
                 )}
+
                 {showYesNo && (
-                  <Controller
-                    name={`value1`}
-                    control={control}
-                    rules={{ required: "Please select Yes or No" }}
-                    render={({ field, fieldState }) => {
-                      const selectedOption =
-                        field.value?.value ?? field.value ?? "";
-                      return (
+                  // Case: Yes/No dropdown
+                  <div className="grid grid-cols-2 gap-4">
+                    <Controller
+                      name={`value1`}
+                      control={control}
+                      rules={{ required: "Please select Yes or No" }}
+                      render={({ field, fieldState }) => (
                         <FormSelect
                           {...field}
                           label="Yes/No"
                           options={yesnoOptions}
                           error={fieldState.error}
                           isMandatory
-                          value={selectedOption}
+                          value={field.value?.value ?? field.value ?? ""}
                           onChange={field.onChange}
                         />
-                      );
-                    }}
-                  />
+                      )}
+                    />
+                    <FormInputField
+                      label="Unit"
+                      placeholder="Enter Unit"
+                      {...register(`unit`)}
+                    />
+                  </div>
                 )}
               </div>
             </div>
           )}
-
-          {/* Tags */}
-          <div className="col-span-2">
-            <FormInputField
-              label="Tag"
-              // isMandatory
-              {...register(`tag`)}
-              error={errors?.tag}
-              // disabled={isDisabled}
-              // readOnly={isDisabled}
-            />
-          </div>
         </div>
       </ModalData>
     </FormProvider>

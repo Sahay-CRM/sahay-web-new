@@ -18,9 +18,9 @@ import { getEmployee } from "@/features/api/companyEmployee";
 // import { useGetCompanyMeetingStatus } from "@/features/api/companyMeeting";
 import { getMeetingType } from "@/features/api/meetingType";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
-import FormSelect from "@/components/shared/Form/FormSelect";
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 
 interface MeetingInfoProps {
@@ -44,6 +44,7 @@ const MeetingType = () => {
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "meetingTypeName", label: "Meeting Type Name", visible: true },
+    // { key: "parentType", label: "Parent Type", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -165,12 +166,14 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
         <FormInputField
           label="Meeting Name"
+          placeholder="Enter an Meeting Name"
           {...register("meetingName", { required: "Name is required" })}
           error={errors.meetingName}
           isMandatory
         />
         <FormInputField
           label="Meeting Description"
+          placeholder="Enter an Meeting Description"
           {...register("meetingDescription", {
             required: "Description is required",
           })}
@@ -197,7 +200,7 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
           }}
         />
 
-        {!shouldHideStatus && (
+        {/* {!shouldHideStatus && (
           <Controller
             name="meetingStatusId"
             control={control}
@@ -209,6 +212,29 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
                 options={meetingStatusOptions}
                 error={fieldState.error}
                 isMandatory
+              />
+            )}
+          />
+        )} */}
+        {!shouldHideStatus && (
+          <Controller
+            name="meetingStatusId"
+            control={control}
+            rules={{ required: "Meeting Status is required" }}
+            render={({ field, fieldState }) => (
+              <SearchDropdown
+                {...field}
+                label="Meeting Status "
+                options={meetingStatusOptions}
+                error={fieldState.error}
+                isMandatory
+                placeholder="Select an Meeting status..."
+                selectedValues={field.value ? [field.value] : []} // Ensure it's an array
+                onSelect={(value) => {
+                  field.onChange(value.value);
+                  setValue("meetingStatusId", value.value);
+                }}
+                className="h-10 mt-0.5"
               />
             )}
           />
@@ -332,10 +358,9 @@ const Joiners = () => {
               isEditDelete={() => false}
               moduleKey="emp"
               isActionButton={() => false}
-              // showActionsColumn={false}
+              showActionsColumn={false}
               selectedValue={field.value || []}
               handleChange={(selectedItems) => field.onChange(selectedItems)}
-              showActionsColumn={false}
               customActions={(row: EmployeeDetails) => {
                 if (!(meetingType.parentType === "DETAIL")) return;
                 const isSelected = (field.value || []).some(
@@ -368,7 +393,7 @@ const Joiners = () => {
               additionalButton={() => false}
               isEditDeleteShow={false}
               isLoading={isLoading}
-              // actionColumnWidth="w-40"
+              actionColumnWidth="w-40"
             />
           );
         }}

@@ -84,7 +84,7 @@ export default function RepeatMeeting() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Repeat Meeting", href: "/dashboard/repeat-meeting" },
+      { label: "Live Meeting Templates", href: "/dashboard/repeat-meeting" },
       { label: `${meetingName}`, href: "", isHighlight: true },
     ]);
   }, [meetingName, setBreadcrumbs]);

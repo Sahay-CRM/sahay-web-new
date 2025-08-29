@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { twMerge } from "tailwind-merge";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Check } from "lucide-react";
 
 type Option = {
   value: string;
@@ -48,7 +48,6 @@ const SearchDropdown = ({
     opt.label.toLowerCase().includes(query.toLowerCase()),
   );
 
-  // Autofocus search box when dropdown opens
   useEffect(() => {
     if (open && inputRef.current) {
       inputRef.current.focus();
@@ -63,24 +62,24 @@ const SearchDropdown = ({
         </FormLabel>
       )}
 
-      {/* Trigger */}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="w-full font-extralight hover:bg-white justify-between text-left text-black "
+            className={twMerge(
+              "w-full font-extralight hover:bg-white justify-between text-left text-black overflow-hidden whitespace-nowrap text-ellipsis",
+              className,
+            )}
           >
             {selectedOption ? selectedOption.label : placeholder}
-            <ChevronDown className="absolute right-3  text-gray-500" />
+            <ChevronDown className="absolute right-3 text-gray-500" />
           </Button>
         </PopoverTrigger>
 
-        {/* Dropdown */}
         <PopoverContent
           align="start"
           className="w-[var(--radix-popover-trigger-width)] p-0 pointer-events-auto"
         >
-          {/* Search box */}
           <div className="p-2">
             <Input
               ref={inputRef}
@@ -91,7 +90,6 @@ const SearchDropdown = ({
             />
           </div>
 
-          {/* Options list */}
           <div
             className="max-h-60 overflow-y-auto"
             onWheel={(e) => e.stopPropagation()}
@@ -100,14 +98,26 @@ const SearchDropdown = ({
               filteredOptions.map((item) => (
                 <div
                   key={item.value}
-                  className="cursor-pointer px-3 py-2 hover:bg-accent hover:text-accent-foreground"
+                  className="px-2 py-1"
                   onClick={() => {
                     onSelect(item);
-                    setQuery(""); // reset search
-                    setOpen(false); // close dropdown
+                    setQuery("");
+                    setOpen(false);
                   }}
                 >
-                  {item.label}
+                  <div
+                    className={twMerge(
+                      "cursor-pointer text-sm py-1 flex items-center justify-between rounded-sm transition-colors duration-200",
+                      selectedValues.includes(item.value)
+                        ? "bg-gray-100 px-2 text-gray-900"
+                        : "hover:bg-gray-100 px-2 hover:text-gray-900",
+                    )}
+                  >
+                    <span className="truncate">{item.label}</span>
+                    {selectedValues.includes(item.value) && (
+                      <Check className="h-4 w-4 text-primary" />
+                    )}
+                  </div>
                 </div>
               ))
             ) : (
@@ -119,7 +129,6 @@ const SearchDropdown = ({
         </PopoverContent>
       </Popover>
 
-      {/* Error */}
       {error?.message && (
         <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
           {error.message}

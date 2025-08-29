@@ -340,6 +340,26 @@ export default function useMeetingDesc() {
     }
   };
 
+  useEffect(() => {
+    const db = getDatabase();
+    const meetingRef = ref(db, `meetings/${meetingId}/state/updatedAt`);
+
+    onValue(meetingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        queryClient.invalidateQueries({
+          queryKey: ["get-meeting-details-timing"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["get-meeting-notes"],
+        });
+      }
+    });
+
+    return () => {
+      off(meetingRef);
+    };
+  }, [handleUpdatedRefresh, meetingId]);
+
   return {
     meetingStatus: meetingTiming?.detailMeetingStatus,
     meetingId,

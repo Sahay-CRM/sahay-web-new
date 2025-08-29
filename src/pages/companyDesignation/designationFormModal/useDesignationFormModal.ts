@@ -76,7 +76,6 @@ export function useDesignationDropdownOptions(departmentId?: string) {
     },
   });
   const designationOptions = [
-    { label: "Select Parent Designation", value: "", disabled: true },
     ...(
       (designationData?.data ?? []) as Array<{
         designationName: string;

@@ -481,9 +481,7 @@ const AddDetailMeeting = () => {
     setBreadcrumbs([
       { label: "Company Meeting", href: "/dashboard/meeting/detail" },
       {
-        label: companyMeetingId
-          ? "Update Detail Meeting"
-          : "Add Detail Meeting",
+        label: companyMeetingId ? "Update Live Meeting" : "Add Live Meeting",
         href: "",
       },
       ...(companyMeetingId

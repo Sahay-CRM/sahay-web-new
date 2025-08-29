@@ -49,7 +49,7 @@ export default function FormDateTimePicker({
   return (
     <div className="w-full">
       {label && (
-        <FormLabel className="mb-5">
+        <FormLabel className="mb-4">
           {label}{" "}
           {isMandatory && <span className="text-red-500 text-[20px]">*</span>}
         </FormLabel>

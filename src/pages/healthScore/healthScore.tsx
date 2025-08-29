@@ -2,10 +2,11 @@ import { FormProvider, Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import useHealthScore from "./useHealthScore";
 import ScoreDataTable from "@/components/shared/DataTable/HealthScore/ScoreDataTable";
-import FormSelect from "@/components/shared/Form/FormSelect";
+// import FormSelect from "@/components/shared/Form/FormSelect";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect } from "react";
 import PageNotAccess from "../PageNoAccess";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 
 export default function HealthScoreList() {
   const {
@@ -23,7 +24,7 @@ export default function HealthScoreList() {
     levelId,
   } = useHealthScore();
 
-  const { control } = formMethods;
+  const { control, setValue } = formMethods;
 
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -63,7 +64,7 @@ export default function HealthScoreList() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-10">
-          <Controller
+          {/* <Controller
             control={control}
             name="coreParameterId"
             render={({ field }) => (
@@ -79,10 +80,37 @@ export default function HealthScoreList() {
                 placeholder="Select Business Function"
               />
             )}
-          />
+          /> */}
+          <div className="w-[20%]">
+            <Controller
+              name="coreParameterId"
+              control={control}
+              rules={{ required: "Business Function is required" }}
+              render={({ field, fieldState }) => (
+                <SearchDropdown
+                  {...field}
+                  label="Business Function"
+                  options={
+                    coreParams?.data.map((param) => ({
+                      label: param.coreParameterName,
+                      value: param.coreParameterId,
+                    })) ?? []
+                  }
+                  error={fieldState.error}
+                  isMandatory
+                  placeholder="Select Business Function..."
+                  selectedValues={field.value ? [field.value] : []} // Ensure it's an array
+                  onSelect={(value) => {
+                    field.onChange(value.value);
+                    setValue("coreParameterId", value.value);
+                  }}
+                />
+              )}
+            />
+          </div>
           {isCoreSelected && (
-            <div className="mb-4">
-              <Controller
+            <div className="mb-4 w-[10%]">
+              {/* <Controller
                 control={control}
                 name="levelId"
                 render={({ field }) => (
@@ -96,6 +124,31 @@ export default function HealthScoreList() {
                       })) ?? []
                     }
                     placeholder="Select Level"
+                  />
+                )}
+              />  */}
+              <Controller
+                name="levelId"
+                control={control}
+                rules={{ required: "Level is required" }}
+                render={({ field, fieldState }) => (
+                  <SearchDropdown
+                    {...field}
+                    label="Level"
+                    options={
+                      companyLevel?.data?.map((level: CompanyLevelRes) => ({
+                        label: level.levelName,
+                        value: level.levelId,
+                      })) ?? []
+                    }
+                    error={fieldState.error}
+                    isMandatory
+                    placeholder="Select Level..."
+                    selectedValues={field.value ? [field.value] : []} // Ensure it's an array
+                    onSelect={(value) => {
+                      field.onChange(value.value);
+                      setValue("level", value.value);
+                    }}
                   />
                 )}
               />

@@ -900,9 +900,9 @@ export default function Agenda({
                                             className="w-fit cursor-pointer"
                                           >
                                             {item.isResolved ? (
-                                              <CopyX className="w-5 h-5 text-green-600" />
+                                              <CopyX className="w-7 h-7 text-red-600" />
                                             ) : (
-                                              <CopyCheck className="w-5 h-5 text-red-600" />
+                                              <CopyCheck className="w-7 h-7 text-green-600" />
                                             )}
                                           </Button>
                                         </TooltipTrigger>
@@ -1020,7 +1020,7 @@ export default function Agenda({
                           {/* Hover button */}
                           {isTeamLeader && (
                             <div
-                              className={`absolute -right-[2px] rounded-md w-20 flex flex-col justify-center items-end opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-10" : "h-[75px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
+                              className={`absolute -right-[2px] rounded-md w-24 flex flex-col justify-center items-end opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-10" : "h-[75px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
                             >
                               <TooltipProvider>
                                 <Tooltip>
@@ -1028,12 +1028,12 @@ export default function Agenda({
                                     <Button
                                       variant="ghost"
                                       onClick={() => handleMarkAsSolved(item)}
-                                      className="w-fit cursor-pointer"
+                                      className="w-10 cursor-pointer"
                                     >
                                       {item.isResolved ? (
-                                        <CopyX className="w-5 h-5 text-green-600" />
+                                        <CopyX className="w-7 h-7 text-red-600" />
                                       ) : (
-                                        <CopyCheck className="w-5 h-5 text-red-600" />
+                                        <CopyCheck className="w-10 block h-10 text-green-600" />
                                       )}
                                     </Button>
                                   </TooltipTrigger>

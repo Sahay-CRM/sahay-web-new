@@ -675,6 +675,12 @@ export const useAgenda = ({
   };
 
   const handleDesc = () => {
+    if (!agendaList || agendaList.length === 0) {
+      // eslint-disable-next-line no-alert
+      window.alert("Please add an issue objective before starting discussion.");
+      return;
+    }
+
     const now = Date.now();
     const totalAgendaTime =
       now - Number(meetingResponse?.state.lastSwitchTimestamp);

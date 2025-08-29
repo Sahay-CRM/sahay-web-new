@@ -24,6 +24,7 @@ import {
   useGetMeetingNotes,
 } from "@/features/api/detailMeeting";
 import { get, getDatabase, ref, update } from "firebase/database";
+import { queryClient } from "@/queryClient";
 
 interface MeetingNotesProps {
   joiners: Joiners[];
@@ -85,6 +86,9 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       onSuccess: async () => {
         const meetingSnapshot = await get(meetingRef);
         if (!meetingSnapshot.exists()) {
+          queryClient.invalidateQueries({
+            queryKey: ["get-meeting-notes"],
+          });
           return;
         } else {
           update(ref(db, `meetings/${meetingId}/state`), {
@@ -134,6 +138,9 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       onSuccess: async () => {
         const meetingSnapshot = await get(meetingRef);
         if (!meetingSnapshot.exists()) {
+          queryClient.invalidateQueries({
+            queryKey: ["get-meeting-notes"],
+          });
           refetchMeetingNotes();
           setDropdownOpen(null);
           return;
@@ -168,6 +175,9 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       onSuccess: async () => {
         const meetingSnapshot = await get(meetingRef);
         if (!meetingSnapshot.exists()) {
+          queryClient.invalidateQueries({
+            queryKey: ["get-meeting-notes"],
+          });
           refetchMeetingNotes();
           setEditingNoteId(null);
           setEditingNoteText("");
@@ -206,6 +216,9 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       onSuccess: async () => {
         const meetingSnapshot = await get(meetingRef);
         if (!meetingSnapshot.exists()) {
+          queryClient.invalidateQueries({
+            queryKey: ["get-meeting-notes"],
+          });
           refetchMeetingNotes();
           setTitleInput("");
           setNoteInput("");
