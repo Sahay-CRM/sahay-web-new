@@ -108,7 +108,7 @@ export default function CompanyTaskListRe() {
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
             {permission.Add && (
-              <Link to="/dashboard/tasksrepet/add">
+              <Link to="/dashboard/tasksrepeat/add">
                 <Button className="py-2 w-fit">Add Company Repeat Task</Button>
               </Link>
             )}

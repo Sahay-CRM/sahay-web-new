@@ -5,7 +5,7 @@ import DashboardLayout from "@/features/layouts/DashboardLayout/dashboardLayout"
 import AddCompanyEmployee from "@/pages/companyEmployee/AddEmployeeFormModal/addEmployee";
 import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
 import AddCompanyMeeting from "@/pages/Meeting/AddMeetingFormModal/addMeeting";
-import GroupKpisCreate from "@/pages/datapointList/GroupKpis/groupKpisCreateGroup";
+// import GroupKpisCreate from "@/pages/datapointList/GroupKpis/groupKpisCreateGroup";
 
 const Theme = lazy(() => import("../pages/theme/Theme"));
 const Profile = lazy(() => import("../pages/profile/Profile"));
@@ -84,17 +84,17 @@ const RepeatMeetingData = lazy(
 
 const Issues = lazy(() => import("../pages/Obj/Issues"));
 const Objective = lazy(() => import("../pages/Obj/Objective"));
-const GroupKpis = lazy(() => import("../pages/datapointList/GroupKpis"));
+// const GroupKpis = lazy(() => import("../pages/datapointList/GroupKpis"));
 
-const AddCompanyTaskListRepeat = lazy(
-  () =>
-    import(
-      "../pages/CompanyTaskListRepeat/CompanyTaskFormModal/AddRepetitiveCompanyTaskList"
-    ),
-);
-const CompanyTaskRe = lazy(
-  () => import("../pages/CompanyTaskListRepeat/CompanyTaskListRe"),
-);
+// const AddCompanyTaskListRepeat = lazy(
+//   () =>
+//     import(
+//       "../pages/CompanyTaskListRepeat/CompanyTaskFormModal/AddRepetitiveCompanyTaskList"
+//     ),
+// );
+// const CompanyTaskRe = lazy(
+//   () => import("../pages/CompanyTaskListRepeat/CompanyTaskListRe"),
+// );
 
 export default function EmployeeRoutes() {
   return (
@@ -137,13 +137,13 @@ export default function EmployeeRoutes() {
         <Route path="tasks/view/:id" element={<CompanyTaskView />} />
 
         <Route path="tasks/edit/:id" element={<AddCompanyTaskList />} />
-        <Route path="tasksrepet/add" element={<AddCompanyTaskListRepeat />} />
-        <Route
+        {/* <Route path="tasksrepeat/add" element={<AddCompanyTaskListRepeat />} /> */}
+        {/* <Route
           path="tasksrepeat/edit/:id"
           element={<AddCompanyTaskListRepeat />}
         />
-        <Route path="tasksrepet/add" element={<AddCompanyTaskListRepeat />} />
-        <Route path="tasksrepet" element={<CompanyTaskRe />} />
+        <Route path="tasksrepeat/add" element={<AddCompanyTaskListRepeat />} />
+        <Route path="tasksrepeat" element={<CompanyTaskRe />} /> */}
 
         <Route path="projects" Component={CompanyProjects} />
         <Route path="projects/add" element={<AddCompanyProjectList />} />
@@ -153,9 +153,9 @@ export default function EmployeeRoutes() {
         <Route path="kpi" Component={DatapointList} />
         <Route path="kpi/add" element={<AddCompanyDatapoint />} />
         <Route path="kpi/edit/:id" element={<AddCompanyDatapoint />} />
-        <Route path="kpi/group-kpis" element={<GroupKpis />} />
+        {/* <Route path="kpi/group-kpis" element={<GroupKpis />} /> */}
 
-        <Route path="kpi/group-create" element={<GroupKpisCreate />} />
+        {/* <Route path="kpi/group-create" element={<GroupKpisCreate />} /> */}
 
         <Route path="datapoint" Component={DatapointList} />
         <Route path="kpi-dashboard" Component={KPIDashboard} />

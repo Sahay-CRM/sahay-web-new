@@ -432,7 +432,7 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
 
     addUpdateTask(payload, {
       onSuccess: () => {
-        navigate("/dashboard/tasksrepet");
+        navigate("/dashboard/tasksrepeat");
       },
     });
   };

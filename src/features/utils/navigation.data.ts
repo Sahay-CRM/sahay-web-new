@@ -81,24 +81,25 @@ export const companyNavigationData = [
     id: 6,
     icon: "CheckSquare",
     label: "Company Task List",
+    link: "/dashboard/tasks",
     permission: "View",
     moduleKey: "TASK",
-    items: [
-      {
-        id: 1,
-        label: "Company Task List",
-        link: "/dashboard/tasks",
-        permission: "View",
-        moduleKey: "TASK",
-      },
-      {
-        id: 2,
-        label: "Company Repetition Task ",
-        link: "/dashboard/tasksrepet",
-        permission: "View",
-        moduleKey: "TASK",
-      },
-    ],
+    // items: [
+    //   {
+    //     id: 1,
+    //     label: "Company Task List",
+    //     link: "/dashboard/tasks",
+    //     permission: "View",
+    //     moduleKey: "TASK",
+    //   },
+    //   {
+    //     id: 2,
+    //     label: "Company Repetition Task ",
+    //     link: "/dashboard/tasksrepeat",
+    //     permission: "View",
+    //     moduleKey: "TASK",
+    //   },
+    // ],
   },
   // {
   //   id: 6,
@@ -129,23 +130,24 @@ export const companyNavigationData = [
     icon: "BarChart3",
     label: "KPI List",
     permission: "View",
-    // moduleKey: "DATAPOINT_LIST",
-    items: [
-      {
-        id: 1,
-        label: "KPI List",
-        link: "/dashboard/kpi",
-        permission: "View",
-        moduleKey: "DATAPOINT_LIST",
-      },
-      {
-        id: 2,
-        label: "KPI Group",
-        link: "/dashboard/kpi/group-kpis",
-        permission: "View",
-        moduleKey: "DATAPOINT_LIST",
-      },
-    ],
+    link: "/dashboard/kpi",
+    moduleKey: "DATAPOINT_LIST",
+    // items: [
+    //   {
+    //     id: 1,
+    //     label: "KPI List",
+    //     link: "/dashboard/kpi",
+    //     permission: "View",
+    //     moduleKey: "DATAPOINT_LIST",
+    //   },
+    //   {
+    //     id: 2,
+    //     label: "KPI Group",
+    //     link: "/dashboard/kpi/group-kpis",
+    //     permission: "View",
+    //     moduleKey: "DATAPOINT_LIST",
+    //   },
+    // ],
   },
   {
     id: 9,

@@ -86,10 +86,11 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
         const meetingSnapshot = await get(meetingRef);
         if (!meetingSnapshot.exists()) {
           return;
+        } else {
+          update(ref(db, `meetings/${meetingId}/state`), {
+            updatedAt: Date.now(),
+          });
         }
-        update(ref(db, `meetings/${meetingId}/state`), {
-          updatedAt: Date.now(),
-        });
       },
     });
     setDropdownOpen(null); // Close dropdown after action
@@ -133,13 +134,16 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       onSuccess: async () => {
         const meetingSnapshot = await get(meetingRef);
         if (!meetingSnapshot.exists()) {
+          refetchMeetingNotes();
+          setDropdownOpen(null);
           return;
+        } else {
+          update(ref(db, `meetings/${meetingId}/state`), {
+            updatedAt: Date.now(),
+          });
+          refetchMeetingNotes();
+          setDropdownOpen(null);
         }
-        update(ref(db, `meetings/${meetingId}/state`), {
-          updatedAt: Date.now(),
-        });
-        refetchMeetingNotes();
-        setDropdownOpen(null); // Close dropdown after action
       },
     });
   };
@@ -164,14 +168,18 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       onSuccess: async () => {
         const meetingSnapshot = await get(meetingRef);
         if (!meetingSnapshot.exists()) {
+          refetchMeetingNotes();
+          setEditingNoteId(null);
+          setEditingNoteText("");
           return;
+        } else {
+          update(ref(db, `meetings/${meetingId}/state`), {
+            updatedAt: Date.now(),
+          });
+          refetchMeetingNotes();
+          setEditingNoteId(null);
+          setEditingNoteText("");
         }
-        update(ref(db, `meetings/${meetingId}/state`), {
-          updatedAt: Date.now(),
-        });
-        refetchMeetingNotes();
-        setEditingNoteId(null);
-        setEditingNoteText("");
       },
     });
   };
@@ -203,10 +211,15 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
           setNoteInput("");
           setIsAddingNote(false);
           return;
+        } else {
+          update(ref(db, `meetings/${meetingId}/state`), {
+            updatedAt: Date.now(),
+          });
+          refetchMeetingNotes();
+          setTitleInput("");
+          setNoteInput("");
+          setIsAddingNote(false);
         }
-        update(ref(db, `meetings/${meetingId}/state`), {
-          updatedAt: Date.now(),
-        });
       },
     });
   };
