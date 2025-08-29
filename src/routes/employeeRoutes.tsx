@@ -137,13 +137,13 @@ export default function EmployeeRoutes() {
         <Route path="tasks/view/:id" element={<CompanyTaskView />} />
 
         <Route path="tasks/edit/:id" element={<AddCompanyTaskList />} />
-        <Route path="tasksrepet/add" element={<AddCompanyTaskListRepeat />} />
+        <Route path="tasksrepeat/add" element={<AddCompanyTaskListRepeat />} />
         <Route
           path="tasksrepeat/edit/:id"
           element={<AddCompanyTaskListRepeat />}
         />
-        <Route path="tasksrepet/add" element={<AddCompanyTaskListRepeat />} />
-        <Route path="tasksrepet" element={<CompanyTaskRe />} />
+        <Route path="tasksrepeat/add" element={<AddCompanyTaskListRepeat />} />
+        <Route path="tasksrepeat" element={<CompanyTaskRe />} />
 
         <Route path="projects" Component={CompanyProjects} />
         <Route path="projects/add" element={<AddCompanyProjectList />} />

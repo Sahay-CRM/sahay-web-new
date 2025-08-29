@@ -48,6 +48,7 @@ export default function DetailMeetingList() {
     handleDateRangeChange,
     handleDateRangeApply,
     taskDateRange,
+    handleDuplicateMeeting,
   } = useDetailMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -55,7 +56,7 @@ export default function DetailMeetingList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Company Detail Meeting", href: "" }]);
+    setBreadcrumbs([{ label: "Live Meetings", href: "" }]);
   }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -97,7 +98,7 @@ export default function DetailMeetingList() {
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-5 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
-            Detail Meeting
+            Live Meetings
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
             {permission.Add && (
@@ -209,6 +210,15 @@ export default function DetailMeetingList() {
 
               return (
                 <>
+                  <Button
+                    size="sm"
+                    className="py-1 w-[150px] px-3 cursor-pointer"
+                    onClick={() => {
+                      handleDuplicateMeeting(row);
+                    }}
+                  >
+                    Duplicate Meeting
+                  </Button>
                   {row.detailMeetingStatus === "ENDED" ? (
                     <div>
                       <Button
@@ -293,7 +303,7 @@ export default function DetailMeetingList() {
             permissionKey="users"
             localStorageId="MeetingList"
             moduleKey="MEETING_LIST"
-            actionColumnWidth="w-64"
+            actionColumnWidth="w-[400px]"
             sortableColumns={[
               "meetingName",
               "meetingDateTime",

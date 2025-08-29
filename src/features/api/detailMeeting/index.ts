@@ -11,6 +11,8 @@ export { default as updateKPIDataMutation } from "./useUpdateKPIData";
 export { default as addUpdateDetailMeetingMutation } from "./useAddUpdateDetailMeeting";
 export { default as createIoMutation } from "./useCreateIo";
 
+export { default as duplicateDetailMeetingMutation } from "./useDuplicateDetailMeeting";
+
 export { default as endMeetingMutation } from "./useEndMeeting";
 
 export { default as deleteMeetingObjectiveMutation } from "./useDeleteMeetingObjective";

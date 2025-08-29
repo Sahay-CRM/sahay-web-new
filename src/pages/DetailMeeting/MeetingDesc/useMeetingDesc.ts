@@ -124,7 +124,6 @@ export default function useMeetingDesc() {
 
         return () => clearTimeout(timer);
       } else {
-        // ❌ Meeting deleted → treat as ENDED
         const timer = setTimeout(() => {
           handleUpdatedRefresh();
           queryClient.resetQueries({
@@ -177,8 +176,10 @@ export default function useMeetingDesc() {
     }
   };
 
-  const handleAddTeamLeader = (data: Joiners) => {
+  const handleAddTeamLeader = async (data: Joiners) => {
     const meetRef = ref(db, `meetings/${meetingId}/state`);
+    const meetingSnapshot = await get(meetRef);
+
     const meetingJoiners = meetingTiming?.joiners;
     const teamLeader = (meetingJoiners as Joiners[])
       ?.filter((da) => da.isTeamLeader)
@@ -197,9 +198,16 @@ export default function useMeetingDesc() {
     };
     addDetailMeeting(payload, {
       onSuccess: () => {
-        update(meetRef, {
-          updatedAt: new Date(),
+        queryClient.invalidateQueries({
+          queryKey: ["get-meeting-details-timing"],
         });
+        if (!meetingSnapshot.exists()) {
+          return;
+        } else {
+          update(meetRef, {
+            updatedAt: new Date(),
+          });
+        }
       },
     });
   };

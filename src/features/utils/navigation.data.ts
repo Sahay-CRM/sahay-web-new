@@ -40,14 +40,14 @@ export const companyNavigationData = [
       },
       {
         id: 2,
-        label: "Detail Meetings",
+        label: "Live Meetings",
         link: "/dashboard/meeting/detail",
         permission: "View",
         moduleKey: "MEETING_LIST",
       },
       {
         id: 3,
-        label: "Repeat Meetings",
+        label: "Live Meetings Templates",
         link: "/dashboard/repeat-meeting",
         permission: "View",
         moduleKey: "MEETING_LIST",
@@ -94,7 +94,7 @@ export const companyNavigationData = [
       {
         id: 2,
         label: "Company Repetition Task ",
-        link: "/dashboard/tasksrepet",
+        link: "/dashboard/tasksrepeat",
         permission: "View",
         moduleKey: "TASK",
       },

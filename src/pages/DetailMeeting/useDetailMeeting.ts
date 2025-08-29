@@ -8,7 +8,10 @@ import { useDeleteCompanyMeeting } from "@/features/api/companyMeeting";
 import { useAddUpdateCompanyMeetingStatus } from "@/features/api/companyMeeting/useAddUpdateCompanyMeetingStatus";
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { useGetDetailMeeting } from "@/features/api/detailMeeting";
+import {
+  duplicateDetailMeetingMutation,
+  useGetDetailMeeting,
+} from "@/features/api/detailMeeting";
 import { queryClient } from "@/queryClient";
 
 const toLocalISOString = (date: Date | undefined) => {
@@ -75,6 +78,7 @@ export default function useDetailMeeting() {
   const { data: meetingStatus, isLoading } = useDdMeetingStatus();
   const { mutate: deleteMeetingById } = useDeleteCompanyMeeting();
   const { mutate: updateMeetingStatus } = useAddUpdateCompanyMeetingStatus();
+  const { mutate: duplicateMeeting } = duplicateDetailMeetingMutation();
 
   const handleAdd = () => {
     setModalData({
@@ -231,6 +235,14 @@ export default function useDetailMeeting() {
     }));
   };
 
+  const handleDuplicateMeeting = (data: CompanyMeetingDataProps) => {
+    if (data.meetingId) {
+      duplicateMeeting({
+        meetingId: data.meetingId,
+      });
+    }
+  };
+
   return {
     isLoading,
     meetingData,
@@ -263,5 +275,6 @@ export default function useDetailMeeting() {
     setTaskDateRange,
     handleDateRangeChange,
     handleDateRangeApply,
+    handleDuplicateMeeting,
   };
 }

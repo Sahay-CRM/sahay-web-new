@@ -476,16 +476,22 @@ export const useAgenda = ({
     ioCreate(payload, {
       onSuccess: () => {
         if (!meetingSnapshot.exists()) {
+          queryClient.resetQueries({
+            queryKey: ["get-detail-meeting-agenda-issue-obj"],
+          });
+          setModalOpen(false);
+          setAddIssueModal(false);
           return;
+        } else {
+          const db = getDatabase();
+          const meetRef = ref(db, `meetings/${meetingId}/state`);
+          update(meetRef, { updatedAt: new Date() });
+          setModalOpen(false);
+          setAddIssueModal(false);
+          queryClient.resetQueries({
+            queryKey: ["get-detail-meeting-agenda-issue-obj"],
+          });
         }
-        const db = getDatabase();
-        const meetRef = ref(db, `meetings/${meetingId}/state`);
-        update(meetRef, { updatedAt: new Date() });
-        setModalOpen(false);
-        setAddIssueModal(false);
-        queryClient.resetQueries({
-          queryKey: ["get-detail-meeting-agenda-issue-obj"],
-        });
       },
     });
     // if (data.type === "ISSUE") {
@@ -757,29 +763,30 @@ export const useAgenda = ({
       (meetingStatus === "DISCUSSION" || meetingStatus === "CONCLUSION")
     ) {
       if (!meetingSnapshot.exists()) {
+        setIsSelectedAgenda(issueObjectiveId);
         return;
+      } else {
+        const prevElapsedSeconds =
+          (now - Number(meetingResponse?.state.lastSwitchTimestamp)) / 1000;
+        const prevObjectiveRef = ref(
+          db,
+          `meetings/${meetingId}/timers/objectives/${ioId}`,
+        );
+
+        const currentActualTime =
+          meetingResponse?.timers.objectives?.[ioId]?.actualTime || 0;
+
+        await update(prevObjectiveRef, {
+          actualTime: currentActualTime + prevElapsedSeconds,
+          lastSwitchTimestamp: now,
+        });
+
+        await update(ref(db, `meetings/${meetingId}/state`), {
+          lastSwitchTimestamp: now,
+          currentAgendaItemId: issueObjectiveId,
+        });
+        setIsSelectedAgenda(issueObjectiveId);
       }
-
-      const prevElapsedSeconds =
-        (now - Number(meetingResponse?.state.lastSwitchTimestamp)) / 1000;
-      const prevObjectiveRef = ref(
-        db,
-        `meetings/${meetingId}/timers/objectives/${ioId}`,
-      );
-
-      const currentActualTime =
-        meetingResponse?.timers.objectives?.[ioId]?.actualTime || 0;
-
-      await update(prevObjectiveRef, {
-        actualTime: currentActualTime + prevElapsedSeconds,
-        lastSwitchTimestamp: now,
-      });
-
-      await update(ref(db, `meetings/${meetingId}/state`), {
-        lastSwitchTimestamp: now,
-        currentAgendaItemId: issueObjectiveId,
-      });
-      setIsSelectedAgenda(issueObjectiveId);
     } else {
       // await update(ref(db, `meetings/${meetingId}/state`), {
       //   lastSwitchTimestamp: now,
@@ -886,12 +893,16 @@ export const useAgenda = ({
         },
         {
           onSuccess: () => {
+            queryClient.resetQueries({
+              queryKey: ["get-meeting-details-timing"],
+            });
             if (!meetingSnapshot.exists()) {
               return;
+            } else {
+              const db = getDatabase();
+              const meetRef = ref(db, `meetings/${meetingId}/state`);
+              update(meetRef, { updatedAt: new Date() });
             }
-            const db = getDatabase();
-            const meetRef = ref(db, `meetings/${meetingId}/state`);
-            update(meetRef, { updatedAt: new Date() });
           },
         },
       );
@@ -922,10 +933,11 @@ export const useAgenda = ({
                 queryKey: ["get-detail-meeting-agenda-issue-obj"],
               });
               return;
+            } else {
+              update(ref(db, `meetings/${meetingId}/state`), {
+                updatedAt: Date.now(),
+              });
             }
-            update(ref(db, `meetings/${meetingId}/state`), {
-              updatedAt: Date.now(),
-            });
           },
         },
       );
@@ -943,10 +955,11 @@ export const useAgenda = ({
                 queryKey: ["get-detail-meeting-agenda-issue-obj"],
               });
               return;
+            } else {
+              update(ref(db, `meetings/${meetingId}/state`), {
+                updatedAt: Date.now(),
+              });
             }
-            update(ref(db, `meetings/${meetingId}/state`), {
-              updatedAt: Date.now(),
-            });
           },
         },
       );

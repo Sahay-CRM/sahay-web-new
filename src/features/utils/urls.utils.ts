@@ -274,6 +274,8 @@ const Urls = {
     `${baseUrl}/company/repetitive-meeting/agenda/io/get`,
   deleteRepeatMeetingAgendaIo: () =>
     `${baseUrl}/company/repetitive-meeting/remove-io`,
+
+  duplicateDetailMeeting: () => `${baseUrl}/company/detail-meeting/duplicate`,
 };
 
 export default Urls;

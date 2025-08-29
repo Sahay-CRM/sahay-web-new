@@ -138,128 +138,135 @@ export default function MeetingDesc() {
                 )}
 
                 <div className="flex flex-col gap-3 px-3">
-                  {(meetingTiming?.joiners as Joiners[]).map((item, index) => {
-                    const isOpen = openEmployeeId === item.employeeId;
-                    const toggleOpen = () =>
-                      setOpenEmployeeId(isOpen ? null : item.employeeId);
+                  {meetingTiming &&
+                    (meetingTiming?.joiners as Joiners[]).map((item, index) => {
+                      const isOpen = openEmployeeId === item.employeeId;
+                      const toggleOpen = () =>
+                        setOpenEmployeeId(isOpen ? null : item.employeeId);
 
-                    const teamLeaderCount = (
-                      meetingTiming?.joiners as Joiners[]
-                    ).filter((emp) => emp.isTeamLeader).length;
+                      const teamLeaderCount = (
+                        meetingTiming?.joiners as Joiners[]
+                      ).filter((emp) => emp.isTeamLeader).length;
 
-                    return (
-                      <div
-                        key={index + item.employeeId}
-                        className="rounded-md bg-white shadow-sm p-3"
-                      >
-                        <div className="flex items-center gap-3 cursor-pointer justify-between">
-                          <div
-                            className="flex items-center gap-3 cursor-pointer w-full"
-                            onClick={() => {
-                              if (isTeamLeader && item.employeeId !== follow) {
-                                toggleOpen();
-                              }
-                            }}
-                          >
-                            <div className="relative">
-                              {item.isTeamLeader && (
-                                <span className="absolute -top-1 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
-                                  <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
-                                </span>
-                              )}
-
-                              <Avatar className="h-10 w-10 relative">
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      {item.employeeImage ? (
-                                        <img
-                                          src={`${ImageBaseURL}/share/profilePics/${item.employeeImage}`}
-                                          alt={item.employeeName}
-                                          className="w-full h-full rounded-full object-cover outline-2 outline-blue-400 bg-black"
-                                        />
-                                      ) : (
-                                        <AvatarFallback className="bg-gray-300 text-gray-700 font-semibold text-sm">
-                                          {getInitials(item.employeeName)}
-                                        </AvatarFallback>
-                                      )}
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      {item.employeeName}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </Avatar>
-                              {item.employeeId === follow && (
-                                <span className="absolute -bottom-0 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
-                                  <CircleCheckBig className="w-4 h-4 text-[#303290] drop-shadow" />
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="text-sm font-medium text-gray-800">
-                              {item.employeeName}
-                            </div>
-                          </div>
-                          <div>
-                            {meetingStatus !== "NOT_STARTED" && (
-                              <FormCheckbox
-                                id={`${item.employeeId}-checkbox`}
-                                className="w-[16px] h-[16px]"
-                                containerClass="p-0 ml-1"
-                                checked={item.attendanceMark as boolean}
-                                onChange={(e) => {
-                                  const updatedAttendance = e.target.checked;
-                                  handleCheckIn(
-                                    item.employeeId,
-                                    updatedAttendance,
-                                  );
-                                }}
-                                disabled={
-                                  meetingStatus === "NOT_STARTED" ||
-                                  meetingStatus === "ENDED" ||
-                                  !isTeamLeader
+                      return (
+                        <div
+                          key={index + item.employeeId}
+                          className="rounded-md bg-white shadow-sm p-3"
+                        >
+                          <div className="flex items-center gap-3 cursor-pointer justify-between">
+                            <div
+                              className="flex items-center gap-3 cursor-pointer w-full"
+                              onClick={() => {
+                                if (
+                                  isTeamLeader &&
+                                  item.employeeId !== follow
+                                ) {
+                                  toggleOpen();
                                 }
-                              />
-                            )}
+                              }}
+                            >
+                              <div className="relative">
+                                {item.isTeamLeader && (
+                                  <span className="absolute -top-1 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                                    <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
+                                  </span>
+                                )}
+
+                                <Avatar className="h-10 w-10 relative">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        {item.employeeImage ? (
+                                          <img
+                                            src={`${ImageBaseURL}/share/profilePics/${item.employeeImage}`}
+                                            alt={item.employeeName}
+                                            className="w-full h-full rounded-full object-cover outline-2 outline-blue-400 bg-black"
+                                          />
+                                        ) : (
+                                          <AvatarFallback className="bg-gray-300 text-gray-700 font-semibold text-sm">
+                                            {getInitials(item.employeeName)}
+                                          </AvatarFallback>
+                                        )}
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        {item.employeeName}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </Avatar>
+                                {item.employeeId === follow && (
+                                  <span className="absolute -bottom-0 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                                    <CircleCheckBig className="w-4 h-4 text-[#303290] drop-shadow" />
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="text-sm font-medium text-gray-800">
+                                {item.employeeName}
+                              </div>
+                            </div>
+                            <div>
+                              {meetingStatus !== "NOT_STARTED" && (
+                                <FormCheckbox
+                                  id={`${item.employeeId}-checkbox`}
+                                  className="w-[16px] h-[16px]"
+                                  containerClass="p-0 ml-1"
+                                  checked={item.attendanceMark as boolean}
+                                  onChange={(e) => {
+                                    const updatedAttendance = e.target.checked;
+                                    handleCheckIn(
+                                      item.employeeId,
+                                      updatedAttendance,
+                                    );
+                                  }}
+                                  disabled={
+                                    meetingStatus === "NOT_STARTED" ||
+                                    meetingStatus === "ENDED" ||
+                                    !isTeamLeader
+                                  }
+                                />
+                              )}
+                            </div>
+                            {/* <div> */}
+                            {meetingStatus === "NOT_STARTED" &&
+                              item.employeeId !== userId &&
+                              isTeamLeader && (
+                                <Trash2
+                                  className="w-6 h-6 mt-1.5"
+                                  onClick={() =>
+                                    handleDeleteEmp(item.employeeId)
+                                  }
+                                />
+                              )}
+                            {/* </div> */}
                           </div>
-                          {/* <div> */}
-                          {meetingStatus === "NOT_STARTED" &&
-                            item.employeeId !== userId && (
-                              <Trash2
-                                className="w-6 h-6 mt-1.5"
-                                onClick={() => handleDeleteEmp(item.employeeId)}
-                              />
-                            )}
-                          {/* </div> */}
-                        </div>
 
-                        {/* Accordion content (only if open) */}
-                        {isOpen && meetingStatus !== "ENDED" && (
-                          <div className="mt-3 pl-12 flex flex-col gap-2">
-                            <>
-                              {!item.isTeamLeader && (
-                                <button
-                                  onClick={() => handleAddTeamLeader(item)}
-                                  className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                >
-                                  Add Team Leader
-                                </button>
-                              )}
+                          {/* Accordion content (only if open) */}
+                          {isOpen && meetingStatus !== "ENDED" && (
+                            <div className="mt-3 pl-12 flex flex-col gap-2">
+                              <>
+                                {!item.isTeamLeader && (
+                                  <button
+                                    onClick={() => handleAddTeamLeader(item)}
+                                    className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                  >
+                                    Add Team Leader
+                                  </button>
+                                )}
 
-                              {item.isTeamLeader && teamLeaderCount > 1 && (
-                                <button
-                                  onClick={() => handleAddTeamLeader(item)}
-                                  className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                >
-                                  Remove Team Leader
-                                </button>
-                              )}
-                            </>
-                            {meetingStatus !== "NOT_STARTED" &&
-                              item.attendanceMark && (
-                                <>
-                                  {/* <button
+                                {item.isTeamLeader && teamLeaderCount > 1 && (
+                                  <button
+                                    onClick={() => handleAddTeamLeader(item)}
+                                    className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                  >
+                                    Remove Team Leader
+                                  </button>
+                                )}
+                              </>
+                              {meetingStatus !== "NOT_STARTED" &&
+                                item.attendanceMark && (
+                                  <>
+                                    {/* <button
                                   onClick={() =>
                                     handleCheckOut(item.employeeId)
                                   }
@@ -268,25 +275,25 @@ export default function MeetingDesc() {
                                   Check Out
                                 </button> */}
 
-                                  {item.isTeamLeader &&
-                                    item.employeeId !== follow &&
-                                    userId === follow && (
-                                      <button
-                                        onClick={() =>
-                                          handleFollow(item.employeeId)
-                                        }
-                                        className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                      >
-                                        Follow
-                                      </button>
-                                    )}
-                                </>
-                              )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                                    {item.isTeamLeader &&
+                                      item.employeeId !== follow &&
+                                      userId === follow && (
+                                        <button
+                                          onClick={() =>
+                                            handleFollow(item.employeeId)
+                                          }
+                                          className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                        >
+                                          Follow
+                                        </button>
+                                      )}
+                                  </>
+                                )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             </div>
