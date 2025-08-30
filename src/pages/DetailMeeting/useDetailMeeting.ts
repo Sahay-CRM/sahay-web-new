@@ -31,6 +31,9 @@ export default function useDetailMeeting() {
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
   const [isChildData, setIsChildData] = useState<string | undefined>();
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+  const [selectedMeeting, setSelectedMeeting] =
+    useState<CompanyMeetingDataProps>();
 
   const today = new Date();
   const before14 = new Date(today);
@@ -239,6 +242,8 @@ export default function useDetailMeeting() {
     if (data.meetingId) {
       duplicateMeeting({
         meetingId: data.meetingId,
+        meetingName: data.meetingName || "",
+        selectDate: data.selectDate || " ",
       });
     }
   };
@@ -276,5 +281,9 @@ export default function useDetailMeeting() {
     handleDateRangeChange,
     handleDateRangeApply,
     handleDuplicateMeeting,
+    setIsDuplicateModalOpen,
+    setSelectedMeeting,
+    isDuplicateModalOpen,
+    selectedMeeting,
   };
 }

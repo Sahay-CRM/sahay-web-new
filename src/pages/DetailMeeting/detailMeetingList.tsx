@@ -23,6 +23,7 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
 import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
+import DuplicateMeetingModal from "./duplicateMeetingModal";
 
 export default function DetailMeetingList() {
   const {
@@ -49,6 +50,10 @@ export default function DetailMeetingList() {
     handleDateRangeApply,
     taskDateRange,
     handleDuplicateMeeting,
+    setIsDuplicateModalOpen,
+    setSelectedMeeting,
+    isDuplicateModalOpen,
+    selectedMeeting,
   } = useDetailMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -217,7 +222,8 @@ export default function DetailMeetingList() {
                       size="sm"
                       className="py-1 w-[150px] px-3 cursor-pointer"
                       onClick={() => {
-                        handleDuplicateMeeting(row);
+                        setSelectedMeeting(row);
+                        setIsDuplicateModalOpen(true);
                       }}
                     >
                       Duplicate Meeting
@@ -341,6 +347,20 @@ export default function DetailMeetingList() {
           isModalOpen={isViewModalOpen}
           modalData={viewModalData}
           modalClose={() => setIsViewModalOpen(false)}
+        />
+        <DuplicateMeetingModal
+          isOpen={isDuplicateModalOpen}
+          onClose={() => setIsDuplicateModalOpen(false)}
+          meetingId={selectedMeeting?.meetingId}
+          meetingName={selectedMeeting?.meetingName}
+          selectDate={selectedMeeting?.selectDate}
+          onConfirm={(id, newName, date) =>
+            handleDuplicateMeeting({
+              meetingId: id,
+              meetingName: newName,
+              selectDate: date,
+            })
+          }
         />
       </div>
     </FormProvider>

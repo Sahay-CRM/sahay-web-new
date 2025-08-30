@@ -297,6 +297,7 @@ interface CompanyMeetingDataProps {
   detailMeetingStatus?: string;
   isDetailMeeting?: boolean;
   meetingTimePlanned?: string;
+  selectDate?: Date | string;
 }
 
 interface Joiners {

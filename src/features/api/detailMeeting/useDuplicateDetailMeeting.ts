@@ -9,6 +9,8 @@ import { queryClient } from "@/queryClient";
 
 interface DuplicateDetailMeetingProps {
   meetingId: string;
+  meetingName: string;
+  selectDate: Date | string;
 }
 
 export default function useDuplicateDetailMeeting() {
