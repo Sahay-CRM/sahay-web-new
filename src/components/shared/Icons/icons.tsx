@@ -1025,3 +1025,29 @@ export const PlusIcon = () => (
     <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3z"></path>
   </svg>
 );
+
+export const Dropdown = () => (
+  <svg
+    fill="currentColor"
+    viewBox="-6.5 0 32 32"
+    version="1.1"
+    xmlns="http://www.w3.org/2000/svg"
+    transform="rotate(270)"
+    stroke="currentColor"
+    stroke-width="3.2"
+  >
+    <g id="SVGRepo_bgCarrier" stroke-width="0" />
+
+    <g
+      id="SVGRepo_tracerCarrier"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke="currentColor"
+      stroke-width="0.32"
+    />
+
+    <g id="SVGRepo_iconCarrier">
+      <path d="M18.813 11.406l-7.906 9.906c-0.75 0.906-1.906 0.906-2.625 0l-7.906-9.906c-0.75-0.938-0.375-1.656 0.781-1.656h16.875c1.188 0 1.531 0.719 0.781 1.656z" />{" "}
+    </g>
+  </svg>
+);

@@ -234,3 +234,23 @@ export const companyNavigationData = [
   //   moduleKey: "ROLES_PERMISSION",
   // },
 ];
+
+export const getRouteByLabel = (label: string): string | null => {
+  const normalize = (val: string) => val.toLowerCase().trim();
+  const allNavItems: CompanyNavItem[] = [];
+  const collectItems = (items: CompanyNavItem[]) => {
+    items.forEach((item) => {
+      allNavItems.push(item);
+      if (item.items && Array.isArray(item.items)) {
+        collectItems(item.items);
+      }
+    });
+  };
+  collectItems(companyNavigationData);
+
+  const found = allNavItems.find(
+    (item) => normalize(item.label) === normalize(label),
+  );
+
+  return found?.link ?? null;
+};

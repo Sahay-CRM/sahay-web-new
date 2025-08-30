@@ -1,6 +1,6 @@
 import { Controller, FormProvider, useFormContext } from "react-hook-form";
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -112,6 +112,7 @@ const MeetingSelectionStep = () => {
   const {
     control,
     formState: { errors },
+    watch,
   } = useFormContext();
   const {
     meetingData,
@@ -120,6 +121,8 @@ const MeetingSelectionStep = () => {
     paginationFilterMeeting,
     meetingLoading,
   } = useAddCompanyTask();
+
+  const projectId = watch("project");
 
   return (
     <div className="p-0">
@@ -142,7 +145,7 @@ const MeetingSelectionStep = () => {
 
         {/* Right: Button */}
         {permission.MEETING_LIST?.Add && (
-          <Link to="/dashboard/meeting/add?from=task">
+          <Link to={`/dashboard/meeting/add?from=task&projectId=${projectId}`}>
             <Button className="py-2 w-fit">Add Meeting</Button>
           </Link>
         )}
@@ -434,7 +437,26 @@ export default function AddCompanyTask() {
     taskDataById,
     isPending,
   } = hookProps;
+
+  const [searchParams] = useSearchParams();
   const { setBreadcrumbs } = useBreadcrumbs();
+  const { handleSubmit, setValue } = methods;
+
+  let projectId = searchParams.get("projectId") || "";
+  let meetingId = searchParams.get("meetingId") || "";
+
+  // remove unwanted "?" or "&" from the end
+  projectId = projectId.replace(/[?&]+$/, "");
+  meetingId = meetingId.replace(/[?&]+$/, "");
+
+  useEffect(() => {
+    if (projectId) {
+      setValue("project", projectId);
+    }
+    if (meetingId) {
+      setValue("meeting", meetingId);
+    }
+  }, [meetingId, projectId, setValue]);
 
   useEffect(() => {
     setBreadcrumbs([
@@ -457,10 +479,17 @@ export default function AddCompanyTask() {
     ]);
   }, [setBreadcrumbs, taskDataById?.data.taskName, repetitiveTaskId]);
 
-  const { handleSubmit } = methods;
+  const effectiveStep = (() => {
+    let adjustedStep = step;
+
+    if (projectId) adjustedStep += 1;
+    if (meetingId) adjustedStep += 1;
+
+    return adjustedStep;
+  })();
 
   const renderStepContent = () => {
-    switch (step) {
+    switch (effectiveStep) {
       case 1:
         return <ProjectSelectionStep key="projectStep" />;
       case 2:

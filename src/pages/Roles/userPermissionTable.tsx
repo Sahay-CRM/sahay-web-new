@@ -25,6 +25,7 @@ import WarningDialog from "../kpiDashboard/WarningModal";
 import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { getRouteByLabel } from "@/features/utils/navigation.data";
 
 // Interfaces
 interface Permission {
@@ -476,37 +477,15 @@ export default function UserPermissionTableMerged() {
         target.closest('[data-slot="sidebar-menu-button"]');
 
       if (isDrawerNavigation) {
+        const textContent = target.textContent?.toLowerCase().trim();
+        const matchedRoute = textContent ? getRouteByLabel(textContent) : null;
+        if (matchedRoute === null) {
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
-
-        let href = target.closest("a")?.getAttribute("href") ?? null;
-
-        if (!href) {
-          const textContent = target.textContent?.toLowerCase().trim();
-          const routeMap: { [key: string]: string } = {
-            "company designation": "/dashboard/company-designation",
-            "company employee": "/dashboard/company-employee",
-            calendar: "/dashboard/calendar",
-            meeting: "/dashboard/meeting",
-            "meeting list": "/dashboard/meeting",
-            "company task list": "/dashboard/tasks",
-            "company project list": "/dashboard/projects",
-            "kpi list": "/dashboard/kpi",
-            "kpi dashboard": "/dashboard/kpi-dashboard",
-            "health weightage": "/dashboard/business/health-weightage",
-            "health score": "/dashboard/business/healthscore-achieve",
-            "business health": "/dashboard/business/health-weightage",
-            "company level assign": "/dashboard/business/company-level-assign",
-            "role & permission": "/dashboard/roles/user-permission",
-            brand: "/dashboard/brand",
-            product: "/dashboard/product",
-            "user log": "/dashboard/user-log",
-          };
-          if (textContent) href = routeMap[textContent] || null;
-        }
-
-        if (href && href !== location.pathname) {
-          setPendingNavigation(href);
+        if (matchedRoute && matchedRoute !== location.pathname) {
+          setPendingNavigation(matchedRoute);
           setShowWarning(true);
         }
       }

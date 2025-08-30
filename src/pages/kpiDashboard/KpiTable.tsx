@@ -801,7 +801,7 @@ export default function UpdatedKpiTable() {
                               <td
                                 key={colIdx}
                                 className={clsx(
-                                  "p-2 border text-center w-[80px] h-[42px]",
+                                  "p-2 border text-center w-[80px] h-[42px] relative",
                                   headers[colIdx].isSunday && "bg-gray-100",
                                 )}
                               >
@@ -809,7 +809,7 @@ export default function UpdatedKpiTable() {
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <input
-                                        type="text"
+                                        type="number"
                                         value={
                                           inputFocused[key]
                                             ? inputVal

@@ -211,18 +211,19 @@ export default function DetailMeetingList() {
 
               return (
                 <>
-                  {userData.employeeType === "CONSULTANT" ||
-                    (userData.employeeType === "OWNER" && (
-                      <Button
-                        size="sm"
-                        className="py-1 w-[150px] px-3 cursor-pointer"
-                        onClick={() => {
-                          handleDuplicateMeeting(row);
-                        }}
-                      >
-                        Duplicate Meeting
-                      </Button>
-                    ))}
+                  {(userData.employeeType === "CONSULTANT" ||
+                    userData.employeeType === "OWNER") && (
+                    <Button
+                      size="sm"
+                      className="py-1 w-[150px] px-3 cursor-pointer"
+                      onClick={() => {
+                        handleDuplicateMeeting(row);
+                      }}
+                    >
+                      Duplicate Meeting
+                    </Button>
+                  )}
+
                   {row.detailMeetingStatus === "ENDED" ? (
                     <div>
                       <Button

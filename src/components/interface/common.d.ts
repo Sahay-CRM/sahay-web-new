@@ -1286,3 +1286,13 @@ interface FileType {
   fileId: string;
   fileName: string;
 }
+
+interface CompanyNavItem {
+  id: number;
+  icon?: string;
+  label: string;
+  link?: string;
+  permission: string;
+  moduleKey?: string;
+  items?: CompanyNavItem[];
+}

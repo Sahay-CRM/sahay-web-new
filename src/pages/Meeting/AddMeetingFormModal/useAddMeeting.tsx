@@ -103,7 +103,7 @@ export default function useAddMeeting() {
         if (searchParams.get("from") === "task") {
           const projectId = searchParams.get("projectId");
           navigate(
-            `/dashboard/tasks/add?meetingId=${meetingId}?${
+            `/dashboard/tasks/add?meetingId=${meetingId}&${
               projectId ? `&projectId=${projectId}` : ""
             }`,
           );
