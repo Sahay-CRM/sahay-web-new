@@ -19,7 +19,9 @@ export default function useDeleteCompanyMeeting() {
     },
     onSuccess: (response) => {
       toast.success(response?.message);
-      queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
+      queryClient.invalidateQueries({ queryKey: ["get-meeting-list"] });
+      queryClient.invalidateQueries({ queryKey: ["get-meeting-dropdown"] });
+      queryClient.invalidateQueries({ queryKey: ["get-meeting-list-by-id"] });
     },
   });
 

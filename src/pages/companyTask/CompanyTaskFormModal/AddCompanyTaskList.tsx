@@ -1,18 +1,19 @@
 import { Controller, FormProvider, useFormContext } from "react-hook-form";
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
-import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import { useAddCompanyTask } from "./useAddCompanyTaskList";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import SearchInput from "@/components/shared/SearchInput";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import PageNotAccess from "@/pages/PageNoAccess";
 
+/* ---------------- Project Step ---------------- */
 const ProjectSelectionStep = () => {
   const {
     control,
@@ -100,10 +101,12 @@ const ProjectSelectionStep = () => {
   );
 };
 
+/* ---------------- Meeting Step ---------------- */
 const MeetingSelectionStep = () => {
   const {
     control,
     formState: { errors },
+    watch,
   } = useFormContext();
   const {
     meetingData,
@@ -113,10 +116,11 @@ const MeetingSelectionStep = () => {
     meetingLoading,
   } = useAddCompanyTask();
 
+  const projectId = watch("project");
+
   return (
     <div className="p-0">
       <div className="flex items-center justify-between mb-4 space-x-5 tb:space-x-7">
-        {/* Left: Search + Error */}
         <div className="flex items-center gap-4">
           <SearchInput
             placeholder="Search..."
@@ -124,22 +128,18 @@ const MeetingSelectionStep = () => {
             setPaginationFilter={setPaginationFilterMeeting}
             className="w-80"
           />
-
           {errors?.meeting && (
             <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] whitespace-nowrap">
               {String(errors?.meeting?.message || "")}
             </span>
           )}
         </div>
-
-        {/* Right: Button */}
         {permission.MEETING_LIST?.Add && (
-          <Link to="/dashboard/meeting/add?from=task">
+          <Link to={`/dashboard/meeting/add?from=task&projectId=${projectId}`}>
             <Button className="py-2 w-fit">Add Meeting</Button>
           </Link>
         )}
       </div>
-
       <Controller
         name="meeting"
         control={control}
@@ -190,25 +190,26 @@ const MeetingSelectionStep = () => {
   );
 };
 
+/* ---------------- Task Details Step ---------------- */
 const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
   const {
     register,
     control,
     formState: { errors },
-    // watch: watchForm,
+    setValue,
   } = useFormContext();
   const { taskStatusOptions, taskTypeOptions } = useAddCompanyTask();
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      <Card className="col-span-2 mt-4 px-6 py-6 grid grid-cols-6 gap-4">
-        {/* Row 1 */}
+      <div className="col-span-2 mt-4 px-6 py-6 grid grid-cols-6 gap-4 h-[calc(100vh-250px)] content-start">
         <div className="col-span-3">
           <FormInputField
             label="Task Name"
-            className="p-5"
+            className="p-5 px-3"
             {...register("taskName", { required: "Task Name is required" })}
             error={errors.taskName}
+            placeholder="Enter Task Name"
           />
         </div>
         <div className="col-span-3">
@@ -251,12 +252,17 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
             name="taskTypeId"
             rules={{ required: "Please select Task Type" }}
             render={({ field }) => (
-              <FormSelect
-                label="Task Type"
+              <SearchDropdown
                 options={taskTypeOptions}
+                selectedValues={field.value ? [field.value] : []}
+                onSelect={(value) => {
+                  field.onChange(value.value);
+                  setValue("taskTypeId", value.value);
+                }}
+                placeholder="Select Task Type..."
+                label="Task Type"
                 error={errors.taskTypeId}
-                {...field}
-                isMandatory={true}
+                isMandatory
               />
             )}
           />
@@ -267,18 +273,21 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
             name="taskStatusId"
             rules={{ required: "Please select Task Status" }}
             render={({ field }) => (
-              <FormSelect
-                label="Task Status"
+              <SearchDropdown
                 options={taskStatusOptions}
+                selectedValues={field.value ? [field.value] : []}
+                onSelect={(value) => {
+                  field.onChange(value.value);
+                  setValue("taskStatusId", value.value);
+                }}
+                placeholder="Select Task Status..."
+                label="Task Status"
                 error={errors.taskStatusId}
-                {...field}
-                isMandatory={true}
+                isMandatory
               />
             )}
           />
         </div>
-
-        {/* Row 3 */}
         <div className="col-span-3">
           <label className="block mb-1 font-medium">
             Task Description <span className="text-red-500">*</span>
@@ -295,7 +304,6 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
             </span>
           )}
         </div>
-
         <div className="col-span-3">
           <label className="block mb-1 font-medium" hidden={!!taskId}>
             Comment
@@ -306,11 +314,12 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
             hidden={!!taskId}
           />
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
 
+/* ---------------- Assign User Step ---------------- */
 const AssignUserStep = () => {
   const {
     control,
@@ -321,20 +330,18 @@ const AssignUserStep = () => {
     setPaginationFilterEmployee,
     paginationFilterEmployee,
     employeeLoading,
-  } = useAddCompanyTask(); // Assuming hook can be called here
+  } = useAddCompanyTask();
 
   return (
-    <div className="">
+    <div>
       <div className="flex items-center justify-between mb-4 space-x-5 tb:space-x-7">
-        {/* Left: Search + Error */}
-        <div className="flex  items-center gap-4">
+        <div className="flex items-center gap-4">
           <SearchInput
             placeholder="Search..."
             searchValue={paginationFilterEmployee?.search || ""}
             setPaginationFilter={setPaginationFilterEmployee}
             className="w-80"
           />
-
           {errors?.assignUser && (
             <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] whitespace-nowrap">
               {String(errors?.assignUser?.message || "")}
@@ -342,7 +349,6 @@ const AssignUserStep = () => {
           )}
         </div>
       </div>
-
       <Controller
         name="assignUser"
         control={control}
@@ -355,40 +361,38 @@ const AssignUserStep = () => {
                 )
               : [];
           return (
-            <>
-              <TableData
-                tableData={employeedata?.data?.map((item, index) => ({
-                  ...item,
-                  srNo:
-                    (employeedata.currentPage - 1) * employeedata.pageSize +
-                    index +
-                    1,
-                }))}
-                isActionButton={() => false}
-                columns={{
-                  srNo: "srNo",
-                  employeeName: "User Name",
-                  designationName: "Designation",
-                  employeeType: "Employee Type",
-                }}
-                primaryKey="employeeId"
-                multiSelect={true}
-                selectedValue={
-                  selectedEmployees as unknown as Record<string, unknown>[]
-                }
-                handleChange={(selected) => {
-                  const ids = Array.isArray(selected)
-                    ? selected.map((emp) => emp.employeeId)
-                    : [];
-                  field.onChange(ids);
-                }}
-                onCheckbox={() => true}
-                paginationDetails={employeedata as PaginationFilter}
-                setPaginationFilter={setPaginationFilterEmployee}
-                showActionsColumn={false}
-                isLoading={employeeLoading}
-              />
-            </>
+            <TableData
+              tableData={employeedata?.data?.map((item, index) => ({
+                ...item,
+                srNo:
+                  (employeedata.currentPage - 1) * employeedata.pageSize +
+                  index +
+                  1,
+              }))}
+              isActionButton={() => false}
+              columns={{
+                srNo: "srNo",
+                employeeName: "User Name",
+                designationName: "Designation",
+                employeeType: "Employee Type",
+              }}
+              primaryKey="employeeId"
+              multiSelect={true}
+              selectedValue={
+                selectedEmployees as unknown as Record<string, unknown>[]
+              }
+              handleChange={(selected) => {
+                const ids = Array.isArray(selected)
+                  ? selected.map((emp) => emp.employeeId)
+                  : [];
+                field.onChange(ids);
+              }}
+              onCheckbox={() => true}
+              paginationDetails={employeedata as PaginationFilter}
+              setPaginationFilter={setPaginationFilterEmployee}
+              showActionsColumn={false}
+              isLoading={employeeLoading}
+            />
           );
         }}
       />
@@ -421,22 +425,27 @@ export default function AddCompanyTask() {
     nextStep,
     prevStep,
     onSubmit,
-    steps: stepNamesArray, // Renamed to avoid conflict with step components
+    steps: stepNamesArray,
     methods,
     taskId,
     taskDataById,
     isPending,
+    taskPermission,
   } = hookProps;
 
   const { setBreadcrumbs } = useBreadcrumbs();
+  const [searchParams] = useSearchParams();
+  const projectId = searchParams.get("projectId");
+  const meetingId = searchParams.get("meetingId");
+
+  console.log(projectId);
+
+  const { handleSubmit, setValue } = methods;
 
   useEffect(() => {
     setBreadcrumbs([
       { label: "Company Task", href: "/dashboard/tasks" },
-      {
-        label: taskId ? "Update Task" : "Add Task",
-        href: "",
-      },
+      { label: taskId ? "Update Task" : "Add Task", href: "" },
       ...(taskId
         ? [
             {
@@ -449,10 +458,26 @@ export default function AddCompanyTask() {
     ]);
   }, [setBreadcrumbs, taskDataById?.data.taskName, taskId]);
 
-  const { handleSubmit } = methods;
+  useEffect(() => {
+    if (projectId) {
+      setValue("project", projectId);
+    }
+    if (meetingId) {
+      setValue("meeting", meetingId);
+    }
+  }, [meetingId, projectId, setValue]);
+
+  const effectiveStep = projectId ? step + 1 : step;
+  const totalSteps = 4;
+
+  // ✅ next handler with validation
+  const handleNext = handleSubmit(
+    () => nextStep(),
+    () => {}, // stay on same step if error
+  );
 
   const renderStepContent = () => {
-    switch (step) {
+    switch (effectiveStep) {
       case 1:
         return <ProjectSelectionStep key="projectStep" />;
       case 2:
@@ -461,29 +486,26 @@ export default function AddCompanyTask() {
         return <TaskDetailsStep key="detailsStep" taskId={taskId!} />;
       case 4:
         return <AssignUserStep key="assignUserStep" />;
-      // case 5:
-      //   if (!taskId) return <CommentStep key="commentStep" />; // Conditional step
-      //   return null;
       default:
         return null;
     }
   };
 
-  const totalSteps = 4;
+  if (!taskPermission || taskPermission.Add === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <StepProgress
-          currentStep={step}
+          currentStep={effectiveStep}
           totalSteps={totalSteps}
-          stepNames={stepNamesArray}
+          stepNames={stepNamesArray} // ⚡ अब slice मत करो, सारे step दिखेंगे
           back={prevStep}
-          isFirstStep={step === 1}
-          isLastStep={step === totalSteps}
-          // isFirstStep={isFirstStep}
-          next={nextStep}
-          // isLastStep={isLastStep}
+          isFirstStep={projectId ? effectiveStep === 2 : effectiveStep === 1}
+          isLastStep={effectiveStep === totalSteps}
+          next={handleNext}
           isPending={isPending}
           onFinish={handleSubmit(onSubmit)}
           isUpdate={!!taskId}

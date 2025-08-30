@@ -15,13 +15,14 @@ import {
 import TableData from "@/components/shared/DataTable/DataTable";
 
 import useCompanyTaskList from "./useCompanyTaskListRe";
-import ViewRepeatTaskModal from "./ViewRepeatTaskModal";
+// import ViewRepeatTaskModal from "./ViewRepeatTaskModal";
 
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 // import DateRangePicker from "@/components/shared/DateRange";
 
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import PageNotAccess from "../PageNoAccess";
+import { format } from "date-fns";
 // import { Trash } from "lucide-react";
 
 export default function CompanyTaskListRe() {
@@ -35,20 +36,21 @@ export default function CompanyTaskListRe() {
     isDeleteModalOpen,
     paginationFilter,
     isChildData,
+    handleStopRepeat,
+    permission,
+    handleRowsModalOpen,
+    isLoading,
     // statusOptions,
     // handleStatusChange,
-    permission,
     // filters,
     // handleFilterChange,
     // handleDateRangeChange,
     // handleDateRangeApply,
     // showOverdue,
     // handleOverdueToggle,
-    handleRowsModalOpen,
-    isLoading,
-    isViewModalOpen,
-    setIsViewModalOpen,
-    viewModalData,
+    // isViewModalOpen,
+    // setIsViewModalOpen,
+    // viewModalData,
     // taskStatus,
     // taskDateRange,
   } = useCompanyTaskList();
@@ -67,8 +69,8 @@ export default function CompanyTaskListRe() {
       label: "Task Description",
       visible: true,
     },
-    { key: "taskDeadline", label: "Task Deadline", visible: true },
-    { key: "employees", label: "Assignees", visible: true },
+    { key: "taskDeadline", label: "Next Date", visible: true },
+    { key: "employeeName", label: "Assignees", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -97,15 +99,6 @@ export default function CompanyTaskListRe() {
     return <PageNotAccess />;
   }
 
-  const formatLocalDate = (isoDate?: string): string => {
-    if (!isoDate) return "";
-
-    const date = new Date(isoDate);
-
-    // Format as YYYY-MM-DD in local time zone
-    return date.toLocaleDateString("en-CA"); // en-CA gives "yyyy-mm-dd"
-  };
-
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
@@ -115,7 +108,7 @@ export default function CompanyTaskListRe() {
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
             {permission.Add && (
-              <Link to="/dashboard/tasksrepet/add">
+              <Link to="/dashboard/tasksrepeat/add">
                 <Button className="py-2 w-fit">Add Company Repeat Task</Button>
               </Link>
             )}
@@ -162,14 +155,9 @@ export default function CompanyTaskListRe() {
                   index +
                   1,
                 status: item.taskStatusId,
-                taskDeadline: formatLocalDate(item.taskDeadline),
-                assigneeNames: item.TaskEmployeeJunction
-                  ? item.TaskEmployeeJunction.map(
-                      (j) => j.Employee?.employeeName,
-                    )
-                      .filter(Boolean)
-                      .join(" , ")
-                  : " ",
+                taskDeadline: item.taskDeadline
+                  ? format(new Date(item.taskDeadline), "dd/MM/yyyy h:mm aa")
+                  : "",
               }),
             )}
             columns={visibleColumns}
@@ -216,6 +204,18 @@ export default function CompanyTaskListRe() {
             isActionButton={() => true}
             // viewButton={true}
             permissionKey="users"
+            customActions={(row) => {
+              return (
+                <>
+                  <Button
+                    className={`w-fit ${row.isActive && "bg-red-500 text-white hover:bg-red-400"}`}
+                    onClick={() => handleStopRepeat(row)}
+                  >
+                    {row.isActive ? "Stop Repeat" : "Start Repeat"}
+                  </Button>
+                </>
+              );
+            }}
             // dropdownColumns={{
             //   taskStatus: {
             //     options: (taskStatus?.data ?? []).map((opt) => ({
@@ -248,11 +248,11 @@ export default function CompanyTaskListRe() {
             // showDeleteOptions={true}
           />
         )}
-        <ViewRepeatTaskModal
+        {/* <ViewRepeatTaskModal
           isModalOpen={isViewModalOpen}
           modalData={viewModalData}
           modalClose={() => setIsViewModalOpen(false)}
-        />
+        /> */}
       </div>
     </FormProvider>
   );

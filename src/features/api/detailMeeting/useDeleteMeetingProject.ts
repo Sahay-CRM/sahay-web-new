@@ -6,21 +6,17 @@ import Urls from "@/features/utils/urls.utils";
 interface DeleteMeetingProject {
   projectId: string;
   meetingId: string;
-  detailMeetingProjectId?: string | undefined;
+  issueTaskId?: string;
+  objectiveTaskId?: string;
 }
 
 export default function useDeleteMeetingProject() {
   const deleteMeetingProjectMutation = useMutation({
     mutationKey: ["delete-meeting-project"],
     mutationFn: async (data: DeleteMeetingProject) => {
-      if (!data.detailMeetingProjectId) {
-        throw new Error("Something Went Wrong");
-      }
-      const { data: resData } = await Api.delete({
-        url: Urls.deleteMeetingProjectData(data.detailMeetingProjectId),
-        data: {
-          meetingId: data.meetingId,
-        },
+      const { data: resData } = await Api.post({
+        url: Urls.deleteMeetingProjectData(),
+        data: data,
       });
       return resData;
     },

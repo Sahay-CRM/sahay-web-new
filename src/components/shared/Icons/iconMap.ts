@@ -14,6 +14,8 @@ import {
   ChevronDown,
   Menu,
   Logs,
+  Presentation,
+  Target,
 } from "lucide-react";
 
 // Icon mapping object
@@ -33,6 +35,8 @@ export const iconMap = {
   ChevronDown,
   Menu,
   Logs,
+  Presentation,
+  Target,
 };
 
 export type IconName = keyof typeof iconMap;

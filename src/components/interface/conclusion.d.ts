@@ -28,6 +28,9 @@ interface MeetingConclusionData {
   noOfProjects?: number;
   noOfKPIs?: number;
   agenda: AgendaResConclusion[];
+  discussionTotalActual?: string;
+  noOfUnsolvedIOs?: number;
+  noOfSolvedIOs?: number;
 }
 
 interface TaskUpdate {

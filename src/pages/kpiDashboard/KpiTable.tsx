@@ -21,7 +21,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import Loader from "@/components/shared/Loader/Loader";
 import { FormDatePicker } from "@/components/shared/Form/FormDatePicker/FormDatePicker";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, RefreshCcw } from "lucide-react";
 import TabsSection from "./TabSection";
 import {
   addUpdateKpi,
@@ -59,17 +59,28 @@ function formatToThreeDecimals(value: string | number | null | undefined) {
     minimumFractionDigits: 0,
   });
 }
-
+interface SortConfig {
+  key: string;
+  direction: "asc" | "desc";
+}
 export default function UpdatedKpiTable() {
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Initialize the state with the correct type
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: "employeeName", // Default sort column
+    direction: "asc", // Default sort direction
+  });
+
   const { data: kpiStructure, isLoading: isKpiStructureLoading } =
-    useGetKpiDashboardStructure();
+    useGetKpiDashboardStructure({
+      sortBy: sortConfig.key,
+      sortOrder: sortConfig.direction,
+    });
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-
   const urlSelectedPeriod = searchParams.get("selectedType");
   const [selectedPeriod, setSelectedPeriod] = useState(urlSelectedPeriod || "");
-
   const [showWarning, setShowWarning] = useState(false);
   const [pendingPeriod, setPendingPeriod] = useState<string | null>(null);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(
@@ -232,10 +243,10 @@ export default function UpdatedKpiTable() {
     selectedDate,
   });
 
-  // const isLoading = !kpiStructure;
   const hasNoKpis = useMemo(() => {
     return !kpiStructure?.totalCount || kpiStructure.totalCount === 0;
   }, [kpiStructure]);
+
   const filteredData = useMemo(() => {
     return (
       kpiStructure?.data?.filter(
@@ -272,6 +283,7 @@ export default function UpdatedKpiTable() {
 
     return groups;
   }, [filteredData]);
+
   useEffect(() => {
     const syncScroll = (e: Event) => {
       if (leftScrollRef.current && rightScrollRef.current) {
@@ -289,6 +301,7 @@ export default function UpdatedKpiTable() {
       rightEl?.removeEventListener("scroll", syncScroll);
     };
   }, [groupedKpiRows, headers]);
+
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (Object.keys(tempValues).length > 0) {
@@ -356,6 +369,7 @@ export default function UpdatedKpiTable() {
   const handleSubmit = () => {
     addUpdateKpiData(formatTempValuesToPayload(tempValues));
   };
+
   const handlePeriodChange = (newPeriod: string) => {
     if (Object.keys(tempValues).length > 0) {
       setPendingPeriod(newPeriod);
@@ -410,9 +424,17 @@ export default function UpdatedKpiTable() {
   const handleWarningClose = () => {
     setPendingPeriod(null);
     setPendingNavigation(null);
-
     setShowWarning(false);
   };
+
+  const handleSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
   //   if (isLoading) {
   //     return <Loader />;
   //   }
@@ -486,14 +508,56 @@ export default function UpdatedKpiTable() {
           <table className="w-full table-fixed border-collapse text-sm bg-white">
             <thead className="bg-primary sticky top-0 z-20">
               <tr>
-                <th className="w-[55px] p-2 font-semibold text-white text-left h-[51px]">
-                  Who
+                <th
+                  className="w-[75px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
+                  onClick={() => handleSort("employeeName")}
+                >
+                  <div className="flex items-center gap-1">
+                    Who
+                    {sortConfig.key === "employeeName" &&
+                      (sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-4 h-4 ml-1" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4 ml-1" />
+                      ))}
+                    {sortConfig.key !== "employeeName" && (
+                      <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
+                    )}
+                  </div>
                 </th>
-                <th className="w-[200px] p-2 font-semibold text-white text-left h-[51px]">
-                  KPI
+                <th
+                  className="w-[190px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
+                  onClick={() => handleSort("KPIName")}
+                >
+                  <div className="flex items-center gap-1">
+                    KPI
+                    {sortConfig.key === "KPIName" &&
+                      (sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-4 h-4 ml-1" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4 ml-1" />
+                      ))}
+                    {sortConfig.key !== "KPIName" && (
+                      <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
+                    )}
+                  </div>
                 </th>
-                <th className="w-[130px] p-2 font-semibold text-white text-left h-[51px]">
-                  Tag
+                <th
+                  className="w-[120px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
+                  onClick={() => handleSort("tag")}
+                >
+                  <div className="flex items-center gap-1">
+                    Tag
+                    {sortConfig.key === "tag" &&
+                      (sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-4 h-4 ml-1" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4 ml-1" />
+                      ))}
+                    {sortConfig.key !== "tag" && (
+                      <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
+                    )}
+                  </div>
                 </th>
                 <th className="w-[100px] p-2 font-semibold text-white text-left h-[51px]">
                   Goal
@@ -515,7 +579,7 @@ export default function UpdatedKpiTable() {
                   </tr>
                   {group.kpis.map(({ kpi }) => (
                     <tr key={kpi.kpiId} className="border-b bg-gray-50 ">
-                      <td className="p-3 border w-[60px] align-middle h-[59px]">
+                      <td className="p-3  w-[75px] flex items-center justify-center  h-[55px]">
                         <Avatar className="h-6 w-6">
                           <TooltipProvider>
                             <Tooltip>
@@ -693,10 +757,12 @@ export default function UpdatedKpiTable() {
                                           className={clsx(
                                             "rounded-sm text-sm w-[80px] h-[42px]",
                                             inputVal !== "" &&
+                                              selectedPeriod !== "YEARLY" &&
                                               (isValid
                                                 ? "bg-green-100 border border-green-500"
                                                 : "bg-red-100 border border-red-500"),
-                                            isVisualized && "opacity-60",
+                                            isVisualized &&
+                                              "opacity-60 border ",
                                           )}
                                         >
                                           <FormSelect
@@ -792,6 +858,7 @@ export default function UpdatedKpiTable() {
                                           "border p-2 rounded-sm text-center text-sm w-[80px] h-[42px]",
                                           inputVal !== "" &&
                                             validationType &&
+                                            selectedPeriod !== "YEARLY" && // 👈 yearly skip
                                             (isValidInput(
                                               validationType,
                                               inputVal,

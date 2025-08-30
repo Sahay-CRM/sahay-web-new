@@ -22,6 +22,11 @@ export function capitalizeFirstLetter(str: string): string {
 
 export function formatFrequencyType(value: string) {
   if (!value) return value;
+
+  if (value === "HALFYEARLY") {
+    return "Half-Yearly";
+  }
+
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 }
 
@@ -117,3 +122,36 @@ export const getInitials = (name: string) => {
   const secondInitial = names.length > 1 ? names[1]?.charAt(0) || "" : "";
   return (firstInitial + secondInitial).toUpperCase();
 };
+
+export function formatIndianNumber(value: string | number) {
+  if (!value) return "";
+  const num = value.toString().replace(/[^0-9]/g, "");
+  if (!num) return "";
+  return Number(num).toLocaleString("en-IN");
+}
+
+export function handleIndianNumberInput(
+  e: React.ChangeEvent<HTMLInputElement>,
+  field: { value: string; onChange: (val: string) => void },
+) {
+  const input = e.target;
+  const selectionStart = input.selectionStart || 0;
+
+  // Remove non-digit characters
+  const raw = input.value.replace(/[^0-9]/g, "");
+
+  // Format number for display
+  const formatted = raw ? Number(raw).toLocaleString("en-IN") : "";
+
+  // Update form value with raw
+  field.onChange(raw);
+
+  // Update input value and restore cursor
+  requestAnimationFrame(() => {
+    input.value = formatted;
+
+    // Adjust cursor position
+    const diff = formatted.length - raw.length;
+    input.setSelectionRange(selectionStart + diff, selectionStart + diff);
+  });
+}

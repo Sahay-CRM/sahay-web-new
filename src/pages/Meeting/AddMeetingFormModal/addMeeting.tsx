@@ -18,9 +18,10 @@ import { getEmployee } from "@/features/api/companyEmployee";
 // import { useGetCompanyMeetingStatus } from "@/features/api/companyMeeting";
 import { getMeetingType } from "@/features/api/meetingType";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
-import FormSelect from "@/components/shared/Form/FormSelect";
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import { ImageBaseURL } from "@/features/utils/urls.utils";
 
 interface MeetingInfoProps {
   isUpdateMeeting: boolean;
@@ -43,7 +44,7 @@ const MeetingType = () => {
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "meetingTypeName", label: "Meeting Type Name", visible: true },
-    { key: "parentType", label: "Parent Type", visible: true },
+    // { key: "parentType", label: "Parent Type", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -165,12 +166,14 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
         <FormInputField
           label="Meeting Name"
+          placeholder="Enter an Meeting Name"
           {...register("meetingName", { required: "Name is required" })}
           error={errors.meetingName}
           isMandatory
         />
         <FormInputField
           label="Meeting Description"
+          placeholder="Enter an Meeting Description"
           {...register("meetingDescription", {
             required: "Description is required",
           })}
@@ -197,7 +200,7 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
           }}
         />
 
-        {!shouldHideStatus && (
+        {/* {!shouldHideStatus && (
           <Controller
             name="meetingStatusId"
             control={control}
@@ -209,6 +212,29 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
                 options={meetingStatusOptions}
                 error={fieldState.error}
                 isMandatory
+              />
+            )}
+          />
+        )} */}
+        {!shouldHideStatus && (
+          <Controller
+            name="meetingStatusId"
+            control={control}
+            rules={{ required: "Meeting Status is required" }}
+            render={({ field, fieldState }) => (
+              <SearchDropdown
+                {...field}
+                label="Meeting Status "
+                options={meetingStatusOptions}
+                error={fieldState.error}
+                isMandatory
+                placeholder="Select an Meeting status..."
+                selectedValues={field.value ? [field.value] : []} // Ensure it's an array
+                onSelect={(value) => {
+                  field.onChange(value.value);
+                  setValue("meetingStatusId", value.value);
+                }}
+                className="h-10 mt-0.5"
               />
             )}
           />
@@ -332,7 +358,7 @@ const Joiners = () => {
               isEditDelete={() => false}
               moduleKey="emp"
               isActionButton={() => false}
-              showActionsColumn={meetingType?.parentType === "DETAIL"}
+              showActionsColumn={false}
               selectedValue={field.value || []}
               handleChange={(selectedItems) => field.onChange(selectedItems)}
               customActions={(row: EmployeeDetails) => {
@@ -376,15 +402,12 @@ const Joiners = () => {
   );
 };
 
-// --- UploadDoc Component Definition ---
 const UploadDoc = () => {
   const { watch, setValue } = useFormContext();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Local state for UI representation of files, synced with form state
-  const [displayFiles, setDisplayFiles] = useState<
-    (File | string | { fileId: string; fileName: string })[]
-  >([]);
+  const [displayFiles, setDisplayFiles] = useState<FileType[]>([]);
 
   // Watch form state for initial files and updates
   const formFiles = watch("meetingDocuments");
@@ -468,24 +491,32 @@ const UploadDoc = () => {
               key={idx} // Using index as key is okay if list order doesn't change unpredictably or items don't have stable IDs
               className="flex items-center justify-between p-2 bg-gray-50 rounded"
             >
-              <span className="font-medium truncate">
-                {typeof file === "string"
-                  ? file.substring(0, 30) + (file.length > 30 ? "..." : "")
-                  : "fileName" in file && !(file instanceof File) // Check it's not a File object
-                    ? file.fileName
-                    : (file as File).name}
-              </span>
-              <button
-                type="button"
-                className="ml-2 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleRemoveFile(idx);
-                }}
-              >
-                Remove
-              </button>
+              <span className="font-medium truncate">{file.fileName}</span>
+              <div>
+                <button
+                  type="button"
+                  className="ml-2 px-2 py-1 bg-primary text-white rounded text-xs hover:bg-red-600 transition"
+                  onClick={() => {
+                    window.open(
+                      `${ImageBaseURL}/share/mDocs/${file.fileName}`,
+                      "_blank",
+                    );
+                  }}
+                >
+                  Download
+                </button>
+                <button
+                  type="button"
+                  className="ml-2 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleRemoveFile(idx);
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
             </div>
           ))}
         </div>

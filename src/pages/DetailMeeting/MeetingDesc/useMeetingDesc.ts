@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getDatabase, off, onValue, ref, update } from "firebase/database";
+import { get, getDatabase, off, onValue, ref, update } from "firebase/database";
 
+import { useAddUpdateCompanyMeeting } from "@/features/api/companyMeeting";
+import { queryClient } from "@/queryClient";
 import {
   addMeetingNotesMutation,
-  addMeetingTimeMutation,
-  addUpdateCompanyMeetingMutation,
+  addUpdateDetailMeetingMutation,
   deleteCompanyMeetingMutation,
   endMeetingMutation,
   updateDetailMeetingMutation,
   useGetMeetingNotes,
   useGetMeetingTiming,
-} from "@/features/api/companyMeeting";
-import { queryClient } from "@/queryClient";
+} from "@/features/api/detailMeeting";
 
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();
@@ -29,18 +29,21 @@ export default function useMeetingDesc() {
   const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
   const { data: meetingNotes } = useGetMeetingNotes({
     filter: {
-      meetingId: meetingTiming?.detailMeetingId,
+      meetingId: meetingTiming?.meetingId,
       noteType: activeTab === "updates" ? "UPDATES" : "APPRECIATION",
     },
-    enable: !!meetingTiming?.detailMeetingId,
+    enable: !!meetingTiming?.meetingId,
   });
 
   const { mutate: endMeet } = endMeetingMutation();
   const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
-  const { mutate: updateMeetingTeamLeader } = addUpdateCompanyMeetingMutation();
-  const { mutate: updateTime } = addMeetingTimeMutation();
+  // const { mutate: updateMeetingTeamLeader } = addUpdateCompanyMeetingMutation();
+  // const { mutate: updateTime } = addMeetingTimeMutation();
   const { mutate: addNote } = addMeetingNotesMutation();
   const deleteNoteMutation = deleteCompanyMeetingMutation();
+  const { mutate: addMeeting } = useAddUpdateCompanyMeeting();
+
+  const { mutate: addDetailMeeting } = addUpdateDetailMeetingMutation();
 
   const handleUpdatedRefresh = useCallback(async () => {
     await Promise.all([
@@ -69,8 +72,34 @@ export default function useMeetingDesc() {
     };
   }, [db, handleUpdatedRefresh, meetingId]);
 
+  // useEffect(() => {
+  //   if (!meetingId || !meetingResponse) return;
+
+  //   const meetingRef = ref(db, `meetings/${meetingId}/state/activeTab`);
+
+  //   const unsubscribe = onValue(meetingRef, (snapshot) => {
+  //     if (snapshot.exists()) {
+  //       const activeTab = snapshot.val();
+
+  //       handleUpdatedRefresh();
+  //       if (activeTab === "CONCLUSION") {
+  //         queryClient.resetQueries({
+  //           queryKey: ["get-meeting-conclusion-res"],
+  //         });
+  //         queryClient.resetQueries({
+  //           queryKey: ["get-meeting-conclusion-time-by-meetingId"],
+  //         });
+  //       } else if (activeTab === "ENDED") {
+  //         handleUpdatedRefresh();
+  //       }
+  //     }
+  //   });
+
+  //   return () => unsubscribe();
+  // }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
+
   useEffect(() => {
-    if (!meetingId || !meetingResponse) return;
+    if (!meetingId) return;
 
     const meetingRef = ref(db, `meetings/${meetingId}/state/activeTab`);
 
@@ -79,30 +108,35 @@ export default function useMeetingDesc() {
         const activeTab = snapshot.val();
 
         handleUpdatedRefresh();
-        if (activeTab === "CONCLUSION") {
+
+        const timer = setTimeout(() => {
+          if (activeTab === "CONCLUSION") {
+            queryClient.resetQueries({
+              queryKey: ["get-meeting-conclusion-res"],
+            });
+            queryClient.resetQueries({
+              queryKey: ["get-meeting-conclusion-time-by-meetingId"],
+            });
+          } else if (activeTab === "ENDED") {
+            handleUpdatedRefresh();
+          }
+        }, 2000);
+
+        return () => clearTimeout(timer);
+      } else {
+        const timer = setTimeout(() => {
+          handleUpdatedRefresh();
           queryClient.resetQueries({
             queryKey: ["get-meeting-conclusion-res"],
           });
-        }
+        }, 1000);
+
+        return () => clearTimeout(timer);
       }
     });
 
     return () => unsubscribe();
-  }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
-
-  useEffect(() => {
-    if (!meetingId || !meetingResponse) return; // ✅ don't run if meeting deleted
-
-    const meetingRef = ref(db, `meetings/${meetingId}/state/updatedAt`);
-
-    const unsubscribe = onValue(meetingRef, (snapshot) => {
-      if (snapshot.exists()) {
-        handleUpdatedRefresh();
-      }
-    });
-
-    return () => unsubscribe();
-  }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
+  }, [db, handleUpdatedRefresh, meetingId]);
 
   const handleTabChange = (tab: string) => {
     if (activeTab === tab) {
@@ -121,7 +155,7 @@ export default function useMeetingDesc() {
       updateDetailMeeting(
         {
           meetingId: meetingId,
-          status: "CONCLUSION",
+          detailMeetingStatus: "CONCLUSION",
         },
         {
           onSuccess: () => {
@@ -142,9 +176,11 @@ export default function useMeetingDesc() {
     }
   };
 
-  const handleAddTeamLeader = (data: Joiners) => {
+  const handleAddTeamLeader = async (data: Joiners) => {
     const meetRef = ref(db, `meetings/${meetingId}/state`);
-    const meetingJoiners = meetingTiming?.employeeList;
+    const meetingSnapshot = await get(meetRef);
+
+    const meetingJoiners = meetingTiming?.joiners;
     const teamLeader = (meetingJoiners as Joiners[])
       ?.filter((da) => da.isTeamLeader)
       .map((item) => item.employeeId);
@@ -157,14 +193,21 @@ export default function useMeetingDesc() {
     }
 
     const payload = {
-      companyMeetingId: meetingId,
+      meetingId: meetingId,
       teamLeaders: updatedTeamLeaders,
     };
-    updateMeetingTeamLeader(payload, {
+    addDetailMeeting(payload, {
       onSuccess: () => {
-        update(meetRef, {
-          updatedAt: new Date(),
+        queryClient.invalidateQueries({
+          queryKey: ["get-meeting-details-timing"],
         });
+        if (!meetingSnapshot.exists()) {
+          return;
+        } else {
+          update(meetRef, {
+            updatedAt: new Date(),
+          });
+        }
       },
     });
   };
@@ -200,14 +243,14 @@ export default function useMeetingDesc() {
     }
   };
 
-  const handleCheckIn = (item: Joiners, attendanceMark: boolean) => {
+  const handleCheckIn = (employeeId: string, attendanceMark: boolean) => {
     if (meetingId) {
-      updateTime(
+      // console.log(attendanceMark, meetingId, employeeId);
+      addDetailMeeting(
         {
           meetingId: meetingId,
-          employeeId: item.employeeId,
+          employeeId: employeeId,
           attendanceMark: attendanceMark,
-          updatedAt: new Date().toISOString(),
         },
         {
           onSuccess: () => {
@@ -224,7 +267,7 @@ export default function useMeetingDesc() {
 
   const handleUpdateNotes = (data: MeetingNotesRes) => {
     const payload = {
-      detailMeetingNoteId: data.detailMeetingNoteId,
+      meetingNoteId: data.meetingNoteId,
       noteType: null,
     };
     addNote(payload, {
@@ -236,8 +279,89 @@ export default function useMeetingDesc() {
     deleteNoteMutation.mutate(id);
   };
 
+  const handleAddEmp = async (data: EmployeeDetails[]) => {
+    const meetingRef = ref(db, `meetings/${meetingId}`);
+    const meetingSnapshot = await get(meetingRef);
+    const meetStateRef = ref(db, `meetings/${meetingId}/state`);
+
+    if (meetingId && meetingTiming?.meetingId) {
+      const payload = {
+        meetingId: meetingId,
+        joiners: [
+          ...(data?.map((item) => item.employeeId) || []),
+          ...((meetingTiming.joiners as Joiners[])?.map(
+            (em) => em.employeeId,
+          ) || []),
+        ],
+      };
+      addDetailMeeting(payload, {
+        onSuccess: () => {
+          if (!meetingSnapshot.exists()) {
+            queryClient.invalidateQueries({
+              queryKey: ["get-meeting-details-timing"],
+            });
+            return;
+          }
+          update(meetStateRef, {
+            updatedAt: Date.now(),
+          });
+        },
+      });
+    }
+  };
+
+  const handleDeleteEmp = async (employeeId: string) => {
+    const meetingRef = ref(db, `meetings/${meetingId}`);
+    const meetingSnapshot = await get(meetingRef);
+    const meetStateRef = ref(db, `meetings/${meetingId}/state`);
+
+    const joiners = (meetingTiming?.joiners as Joiners[])
+      ?.filter((item) => item.employeeId !== employeeId)
+      ?.map((item) => item.employeeId);
+
+    if (meetingId && meetingTiming?.meetingId) {
+      const payload = {
+        companyMeetingId: meetingId,
+        joiners: joiners,
+      };
+      addMeeting(payload, {
+        onSuccess: () => {
+          if (!meetingSnapshot.exists()) {
+            queryClient.invalidateQueries({
+              queryKey: ["get-meeting-details-timing"],
+            });
+            return;
+          }
+          update(meetStateRef, {
+            updatedAt: Date.now(),
+          });
+        },
+      });
+    }
+  };
+
+  useEffect(() => {
+    const db = getDatabase();
+    const meetingRef = ref(db, `meetings/${meetingId}/state/updatedAt`);
+
+    onValue(meetingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        queryClient.invalidateQueries({
+          queryKey: ["get-meeting-details-timing"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["get-meeting-notes"],
+        });
+      }
+    });
+
+    return () => {
+      off(meetingRef);
+    };
+  }, [handleUpdatedRefresh, meetingId]);
+
   return {
-    meetingStatus: meetingTiming?.status,
+    meetingStatus: meetingTiming?.detailMeetingStatus,
     meetingId,
     meetingResponse,
     meetingTiming,
@@ -262,5 +386,7 @@ export default function useMeetingDesc() {
     dropdownOpen,
     setDropdownOpen,
     handleDelete,
+    handleAddEmp,
+    handleDeleteEmp,
   };
 }

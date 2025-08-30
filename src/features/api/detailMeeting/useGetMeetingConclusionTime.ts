@@ -2,19 +2,17 @@ import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 
-// type DatePaging = BaseResponse<DetailMeetingAgendaIssue>;
-
-export default function useGetDetailMeetingAgendaIssue({
+export default function useGetMeetingConclusionTime({
   filter,
   enable,
 }: FilterDataProps) {
   const query = useQuery({
-    queryKey: ["get-detailMeetingAgendaIssue", filter],
+    queryKey: ["get-meeting-conclusion-time-by-meetingId", filter],
     queryFn: async () => {
       const { data: resData } = await Api.post<{
-        data: DetailMeetingAgendaIssue;
+        data: MeetingConclusionData;
       }>({
-        url: Urls.detailMeetingAgendaIssue(filter.detailMeetingAgendaIssueId),
+        url: Urls.getConclusionTime(filter.meetingId),
       });
 
       return resData.data;

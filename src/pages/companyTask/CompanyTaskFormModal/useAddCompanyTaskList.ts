@@ -35,6 +35,7 @@ export const useAddCompanyTask = () => {
   const { data: taskDataById } = useGetCompanyTaskById(taskId || "");
   const permission = useSelector(getUserPermission);
   const navigate = useNavigate();
+  console.log();
 
   const methods = useForm<FormValues>({
     defaultValues: {
@@ -52,7 +53,7 @@ export const useAddCompanyTask = () => {
     },
     mode: "onChange",
   });
-  const { reset } = methods;
+  const { reset, getValues } = methods;
 
   useEffect(() => {
     if (taskId && taskDataById?.data) {
@@ -77,7 +78,7 @@ export const useAddCompanyTask = () => {
       });
     }
   }, [taskId, taskDataById, reset]);
-
+  console.log(getValues());
   const [step, setStep] = useState(1);
 
   const [paginationFilterEmployee, setPaginationFilterEmployee] =
@@ -127,8 +128,8 @@ export const useAddCompanyTask = () => {
 
   const taskTypeOptions = taskTypeData
     ? taskTypeData.data.map((status) => ({
-        label: status.taskTypeName,
-        value: status.taskTypeId,
+        label: status.taskTypeName || "Unnamed",
+        value: status.taskTypeId || "", // Fallback to empty string
       }))
     : [];
 
@@ -283,5 +284,6 @@ export const useAddCompanyTask = () => {
     typeLoading,
     employeeLoading,
     meetingLoading,
+    taskPermission: permission.TASK,
   };
 };

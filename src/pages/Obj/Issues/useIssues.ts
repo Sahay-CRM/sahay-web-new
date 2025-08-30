@@ -1,9 +1,10 @@
-import { deleteIssueMutation, useGetIssues } from "@/features/api/Issues";
-import { getUserPermission } from "@/features/selectors/auth.selector";
-import { AxiosError } from "axios";
 import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
+import { AxiosError } from "axios";
+
+import { deleteIssueMutation, useGetIssues } from "@/features/api/Issues";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 
 export default function useIssues() {
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({

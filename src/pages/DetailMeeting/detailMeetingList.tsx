@@ -22,7 +22,7 @@ import DateRangePicker from "@/components/shared/DateRange";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
-import { getUserId } from "@/features/selectors/auth.selector";
+import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
 
 export default function DetailMeetingList() {
   const {
@@ -47,19 +47,17 @@ export default function DetailMeetingList() {
     handleStatusChange,
     handleDateRangeChange,
     handleDateRangeApply,
-    showOverdue,
-    handleOverdueToggle,
     taskDateRange,
-    // handleDetailToggle,
-    // showDetail,
+    handleDuplicateMeeting,
   } = useDetailMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
+  const userData = useSelector(getUserDetail);
   const userId = useSelector(getUserId);
   const navigate = useNavigate();
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Company Meeting", href: "" }]);
+    setBreadcrumbs([{ label: "Live Meetings", href: "" }]);
   }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -70,9 +68,8 @@ export default function DetailMeetingList() {
       label: "Meeting Description",
       visible: true,
     },
-    { key: "meetingDateTime", label: "Meeting TIme", visible: true },
+    { key: "meetingDateTime", label: "Meeting Time", visible: true },
     { key: "joinerNames", label: "Joiners", visible: true },
-    { key: "meetingStatus", label: "Status", visible: true }, // <-- add this line
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -102,11 +99,11 @@ export default function DetailMeetingList() {
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-5 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
-            Meeting List
+            Live Meetings
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
             {permission.Add && (
-              <Link to="/dashboard/meeting/add">
+              <Link to="/dashboard/meeting/detail/add">
                 <Button className="py-2 w-fit">Add Meeting</Button>
               </Link>
             )}
@@ -124,16 +121,14 @@ export default function DetailMeetingList() {
           </div>
           <div className="flex gap-4 flex-wrap">
             <div className="relative flex items-center gap-2 ">
-              {!showOverdue && (
-                <DateRangePicker
-                  value={{
-                    from: taskDateRange.taskStartDate,
-                    to: taskDateRange.taskDeadline,
-                  }}
-                  onChange={handleDateRangeChange}
-                  onApply={handleDateRangeApply}
-                />
-              )}
+              <DateRangePicker
+                value={{
+                  from: taskDateRange.taskStartDate,
+                  to: taskDateRange.taskDeadline,
+                }}
+                onChange={handleDateRangeChange}
+                onApply={handleDateRangeApply}
+              />
             </div>
             <div>
               <DropdownSearchMenu
@@ -146,20 +141,7 @@ export default function DetailMeetingList() {
                 multiSelect
               />
             </div>
-            {/* <Button
-              variant={showDetail ? "outline" : "destructive"}
-              onClick={handleDetailToggle}
-              className="py-2 w-fit"
-            >
-              {showDetail ? "Show Other Meetings" : "Show Detail Meetings"}
-            </Button> */}
-            <Button
-              variant={showOverdue ? "destructive" : "outline"}
-              onClick={handleOverdueToggle}
-              className="py-2 w-fit"
-            >
-              {showOverdue ? "Show All Meeting" : "Show Overdue"}
-            </Button>
+
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>
@@ -190,7 +172,6 @@ export default function DetailMeetingList() {
                 (meetingData.currentPage - 1) * meetingData.pageSize +
                 index +
                 1,
-              status: item.meetingStatusId,
               meetingDateTime: format(
                 new Date(item.meetingDateTime ?? 0),
                 "dd/MM/yyyy hh:mm a",
@@ -211,12 +192,13 @@ export default function DetailMeetingList() {
             onEdit={
               permission.Edit
                 ? (row) => {
-                    navigate(`/dashboard/meeting/edit/${row.meetingId}`);
+                    navigate(
+                      `/dashboard/meeting/detail/update/${row.meetingId}`,
+                    );
                   }
                 : undefined
             }
             customActions={(row) => {
-              if (row.parentType !== "DETAIL") return null;
               const isTeamLeader = Array.isArray(row.joiners)
                 ? row.joiners.some(
                     (emp) =>
@@ -229,6 +211,18 @@ export default function DetailMeetingList() {
 
               return (
                 <>
+                  {userData.employeeType === "CONSULTANT" ||
+                    (userData.employeeType === "OWNER" && (
+                      <Button
+                        size="sm"
+                        className="py-1 w-[150px] px-3 cursor-pointer"
+                        onClick={() => {
+                          handleDuplicateMeeting(row);
+                        }}
+                      >
+                        Duplicate Meeting
+                      </Button>
+                    ))}
                   {row.detailMeetingStatus === "ENDED" ? (
                     <div>
                       <Button
@@ -264,7 +258,7 @@ export default function DetailMeetingList() {
                         </Button>
                       ) : (
                         <div>
-                          {row.detailMeetingStatus === "NOT STARTED" ? (
+                          {/* {row.detailMeetingStatus === "NOT STARTED" ? (
                             <Button
                               variant="outline"
                               size="sm"
@@ -272,27 +266,27 @@ export default function DetailMeetingList() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate(
-                                  `/dashboard/meeting/detail/${row.meetingId}`,
+                                  `/dashboard/meeting/detail/${row.meetingId}`
                                 );
                               }}
                             >
                               Not Started
                             </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="py-1 w-[150px] px-3 cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(
-                                  `/dashboard/meeting/detail/${row.meetingId}`,
-                                );
-                              }}
-                            >
-                              Join Meeting
-                            </Button>
-                          )}
+                          ) : ( */}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="py-1 w-[150px] px-3 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(
+                                `/dashboard/meeting/detail/${row.meetingId}`,
+                              );
+                            }}
+                          >
+                            Join Meeting
+                          </Button>
+                          {/* )} */}
                         </div>
                       )}
                     </div>
@@ -313,6 +307,7 @@ export default function DetailMeetingList() {
             permissionKey="users"
             localStorageId="MeetingList"
             moduleKey="MEETING_LIST"
+            actionColumnWidth="w-[400px]"
             sortableColumns={[
               "meetingName",
               "meetingDateTime",

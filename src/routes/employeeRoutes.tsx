@@ -4,7 +4,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import DashboardLayout from "@/features/layouts/DashboardLayout/dashboardLayout";
 import AddCompanyEmployee from "@/pages/companyEmployee/AddEmployeeFormModal/addEmployee";
 import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
-import AddCompanyTaskListRepeat from "@/pages/CompanyTaskListRepeat/CompanyTaskFormModal/AddRepetitiveCompanyTaskList";
+// import AddCompanyTaskListRepeat from "@/pages/CompanyTaskListRepeat/CompanyTaskFormModal/AddRepetitiveCompanyTaskList";
 import AddCompanyMeeting from "@/pages/Meeting/AddMeetingFormModal/addMeeting";
 import GroupKpisCreate from "@/pages/datapointList/GroupKpis/groupKpisCreateGroup";
 
@@ -71,10 +71,34 @@ const AllNotifications = lazy(
 );
 const StartMeeting = lazy(() => import("../pages/DetailMeeting/MeetingDesc"));
 const DetailMeeting = lazy(() => import("../pages/DetailMeeting"));
+const AddDetailMeeting = lazy(
+  () => import("../pages/DetailMeeting/AddMeetingFormModal"),
+);
+
+const RepeatDetailMeeting = lazy(
+  () => import("../pages/DetailMeeting/MeetingListRepeat"),
+);
+const AddRepeatDetailMeeting = lazy(
+  () =>
+    import("../pages/DetailMeeting/MeetingListRepeat/RepeatMeetingFormModal"),
+);
+const RepeatMeetingData = lazy(
+  () => import("../pages/DetailMeeting/MeetingListRepeat/DetailRepeatMeeting"),
+);
 
 const Issues = lazy(() => import("../pages/Obj/Issues"));
 const Objective = lazy(() => import("../pages/Obj/Objective"));
 const GroupKpis = lazy(() => import("../pages/datapointList/GroupKpis"));
+
+const AddCompanyTaskListRepeat = lazy(
+  () =>
+    import(
+      "../pages/CompanyTaskListRepeat/CompanyTaskFormModal/AddRepetitiveCompanyTaskList"
+    ),
+);
+// const CompanyTaskRe = lazy(
+//   () => import("../pages/CompanyTaskListRepeat/CompanyTaskListRe"),
+// );
 
 export default function EmployeeRoutes() {
   return (
@@ -99,6 +123,15 @@ export default function EmployeeRoutes() {
 
         <Route path="meeting/detail/:id" Component={StartMeeting} />
         <Route path="meeting/detail" Component={DetailMeeting} />
+        <Route path="meeting/detail/add" Component={AddDetailMeeting} />
+        <Route path="meeting/detail/update/:id" Component={AddDetailMeeting} />
+
+        <Route path="repeat-meeting/">
+          <Route index Component={RepeatDetailMeeting} />
+          <Route path="add" Component={AddRepeatDetailMeeting} />
+          <Route path="update/:id" Component={AddRepeatDetailMeeting} />
+          <Route path="detail/:id" Component={RepeatMeetingData} />
+        </Route>
 
         <Route path="issues" Component={Issues} />
         <Route path="objective" Component={Objective} />
@@ -108,11 +141,16 @@ export default function EmployeeRoutes() {
         <Route path="tasksrepet/add" element={<AddCompanyTaskListRepeat />} />
         <Route path="tasksrepet" element={<CompanyTaskRe />} />
         <Route path="tasks/view/:id" element={<CompanyTaskView />} />
+
         <Route path="tasks/edit/:id" element={<AddCompanyTaskList />} />
+        <Route path="tasksrepeat/add" element={<AddCompanyTaskListRepeat />} />
         <Route
           path="tasksrepeat/edit/:id"
           element={<AddCompanyTaskListRepeat />}
         />
+        <Route path="tasksrepeat/add" element={<AddCompanyTaskListRepeat />} />
+        <Route path="tasksrepeat" element={<CompanyTaskRe />} />
+
         <Route path="projects" Component={CompanyProjects} />
         <Route path="projects/add" element={<AddCompanyProjectList />} />
         <Route path="projects/edit/:id" element={<AddCompanyProjectList />} />

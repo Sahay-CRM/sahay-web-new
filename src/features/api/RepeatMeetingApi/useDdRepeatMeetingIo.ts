@@ -2,20 +2,21 @@ import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 
-export default function useGetMeetingConclusion({
+type DatePaging = BaseResponse<DetailMeetingObjectives>;
+
+export default function useDdRepeatMeetingIo({
   filter,
   enable,
 }: FilterDataProps) {
   const query = useQuery({
-    queryKey: ["get-meeting-conclusion-res", filter],
+    queryKey: ["dd-repeatMeeting-obj-issue", filter],
     queryFn: async () => {
-      const { data: resData } = await Api.post<{
-        data: MeetingConclusionData;
-      }>({
-        url: Urls.getConclusionByMeeting(filter.meetingId),
+      const { data: resData } = await Api.post<DatePaging>({
+        url: Urls.ddRepeatMeetingIo(),
+        data: filter,
       });
 
-      return resData.data;
+      return resData;
     },
     enabled: !!enable,
   });

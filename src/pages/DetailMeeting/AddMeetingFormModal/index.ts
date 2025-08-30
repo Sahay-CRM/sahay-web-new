@@ -1,1 +1,1 @@
-export { default } from "./addMeeting";
+export { default } from "./addDetailMeeting";

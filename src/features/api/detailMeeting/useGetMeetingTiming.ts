@@ -6,8 +6,10 @@ export default function useGetMeetingTiming(meetingId: string) {
   const query = useQuery({
     queryKey: ["get-meeting-details-timing", meetingId],
     queryFn: async () => {
-      const { data: resData } = await Api.post<{ data: MeetingDetailsTiming }>({
-        url: Urls.getTimeByMeeting(meetingId),
+      const { data: resData } = await Api.post<{
+        data: CompanyMeetingDataProps;
+      }>({
+        url: Urls.getDetailMeetingById(meetingId),
       });
       return resData.data;
     },

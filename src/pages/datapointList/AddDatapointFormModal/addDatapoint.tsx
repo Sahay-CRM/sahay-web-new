@@ -1,24 +1,27 @@
 import { FormProvider, useForm } from "react-hook-form";
 
-import AddDatapointModal from "./addDatapointModal";
+// import AddDatapointModal from "./addDatapointModal";
 import useAddDatapoint from "./useAddDatapoint";
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
+import PageNotAccess from "@/pages/PageNoAccess";
 
 const AddDatapoint = () => {
   const {
-    onFinish,
-    isModalOpen,
-    handleClose,
+    // onFinish,
+    // isModalOpen,
+    // handleClose,
     onSubmit,
     Kpi,
     // Product,
     // AssignUser,
     // GoalValue,
     trigger,
-    KpiPreview,
+    // KpiPreview,
     isPending,
     Details,
+    permission,
+    selectedKpi,
   } = useAddDatapoint();
 
   const methods = useForm({ mode: "onChange" });
@@ -26,7 +29,6 @@ const AddDatapoint = () => {
   let stepNames = [];
 
   const steps = [<Kpi />, <Details />];
-  stepNames = ["KPI", "Details", "Assign User", "Goal Value"];
 
   const {
     back,
@@ -37,6 +39,18 @@ const AddDatapoint = () => {
     isFirstStep,
     isLastStep,
   } = useStepForm(steps, trigger);
+
+  if (permission && permission.Add === false) {
+    return <PageNotAccess />;
+  }
+
+  // Build step names dynamically
+  stepNames = ["KPI", "Details", "Assign User", "Goal Value"];
+
+  // 👉 If user is on 2nd step or later, append KPIName to first step
+  if (currentStep > 1 && selectedKpi?.KPIName) {
+    stepNames[0] = `KPI (${selectedKpi.KPIName})`;
+  }
 
   return (
     <FormProvider {...methods}>
@@ -51,13 +65,13 @@ const AddDatapoint = () => {
             next={next}
             isLastStep={isLastStep}
             isPending={isPending}
-            onFinish={onFinish}
+            onFinish={onSubmit}
           />
         </div>
 
         <div className="step-content w-full">{stepContent}</div>
 
-        {isModalOpen && (
+        {/* {isModalOpen && (
           <AddDatapointModal
             modalData={KpiPreview}
             isModalOpen={isModalOpen}
@@ -65,7 +79,7 @@ const AddDatapoint = () => {
             onSubmit={onSubmit}
             isLoading={isPending}
           />
-        )}
+        )} */}
       </div>
     </FormProvider>
   );

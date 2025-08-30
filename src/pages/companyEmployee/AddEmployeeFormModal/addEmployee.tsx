@@ -44,7 +44,9 @@ const EmployeeStatus = () => {
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4 w-2/3">
         <div>
           <FormInputField
+            isMandatory
             label="Employee Name"
+            placeholder="Enter Employee Name"
             {...register("employeeName", { required: "Name is required" })}
             error={errors.employeeName}
             onFocus={(e) => e.target.select()}
@@ -53,8 +55,9 @@ const EmployeeStatus = () => {
         <div>
           <FormInputField
             label="Email"
+            placeholder="Enter Email"
             {...register("employeeEmail", {
-              required: "Email is required",
+              // required: "Email is required",
               pattern: {
                 value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                 message: "Enter valid email",
@@ -65,6 +68,7 @@ const EmployeeStatus = () => {
           />
         </div>
         <FormInputField
+          isMandatory
           id="employeeMobile"
           label="Mobile Number"
           {...register("employeeMobile", {
@@ -75,7 +79,7 @@ const EmployeeStatus = () => {
           options={[{ value: "+91", label: "+91" }]}
           selectedCodeValue={countryCode || "+91"}
           onCountryCodeChange={setCountryCode}
-          className="text-lg"
+          className="text-lg py-5"
         />
         <Controller
           control={control}
@@ -83,6 +87,7 @@ const EmployeeStatus = () => {
           rules={{ required: "Employee Type is required" }}
           render={({ field }) => (
             <FormSelect
+              isMandatory
               label="Employee Type"
               value={field.value}
               onChange={field.onChange}

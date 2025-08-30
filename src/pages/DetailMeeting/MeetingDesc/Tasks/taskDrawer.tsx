@@ -1,5 +1,7 @@
 import { useRef, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useParams } from "react-router-dom";
+
 import FormSelect from "@/components/shared/Form/FormSelect";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import {
@@ -9,17 +11,8 @@ import {
 } from "@/features/api/companyTask";
 import { useGetCompanyProjectAll } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
-import { useParams } from "react-router-dom";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
-import { addMeetingNotesMutation } from "@/features/api/companyMeeting";
-
-interface TaskDrawerProps {
-  open: boolean;
-  onClose: () => void;
-  taskData?: TaskGetPaging | null; // Use your TaskGetPaging type if available
-  detailMeetingAgendaIssueId?: string;
-  detailMeetingId?: string;
-}
+import { addMeetingNotesMutation } from "@/features/api/detailMeeting";
 
 type TaskFormData = {
   taskName: string;
@@ -32,13 +25,22 @@ type TaskFormData = {
   taskDeadline?: string | Date | null;
   repetition?: string;
 };
+interface TaskDrawerProps {
+  open: boolean;
+  onClose: () => void;
+  taskData?: TaskGetPaging | null;
+  issueId?: string;
+  tasksFireBase: () => void;
+  ioType?: string;
+}
 
 export default function TaskDrawer({
   open,
   onClose,
   taskData,
-  detailMeetingAgendaIssueId,
-  detailMeetingId,
+  issueId,
+  tasksFireBase,
+  ioType,
 }: TaskDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -132,40 +134,39 @@ export default function TaskDrawer({
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      // If click is inside the drawer, do nothing
+      const target = event.target as HTMLElement;
+      if (drawerRef.current && drawerRef.current.contains(target)) {
+        return;
+      }
       if (
-        drawerRef.current &&
-        drawerRef.current.contains(event.target as Node)
+        target.closest('[data-slot="select-content"]') ||
+        target.closest('[data-slot="popover-content"]') ||
+        target.closest("[data-radix-popper-content-wrapper]")
       ) {
         return;
       }
-      // If click is inside a select or popover menu, do nothing
       if (
-        (event.target as HTMLElement).closest('[data-slot="select-content"]') ||
-        (event.target as HTMLElement).closest(
-          '[data-slot="popover-content"]',
-        ) ||
-        (event.target as HTMLElement).closest(
-          "[data-radix-popper-content-wrapper]",
-        )
+        target.closest(".react-datepicker") ||
+        target.closest(".react-datepicker-popper")
       ) {
         return;
       }
-      // Otherwise, close the drawer
       onClose();
     }
+
     if (open) {
       document.addEventListener("mousedown", handleClickOutside);
     } else {
       document.removeEventListener("mousedown", handleClickOutside);
     }
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onClose, open]);
 
   const onSubmit = (data: TaskFormData) => {
-    if (meetingId && detailMeetingId) {
+    if (meetingId) {
       const { assignUsers, taskStartDate, taskDeadline, ...rest } = data;
       const payload: AddUpdateTask = {
         ...rest,
@@ -174,23 +175,29 @@ export default function TaskDrawer({
         taskStartDate: taskStartDate ? new Date(taskStartDate) : null,
         taskDeadline: taskDeadline ? new Date(taskDeadline) : null,
         meetingId: meetingId,
-        detailMeetingAgendaIssueId: detailMeetingAgendaIssueId,
-        detailMeetingId: detailMeetingId,
+        ...(ioType === "ISSUE"
+          ? { issueId: issueId }
+          : { objectiveId: issueId }),
+        ioType: ioType,
       };
       addUpdateTask(payload, {
         onSuccess: () => {
           if (taskData && taskData.detailMeetingNoteId) {
             addNote(
               {
-                detailMeetingNoteId: taskData?.detailMeetingNoteId,
+                meetingNoteId: taskData?.detailMeetingNoteId,
                 noteType: "TASKS",
               },
               {
                 onSuccess: () => {
+                  tasksFireBase();
                   onClose();
                 },
               },
             );
+          } else {
+            tasksFireBase();
+            onClose();
           }
         },
       });

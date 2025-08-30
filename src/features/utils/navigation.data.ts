@@ -25,10 +25,11 @@ export const companyNavigationData = [
   },
   {
     id: 4,
-    icon: "Video",
-    label: "Meeting",
+    icon: "Presentation",
+    label: "Meetings",
     permission: "View",
-    moduleKey: "MEETING_LIST",
+    // moduleKey: "MEETING_LIST",
+    // link: "/dashboard/meeting",
     items: [
       {
         id: 1,
@@ -39,8 +40,15 @@ export const companyNavigationData = [
       },
       {
         id: 2,
-        label: "Detail Meeting",
+        label: "Live Meetings",
         link: "/dashboard/meeting/detail",
+        permission: "View",
+        moduleKey: "MEETING_LIST",
+      },
+      {
+        id: 3,
+        label: "Live Meetings Templates",
+        link: "/dashboard/repeat-meeting",
         permission: "View",
         moduleKey: "MEETING_LIST",
       },
@@ -48,8 +56,8 @@ export const companyNavigationData = [
   },
   {
     id: 5,
-    icon: "Heart",
-    label: "Objective",
+    icon: "Target",
+    label: "Agenda",
     permission: "View",
     // moduleKey: "OBJECTIVE",
     items: [
@@ -94,12 +102,20 @@ export const companyNavigationData = [
       {
         id: 2,
         label: "Company Repetition Task ",
-        link: "/dashboard/tasksrepet",
+        link: "/dashboard/tasksrepeat",
         permission: "View",
         moduleKey: "TASK",
       },
     ],
   },
+  // {
+  //   id: 6,
+  //   icon: "CheckSquare",
+  //   label: "Company Task List",
+  //   link: "/dashboard/tasks",
+  //   permission: "View",
+  //   moduleKey: "TASK",
+  // },
   {
     id: 7,
     icon: "FolderOpen",
@@ -193,22 +209,22 @@ export const companyNavigationData = [
     permission: "View",
     moduleKey: "ROLES_PERMISSION",
   },
-  {
-    id: 12,
-    icon: "Tag",
-    label: "Brand",
-    link: "/dashboard/brand",
-    permission: "View",
-    moduleKey: "BRAND",
-  },
-  {
-    id: 13,
-    icon: "Package",
-    label: "Product",
-    link: "/dashboard/product",
-    permission: "View",
-    moduleKey: "PRODUCT",
-  },
+  // {
+  //   id: 12,
+  //   icon: "Tag",
+  //   label: "Brand",
+  //   link: "/dashboard/brand",
+  //   permission: "View",
+  //   moduleKey: "BRAND",
+  // },
+  // {
+  //   id: 13,
+  //   icon: "Package",
+  //   label: "Product",
+  //   link: "/dashboard/product",
+  //   permission: "View",
+  //   moduleKey: "PRODUCT",
+  // },
   // {
   //   id: 14,
   //   icon: "Logs",

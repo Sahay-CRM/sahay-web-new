@@ -1,24 +1,26 @@
-import { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 
 import {
+  CircleCheckBig,
   Crown,
   EllipsisVertical,
   FileText,
   RefreshCcw,
   ThumbsUp,
   Trash2,
+  Unlink,
   UsersRound,
   X,
 } from "lucide-react";
 
 import useMeetingDesc from "./useMeetingDesc";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import Agenda from "./Agenda";
+// import Agenda from "./Agenda";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import MeetingNotes from "./Agenda/meetingNotes";
+// import MeetingNotes from "./Agenda/meetingNotes";
 import { getUserId } from "@/features/selectors/auth.selector";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -36,6 +38,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
+// import EmployeeSearchDropdown from "./EmployeeSearchDropdown";
+
+const Agenda = React.lazy(() => import("./Agenda"));
+const MeetingNotes = React.lazy(() => import("./Agenda/meetingNotes"));
+const EmployeeSearchDropdown = React.lazy(
+  () => import("./EmployeeSearchDropdown"),
+);
 
 export default function MeetingDesc() {
   const {
@@ -60,6 +69,8 @@ export default function MeetingDesc() {
     dropdownOpen,
     setDropdownOpen,
     handleDelete,
+    handleAddEmp,
+    handleDeleteEmp,
   } = useMeetingDesc();
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -72,9 +83,20 @@ export default function MeetingDesc() {
     ]);
   }, [meetingTiming?.meetingName, setBreadcrumbs]);
 
-  const isTeamLeader = meetingTiming?.employeeList?.find(
-    (item) => item.employeeId === userId,
-  )?.isTeamLeader;
+  const isTeamLeader = useMemo(
+    () =>
+      (meetingTiming?.joiners as Joiners[])?.some(
+        (item) => item.employeeId === userId && item.isTeamLeader,
+      ),
+    [meetingTiming?.joiners, userId],
+  );
+
+  const teamLeaderCount = useMemo(
+    () =>
+      (meetingTiming?.joiners as Joiners[])?.filter((emp) => emp.isTeamLeader)
+        .length,
+    [meetingTiming?.joiners],
+  );
 
   return (
     <div className="flex w-full h-full bg-gray-200 overflow-hidden">
@@ -90,20 +112,14 @@ export default function MeetingDesc() {
             meetingId={meetingId ?? ""}
             meetingStatus={meetingStatus}
             meetingResponse={meetingResponse}
-            agendaPlannedTime={meetingTiming?.agendaTimePlanned}
-            detailMeetingId={meetingTiming?.detailMeetingId}
-            joiners={meetingTiming?.employeeList ?? []}
+            joiners={meetingTiming?.joiners as Joiners[]}
             meetingTime={meetingTiming?.meetingTimePlanned}
-            isTeamLeader={
-              meetingTiming?.employeeList?.find(
-                (item) => item.employeeId === userId,
-              )?.isTeamLeader
-            }
-            isCheckIn={
-              meetingTiming?.employeeList?.find(
-                (item) => item.employeeId === userId,
-              )?.attendanceMark
-            }
+            isTeamLeader={isTeamLeader}
+            // isCheckIn={
+            //   (meetingTiming?.joiners as Joiners[])?.find(
+            //     (item) => item.employeeId === userId
+            //   )?.attendanceMark
+            // }
             follow={meetingResponse?.state.follow === userId}
           />
         </div>
@@ -120,7 +136,7 @@ export default function MeetingDesc() {
             <div>
               <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
                 <h3 className="p-0 text-base pl-4">Meeting Joiners</h3>
-                <div>
+                <div className="flex gap-2 items-center">
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
                     onClick={() => setIsCardVisible(false)}
@@ -128,118 +144,148 @@ export default function MeetingDesc() {
                 </div>
               </div>
               <div className="h-[calc(100vh-170px)] overflow-auto">
-                <div className="flex flex-col gap-3">
-                  {(meetingTiming?.employeeList || []).map((item, index) => {
-                    const isOpen = openEmployeeId === item.employeeId;
-                    const toggleOpen = () =>
-                      setOpenEmployeeId(isOpen ? null : item.employeeId);
+                {meetingStatus !== "ENDED" && isTeamLeader && (
+                  <div className="px-4 mb-2">
+                    <EmployeeSearchDropdown
+                      onAdd={handleAddEmp}
+                      minSearchLength={2}
+                      filterProps={{ pageSize: 20 }}
+                    />
+                  </div>
+                )}
 
-                    const teamLeaderCount = (
-                      meetingTiming?.employeeList || []
-                    ).filter((emp) => emp.isTeamLeader).length;
+                <div className="flex flex-col gap-3 px-3">
+                  {meetingTiming &&
+                    (meetingTiming?.joiners as Joiners[]).map((item, index) => {
+                      const isOpen = openEmployeeId === item.employeeId;
+                      const toggleOpen = () =>
+                        setOpenEmployeeId(isOpen ? null : item.employeeId);
 
-                    return (
-                      <div
-                        key={index + item.employeeId}
-                        className="rounded-md bg-white shadow-sm p-3"
-                      >
-                        <div className="flex items-center gap-3 cursor-pointer justify-between">
-                          <div
-                            className="flex items-center gap-3 cursor-pointer"
-                            onClick={() => {
-                              if (isTeamLeader && item.employeeId !== follow) {
-                                toggleOpen();
-                              }
-                            }}
-                          >
-                            <div className="relative">
-                              {item.isTeamLeader && (
-                                <span className="absolute -top-1 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
-                                  <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
-                                </span>
-                              )}
+                      // const teamLeaderCount = (
+                      //   meetingTiming?.joiners as Joiners[]
+                      // ).filter((emp) => emp.isTeamLeader).length;
 
-                              <Avatar className="h-10 w-10 relative">
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      {item.employeeImage ? (
-                                        <img
-                                          src={`${ImageBaseURL}/share/company/profilePics/${item.employeeImage}`}
-                                          alt={item.employeeName}
-                                          className="w-full h-full rounded-full object-cover outline-2 outline-blue-400 bg-black"
-                                        />
-                                      ) : (
-                                        <AvatarFallback className="bg-gray-300 text-gray-700 font-semibold text-sm">
-                                          {getInitials(item.employeeName)}
-                                        </AvatarFallback>
-                                      )}
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      {item.employeeName}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </Avatar>
-                            </div>
-
-                            <div className="text-sm font-medium text-gray-800">
-                              {item.employeeName}
-                            </div>
-                          </div>
-                          <div>
-                            <FormCheckbox
-                              id={`${item.employeeId}-checkbox`}
-                              className="w-[16px] h-[16px]"
-                              containerClass="p-0 ml-1"
-                              checked={item.attendanceMark}
-                              onChange={(e) => {
-                                const updatedAttendance = e.target.checked;
-                                handleCheckIn(item, updatedAttendance);
+                      return (
+                        <div
+                          key={index + item.employeeId}
+                          className="rounded-md bg-white shadow-sm p-3"
+                        >
+                          <div className="flex items-center gap-3 cursor-pointer justify-between">
+                            <div
+                              className="flex items-center gap-3 cursor-pointer w-full"
+                              onClick={() => {
+                                if (
+                                  isTeamLeader &&
+                                  item.employeeId !== follow
+                                ) {
+                                  toggleOpen();
+                                }
                               }}
-                              disabled={
-                                meetingStatus === "NOT_STARTED" ||
-                                meetingStatus === "ENDED" ||
-                                !isTeamLeader
-                              }
-                            />
-                          </div>
-                        </div>
+                            >
+                              <div className="relative">
+                                {item.isTeamLeader && (
+                                  <span className="absolute -top-1 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                                    <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
+                                  </span>
+                                )}
 
-                        {/* Accordion content (only if open) */}
-                        {isOpen &&
-                          meetingStatus !== "NOT_STARTED" &&
-                          meetingStatus !== "ENDED" && (
-                            <div className="mt-3 pl-12 flex flex-col gap-2">
-                              {item.attendanceMark && (
-                                <>
-                                  {isTeamLeader && (
-                                    <>
-                                      {!item.isTeamLeader && (
-                                        <button
-                                          onClick={() =>
-                                            handleAddTeamLeader(item)
-                                          }
-                                          className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                        >
-                                          Add Team Leader
-                                        </button>
-                                      )}
-
-                                      {item.isTeamLeader &&
-                                        teamLeaderCount > 1 && (
-                                          <button
-                                            onClick={() =>
-                                              handleAddTeamLeader(item)
-                                            }
-                                            className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                          >
-                                            Remove Team Leader
-                                          </button>
+                                <Avatar className="h-10 w-10 relative">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        {item.employeeImage ? (
+                                          <img
+                                            src={`${ImageBaseURL}/share/profilePics/${item.employeeImage}`}
+                                            alt={item.employeeName}
+                                            className="w-full h-full rounded-full object-cover outline-2 outline-blue-400 bg-black"
+                                          />
+                                        ) : (
+                                          <AvatarFallback className="bg-gray-300 text-gray-700 font-semibold text-sm">
+                                            {getInitials(item.employeeName)}
+                                          </AvatarFallback>
                                         )}
-                                    </>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        {item.employeeName}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </Avatar>
+                                {item.employeeId === follow && (
+                                  <span className="absolute -bottom-0 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                                    <CircleCheckBig className="w-4 h-4 text-[#303290] drop-shadow" />
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="text-sm font-medium text-gray-800">
+                                {item.employeeName}
+                              </div>
+                            </div>
+                            <div>
+                              {meetingStatus !== "NOT_STARTED" && (
+                                <FormCheckbox
+                                  id={`${item.employeeId}-checkbox`}
+                                  className="w-[16px] h-[16px]"
+                                  containerClass="p-0 ml-1"
+                                  checked={item.attendanceMark as boolean}
+                                  onChange={(e) => {
+                                    const updatedAttendance = e.target.checked;
+                                    handleCheckIn(
+                                      item.employeeId,
+                                      updatedAttendance,
+                                    );
+                                  }}
+                                  disabled={
+                                    meetingStatus === "NOT_STARTED" ||
+                                    meetingStatus === "ENDED" ||
+                                    !isTeamLeader
+                                  }
+                                />
+                              )}
+                            </div>
+                            {/* <div> */}
+                            {meetingStatus === "NOT_STARTED" &&
+                              item.employeeId !== userId &&
+                              isTeamLeader && (
+                                <Trash2
+                                  className="w-6 h-6 mt-1.5"
+                                  onClick={() =>
+                                    handleDeleteEmp(item.employeeId)
+                                  }
+                                />
+                              )}
+                            {/* </div> */}
+                          </div>
+
+                          {/* Accordion content (only if open) */}
+                          {isOpen && meetingStatus !== "ENDED" && (
+                            <div className="mt-3 pl-12 flex flex-col gap-2">
+                              {item.employeeId !== userId && (
+                                <>
+                                  {!item.isTeamLeader && (
+                                    <button
+                                      onClick={() => handleAddTeamLeader(item)}
+                                      className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                    >
+                                      Add Team Leader
+                                    </button>
                                   )}
-                                  {/* <button
+
+                                  {item.isTeamLeader && teamLeaderCount > 1 && (
+                                    <button
+                                      onClick={() => handleAddTeamLeader(item)}
+                                      className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                    >
+                                      Remove Team Leader
+                                    </button>
+                                  )}
+                                </>
+                              )}
+                              {meetingStatus !== "NOT_STARTED" &&
+                                item.attendanceMark && (
+                                  <>
+                                    {/* <button
                                   onClick={() =>
                                     handleCheckOut(item.employeeId)
                                   }
@@ -248,24 +294,25 @@ export default function MeetingDesc() {
                                   Check Out
                                 </button> */}
 
-                                  {item.isTeamLeader &&
-                                    item.employeeId !== follow && (
-                                      <button
-                                        onClick={() =>
-                                          handleFollow(item.employeeId)
-                                        }
-                                        className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                      >
-                                        Follow
-                                      </button>
-                                    )}
-                                </>
-                              )}
+                                    {item.isTeamLeader &&
+                                      item.employeeId !== follow &&
+                                      userId === follow && (
+                                        <button
+                                          onClick={() =>
+                                            handleFollow(item.employeeId)
+                                          }
+                                          className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                        >
+                                          Follow
+                                        </button>
+                                      )}
+                                  </>
+                                )}
                             </div>
                           )}
-                      </div>
-                    );
-                  })}
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             </div>
@@ -282,14 +329,14 @@ export default function MeetingDesc() {
                 </div>
               </div>
               <div className="px-2">
-                {meetingId && meetingTiming?.employeeList && (
+                {meetingId && (meetingTiming?.joiners as Joiners[]) && (
                   <MeetingNotes
-                    joiners={meetingTiming?.employeeList}
+                    joiners={meetingTiming?.joiners as Joiners[]}
                     meetingId={meetingId}
-                    detailMeetingId={meetingTiming?.detailMeetingId}
+                    // detailMeetingId={meetingTiming?.detailMeetingId}
                     employeeId={userId}
                     className="mt-2"
-                    meetingName={meetingTiming.meetingName}
+                    meetingName={meetingTiming?.meetingName}
                     meetingStatus={meetingStatus}
                   />
                 )}
@@ -311,13 +358,13 @@ export default function MeetingDesc() {
                 {Array.isArray(meetingNotes?.data) &&
                   meetingNotes.data.map(
                     (note: MeetingNotesRes, idx: number) => {
-                      const author = meetingTiming?.employeeList?.find(
-                        (j) => j.employeeId === note.employeeId,
-                      );
+                      const author = (
+                        meetingTiming?.joiners as Joiners[]
+                      )?.find((j) => j.employeeId === note.employeeId);
 
                       return (
                         <div
-                          key={note.detailMeetingNoteId || idx}
+                          key={note.meetingNoteId || idx}
                           className="flex items-start bg-white rounded-lg border px-3 mb-3 py-2 shadow-sm gap-2"
                         >
                           <div className="flex-1 text-sm text-black">
@@ -348,24 +395,17 @@ export default function MeetingDesc() {
                                 meetingStatus !== "ENDED" && (
                                   <div>
                                     <DropdownMenu
-                                      open={
-                                        dropdownOpen ===
-                                        note.detailMeetingNoteId
-                                      }
+                                      open={dropdownOpen === note.meetingNoteId}
                                       onOpenChange={(open) =>
                                         setDropdownOpen(
-                                          open
-                                            ? note.detailMeetingNoteId
-                                            : null,
+                                          open ? note.meetingNoteId : null,
                                         )
                                       }
                                     >
                                       <DropdownMenuTrigger asChild>
                                         <button
                                           onClick={() =>
-                                            setDropdownOpen(
-                                              note.detailMeetingNoteId,
-                                            )
+                                            setDropdownOpen(note.meetingNoteId)
                                           }
                                           className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
                                         >
@@ -389,13 +429,11 @@ export default function MeetingDesc() {
 
                                         <DropdownMenuItem
                                           onClick={() =>
-                                            handleDelete(
-                                              note.detailMeetingNoteId,
-                                            )
+                                            handleDelete(note.meetingNoteId)
                                           }
                                           className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
                                         >
-                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          <Unlink className="h-4 w-4 mr-2" />
                                           Delete
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>
@@ -426,13 +464,13 @@ export default function MeetingDesc() {
                 {Array.isArray(meetingNotes?.data) &&
                   meetingNotes.data.map(
                     (note: MeetingNotesRes, idx: number) => {
-                      const author = meetingTiming?.employeeList?.find(
-                        (j) => j.employeeId === note.employeeId,
-                      );
+                      const author = (
+                        meetingTiming?.joiners as Joiners[]
+                      )?.find((j) => j.employeeId === note.employeeId);
 
                       return (
                         <div
-                          key={note.detailMeetingNoteId || idx}
+                          key={note.meetingNoteId || idx}
                           className="flex items-start bg-white rounded-lg border px-3 mb-3 py-2 shadow-sm gap-2"
                         >
                           <div className="flex-1 text-sm text-black">
@@ -463,24 +501,17 @@ export default function MeetingDesc() {
                                 meetingStatus !== "ENDED" && (
                                   <div>
                                     <DropdownMenu
-                                      open={
-                                        dropdownOpen ===
-                                        note.detailMeetingNoteId
-                                      }
+                                      open={dropdownOpen === note.meetingNoteId}
                                       onOpenChange={(open) =>
                                         setDropdownOpen(
-                                          open
-                                            ? note.detailMeetingNoteId
-                                            : null,
+                                          open ? note.meetingNoteId : null,
                                         )
                                       }
                                     >
                                       <DropdownMenuTrigger asChild>
                                         <button
                                           onClick={() =>
-                                            setDropdownOpen(
-                                              note.detailMeetingNoteId,
-                                            )
+                                            setDropdownOpen(note.meetingNoteId)
                                           }
                                           className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
                                         >
@@ -503,13 +534,11 @@ export default function MeetingDesc() {
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                           onClick={() =>
-                                            handleDelete(
-                                              note.detailMeetingNoteId,
-                                            )
+                                            handleDelete(note.meetingNoteId)
                                           }
                                           className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
                                         >
-                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          <Unlink className="h-4 w-4 mr-2" />
                                           Delete
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>

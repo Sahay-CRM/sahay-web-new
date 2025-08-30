@@ -5,7 +5,7 @@ import { useGetCompanyTask } from "@/features/api/companyTask";
 import { Plus } from "lucide-react";
 
 interface TaskSearchDropdownProps {
-  onAdd: (selectedTasks: TaskGetPaging[]) => void;
+  onAdd: (selectedTasks: TaskGetPaging) => void;
   filterProps?: Partial<FilterDataProps["filter"]>;
   minSearchLength?: number;
   renderTask?: (task: TaskGetPaging, checked: boolean) => React.ReactNode;
@@ -61,7 +61,7 @@ const TaskSearchDropdown: React.FC<TaskSearchDropdownProps> = ({
 
   // On item click logic
   const handleSelect = (task: TaskGetPaging) => {
-    onAdd([task]);
+    onAdd(task);
     setShowDropdown(false);
     setSearchValue("");
   };

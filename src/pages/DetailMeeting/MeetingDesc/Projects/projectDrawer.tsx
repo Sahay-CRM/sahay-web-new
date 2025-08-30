@@ -4,7 +4,8 @@ import { useForm, Controller } from "react-hook-form";
 
 import FormSelect from "@/components/shared/Form/FormSelect";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
-import { queryClient } from "@/queryClient";
+import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
+
 import {
   useAddUpdateCompanyProject,
   useGetAllProjectStatus,
@@ -12,16 +13,7 @@ import {
   useGetSubParaFilter,
 } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
-import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
-import { addMeetingNotesMutation } from "@/features/api/companyMeeting";
-
-interface ProjectDrawerProps {
-  open: boolean;
-  onClose: () => void;
-  projectData?: CompanyProjectDataProps | null;
-  detailMeetingAgendaIssueId?: string;
-  detailMeetingId?: string;
-}
+import { addMeetingNotesMutation } from "@/features/api/detailMeeting";
 
 type ProjectFormData = {
   projectId: string;
@@ -33,13 +25,22 @@ type ProjectFormData = {
   subParameterId: string[];
   employeeId: string[];
 };
+interface ProjectDrawerProps {
+  open: boolean;
+  onClose: () => void;
+  projectData?: CompanyProjectDataProps | null;
+  issueId?: string;
+  projectsFireBase: () => void;
+  ioType?: string;
+}
 
 export default function ProjectDrawer({
   open,
   onClose,
   projectData,
-  detailMeetingAgendaIssueId,
-  detailMeetingId,
+  issueId,
+  projectsFireBase,
+  ioType,
 }: ProjectDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -73,7 +74,6 @@ export default function ProjectDrawer({
       }))
     : [];
 
-  // Default values from projectData
   const defaultValues = projectData
     ? {
         projectId: projectData.projectId || "",
@@ -146,65 +146,76 @@ export default function ProjectDrawer({
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+
+      if (drawerRef.current && drawerRef.current.contains(target)) {
+        return;
+      }
+
       if (
-        drawerRef.current &&
-        drawerRef.current.contains(event.target as Node)
+        target.closest('[data-slot="select-content"]') ||
+        target.closest('[data-slot="popover-content"]') ||
+        target.closest("[data-radix-popper-content-wrapper]")
       ) {
         return;
       }
+
       if (
-        (event.target as HTMLElement).closest('[data-slot="select-content"]') ||
-        (event.target as HTMLElement).closest(
-          '[data-slot="popover-content"]',
-        ) ||
-        (event.target as HTMLElement).closest(
-          "[data-radix-popper-content-wrapper]",
-        )
+        target.closest(".react-datepicker") ||
+        target.closest(".react-datepicker-popper")
       ) {
         return;
       }
+
       onClose();
     }
+
     if (open) {
       document.addEventListener("mousedown", handleClickOutside);
     } else {
       document.removeEventListener("mousedown", handleClickOutside);
     }
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onClose, open]);
 
   const onSubmit = (data: ProjectFormData) => {
-    if (meetingId && detailMeetingAgendaIssueId) {
+    if (meetingId && issueId) {
       const { employeeId, projectDeadline, ...rest } = data;
       const payload = {
         ...rest,
         projectId: projectData?.projectId,
         otherProjectEmployees: employeeId,
-        detailMeetingId: detailMeetingId,
+        meetingId: meetingId,
         projectDeadline: projectDeadline
           ? new Date(projectDeadline).toISOString()
           : null,
-        detailMeetingAgendaIssueId: detailMeetingAgendaIssueId,
+        ...(ioType === "ISSUE"
+          ? { issueId: issueId }
+          : { objectiveId: issueId }),
+        ioType,
       };
       addProject(payload, {
         onSuccess: () => {
           if (projectData && projectData.detailMeetingNoteId) {
             addNote(
               {
-                detailMeetingNoteId: projectData?.detailMeetingNoteId,
+                meetingNoteId: projectData?.detailMeetingNoteId,
                 noteType: "TASKS",
               },
               {
                 onSuccess: () => {
+                  projectsFireBase();
                   onClose();
                 },
               },
             );
+          } else {
+            projectsFireBase();
+            onClose();
           }
-          queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
-          onClose();
         },
       });
     }

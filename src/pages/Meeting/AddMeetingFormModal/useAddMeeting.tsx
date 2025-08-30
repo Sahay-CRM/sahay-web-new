@@ -38,7 +38,7 @@ export default function useAddMeeting() {
         meetingDateTime: data.meetingDateTime
           ? new Date(data.meetingDateTime).toISOString()
           : null,
-        meetingStatusId: data.meetingStatus || undefined,
+        meetingStatusId: data.meetingStatus?.meetingStatusId || undefined,
         meetingTypeId: data.meetingType || undefined,
         employeeId: data.joiners,
         meetingDocuments: Array.isArray(data.files)
@@ -88,9 +88,8 @@ export default function useAddMeeting() {
     addMeeting(payload, {
       onSuccess: (response) => {
         const meetingId = Array.isArray(response?.data)
-          ? response?.data[0]?.companyMeetingId || companyMeetingId
-          : (response?.data as { companyMeetingId?: string })
-              ?.companyMeetingId || companyMeetingId;
+          ? response?.data[0]?.meetingId
+          : (response?.data as { meetingId?: string })?.meetingId;
 
         if (typeof meetingId === "string" && meetingId) {
           handleFileOperations(
@@ -102,7 +101,13 @@ export default function useAddMeeting() {
 
         handleModalClose();
         if (searchParams.get("from") === "task") {
-          navigate("/dashboard/tasks/add");
+          const projectId = searchParams.get("projectId");
+          navigate(
+            `/dashboard/tasks/add?meetingId=${meetingId}?${
+              projectId ? `&projectId=${projectId}` : ""
+            }`,
+          );
+
           window.location.reload();
         } else {
           navigate("/dashboard/meeting");

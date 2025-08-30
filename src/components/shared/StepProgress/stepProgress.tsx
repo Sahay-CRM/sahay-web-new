@@ -103,7 +103,6 @@ const StepProgress: React.FC<StepProgressProps> = ({
               onClick={next}
               className="w-fit"
               disabled={isLastStep || isPending}
-              isLoading={isPending}
             >
               Next
             </Button>
@@ -111,12 +110,17 @@ const StepProgress: React.FC<StepProgressProps> = ({
             {/* Finish button always visible on last step */}
             {/* {isLastStep && (
               <Button onClick={onFinish} className="w-fit" disabled={isPending}>
-                Finish
+              Finish
               </Button>
-            )} */}
+              )} */}
 
             {(isUpdate || isLastStep) && (
-              <Button onClick={onFinish} className="w-fit" disabled={isPending}>
+              <Button
+                onClick={onFinish}
+                className="w-fit"
+                disabled={isPending}
+                isLoading={isPending}
+              >
                 Submit
               </Button>
             )}

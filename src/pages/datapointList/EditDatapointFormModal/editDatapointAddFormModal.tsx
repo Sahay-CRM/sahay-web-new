@@ -6,6 +6,8 @@ import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import useEditDatapointFormModal from "./useEditDatapointFormModal";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { Label } from "@radix-ui/react-label";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import { formatIndianNumber } from "@/features/utils/app.utils";
 
 interface UseEditDatapointFormModalProps {
   modalClose: () => void;
@@ -45,14 +47,16 @@ export default function EditDatapointAddFormModal({
     showYesNo,
     showBoth,
     yesnoOptions,
+    allKpi,
   } = useEditDatapointFormModal({ modalClose, kpiId });
 
   return (
     <FormProvider {...methods}>
       <ModalData
         isModalOpen={isModalOpen}
-        modalTitle="Update KPI"
+        modalTitle={datapointApiData?.KPIMaster?.KPIName}
         modalClose={handleClose}
+        containerClass="min-w-[50%]"
         buttons={[
           {
             btnText: "Submit",
@@ -62,15 +66,38 @@ export default function EditDatapointAddFormModal({
           },
         ]}
       >
-        <div className="grid grid-cols-2 gap-4">
-          {/* <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4"> */}
-          <FormInputField
-            label="Selected Kpi"
-            value={datapointApiData?.KPIMaster?.KPIName}
-            disabled
-            className="h-[44px] border-gray-300 cursor-not-allowed"
+        {!hasData && (
+          <Controller
+            control={control}
+            name="KPIMasterId"
+            rules={{ required: "KPIMasterId is required" }}
+            render={({ field }) => (
+              <SearchDropdown
+                options={allKpi}
+                selectedValues={field.value ? [field.value] : []}
+                onSelect={(value) => {
+                  field.onChange(value.value);
+                  setValue("KPIMasterId", value.value);
+                }}
+                placeholder="Select KPI..."
+                label="Selected KPI"
+                error={errors.KPIMasterId}
+                isMandatory
+                className="mb-2"
+              />
+            )}
           />
+        )}
 
+        {/* <FormInputField
+          label="Selected Kpi"
+          value={datapointApiData?.KPIMaster?.KPIName}
+          disabled
+          className="h-[44px] border-gray-300 cursor-not-allowed"
+        /> */}
+
+        <div className="grid grid-cols-2 gap-4">
+          {/* Frequency */}
           <Controller
             control={control}
             name="frequencyType"
@@ -89,9 +116,11 @@ export default function EditDatapointAddFormModal({
                 disabled={hasData}
                 className={hasData ? "rounded-md" : ""}
                 isMandatory
+                triggerClassName="py-4"
               />
             )}
           />
+          {/* Validation Type */}
           <Controller
             control={control}
             name="validationType"
@@ -105,13 +134,13 @@ export default function EditDatapointAddFormModal({
                 error={errors.validationType}
                 className="rounded-md"
                 isMandatory
-                labelClass="mb-2"
+                triggerClassName="py-4"
               />
             )}
           />
-
+          {/* Visual Frequency + Sum/Average */}
           {shouldShowVisualFrequency && (
-            <div>
+            <div className="col-span-2 grid grid-cols-2 gap-4">
               <Controller
                 control={control}
                 name="visualFrequencyTypes"
@@ -136,119 +165,177 @@ export default function EditDatapointAddFormModal({
                   />
                 )}
               />
+
               {shouldShowSumAveField && (
-                <div className="">
-                  <Controller
-                    control={control}
-                    name="visualFrequencyAggregate"
-                    render={({ field }) => (
-                      <FormSelect
-                        label="Sum/Average"
-                        value={field.value || "sum"}
-                        onChange={field.onChange}
-                        options={sumAveOptions}
-                        error={errors.visualFrequencyAggregate}
-                        placeholder="Select visual frequency Aggregate"
-                        disabled={false}
-                      />
-                    )}
-                  />
-                </div>
+                <Controller
+                  control={control}
+                  name="visualFrequencyAggregate"
+                  render={({ field }) => (
+                    <FormSelect
+                      label="Sum/Average"
+                      value={field.value || "sum"}
+                      onChange={field.onChange}
+                      options={sumAveOptions}
+                      error={errors.visualFrequencyAggregate}
+                      placeholder="Select visual frequency Aggregate"
+                      disabled={false}
+                      triggerClassName="py-4"
+                    />
+                  )}
+                />
               )}
             </div>
           )}
-
-          <FormInputField label="Unit" {...register(`unit`)} />
-
+          {/* Employee */}
           <Controller
             control={control}
             name="employeeId"
             rules={{ required: "Employee is required" }}
             render={({ field }) => (
-              <FormSelect
-                label="Employee"
-                value={field.value}
-                onChange={(value) => {
-                  field.onChange(value);
-                  setValue("employeeId", value);
-                }}
+              <SearchDropdown
                 options={allOptions}
+                selectedValues={field.value ? [field.value] : []}
+                onSelect={(value) => {
+                  field.onChange(value.value);
+                  setValue("employeeId", value.value);
+                }}
+                placeholder="Select an employee..."
+                label="Employee"
                 error={errors.employeeId}
                 isMandatory
-                disabled={!!datapointApiData?.hasData}
               />
             )}
           />
-
+          <FormInputField
+            label="Tag"
+            placeholder="Enter Tag"
+            // isMandatory
+            {...register(`tag`)}
+            error={errors?.tag}
+            // disabled={isDisabled}
+            // readOnly={isDisabled}
+          />
           {employee && (
-            <div key={employee} className="flex gap-2 w-full">
+            <div className="col-span-2 flex flex-col gap-2">
               <Label className="text-[18px] mb-0">
                 {getEmployeeName(employee)}
               </Label>
-              <div
-                className={`grid w-1/2 ${
-                  showBoth ? "grid-cols-2" : "grid-cols-1"
-                } gap-4 mt-0`}
-              >
-                {!showYesNo && (
-                  <>
-                    <FormInputField
-                      label="Goal Value 1"
-                      isMandatory
-                      {...register(`value1`, {
-                        required: "Please enter Goal Value 1",
-                      })}
-                      error={errors?.value1}
-                      // disabled={isDisabled}
-                      // readOnly={isDisabled}
+
+              <div className="grid w-full gap-4 mt-0">
+                {!showYesNo && !showBoth && (
+                  // Case: Only Goal Value 1 -> side by side with Unit
+                  <div className="grid grid-cols-2 gap-4">
+                    <Controller
+                      name="value1"
+                      control={control}
+                      rules={{ required: "Please enter Goal Value 1" }}
+                      render={({ field, fieldState }) => (
+                        <FormInputField
+                          label="Goal Value 1"
+                          isMandatory
+                          // value={field.value || ""}
+                          // onChange={(e) => field.onChange(e.target.value)} // store raw input
+                          // onBlur={() => {
+                          //   const formatted = formatIndianNumber(field.value);
+                          //   field.onChange(formatted);
+                          // }}
+                          placeholder="Enter Goal Value 1"
+                          value={formatIndianNumber(field.value)}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/,/g, "");
+                            field.onChange(raw);
+                          }}
+                          error={fieldState.error}
+                        />
+                      )}
                     />
-                    {showBoth && (
-                      <FormInputField
-                        isMandatory
-                        label="Goal Value 2"
-                        {...register(`value2`, {
-                          required: "Please enter Goal Value 2",
-                        })}
-                        error={errors?.value2}
-                        // disabled={isDisabled}
-                        // readOnly={isDisabled}
+                    <FormInputField
+                      label="Unit"
+                      placeholder="Enter Unit"
+                      {...register(`unit`)}
+                    />
+                  </div>
+                )}
+
+                {!showYesNo && showBoth && (
+                  // Case: Goal Value 1 + Goal Value 2
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Controller
+                        name="value1"
+                        control={control}
+                        rules={{ required: "Please enter Goal Value 1" }}
+                        render={({ field, fieldState }) => (
+                          <FormInputField
+                            label="Goal Value 1"
+                            isMandatory
+                            placeholder="Enter Goal Value 1"
+                            value={formatIndianNumber(field.value)}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/,/g, "");
+                              field.onChange(raw);
+                            }}
+                            error={fieldState.error}
+                          />
+                        )}
                       />
-                    )}
+
+                      <Controller
+                        name="value2"
+                        control={control}
+                        rules={{ required: "Please enter Goal Value 2" }}
+                        render={({ field, fieldState }) => (
+                          <FormInputField
+                            label="Goal Value 2"
+                            isMandatory
+                            placeholder="Enter Goal Value 2"
+                            value={formatIndianNumber(field.value)}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/,/g, "");
+                              field.onChange(raw);
+                            }}
+                            error={fieldState.error}
+                          />
+                        )}
+                      />
+                    </div>
+                    <FormInputField
+                      label="Unit"
+                      placeholder="Enter Unit"
+                      {...register(`unit`)}
+                    />
                   </>
                 )}
+
                 {showYesNo && (
-                  <Controller
-                    name={`value1`}
-                    control={control}
-                    rules={{ required: "Please select Yes or No" }}
-                    render={({ field, fieldState }) => {
-                      const selectedOption =
-                        field.value?.value ?? field.value ?? "";
-                      return (
+                  // Case: Yes/No dropdown
+                  <div className="grid grid-cols-2 gap-4">
+                    <Controller
+                      name={`value1`}
+                      control={control}
+                      rules={{ required: "Please select Yes or No" }}
+                      render={({ field, fieldState }) => (
                         <FormSelect
                           {...field}
                           label="Yes/No"
                           options={yesnoOptions}
                           error={fieldState.error}
-                          isMandatory={true}
-                          value={selectedOption}
+                          isMandatory
+                          value={field.value?.value ?? field.value ?? ""}
                           onChange={field.onChange}
                         />
-                      );
-                    }}
-                  />
+                      )}
+                    />
+                    <FormInputField
+                      label="Unit"
+                      placeholder="Enter Unit"
+                      {...register(`unit`)}
+                    />
+                  </div>
                 )}
               </div>
             </div>
           )}
-          <div className="">
-            <label className="block mb-1 font-medium">Tags</label>
-            <textarea
-              {...register(`tag`)}
-              className="w-full border rounded-md p-2 text-base h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          {/* </Card> */}
         </div>
       </ModalData>
     </FormProvider>

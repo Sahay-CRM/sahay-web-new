@@ -22,6 +22,9 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import React from "react";
 import { SpinnerIcon } from "@/components/shared/Icons";
 import WarningDialog from "../kpiDashboard/WarningModal";
+import PageNotAccess from "../PageNoAccess";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 
 // Interfaces
 interface Permission {
@@ -341,6 +344,8 @@ export default function UserPermissionTableMerged() {
   );
   const [showWarning, setShowWarning] = useState(false);
 
+  const permission = useSelector(getUserPermission).ROLES_PERMISSION;
+
   useEffect(() => {
     setBreadcrumbs([
       {
@@ -482,6 +487,7 @@ export default function UserPermissionTableMerged() {
             "company designation": "/dashboard/company-designation",
             "company employee": "/dashboard/company-employee",
             calendar: "/dashboard/calendar",
+            meeting: "/dashboard/meeting",
             "meeting list": "/dashboard/meeting",
             "company task list": "/dashboard/tasks",
             "company project list": "/dashboard/projects",
@@ -489,6 +495,7 @@ export default function UserPermissionTableMerged() {
             "kpi dashboard": "/dashboard/kpi-dashboard",
             "health weightage": "/dashboard/business/health-weightage",
             "health score": "/dashboard/business/healthscore-achieve",
+            "business health": "/dashboard/business/health-weightage",
             "company level assign": "/dashboard/business/company-level-assign",
             "role & permission": "/dashboard/roles/user-permission",
             brand: "/dashboard/brand",
@@ -513,6 +520,10 @@ export default function UserPermissionTableMerged() {
       document.removeEventListener("click", handleClick, true);
     };
   }, [hasChange, location.pathname]);
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <div className="p-6">

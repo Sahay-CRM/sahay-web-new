@@ -2,12 +2,11 @@ import { useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { getDatabase, ref, update } from "firebase/database";
 import { useSelector } from "react-redux";
-import { getUserId } from "@/features/selectors/auth.selector";
-import {
-  addMeetingTimeMutation,
-  addUpdateCompanyMeetingMutation,
-} from "@/features/api/companyMeeting";
 import { queryClient } from "@/queryClient";
+
+import { getUserId } from "@/features/selectors/auth.selector";
+import { addUpdateCompanyMeetingMutation } from "@/features/api/companyMeeting";
+import { addMeetingTimeMutation } from "@/features/api/detailMeeting";
 
 interface UseMeetingUiOptions {
   meetingStart: boolean;

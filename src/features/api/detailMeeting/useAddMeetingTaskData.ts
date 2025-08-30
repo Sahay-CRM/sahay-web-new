@@ -6,17 +6,19 @@ import Urls from "@/features/utils/urls.utils";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-interface MeetingKpisAdd {
+interface MeetingTaskAdd {
   meetingId: string;
-  kpiIds: string[];
+  taskId: string;
+  objectiveId?: string;
+  issueId?: string;
 }
 
-export default function useAddMeetingKpisData() {
-  const addMeetingKpisDataMutation = useMutation({
+export default function useAddMeetingTaskData() {
+  const addMeetingTaskDataMutation = useMutation({
     mutationKey: ["add-meeting-task-data"],
-    mutationFn: async (data: MeetingKpisAdd) => {
+    mutationFn: async (data: MeetingTaskAdd) => {
       const { data: resData } = await Api.post({
-        url: Urls.addMeetingKpisData(),
+        url: Urls.addMeetingTaskData(),
         data: data,
       });
 
@@ -31,5 +33,5 @@ export default function useAddMeetingKpisData() {
       toast.error(error.response?.data?.message);
     },
   });
-  return addMeetingKpisDataMutation;
+  return addMeetingTaskDataMutation;
 }

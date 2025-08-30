@@ -3,23 +3,25 @@ import { toast } from "sonner";
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 
-// interface DeleteMeetingTask {
-//   taskId: string;
-//   meetingId: string;
-// }
+type DeleteMeetingTask =
+  | {
+      taskId: string;
+      ioType: string;
+      issueTaskId?: string;
+    }
+  | {
+      taskId: string;
+      ioType: string;
+      objectiveTaskId?: string;
+    };
 
 export default function useDeleteMeetingTask() {
   const deleteMeetingTaskMutation = useMutation({
     mutationKey: ["delete-meeting-task"],
-    mutationFn: async (taskId: string) => {
-      if (!taskId) {
-        throw new Error("Something Went Wrong");
-      }
-      const { data: resData } = await Api.delete({
-        url: Urls.deleteMeetingTaskData(taskId),
-        // data: {
-        //   meetingId: data.meetingId,
-        // },
+    mutationFn: async (data: DeleteMeetingTask) => {
+      const { data: resData } = await Api.post({
+        url: Urls.deleteMeetingTaskData(),
+        data: data,
       });
       return resData;
     },

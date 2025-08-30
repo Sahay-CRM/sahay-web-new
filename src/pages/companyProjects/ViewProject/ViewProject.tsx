@@ -6,12 +6,13 @@ import { format } from "date-fns";
 import useViewProject from "./useViewProject";
 import { Controller, FormProvider } from "react-hook-form";
 import FormSelect from "@/components/shared/Form/FormSelect";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect } from "react";
 
 const ProjectView = () => {
   const { setBreadcrumbs } = useBreadcrumbs();
+  const { id: projectId } = useParams();
 
   useEffect(() => {
     setBreadcrumbs([
@@ -180,7 +181,10 @@ const ProjectView = () => {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Tasks</h2>
                 {taskPermission.Add && (
-                  <Link to="/dashboard/tasks/add">
+                  // <Link to="/dashboard/tasks/add">
+                  //   <Button className="py-2 w-fit">Add Task</Button>
+                  // </Link>
+                  <Link to={`/dashboard/tasks/add?projectId=${projectId}`}>
                     <Button className="py-2 w-fit">Add Task</Button>
                   </Link>
                 )}
@@ -188,7 +192,7 @@ const ProjectView = () => {
               <div className="space-y-4 pr-2 overflow-y-auto">
                 {tasks?.length > 0 ? (
                   <>
-                    {tasks.map((task) => (
+                    {tasks?.filter(Boolean).map((task) => (
                       <div
                         key={task.taskId}
                         className={`rounded-lg border bg-muted/30 p-4 text-md shadow-sm ${
@@ -208,7 +212,7 @@ const ProjectView = () => {
                             Task Name:
                           </span>
                           <h3 className="text-base font-semibold text-primary">
-                            {task.taskName}
+                            {task?.taskName}
                           </h3>
                         </div>
                         <div className="flex items-center gap-2 mt-1 mb-4">

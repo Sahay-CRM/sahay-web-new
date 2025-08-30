@@ -1,25 +1,25 @@
 import ModalData from "@/components/shared/Modal/ModalData";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 
 interface ViewMeetingModalProps {
   modalData: KPIFormData;
   isModalOpen: boolean;
   modalClose: () => void;
+  onEdit?: (kpiId: string) => void;
 }
 
-const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
+export default function ViewKpiDetailModal({
   modalData,
   isModalOpen,
   modalClose,
-}) => {
-  const navigate = useNavigate();
+  onEdit,
+}: ViewMeetingModalProps) {
   const permission = useSelector(getUserPermission).DATAPOINT_LIST;
 
   const handleEdit = () => {
-    if (modalData?.kpiId) {
-      navigate(`/dashboard/kpi/edit/${modalData.kpiId}`);
+    if (modalData?.kpiId && onEdit) {
+      onEdit(modalData.kpiId);
     }
   };
 
@@ -47,13 +47,13 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
     >
       <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-700 mb-6">
         {modalData?.KPIName && (
-          <div>
+          <div className="break-words whitespace-normal">
             <span className="font-medium text-primary">KPI Name : </span>
             {modalData.KPIName}
           </div>
         )}
         {modalData?.KPILabel && (
-          <div>
+          <div className="break-words whitespace-normal">
             <span className="font-medium text-primary">
               KPI Description (Tooltip) :{" "}
             </span>
@@ -61,25 +61,25 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
           </div>
         )}
         {modalData?.tag && (
-          <div>
+          <div className="break-words whitespace-normal">
             <span className="font-medium text-primary">Tag : </span>
             {modalData.tag}
           </div>
         )}
         {modalData?.validationType && (
-          <div>
+          <div className="break-words whitespace-normal">
             <span className="font-medium text-primary">Validation Type : </span>
             {modalData.validationType}
           </div>
         )}
         {modalData?.frequencyType && (
-          <div>
+          <div className="break-words whitespace-normal">
             <span className="font-medium text-primary">Frequency Type : </span>
             {modalData.frequencyType}
           </div>
         )}
         {modalData?.visualFrequencyTypes && (
-          <div>
+          <div className="break-words whitespace-normal">
             <span className="font-medium text-primary">
               Visual Frequency Types :{" "}
             </span>
@@ -87,31 +87,31 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
           </div>
         )}
         {modalData?.selectedType && (
-          <div>
+          <div className="break-words whitespace-normal">
             <span className="font-medium text-primary">Selected Type : </span>
             {modalData.selectedType}
           </div>
         )}
         {modalData?.unit && (
-          <div>
+          <div className="break-words whitespace-normal">
             <span className="font-medium text-primary">Unit Type : </span>
             {modalData.unit}
           </div>
         )}
         {modalData?.value1 && (
-          <div>
+          <div className="break-words whitespace-normal">
             <span className="font-medium text-primary">Value 1 : </span>
             {modalData.value1}
           </div>
         )}
         {modalData?.value2 && (
-          <div>
+          <div className="break-words whitespace-normal">
             <span className="font-medium text-primary">Value 2 : </span>
             {modalData.value2}
           </div>
         )}
         {modalData?.employeeName && (
-          <div>
+          <div className="break-words whitespace-normal">
             <span className="font-medium text-primary">Employee Name : </span>
             {modalData.employeeName}
           </div>
@@ -119,6 +119,4 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
       </div>
     </ModalData>
   );
-};
-
-export default ViewMeetingModal;
+}

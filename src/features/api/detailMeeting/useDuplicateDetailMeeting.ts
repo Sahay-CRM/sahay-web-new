@@ -5,19 +5,18 @@ import Urls from "@/features/utils/urls.utils";
 // import { queryClient } from "@/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { queryClient } from "@/queryClient";
 
-interface MeetingTaskAdd {
-  detailMeetingId: string;
-  taskIds: string[];
-  detailMeetingAgendaIssueId: string;
+interface DuplicateDetailMeetingProps {
+  meetingId: string;
 }
 
-export default function useAddMeetingTaskData() {
-  const addMeetingTaskDataMutation = useMutation({
+export default function useDuplicateDetailMeeting() {
+  const duplicateDetailMeetingMutation = useMutation({
     mutationKey: ["add-meeting-task-data"],
-    mutationFn: async (data: MeetingTaskAdd) => {
+    mutationFn: async (data: DuplicateDetailMeetingProps) => {
       const { data: resData } = await Api.post({
-        url: Urls.addMeetingTaskData(),
+        url: Urls.duplicateDetailMeeting(),
         data: data,
       });
 
@@ -25,12 +24,12 @@ export default function useAddMeetingTaskData() {
     },
     onSuccess: () => {
       toast.success("Data Added");
-      // queryClient.resetQueries({ queryKey: ["get-meeting-issue"] });
-      // queryClient.resetQueries({ queryKey: ["get-meeting-objective"] });
+      queryClient.resetQueries({ queryKey: ["get-detail-meeting-list"] });
+      queryClient.resetQueries({ queryKey: ["get-meeting-details-timing"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);
     },
   });
-  return addMeetingTaskDataMutation;
+  return duplicateDetailMeetingMutation;
 }

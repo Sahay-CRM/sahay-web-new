@@ -21,6 +21,7 @@ import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
+import { format } from "date-fns";
 
 export default function CompanyTaskList() {
   const {
@@ -95,15 +96,6 @@ export default function CompanyTaskList() {
   if (permission && permission.View === false) {
     return <PageNotAccess />;
   }
-
-  const formatLocalDate = (isoDate?: string): string => {
-    if (!isoDate) return "";
-
-    const date = new Date(isoDate);
-
-    // Format as YYYY-MM-DD in local time zone
-    return date.toLocaleDateString("en-CA"); // en-CA gives "yyyy-mm-dd"
-  };
 
   return (
     <FormProvider {...methods}>
@@ -191,7 +183,9 @@ export default function CompanyTaskList() {
                   index +
                   1,
                 status: item.taskStatusId,
-                taskDeadline: formatLocalDate(item.taskDeadline),
+                taskDeadline: item.taskDeadline
+                  ? format(new Date(item.taskDeadline), "dd/MM/yyyy h:mm aa")
+                  : "",
                 assigneeNames: item.TaskEmployeeJunction
                   ? item.TaskEmployeeJunction.map(
                       (j) => j.Employee?.employeeName,

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
+import { getDatabase, off, onValue, ref } from "firebase/database";
+import { useParams } from "react-router-dom";
 
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
@@ -13,28 +15,30 @@ import {
 import { useGetAllTaskStatus } from "@/features/api/companyTask";
 
 import TaskSearchDropdown from "./TaskSearchDropdown";
-import {
-  addMeetingTaskDataMutation,
-  deleteMeetingTaskMutation,
-  useGetMeetingTask,
-} from "@/features/api/companyMeeting";
+
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
 import { queryClient } from "@/queryClient";
 import TaskDrawer from "./taskDrawer";
 import { Button } from "@/components/ui/button";
-import { getDatabase, off, onValue, ref } from "firebase/database";
-import { useParams } from "react-router-dom";
+import {
+  addMeetingTaskDataMutation,
+  deleteMeetingTaskMutation,
+  useGetMeetingTask,
+} from "@/features/api/detailMeeting";
+import { Unlink } from "lucide-react";
 
 interface TasksProps {
   tasksFireBase: () => void;
-  meetingAgendaIssueId?: string | undefined;
-  detailMeetingId: string | undefined;
+  issueId?: string | undefined;
+  ioType?: string;
+  selectedIssueId?: string;
 }
 
 export default function Tasks({
   tasksFireBase,
-  meetingAgendaIssueId,
-  detailMeetingId,
+  issueId,
+  ioType,
+  selectedIssueId,
 }: TasksProps) {
   const { id: meetingId } = useParams();
   const { data: taskStatus } = useGetAllTaskStatus({
@@ -50,18 +54,22 @@ export default function Tasks({
 
   const { data: selectedTask } = useGetMeetingTask({
     filter: {
-      detailMeetingId: detailMeetingId,
-      detailMeetingAgendaIssueId: meetingAgendaIssueId,
+      meetingId: meetingId,
+      ...(ioType === "ISSUE" ? { issueId: issueId } : { objectiveId: issueId }),
+      ioType: ioType,
     },
-    enable: !!detailMeetingId && !!meetingAgendaIssueId,
+    enable: !!meetingId && !!issueId && !!ioType,
   });
 
-  const handleAddTasks = (tasks: TaskGetPaging[]) => {
-    if (meetingAgendaIssueId && detailMeetingId) {
+  const handleAddTasks = (tasks: TaskGetPaging) => {
+    if (issueId && meetingId) {
       const payload = {
-        detailMeetingId: detailMeetingId,
-        taskIds: tasks.map((item) => item.taskId),
-        detailMeetingAgendaIssueId: meetingAgendaIssueId,
+        meetingId: meetingId,
+        taskId: tasks.taskId,
+        ...(ioType === "ISSUE"
+          ? { issueId: issueId }
+          : { objectiveId: issueId }),
+        ioType: ioType,
       };
       addMeetingTask(payload, {
         onSuccess: () => {
@@ -78,7 +86,7 @@ export default function Tasks({
     const db = getDatabase();
     const meetingRef = ref(
       db,
-      `meetings/${meetingId}/timers/objectives/${meetingAgendaIssueId}/tasks`,
+      `meetings/${meetingId}/timers/objectives/${selectedIssueId}/tasks`,
     );
 
     onValue(meetingRef, (snapshot) => {
@@ -93,7 +101,7 @@ export default function Tasks({
     return () => {
       off(meetingRef);
     };
-  }, [meetingAgendaIssueId, meetingId]);
+  }, [selectedIssueId, meetingId]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -136,12 +144,19 @@ export default function Tasks({
 
   const conformDelete = useCallback(
     async (data: TaskGetPaging) => {
-      if (data && data.detailMeetingTaskId) {
-        // const payload = {
-        //   taskId: data.taskId,
-        //   meetingId: meetingId,
-        // };
-        deleteTaskById(data.detailMeetingTaskId, {
+      if (data && ioType) {
+        const payload = {
+          taskId: data.taskId,
+          ioType: ioType,
+          ...(ioType === "ISSUE"
+            ? {
+                issueTaskId: data.issueTaskId,
+              }
+            : {
+                objectiveTaskId: data.objectiveTaskId,
+              }),
+        };
+        deleteTaskById(payload, {
           onSuccess: () => {
             queryClient.resetQueries({
               queryKey: ["get-detailMeetingAgendaIssue"],
@@ -161,7 +176,7 @@ export default function Tasks({
         });
       }
     },
-    [deleteTaskById, tasksFireBase],
+    [deleteTaskById, ioType, tasksFireBase],
   );
 
   const handleAddTask = () => {
@@ -230,15 +245,27 @@ export default function Tasks({
           }
         }}
         showIndexColumn={false}
-        isActionButton={() => true}
-        isEditDelete={() => true}
         // viewButton={true}
         permissionKey="users"
         onDelete={(row) => {
           conformDelete(row as unknown as TaskGetPaging);
         }}
-        showActionsColumn={true}
-        isEditDeleteShow={true}
+        customActions={(row) => {
+          return (
+            <>
+              <Button
+                className="py-1 px-3 bg-transparent cursor-pointer hover:bg-transparent"
+                onClick={() => {
+                  conformDelete(row as unknown as TaskGetPaging);
+                }}
+              >
+                <Unlink className="w-4 h-4 text-red-700" />
+              </Button>
+            </>
+          );
+        }}
+        // showActionsColumn={false}
+        isEditDeleteShow={false}
         dropdownColumns={{
           taskStatus: {
             options: (taskStatus?.data ?? []).map((opt) => ({
@@ -249,10 +276,7 @@ export default function Tasks({
             onChange: (row, value) => handleStatusChange(value, row),
           },
         }}
-        // onRowClick={(row) => {
-        //   handleRowsModalOpen(row);
-        // }}
-
+        actionColumnWidth="w-22"
         sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
       />
       {drawerOpen && (
@@ -260,8 +284,9 @@ export default function Tasks({
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           taskData={selected}
-          detailMeetingAgendaIssueId={meetingAgendaIssueId}
-          detailMeetingId={detailMeetingId}
+          issueId={issueId}
+          tasksFireBase={tasksFireBase}
+          ioType={ioType}
         />
       )}
     </div>
