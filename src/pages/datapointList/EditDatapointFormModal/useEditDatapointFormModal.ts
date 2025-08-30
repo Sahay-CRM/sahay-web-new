@@ -5,7 +5,7 @@ import {
 } from "@/features/api/companyDatapoint";
 import { useEffect } from "react";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
-import { useDdAllKpiList } from "@/features/api/KpiList";
+import { useDdNonSelectAllKpiList } from "@/features/api/KpiList";
 
 interface UseEditDatapointFormModalProps {
   modalClose: () => void;
@@ -22,7 +22,7 @@ export default function useEditDatapointFormModal({
   const { data: employeeData } = useGetEmployeeDd({
     filter: { isDeactivated: false },
   });
-  const { data: datpointData } = useDdAllKpiList({
+  const { data: datpointData } = useDdNonSelectAllKpiList({
     filter: {},
     enable: true,
   });
@@ -39,35 +39,18 @@ export default function useEditDatapointFormModal({
 
   useEffect(() => {
     if (datapointApiData) {
-      const selectedKpi = {
-        KPIMasterId: datapointApiData.KPIMasterId,
-        KPIId: datapointApiData.kpiId,
-        KPIName:
-          datapointApiData.KPIMaster?.KPIName ||
-          datapointApiData.dataPointLabel,
-        KPILabel:
-          datapointApiData.KPIMaster?.KPILabel ||
-          datapointApiData.dataPointName,
-        value: datapointApiData.kpiId,
-        label:
-          datapointApiData.KPIMaster?.KPIName ||
-          datapointApiData.dataPointLabel,
-      };
-
-      // Form ke liye dono set karo
-      setValue("KPIMasterId", selectedKpi.KPIId);
-      setValue("selectedKpi", selectedKpi);
+      setValue("KPIMasterId", datapointApiData.KPIMasterId);
 
       setValue("kpiId", datapointApiData.kpiId);
-      // Set frequency
+
       setValue("frequencyType", datapointApiData.frequencyType);
-      // Set validation type
+
       setValue("validationType", datapointApiData.validationType);
       setValue(
         "visualFrequencyAggregate",
         datapointApiData.visualFrequencyAggregate,
       );
-      // Set unit
+
       setValue("employeeId", datapointApiData.employeeId);
       setValue("unit", datapointApiData.unit);
       setValue("value1", datapointApiData.value1);
@@ -84,8 +67,9 @@ export default function useEditDatapointFormModal({
             : { value: "0", label: "No" },
         );
       }
-      // Set core parameter
+
       setValue("coreParameterId", datapointApiData.coreParameterId);
+
       if (datapointApiData.visualFrequencyTypes) {
         let visualFrequencyArray: string[];
 
@@ -107,7 +91,7 @@ export default function useEditDatapointFormModal({
       ? data.visualFrequencyTypes.join(",")
       : data.visualFrequencyTypes;
     const payload = {
-      KPIMasterId: data.selectedKpi?.KPIMasterId,
+      KPIMasterId: data.KPIMasterId,
       kpiId: data.kpiId,
       coreParameterId: data.coreParameterId,
       employeeId: data.employeeId,
@@ -120,7 +104,6 @@ export default function useEditDatapointFormModal({
       visualFrequencyTypes: visualFrequencyTypesStr,
       visualFrequencyAggregate: data.visualFrequencyAggregate,
     };
-    // console.log(payload, "gasd");
     addDatapoint(payload, {
       onSuccess: () => {
         handleClose();

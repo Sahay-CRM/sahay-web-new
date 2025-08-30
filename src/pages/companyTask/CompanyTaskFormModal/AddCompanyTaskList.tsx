@@ -106,6 +106,7 @@ const MeetingSelectionStep = () => {
   const {
     control,
     formState: { errors },
+    watch,
   } = useFormContext();
   const {
     meetingData,
@@ -114,6 +115,8 @@ const MeetingSelectionStep = () => {
     paginationFilterMeeting,
     meetingLoading,
   } = useAddCompanyTask();
+
+  const projectId = watch("project");
 
   return (
     <div className="p-0">
@@ -132,7 +135,7 @@ const MeetingSelectionStep = () => {
           )}
         </div>
         {permission.MEETING_LIST?.Add && (
-          <Link to="/dashboard/meeting/add?from=task">
+          <Link to={`/dashboard/meeting/add?from=task&projectId=${projectId}`}>
             <Button className="py-2 w-fit">Add Meeting</Button>
           </Link>
         )}
@@ -433,6 +436,9 @@ export default function AddCompanyTask() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get("projectId");
+  const meetingId = searchParams.get("meetingId");
+
+  console.log(projectId);
 
   const { handleSubmit, setValue } = methods;
 
@@ -456,7 +462,10 @@ export default function AddCompanyTask() {
     if (projectId) {
       setValue("project", projectId);
     }
-  }, [projectId, setValue]);
+    if (meetingId) {
+      setValue("meeting", meetingId);
+    }
+  }, [meetingId, projectId, setValue]);
 
   const effectiveStep = projectId ? step + 1 : step;
   const totalSteps = 4;

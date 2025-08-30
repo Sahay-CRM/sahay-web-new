@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-type DatePaging = BaseResponse<CompanyProjectDataProps>;
+type DatePaging = CommonResponse<CompanyProjectDataProps>;
 
 export default function useAddUpdateCompanyProject() {
   const addUpdateCompanyProjectMutation = useMutation({

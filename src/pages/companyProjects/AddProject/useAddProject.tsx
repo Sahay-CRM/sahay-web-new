@@ -45,6 +45,7 @@ export default function useAddProject() {
     mode: "onChange",
   });
   const { handleSubmit, trigger, reset, watch, setValue, getValues } = methods;
+  const isCoreParameterSelected = watch("coreParameterId");
 
   /** Reset with API data */
   useEffect(() => {
@@ -154,10 +155,11 @@ export default function useAddProject() {
         };
 
     addProject(payload, {
-      onSuccess: () => {
+      onSuccess: (response) => {
+        const projectId = response.data.projectId;
         handleModalClose();
         if (searchParams.get("from") === "task") {
-          navigate("/dashboard/tasks/add");
+          navigate(`/dashboard/tasks/add?projectId=${projectId}`);
         } else {
           navigate("/dashboard/projects");
         }
@@ -186,5 +188,6 @@ export default function useAddProject() {
     permission,
     StatusOptions,
     bussinessFunctOptions,
+    isCoreParameterSelected,
   };
 }

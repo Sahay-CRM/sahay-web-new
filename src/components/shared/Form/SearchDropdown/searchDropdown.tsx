@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { twMerge } from "tailwind-merge";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check, X } from "lucide-react";
 
 type Option = {
   value: string;
@@ -67,11 +67,33 @@ const SearchDropdown = ({
           <Button
             variant="outline"
             className={twMerge(
-              "w-full font-extralight hover:bg-white justify-between text-left text-black overflow-hidden whitespace-nowrap text-ellipsis",
+              "w-full font-extralight hover:bg-white justify-between text-left text-black overflow-hidden whitespace-nowrap text-ellipsis relative",
               className,
             )}
           >
-            {selectedOption ? selectedOption.label : placeholder}
+            <span
+              className={twMerge(
+                "truncate pr-10",
+                !selectedOption && "text-gray-500",
+              )}
+            >
+              {selectedOption ? selectedOption.label : placeholder}
+            </span>
+
+            {selectedOption ? (
+              <span
+                className="absolute right-8 h-4 w-4 text-gray-500 hover:text-red-500 cursor-pointer z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect({ value: "", label: "" });
+                  setOpen(false);
+                }}
+                onMouseDown={(e) => e.preventDefault()}
+              >
+                <X className="h-4 w-4" />
+              </span>
+            ) : null}
+
             <ChevronDown className="absolute right-3 text-gray-500" />
           </Button>
         </PopoverTrigger>

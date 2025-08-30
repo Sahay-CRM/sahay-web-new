@@ -22,7 +22,7 @@ import DateRangePicker from "@/components/shared/DateRange";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
-import { getUserId } from "@/features/selectors/auth.selector";
+import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
 
 export default function DetailMeetingList() {
   const {
@@ -52,6 +52,7 @@ export default function DetailMeetingList() {
   } = useDetailMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
+  const userData = useSelector(getUserDetail);
   const userId = useSelector(getUserId);
   const navigate = useNavigate();
 
@@ -210,15 +211,18 @@ export default function DetailMeetingList() {
 
               return (
                 <>
-                  <Button
-                    size="sm"
-                    className="py-1 w-[150px] px-3 cursor-pointer"
-                    onClick={() => {
-                      handleDuplicateMeeting(row);
-                    }}
-                  >
-                    Duplicate Meeting
-                  </Button>
+                  {userData.employeeType === "CONSULTANT" ||
+                    (userData.employeeType === "OWNER" && (
+                      <Button
+                        size="sm"
+                        className="py-1 w-[150px] px-3 cursor-pointer"
+                        onClick={() => {
+                          handleDuplicateMeeting(row);
+                        }}
+                      >
+                        Duplicate Meeting
+                      </Button>
+                    ))}
                   {row.detailMeetingStatus === "ENDED" ? (
                     <div>
                       <Button

@@ -49,7 +49,7 @@ export default function RepeatMeetingList() {
   const { setBreadcrumbs } = useBreadcrumbs();
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Repeat Meeting Repetition", href: "" }]);
+    setBreadcrumbs([{ label: "Live Meetings Templates", href: "" }]);
   }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -96,12 +96,12 @@ export default function RepeatMeetingList() {
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-3 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
-            Meeting Repetition List
+            Live Meetings Templates
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
             {permission.Add && (
               <Link to="/dashboard/repeat-meeting/add">
-                <Button className="py-2 w-fit">Add Repeat Meeting</Button>
+                <Button className="py-2 w-fit">Add Live Meeting</Button>
               </Link>
             )}
           </div>

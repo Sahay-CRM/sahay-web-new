@@ -75,10 +75,9 @@ export default function EditDatapointAddFormModal({
               <SearchDropdown
                 options={allKpi}
                 selectedValues={field.value ? [field.value] : []}
-                onSelect={(selected) => {
-                  field.onChange(selected);
-                  setValue("KPIMasterId", selected.value);
-                  setValue("selectedKpi", selected);
+                onSelect={(value) => {
+                  field.onChange(value.value);
+                  setValue("KPIMasterId", value.value);
                 }}
                 placeholder="Select KPI..."
                 label="Selected KPI"

@@ -276,6 +276,8 @@ const Urls = {
     `${baseUrl}/company/repetitive-meeting/remove-io`,
 
   duplicateDetailMeeting: () => `${baseUrl}/company/detail-meeting/duplicate`,
+
+  ddAllNonSelectDatapointList: () => `${baseUrl}/kpi/get-all`,
 };
 
 export default Urls;

@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 
 interface TimerProps {
-  defaultTime?: number; // Default time in seconds (optional)
-  actualTime: number; // Current accumulated time in seconds from Firebase
-  lastSwitchTimestamp: number; // Last activation time in milliseconds
-  isActive: boolean; // Whether this timer is currently active
-  onTimeUpdate?: (time: number) => void; // Callback for time updates
+  defaultTime?: number;
+  actualTime: number;
+  lastSwitchTimestamp: number;
+  isActive: boolean;
+  onTimeUpdate?: (time: number) => void;
   className?: string;
 }
 
 export default function Timer({
   defaultTime = 0,
-  actualTime,
+  actualTime = 0,
   lastSwitchTimestamp,
   isActive,
   onTimeUpdate,
@@ -20,7 +20,6 @@ export default function Timer({
   const safeActualTime = Number.isFinite(actualTime) ? actualTime : 0;
   const safeDefaultTime = Number.isFinite(defaultTime) ? defaultTime : 0;
 
-  // const [displayTime, setDisplayTime] = useState(actualTime || defaultTime);
   const [displayTime, setDisplayTime] = useState(
     safeActualTime || safeDefaultTime,
   );

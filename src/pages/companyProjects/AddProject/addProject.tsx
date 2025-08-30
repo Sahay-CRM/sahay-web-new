@@ -30,6 +30,7 @@ const ProjectInfo = () => {
     formState: { errors },
   } = useFormContext();
   const { StatusOptions, bussinessFunctOptions } = useAddProject();
+
   return (
     <div className="grid grid-cols-2 gap-4">
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 mt-4 gap-4">
@@ -107,18 +108,18 @@ const ProjectInfo = () => {
         <Controller
           name="coreParameterId"
           control={control}
-          rules={{
-            required: {
-              value: true,
-              message: "Please select a Business Function",
-            },
-          }}
+          // rules={{
+          //   required: {
+          //     value: true,
+          //     message: "Please select a Business Function",
+          //   },
+          // }}
           render={({ field }) => (
             <SearchDropdown
               placeholder="Select a Business Function..."
               label="Business Function"
               error={errors.coreParameterId}
-              isMandatory
+              // isMandatory
               options={bussinessFunctOptions}
               selectedValues={field.value ? [field.value] : []}
               onSelect={(value) => {
@@ -592,6 +593,7 @@ const AddProject = () => {
     methods,
     projectApiData,
     permission,
+    isCoreParameterSelected,
   } = useAddProject();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -623,9 +625,7 @@ const AddProject = () => {
 
   const steps = [
     <ProjectInfo key="projectInfo" />,
-    // <ProjectStatus key="projectStatus" />,
-    // <CoreParameter key="coreParameter" />,
-    <SubParameter key="subParameter" />,
+    ...(isCoreParameterSelected ? [<SubParameter key="subParameter" />] : []),
     <Employees key="employees" />,
   ];
 
@@ -643,7 +643,7 @@ const AddProject = () => {
     "Project Info",
     // "Project Status",
     // "Business Function",
-    "Key Result Area",
+    ...(isCoreParameterSelected ? ["Sub Parameter"] : []),
     "Assignees",
   ];
 

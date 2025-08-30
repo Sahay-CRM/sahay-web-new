@@ -101,7 +101,13 @@ export default function useAddMeeting() {
 
         handleModalClose();
         if (searchParams.get("from") === "task") {
-          navigate("/dashboard/tasks/add");
+          const projectId = searchParams.get("projectId");
+          navigate(
+            `/dashboard/tasks/add?meetingId=${meetingId}?${
+              projectId ? `&projectId=${projectId}` : ""
+            }`,
+          );
+
           window.location.reload();
         } else {
           navigate("/dashboard/meeting");

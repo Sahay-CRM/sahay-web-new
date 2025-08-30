@@ -108,7 +108,9 @@ const EmployeeSearchDropdown: React.FC<EmployeeSearchDropdownProps> = ({
                   {renderEmp ? (
                     renderEmp(emp, false)
                   ) : (
-                    <span>{emp.employeeName}</span>
+                    <span>
+                      {emp.employeeName} - {emp.employeeType}
+                    </span>
                   )}
                 </li>
               ))}
