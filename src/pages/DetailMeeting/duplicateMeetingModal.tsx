@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import ModalData from "@/components/shared/Modal/ModalData";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
+import { FormLabel } from "@/components/ui/form";
 
 interface DuplicateMeetingModalProps {
   isOpen: boolean;
@@ -44,10 +44,37 @@ const DuplicateMeetingModal: React.FC<DuplicateMeetingModalProps> = ({
   );
   const [loading, setLoading] = useState(false);
 
+  // error states
+  const [errors, setErrors] = useState<{ name?: string; dateTime?: string }>(
+    {},
+  );
+
   useEffect(() => {
     setName(meetingName);
     setDateTime(selectDate ? new Date(selectDate) : null);
-  }, [meetingName, selectDate]);
+    setErrors({});
+  }, [meetingName, selectDate, isOpen]);
+
+  const handleSave = async () => {
+    if (!meetingId) return;
+
+    const newErrors: { name?: string; dateTime?: string } = {};
+    if (!name.trim()) newErrors.name = "Meeting name is required";
+    if (!dateTime) newErrors.dateTime = "Meeting date & time is required";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await onConfirm(meetingId, name, dateTime?.toISOString() ?? "");
+      onClose();
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ModalData
@@ -62,62 +89,61 @@ const DuplicateMeetingModal: React.FC<DuplicateMeetingModalProps> = ({
         },
         {
           btnText: "Save & Duplicate",
-          btnClick: async () => {
-            if (!meetingId) return;
-            try {
-              setLoading(true);
-              await onConfirm(meetingId, name, dateTime?.toISOString() ?? "");
-              onClose();
-            } finally {
-              setLoading(false);
-            }
-          },
+          btnClick: handleSave,
           isLoading: loading,
         },
       ]}
     >
       <div className="space-y-4">
-        {/* Meeting Name */}
         <div className="space-y-2">
-          <Label htmlFor="meeting-name">Meeting Name</Label>
-          <Input
+          <FormInputField
             id="meeting-name"
-            type="text"
+            label="Meeting Name"
+            placeholder="Enter meeting name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Enter meeting name"
+            isMandatory={true}
+            className="mt-0"
+            error={errors.name ? { message: errors.name } : undefined}
           />
         </div>
 
-        {/* Meeting Date & Time */}
-        <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
-          <Label>Meeting Date & Time</Label>
-          <div
-            className="flex items-center gap-2"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex-1">
-              <input
-                type="datetime-local"
-                className="border rounded-md p-2 w-full"
-                value={formatDateTimeLocal(dateTime)}
-                onChange={(e) => {
-                  const newDate = parseDateTimeLocal(e.target.value);
-                  setDateTime(newDate);
-                }}
-              />
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-11"
-              onClick={() => {
-                const now = new Date();
-                setDateTime(now);
-              }}
+        <div className="space-y-4">
+          {/* Meeting Date & Time */}
+          <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+            <FormLabel>Meeting Date & Time</FormLabel>
+            <div
+              className="flex items-center gap-2"
+              onClick={(e) => e.stopPropagation()}
             >
-              Now
-            </Button>
+              <div className="flex-1">
+                <input
+                  type="datetime-local"
+                  className="border rounded-md p-2 w-full"
+                  value={formatDateTimeLocal(dateTime)}
+                  onChange={(e) => {
+                    const newDate = parseDateTimeLocal(e.target.value);
+                    setDateTime(newDate);
+                  }}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11"
+                onClick={() => {
+                  const now = new Date();
+                  setDateTime(now);
+                }}
+              >
+                Now
+              </Button>
+            </div>
+            {errors.dateTime && (
+              <p className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                {errors.dateTime}
+              </p>
+            )}
           </div>
         </div>
       </div>

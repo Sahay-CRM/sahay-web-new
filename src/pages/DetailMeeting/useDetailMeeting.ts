@@ -243,7 +243,7 @@ export default function useDetailMeeting() {
       duplicateMeeting({
         meetingId: data.meetingId,
         meetingName: data.meetingName || "",
-        selectDate: data.selectDate || " ",
+        selectDate: data.selectDate || "",
       });
     }
   };

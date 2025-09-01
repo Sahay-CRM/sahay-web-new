@@ -134,9 +134,12 @@ export default function useAddMeeting() {
         formData.append("files", file);
         docUpload(formData, {
           onSuccess: () => {
+            queryClient.resetQueries({
+              queryKey: ["get-meeting-list-by-id", meetingId],
+            });
+
             queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
             queryClient.resetQueries({ queryKey: ["get-meeting-dropdown"] });
-            queryClient.resetQueries({ queryKey: ["get-meeting-list-by-id"] });
           },
         });
       }
@@ -156,7 +159,13 @@ export default function useAddMeeting() {
       formData.append("imageType", "MEETING");
       formData.append("isMaster", "0");
       formData.append("removedFiles", removedIds.join(",")); // Send as comma-separated string
-      docUpload(formData);
+      docUpload(formData, {
+        onSuccess: () => {
+          queryClient.resetQueries({
+            queryKey: ["get-meeting-list-by-id", meetingId],
+          });
+        },
+      });
     }
   };
 

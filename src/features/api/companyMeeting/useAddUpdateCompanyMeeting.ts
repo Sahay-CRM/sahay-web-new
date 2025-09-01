@@ -30,7 +30,6 @@ export default function useAddUpdateCompanyMeeting() {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
       queryClient.resetQueries({ queryKey: ["get-meeting-dropdown"] });
-      queryClient.resetQueries({ queryKey: ["get-meeting-list-by-id"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

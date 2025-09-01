@@ -1286,6 +1286,7 @@ interface RepeatMeeting {
 interface FileType {
   fileId: string;
   fileName: string;
+  name?: string;
 }
 
 interface CompanyNavItem {
