@@ -7,11 +7,14 @@ import {
   addUpdateDetailMeetingMutation,
   useGetMeetingTiming,
 } from "@/features/api/detailMeeting";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 
 // Renamed function
 export default function useAddDetailMeeting() {
   const { id: companyMeetingId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
+  const permission = useSelector(getUserPermission).LIVE_MEETING;
 
   const { mutate: addDetailMeeting, isPending } =
     addUpdateDetailMeetingMutation();
@@ -120,5 +123,6 @@ export default function useAddDetailMeeting() {
     companyMeetingId,
     isPending,
     meetingApiData,
+    permission,
   };
 }

@@ -313,7 +313,7 @@ export default function DetailMeetingList() {
             isLoading={isLoading}
             permissionKey="users"
             localStorageId="MeetingList"
-            moduleKey="MEETING_LIST"
+            moduleKey="LIVE_MEETING"
             actionColumnWidth="w-[400px]"
             sortableColumns={[
               "meetingName",

@@ -211,7 +211,7 @@ export default function RepeatMeetingList() {
             paginationDetails={mapPaginationDetails(repeatMeetingData)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
-            moduleKey="TASK"
+            moduleKey="LIVE_MEETING_TEMPLATES"
             showIndexColumn={false}
             isActionButton={() => true}
             permissionKey="users"

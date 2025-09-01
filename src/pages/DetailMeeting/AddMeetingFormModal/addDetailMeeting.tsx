@@ -20,6 +20,7 @@ import { getMeetingType } from "@/features/api/meetingType";
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import PageNotAccess from "@/pages/PageNoAccess";
 
 interface MeetingInfoProps {
   isUpdateMeeting: boolean;
@@ -473,6 +474,7 @@ const AddDetailMeeting = () => {
     companyMeetingId,
     isPending,
     meetingApiData,
+    permission,
   } = useAddDetailMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -515,6 +517,10 @@ const AddDetailMeeting = () => {
   } = useStepForm(steps, trigger);
 
   const stepNames = ["Meeting Type", "Meeting Info", "Joiners"];
+
+  if (permission && (permission.Add === false || permission.Edit === false)) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...methods}>

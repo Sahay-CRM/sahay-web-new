@@ -25,6 +25,8 @@ const toLocalISOString = (date: Date | undefined) => {
 };
 
 export default function useDetailMeeting() {
+  const permission = useSelector(getUserPermission).LIVE_MEETING;
+
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [modalData, setModalData] = useState<MeetingData>({} as MeetingData);
@@ -69,7 +71,6 @@ export default function useDetailMeeting() {
     pageSize: 25,
     search: "",
   });
-  const permission = useSelector(getUserPermission).MEETING_LIST;
   const { data: meetingData } = useGetDetailMeeting({
     filter: {
       ...paginationFilter,

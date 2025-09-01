@@ -22,6 +22,7 @@ import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import DatePicker from "react-datepicker";
+import PageNotAccess from "@/pages/PageNoAccess";
 
 interface MeetingInfoProps {
   isUpdateMeeting: boolean;
@@ -516,6 +517,7 @@ const AddRepeatMeeting = () => {
     repetitiveMeetingId,
     isPending,
     meetingApiData,
+    permission,
   } = useAddRepeatMeetingForm();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -560,6 +562,10 @@ const AddRepeatMeeting = () => {
   } = useStepForm(steps, trigger);
 
   const stepNames = ["Meeting Type", "Meeting Info", "Joiners"];
+
+  if (permission && (permission.Add === false || permission.Edit === false)) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...methods}>

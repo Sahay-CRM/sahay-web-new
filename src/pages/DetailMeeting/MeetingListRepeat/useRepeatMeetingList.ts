@@ -12,6 +12,8 @@ import {
 import { toLocalISOString } from "@/pages/Meeting/useMeeting";
 
 export default function useRepeatMeetingList() {
+  const permission = useSelector(getUserPermission).LIVE_MEETING_TEMPLATES;
+
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [modalData, setModalData] = useState<RepeatMeeting>(
@@ -19,7 +21,6 @@ export default function useRepeatMeetingList() {
   );
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
-  const permission = useSelector(getUserPermission).TASK;
   const [isChildData, setIsChildData] = useState<string | undefined>();
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewModalData, setViewModalData] = useState<RepeatMeeting>(
