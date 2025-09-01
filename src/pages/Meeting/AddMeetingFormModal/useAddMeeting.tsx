@@ -6,7 +6,6 @@ import {
 } from "@/features/api/companyMeeting";
 import { docUploadMutation } from "@/features/api/file";
 import { queryClient } from "@/queryClient";
-import { format, parseISO } from "date-fns";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 
@@ -37,25 +36,18 @@ export default function useAddMeeting() {
         meetingName: data.meetingName || "",
         meetingDescription: data.meetingDescription || "",
         meetingDateTime: data.meetingDateTime
-          ? format(parseISO(data.meetingDateTime), "yyyy-MM-dd")
-          : "",
-        meetingStatusId: data.meetingStatus || undefined,
+          ? new Date(data.meetingDateTime).toISOString()
+          : null,
+        meetingStatusId: data.meetingStatus?.meetingStatusId || undefined,
         meetingTypeId: data.meetingType || undefined,
-        employeeId:
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data.joiners?.map((ele: any) => ({
-            employeeId: ele.employeeId,
-            // Potentially include other details if needed by TableData's selectedValue comparison
-            employeeName: ele.employeeName, // Assuming employeeName is available for initial display
-          })),
-        // Initialize meetingDocuments and removedFileIdsArray for the form
+        employeeId: data.joiners,
         meetingDocuments: Array.isArray(data.files)
           ? data.files.map((f: { fileId: string; fileName: string }) => ({
               fileId: f.fileId,
               fileName: f.fileName,
             }))
           : [],
-        removedFileIdsArray: [], // Initialize as empty array
+        removedFileIdsArray: [],
       });
     }
   }, [meetingApiData, reset, companyMeetingId, setValue]);
@@ -75,24 +67,31 @@ export default function useAddMeeting() {
     const payload = {
       meetingName: data?.meetingName,
       meetingDescription: data?.meetingDescription,
-      meetingDateTime: data?.meetingDateTime,
+      meetingDateTime:
+        data.meetingDateTime instanceof Date
+          ? data.meetingDateTime.toISOString()
+          : data.meetingDateTime,
       meetingTypeId: data?.meetingTypeId?.meetingTypeId,
-      meetingStatusId: data?.meetingStatusId?.meetingStatusId,
+      meetingStatusId:
+        data?.meetingStatusId?.meetingStatusId || data?.meetingStatusId,
       joiners: data?.employeeId?.map(
         (ele: { employeeId: string }) => ele?.employeeId,
-      ), // Assuming employeeId is an array of objects
+      ),
       companyMeetingId: companyMeetingId || "",
+      teamLeaders: Array.isArray(data?.employeeId)
+        ? data.employeeId
+            .filter((emp: EmployeeDetails) => emp.isTeamLeader)
+            .map((emp: EmployeeDetails) => emp.employeeId)
+        : [],
     };
 
     addMeeting(payload, {
       onSuccess: (response) => {
         const meetingId = Array.isArray(response?.data)
-          ? response?.data[0]?.companyMeetingId || companyMeetingId
-          : (response?.data as { companyMeetingId?: string })
-              ?.companyMeetingId || companyMeetingId;
+          ? response?.data[0]?.meetingId
+          : (response?.data as { meetingId?: string })?.meetingId;
 
         if (typeof meetingId === "string" && meetingId) {
-          // Access meetingDocuments and removedFileIdsArray from form data
           handleFileOperations(
             meetingId,
             data.meetingDocuments || [],
@@ -102,7 +101,13 @@ export default function useAddMeeting() {
 
         handleModalClose();
         if (searchParams.get("from") === "task") {
-          navigate("/dashboard/tasks/add");
+          const projectId = searchParams.get("projectId");
+          navigate(
+            `/dashboard/tasks/add?meetingId=${meetingId}&${
+              projectId ? `&projectId=${projectId}` : ""
+            }`,
+          );
+
           window.location.reload();
         } else {
           navigate("/dashboard/meeting");
@@ -122,16 +127,19 @@ export default function useAddMeeting() {
     ) => {
       const formData = new FormData();
       formData.append("refId", meetingId);
-      formData.append("imageType", "MEETING"); // Ensure this matches backend expectation
+      formData.append("imageType", "MEETING");
       formData.append("isMaster", "0");
       formData.append("fileType", fileType);
       if (file instanceof File || typeof file === "string") {
-        formData.append("files", file); // Backend expects 'files' (plural)
+        formData.append("files", file);
         docUpload(formData, {
           onSuccess: () => {
+            queryClient.resetQueries({
+              queryKey: ["get-meeting-list-by-id", meetingId],
+            });
+
             queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
             queryClient.resetQueries({ queryKey: ["get-meeting-dropdown"] });
-            queryClient.resetQueries({ queryKey: ["get-meeting-list-by-id"] });
           },
         });
       }
@@ -151,7 +159,13 @@ export default function useAddMeeting() {
       formData.append("imageType", "MEETING");
       formData.append("isMaster", "0");
       formData.append("removedFiles", removedIds.join(",")); // Send as comma-separated string
-      docUpload(formData); // No file field, just metadata for removal
+      docUpload(formData, {
+        onSuccess: () => {
+          queryClient.resetQueries({
+            queryKey: ["get-meeting-list-by-id", meetingId],
+          });
+        },
+      });
     }
   };
 

@@ -21,6 +21,11 @@ import {
 import { ChevronDown, ChevronRight } from "lucide-react";
 import React from "react";
 import { SpinnerIcon } from "@/components/shared/Icons";
+import WarningDialog from "../kpiDashboard/WarningModal";
+import PageNotAccess from "../PageNoAccess";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+import { getRouteByLabel } from "@/features/utils/navigation.data";
 
 // Interfaces
 interface Permission {
@@ -325,7 +330,6 @@ function PermissionTableInner({ data, onChange }: PermissionTableProps) {
   );
 }
 
-// Main merged component
 export default function UserPermissionTableMerged() {
   const { id: employeeId } = useParams();
   const [permissions, setPermissions] = useState<Permission[]>([]);
@@ -334,6 +338,14 @@ export default function UserPermissionTableMerged() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const location = useLocation();
   const userName = location.state?.userName;
+  const [hasChange, setHasChange] = useState(false);
+
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(
+    null,
+  );
+  const [showWarning, setShowWarning] = useState(false);
+
+  const permission = useSelector(getUserPermission).ROLES_PERMISSION;
 
   useEffect(() => {
     setBreadcrumbs([
@@ -342,7 +354,7 @@ export default function UserPermissionTableMerged() {
         href: "/dashboard/roles/user-permission",
       },
       { label: "Edit Permissions" },
-      { label: `${userName || ""}` },
+      { label: `${userName || ""}`, isHighlight: true },
     ]);
   }, [setBreadcrumbs, userName]);
 
@@ -381,30 +393,133 @@ export default function UserPermissionTableMerged() {
 
   const handlePermissionChange = (newPermissions: Permission[]) => {
     setPermissions(newPermissions);
+    setHasChange(true);
   };
 
   const handleSavePermissions = () => {
     if (!employeeId) {
       return;
     }
-    updatePermission.mutate({
-      employeeId,
-      permissions,
-    });
+    updatePermission.mutate(
+      {
+        employeeId,
+        permissions,
+      },
+      {
+        onSuccess: () => {
+          setHasChange(false);
+        },
+      },
+    );
   };
+
+  const handleWarningSubmit = () => {
+    handleSavePermissions();
+    setShowWarning(false);
+    setPendingNavigation(null);
+    // if (pendingNavigation) {
+    //   window.location.href = pendingNavigation;
+    // }
+  };
+
+  const handleWarningDiscard = () => {
+    if (pendingNavigation) {
+      window.location.href = pendingNavigation;
+    }
+    setShowWarning(false);
+    setPendingNavigation(null);
+  };
+
+  const handleWarningClose = () => {
+    setShowWarning(false);
+    setPendingNavigation(null);
+  };
+
+  useEffect(() => {
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+
+    const interceptNavigation = (
+      originalFn: typeof history.pushState | typeof history.replaceState,
+    ) => {
+      return function (
+        this: History,
+        data: unknown,
+        title: string,
+        url?: string | URL | null,
+      ) {
+        if (hasChange && url && url !== location.pathname) {
+          setPendingNavigation(
+            typeof url === "string" ? url : url?.toString() || null,
+          );
+          setShowWarning(true);
+          return;
+        }
+        return originalFn.call(this, data, title, url);
+      };
+    };
+
+    history.pushState = interceptNavigation(originalPushState);
+    history.replaceState = interceptNavigation(originalReplaceState);
+
+    const handleClick = (event: Event) => {
+      if (!hasChange) return;
+
+      const target = event.target as HTMLElement;
+
+      const isDrawerNavigation =
+        target.closest("a[href]") ||
+        target.closest('li[class*="cursor-pointer"]') ||
+        target.closest('button[class*="hover:text-primary"]') ||
+        target.closest('li[class*="hover:text-primary"]') ||
+        target.closest('div[class*="cursor-pointer"]') ||
+        target.closest('[data-sidebar="menu-button"]') ||
+        target.closest('[data-slot="sidebar-menu-button"]');
+
+      if (isDrawerNavigation) {
+        const textContent = target.textContent?.toLowerCase().trim();
+        const matchedRoute = textContent ? getRouteByLabel(textContent) : null;
+        if (matchedRoute === null) {
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        if (matchedRoute && matchedRoute !== location.pathname) {
+          setPendingNavigation(matchedRoute);
+          setShowWarning(true);
+        }
+      }
+    };
+
+    document.addEventListener("click", handleClick, true);
+
+    return () => {
+      history.pushState = originalPushState;
+      history.replaceState = originalReplaceState;
+      document.removeEventListener("click", handleClick, true);
+    };
+  }, [hasChange, location.pathname]);
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
         <div>
           <h2 className="text-xl">
-            Editing permissions for:{" "}
-            {userName ? <span className="font-bold">{userName}</span> : "User"}
+            Editing permissions for :{" "}
+            {userName ? (
+              <span className="font-bold text-[#2e3090]">{userName}</span>
+            ) : (
+              "User"
+            )}
           </h2>
         </div>
         <Button
           onClick={handleSavePermissions}
-          disabled={updatePermission.isPending}
+          disabled={updatePermission.isPending || !hasChange}
         >
           {updatePermission.isPending ? "Saving..." : "Save Permissions"}
         </Button>
@@ -415,6 +530,12 @@ export default function UserPermissionTableMerged() {
           onChange={handlePermissionChange}
         />
       </div>
+      <WarningDialog
+        open={showWarning}
+        onSubmit={handleWarningSubmit}
+        onDiscard={handleWarningDiscard}
+        onClose={handleWarningClose}
+      />
     </div>
   );
 }

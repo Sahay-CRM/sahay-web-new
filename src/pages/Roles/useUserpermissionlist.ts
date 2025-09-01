@@ -21,7 +21,7 @@ export default function useAdminUser() {
   });
 
   const { data: employeeData, isLoading } = useGetEmployee({
-    filter: paginationFilter,
+    filter: { ...paginationFilter, isDeactivated: false },
   });
 
   const handleAdd = () => {

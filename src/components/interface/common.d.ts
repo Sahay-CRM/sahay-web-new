@@ -103,8 +103,9 @@ interface CompanyTaskData {
 //kk
 interface CoreParameter {
   coreParameterId: string;
-  departmentId: string;
   coreParameterName: string;
+  departmentId: string;
+  departmentName: string;
   createdBy: string;
   updatedBy: string;
   isDelete: boolean;
@@ -188,26 +189,22 @@ interface IProjectFormData {
   projectDescription: string;
   projectDeadline: string;
   projectStatusId: string;
-
   employeeIds: string[];
   projectStatus?: {
     projectStatus: string;
   };
   subParameterIds: string[];
-
   createdBy?: {
     employeeId: string;
     employeeName: string;
     employeeEmail: string;
     employeeMobile: string;
   };
-
   ProjectEmployees?: {
     employeeId: string;
     employeeName: string;
     employeeEmail: string;
   }[];
-
   ProjectSubParameterJunction?: {
     projectSubParameterId: string;
     subPara: {
@@ -220,6 +217,9 @@ interface IProjectFormData {
       };
     };
   }[];
+  detailMeetingProjectId?: string;
+  objectiveProjectId?: string;
+  issueProjectId?: string;
 }
 
 //
@@ -275,11 +275,12 @@ interface ImportantDatesDataProps {
 
 interface CompanyMeetingDataProps {
   meetingId?: string;
-  meetingName: string;
-  meetingDescription: string;
-  meetingDateTime: string;
-  meetingTypeId: string;
-  meetingStatusId: string;
+  meetingName?: string;
+  meetingDescription?: string;
+  meetingDateTime?: string;
+  meetingTypeId?: string;
+  parentType?: string;
+  meetingStatusId?: string;
   companyMeetingId?: string;
   joiners?: string[] | Joiners[];
   meetingStatus?: CompanyMeetingStatusDataProps;
@@ -290,6 +291,21 @@ interface CompanyMeetingDataProps {
       fileName: string;
     },
   ];
+  teamLeaders?: string[];
+  employeeId?: string;
+  attendanceMark?: boolean;
+  detailMeetingStatus?: string;
+  isDetailMeeting?: boolean;
+  meetingTimePlanned?: string;
+  selectDate?: Date | string;
+}
+
+interface Joiners {
+  employeeId: string;
+  employeeName: string;
+  isTeamLeader?: boolean;
+  attendanceMark?: boolean;
+  employeeImage?: string;
 }
 
 interface CompanyDatapointDataProps {
@@ -330,7 +346,7 @@ interface CompanyProjectDataProps {
   projectName?: string;
   projectDescription?: string;
   projectActualEndDate?: string | null;
-  projectDeadline?: string;
+  projectDeadline?: Date | string | null;
   employeeId?: string;
   ProjectParameters?: ProjectParameters;
   ProjectEmployees?: Employee[];
@@ -339,6 +355,15 @@ interface CompanyProjectDataProps {
   projectStatusId: string;
   projectStatus?: ProjectStatusRes;
   otherProjectEmployees?: string[];
+  detailMeetingProjectId?: string;
+  detailMeetingId?: string;
+  coreParameter?: CoreParameter;
+  subParameters?: SubParameter[];
+  coreParameterId?: string;
+  coreParameterName?: string;
+  detailMeetingProjectId?: string;
+  detailMeetingNoteId?: string;
+  ioType?: string;
 }
 
 interface CompanyMeetingDataProps {
@@ -370,10 +395,10 @@ interface ProjectParameters {
   subParameters: SubParameter[];
 }
 
-interface CoreParameter {
-  coreParameterId: string;
-  coreParameterName: string;
-}
+// interface CoreParameter {
+//   coreParameterId: string;
+//   coreParameterName: string;
+// }
 
 interface SubParameter {
   projectSubParameterId: string;
@@ -400,12 +425,12 @@ interface SubParameter {
   coreParameter: CoreParameter;
 }
 
-interface CoreParameter {
-  coreParameterId: string;
-  coreParameterName: string;
-  departmentId: string;
-  departmentName: string;
-}
+// interface CoreParameter {
+//   coreParameterId: string;
+//   coreParameterName: string;
+//   departmentId: string;
+//   departmentName: string;
+// }
 
 interface DesignationDataProps {
   designationId: string;
@@ -492,6 +517,7 @@ interface EmployeeDetails {
   companyAdminName: string;
   reportingManager: null;
   isDeactivated?: boolean;
+  isTeamLeader?: boolean;
 }
 
 interface EmployeeCompany {
@@ -585,8 +611,12 @@ interface AddUpdateTask {
   taskStatusId?: string;
   taskTypeId?: string;
   comment?: string;
-  assigneeIds?: string[];
+  employeeIds?: string[];
   projectId?: string;
+  meetingId?: string;
+  issueId?: string;
+  repetitiveTaskId?: string;
+  ioType?: string;
 }
 
 interface TaskGetPaging {
@@ -609,6 +639,7 @@ interface TaskGetPaging {
   taskDeadline?: string;
   TaskCommentMaster?: TaskComment[];
   TaskEmployeeJunction?: TaskEmployee[];
+  assignUsers?: Employee[];
   TaskMeetingJunction?: TaskMeeting[];
   companyAdminName?: string;
   companyAdminEmail?: string;
@@ -617,6 +648,14 @@ interface TaskGetPaging {
   taskDeadline?: string;
   taskStartDate?: string;
   color?: string;
+  objectiveTaskId?: string;
+  projectId?: string;
+  issueTaskId?: string;
+  repetition?: string;
+  detailMeetingNoteId?: string;
+  repetitiveTaskId?: string;
+  employeeName?: string;
+  isActive?: boolean;
 }
 
 interface TaskProject {
@@ -701,6 +740,10 @@ interface Task {
   meetings: Meeting[];
   comments: TaskComment[];
   createdBy: CreatedBy;
+  repeatType?: string;
+  repetitiveTaskId?: string;
+  employeeIds?: string | string[];
+  isActive?: boolean;
 }
 
 interface ProjectTask {
@@ -829,6 +872,7 @@ interface DataPointEmployee {
 // }
 
 interface KPIFormData {
+  srNo?: number;
   kpiId?: string;
   dataPointName?: string;
   dataPointLabel?: string;
@@ -837,6 +881,7 @@ interface KPIFormData {
     KPIName: string;
     KPILabel: string;
   };
+  kpiMergeId?: string;
   KPIName?: string;
   KPILabel?: string;
   validationType: string;
@@ -846,7 +891,8 @@ interface KPIFormData {
   coreParameter?: {
     coreParameterId: string;
   };
-  visualFrequencyTypes: string;
+  coreParameterName?: string;
+  visualFrequencyTypes: string | string[];
   employeeId: string;
   value1: string;
   value2: string;
@@ -854,6 +900,8 @@ interface KPIFormData {
   coreParameterId?: string;
   hasData?: boolean;
   employeeName?: string;
+  visualFrequencyAggregate: string | null;
+  ioKPIId?: string;
 }
 
 interface KPIFormDataProp {
@@ -950,6 +998,7 @@ interface Kpi {
   value2?: string | null;
   photo?: string | null;
   tag?: string;
+  detailMeetingKPIId?: string;
 }
 
 interface CoreParameterGroup {
@@ -997,7 +1046,7 @@ interface HealthScoreResponse {
 }
 
 interface KpiDataCell {
-  kpiId: string;
+  kpiId?: string;
   validationType: string;
   startDate: string;
   endDate: string;
@@ -1005,6 +1054,7 @@ interface KpiDataCell {
   value1?: string | number | null;
   value2?: string | number | null;
   avg?: string | number | null;
+  isSunday?: boolean;
 }
 
 interface UserLogDetails {
@@ -1020,4 +1070,255 @@ interface ChangeLog<T> {
   newValue: T;
   logType: string;
   logTime: string;
+}
+
+interface MeetingObjective {
+  detailMeetingAgendaObjectiveId: string;
+  detailMeetingId: string;
+  agendaObjective: string;
+  objectivePlannedTime?: string;
+}
+
+// interface IssueObjective {
+//   agendaIssue?: string;
+//   detailMeetingAgendaIssueId?: string;
+//   detailMeetingId: string;
+//   isResolved?: boolean;
+//   issueActualTime?: string | null;
+//   issuePlannedTime?: string;
+//   sequence?: string | null;
+//   agendaObjective?: string;
+//   detailMeetingAgendaObjectiveId?: string;
+//   objectiveActualTime?: string | null;
+//   objectivePlannedTime?: string;
+// }
+
+interface TimerEntry {
+  actualTime: number;
+  updatedAt: number | string;
+  activeTab?: string;
+}
+
+interface MeetingResFire {
+  state: {
+    lastSwitchTimestamp: number;
+    activeTab: string;
+    currentAgendaItemId?: string;
+    status?: string;
+    follow: string;
+    meetingTimestamp?: number;
+    updatedAt: number | string;
+    conclusionTimestamp: number;
+  };
+  timers: {
+    agenda?: TimerEntry;
+    conclusion?: TimerEntry;
+    objectives?: {
+      [objectiveId: string]: TimerEntry;
+    };
+  };
+}
+
+interface FbIssues {
+  id: string;
+  actualTime: string;
+}
+
+interface HandleTabChangeLocalProps {
+  (tab: string): void;
+}
+
+interface KpiAllList {
+  dataPointName?: string;
+  dataPointLabel?: string;
+  KPIMasterId?: string;
+  kpiId: string;
+  KPIName?: string;
+  kpiName?: string;
+  KPILabel?: string;
+  kpiLabel?: string;
+  validationType: string;
+  frequencyType: string;
+  selectedType?: string | null;
+  coreParameterId?: string;
+  employeeName?: string;
+  dataPointEmployeeJunction?: {
+    dataPointEmpId: string;
+    employeeId: string;
+    value1: string;
+    value2: string;
+    employeeName: string;
+  }[];
+  dataArray?: KpiDataCell[];
+  value1: string;
+  value2: string;
+  tag: string;
+  unit: string;
+  isVisualized: boolean;
+  visualFrequencyAggregate: string | null;
+  visualFrequencyTypes: string;
+  employeeId: string;
+  detailMeetingKPIId?: string;
+  kpiMergeId?: string;
+  ioKPIId?: string;
+}
+
+interface KPICoreParameter {
+  coreParameterId: string;
+  coreParameterName: string;
+  kpis: KpiAllList[];
+  dataArray: KpiDataCell[];
+}
+
+interface SelectedKpisData {
+  frequencyType: string;
+  kpis: KPICoreParameter[];
+  count: number;
+}
+
+interface MeetingDetailsTiming {
+  detailMeetingId?: string;
+  meetingId: string;
+  employeeId?: string;
+  attendanceMark?: boolean;
+  agendaTimePlanned?: string;
+  agendaTimeActual?: string;
+  employeeList?: Joiners[];
+  detailMeetingStatus?: string;
+  updatedAt?: string;
+  meetingName?: string;
+  conclusionTime?: string;
+  meetingTimeActual?: string;
+  meetingTimePlanned?: string;
+  conclusionTimeActual?: string;
+}
+
+interface MeetingNotesRes {
+  employeeId: string;
+  note: string;
+  meetingNoteId: string;
+  createdAt: string;
+  noteType?: string;
+}
+
+interface IssuesProps {
+  issueId?: string;
+  issueName: string;
+  isResolved?: boolean;
+}
+
+interface UseIssuesFormModalProps {
+  isModalOpen: boolean;
+  modalClose: () => void;
+  modalData?: IssuesProps;
+}
+interface UseObjectiveFormModalProps {
+  isModalOpen: boolean;
+  modalClose: () => void;
+  modalData?: ObjectiveProps;
+}
+
+interface ObjectiveProps {
+  objectiveId?: string;
+  objectiveName: string;
+  isResolved?: boolean;
+  detailMeetingId?: string;
+}
+
+interface DetailMeetingObjectives {
+  id: string;
+  name: string;
+  ioType: string;
+}
+
+interface MeetingAgenda {
+  detailMeetingAgendaIssueId?: string;
+  issueObjectiveId: string;
+  ioType: string;
+  name: string;
+  actualTime: string | null;
+  plannedTime: string | null;
+  createdAt?: string | null;
+  noOfTasks: number;
+  noOfProjects: number;
+  noOfKPIs: number;
+  isResolved?: boolean;
+  issueId?: string;
+  objectiveId?: string;
+}
+
+interface DetailMeetingAgendaIssue {
+  detailMeetingAgendaIssueId: string;
+  issueObjectiveId: string;
+  agendaType: string;
+  detailMeetingId: string;
+  issueObjectiveName: string;
+  isResolved: boolean;
+  actualTime: string | null;
+  plannedTime: string;
+  noOfTasks: number;
+  noOfProjects: number;
+  noOfKPIs: number;
+}
+
+interface GroupKpisProps {
+  selectedKpisIds?: string[];
+  selectedKpiData?: KPIFormData[];
+  isModalOpen: boolean;
+  modalClose: () => void;
+  groupId?: string | null;
+}
+
+interface KpiMergeRes {
+  kpiMergeId: string;
+  kpiIds: string;
+  kpiMergeName: string;
+  tag: string;
+  companyId: string;
+  value1: string;
+  value2: string;
+  validationType: string;
+  visualFrequencyTypes: string;
+  visualFrequencyAggregate: string;
+  isDelete: boolean;
+}
+
+interface RepeatMeeting {
+  repetitiveMeetingId?: string;
+  meetingName?: string;
+  meetingDescription?: string;
+  meetingTypeId?: string;
+  meetingTimePlanned?: string;
+  repeatType?: string;
+  joiners?: Joiners[] | string[];
+  teamLeaderName?: string[];
+  createdBy?: string;
+  updatedBy?: string;
+  createdDatetime?: string;
+  updatedDatetime?: string;
+  nextDate?: string;
+  isActive?: boolean;
+  meetingDateTime?: string;
+  meetingType?: {
+    meetingTypeId: string;
+    meetingTypeName: string;
+  };
+  isDetailMeeting?: boolean;
+  // meetingStatusId?: string;
+}
+
+interface FileType {
+  fileId: string;
+  fileName: string;
+  name?: string;
+}
+
+interface CompanyNavItem {
+  id: number;
+  icon?: string;
+  label: string;
+  link?: string;
+  permission: string;
+  moduleKey?: string;
+  items?: CompanyNavItem[];
 }

@@ -1,4 +1,3 @@
-// src/components/shared/Breadcrumbs.tsx
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,7 +9,9 @@ import {
 
 type BreadcrumbItemType = {
   label: string;
-  href?: string; // If no href, it will be the current page
+  href?: string;
+  className?: string;
+  isHighlight?: boolean;
 };
 
 type BreadcrumbsProps = {
@@ -23,17 +24,23 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
       <BreadcrumbList>
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
+
+          const highlightClass = item.isHighlight
+            ? "text-[#2e3090] mb-1 text-xl font-semibold  "
+            : "";
+
           return (
-            <div key={index} className="flex  items-center text-primary gap-2">
+            <div
+              key={index}
+              className="flex text-[15px] items-center text-primary gap-2"
+            >
               <BreadcrumbItem>
                 {isLast || !item.href ? (
-                  <BreadcrumbPage className="text-[15px]">
+                  <BreadcrumbPage className={highlightClass}>
                     {item.label}
                   </BreadcrumbPage>
                 ) : (
-                  <BreadcrumbLink href={item.href} className="text-[15px]">
-                    {item.label}
-                  </BreadcrumbLink>
+                  <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
                 )}
               </BreadcrumbItem>
               {!isLast && <BreadcrumbSeparator />}

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 type DatePaging = BaseResponse<TaskGetPaging>;
 
-export default function useGetCompanyTask({ filter }: FilterDataProps) {
+export default function useGetCompanyTask({ filter, enable }: FilterDataProps) {
   const query = useQuery({
     queryKey: ["get-task-list", filter],
     queryFn: async () => {
@@ -17,6 +17,7 @@ export default function useGetCompanyTask({ filter }: FilterDataProps) {
 
       return resData;
     },
+    enabled: enable,
   });
   return query;
 }

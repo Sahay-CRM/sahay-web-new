@@ -1,47 +1,34 @@
-import { Button } from "@/components/ui/button";
-import AddDatapointModal from "./addDatapointModal";
-import useAddDatapoint from "./useAddDatapoint";
 import { FormProvider, useForm } from "react-hook-form";
+
+// import AddDatapointModal from "./addDatapointModal";
+import useAddDatapoint from "./useAddDatapoint";
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
-import Loader from "@/components/shared/Loader/Loader";
+import PageNotAccess from "@/pages/PageNoAccess";
 
 const AddDatapoint = () => {
   const {
-    onFinish,
-    isModalOpen,
-    handleClose,
+    // onFinish,
+    // isModalOpen,
+    // handleClose,
     onSubmit,
     Kpi,
     // Product,
-    AssignUser,
+    // AssignUser,
     // GoalValue,
     trigger,
-    KpiPreview,
-    isLoading,
+    // KpiPreview,
     isPending,
-    companykpimasterId,
-    datapointApiData,
     Details,
+    permission,
+    selectedKpi,
   } = useAddDatapoint();
 
   const methods = useForm({ mode: "onChange" });
 
-  // Build steps array based on companykpimasterId and datapointApiData?.coreParameterId
-  let steps = [];
   let stepNames = [];
 
-  if (companykpimasterId) {
-    // Hide KPI step
-    steps = [<Details />];
-    stepNames = ["Details"];
-    steps.push(<AssignUser />);
-    stepNames.push("Assign User");
-  } else {
-    // Show all steps
-    steps = [<Kpi />, <Details />, <AssignUser />];
-    stepNames = ["KPI", "Details", "Assign User", "Goal Value"];
-  }
+  const steps = [<Kpi />, <Details />];
 
   const {
     back,
@@ -53,51 +40,38 @@ const AddDatapoint = () => {
     isLastStep,
   } = useStepForm(steps, trigger);
 
-  // Show loader while API data is being fetched
-  if (isLoading) {
-    return <Loader />;
+  if (permission && permission.Add === false) {
+    return <PageNotAccess />;
+  }
+
+  // Build step names dynamically
+  stepNames = ["KPI", "Details", "Assign User", "Goal Value"];
+
+  // 👉 If user is on 2nd step or later, append KPIName to first step
+  if (currentStep > 1 && selectedKpi?.KPIName) {
+    stepNames[0] = `KPI (${selectedKpi.KPIName})`;
   }
 
   return (
     <FormProvider {...methods}>
-      <div>
-        <div className="">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
+        <div className="flex items-center gap-5 mb-3">
           <StepProgress
             currentStep={currentStep}
             stepNames={stepNames}
             totalSteps={totalSteps}
-            header={
-              companykpimasterId ? datapointApiData?.KPIMaster?.KPIName : null
-            }
+            back={back}
+            isFirstStep={isFirstStep}
+            next={next}
+            isLastStep={isLastStep}
+            isPending={isPending}
+            onFinish={onSubmit}
           />
         </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-end gap-5 mb-5 ">
-          <Button onClick={back} disabled={isFirstStep} className="w-fit">
-            Previous
-          </Button>
-          <Button
-            onClick={isLastStep ? onFinish : next}
-            className="w-fit"
-            disabled={isPending}
-            isLoading={isPending}
-          >
-            {isLastStep ? "Finish" : "Next"}
-          </Button>
-
-          {companykpimasterId && !isLastStep && (
-            <Button onClick={onFinish} className="w-fit">
-              Submit
-            </Button>
-          )}
-        </div>
-
-        {/* Step Content */}
         <div className="step-content w-full">{stepContent}</div>
 
-        {/* Modal Component */}
-        {isModalOpen && (
+        {/* {isModalOpen && (
           <AddDatapointModal
             modalData={KpiPreview}
             isModalOpen={isModalOpen}
@@ -105,7 +79,7 @@ const AddDatapoint = () => {
             onSubmit={onSubmit}
             isLoading={isPending}
           />
-        )}
+        )} */}
       </div>
     </FormProvider>
   );

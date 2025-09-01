@@ -25,38 +25,130 @@ export const companyNavigationData = [
   },
   {
     id: 4,
-    icon: "Video",
-    label: "Meeting List",
-    link: "/dashboard/meeting",
+    icon: "Presentation",
+    label: "Meetings",
     permission: "View",
-    moduleKey: "MEETING_LIST",
+    // moduleKey: "MEETING_LIST",
+    // link: "/dashboard/meeting",
+    items: [
+      {
+        id: 1,
+        label: "Meeting List",
+        link: "/dashboard/meeting",
+        permission: "View",
+        moduleKey: "MEETING_LIST",
+      },
+      {
+        id: 2,
+        label: "Live Meetings",
+        link: "/dashboard/meeting/detail",
+        permission: "View",
+        moduleKey: "LIVE_MEETING",
+      },
+      {
+        id: 3,
+        label: "Live Meetings Templates",
+        link: "/dashboard/repeat-meeting",
+        permission: "View",
+        moduleKey: "LIVE_MEETING_TEMPLATES",
+      },
+    ],
   },
   {
     id: 5,
-    icon: "CheckSquare",
-    label: "Company Task List",
-    link: "/dashboard/tasks",
+    icon: "Target",
+    label: "Agenda",
     permission: "View",
-    moduleKey: "TASK",
+    // moduleKey: "OBJECTIVE",
+    items: [
+      {
+        id: 1,
+        label: "Issues",
+        link: "/dashboard/issues",
+        permission: "View",
+        moduleKey: "ISSUES",
+      },
+      {
+        id: 2,
+        label: "Objective",
+        link: "/dashboard/objective",
+        permission: "View",
+        moduleKey: "OBJECTIVE",
+      },
+    ],
   },
   {
     id: 6,
+    icon: "CheckSquare",
+    label: "Company Task List",
+    permission: "View",
+    moduleKey: "TASK",
+    items: [
+      {
+        id: 1,
+        label: "Company Task List",
+        link: "/dashboard/tasks",
+        permission: "View",
+        moduleKey: "TASK",
+      },
+      {
+        id: 2,
+        label: "Company Repetition Task ",
+        link: "/dashboard/tasksrepeat",
+        permission: "View",
+        moduleKey: "TASK",
+      },
+    ],
+  },
+  // {
+  //   id: 6,
+  //   icon: "CheckSquare",
+  //   label: "Company Task List",
+  //   link: "/dashboard/tasks",
+  //   permission: "View",
+  //   moduleKey: "TASK",
+  // },
+  {
+    id: 7,
     icon: "FolderOpen",
     label: "Company Project List",
     link: "/dashboard/projects",
     permission: "View",
     moduleKey: "PROJECT_LIST",
   },
-  {
-    id: 7,
-    icon: "BarChart3",
-    label: "KPI List",
-    link: "/dashboard/kpi",
-    permission: "View",
-    moduleKey: "DATAPOINT_LIST",
-  },
+  // {
+  //   id: 8,
+  //   icon: "BarChart3",
+  //   label: "KPI List",
+  //   link: "/dashboard/kpi",
+  //   permission: "View",
+  //   moduleKey: "DATAPOINT_LIST",
+  // },
   {
     id: 8,
+    icon: "BarChart3",
+    label: "KPI List",
+    permission: "View",
+    // moduleKey: "DATAPOINT_LIST",
+    items: [
+      {
+        id: 1,
+        label: "KPI List",
+        link: "/dashboard/kpi",
+        permission: "View",
+        moduleKey: "DATAPOINT_LIST",
+      },
+      {
+        id: 2,
+        label: "KPI Group",
+        link: "/dashboard/kpi/group-kpis",
+        permission: "View",
+        moduleKey: "DATAPOINT_LIST",
+      },
+    ],
+  },
+  {
+    id: 9,
     icon: "TrendingUp",
     label: "KPI Dashboard",
     link: "/dashboard/kpi-dashboard",
@@ -72,11 +164,11 @@ export const companyNavigationData = [
   //   moduleKey: "HEALTH_SCORE",
   // },
   {
-    id: 9,
+    id: 10,
     icon: "Heart",
     label: "Business Health",
     permission: "View",
-    moduleKey: "BUSINESS_HEALTH",
+    // moduleKey: "BUSINESS_HEALTH",
     items: [
       {
         id: 1,
@@ -102,31 +194,31 @@ export const companyNavigationData = [
     ],
   },
   {
-    id: 10,
+    id: 11,
     icon: "Shield",
     label: "Role & Permission",
     link: "/dashboard/roles/user-permission",
     permission: "View",
     moduleKey: "ROLES_PERMISSION",
   },
-  {
-    id: 11,
-    icon: "Tag",
-    label: "Brand",
-    link: "/dashboard/brand",
-    permission: "View",
-    moduleKey: "BRAND",
-  },
-  {
-    id: 12,
-    icon: "Package",
-    label: "Product",
-    link: "/dashboard/product",
-    permission: "View",
-    moduleKey: "PRODUCT",
-  },
+  // {
+  //   id: 12,
+  //   icon: "Tag",
+  //   label: "Brand",
+  //   link: "/dashboard/brand",
+  //   permission: "View",
+  //   moduleKey: "BRAND",
+  // },
   // {
   //   id: 13,
+  //   icon: "Package",
+  //   label: "Product",
+  //   link: "/dashboard/product",
+  //   permission: "View",
+  //   moduleKey: "PRODUCT",
+  // },
+  // {
+  //   id: 14,
   //   icon: "Logs",
   //   label: "User Log",
   //   link: "/dashboard/user-log",
@@ -142,3 +234,23 @@ export const companyNavigationData = [
   //   moduleKey: "ROLES_PERMISSION",
   // },
 ];
+
+export const getRouteByLabel = (label: string): string | null => {
+  const normalize = (val: string) => val.toLowerCase().trim();
+  const allNavItems: CompanyNavItem[] = [];
+  const collectItems = (items: CompanyNavItem[]) => {
+    items.forEach((item) => {
+      allNavItems.push(item);
+      if (item.items && Array.isArray(item.items)) {
+        collectItems(item.items);
+      }
+    });
+  };
+  collectItems(companyNavigationData);
+
+  const found = allNavItems.find(
+    (item) => normalize(item.label) === normalize(label),
+  );
+
+  return found?.link ?? null;
+};

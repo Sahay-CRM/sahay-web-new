@@ -20,7 +20,7 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
-import FormSelect from "@/components/shared/Form/FormSelect";
+
 
 export default function CompanyDesignation() {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -30,11 +30,6 @@ export default function CompanyDesignation() {
   }, [setBreadcrumbs]);
 
   const userData = useSelector(getUserDetail);
-
-  const statusOptions = [
-    { label: "Active", value: false },
-    { label: "Inactive", value: true },
-  ];
 
   const {
     employeedata,
@@ -109,8 +104,10 @@ export default function CompanyDesignation() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 ">
-        <div className="flex mb-3 justify-between items-center">
+
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
+        <div className="flex mb-5 justify-between items-center">
+
           <h1 className="font-semibold capitalize text-xl text-black">
             Employee List
           </h1>
@@ -202,6 +199,8 @@ export default function CompanyDesignation() {
             onToggleActive={(item) => {
               handleInactive(item);
             }}
+            activeToggleKey="isDeactivated"
+            actionColumnWidth="w-[160px] overflow-hidden "
           />
         </div>
 

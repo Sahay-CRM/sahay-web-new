@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import TableData from "@/components/shared/DataTable/DataTable";
+import { Link } from "react-router-dom";
+
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyTaskList from "./useDatapointList";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
@@ -17,6 +17,9 @@ import {
 } from "@/components/ui/tooltip";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
+import { formatFrequencyType } from "@/features/utils/app.utils";
+import EditDatapointAddFormModal from "./EditDatapointFormModal/editDatapointAddFormModal";
+import TableData from "@/components/shared/DataTable/DataTableKpi";
 
 const validationOptions = [
   { value: "EQUAL_TO", label: "= Equal to" },
@@ -33,7 +36,50 @@ function getValidationLabel(value: string) {
   const found = validationOptions.find((opt) => opt.value === value);
   return found ? found.label : value;
 }
+// Add this helper function in your file
+// function getFrequencySymbol(value: string) {
+//   switch (value) {
+//     case "DAILY":
+//       return "D";
+//     case "WEEKLY":
+//       return "W";
+//     case "MONTHLY":
+//       return "M";
+//     case "QUARTERLY":
+//       return "Q";
+//     case "HALF_YEARLY":
+//       return "H";
+//     case "YEARLY":
+//       return "Y";
+//     default:
+//       return value;
+//   }
+// }
+// Helper to get only the symbol from the label
+function getValidationSymbol(value: string) {
+  const found = validationOptions.find((opt) => opt.value === value);
+  if (!found) return value;
+  const label = found.label;
+  const symbolMatch = label.match(/^[^a-zA-Z\s]+/);
+  return symbolMatch ? symbolMatch[0].trim() : label;
+}
+// Add this helper function in your file, likely near the others
+function getInitials(name: string) {
+  if (!name || name.trim() === "") {
+    return "-";
+  }
 
+  // Split the name by spaces
+  const nameParts = name.trim().split(" ");
+
+  // If there's more than one word, get the first letter of each
+  if (nameParts.length > 1) {
+    return nameParts.map((word) => word.charAt(0).toUpperCase()).join("");
+  }
+
+  // If there's only one word, return just the first letter in uppercase
+  return name.charAt(0).toUpperCase();
+}
 export default function CompanyTaskList() {
   const {
     datpointData,
@@ -52,6 +98,10 @@ export default function CompanyTaskList() {
     setIsViewModalOpen,
     viewModalData,
     onForceSubmit,
+    isEditModalOpen,
+    isEditKpiId,
+    setIsEditKpiId,
+    setIsEditModalOpen,
   } = useCompanyTaskList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -66,13 +116,39 @@ export default function CompanyTaskList() {
       key: "KPIName",
       label: "KPI Name",
       visible: true,
+      tooltipColumn: "KPILabel",
     },
-    { key: "KPILabel", label: "KPI Description (Tooltip)", visible: true },
-    { key: "validationType", label: "Validation Type", visible: true },
-    { key: "frequencyType", label: "Frequency", visible: true },
+    {
+      key: "tag",
+      label: "Tag",
+      visible: true,
+    },
+    {
+      key: "employeeName",
+      label: "Assigned",
+      visible: true,
+      tooltipColumn: "employeeFullName",
+    },
+    {
+      key: "validationType",
+      label: "Validation Type",
+      visible: true,
+      tooltipColumn: "validationTypeFullLabel",
+    },
+    {
+      key: "frequencyType",
+      label: "Frequency",
+      visible: true,
+      // tooltipColumn: "frequencyTypeFullName",
+    },
     {
       key: "coreParameterName",
       label: "Business Function Name",
+      visible: true,
+    },
+    {
+      key: "goal", // Use a new, descriptive key
+      label: "Goal",
       visible: true,
     },
   ]);
@@ -80,10 +156,15 @@ export default function CompanyTaskList() {
   // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          tooltipColumn: col.tooltipColumn,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; tooltipColumn?: string }>,
   );
 
   // Toggle column visibility
@@ -94,10 +175,8 @@ export default function CompanyTaskList() {
       ),
     );
   };
-  // Check if the number of columns is more than 3
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
-  const navigate = useNavigate();
 
   if (permission && permission.View === false) {
     return <PageNotAccess />;
@@ -105,7 +184,7 @@ export default function CompanyTaskList() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-5 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             KPI List
@@ -127,7 +206,6 @@ export default function CompanyTaskList() {
               className="w-80"
             />
           </div>
-
           <div className="flex items-center gap-2">
             {canToggleColumns && (
               <TooltipProvider>
@@ -149,8 +227,7 @@ export default function CompanyTaskList() {
             )}
           </div>
         </div>
-
-        <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
+        <div className="bg-white">
           <TableData
             key={datpointData?.currentPage}
             tableData={datpointData?.data.map((item, index) => ({
@@ -159,8 +236,23 @@ export default function CompanyTaskList() {
                 (datpointData.currentPage - 1) * datpointData.pageSize +
                 index +
                 1,
-              validationType: getValidationLabel(item.validationType),
-              frequencyType: item.frequencyType,
+
+              validationType: getValidationSymbol(item.validationType),
+              validationTypeFullLabel: getValidationLabel(item.validationType),
+              frequencyType: formatFrequencyType(item.frequencyType),
+              // frequencyType: getFrequencySymbol(item.frequencyType),
+              // frequencyTypeFullName: formatFrequencyType(item.frequencyType),
+              goal:
+                item.validationType === "YES_NO"
+                  ? item.value1 === "1"
+                    ? "Yes"
+                    : "No"
+                  : item.value2
+                    ? `${item.value1} to ${item.value2}`
+                    : `${item.value1}`,
+              employeeName: getInitials(item.employeeName || ""), // Use initials for the display
+              employeeFullName: item.employeeName,
+
             }))}
             columns={visibleColumns}
             primaryKey="kpiId"
@@ -170,12 +262,15 @@ export default function CompanyTaskList() {
             onEdit={
               permission.Edit
                 ? (row) => {
-                    navigate(`/dashboard/kpi/edit/${row.kpiId}`);
+                    if (row.kpiId) {
+                      setIsEditKpiId(row.kpiId);
+                      setIsEditModalOpen(true);
+                    }
                   }
                 : undefined
             }
             onRowClick={(row) => {
-              handleRowsModalOpen(row as unknown as KPIFormData);
+              handleRowsModalOpen(row);
             }}
             isLoading={isLoading}
             isActionButton={() => true}
@@ -189,11 +284,11 @@ export default function CompanyTaskList() {
               "KPILabel",
               "validationType",
               "frequencyType",
+              "coreParameterName",
             ]}
+            actionColumnWidth="w-[100px] overflow-hidden "
           />
         </div>
-
-        {/* Modal Component */}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
             title={"Delete KPI"}
@@ -204,12 +299,26 @@ export default function CompanyTaskList() {
             onSubmit={conformDelete}
             isChildData={isChildData}
             onForceSubmit={onForceSubmit}
+
+          />
+        )}
+        {isEditModalOpen && (
+          <EditDatapointAddFormModal
+            modalClose={closeDeleteModal}
+            kpiId={isEditKpiId}
+            isModalOpen={isEditModalOpen}
+
           />
         )}
         <ViewKPIDetailModal
           isModalOpen={isViewModalOpen}
           modalData={viewModalData}
           modalClose={() => setIsViewModalOpen(false)}
+          onEdit={(kpiId) => {
+            setIsViewModalOpen(false);
+            setIsEditKpiId(kpiId);
+            setIsEditModalOpen(true);
+          }}
         />
       </div>
     </FormProvider>

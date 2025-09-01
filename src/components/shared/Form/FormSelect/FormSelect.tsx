@@ -14,6 +14,7 @@ import { FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { CheckIcon } from "lucide-react";
+import { twMerge } from "tailwind-merge";
 
 interface Option {
   id?: string | number;
@@ -36,6 +37,7 @@ interface FormSelectProps {
   isMandatory?: boolean;
   isSearchable?: boolean;
   triggerClassName?: string;
+  labelClass?: string;
 }
 
 export default function FormSelect({
@@ -52,6 +54,7 @@ export default function FormSelect({
   isMandatory = false,
   isSearchable = false,
   triggerClassName = "",
+  labelClass,
 }: FormSelectProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
@@ -92,7 +95,7 @@ export default function FormSelect({
   return (
     <div className={className}>
       {label && (
-        <FormLabel className="mb-2" htmlFor={id}>
+        <FormLabel className={twMerge("mb-4", labelClass)} htmlFor={id}>
           {label}{" "}
           {isMandatory && <span className="text-red-500 text-[20px]">*</span>}
         </FormLabel>
@@ -114,15 +117,11 @@ export default function FormSelect({
               className={`w-full mb-1 py-5 custom-select-trigger text-black ${triggerClassName}`}
               id={id}
             >
-              {isMulti ? (
-                <div className="w-full text-left">{displayValue()}</div>
-              ) : (
-                <SelectValue placeholder={placeholder} />
-              )}
+              <SelectValue placeholder={placeholder} />
             </SelectTrigger>
           </FormControl>
 
-          <SelectContent className="w-full max-h-60 overflow-auto">
+          <SelectContent className="w-full max-h-60 overflow-auto ">
             {isSearchable && (
               <div className="p-2">
                 <Input
@@ -148,14 +147,14 @@ export default function FormSelect({
             <button
               type="button"
               disabled={disabled}
-              className="w-full border rounded-md px-3 py-1.5 text-left"
+              className="w-full border rounded-md px-3 text-left text-sm py-2"
             >
               {displayValue()}
             </button>
           </PopoverTrigger>
           {/* <PopoverContent className="w-full p-2"> */}
           <PopoverContent
-            className="p-2"
+            className="p-2 text-sm"
             style={{ width: "var(--radix-popover-trigger-width)" }}
           >
             {isSearchable && (

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 type DesignationRes = BaseResponse<DesignationDetails>;
 
-export default function useGetDesignation({ filter }: FilterDataProps) {
+export default function useGetDesignation({ filter, enable }: FilterDataProps) {
   return useQuery({
     queryKey: ["get-designation-list", filter],
     queryFn: async () => {
@@ -14,6 +14,6 @@ export default function useGetDesignation({ filter }: FilterDataProps) {
       });
       return data;
     },
-    enabled: !!filter,
+    enabled: !!enable || !!filter,
   });
 }

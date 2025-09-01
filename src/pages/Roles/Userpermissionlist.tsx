@@ -51,14 +51,14 @@ export default function MeetingList() {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
   // Toggle column visibility
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col,
-      ),
+        col.key === key ? { ...col, visible: !col.visible } : col
+      )
     );
   };
   // Check if the number of columns is more than 3
@@ -73,7 +73,7 @@ export default function MeetingList() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-5 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             Employee List
@@ -126,17 +126,19 @@ export default function MeetingList() {
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
             permissionKey="users"
-            isActionButton={() => true}
+            isActionButton={() => false}
+            isEditDeleteShow={false}
             localStorageId="UserPermissionList"
             moduleKey="ROLES_PERMISSION"
             additionalButton={(item) => !item.isSuperAdmin}
-            isEditDelete={false}
+            isEditDelete={() => false}
             onAdditionButton={(data) => {
               navigate(
                 `/dashboard/roles/user-permission/edit/${data.employeeId}`,
-                { state: { userName: data.employeeName } },
+                { state: { userName: data.employeeName } }
               );
             }}
+            actionColumnWidth="w-[80px] overflow-hidden "
             sortableColumns={[
               "employeeName",
               "departmentName",

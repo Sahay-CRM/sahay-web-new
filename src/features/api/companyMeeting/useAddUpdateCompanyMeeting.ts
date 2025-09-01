@@ -5,27 +5,19 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-type DatePaging = BaseResponse<CompanyMeetingDataProps>;
+type DatePaging = CommonResponse<CompanyMeetingDataProps>;
 
 export default function useAddUpdateCompanyMeeting() {
   const addUpdateCompanyMeetingMutation = useMutation({
     mutationKey: ["add-or-update-meeting-list"],
     mutationFn: async (data: CompanyMeetingDataProps) => {
-      const isUpdate = Boolean(data.companyMeetingId);
-      const payload = {
-        meetingName: data?.meetingName,
-        meetingDescription: data?.meetingDescription,
-        meetingDateTime: data?.meetingDateTime,
-        meetingStatusId: data?.meetingStatusId,
-        meetingTypeId: data?.meetingTypeId,
-        joiners: data?.joiners,
-      };
+      const isUpdate = Boolean(data?.companyMeetingId);
 
       const config = {
         url: isUpdate
           ? Urls.updateCompanyMeeting(data.companyMeetingId!)
           : Urls.addCompanyMeeting(),
-        data: payload,
+        data: data,
       };
 
       const { data: resData } = isUpdate
@@ -38,7 +30,6 @@ export default function useAddUpdateCompanyMeeting() {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
       queryClient.resetQueries({ queryKey: ["get-meeting-dropdown"] });
-      queryClient.resetQueries({ queryKey: ["get-meeting-list-by-id"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

@@ -14,6 +14,9 @@ export default function useAdminUser() {
   const [modalData, setModalData] = useState<KPIFormData>({} as KPIFormData);
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isEditKpiId, setIsEditKpiId] = useState<string>("");
+
   const permission = useSelector(getUserPermission).DATAPOINT_LIST;
 
   const { mutate: deleteDatapoint } = useDeleteDatapoint();
@@ -52,6 +55,7 @@ export default function useAdminUser() {
       value1: "",
       value2: "",
       tag: "",
+      visualFrequencyAggregate: "",
     });
     setIsUserModalOpen(true);
   };
@@ -80,10 +84,12 @@ export default function useAdminUser() {
       value1: "",
       value2: "",
       tag: "",
+      visualFrequencyAggregate: "",
     }); // Clear modal data
     setIsUserModalOpen(false);
     setIsDeleteModalOpen(false);
     setIsChildData("");
+    setIsEditModalOpen(false);
   };
 
   const onDelete = useCallback((data: KPIFormData) => {
@@ -155,6 +161,7 @@ export default function useAdminUser() {
     setViewModalData(data);
     setIsViewModalOpen(true);
   };
+
   return {
     isLoading,
     datpointData,
@@ -180,5 +187,9 @@ export default function useAdminUser() {
     isViewModalOpen,
     setIsViewModalOpen,
     viewModalData,
+    isEditModalOpen,
+    isEditKpiId,
+    setIsEditKpiId,
+    setIsEditModalOpen,
   };
 }

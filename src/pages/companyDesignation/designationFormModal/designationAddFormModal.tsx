@@ -1,6 +1,5 @@
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import ModalData from "@/components/shared/Modal/ModalData";
-import FormSelect from "@/components/shared/Form/FormSelect/selectuser";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import {
   useDesignationFormModalOptions,
@@ -10,6 +9,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useMemo } from "react";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 
 function DesignationAddFormModal({
   isModalOpen,
@@ -69,15 +69,21 @@ function DesignationAddFormModal({
             control={methods.control}
             rules={{ required: "Department is required" }}
             render={({ field, fieldState }) => (
-              <FormSelect
+              <SearchDropdown
+                options={DepartmentOptions}
+                selectedValues={field.value ? [field.value] : []} // Ensure it's an array
+                onSelect={(value) => {
+                  field.onChange(value.value);
+                }}
                 {...field}
                 label="Department"
-                options={DepartmentOptions}
+                placeholder="Select an Department..."
                 error={fieldState.error}
                 isMandatory={true}
               />
             )}
           />
+
           <div>
             <FormInputField
               id="designationName"
@@ -114,7 +120,7 @@ function DesignationAddFormModal({
           {/* Show this only if switch is ON */}
           {methods.watch("isParentDesignation") && (
             <div className="mt-4">
-              <Controller
+              {/* <Controller
                 name="parentId"
                 control={methods.control}
                 rules={{
@@ -131,6 +137,30 @@ function DesignationAddFormModal({
                     options={filteredDesignationOptions}
                     error={fieldState.error}
                     isMandatory={true}
+                  />
+                )}
+              /> */}
+              <Controller
+                name="parentId"
+                control={methods.control}
+                rules={{
+                  required: {
+                    value: true,
+                    message: "Parent Designation is required",
+                  },
+                }}
+                render={({ field, fieldState }) => (
+                  <SearchDropdown
+                    {...field}
+                    label="Parent Designation"
+                    options={filteredDesignationOptions}
+                    error={fieldState.error}
+                    isMandatory={true}
+                    selectedValues={field.value ? [field.value] : []} // Ensure it's an array
+                    onSelect={(value) => {
+                      field.onChange(value.value);
+                    }}
+                    placeholder="Select an Parent Designation..."
                   />
                 )}
               />

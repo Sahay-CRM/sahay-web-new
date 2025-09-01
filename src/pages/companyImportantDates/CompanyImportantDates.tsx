@@ -94,7 +94,7 @@ function Calendar() {
 
   return (
     <FormProvider {...methods}>
-      <div className="px-4 h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto">
+      <div className="px-2 h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto  overflow-x-auto sm:px-4 py-6">
         <div className="mb-4 flex justify-between gap-5">
           {permission.IMPORTANT_DATE.Add && (
             <div>

@@ -2,87 +2,109 @@ import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   useAddUpdateCompanyProject,
+  useGetAllProjectStatus,
   useGetCompanyProjectById,
 } from "@/features/api/companyProject";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { format, parseISO } from "date-fns";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+import { useGetCoreParameterDropdown } from "@/features/api/Business";
 
 export default function useAddProject() {
   const { id: companyProjectId } = useParams();
   const [searchParams] = useSearchParams();
-
+  const navigate = useNavigate();
   const [isModalOpen, setModalOpen] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [hasInitializedData, setHasInitializedData] = useState(false);
 
+  const permission = useSelector(getUserPermission).PROJECT_LIST;
+
+  /** Dropdown options */
+  const { data: StatusOptionsData } = useGetAllProjectStatus();
+  const { data: coreParams } = useGetCoreParameterDropdown();
+
+  const StatusOptions = (StatusOptionsData?.data || []).map((status) => ({
+    value: status.projectStatusId,
+    label: status.projectStatus,
+  }));
+
+  const bussinessFunctOptions = (coreParams?.data || []).map((status) => ({
+    value: status.coreParameterId,
+    label: status.coreParameterName,
+  }));
+
+  /** Mutations & API */
   const { mutate: addProject, isPending } = useAddUpdateCompanyProject();
   const { data: projectApiData } = useGetCompanyProjectById(
     companyProjectId || "",
   );
-  const navigate = useNavigate();
+
+  /** Form setup */
   const methods = useForm({
     mode: "onChange",
   });
-
   const { handleSubmit, trigger, reset, watch, setValue, getValues } = methods;
+  const isCoreParameterSelected = watch("coreParameterId");
 
+  /** Reset with API data */
   useEffect(() => {
     if (projectApiData?.data) {
-      setIsInitialLoad(true); // Set true before reset to manage dependent effects
-      setHasInitializedData(false); // Set false before reset
+      setIsInitialLoad(true);
+      setHasInitializedData(false);
+
       reset({
         projectId: companyProjectId || "",
         projectName: projectApiData?.data.projectName || "",
         projectDescription: projectApiData?.data.projectDescription || "",
-        projectDeadline: projectApiData?.data.projectDeadline
-          ? format(
-              parseISO(projectApiData?.data?.projectDeadline),
-              "yyyy-MM-dd",
-            )
-          : "",
-        projectStatusId: projectApiData?.data.projectStatus || "", // Store the whole object if API returns it
+        projectDeadline: projectApiData.data.projectDeadline
+          ? new Date(projectApiData.data.projectDeadline).toISOString()
+          : null,
+        projectStatusId: projectApiData.data.projectStatusId || "",
         subParameterId:
           projectApiData?.data.ProjectParameters?.subParameters?.map(
             (item) => item.subParameterId, // Store as array of IDs
           ) || [],
         coreParameterId:
-          projectApiData?.data.ProjectParameters?.coreParameter || undefined, // Store the whole object
+          projectApiData.data.ProjectParameters?.coreParameter
+            ?.coreParameterId || "", // ✅ fixed
         employeeId:
-          projectApiData?.data?.ProjectEmployees?.map(
-            (item) => item.employeeId, // Store as array of IDs
+          projectApiData.data.ProjectEmployees?.map(
+            (item) => item.employeeId,
           ) || [],
       });
-      // Set flags after form data is set and effects might have run
+
       setTimeout(() => {
         setIsInitialLoad(false);
         setHasInitializedData(true);
-      }, 0); // Use setTimeout to allow one render cycle for reset to apply
+      }, 0);
     } else {
       setIsInitialLoad(false);
       setHasInitializedData(false);
-      // Optionally reset form to defaults if no data and not editing
+
       if (!companyProjectId) {
         reset({
           projectId: "",
           projectName: "",
           projectDescription: "",
-          projectDeadline: "",
-          projectStatusId: undefined,
+          projectDeadline: null,
+          projectStatusId: "",
           subParameterId: [],
-          coreParameterId: undefined,
+          coreParameterId: "",
           employeeId: [],
         });
       }
     }
   }, [projectApiData, reset, companyProjectId]);
 
+  /** Clear subParameters when coreParameter changes */
   const watchedCoreParameter = watch("coreParameterId");
   const [previousCoreParameterId, setPreviousCoreParameterId] = useState<
     string | undefined
   >(undefined);
 
   useEffect(() => {
-    const currentCoreParameterId = watchedCoreParameter?.coreParameterId;
+    const currentCoreParameterId = watchedCoreParameter; // ✅ fixed (direct primitive)
 
     if (
       !isInitialLoad &&
@@ -90,7 +112,7 @@ export default function useAddProject() {
       currentCoreParameterId !== previousCoreParameterId
     ) {
       if (previousCoreParameterId !== undefined) {
-        setValue("subParameterId", []);
+        setValue("subParameterId", []); // clear sub-parameters
       }
     }
     setPreviousCoreParameterId(currentCoreParameterId);
@@ -99,9 +121,10 @@ export default function useAddProject() {
     setValue,
     isInitialLoad,
     hasInitializedData,
-    previousCoreParameterId, // Add as dependency
+    previousCoreParameterId,
   ]);
 
+  /** Handlers */
   const handleClose = () => setModalOpen(false);
 
   const onFinish = useCallback(async () => {
@@ -112,37 +135,33 @@ export default function useAddProject() {
   }, [trigger]);
 
   const onSubmit = handleSubmit(async (data) => {
-    const projectStatusIdValue =
-      data.projectStatusId?.projectStatusId || data.projectStatusId;
-
     const payload = companyProjectId
       ? {
-          projectId: companyProjectId || "",
+          projectId: companyProjectId,
           projectName: data.projectName,
           projectDescription: data.projectDescription,
           projectDeadline: data.projectDeadline,
-          projectStatusId: projectStatusIdValue,
-          subParameterIds: data.subParameterId, // Should be array of IDs
-          otherProjectEmployees: data.employeeId, // Should be array of IDs
+          projectStatusId: data.projectStatusId,
+          subParameterIds: data.subParameterId,
+          otherProjectEmployees: data.employeeId,
         }
       : {
           projectName: data.projectName,
           projectDescription: data.projectDescription,
           projectDeadline: data.projectDeadline,
-          projectStatusId: projectStatusIdValue,
-          subParameterIds: data.subParameterId, // Should be array of IDs
-          otherProjectEmployees: data.employeeId, // Should be array of IDs
+          projectStatusId: data.projectStatusId,
+          subParameterIds: data.subParameterId,
+          otherProjectEmployees: data.employeeId,
         };
 
     addProject(payload, {
-      onSuccess: () => {
+      onSuccess: (response) => {
+        const projectId = response.data.projectId;
         handleModalClose();
         if (searchParams.get("from") === "task") {
-          navigate("/dashboard/tasks/add");
-          // window.location.reload(); // Consider if reload is necessary or if cache invalidation is enough
+          navigate(`/dashboard/tasks/add?projectId=${projectId}`);
         } else {
-          navigate(`/dashboard/projects`);
-          // window.location.reload();
+          navigate("/dashboard/projects");
         }
       },
     });
@@ -166,5 +185,9 @@ export default function useAddProject() {
     isInitialLoad,
     hasInitializedData,
     projectApiData,
+    permission,
+    StatusOptions,
+    bussinessFunctOptions,
+    isCoreParameterSelected,
   };
 }

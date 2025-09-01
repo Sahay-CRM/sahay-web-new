@@ -1,4 +1,4 @@
-import { format, parseISO } from "date-fns";
+import { format, getDay, parseISO } from "date-fns";
 
 export function formatToDateOnly(date?: string | Date | null): string {
   if (!date) return "";
@@ -19,6 +19,7 @@ interface KpiHeader {
   label: string;
   year: string;
   data: object;
+  isSunday?: boolean;
 }
 
 export function getKpiHeadersFromData(
@@ -68,6 +69,7 @@ export function getKpiHeadersFromData(
           label: format(start, "dd MMM"),
           year,
           data: entry,
+          isSunday: getDay(start) === 0,
         };
       default:
         return {
@@ -194,4 +196,28 @@ export function formatTempValuesToPayload(tempValues: Record<string, string>) {
       data: value,
     };
   });
+}
+
+export function formatTempValuesMeetingToPayload(
+  tempValues: Record<string, string>,
+  ioId: string,
+  ioType: string,
+  ioKPIId: string,
+) {
+  const data = Object.entries(tempValues).map(([key, value]) => {
+    const [kpiId, startDate, endDate] = key.split("/");
+    return {
+      kpiId,
+      startDate,
+      endDate,
+      data: value,
+    };
+  });
+
+  return {
+    data,
+    ioId,
+    ioType,
+    ioKPIId,
+  };
 }

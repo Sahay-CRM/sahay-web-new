@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-type DatePaging = BaseResponse<CompanyProjectDataProps>;
+type DatePaging = CommonResponse<CompanyProjectDataProps>;
 
 export default function useAddUpdateCompanyProject() {
   const addUpdateCompanyProjectMutation = useMutation({
@@ -29,7 +29,7 @@ export default function useAddUpdateCompanyProject() {
     },
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
-      queryClient.resetQueries({ queryKey: ["get-project-list"] });
+      queryClient.resetQueries({ queryKey: ["get-project-list-meeting"] });
       queryClient.resetQueries({ queryKey: ["get-project-by-id"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {

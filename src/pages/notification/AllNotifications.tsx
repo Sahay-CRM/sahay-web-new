@@ -1,13 +1,16 @@
-import { useSelector } from "react-redux";
-import { selectNotifications } from "@/features/reducers/notification.reducer";
+// import { useSelector } from "react-redux";
+// import { selectNotifications } from "@/features/reducers/notification.reducer";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { notificationMutation } from "@/features/api/Notification";
+import useGetUserNotification from "@/features/layouts/DashboardLayout/useGetUserNotification";
 
 const AllNotifications = () => {
-  const notifications = useSelector(selectNotifications);
+  // const notifications = useSelector(selectNotifications);
+  const { data: notifications } = useGetUserNotification();
+
   const { setBreadcrumbs } = useBreadcrumbs();
   const navigate = useNavigate();
 
@@ -17,14 +20,20 @@ const AllNotifications = () => {
     setBreadcrumbs([{ label: "Notifications", href: "" }]);
   }, [setBreadcrumbs]);
 
-  const handleView = (type?: string, typeId?: string) => {
-    if (typeId) {
-      updateNotification([typeId], {
+  const handleView = (
+    type?: string,
+    typeId?: string,
+    notificationId?: string,
+  ) => {
+    if (notificationId) {
+      updateNotification([notificationId], {
         onSuccess: () => {
           if (type === "TASK" && typeId) {
             navigate(`/dashboard/tasks/view/${typeId}`);
           } else if (type === "PROJECT" && typeId) {
             navigate(`/dashboard/projects/view/${typeId}`);
+          } else if (type === "MEETING" && typeId) {
+            navigate(`/dashboard/meeting/detail/${typeId}`);
           }
         },
       });
@@ -34,7 +43,7 @@ const AllNotifications = () => {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">All Notifications</h1>
-      {notifications.length > 0 ? (
+      {notifications?.data && notifications?.data?.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="min-w-full border text-left">
             <thead>
@@ -46,7 +55,7 @@ const AllNotifications = () => {
               </tr>
             </thead>
             <tbody>
-              {notifications.map((notification, index) => (
+              {notifications?.data?.map((notification, index) => (
                 <tr
                   key={index}
                   className={`border-b hover:bg-gray-50 ${
@@ -73,6 +82,7 @@ const AllNotifications = () => {
                           handleView(
                             notification.data?.type,
                             notification.data?.typeId,
+                            notification.notificationId || "",
                           )
                         }
                       >

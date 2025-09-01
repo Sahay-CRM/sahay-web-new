@@ -56,7 +56,6 @@ export default function useDesignationFormModal({
 export function useDesignationFormModalOptions() {
   const { data: departmentData } = getALLDepartmentList();
   const DepartmentOptions = [
-    { label: "Select Department", value: "", disabled: true },
     ...(
       (departmentData?.data ?? []) as Array<{
         departmentName: string;
@@ -77,7 +76,6 @@ export function useDesignationDropdownOptions(departmentId?: string) {
     },
   });
   const designationOptions = [
-    { label: "Select Parent Designation", value: "", disabled: true },
     ...(
       (designationData?.data ?? []) as Array<{
         designationName: string;

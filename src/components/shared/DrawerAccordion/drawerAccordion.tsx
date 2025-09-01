@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import type { FC } from "react";
-import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
 import { useSelector } from "react-redux";
+
+import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import LucideIcon from "@/components/shared/Icons/LucideIcon";
 import { type IconName } from "@/components/shared/Icons/iconMap";
+import { useEffect, useRef } from "react";
 
 interface ChildItem {
   label: string;
@@ -30,16 +31,18 @@ interface DrawerAccordionProps {
   user: unknown;
 }
 
-const DrawerAccordion: FC<DrawerAccordionProps> = ({
+export default function DrawerAccordion({
   item,
   isOpen,
   changeActiveIndex,
   postOnClick = () => {},
-}) => {
+}: DrawerAccordionProps) {
   const navigate = useNavigate();
   const hasChildren = Array.isArray(item.items) && item.items.length > 0;
   const { bgColor } = useSidebarTheme();
   const permissions = useSelector(getUserPermission);
+
+  const contentRef = useRef<HTMLDivElement | null>(null);
 
   const onClick = () => {
     if (hasChildren) return changeActiveIndex();
@@ -53,6 +56,15 @@ const DrawerAccordion: FC<DrawerAccordionProps> = ({
       : permissions?.[item.moduleKey]?.View
     : true;
 
+  useEffect(() => {
+    if (isOpen && contentRef.current) {
+      contentRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [isOpen]);
+
   // If parent's View permission is false, don't render
   if (item.moduleKey && !hasParentPermission) {
     return null;
@@ -64,7 +76,7 @@ const DrawerAccordion: FC<DrawerAccordionProps> = ({
       className="w-full overflow-hidden py-1 px-4 text-gray-700"
     >
       <button
-        className="flex items-center justify-between w-full py-1 text-left focus:outline-none text-sm hover:text-primary font-medium py-2 rounded-lg"
+        className="flex items-center justify-between w-full text-left focus:outline-none text-sm hover:text-primary font-medium py-2 rounded-lg"
         onClick={onClick}
       >
         {" "}
@@ -118,6 +130,4 @@ const DrawerAccordion: FC<DrawerAccordionProps> = ({
       )}
     </div>
   );
-};
-
-export default DrawerAccordion;
+}
