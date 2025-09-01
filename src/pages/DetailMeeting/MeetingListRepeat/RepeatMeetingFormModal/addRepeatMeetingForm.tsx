@@ -312,7 +312,7 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
                   field.onChange(date?.toISOString());
                 }}
                 error={errors.meetingDateTime}
-                disableDaysFromToday={5}
+                // disableDaysFromToday={5}
               />
             );
           }}

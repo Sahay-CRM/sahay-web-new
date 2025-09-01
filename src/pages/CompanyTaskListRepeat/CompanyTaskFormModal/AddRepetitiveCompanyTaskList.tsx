@@ -285,7 +285,7 @@ const TaskDetailsStep = () => {
                   value={field.value}
                   onChange={field.onChange}
                   error={errors.taskDeadline}
-                  disableDaysFromToday={5}
+                  // disableDaysFromToday={5}
                 />
               )}
             />

@@ -101,7 +101,9 @@ export default function RepeatMeetingList() {
           <div className="flex items-center space-x-5 tb:space-x-7">
             {permission.Add && (
               <Link to="/dashboard/repeat-meeting/add">
-                <Button className="py-2 w-fit">Add Live Meeting</Button>
+                <Button className="py-2 w-fit">
+                  Add Live Meeting Templates
+                </Button>
               </Link>
             )}
           </div>

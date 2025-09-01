@@ -22,8 +22,9 @@ import DateRangePicker from "@/components/shared/DateRange";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
-import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
+import { getUserDetail } from "@/features/selectors/auth.selector";
 import DuplicateMeetingModal from "./duplicateMeetingModal";
+import { CopyPlus } from "lucide-react";
 
 export default function DetailMeetingList() {
   const {
@@ -41,7 +42,7 @@ export default function DetailMeetingList() {
     statusOptions,
     filters,
     handleFilterChange,
-    handleRowsModalOpen,
+    // handleRowsModalOpen,
     isViewModalOpen,
     setIsViewModalOpen,
     viewModalData,
@@ -58,7 +59,7 @@ export default function DetailMeetingList() {
 
   const { setBreadcrumbs } = useBreadcrumbs();
   const userData = useSelector(getUserDetail);
-  const userId = useSelector(getUserId);
+  // const userId = useSelector(getUserId);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -109,7 +110,7 @@ export default function DetailMeetingList() {
           <div className="flex items-center space-x-5 tb:space-x-7">
             {permission.Add && (
               <Link to="/dashboard/meeting/detail/add">
-                <Button className="py-2 w-fit">Add Meeting</Button>
+                <Button className="py-2 w-fit">Add Live Meeting</Button>
               </Link>
             )}
           </div>
@@ -204,15 +205,15 @@ export default function DetailMeetingList() {
                 : undefined
             }
             customActions={(row) => {
-              const isTeamLeader = Array.isArray(row.joiners)
-                ? row.joiners.some(
-                    (emp) =>
-                      emp &&
-                      typeof emp === "object" &&
-                      emp.employeeId === userId &&
-                      emp.isTeamLeader === true,
-                  )
-                : false;
+              // const isTeamLeader = Array.isArray(row.joiners)
+              //   ? row.joiners.some(
+              //       (emp) =>
+              //         emp &&
+              //         typeof emp === "object" &&
+              //         emp.employeeId === userId &&
+              //         emp.isTeamLeader === true
+              //     )
+              //   : false;
 
               return (
                 <>
@@ -220,17 +221,18 @@ export default function DetailMeetingList() {
                     userData.employeeType === "OWNER") && (
                     <Button
                       size="sm"
-                      className="py-1 w-[150px] px-3 cursor-pointer"
+                      variant="outline"
+                      className="py-1 w-[40px] bg-transparent text-primary px-3 cursor-pointer"
                       onClick={() => {
                         setSelectedMeeting(row);
                         setIsDuplicateModalOpen(true);
                       }}
                     >
-                      Duplicate Meeting
+                      <CopyPlus className="block !w-5 !h-5" />
                     </Button>
                   )}
 
-                  {row.detailMeetingStatus === "ENDED" ? (
+                  {/* {row.detailMeetingStatus === "ENDED" ? (
                     <div>
                       <Button
                         variant="outline"
@@ -239,7 +241,7 @@ export default function DetailMeetingList() {
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(
-                            `/dashboard/meeting/detail/${row.meetingId}`,
+                            `/dashboard/meeting/detail/${row.meetingId}`
                           );
                         }}
                       >
@@ -257,7 +259,7 @@ export default function DetailMeetingList() {
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(
-                              `/dashboard/meeting/detail/${row.meetingId}`,
+                              `/dashboard/meeting/detail/${row.meetingId}`
                             );
                           }}
                         >
@@ -265,21 +267,6 @@ export default function DetailMeetingList() {
                         </Button>
                       ) : (
                         <div>
-                          {/* {row.detailMeetingStatus === "NOT STARTED" ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="py-1 w-[150px] px-3 cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(
-                                  `/dashboard/meeting/detail/${row.meetingId}`
-                                );
-                              }}
-                            >
-                              Not Started
-                            </Button>
-                          ) : ( */}
                           <Button
                             variant="outline"
                             size="sm"
@@ -287,17 +274,16 @@ export default function DetailMeetingList() {
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate(
-                                `/dashboard/meeting/detail/${row.meetingId}`,
+                                `/dashboard/meeting/detail/${row.meetingId}`
                               );
                             }}
                           >
                             Join Meeting
                           </Button>
-                          {/* )} */}
                         </div>
                       )}
                     </div>
-                  )}
+                  )} */}
                 </>
               );
             }}
@@ -306,7 +292,7 @@ export default function DetailMeetingList() {
               onDelete(row as unknown as MeetingData);
             }}
             onRowClick={(row) => {
-              handleRowsModalOpen(row as unknown as MeetingData);
+              navigate(`/dashboard/meeting/detail/${row.meetingId}`);
             }}
             paginationDetails={mapPaginationDetails(meetingData)}
             setPaginationFilter={setPaginationFilter}
@@ -314,7 +300,7 @@ export default function DetailMeetingList() {
             permissionKey="users"
             localStorageId="MeetingList"
             moduleKey="LIVE_MEETING"
-            actionColumnWidth="w-[400px]"
+            actionColumnWidth="w-[135px]"
             sortableColumns={[
               "meetingName",
               "meetingDateTime",
