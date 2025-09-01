@@ -126,14 +126,14 @@ const TableData = <T extends Record<string, unknown>>({
   selectedValue = [],
   handleChange,
   onCheckbox,
-  isEditDelete,
+  // isEditDelete,
   moduleKey = "",
   dropdownColumns = {},
   sortableColumns = [],
   onToggleActive,
   showActiveToggle = false,
   activeToggleKey,
-  isEditDeleteShow = true,
+  isEditDeleteShow = false,
   showActionsColumn = true,
   actionColumnWidth,
 }: TableProps<T>) => {
@@ -469,6 +469,7 @@ const TableData = <T extends Record<string, unknown>>({
                     >
                       <div className="flex gap-1 justify-end items-end">
                         {customActions?.(item)}
+
                         {isEditDeleteShow ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -490,8 +491,8 @@ const TableData = <T extends Record<string, unknown>>({
                             <TooltipContent>Edit</TooltipContent>
                           </Tooltip>
                         ) : (
-                          isEditDelete &&
-                          isActionButton?.(item) &&
+                          // isEditDelete &&
+                          // isActionButton?.(item) &&
                           permission?.Edit && (
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -537,8 +538,8 @@ const TableData = <T extends Record<string, unknown>>({
                             <TooltipContent>Delete</TooltipContent>
                           </Tooltip>
                         ) : (
-                          isEditDelete &&
-                          isActionButton?.(item) &&
+                          // isEditDelete &&
+                          // isActionButton?.(item) &&
                           permission?.Delete &&
                           (!canDelete || canDelete(item)) && (
                             <Tooltip>
@@ -563,6 +564,7 @@ const TableData = <T extends Record<string, unknown>>({
                             </Tooltip>
                           )
                         )}
+
                         {permission?.Delete &&
                           showActiveToggle &&
                           isActionButton?.(item) &&
