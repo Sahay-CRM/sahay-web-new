@@ -236,6 +236,7 @@ export default function CompanyTaskList() {
                 (datpointData.currentPage - 1) * datpointData.pageSize +
                 index +
                 1,
+
               validationType: getValidationSymbol(item.validationType),
               validationTypeFullLabel: getValidationLabel(item.validationType),
               frequencyType: formatFrequencyType(item.frequencyType),
@@ -251,6 +252,7 @@ export default function CompanyTaskList() {
                     : `${item.value1}`,
               employeeName: getInitials(item.employeeName || ""), // Use initials for the display
               employeeFullName: item.employeeName,
+
             }))}
             columns={visibleColumns}
             primaryKey="kpiId"
@@ -297,6 +299,7 @@ export default function CompanyTaskList() {
             onSubmit={conformDelete}
             isChildData={isChildData}
             onForceSubmit={onForceSubmit}
+
           />
         )}
         {isEditModalOpen && (
@@ -304,6 +307,7 @@ export default function CompanyTaskList() {
             modalClose={closeDeleteModal}
             kpiId={isEditKpiId}
             isModalOpen={isEditModalOpen}
+
           />
         )}
         <ViewKPIDetailModal

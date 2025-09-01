@@ -38,7 +38,9 @@ export default function useDeleteUserLog() {
           <div>
             <FormSelect
               value={selectedEmployee}
-              onChange={handleOptionChange}
+              onChange={(value) =>
+                handleOptionChange(value as string | string[])
+              }
               options={employeeOptions}
               className="h-9"
               isSearchable={true}
