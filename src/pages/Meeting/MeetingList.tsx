@@ -154,6 +154,13 @@ export default function MeetingList() {
               {showDetail ? "Show Other Meetings" : "Show Detail Meetings"}
             </Button> */}
             <Button
+              variant={showDetail ? "outline" : "destructive"}
+              onClick={handleDetailToggle}
+              className="py-2 w-fit"
+            >
+              {showDetail ? "Show Other Meetings" : "Show Detail Meetings"}
+            </Button>
+            <Button
               variant={showOverdue ? "destructive" : "outline"}
               onClick={handleOverdueToggle}
               className="py-2 w-fit"
