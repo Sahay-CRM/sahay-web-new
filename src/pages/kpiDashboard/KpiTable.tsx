@@ -290,6 +290,7 @@ export default function UpdatedKpiTable() {
         leftScrollRef.current.scrollTop = (e.target as HTMLElement).scrollTop;
         rightScrollRef.current.scrollTop = (e.target as HTMLElement).scrollTop;
       }
+
     };
     const leftEl = leftScrollRef.current;
     const rightEl = rightScrollRef.current;
@@ -565,6 +566,7 @@ export default function UpdatedKpiTable() {
           </div>
         </div>
       </div>
+
       <div className="flex w-full gap-0 p-2">
         {/* LEFT TABLE */}
         <div
@@ -776,6 +778,7 @@ export default function UpdatedKpiTable() {
                 {groupedKpiRows.map((group, idx) => (
                   <React.Fragment
                     key={(group.coreParameter.coreParameterId, idx)}
+
                   >
                     <tr className="sticky h-[39px] top-[50px] bg-blue-50 z-10">
                       <td

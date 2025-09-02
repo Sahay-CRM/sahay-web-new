@@ -18,16 +18,16 @@ import { twMerge } from "tailwind-merge";
 
 interface Option {
   id?: string | number;
-  value?: string | number;
-  label?: string | number;
+  value?: string | number | boolean;
+  label?: string | number | boolean;
   color?: string;
 }
 
 interface FormSelectProps {
   id?: string;
   label?: string;
-  value?: string | string[];
-  onChange: (value: string | string[]) => void;
+  value?: string | string[] | boolean;
+  onChange: (value: string | string[] | boolean) => void;
   options: Option[];
   disabled?: boolean;
   error?: { message?: string };
@@ -103,8 +103,13 @@ export default function FormSelect({
 
       {!isMulti && (
         <Select
-          value={value as string}
-          onValueChange={(val) => onChange(val)}
+          value={String(value)}
+          onValueChange={(val) => {
+            // Try to convert to boolean if possible
+            if (val === "true") onChange(true);
+            else if (val === "false") onChange(false);
+            else onChange(val);
+          }}
           disabled={disabled}
         >
           <FormControl>
@@ -128,7 +133,7 @@ export default function FormSelect({
               </div>
             )}
             {filteredOptions.map((opt) => (
-              <SelectItem key={opt.value} value={String(opt.value)}>
+              <SelectItem key={String(opt.value)} value={String(opt.value)}>
                 {opt.label}
               </SelectItem>
             ))}

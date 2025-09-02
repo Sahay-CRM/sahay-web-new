@@ -151,8 +151,10 @@ const Urls = {
   detailMeetingCheckStatus: (id: string) =>
     `${baseUrl}/company/detail-meeting/start/${id}`,
 
+
   updateDetailMeetingCheckStatus: (id: string) =>
     `${baseUrl}/company/detail-meeting/update/${id}`,
+
 
   endMeeting: (id: string) => `${baseUrl}/company/detail-meeting/end/${id}`,
 
@@ -189,6 +191,7 @@ const Urls = {
   getMeetingKpisData: () => `${baseUrl}/company/detail-meeting/kpi/get`,
   getMeetingSelectedKpisData: () =>
     `${baseUrl}/company/detail-meeting/kpi/get-data`,
+
   deleteMeetingKpisData: () => `${baseUrl}/company/detail-meeting/kpi/remove`,
   allKpiList: () => `${baseUrl}/company/kpi/get-detail-meeting`,
 
@@ -200,6 +203,7 @@ const Urls = {
   detailMeetingGet: () => `${baseUrl}/company/detail-meeting/get`,
   detailMeetingDelete: (id: string) =>
     `${baseUrl}/company/detail-meeting/delete/${id}`,
+
 
   getConclusionByMeeting: (id: string) =>
     `${baseUrl}/company/detail-meeting/get-conclusion/${id}`,
@@ -278,6 +282,7 @@ const Urls = {
   duplicateDetailMeeting: () => `${baseUrl}/company/detail-meeting/duplicate`,
 
   ddAllNonSelectDatapointList: () => `${baseUrl}/kpi/get-all`,
+
 };
 
 export default Urls;

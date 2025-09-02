@@ -47,13 +47,16 @@ export default function ViewKpiDetailModal({
     >
       <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-700 mb-6">
         {modalData?.KPIName && (
+
           <div className="break-words whitespace-normal">
+
             <span className="font-medium text-primary">KPI Name : </span>
             {modalData.KPIName}
           </div>
         )}
         {modalData?.KPILabel && (
           <div className="break-words whitespace-normal">
+
             <span className="font-medium text-primary">
               KPI Description (Tooltip) :{" "}
             </span>
