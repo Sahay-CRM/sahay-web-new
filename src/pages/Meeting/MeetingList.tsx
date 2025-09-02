@@ -21,10 +21,8 @@ import { format } from "date-fns";
 import DateRangePicker from "@/components/shared/DateRange";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
-
 // import { useSelector } from "react-redux";
 // import { getUserId } from "@/features/selectors/auth.selector";
-
 
 export default function MeetingList() {
   const {
@@ -58,7 +56,6 @@ export default function MeetingList() {
 
   const { setBreadcrumbs } = useBreadcrumbs();
   // const userId = useSelector(getUserId);
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -156,13 +153,6 @@ export default function MeetingList() {
             >
               {showDetail ? "Show Other Meetings" : "Show Detail Meetings"}
             </Button> */}
-            <Button
-              variant={showDetail ? "outline" : "destructive"}
-              onClick={handleDetailToggle}
-              className="py-2 w-fit"
-            >
-              {showDetail ? "Show Other Meetings" : "Show Detail Meetings"}
-            </Button>
             <Button
               variant={showOverdue ? "destructive" : "outline"}
               onClick={handleOverdueToggle}
@@ -310,7 +300,6 @@ export default function MeetingList() {
             //     </>
             //   );
             // }}
-
             isActionButton={() => true}
             onDelete={(row) => {
               onDelete(row as unknown as CompanyMeetingDataProps);
