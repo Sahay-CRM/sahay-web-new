@@ -188,6 +188,8 @@ const DashboardLayout = () => {
 
     companyVerifyOtp(verifyCompanyData, {
       onSuccess: (response) => {
+        console.log(response);
+        // return;
         if (response?.status) {
           setToken(response?.data?.token ?? "", response?.data);
           dispatch(
