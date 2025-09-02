@@ -999,6 +999,7 @@ interface Kpi {
   photo?: string | null;
   tag?: string;
   detailMeetingKPIId?: string;
+  goalValue?: number;
 }
 
 interface CoreParameterGroup {

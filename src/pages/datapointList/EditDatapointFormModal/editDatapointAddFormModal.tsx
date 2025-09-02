@@ -80,7 +80,7 @@ export default function EditDatapointAddFormModal({
                   setValue("KPIMasterId", value.value);
                 }}
                 placeholder="Select KPI..."
-                label="Selected KPI"
+                label="KPI"
                 error={errors.KPIMasterId}
                 isMandatory
                 className="mb-2"

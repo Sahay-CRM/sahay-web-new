@@ -436,6 +436,73 @@ export default function UpdatedKpiTable() {
     setSortConfig({ key, direction });
   };
 
+  const handleFocus = (
+    e: React.FocusEvent<HTMLInputElement>,
+    cellKey: string,
+  ) => {
+    setInputFocused((prev) => ({
+      ...prev,
+      [cellKey]: true,
+    }));
+    setTimeout(() => e.target.select(), 10);
+  };
+
+  const handleBlur = (cellKey: string) => {
+    setInputFocused((prev) => ({
+      ...prev,
+      [cellKey]: false,
+    }));
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    cellKey: string,
+  ) => {
+    const val = e.target.value;
+
+    // Only allow numbers, decimal point, and empty string
+    const isValidNumber = /^-?\d*\.?\d*$/.test(val) || val === "";
+
+    if (isValidNumber) {
+      setInputValues((prev) => ({
+        ...prev,
+        [cellKey]: val,
+      }));
+      setTempValues((prev) => ({
+        ...prev,
+        [cellKey]: val,
+      }));
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const charCode = e.which ? e.which : e.keyCode;
+    const char = String.fromCharCode(charCode);
+
+    if (
+      !/[\d.]/.test(char) &&
+      charCode > 31 &&
+      (charCode < 48 || charCode > 57)
+    ) {
+      e.preventDefault();
+    }
+
+    // Allow only one decimal point
+    if (char === "." && e.currentTarget.value.includes(".")) {
+      e.preventDefault();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    // Validate pasted content
+    const pastedText = e.clipboardData.getData("text");
+    const isValidPaste = /^-?\d*\.?\d*$/.test(pastedText);
+
+    if (!isValidPaste) {
+      e.preventDefault();
+    }
+  };
+
   //   if (isLoading) {
   //     return <Loader />;
   //   }
@@ -646,19 +713,27 @@ export default function UpdatedKpiTable() {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <span className="line-clamp-2 break-words cursor-default">
-                                {getFormattedValue(
-                                  kpi.validationType,
-                                  kpi?.value1,
-                                  kpi?.value2,
-                                  kpi?.unit,
-                                )}
+                                {kpi.validationType === "YES_NO"
+                                  ? kpi.goalValue === 1
+                                    ? "Yes"
+                                    : "No" // Show Yes/No based on goalValue
+                                  : getFormattedValue(
+                                      kpi.validationType,
+                                      kpi?.value1,
+                                      kpi?.value2,
+                                      kpi?.unit,
+                                    )}
                               </span>
                             </TooltipTrigger>
                             <TooltipContent>
                               <span>
-                                {kpi.validationType === "BETWEEN"
-                                  ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(kpi?.value2)}`
-                                  : formatToThreeDecimals(kpi?.value1)}
+                                {kpi.validationType === "YES_NO"
+                                  ? kpi.goalValue === 1
+                                    ? `Yes ${formatToThreeDecimals(kpi.value1)}`
+                                    : `No ${formatToThreeDecimals(kpi.value1)}`
+                                  : kpi.validationType === "BETWEEN"
+                                    ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(kpi?.value2)}`
+                                    : formatToThreeDecimals(kpi?.value1)}
                               </span>
                             </TooltipContent>
                           </Tooltip>
@@ -768,31 +843,51 @@ export default function UpdatedKpiTable() {
                                               "opacity-60 border ",
                                           )}
                                         >
-                                          <FormSelect
-                                            value={inputVal}
-                                            onChange={
-                                              canInput
-                                                ? (val) => {
-                                                    setInputValues((prev) => ({
-                                                      ...prev,
-                                                      [key]: Array.isArray(val)
-                                                        ? val.join(", ")
-                                                        : String(val),
-                                                    }));
-                                                    setTempValues((prev) => ({
-                                                      ...prev,
-                                                      [key]: Array.isArray(val)
-                                                        ? val.join(", ")
-                                                        : String(val),
-                                                    }));
-                                                  }
-                                                : () => {}
-                                            }
-                                            options={selectOptions}
-                                            placeholder="Select"
-                                            disabled={!canInput}
-                                            triggerClassName="text-sm px-1 text-center justify-center"
-                                          />
+                                          {!isVisualized ? (
+                                            <FormSelect
+                                              value={inputVal}
+                                              onChange={
+                                                canInput
+                                                  ? (val) => {
+                                                      setInputValues(
+                                                        (prev) => ({
+                                                          ...prev,
+                                                          [key]: Array.isArray(
+                                                            val,
+                                                          )
+                                                            ? val.join(", ")
+                                                            : String(val),
+                                                        }),
+                                                      );
+                                                      setTempValues((prev) => ({
+                                                        ...prev,
+                                                        [key]: Array.isArray(
+                                                          val,
+                                                        )
+                                                          ? val.join(", ")
+                                                          : String(val),
+                                                      }));
+                                                    }
+                                                  : () => {}
+                                              }
+                                              options={selectOptions}
+                                              placeholder="Select"
+                                              disabled={!canInput}
+                                              triggerClassName="text-sm px-1 text-center justify-center"
+                                            />
+                                          ) : (
+                                            <div className="flex flex-col items-center  justify-center h-full w-full cursor-not-allowed">
+                                              <span className="text-black">
+                                                {
+                                                  inputFocused[key]
+                                                    ? inputVal // Show raw value when focused
+                                                    : formatCompactNumber(
+                                                        inputVal,
+                                                      ) // Show formatted value when blurred
+                                                }
+                                              </span>
+                                            </div>
+                                          )}
                                         </div>
                                       </TooltipTrigger>
                                     </Tooltip>
@@ -812,56 +907,36 @@ export default function UpdatedKpiTable() {
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <input
-                                        type="number"
+                                        type="text"
+                                        inputMode="decimal"
                                         value={
                                           inputFocused[key]
-                                            ? inputVal
-                                            : formatCompactNumber(inputVal)
+                                            ? inputVal // Show raw value when focused
+                                            : formatCompactNumber(inputVal) // Show formatted value when blurred
                                         }
                                         onFocus={
                                           canInput
-                                            ? () =>
-                                                setInputFocused((prev) => ({
-                                                  ...prev,
-                                                  [key]: true,
-                                                }))
+                                            ? (e) => handleFocus(e, key)
                                             : undefined
                                         }
                                         onBlur={
                                           canInput
-                                            ? () =>
-                                                setInputFocused((prev) => ({
-                                                  ...prev,
-                                                  [key]: false,
-                                                }))
+                                            ? () => handleBlur(key)
                                             : undefined
                                         }
                                         onChange={
                                           canInput
-                                            ? (e) => {
-                                                const val = e.target.value;
-                                                const isValidNumber =
-                                                  /^(\d+(\.\d*)?|\.\d*)?$/.test(
-                                                    val,
-                                                  ) || val === "";
-                                                if (isValidNumber) {
-                                                  setInputValues((prev) => ({
-                                                    ...prev,
-                                                    [key]: val,
-                                                  }));
-                                                }
-                                                setTempValues((prev) => ({
-                                                  ...prev,
-                                                  [key]: e?.target.value,
-                                                }));
-                                              }
+                                            ? (e) => handleChange(e, key)
                                             : undefined
                                         }
+                                        onKeyPress={handleKeyPress}
+                                        onPaste={handlePaste}
                                         className={clsx(
-                                          "border p-2 rounded-sm text-center text-sm w-[80px] h-[42px]",
+                                          "border p-2 rounded-sm text-center text-sm w-full h-[42px] transition-all",
+                                          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
                                           inputVal !== "" &&
                                             validationType &&
-                                            selectedPeriod !== "YEARLY" && // 👈 yearly skip
+                                            selectedPeriod !== "YEARLY" &&
                                             (isValidInput(
                                               validationType,
                                               inputVal,
@@ -873,7 +948,7 @@ export default function UpdatedKpiTable() {
                                           (!canInput || isVisualized) &&
                                             "opacity-60 cursor-not-allowed bg-gray-50",
                                         )}
-                                        placeholder=""
+                                        placeholder="0"
                                         disabled={!canInput}
                                         readOnly={!canInput}
                                       />

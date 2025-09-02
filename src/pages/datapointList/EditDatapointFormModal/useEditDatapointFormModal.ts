@@ -35,7 +35,9 @@ export default function useEditDatapointFormModal({
     control,
     watch,
     setValue,
+    getValues,
   } = useForm();
+  console.log(getValues());
 
   useEffect(() => {
     if (datapointApiData) {
@@ -145,8 +147,8 @@ export default function useEditDatapointFormModal({
     KPIMasterId: emp.KPIMasterId ?? "",
     KPIId: emp.kpiId ?? "",
     KPIName: emp.KPIName ?? "",
-    value: emp.kpiId ?? "", // dropdown value अब unique KPIId होगा
-    label: emp.KPIName ?? "", // dropdown label KPIName रहेगा
+    value: emp.KPIMasterId ?? "",
+    label: emp.KPIName ?? "",
   }));
 
   // Filter visual frequency options based on selected frequency
