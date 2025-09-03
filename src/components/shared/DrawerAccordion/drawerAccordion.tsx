@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
-import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
+import { useSidebarTheme } from "@/features/layouts/useSidebarTheme";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import LucideIcon from "@/components/shared/Icons/LucideIcon";
 import { type IconName } from "@/components/shared/Icons/iconMap";

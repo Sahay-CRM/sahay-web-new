@@ -5,7 +5,7 @@ import { Bell, LogOut, User2Icon } from "lucide-react";
 
 import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
 import VerticalNavBar from "@/components/shared/VerticalNavBar/VerticalNavBar";
-import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
+import { useSidebarTheme } from "../useSidebarTheme";
 import {
   logout,
   setAuth,
@@ -36,7 +36,7 @@ import { ImageBaseURL } from "@/features/utils/urls.utils";
 import CompanyModal from "@/pages/auth/login/CompanyModal";
 import { useGetCompanyList } from "@/features/api/SelectCompany";
 import { verifyCompanyOtpMutation } from "@/features/api/login";
-import { useAuth } from "@/features/auth/useAuth";
+// import { useAuth } from "@/features/auth/useAuth";
 import { queryClient } from "@/queryClient";
 import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
@@ -86,7 +86,7 @@ const DashboardLayout = () => {
 
   const [isCompanyModalOpen, setCompanyModalOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const { setToken } = useAuth();
+  // const { setToken } = useAuth();
 
   const user = useSelector(getUserDetail);
   const userId = useSelector(getUserId);
@@ -189,7 +189,7 @@ const DashboardLayout = () => {
     companyVerifyOtp(verifyCompanyData, {
       onSuccess: (response) => {
         if (response?.status) {
-          setToken(response?.data?.token ?? "", response?.data);
+          // setToken(response?.data?.token ?? "", response?.data);
           dispatch(
             setAuth({
               userId: response.data.employeeId,
