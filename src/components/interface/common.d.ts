@@ -1000,6 +1000,7 @@ interface Kpi {
   tag?: string;
   detailMeetingKPIId?: string;
   goalValue?: number;
+  sequence?: number;
 }
 
 interface CoreParameterGroup {

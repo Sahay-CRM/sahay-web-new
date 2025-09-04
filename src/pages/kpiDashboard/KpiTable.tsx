@@ -21,7 +21,13 @@ import { FormProvider, useForm } from "react-hook-form";
 import Loader from "@/components/shared/Loader/Loader";
 import { FormDatePicker } from "@/components/shared/Form/FormDatePicker/FormDatePicker";
 import { Button } from "@/components/ui/button";
-import { ArrowDown, ArrowUp, ArrowUpDown, RefreshCcw } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChartNoAxesColumn,
+  RefreshCcw,
+} from "lucide-react";
 import TabsSection from "./TabSection";
 import {
   addUpdateKpi,
@@ -31,12 +37,7 @@ import WarningDialog from "./WarningModal";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-
-interface CoreParameterGroup {
-  coreParameterId: string;
-  coreParameterName: string;
-  kpis: Kpi[];
-}
+import KPISideBar from "./KPISideBar";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -66,10 +67,9 @@ interface SortConfig {
 export default function UpdatedKpiTable() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Initialize the state with the correct type
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "employeeName", // Default sort column
-    direction: "asc", // Default sort direction
+    key: "sequence",
+    direction: "asc",
   });
 
   const { data: kpiStructure, isLoading: isKpiStructureLoading } =
@@ -115,6 +115,7 @@ export default function UpdatedKpiTable() {
   const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
     {},
   );
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const originalPushState = history.pushState;
@@ -290,7 +291,6 @@ export default function UpdatedKpiTable() {
         leftScrollRef.current.scrollTop = (e.target as HTMLElement).scrollTop;
         rightScrollRef.current.scrollTop = (e.target as HTMLElement).scrollTop;
       }
-
     };
     const leftEl = leftScrollRef.current;
     const rightEl = rightScrollRef.current;
@@ -503,6 +503,8 @@ export default function UpdatedKpiTable() {
     }
   };
 
+  const handleSidebarOpen = () => setOpen(true);
+
   //   if (isLoading) {
   //     return <Loader />;
   //   }
@@ -528,18 +530,34 @@ export default function UpdatedKpiTable() {
     <FormProvider {...methods}>
       <div className="sticky top-0 z-10 bg-white p-4 m-0">
         <div className="flex justify-between">
-          {" "}
           <div className="flex justify-between items-center">
             <TabsSection
               selectedPeriod={selectedPeriod}
               onSelectPeriod={handlePeriodChange}
               kpiStructure={kpiStructure}
             />
-          </div>{" "}
+          </div>
           <div className="flex gap-4 items-center justify-end">
             {Object.keys(tempValues).length > 0 && (
               <Button onClick={handleSubmit}>Submit</Button>
             )}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={handleSidebarOpen}
+                    variant="ghost"
+                    className="bg-primary hover:bg-primary text-white rotate-270"
+                    size="icon"
+                  >
+                    <ChartNoAxesColumn className="text-white w-8 h-8" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>ReArrange</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <FormDatePicker
               value={selectedDate}
               onSubmit={(date) => {
@@ -778,7 +796,6 @@ export default function UpdatedKpiTable() {
                 {groupedKpiRows.map((group, idx) => (
                   <React.Fragment
                     key={(group.coreParameter.coreParameterId, idx)}
-
                   >
                     <tr className="sticky h-[39px] top-[50px] bg-blue-50 z-10">
                       <td
@@ -984,6 +1001,16 @@ export default function UpdatedKpiTable() {
         onSubmit={handleWarningSubmit}
         onDiscard={handleWarningDiscard}
         onClose={handleWarningClose}
+      />
+      <KPISideBar
+        open={open}
+        onClose={() => setOpen(false)}
+        selectedType={selectedPeriod}
+        data={groupedKpiRows.map((row) => ({
+          coreParameterId: row.coreParameter.coreParameterId,
+          coreParameterName: row.coreParameter.coreParameterName,
+          kpis: row.kpis.map((k) => k.kpi),
+        }))}
       />
     </FormProvider>
   );

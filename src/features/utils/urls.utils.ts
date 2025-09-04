@@ -151,10 +151,8 @@ const Urls = {
   detailMeetingCheckStatus: (id: string) =>
     `${baseUrl}/company/detail-meeting/start/${id}`,
 
-
   updateDetailMeetingCheckStatus: (id: string) =>
     `${baseUrl}/company/detail-meeting/update/${id}`,
-
 
   endMeeting: (id: string) => `${baseUrl}/company/detail-meeting/end/${id}`,
 
@@ -203,7 +201,6 @@ const Urls = {
   detailMeetingGet: () => `${baseUrl}/company/detail-meeting/get`,
   detailMeetingDelete: (id: string) =>
     `${baseUrl}/company/detail-meeting/delete/${id}`,
-
 
   getConclusionByMeeting: (id: string) =>
     `${baseUrl}/company/detail-meeting/get-conclusion/${id}`,
@@ -283,6 +280,7 @@ const Urls = {
 
   ddAllNonSelectDatapointList: () => `${baseUrl}/kpi/get-all`,
 
+  updateKPISequence: () => `${baseUrl}/company/kpi-data/sequence/update`,
 };
 
 export default Urls;
