@@ -547,7 +547,7 @@ export default function UpdatedKpiTable() {
                   <Button
                     onClick={handleSidebarOpen}
                     variant="ghost"
-                    className="bg-primary hover:bg-primary text-white rotate-270"
+                    className="bg-primary hover:bg-primary text-white rotate-270 cursor-pointer"
                     size="icon"
                   >
                     <ChartNoAxesColumn className="text-white w-8 h-8" />

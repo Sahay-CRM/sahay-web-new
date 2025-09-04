@@ -26,6 +26,7 @@ import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { getRouteByLabel } from "@/features/utils/navigation.data";
+import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 
 // Interfaces
 interface Permission {
@@ -71,7 +72,6 @@ interface ModuleWithChildren extends ModuleDetails {
   children?: ModuleWithChildren[];
 }
 
-// PermissionTable component (inner)
 function PermissionTableInner({ data, onChange }: PermissionTableProps) {
   const { data: moduleData, isLoading: moduleLoading } = useGetAllModule();
   const { data: permissionData, isLoading: permissionLoading } =
@@ -334,6 +334,7 @@ export default function UserPermissionTableMerged() {
   const { id: employeeId } = useParams();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const updatePermission = useUpdateUserPermission();
+  const { data: employeeApiData } = useGetEmployeeById(employeeId || "");
   const { data: userPerm } = useGetUserPerById(employeeId || "");
   const { setBreadcrumbs } = useBreadcrumbs();
   const location = useLocation();
@@ -502,6 +503,13 @@ export default function UserPermissionTableMerged() {
 
   if (permission && permission.View === false) {
     return <PageNotAccess />;
+  }
+  if (employeeApiData?.data.isSuperAdmin) {
+    return (
+      <div className="h-full w-full text-3xl text-primary font-semibold uppercase flex flex-col items-center justify-center">
+        Cannot assign permissions to a Super Admin.
+      </div>
+    );
   }
 
   return (
