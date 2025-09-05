@@ -96,6 +96,8 @@ const CompanyTaskRe = lazy(
   () => import("../pages/CompanyTaskListRepeat/CompanyTaskListRe"),
 );
 
+const CompanyTaskNew = lazy(() => import("../pages/ToDoList"));
+
 export default function EmployeeRoutes() {
   return (
     <Routes>
@@ -162,6 +164,8 @@ export default function EmployeeRoutes() {
         {/* <Route path="kpi-visualize" Component={KPIVisualize} /> */}
 
         <Route path="healthscore-achieve" Component={Healthscore} />
+
+        <Route path="todo-list" element={<CompanyTaskNew />} />
 
         <Route path="business">
           <Route path="health-weightage" Component={HealthWeightage} />

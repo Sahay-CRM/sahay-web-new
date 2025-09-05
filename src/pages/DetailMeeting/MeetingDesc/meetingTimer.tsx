@@ -303,8 +303,6 @@ export default function MeetingTimer({
               variant="ghost"
               onClick={() => {
                 if (isEditMode) {
-                  console.log(isEditMode);
-
                   handleEditClick();
                 }
               }}

@@ -311,6 +311,7 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
                 onChange={(date) => {
                   field.onChange(date?.toISOString());
                 }}
+                disablePastDates={true}
                 error={errors.meetingDateTime}
                 // disableDaysFromToday={5}
               />

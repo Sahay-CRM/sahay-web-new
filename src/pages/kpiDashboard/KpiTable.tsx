@@ -22,9 +22,9 @@ import Loader from "@/components/shared/Loader/Loader";
 import { FormDatePicker } from "@/components/shared/Form/FormDatePicker/FormDatePicker";
 import { Button } from "@/components/ui/button";
 import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
+  // ArrowDown,
+  // ArrowUp,
+  // ArrowUpDown,
   ChartNoAxesColumn,
   RefreshCcw,
 } from "lucide-react";
@@ -35,7 +35,10 @@ import {
 } from "@/features/api/kpiDashboard";
 import WarningDialog from "./WarningModal";
 import { useSelector } from "react-redux";
-import { getUserPermission } from "@/features/selectors/auth.selector";
+import {
+  getUserDetail,
+  getUserPermission,
+} from "@/features/selectors/auth.selector";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import KPISideBar from "./KPISideBar";
 
@@ -60,22 +63,24 @@ function formatToThreeDecimals(value: string | number | null | undefined) {
     minimumFractionDigits: 0,
   });
 }
-interface SortConfig {
-  key: string;
-  direction: "asc" | "desc";
-}
+// interface SortConfig {
+//   key: string;
+//   direction: "asc" | "desc";
+// }
 export default function UpdatedKpiTable() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "sequence",
-    direction: "asc",
-  });
+  const userData = useSelector(getUserDetail);
+
+  // const [sortConfig, setSortConfig] = useState<SortConfig>({
+  //   key: "sequence",
+  //   direction: "asc",
+  // });
 
   const { data: kpiStructure, isLoading: isKpiStructureLoading } =
     useGetKpiDashboardStructure({
-      sortBy: sortConfig.key,
-      sortOrder: sortConfig.direction,
+      sortBy: "sequence",
+      sortOrder: "asc",
     });
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -428,13 +433,13 @@ export default function UpdatedKpiTable() {
     setShowWarning(false);
   };
 
-  const handleSort = (key: string) => {
-    let direction: "asc" | "desc" = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-    setSortConfig({ key, direction });
-  };
+  // const handleSort = (key: string) => {
+  //   let direction: "asc" | "desc" = "asc";
+  //   if (sortConfig.key === key && sortConfig.direction === "asc") {
+  //     direction = "desc";
+  //   }
+  //   setSortConfig({ key, direction });
+  // };
 
   const handleFocus = (
     e: React.FocusEvent<HTMLInputElement>,
@@ -541,23 +546,25 @@ export default function UpdatedKpiTable() {
             {Object.keys(tempValues).length > 0 && (
               <Button onClick={handleSubmit}>Submit</Button>
             )}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={handleSidebarOpen}
-                    variant="ghost"
-                    className="bg-primary hover:bg-primary text-white rotate-270 cursor-pointer"
-                    size="icon"
-                  >
-                    <ChartNoAxesColumn className="text-white w-8 h-8" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>ReArrange</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {userData.isSuperAdmin && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleSidebarOpen}
+                      variant="ghost"
+                      className="bg-primary hover:bg-primary text-white rotate-270 cursor-pointer"
+                      size="icon"
+                    >
+                      <ChartNoAxesColumn className="text-white w-8 h-8" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>ReArrange</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             <FormDatePicker
               value={selectedDate}
               onSubmit={(date) => {
@@ -597,11 +604,11 @@ export default function UpdatedKpiTable() {
               <tr>
                 <th
                   className="w-[75px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
-                  onClick={() => handleSort("employeeName")}
+                  // onClick={() => handleSort("employeeName")}
                 >
                   <div className="flex items-center gap-1">
                     Who
-                    {sortConfig.key === "employeeName" &&
+                    {/* {sortConfig.key === "employeeName" &&
                       (sortConfig.direction === "asc" ? (
                         <ArrowUp className="w-4 h-4 ml-1" />
                       ) : (
@@ -609,16 +616,16 @@ export default function UpdatedKpiTable() {
                       ))}
                     {sortConfig.key !== "employeeName" && (
                       <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
-                    )}
+                    )} */}
                   </div>
                 </th>
                 <th
                   className="w-[190px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
-                  onClick={() => handleSort("KPIName")}
+                  // onClick={() => handleSort("KPIName")}
                 >
                   <div className="flex items-center gap-1">
                     KPI
-                    {sortConfig.key === "KPIName" &&
+                    {/* {sortConfig.key === "KPIName" &&
                       (sortConfig.direction === "asc" ? (
                         <ArrowUp className="w-4 h-4 ml-1" />
                       ) : (
@@ -626,16 +633,16 @@ export default function UpdatedKpiTable() {
                       ))}
                     {sortConfig.key !== "KPIName" && (
                       <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
-                    )}
+                    )} */}
                   </div>
                 </th>
                 <th
                   className="w-[120px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
-                  onClick={() => handleSort("tag")}
+                  // onClick={() => handleSort("tag")}
                 >
                   <div className="flex items-center gap-1">
                     Tag
-                    {sortConfig.key === "tag" &&
+                    {/* {sortConfig.key === "tag" &&
                       (sortConfig.direction === "asc" ? (
                         <ArrowUp className="w-4 h-4 ml-1" />
                       ) : (
@@ -643,7 +650,7 @@ export default function UpdatedKpiTable() {
                       ))}
                     {sortConfig.key !== "tag" && (
                       <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
-                    )}
+                    )} */}
                   </div>
                 </th>
                 <th className="w-[100px] p-2 font-semibold text-white text-left h-[51px]">

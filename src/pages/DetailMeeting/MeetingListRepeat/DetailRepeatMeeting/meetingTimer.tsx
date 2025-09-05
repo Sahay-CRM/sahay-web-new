@@ -67,8 +67,8 @@ export default function MeetingTimer({
   const [editMode, setEditMode] = useState(false);
   const [hoursInput, setHoursInput] = useState("");
   const [minutesInput, setMinutesInput] = useState("");
-  const [currentTime, setCurrentTime] = useState(initialPlannedTime);
-  const [editedTime, setEditedTime] = useState(initialPlannedTime);
+  const [currentTime, setCurrentTime] = useState(initialPlannedTime ?? 0);
+  const [editedTime, setEditedTime] = useState(initialPlannedTime ?? 0);
   const [localUpdating, setLocalUpdating] = useState(false);
 
   const formatTime = useCallback((seconds: number = 0) => {
@@ -78,6 +78,13 @@ export default function MeetingTimer({
     const minutes = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
     return { sign, hours, minutes };
   }, []);
+
+  useEffect(() => {
+    if (initialPlannedTime) {
+      setCurrentTime(initialPlannedTime);
+      setEditedTime(initialPlannedTime);
+    }
+  }, [initialPlannedTime]);
 
   const formattedTime = useMemo(
     () => formatTime(Math.floor(editMode ? editedTime : currentTime)),

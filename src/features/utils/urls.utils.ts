@@ -281,6 +281,18 @@ const Urls = {
   ddAllNonSelectDatapointList: () => `${baseUrl}/kpi/get-all`,
 
   updateKPISequence: () => `${baseUrl}/company/kpi-data/sequence/update`,
+
+  createTODOList: () => `${baseUrl}/company/to-do/create`,
+  getAllTODOList: () => `${baseUrl}/company/to-do/get-all`,
+
+  getAllTODOListFile: (id: string) => `${baseUrl}/company/to-do/get-all/${id}`,
+  getByIdTODOList: (id: string) => `${baseUrl}/company/to-do/get/${id}`,
+  updateTODOList: (id: string) => `${baseUrl}/company/to-do/update/${id}`,
+  deleteTODOList: (id: string) => `${baseUrl}/company/to-do/delete/${id}`,
+  updateTODOnotes: (id: string) => `${baseUrl}/company/to-do/note/update/${id}`,
+  addTODOnotes: () => `${baseUrl}/company/to-do/note/create`,
+  getTODOnotes: (id: string) => `${baseUrl}/company/to-do/note/get/${id}`,
+  deleteTODOnote: (id: string) => `${baseUrl}/company/to-do/note/delete/${id}`,
 };
 
 export default Urls;
