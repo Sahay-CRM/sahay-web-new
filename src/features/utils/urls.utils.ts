@@ -271,6 +271,13 @@ const Urls = {
   createRepeatMeetingIo: () =>
     `${baseUrl}/company/repetitive-meeting/agenda/io/create-add`,
 
+  getRepeatMeetingNotes: () => `${baseUrl}/company/repetitive-meeting/note/get`,
+  addRepeatMeetingNotes: () => `${baseUrl}/company/repetitive-meeting/note/add`,
+  updateRepeatMeetingNotes: (id: string) =>
+    `${baseUrl}/company/repetitive-meeting/note/update/${id}`,
+  deleteRepeatMeetingNotes: (id: string) =>
+    `${baseUrl}/company/repetitive-meeting/note/delete/${id}`,
+
   getRepeatMeetingAgendaIo: () =>
     `${baseUrl}/company/repetitive-meeting/agenda/io/get`,
   deleteRepeatMeetingAgendaIo: () =>

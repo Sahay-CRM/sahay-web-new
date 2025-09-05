@@ -1324,3 +1324,13 @@ interface CompanyNavItem {
   moduleKey?: string;
   items?: CompanyNavItem[];
 }
+
+interface RepeatMeetingNotesRes {
+  employeeId?: string;
+  note?: string;
+  noteId?: string;
+  repetitiveMeetingId?: string;
+  createdAt?: string;
+  noteType?: string;
+  employeeName?: string;
+}

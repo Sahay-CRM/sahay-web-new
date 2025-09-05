@@ -204,7 +204,7 @@ export const companyNavigationData = [
   {
     id: 12,
     icon: "ListTodo",
-    label: "ToDo List",
+    label: "My Day",
     link: "/dashboard/todo-list",
     permission: "View",
     moduleKey: "TASK",

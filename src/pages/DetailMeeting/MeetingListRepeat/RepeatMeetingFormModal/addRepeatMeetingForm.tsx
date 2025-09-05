@@ -21,7 +21,7 @@ import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import FormSelect from "@/components/shared/Form/FormSelect";
-import DatePicker from "react-datepicker";
+// import DatePicker from "react-datepicker";
 import PageNotAccess from "@/pages/PageNoAccess";
 
 interface MeetingInfoProps {
@@ -336,7 +336,7 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
             />
           )}
         />
-        <Controller
+        {/* <Controller
           control={control}
           name="meetingTimePlanned"
           render={({ field }) => (
@@ -350,7 +350,7 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
               dateFormat="h:mm aa"
             />
           )}
-        />
+        /> */}
       </Card>
     </div>
   );

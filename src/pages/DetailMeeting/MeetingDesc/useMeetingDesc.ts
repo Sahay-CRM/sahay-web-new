@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { get, getDatabase, off, onValue, ref, update } from "firebase/database";
 
-import { useAddUpdateCompanyMeeting } from "@/features/api/companyMeeting";
+// import { useAddUpdateCompanyMeeting } from "@/features/api/companyMeeting";
 import { queryClient } from "@/queryClient";
 import {
   addMeetingNotesMutation,
@@ -41,7 +41,7 @@ export default function useMeetingDesc() {
   // const { mutate: updateTime } = addMeetingTimeMutation();
   const { mutate: addNote } = addMeetingNotesMutation();
   const deleteNoteMutation = deleteCompanyMeetingMutation();
-  const { mutate: addMeeting } = useAddUpdateCompanyMeeting();
+  // const { mutate: addMeeting } = useAddUpdateCompanyMeeting();
 
   const { mutate: addDetailMeeting } = addUpdateDetailMeetingMutation();
 
@@ -321,10 +321,10 @@ export default function useMeetingDesc() {
 
     if (meetingId && meetingTiming?.meetingId) {
       const payload = {
-        companyMeetingId: meetingId,
+        meetingId: meetingId,
         joiners: joiners,
       };
-      addMeeting(payload, {
+      addDetailMeeting(payload, {
         onSuccess: () => {
           if (!meetingSnapshot.exists()) {
             queryClient.invalidateQueries({

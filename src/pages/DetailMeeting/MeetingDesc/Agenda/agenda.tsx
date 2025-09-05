@@ -700,7 +700,12 @@ export default function Agenda({
                 <Tabs
                   defaultValue="UNSOLVED"
                   onValueChange={(value) => {
-                    if (isTeamLeader) {
+                    if (isTeamLeader && follow) {
+                      handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
+                    } else if (
+                      meetingStatus === "NOT_STARTED" ||
+                      meetingStatus === "ENDED"
+                    ) {
                       handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
                     }
                   }}

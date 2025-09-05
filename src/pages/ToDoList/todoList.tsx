@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronUp, Pencil, Trash, X } from "lucide-react";
+import { Pencil, Trash, X } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import TaskSheet from "./todoListDrawer";
@@ -28,7 +27,6 @@ export default function TodoList() {
   } = useTodoList();
 
   const [editTaskId, setEditTaskId] = useState<string | null>(null);
-  const [showCompleted, setShowCompleted] = useState(true);
 
   const completedTasks = (tasks ?? []).filter((t) => t.isCompleted);
   const activeTasks = (tasks ?? []).filter((t) => !t.isCompleted);
@@ -42,11 +40,11 @@ export default function TodoList() {
     <div className="flex h-[calc(100vh-90px)] w-full bg-background">
       {/* Task List */}
       <div
-        className={`flex flex-col p-4 transition-all duration-300 ${
+        className={`flex flex-col transition-all duration-300 ${
           isDrawerOpen ? "w-3/4" : "w-full"
         }`}
       >
-        <div className="flex-1 h-[60%] space-y-3 overflow-y-auto pr-1">
+        <div className="flex-1 space-y-3 p-4 overflow-y-auto pr-1">
           {tasks?.length === 0 && (
             <p className="text-muted-foreground text-sm italic text-center py-6">
               No tasks yet. Add one below.
@@ -55,9 +53,9 @@ export default function TodoList() {
 
           {/* Active Tasks */}
           {activeTasks.map((task) => (
-            <Card
+            <div
               key={task.toDoId}
-              className={`flex justify-between px-4 py-3 rounded-lg bg-card hover:bg-accent transition 
+              className={`flex justify-between rounded-lg border bg-card hover:bg-accent pl-2 transition 
                 ${task.isCompleted ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
               onClick={() => {
                 if (
@@ -172,73 +170,39 @@ export default function TodoList() {
                   )}
                 </div>
               </div>
-            </Card>
+            </div>
           ))}
+          <div className="space-y-3 overflow-auto flex-1 pr-1">
+            <h2 className="text-sm font-medium">COMPLETED </h2>
+            {completedTasks.map((task) => (
+              <div
+                key={task.toDoId}
+                className="flex justify-between border p-1 break-all rounded-lg bg-card hover:bg-accent transition cursor-not-allowed opacity-70"
+              >
+                <div className="flex gap-3 flex-1 items-center justify-between">
+                  <div className="flex gap-2 flex-1 items-center">
+                    <RadioGroup value="done" className="flex-shrink-0">
+                      <RadioGroupItem
+                        value="done"
+                        id={`task-${task.toDoId}`}
+                        className="w-5 h-5 rounded-full"
+                        disabled
+                      />
+                    </RadioGroup>
+                    <Label className="mr-5 text-[12px]" title={task.toDoName}>
+                      {task.toDoName}
+                    </Label>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Completed Tasks */}
-        {completedTasks.length > 0 && (
-          <>
-            {showCompleted ? (
-              <div className="mt-6 h-[40%] flex flex-col">
-                {/* Toggle Button */}
-                <div className="shrink-0 sticky top-0 bg-background z-10">
-                  <Button
-                    variant="outline"
-                    className="w-50 hover:text-primary justify-center font-semibold text-primary border border-primary"
-                    onClick={() => setShowCompleted(false)}
-                  >
-                    <ChevronDown className="text-primary w-4 h-4 mr-1" />
-                    COMPLETED {completedTasks.length}
-                  </Button>
-                </div>
-
-                {/* Scrollable Completed List */}
-                <div className="mt-3 space-y-3 overflow-auto flex-1 pr-1">
-                  {completedTasks.map((task) => (
-                    <Card
-                      key={task.toDoId}
-                      className="flex justify-between px-4 py-3 rounded-lg bg-card hover:bg-accent transition cursor-not-allowed opacity-70"
-                    >
-                      <div className="flex gap-3 flex-1 items-center justify-between">
-                        <div className="flex gap-2 flex-1 items-center overflow-hidden">
-                          <RadioGroup value="done" className="flex-shrink-0">
-                            <RadioGroupItem
-                              value="done"
-                              id={`task-${task.toDoId}`}
-                              className="w-5 h-5 rounded-full"
-                              disabled
-                            />
-                          </RadioGroup>
-                          <Label
-                            className="text-muted-foreground truncate mr-5 overflow-hidden whitespace-nowrap"
-                            title={task.toDoName}
-                          >
-                            {task.toDoName}
-                          </Label>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="mt-4">
-                <Button
-                  variant="outline"
-                  className="w-50 hover:text-primary justify-center font-semibold text-primary border border-primary"
-                  onClick={() => setShowCompleted(true)}
-                >
-                  <ChevronUp className="text-primary w-4 h-4 mr-1" />
-                  COMPLETED {completedTasks.length}
-                </Button>
-              </div>
-            )}
-          </>
-        )}
 
         {/* Input for new task */}
-        <div className="mt-3 border-t border-gray-800  flex items-center gap-2">
+        <div className="mt-3 bg-primary p-2 pb-4 flex items-center gap-2 rounded-md">
           <Input
             type="text"
             placeholder="Add a todo..."
@@ -247,7 +211,7 @@ export default function TodoList() {
             onKeyDown={(e) => {
               if (e.key === "Enter") handleAddTask();
             }}
-            className="flex-1 mt-2  rounded-lg border border-primary  "
+            className="flex-1 mt-2  rounded-lg border border-white text-white placeholder:text-white"
           />
         </div>
       </div>
