@@ -99,7 +99,6 @@ export default function useAddDetailMeeting() {
         handleModalClose();
         if (searchParams.get("from") === "task") {
           navigate("/dashboard/tasks/add");
-          window.location.reload();
         } else {
           navigate("/dashboard/meeting/detail");
         }

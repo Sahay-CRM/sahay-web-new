@@ -25,7 +25,7 @@ export default function useDuplicateDetailMeeting() {
       return resData;
     },
     onSuccess: () => {
-      toast.success("Data Added");
+      toast.success("Meeting Duplicate Successful");
       queryClient.resetQueries({ queryKey: ["get-detail-meeting-list"] });
       queryClient.resetQueries({ queryKey: ["get-meeting-details-timing"] });
     },

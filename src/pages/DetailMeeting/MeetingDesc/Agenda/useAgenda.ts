@@ -481,6 +481,7 @@ export const useAgenda = ({
           });
           setModalOpen(false);
           setAddIssueModal(false);
+          setIssueInput("");
           return;
         } else {
           const db = getDatabase();
@@ -859,11 +860,7 @@ export const useAgenda = ({
     //   ? (now - meetingConclusionTime) / 1000
     //   : undefined;
     if (meetingId && meetingId) {
-      endMeet(meetingId, {
-        onSuccess: () => {
-          window.location.reload();
-        },
-      });
+      endMeet(meetingId);
     }
   };
 
@@ -899,10 +896,10 @@ export const useAgenda = ({
         },
         {
           onSuccess: () => {
-            queryClient.resetQueries({
-              queryKey: ["get-meeting-details-timing"],
-            });
             if (!meetingSnapshot.exists()) {
+              queryClient.resetQueries({
+                queryKey: ["get-meeting-details-timing"],
+              });
               return;
             } else {
               const db = getDatabase();

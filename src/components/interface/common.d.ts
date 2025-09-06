@@ -362,7 +362,7 @@ interface CompanyProjectDataProps {
   coreParameterId?: string;
   coreParameterName?: string;
   detailMeetingProjectId?: string;
-  detailMeetingNoteId?: string;
+  meetingNoteId?: string;
   ioType?: string;
 }
 
@@ -652,7 +652,7 @@ interface TaskGetPaging {
   projectId?: string;
   issueTaskId?: string;
   repetition?: string;
-  detailMeetingNoteId?: string;
+  meetingNoteId?: string;
   repetitiveTaskId?: string;
   employeeName?: string;
   isActive?: boolean;

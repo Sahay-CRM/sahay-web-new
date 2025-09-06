@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pencil, Trash, X } from "lucide-react";
+import { Calendar, CheckCircle2, Pencil, Trash, X } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -44,7 +44,7 @@ export default function TodoList() {
           isDrawerOpen ? "w-3/4" : "w-full"
         }`}
       >
-        <div className="flex-1 space-y-3 p-4 overflow-y-auto pr-1">
+        <div className="flex-1 space-y-1 p-4 overflow-y-auto pr-1">
           {tasks?.length === 0 && (
             <p className="text-muted-foreground text-sm italic text-center py-6">
               No tasks yet. Add one below.
@@ -55,8 +55,8 @@ export default function TodoList() {
           {activeTasks.map((task) => (
             <div
               key={task.toDoId}
-              className={`flex justify-between rounded-lg border bg-card hover:bg-accent pl-2 transition 
-                ${task.isCompleted ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+              className={`flex justify-between p-1 rounded-sm border bg-card hover:bg-accent pl-2 transition 
+               ${task.isCompleted ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
               onClick={() => {
                 if (
                   !task.isCompleted &&
@@ -68,8 +68,9 @@ export default function TodoList() {
                 }
               }}
             >
-              <div className="flex gap-3 flex-1 items-center justify-between ">
-                <div className="flex gap-2 flex-1 items-center overflow-hidden">
+              <div className="flex gap-4 flex-1 items-center justify-between">
+                <div className="flex gap-3 flex-1 items-center overflow-hidden min-w-0">
+                  {/* Checkbox */}
                   <RadioGroup
                     value={task.isCompleted ? "done" : "todo"}
                     onValueChange={() => {
@@ -77,16 +78,17 @@ export default function TodoList() {
                         toggleComplete(task.toDoId);
                       }
                     }}
-                    className="flex-shrink-0"
+                    className="px-1 flex-shrink-0"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <RadioGroupItem
                       value="done"
                       id={`task-${task.toDoId}`}
-                      className="w-5 h-5 rounded-full"
-                      disabled={task.isCompleted}
+                      className="w-4 h-4 rounded-full border border-gray-400 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                     />
                   </RadioGroup>
 
+                  {/* Task Content */}
                   {editTaskId === task.toDoId ? (
                     <>
                       <Input
@@ -105,7 +107,7 @@ export default function TodoList() {
                           }
                         }}
                         disabled={!task.toDoId}
-                        className="flex-1 h-8 text-sm"
+                        className="flex-1 h-8 text-sm "
                       />
                       <Button
                         variant="ghost"
@@ -115,28 +117,64 @@ export default function TodoList() {
                           setEditTaskId(null);
                           setEditValue("");
                         }}
-                        className="text-muted-foreground hover:text-primary w-10 border rounded-md aspect-square"
+                        className="text-muted-foreground hover:text-red-500 w-10 border rounded-md aspect-square"
                       >
-                        <X className="text-black w-4 h-4" />
+                        <X className="w-4 h-4" />
                       </Button>
                     </>
                   ) : (
-                    <Label
-                      className={`cursor-pointer truncate flex-1 ${
-                        task.isCompleted
-                          ? "text-muted-foreground"
-                          : "text-foreground"
-                      }`}
-                      title={task.toDoName} // tooltip for full text
-                    >
-                      {task.toDoName}
-                    </Label>
+                    <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+                      {/* ✅ Task Title with Wrap */}
+                      <Label
+                        className="text-black  text-[12px] "
+                        title={task.toDoName}
+                      >
+                        {task.toDoName}
+                      </Label>
+
+                      {/* ✅ Due Date Below */}
+                      {task.dueDate &&
+                        (() => {
+                          const due = new Date(task.dueDate);
+                          const today = new Date();
+                          const tomorrow = new Date();
+                          tomorrow.setDate(today.getDate() + 1);
+
+                          const isSameDay = (d1: Date, d2: Date) =>
+                            d1.getDate() === d2.getDate() &&
+                            d1.getMonth() === d2.getMonth() &&
+                            d1.getFullYear() === d2.getFullYear();
+
+                          let displayDate;
+                          if (isSameDay(due, today)) {
+                            displayDate = "Today";
+                          } else if (isSameDay(due, tomorrow)) {
+                            displayDate = "Tomorrow";
+                          } else {
+                            displayDate = due.toLocaleDateString("en-GB", {
+                              day: "2-digit",
+                              month: "numeric",
+                              year: "numeric",
+                            });
+                          }
+
+                          return (
+                            <span className="flex items-center gap-1 text-[9px] text-primary leading-none">
+                              <Calendar className="w-2 h-2 shrink-0" />
+                              <span className="inline-block leading-none">
+                                {displayDate}
+                              </span>
+                            </span>
+                          );
+                        })()}
+                    </div>
                   )}
                 </div>
 
-                <div>
-                  <Button
-                    variant="ghost"
+                {/* Actions */}
+                <div className="flex items-center gap-2 mr-2">
+                  {/* Delete */}
+                  <span
                     title="Delete task"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -148,50 +186,89 @@ export default function TodoList() {
                         }
                       }
                     }}
-                    disabled={task.isCompleted || editTaskId === task.toDoId}
-                    className="text-muted-foreground hover:text-primary w-10 border rounded-md aspect-square mr-2 cursor-pointer"
+                    className={`cursor-pointer p-2 rounded-md hover:bg-red-100 
+        ${task.isCompleted || editTaskId === task.toDoId ? "opacity-50 hidden pointer-events-none" : ""}`}
                   >
-                    <Trash className="text-black w-4 h-4" />
-                  </Button>
+                    <Trash className="w-4 h-4 text-red-500" />
+                  </span>
+
+                  {/* Edit */}
                   {editTaskId !== task.toDoId && (
-                    <Button
-                      variant="ghost"
+                    <span
                       title="Edit task"
                       onClick={(e) => {
                         e.stopPropagation();
                         setEditTaskId(task.toDoId ?? null);
                         setEditValue(task.toDoName || "");
                       }}
-                      disabled={task.isCompleted} // Optional: keep disabled for completed tasks
-                      className="text-muted-foreground hover:text-primary w-10 border rounded-md aspect-square cursor-pointer"
+                      className={`cursor-pointer p-2 rounded-md hover:bg-gray-200 
+          ${task.isCompleted ? "opacity-50 pointer-events-none" : ""}`}
                     >
-                      <Pencil className="text-black w-4 h-4" />
-                    </Button>
+                      <Pencil className="w-4 h-4 text-primary" />
+                    </span>
                   )}
                 </div>
               </div>
             </div>
           ))}
-          <div className="space-y-3 overflow-auto flex-1 pr-1">
-            <h2 className="text-sm font-medium">COMPLETED </h2>
+
+          <div className="space-y-1  overflow-auto flex-1 pr-1">
+            <h2 className=" mt-2 text-primary border-b mb-3 font-medium">
+              COMPLETED{" "}
+            </h2>
             {completedTasks.map((task) => (
               <div
                 key={task.toDoId}
-                className="flex justify-between border p-1 break-all rounded-lg bg-card hover:bg-accent transition cursor-not-allowed opacity-70"
+                className="flex h-10 justify-between border p-1 break-all rounded-sm bg-card hover:bg-accent transition cursor-not-allowed items-center"
               >
-                <div className="flex gap-3 flex-1 items-center justify-between">
-                  <div className="flex gap-2 flex-1 items-center">
-                    <RadioGroup value="done" className="flex-shrink-0">
-                      <RadioGroupItem
-                        value="done"
-                        id={`task-${task.toDoId}`}
-                        className="w-5 h-5 rounded-full"
-                        disabled
-                      />
-                    </RadioGroup>
-                    <Label className="mr-5 text-[12px]" title={task.toDoName}>
+                <div className="flex gap-3 flex-1 items-center">
+                  <div className="px-1 disabled flex-shrink-0 flex items-center h-full">
+                    <CheckCircle2 className="w-4.5 h-4.5 text-gray-600 disabled:" />
+                  </div>
+
+                  {/* ✅ Add min-w-0 here to ensure truncation works */}
+                  <div className="flex flex-col flex-1 ">
+                    <Label
+                      className="text-muted-foreground line-through text-[12px] "
+                      title={task.toDoName}
+                    >
                       {task.toDoName}
                     </Label>
+                    {/* ✅ Due Date Below */}
+                    {task.dueDate &&
+                      (() => {
+                        const due = new Date(task.dueDate);
+                        const today = new Date();
+                        const tomorrow = new Date();
+                        tomorrow.setDate(today.getDate() + 1);
+
+                        const isSameDay = (d1: Date, d2: Date) =>
+                          d1.getDate() === d2.getDate() &&
+                          d1.getMonth() === d2.getMonth() &&
+                          d1.getFullYear() === d2.getFullYear();
+
+                        let displayDate;
+                        if (isSameDay(due, today)) {
+                          displayDate = "Today";
+                        } else if (isSameDay(due, tomorrow)) {
+                          displayDate = "Tomorrow";
+                        } else {
+                          displayDate = due.toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "numeric",
+                            year: "numeric",
+                          });
+                        }
+
+                        return (
+                          <span className="flex items-center gap-1 text-[9px] text-primary leading-none">
+                            <Calendar className="w-2 h-2 shrink-0" />
+                            <span className="inline-block leading-none">
+                              {displayDate}
+                            </span>
+                          </span>
+                        );
+                      })()}
                   </div>
                 </div>
               </div>
@@ -202,7 +279,7 @@ export default function TodoList() {
         {/* Completed Tasks */}
 
         {/* Input for new task */}
-        <div className="mt-3 bg-primary p-2 pb-4 flex items-center gap-2 rounded-md">
+        <div className="mt-3  bg-primary p-2 pb-3 flex items-center gap-2 rounded-md">
           <Input
             type="text"
             placeholder="Add a todo..."
@@ -211,7 +288,7 @@ export default function TodoList() {
             onKeyDown={(e) => {
               if (e.key === "Enter") handleAddTask();
             }}
-            className="flex-1 mt-2  rounded-lg border border-white text-white placeholder:text-white"
+            className="flex-1 mt-1 bg-white rounded-lg border border-white text-black placeholder:text-gray-800"
           />
         </div>
       </div>

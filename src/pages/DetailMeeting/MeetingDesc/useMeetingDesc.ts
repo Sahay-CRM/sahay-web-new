@@ -138,14 +138,17 @@ export default function useMeetingDesc() {
     return () => unsubscribe();
   }, [db, handleUpdatedRefresh, meetingId]);
 
-  const handleTabChange = (tab: string) => {
-    if (activeTab === tab) {
-      setIsCardVisible(!isCardVisible);
-    } else {
-      setActiveTab(tab);
-      setIsCardVisible(true);
-    }
-  };
+  const handleTabChange = useCallback((tab: string) => {
+    setActiveTab((prevTab) => {
+      if (prevTab === tab) {
+        setIsCardVisible((prev) => !prev);
+        return tab;
+      } else {
+        setIsCardVisible(true);
+        return tab;
+      }
+    });
+  }, []);
 
   const handleConclusionMeeting = () => {
     if (meetingId) {
@@ -351,6 +354,9 @@ export default function useMeetingDesc() {
         });
         queryClient.invalidateQueries({
           queryKey: ["get-meeting-notes"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["get-detail-meeting-obj-issue"],
         });
       }
     });

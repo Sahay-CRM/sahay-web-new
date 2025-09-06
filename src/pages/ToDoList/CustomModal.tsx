@@ -249,13 +249,13 @@ export default function CustomModalFile({
             {dateOrWeekly === "WEEKLY" && (
               <div className="flex items-start gap-6">
                 {/* Week selector */}
-                <div className="w-40">
+                <div className="w-50">
                   <Label className="text-sm font-medium">Select Week</Label>
                   <Select
                     value={selectedWeek !== null ? String(selectedWeek) : ""} // UI ke liye string
                     onValueChange={(value) => setSelectedWeek(Number(value))} // convert to number
                   >
-                    <SelectTrigger className="mt-2 w-40">
+                    <SelectTrigger className="mt-2 w-50">
                       <SelectValue placeholder="Choose week..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -348,13 +348,13 @@ export default function CustomModalFile({
             {/* Weekly Pattern → Select week + day */}
             {selectedQuarter && dateOrWeekly === "WEEKLY" && (
               <div className="flex items-start gap-6">
-                <div className="w-40">
+                <div className="w-50">
                   <Label className="text-sm font-medium">Select Week</Label>
                   <Select
                     value={selectedWeek !== null ? String(selectedWeek) : ""} // UI ke liye string
                     onValueChange={(value) => setSelectedWeek(Number(value))}
                   >
-                    <SelectTrigger className="mt-2 w-40">
+                    <SelectTrigger className="mt-2 w-50">
                       <SelectValue placeholder="Choose week..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -448,13 +448,13 @@ export default function CustomModalFile({
 
             {selectedHalf && dateOrWeekly === "WEEKLY" && (
               <div className="flex items-start gap-6">
-                <div className="w-40">
+                <div className="w-50">
                   <Label className="text-sm font-medium">Select Week</Label>
                   <Select
                     value={selectedWeek !== null ? String(selectedWeek) : ""} // UI ke liye string
                     onValueChange={(value) => setSelectedWeek(Number(value))}
                   >
-                    <SelectTrigger className="mt-2 w-40">
+                    <SelectTrigger className="mt-2 w-50">
                       <SelectValue placeholder="Choose week..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -548,13 +548,13 @@ export default function CustomModalFile({
 
             {selectedMonth && dateOrWeekly === "WEEKLY" && (
               <div className="flex items-start gap-6">
-                <div className="w-40">
+                <div className="w-50">
                   <Label className="text-sm font-medium">Select Week</Label>
                   <Select
                     value={selectedWeek !== null ? String(selectedWeek) : ""} // UI ke liye string
                     onValueChange={(value) => setSelectedWeek(Number(value))}
                   >
-                    <SelectTrigger className="mt-2 w-40">
+                    <SelectTrigger className="mt-2 w-50">
                       <SelectValue placeholder="Choose week..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -620,15 +620,24 @@ export default function CustomModalFile({
     switch (baseFrequency) {
       case "WEEKLY":
         if (selectedDay !== null && selectedDay !== undefined) {
-          summary += ` ${dayNames[selectedDay]}`;
+          summary += `Every Week in ${dayNames[selectedDay]}`;
         }
         break;
 
       case "MONTHLY":
         if (dateOrWeekly === "date" && selectedDate) {
           summary += `Every month on the ${selectedDate}${getOrdinal(selectedDate)} date`;
-        } else if (dateOrWeekly === "WEEKLY" && selectedWeek && selectedDay) {
-          summary += `Every month on the ${getLabel(weeks, selectedWeek)} ${dayNames[selectedDay]}`;
+        } else if (
+          dateOrWeekly === "WEEKLY" &&
+          selectedWeek &&
+          selectedDay !== null &&
+          selectedDay !== undefined
+        ) {
+          let weekLabel = getLabel(weeks, selectedWeek);
+          if (weekLabel) {
+            weekLabel = weekLabel.replace(/^Every\s+/i, ""); // Remove "Every"
+          }
+          summary += `Every month on the ${weekLabel} ${dayNames[selectedDay]}`;
         }
         break;
 
@@ -651,7 +660,7 @@ export default function CustomModalFile({
           summary += `Every quarter on (${monthNames})`;
 
           if (dateOrWeekly === "date" && selectedDate) {
-            summary += ` on the ${selectedDate}${getOrdinal(selectedDate)} Date`;
+            summary += `  the ${selectedDate}${getOrdinal(selectedDate)} Date`;
           } else if (
             dateOrWeekly === "WEEKLY" &&
             selectedWeek &&
@@ -661,7 +670,7 @@ export default function CustomModalFile({
             if (weekLabel) {
               weekLabel = weekLabel.replace(/^Every\s+/i, ""); // Remove "Every"
             }
-            summary += ` on the ${weekLabel} ${dayNames[selectedDay]}`;
+            summary += `  the ${weekLabel} ${dayNames[selectedDay]}`;
           }
         }
         break;
@@ -743,7 +752,7 @@ export default function CustomModalFile({
       isModalOpen={open}
       modalClose={() => onOpenChange(false)}
       modalTitle="Custom Repetition"
-      containerClass="  min-w-[40%] "
+      containerClass="   min-w-[40%] "
       buttons={[
         {
           btnText: "Save",
@@ -885,11 +894,14 @@ export default function CustomModalFile({
         {renderFrequencyFields()}
 
         {/* Schedule Summary - always at bottom */}
-        <div className="pt-4  border-gray-200">
-          <p className="text-sm text-gray-600 bg-gray-100 p-3 rounded-md">
-            {getScheduleSummary()}
-          </p>
-        </div>
+        {/* Schedule Summary - only show if there is meaningful content */}
+        {getScheduleSummary().trim() !== "Summary :" && (
+          <div className="pt-4 border-gray-200">
+            <p className="text-sm text-gray-600 bg-gray-100 p-3 rounded-md">
+              {getScheduleSummary()}
+            </p>
+          </div>
+        )}
       </div>
     </ModalData>
   );

@@ -68,10 +68,13 @@ export default function TaskDrawer({
     : [];
   const employeeOption = employeedata
     ? employeedata.data.map((status) => ({
-        label: `${status.employeeName} ${status.designationName} ${status.employeeType}`,
+        label: `${status.employeeName}${
+          status.designationName ? " " + status.designationName : ""
+        } ${status.employeeType}`,
         value: status.employeeId,
       }))
     : [];
+
   const projectListOption = projectListdata
     ? Array.isArray(projectListdata.data)
       ? projectListdata.data.map((project) => ({
@@ -180,12 +183,13 @@ export default function TaskDrawer({
           : { objectiveId: issueId }),
         ioType: ioType,
       };
+
       addUpdateTask(payload, {
         onSuccess: () => {
-          if (taskData && taskData.detailMeetingNoteId) {
+          if (taskData && taskData.meetingNoteId) {
             addNote(
               {
-                meetingNoteId: taskData?.detailMeetingNoteId,
+                meetingNoteId: taskData?.meetingNoteId,
                 noteType: "TASKS",
               },
               {

@@ -62,7 +62,9 @@ export default function ProjectDrawer({
     : [];
   const employeeOption = employeeData
     ? employeeData.data.map((status) => ({
-        label: `${status.employeeName} ${status.designationName} ${status.employeeType}`,
+        label: `${status.employeeName}${
+          status.designationName ? " " + status.designationName : ""
+        } ${status.employeeType}`,
         value: status.employeeId,
       }))
     : [];
@@ -199,10 +201,10 @@ export default function ProjectDrawer({
       };
       addProject(payload, {
         onSuccess: () => {
-          if (projectData && projectData.detailMeetingNoteId) {
+          if (projectData && projectData.meetingNoteId) {
             addNote(
               {
-                meetingNoteId: projectData?.detailMeetingNoteId,
+                meetingNoteId: projectData?.meetingNoteId,
                 noteType: "TASKS",
               },
               {

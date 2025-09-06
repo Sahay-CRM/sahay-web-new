@@ -128,11 +128,13 @@ export default function MeetingTimer({
   );
 
   const handleEditClick = () => {
-    const time = Math.floor(currentTime);
-    setHoursInput(String(Math.floor(time / 3600)));
-    setMinutesInput(String(Math.floor((time % 3600) / 60)));
-    setEditedTime(time);
-    setEditMode(true);
+    if (!meetingStart && isEditMode) {
+      const time = Math.floor(currentTime);
+      setHoursInput(String(Math.floor(time / 3600)));
+      setMinutesInput(String(Math.floor((time % 3600) / 60)));
+      setEditedTime(time);
+      setEditMode(true);
+    }
   };
 
   const handleCancel = () => {
@@ -302,9 +304,7 @@ export default function MeetingTimer({
               size="sm"
               variant="ghost"
               onClick={() => {
-                if (isEditMode) {
-                  handleEditClick();
-                }
+                handleEditClick();
               }}
               title="Edit time"
               className="text-muted-foreground hover:text-primary"

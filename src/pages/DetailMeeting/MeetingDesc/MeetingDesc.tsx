@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { Suspense, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 
 import {
@@ -38,6 +38,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
+import { SpinnerIcon } from "@/components/shared/Icons";
 // import EmployeeSearchDropdown from "./EmployeeSearchDropdown";
 
 const Agenda = React.lazy(() => import("./Agenda"));
@@ -146,11 +147,19 @@ export default function MeetingDesc() {
               <div className="h-[calc(100vh-170px)] overflow-auto">
                 {meetingStatus !== "ENDED" && isTeamLeader && (
                   <div className="px-4 mb-2">
-                    <EmployeeSearchDropdown
-                      onAdd={handleAddEmp}
-                      minSearchLength={2}
-                      filterProps={{ pageSize: 20 }}
-                    />
+                    <Suspense
+                      fallback={
+                        <div className="animate-spin">
+                          <SpinnerIcon />
+                        </div>
+                      }
+                    >
+                      <EmployeeSearchDropdown
+                        onAdd={handleAddEmp}
+                        minSearchLength={2}
+                        filterProps={{ pageSize: 20 }}
+                      />
+                    </Suspense>
                   </div>
                 )}
 
@@ -184,8 +193,8 @@ export default function MeetingDesc() {
                             >
                               <div className="relative">
                                 {item.isTeamLeader && (
-                                  <span className="absolute -top-1 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
-                                    <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
+                                  <span className="absolute -top-2 right-3 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                                    <Crown className="w-3 h-3 text-[#303290] drop-shadow" />
                                   </span>
                                 )}
 
@@ -213,7 +222,7 @@ export default function MeetingDesc() {
                                 </Avatar>
                                 {item.employeeId === follow && (
                                   <span className="absolute -bottom-0 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
-                                    <CircleCheckBig className="w-4 h-4 text-[#303290] drop-shadow" />
+                                    <CircleCheckBig className="w-3 h-3 text-[#303290] drop-shadow" />
                                   </span>
                                 )}
                               </div>
@@ -330,15 +339,23 @@ export default function MeetingDesc() {
               </div>
               <div className="px-2">
                 {meetingId && (meetingTiming?.joiners as Joiners[]) && (
-                  <MeetingNotes
-                    joiners={meetingTiming?.joiners as Joiners[]}
-                    meetingId={meetingId}
-                    // detailMeetingId={meetingTiming?.detailMeetingId}
-                    employeeId={userId}
-                    className="mt-2"
-                    meetingName={meetingTiming?.meetingName}
-                    meetingStatus={meetingStatus}
-                  />
+                  <Suspense
+                    fallback={
+                      <div className="animate-spin">
+                        <SpinnerIcon />
+                      </div>
+                    }
+                  >
+                    <MeetingNotes
+                      joiners={meetingTiming?.joiners as Joiners[]}
+                      meetingId={meetingId}
+                      // detailMeetingId={meetingTiming?.detailMeetingId}
+                      employeeId={userId}
+                      className="mt-2"
+                      meetingName={meetingTiming?.meetingName}
+                      meetingStatus={meetingStatus}
+                    />
+                  </Suspense>
                 )}
               </div>
             </div>

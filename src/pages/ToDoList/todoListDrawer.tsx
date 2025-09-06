@@ -61,7 +61,7 @@ export default function TodoListDrawer({
   const [openCustomModal, setOpenCustomModal] = useState(false);
   const [showFullTitle, setShowFullTitle] = useState(false);
   const [removedFileIds, setRemovedFileIds] = useState<string[]>([]);
-  const MAX_TITLE_LENGTH = 30; // truncate if longer than this
+  const MAX_TITLE_LENGTH = 30;
   const isLongTitle = taskTitle && taskTitle.length > MAX_TITLE_LENGTH;
   const displayedTitle =
     !isLongTitle || showFullTitle
@@ -71,9 +71,7 @@ export default function TodoListDrawer({
   const [selectedRepeat, setSelectedRepeat] = useState<string>("");
   const { mutate: addNoteApi } = addTODONotesMutation();
   const { data: todoNotes, refetch: refetchMeetingNotes } = useGetTODONotes({
-    filter: {
-      toDoId: taskId,
-    },
+    filter: { toDoId: taskId },
     enable: !!taskId,
   });
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
@@ -86,63 +84,53 @@ export default function TodoListDrawer({
 
   const handleSaveEdit = (noteId: string) => {
     if (!editValue.trim()) return;
-
     addNoteApi({
       noteId,
       toDoId: taskId,
       note: editValue.trim(),
       noteType: "GENERAL",
     });
-
     setEditingNoteId(null);
     setEditValue("");
   };
 
-  // ✅ Add note locally
   const handleAddNote = () => {
     if (!noteInput.trim() || !taskId) return;
-
-    addNoteApi({
-      note: noteInput.trim(),
-      toDoId: taskId,
-      noteType: "GENERAL",
-    });
+    addNoteApi({ note: noteInput.trim(), toDoId: taskId, noteType: "GENERAL" });
     refetchMeetingNotes();
     setNoteInput("");
     setIsAddingNote(false);
   };
-  const { mutate: deleteNote } = useDeleteTODONote();
-  // ✅ Delete note
-  const handleDelete = (noteId: string) => {
-    deleteNote(noteId);
-  };
-  const handleFileClick = () => {
-    fileInputRef.current?.click();
-  };
 
+  const { mutate: deleteNote } = useDeleteTODONote();
+  const handleDelete = (noteId: string) => deleteNote(noteId);
+
+  const handleFileClick = () => fileInputRef.current?.click();
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files ? Array.from(e.target.files) : [];
-    if (files.length > 0) {
-      const updatedFiles = [...selectedFiles, ...files];
-      setSelectedFiles(updatedFiles);
-    }
+    if (files.length > 0) setSelectedFiles([...selectedFiles, ...files]);
   };
+
   const { mutate: docUpload } = docUploadMutation();
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]); // store already uploaded file names
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
 
   const handleFileOperations = async (
     taskId: string,
     currentFiles: (File | { fileId: string; fileName: string })[],
     removedIds: string[],
   ) => {
-    const uploadMeetingFile = (file: File) => {
+    const unUploaded = currentFiles.filter(
+      (f) => f instanceof File && !uploadedFiles.includes(f.name),
+    ) as File[];
+
+    if (unUploaded.length > 0) {
       const formData = new FormData();
       formData.append("refId", taskId);
       formData.append("isMaster", "0");
       formData.append("fileType", "2060");
-      formData.append("files", file);
+      unUploaded.forEach((file) => formData.append("files", file));
 
-      return new Promise<void>((resolve) => {
+      await new Promise<void>((resolve) => {
         docUpload(formData, {
           onSuccess: () => {
             queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
@@ -152,23 +140,13 @@ export default function TodoListDrawer({
           },
         });
       });
-    };
-
-    const unUploaded = currentFiles.filter(
-      (f) => f instanceof File && !uploadedFiles.includes(f.name),
-    ) as File[];
-
-    for (const file of unUploaded) {
-      await uploadMeetingFile(file);
+      setUploadedFiles((prev) => [...prev, ...unUploaded.map((f) => f.name)]);
     }
-
-    setUploadedFiles((prev) => [...prev, ...unUploaded.map((f) => f.name)]);
 
     if (removedIds.length > 0) {
       const formData = new FormData();
       formData.append("refId", taskId);
       formData.append("removedFiles", removedIds.join(","));
-
       await docUpload(formData, {
         onSuccess: () => {
           queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
@@ -181,18 +159,15 @@ export default function TodoListDrawer({
 
   const handleRemoveFile = async (index: number) => {
     const fileToRemove = selectedFiles[index];
-
     if ("fileId" in fileToRemove) {
       await handleFileOperations(taskId || "", selectedFiles, [
         fileToRemove.fileId,
       ]);
     }
-
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const { mutate: modifyTodo } = addUpdateToDoListMutation();
-
   type RepeatPayload = {
     toDoId: string;
     repeatType?: string;
@@ -237,30 +212,25 @@ export default function TodoListDrawer({
 
     modifyTodo(cleanedPayload);
   };
+
   interface FileItem {
     fileId: string;
-    fileName: string; // ✅ add this
+    fileName: string;
+    name: string;
   }
-
   const { data: todoData, refetch: refetchTodo } = useGetTodobyId(taskId || "");
   useEffect(() => {
-    if (open && taskId) {
-      refetchTodo();
-    }
+    if (open && taskId) refetchTodo();
   }, [open, taskId, refetchTodo]);
 
   const methods = useForm({ mode: "onChange" });
   const { reset } = methods;
-
   useEffect(() => {
     if (todoData) {
       const data = todoData;
-
-      // Format dueDate from ISO to YYYY-MM-DD
       const formattedDueDate = data.dueDate
         ? new Date(data.dueDate).toISOString().split("T")[0]
         : "";
-
       reset({
         toDoId: data.toDoId || "",
         toDoName: data.toDoName || "",
@@ -270,19 +240,15 @@ export default function TodoListDrawer({
         repeatType: data.repeatType || "",
         customObj: data.customObj || {},
       });
-
-      setDueDate(formattedDueDate); // <-- set it here
+      setDueDate(formattedDueDate);
       setSelectedRepeat(getRepeatTypeOrCustom(data));
-
       if (data.files && Array.isArray(data.files)) {
-        const mapped: FileItem[] = (
-          data.files as { fileId: string; fileName?: string; name?: string }[]
-        ).map((f) => ({
-          fileId: f.fileId,
-          fileName: f.fileName ?? f.name ?? "",
-        }));
-
-        setSelectedFiles(mapped);
+        setSelectedFiles(
+          (data.files as FileItem[]).map((f) => ({
+            fileId: f.fileId,
+            fileName: f.fileName ?? f.name ?? "",
+          })),
+        );
       }
     }
   }, [todoData, reset]);
@@ -295,13 +261,12 @@ export default function TodoListDrawer({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        aria-describedby={undefined}
         side="right"
-        className="w-full sm:w-96 border-l bg-card overflow-auto"
+        className="w-full sm:w-96  overflow-auto border-l bg-card flex flex-col"
       >
         <SheetHeader>
           <div className="flex flex-col mr-3">
-            <SheetTitle className="font-semibold text-lg break-words">
+            <SheetTitle className="font-semibold mr-1 text-lg break-words">
               {displayedTitle || "Task Details"}
             </SheetTitle>
             {isLongTitle && (
@@ -313,15 +278,11 @@ export default function TodoListDrawer({
               </button>
             )}
           </div>
-
-          {/* <SheetDescription>
-            Here you can manage all details for this task.
-          </SheetDescription> */}
         </SheetHeader>
 
-        <div className="p-2 space-y-2">
-          {/* -------- Due Date -------- */}
-          <div className="divide-y divide-border rounded-md border">
+        <div className="p-2 flex flex-col gap-2 flex-1 overflow-hidden">
+          {/* Due Date & Repeat */}
+          <div className="divide-y divide-border rounded-md border flex-shrink-0">
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <div className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent">
@@ -334,73 +295,60 @@ export default function TodoListDrawer({
                   mode="single"
                   selected={dueDate ? new Date(dueDate) : undefined}
                   onSelect={(date) => {
-                    if (date) {
-                      const year = date.getFullYear();
-                      const month = (date.getMonth() + 1)
-                        .toString()
-                        .padStart(2, "0");
-                      const day = date.getDate().toString().padStart(2, "0");
-
-                      const formattedDueDate = `${year}-${month}-${day}`;
-                      setDueDate(formattedDueDate);
-                      setCalendarOpen(false);
-                      handleUpdateRepeat(selectedRepeat, formattedDueDate);
-                    }
+                    if (!date) return;
+                    const formattedDueDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+                    setDueDate(formattedDueDate);
+                    setCalendarOpen(false);
+                    handleUpdateRepeat(selectedRepeat, formattedDueDate);
                   }}
                 />
               </PopoverContent>
             </Popover>
 
-            {/* -------- Repeat -------- */}
-            <div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <div className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent">
-                    <Repeat className="w-4 h-4" />
-                    <span>{selectedRepeatLabel}</span>
-                  </div>
-                </DropdownMenuTrigger>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent">
+                  <Repeat className="w-4 h-4" />
+                  <span>{selectedRepeatLabel}</span>
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-fit">
+                {repeatOptions.map((item) => {
+                  const isSelected = item.value === selectedRepeat;
+                  return (
+                    <DropdownMenuItem
+                      key={item.value}
+                      onClick={() => {
+                        if (item.value === "CUSTOMTYPE")
+                          setOpenCustomModal(true);
+                        else {
+                          setSelectedRepeat(item.value);
+                          handleUpdateRepeat(item.value);
+                        }
+                      }}
+                      className={`flex items-center justify-between ${isSelected ? "bg-accent text-accent-foreground" : ""}`}
+                    >
+                      <span>{item.label}</span>
+                      {isSelected && <span className="ml-2">✔</span>}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-                <DropdownMenuContent align="start" className="w-fit">
-                  {repeatOptions.map((item) => {
-                    const isSelected = item.value === selectedRepeat;
-                    return (
-                      <DropdownMenuItem
-                        key={item.value}
-                        onClick={() => {
-                          if (item.value === "CUSTOMTYPE") {
-                            setOpenCustomModal(true);
-                          } else {
-                            setSelectedRepeat(item.value);
-                            handleUpdateRepeat(item.value);
-                          }
-                        }}
-                        className={`flex items-center justify-between ${
-                          isSelected ? "bg-accent text-accent-foreground" : ""
-                        }`}
-                      >
-                        <span>{item.label}</span>
-                        {isSelected && <span className="ml-2">✔</span>}
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Custom Modal */}
-              <CustomModalFile
-                open={openCustomModal}
-                defaultValues={todoData?.customObj ?? undefined}
-                onOpenChange={setOpenCustomModal}
-                onSave={(data) => {
-                  setSelectedRepeat("CUSTOMTYPE");
-                  handleUpdateRepeat(data);
-                }}
-              />
-            </div>
+            <CustomModalFile
+              open={openCustomModal}
+              defaultValues={todoData?.customObj ?? undefined}
+              onOpenChange={setOpenCustomModal}
+              onSave={(data) => {
+                setSelectedRepeat("CUSTOMTYPE");
+                handleUpdateRepeat(data);
+              }}
+            />
           </div>
 
-          <div className="rounded-md border flex flex-col h-52 relative">
+          {/* File Section */}
+          <div className="rounded-md border flex flex-col relative flex-shrink-0">
             <div
               className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent border-b"
               onClick={handleFileClick}
@@ -409,43 +357,42 @@ export default function TodoListDrawer({
               <span>Add file</span>
             </div>
 
-            <div className="overflow-y-auto px-2 py-2 flex flex-wrap gap-x-2 gap-y-1">
+            <div
+              className={`flex flex-wrap gap-x-2 gap-y-1 max-h-32 overflow-y-auto ${selectedFiles.length > 0 ? "px-2 py-2" : ""}`}
+            >
               {selectedFiles.map((file, idx) => {
                 const isUploaded =
                   file instanceof File
                     ? uploadedFiles.includes(file.name)
                     : true;
-
                 const fileName = "fileId" in file ? file.fileName : file.name;
+                const localURL =
+                  file instanceof File ? URL.createObjectURL(file) : null;
 
                 return (
                   <div
                     key={idx}
-                    // className="relative flex items-center gap-1 group"
-                    className={`relative h-7 group flex items-center rounded-full px-2 py-1 text-sm 
-                      ${isUploaded ? "bg-gray-100 text-blue-600" : "bg-gray-100 text-gray-700"}`}
+                    className={`relative h-7 group flex items-center rounded-full px-2 py-1 text-sm text-blue-600`}
                   >
-                    {isUploaded ? (
-                      <a
-                        href={`${ImageBaseURL}/share/toDoFiles/${fileName}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className=" underline cursor-pointer overflow-hidden whitespace-nowrap text-ellipsis max-w-[150px]"
-                      >
-                        {fileName}
-                      </a>
-                    ) : (
-                      <span className="overflow-hidden whitespace-nowrap text-ellipsis max-w-[150px]">
-                        {fileName}
-                      </span>
-                    )}
+                    <a
+                      href={
+                        isUploaded
+                          ? `${ImageBaseURL}/share/toDoFiles/${fileName}`
+                          : localURL || ""
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download={!isUploaded ? fileName : undefined}
+                      title={fileName}
+                      className="underline cursor-pointer overflow-hidden whitespace-nowrap text-ellipsis max-w-[150px]"
+                    >
+                      {fileName}
+                    </a>
                     {idx < selectedFiles.length - 1 && (
                       <span className="overflow-hidden whitespace-nowrap text-ellipsis max-w-[150px]">
                         ,
                       </span>
                     )}
-
-                    {/* Cross button */}
                     <button
                       onClick={() => handleRemoveFile(idx)}
                       className="absolute -top-1 -right-1 rounded-full bg-gray-300 text-gray-700 hover:bg-red-500 hover:text-white p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -464,11 +411,9 @@ export default function TodoListDrawer({
               onChange={handleFileChange}
               multiple
             />
-
-            {/* Upload Button */}
             <button
               className="absolute top-2 right-2 bg-primary text-white text-xs px-3 py-1 rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={
+              hidden={
                 !selectedFiles.some(
                   (f) => f instanceof File && !uploadedFiles.includes(f.name),
                 )
@@ -488,8 +433,8 @@ export default function TodoListDrawer({
             </button>
           </div>
 
-          {/* -------- Notes -------- */}
-          <div>
+          {/* Notes Section */}
+          <div className="flex-1 flex flex-col overflow-hidden">
             {!isAddingNote ? (
               <div className="flex items-center gap-2">
                 <button
@@ -502,7 +447,7 @@ export default function TodoListDrawer({
             ) : (
               <div className="bg-white rounded-md relative">
                 <textarea
-                  className="w-full rounded-md p-2 pr-16 text-black shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent resize-none"
+                  className="w-full rounded-md p-2 pr-16 text-black shadow-none bg-transparent resize-none border focus:ring-0"
                   placeholder="Take a note..."
                   value={noteInput}
                   onChange={(e) => setNoteInput(e.target.value)}
@@ -515,8 +460,6 @@ export default function TodoListDrawer({
                     }
                   }}
                 />
-
-                {/* Show Done & X only if noteInput has text */}
                 <div className="absolute top-2 right-2 flex gap-2">
                   {noteInput.trim().length > 0 && (
                     <button
@@ -537,76 +480,69 @@ export default function TodoListDrawer({
               </div>
             )}
 
-            {/* -------- Notes List -------- */}
-            <div className="px-2 space-y-2 max-h-[calc(100vh-500px)] overflow-auto pb-2 mt-4">
+            <div className="px-2 space-y-2 flex-1 overflow-auto pb-2 mt-4">
               {todoNotes?.map((note) => (
                 <div
                   key={note.toDoNoteId}
-                  className="flex items-start bg-white rounded-lg border px-3 py-2 shadow-sm gap-2"
+                  className="flex items-start justify-between bg-white rounded-lg border px-3 py-2 shadow-sm"
                 >
-                  <div className="flex-1 text-sm text-black">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs text-gray-400">
-                        {new Date(note.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-start gap-2 group">
-                      {editingNoteId === note.toDoNoteId ? (
-                        <div className="flex w-full gap-2">
-                          <input
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            className="border rounded-md px-2 py-1 text-sm flex-1"
-                            autoFocus
-                          />
-                          <button
-                            onClick={() => handleSaveEdit(note.toDoNoteId)}
-                            className="text-blue-600 text-sm px-2"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => setEditingNoteId(null)}
-                            className="text-gray-500 text-sm px-2"
-                          >
-                            Cancel
-                          </button>
+                  <div className="flex-1 text-sm text-black pr-2">
+                    {editingNoteId === note.toDoNoteId ? (
+                      <div className="flex w-full gap-2">
+                        <input
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="border rounded-md px-2 py-1 text-sm flex-1"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleSaveEdit(note.toDoNoteId)}
+                          className="w-10 text-primary text-sm px-2"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingNoteId(null)}
+                          className="w-12 text-gray-500 text-sm px-2"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-start w-full">
+                        <div className="flex flex-col flex-1 pr-2">
+                          <span className="text-xs text-gray-400">
+                            {new Date(note.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                          <p className="break-words break-all overflow-wrap-anywhere mt-1">
+                            {note.note}
+                          </p>
                         </div>
-                      ) : (
-                        <>
-                          <p className="break-words">{note.note}</p>
-
-                          <DropdownMenu>
+                        <DropdownMenu>
+                          <div className="flex justify-center">
                             <DropdownMenuTrigger asChild>
-                              <button className="text-gray-500 items-center text-sm w-fit py-1.5 px-2">
+                              <button className="flex mt-3 items-center justify-center text-gray-500 text-sm">
                                 <EllipsisVertical className="h-5 w-5" />
                               </button>
                             </DropdownMenuTrigger>
-
-                            <DropdownMenuContent align="end" className="w-full">
-                              <DropdownMenuItem
-                                onClick={() => handleEdit(note)}
-                                className="px-2 py-1.5 "
-                              >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDelete(note.toDoNoteId)}
-                                className="text-red-600 focus:text-red-600 focus:bg-red-50 px-2 py-1.5"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </>
-                      )}
-                    </div>
+                          </div>
+                          <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem onClick={() => handleEdit(note)}>
+                              <Edit className="h-4 w-4 mr-2" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(note.toDoNoteId)}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

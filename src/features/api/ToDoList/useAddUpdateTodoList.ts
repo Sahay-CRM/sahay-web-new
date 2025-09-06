@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-type DatePaging = BaseResponse<ToDoList>;
+type DatePaging = CommonResponse<ToDoList>;
 
 export default function useAddUpdateTodoList() {
   const addUpdateToDoListMutation = useMutation({
@@ -29,6 +29,9 @@ export default function useAddUpdateTodoList() {
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["getAllTodoList"] });
+      queryClient.resetQueries({
+        queryKey: ["get-todo-by-id", res.data.toDoId],
+      });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

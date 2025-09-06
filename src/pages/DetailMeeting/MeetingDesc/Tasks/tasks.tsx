@@ -32,6 +32,7 @@ interface TasksProps {
   issueId?: string | undefined;
   ioType?: string;
   selectedIssueId?: string;
+  isTeamLeader?: boolean | undefined;
 }
 
 export default function Tasks({
@@ -39,6 +40,7 @@ export default function Tasks({
   issueId,
   ioType,
   selectedIssueId,
+  isTeamLeader,
 }: TasksProps) {
   const { id: meetingId } = useParams();
   const { data: taskStatus } = useGetAllTaskStatus({
@@ -188,14 +190,18 @@ export default function Tasks({
     <div className=" h-full">
       <div className="flex gap-5 justify-between mb-5">
         <div className="flex gap-5 items-center">
-          <TaskSearchDropdown
-            onAdd={handleAddTasks}
-            minSearchLength={2}
-            filterProps={{ pageSize: 20 }}
-          />
-          <Button className="py-2 w-fit" onClick={handleAddTask}>
-            Add Company Task
-          </Button>
+          {isTeamLeader && (
+            <>
+              <TaskSearchDropdown
+                onAdd={handleAddTasks}
+                minSearchLength={2}
+                filterProps={{ pageSize: 20 }}
+              />
+              <Button className="py-2 w-fit" onClick={handleAddTask}>
+                Add Company Task
+              </Button>
+            </>
+          )}
         </div>
         <div>
           {canToggleColumns && (
@@ -253,14 +259,25 @@ export default function Tasks({
         customActions={(row) => {
           return (
             <>
-              <Button
-                className="py-1 px-3 bg-transparent cursor-pointer hover:bg-transparent"
-                onClick={() => {
-                  conformDelete(row as unknown as TaskGetPaging);
-                }}
-              >
-                <Unlink className="w-4 h-4 text-red-700" />
-              </Button>
+              {isTeamLeader && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        className="py-1 px-3 bg-transparent cursor-pointer hover:bg-transparent"
+                        onClick={() => {
+                          conformDelete(row as unknown as TaskGetPaging);
+                        }}
+                      >
+                        <Unlink className="w-4 h-4 text-red-700" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Unlink from this Meeting</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </>
           );
         }}

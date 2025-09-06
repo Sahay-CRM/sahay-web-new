@@ -65,6 +65,7 @@ interface KpisProps {
   ioId: string | undefined;
   ioType?: string;
   selectedIssueId?: string;
+  isTeamLeader?: boolean | undefined;
 }
 
 interface SortConfig {
@@ -78,6 +79,7 @@ export default function KPITable({
   kpisFireBase,
   ioType,
   selectedIssueId,
+  isTeamLeader,
 }: KpisProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -532,11 +534,13 @@ export default function KPITable({
   return (
     <FormProvider {...methods}>
       <div className="w-full">
-        <KpisSearchDropdown
-          onAdd={handleAddKpis}
-          minSearchLength={2}
-          filterProps={{ pageSize: 20 }}
-        />
+        {isTeamLeader && (
+          <KpisSearchDropdown
+            onAdd={handleAddKpis}
+            minSearchLength={2}
+            filterProps={{ pageSize: 20 }}
+          />
+        )}
       </div>
 
       <div className="sticky top-0 z-10 bg-white px-4 py-2 m-0">

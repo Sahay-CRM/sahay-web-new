@@ -34,6 +34,7 @@ interface ProjectProps {
   issueId: string | undefined;
   ioType?: string;
   selectedIssueId?: string;
+  isTeamLeader?: boolean | undefined;
 }
 
 export default function Projects({
@@ -41,6 +42,7 @@ export default function Projects({
   issueId,
   ioType,
   selectedIssueId,
+  isTeamLeader,
 }: ProjectProps) {
   const { id: meetingId } = useParams();
   const { mutate: addMeetingProject } = addMeetingProjectDataMutation();
@@ -192,14 +194,18 @@ export default function Projects({
     <div>
       <div className="flex gap-5 justify-between mb-5">
         <div className="flex gap-5 items-center">
-          <ProjectSearchDropdown
-            onAdd={handleAdd}
-            minSearchLength={3}
-            filterProps={{ pageSize: 25 }}
-          />
-          <Button className="py-2 w-fit" onClick={handleAddProject}>
-            Add Company Project
-          </Button>
+          {isTeamLeader && (
+            <>
+              <ProjectSearchDropdown
+                onAdd={handleAdd}
+                minSearchLength={3}
+                filterProps={{ pageSize: 25 }}
+              />
+              <Button className="py-2 w-fit" onClick={handleAddProject}>
+                Add Company Project
+              </Button>
+            </>
+          )}
         </div>
         <div>
           {canToggleColumns && (
@@ -259,14 +265,25 @@ export default function Projects({
         customActions={(row) => {
           return (
             <>
-              <Button
-                className="py-1 px-3 bg-transparent cursor-pointer hover:bg-transparent"
-                onClick={() => {
-                  conformDelete(row as unknown as IProjectFormData);
-                }}
-              >
-                <Unlink className="w-4 h-4 text-red-700" />
-              </Button>
+              {isTeamLeader && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        className="py-1 px-3 bg-transparent cursor-pointer hover:bg-transparent"
+                        onClick={() => {
+                          conformDelete(row as unknown as IProjectFormData);
+                        }}
+                      >
+                        <Unlink className="w-4 h-4 text-red-700" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Unlink from this Meeting</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </>
           );
         }}

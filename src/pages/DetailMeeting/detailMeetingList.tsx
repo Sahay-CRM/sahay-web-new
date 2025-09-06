@@ -22,7 +22,7 @@ import DateRangePicker from "@/components/shared/DateRange";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
-import { getUserDetail } from "@/features/selectors/auth.selector";
+import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
 import DuplicateMeetingModal from "./duplicateMeetingModal";
 import { CopyPlus } from "lucide-react";
 
@@ -59,7 +59,7 @@ export default function DetailMeetingList() {
 
   const { setBreadcrumbs } = useBreadcrumbs();
   const userData = useSelector(getUserDetail);
-  // const userId = useSelector(getUserId);
+  const userId = useSelector(getUserId);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -205,15 +205,29 @@ export default function DetailMeetingList() {
                 : undefined
             }
             customActions={(row) => {
-              // const isTeamLeader = Array.isArray(row.joiners)
-              //   ? row.joiners.some(
-              //       (emp) =>
-              //         emp &&
-              //         typeof emp === "object" &&
-              //         emp.employeeId === userId &&
-              //         emp.isTeamLeader === true
-              //     )
-              //   : false;
+              const isTeamLeader = Array.isArray(row.joiners)
+                ? row.joiners.some(
+                    (emp) =>
+                      emp &&
+                      typeof emp === "object" &&
+                      emp.employeeId === userId &&
+                      emp.isTeamLeader === true,
+                  )
+                : false;
+
+              // Define color styles by status
+              const getButtonColor = (status: string) => {
+                switch (status) {
+                  case "NOT_STARTED":
+                    return "bg-primary hover:bg-primary text-white";
+                  case "STARTED":
+                    return "bg-green-500 hover:bg-green-600 text-white";
+                  case "ENDED":
+                    return "bg-red-500 hover:bg-red-600 text-white";
+                  default:
+                    return "bg-gray-500 hover:bg-gray-600 text-white";
+                }
+              };
 
               return (
                 <>
@@ -232,58 +246,25 @@ export default function DetailMeetingList() {
                     </Button>
                   )}
 
-                  {/* {row.detailMeetingStatus === "ENDED" ? (
-                    <div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="py-1 px-3 w-[150px] cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(
-                            `/dashboard/meeting/detail/${row.meetingId}`
-                          );
-                        }}
-                      >
-                        Meeting Details
-                      </Button>
-                    </div>
-                  ) : (
-                    <div>
-                      {isTeamLeader &&
-                      row.detailMeetingStatus === "NOT_STARTED" ? (
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="py-1 w-[150px] px-3 cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(
-                              `/dashboard/meeting/detail/${row.meetingId}`
-                            );
-                          }}
-                        >
-                          Start Meeting
-                        </Button>
-                      ) : (
-                        <div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="py-1 w-[150px] px-3 cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(
-                                `/dashboard/meeting/detail/${row.meetingId}`
-                              );
-                            }}
-                          >
-                            Join Meeting
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )} */}
+                  <Button
+                    size="sm"
+                    className={`py-1 w-[150px] px-3 cursor-pointer ${getButtonColor(
+                      row.detailMeetingStatus!,
+                    )}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/dashboard/meeting/detail/${row.meetingId}`);
+                    }}
+                  >
+                    {row.detailMeetingStatus === "ENDED"
+                      ? "Meeting Details"
+                      : isTeamLeader &&
+                          row.detailMeetingStatus === "NOT_STARTED"
+                        ? "Start Meeting"
+                        : isTeamLeader
+                          ? "Join Meeting"
+                          : "Not Started"}
+                  </Button>
                 </>
               );
             }}
@@ -300,7 +281,7 @@ export default function DetailMeetingList() {
             permissionKey="users"
             localStorageId="MeetingList"
             moduleKey="LIVE_MEETING"
-            actionColumnWidth="w-[135px]"
+            actionColumnWidth="w-fit"
             sortableColumns={[
               "meetingName",
               "meetingDateTime",
