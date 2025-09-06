@@ -3,7 +3,7 @@ import {
   verifyCompanyOtpMutation,
   verifyOtpMutation,
 } from "@/features/api/login";
-import { useAuth } from "@/features/auth/useAuth";
+// import { useAuth } from "@/features/auth/useAuth";
 import { setAuth, setFireBaseToken } from "@/features/reducers/auth.reducer";
 import { useDispatch } from "react-redux";
 import { useState } from "react";
@@ -19,7 +19,7 @@ const useLogin = () => {
   const { mutate: sendOtp } = sendOtpMutation();
   const { mutate: verifyOtp } = verifyOtpMutation();
   const { mutate: companyVerifyOtp } = verifyCompanyOtpMutation();
-  const { setToken } = useAuth();
+  // const { setToken } = useAuth();
   const [statusSentOtp, setStatusSentOtp] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isCompanyModalOpen, setCompanyModalOpen] = useState(false);
@@ -56,9 +56,9 @@ const useLogin = () => {
     companyVerifyOtp(verifyCompanyData, {
       onSuccess: (response) => {
         if (response?.status) {
-          if (response?.data?.token) {
-            setToken(response.data.token, response.data);
-          }
+          // if (response?.data?.token) {
+          //   setToken(response.data.token, response.data);
+          // }
 
           dispatch(
             setAuth({
@@ -156,7 +156,7 @@ const useLogin = () => {
                     );
                   },
                 );
-                setToken(token ?? "", dataRes);
+                // setToken(token ?? "", dataRes);
                 setLoginDetails(null);
               } else {
                 throw new Error("No companies found.");

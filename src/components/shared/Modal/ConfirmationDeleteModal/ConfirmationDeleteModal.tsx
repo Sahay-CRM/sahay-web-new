@@ -30,7 +30,6 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
   const [deleteOption, setDeleteOption] = useState<"single" | "group">(
     "single",
   );
-
   return (
     <div>
       <ModalData
@@ -48,12 +47,14 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
             buttonCss: "py-1.5 px-5",
             btnClick: () => onSubmit(deleteOption === "group"),
           },
+
           ...(isChildData && userData.isSuperAdmin
             ? [
                 {
                   btnText: "Force delete",
                   buttonCss:
                     "py-1.5 px-5 bg-red-600 text-white hover:bg-red-400",
+
                   btnClick: onForceSubmit
                     ? onForceSubmit
                     : () => onSubmit(deleteOption === "group"),

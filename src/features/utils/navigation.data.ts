@@ -43,14 +43,14 @@ export const companyNavigationData = [
         label: "Live Meetings",
         link: "/dashboard/meeting/detail",
         permission: "View",
-        moduleKey: "MEETING_LIST",
+        moduleKey: "LIVE_MEETING",
       },
       {
         id: 3,
         label: "Live Meetings Templates",
         link: "/dashboard/repeat-meeting",
         permission: "View",
-        moduleKey: "MEETING_LIST",
+        moduleKey: "LIVE_MEETING_TEMPLATES",
       },
     ],
   },
@@ -209,6 +209,14 @@ export const companyNavigationData = [
     permission: "View",
     moduleKey: "ROLES_PERMISSION",
   },
+  {
+    id: 12,
+    icon: "ListTodo",
+    label: "My Day",
+    link: "/dashboard/todo-list",
+    permission: "View",
+    moduleKey: "TASK",
+  },
   // {
   //   id: 12,
   //   icon: "Tag",
@@ -242,3 +250,23 @@ export const companyNavigationData = [
   //   moduleKey: "ROLES_PERMISSION",
   // },
 ];
+
+export const getRouteByLabel = (label: string): string | null => {
+  const normalize = (val: string) => val.toLowerCase().trim();
+  const allNavItems: CompanyNavItem[] = [];
+  const collectItems = (items: CompanyNavItem[]) => {
+    items.forEach((item) => {
+      allNavItems.push(item);
+      if (item.items && Array.isArray(item.items)) {
+        collectItems(item.items);
+      }
+    });
+  };
+  collectItems(companyNavigationData);
+
+  const found = allNavItems.find(
+    (item) => normalize(item.label) === normalize(label),
+  );
+
+  return found?.link ?? null;
+};

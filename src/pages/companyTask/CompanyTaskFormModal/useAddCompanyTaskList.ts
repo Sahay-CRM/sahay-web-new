@@ -35,7 +35,6 @@ export const useAddCompanyTask = () => {
   const { data: taskDataById } = useGetCompanyTaskById(taskId || "");
   const permission = useSelector(getUserPermission);
   const navigate = useNavigate();
-  console.log();
 
   const methods = useForm<FormValues>({
     defaultValues: {
@@ -53,7 +52,7 @@ export const useAddCompanyTask = () => {
     },
     mode: "onChange",
   });
-  const { reset, getValues } = methods;
+  const { reset } = methods;
 
   useEffect(() => {
     if (taskId && taskDataById?.data) {
@@ -78,7 +77,7 @@ export const useAddCompanyTask = () => {
       });
     }
   }, [taskId, taskDataById, reset]);
-  console.log(getValues());
+  // console.log(getValues());
   const [step, setStep] = useState(1);
 
   const [paginationFilterEmployee, setPaginationFilterEmployee] =

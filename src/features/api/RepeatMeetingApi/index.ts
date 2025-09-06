@@ -10,3 +10,7 @@ export { default as deleteRepeatMeetingIOMutation } from "./useDeleteRepeatMeeti
 
 export { default as createRepeatIoMutation } from "./useCreateRepeatMeetingIo";
 export { default as createIoRepeatMeetingMutation } from "./useCreateRepeatMeetingIssue";
+
+export { default as useGetRepeatMeetingNotes } from "./useGetRepeatMeetingNotes";
+export { default as deleteRepeatCompanyMeetingMutation } from "./useDeleteRepeatMeetingNote";
+export { default as addRepeatMeetingNotesMutation } from "./useAddEditRepeatMeetingNotes";

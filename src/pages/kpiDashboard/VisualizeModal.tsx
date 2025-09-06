@@ -76,7 +76,7 @@ export default function SearchKpiModal({
           <FormSelect
             value={selectedFreq}
             onChange={(val) => {
-              setSelectedFreq(Array.isArray(val) ? val[0] : val);
+              setSelectedFreq(val as string | string[0]);
             }}
             options={frequencyDropdownOptions}
             placeholder="Select Frequency"

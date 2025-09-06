@@ -297,6 +297,7 @@ interface CompanyMeetingDataProps {
   detailMeetingStatus?: string;
   isDetailMeeting?: boolean;
   meetingTimePlanned?: string;
+  selectDate?: Date | string;
 }
 
 interface Joiners {
@@ -364,6 +365,30 @@ interface CompanyProjectDataProps {
   detailMeetingProjectId?: string;
   detailMeetingNoteId?: string;
   ioType?: string;
+}
+
+interface CompanyMeetingDataProps {
+  meetingId?: string;
+  meetingName?: string;
+  meetingDescription?: string;
+  meetingDateTime?: string;
+  meetingTypeId?: string;
+  parentType?: string;
+  meetingStatusId?: string;
+  companyMeetingId?: string;
+  joiners?: string[] | Joiners[];
+  meetingStatus?: CompanyMeetingStatusDataProps;
+  meetingType?: CompanyMeetingTypeDataProps;
+  files?: [
+    {
+      fileId: string;
+      fileName: string;
+    },
+  ];
+  teamLeaders?: string[];
+  employeeId?: string;
+  attendanceMark?: boolean;
+  detailMeetingStatus?: string;
 }
 
 interface ProjectParameters {
@@ -983,6 +1008,8 @@ interface Kpi {
   photo?: string | null;
   tag?: string;
   detailMeetingKPIId?: string;
+  goalValue?: number;
+  sequence?: number;
 }
 
 interface CoreParameterGroup {
@@ -1294,4 +1321,25 @@ interface RepeatMeeting {
 interface FileType {
   fileId: string;
   fileName: string;
+  name?: string;
+}
+
+interface CompanyNavItem {
+  id: number;
+  icon?: string;
+  label: string;
+  link?: string;
+  permission: string;
+  moduleKey?: string;
+  items?: CompanyNavItem[];
+}
+
+interface RepeatMeetingNotesRes {
+  employeeId?: string;
+  note?: string;
+  noteId?: string;
+  repetitiveMeetingId?: string;
+  createdAt?: string;
+  noteType?: string;
+  employeeName?: string;
 }

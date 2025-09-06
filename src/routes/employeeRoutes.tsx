@@ -65,7 +65,7 @@ const KPIDashboard = lazy(() => import("../pages/kpiDashboard/KpiDashboard"));
 //   () => import("../pages/kpiDashboard/KpiVisualizePage"),
 // );
 
-const UserLog = lazy(() => import("../pages/UserLog"));
+// const UserLog = lazy(() => import("../pages/UserLog"));
 const AllNotifications = lazy(
   () => import("../pages/notification/AllNotifications"),
 );
@@ -99,6 +99,8 @@ const AddCompanyTaskListRepeat = lazy(
 // const CompanyTaskRe = lazy(
 //   () => import("../pages/CompanyTaskListRepeat/CompanyTaskListRe"),
 // );
+
+const CompanyTaskNew = lazy(() => import("../pages/ToDoList"));
 
 export default function EmployeeRoutes() {
   return (
@@ -169,6 +171,8 @@ export default function EmployeeRoutes() {
 
         <Route path="healthscore-achieve" Component={Healthscore} />
 
+        <Route path="todo-list" element={<CompanyTaskNew />} />
+
         <Route path="business">
           <Route path="health-weightage" Component={HealthWeightage} />
           <Route path="healthscore-achieve" Component={Healthscore} />
@@ -181,7 +185,7 @@ export default function EmployeeRoutes() {
         </Route>
         <Route path="brand" Component={Brand} />
         <Route path="product" Component={Product} />
-        <Route path="user-log" Component={UserLog} />
+        {/* <Route path="user-log" Component={UserLog} /> */}
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

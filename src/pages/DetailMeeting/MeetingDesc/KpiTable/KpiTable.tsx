@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import { RefreshCcw } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, RefreshCcw } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import clsx from "clsx";
 import { getDatabase, off, onValue, ref } from "firebase/database";
@@ -67,6 +67,11 @@ interface KpisProps {
   selectedIssueId?: string;
 }
 
+interface SortConfig {
+  key: string;
+  direction: "asc" | "desc";
+}
+
 export default function KPITable({
   meetingId,
   ioId,
@@ -83,11 +88,24 @@ export default function KPITable({
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(
     null,
   );
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: "employeeName",
+    direction: "asc",
+  });
+
   const { mutate: addKpiList } = addMeetingKpisDataMutation();
   const navigate = useNavigate();
   const location = useLocation();
   const leftScrollRef = useRef<HTMLDivElement>(null);
   const rightScrollRef = useRef<HTMLDivElement>(null);
+
+  const handleSort = (key: string) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
 
   const { mutate: addUpdateKpiData } = updateKPIDataMutation();
 
@@ -571,14 +589,50 @@ export default function KPITable({
           <table className="w-full table-fixed border-collapse text-sm bg-white">
             <thead className="bg-primary sticky top-0 z-20">
               <tr>
-                <th className="w-[55px] p-2 font-semibold text-white text-left h-[51px]">
+                <th
+                  className="w-[55px] p-2 font-semibold text-white text-left h-[51px]"
+                  onClick={() => handleSort("employeeName")}
+                >
                   Who
+                  {sortConfig.key === "employeeName" &&
+                    (sortConfig.direction === "asc" ? (
+                      <ArrowUp className="w-4 h-4 ml-1" />
+                    ) : (
+                      <ArrowDown className="w-4 h-4 ml-1" />
+                    ))}
+                  {sortConfig.key !== "employeeName" && (
+                    <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
+                  )}
                 </th>
-                <th className="w-[200px] p-2 font-semibold text-white text-left h-[51px]">
+                <th
+                  className="w-[200px] p-2 font-semibold text-white text-left h-[51px]"
+                  onClick={() => handleSort("KPIName")}
+                >
                   KPI
+                  {sortConfig.key === "KPIName" &&
+                    (sortConfig.direction === "asc" ? (
+                      <ArrowUp className="w-4 h-4 ml-1" />
+                    ) : (
+                      <ArrowDown className="w-4 h-4 ml-1" />
+                    ))}
+                  {sortConfig.key !== "KPIName" && (
+                    <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
+                  )}
                 </th>
-                <th className="w-[130px] p-2 font-semibold text-white text-left h-[51px]">
+                <th
+                  className="w-[130px] p-2 font-semibold text-white text-left h-[51px]"
+                  onClick={() => handleSort("tag")}
+                >
                   Tag
+                  {sortConfig.key === "tag" &&
+                    (sortConfig.direction === "asc" ? (
+                      <ArrowUp className="w-4 h-4 ml-1" />
+                    ) : (
+                      <ArrowDown className="w-4 h-4 ml-1" />
+                    ))}
+                  {sortConfig.key !== "tag" && (
+                    <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
+                  )}
                 </th>
                 <th className="w-[100px] p-2 font-semibold text-white text-left h-[51px]">
                   Goal

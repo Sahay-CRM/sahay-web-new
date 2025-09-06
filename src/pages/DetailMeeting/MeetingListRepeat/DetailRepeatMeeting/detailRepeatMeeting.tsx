@@ -193,7 +193,7 @@ export default function DetailRepeatMeeting({
         <div className="flex flex-wrap md:flex-nowrap items-center gap-3 md:w-auto">
           <div className="w-fit pr-2 h-[40px] border-gray-300 rounded-[10px] flex items-center justify-center">
             <MeetingTimer
-              meetingTime={Number(meetingTime) || 0}
+              meetingTime={Number(meetingTime)}
               className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
               onTimeUpdate={handleTimeUpdate}
               meetingStatus={meetingStatus}

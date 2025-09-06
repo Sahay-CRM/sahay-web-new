@@ -7,10 +7,15 @@ import {
   addUpdateRepeatMeetingMutation,
   useGetRepeatMeetingById,
 } from "@/features/api/RepeatMeetingApi";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+import { queryClient } from "@/queryClient";
 
 // Renamed function
 export default function useAddRepeatMeetingForm() {
   const { id: repetitiveMeetingId } = useParams();
+  const permission = useSelector(getUserPermission).LIVE_MEETING_TEMPLATES;
+
   const [isModalOpen, setModalOpen] = useState(false);
 
   const { mutate: addDetailMeeting, isPending } =
@@ -97,6 +102,7 @@ export default function useAddRepeatMeetingForm() {
 
     addDetailMeeting(payload, {
       onSuccess: () => {
+        queryClient.resetQueries({ queryKey: ["get-detail-meeting-list"] });
         handleModalClose();
         navigate("/dashboard/repeat-meeting");
       },
@@ -119,5 +125,6 @@ export default function useAddRepeatMeetingForm() {
     repetitiveMeetingId,
     isPending,
     meetingApiData,
+    permission,
   };
 }

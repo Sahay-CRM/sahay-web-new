@@ -435,10 +435,13 @@ export default function AddCompanyTask() {
 
   const { setBreadcrumbs } = useBreadcrumbs();
   const [searchParams] = useSearchParams();
-  const projectId = searchParams.get("projectId");
-  const meetingId = searchParams.get("meetingId");
 
-  console.log(projectId);
+  let projectId = searchParams.get("projectId") || "";
+  let meetingId = searchParams.get("meetingId") || "";
+
+  // remove unwanted "?" or "&" from the end
+  projectId = projectId.replace(/[?&]+$/, "");
+  meetingId = meetingId.replace(/[?&]+$/, "");
 
   const { handleSubmit, setValue } = methods;
 
@@ -467,13 +470,20 @@ export default function AddCompanyTask() {
     }
   }, [meetingId, projectId, setValue]);
 
-  const effectiveStep = projectId ? step + 1 : step;
+  const effectiveStep = (() => {
+    let adjustedStep = step;
+
+    if (projectId) adjustedStep += 1;
+    if (meetingId) adjustedStep += 1;
+
+    return adjustedStep;
+  })();
+
   const totalSteps = 4;
 
-  // ✅ next handler with validation
   const handleNext = handleSubmit(
     () => nextStep(),
-    () => {}, // stay on same step if error
+    () => {},
   );
 
   const renderStepContent = () => {

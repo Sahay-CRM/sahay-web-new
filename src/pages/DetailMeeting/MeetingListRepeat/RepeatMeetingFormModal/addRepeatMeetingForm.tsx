@@ -21,7 +21,8 @@ import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import FormSelect from "@/components/shared/Form/FormSelect";
-import DatePicker from "react-datepicker";
+// import DatePicker from "react-datepicker";
+import PageNotAccess from "@/pages/PageNoAccess";
 
 interface MeetingInfoProps {
   isUpdateMeeting: boolean;
@@ -211,20 +212,20 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
         ...(isLastDayOfMonth
           ? [
               {
-                value: "MONTHLYLASTDAY",
+                value: "MONTHLYEOM",
                 label: `Monthly on the last day (${getOrdinalDate(lastDateOfMonth)})`,
               },
             ]
           : []),
 
         {
-          value: "YEARLYDATE",
+          value: "YEARLYXMONTHDATE",
           label: `Yearly on ${monthName} ${getOrdinalDate(dateOfMonth)}`, // Yearly - Date (e.g., March 14th)
         },
         ...(!isLastDayOfMonth
           ? [
               {
-                value: "YEARLYMONTHNWEEKDAY",
+                value: "YEARLYXMONTHNWEEKDAY",
                 label: `Yearly on the ${ordinalWeekday} of ${monthName}  `,
               },
             ]
@@ -232,7 +233,7 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
         ...(isLastDayOfMonth
           ? [
               {
-                value: "YEARLYMONTHLASTWEEKDAY",
+                value: "YEARLYXMONTHLASTWEEKDAY",
                 label: `Yearly on the last ${dayName} of ${monthName}  `,
               },
             ]
@@ -310,8 +311,9 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
                 onChange={(date) => {
                   field.onChange(date?.toISOString());
                 }}
+                disablePastDates={true}
                 error={errors.meetingDateTime}
-                disableDaysFromToday={5}
+                // disableDaysFromToday={5}
               />
             );
           }}
@@ -334,7 +336,7 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
             />
           )}
         />
-        <Controller
+        {/* <Controller
           control={control}
           name="meetingTimePlanned"
           render={({ field }) => (
@@ -348,7 +350,7 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
               dateFormat="h:mm aa"
             />
           )}
-        />
+        /> */}
       </Card>
     </div>
   );
@@ -516,6 +518,7 @@ const AddRepeatMeeting = () => {
     repetitiveMeetingId,
     isPending,
     meetingApiData,
+    permission,
   } = useAddRepeatMeetingForm();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -560,6 +563,10 @@ const AddRepeatMeeting = () => {
   } = useStepForm(steps, trigger);
 
   const stepNames = ["Meeting Type", "Meeting Info", "Joiners"];
+
+  if (permission && (permission.Add === false || permission.Edit === false)) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...methods}>

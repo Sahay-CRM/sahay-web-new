@@ -21,7 +21,13 @@ import { FormProvider, useForm } from "react-hook-form";
 import Loader from "@/components/shared/Loader/Loader";
 import { FormDatePicker } from "@/components/shared/Form/FormDatePicker/FormDatePicker";
 import { Button } from "@/components/ui/button";
-import { ArrowDown, ArrowUp, ArrowUpDown, RefreshCcw } from "lucide-react";
+import {
+  // ArrowDown,
+  // ArrowUp,
+  // ArrowUpDown,
+  ChartNoAxesColumn,
+  RefreshCcw,
+} from "lucide-react";
 import TabsSection from "./TabSection";
 import {
   addUpdateKpi,
@@ -29,14 +35,12 @@ import {
 } from "@/features/api/kpiDashboard";
 import WarningDialog from "./WarningModal";
 import { useSelector } from "react-redux";
-import { getUserPermission } from "@/features/selectors/auth.selector";
+import {
+  getUserDetail,
+  getUserPermission,
+} from "@/features/selectors/auth.selector";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-
-interface CoreParameterGroup {
-  coreParameterId: string;
-  coreParameterName: string;
-  kpis: Kpi[];
-}
+import KPISideBar from "./KPISideBar";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -59,23 +63,24 @@ function formatToThreeDecimals(value: string | number | null | undefined) {
     minimumFractionDigits: 0,
   });
 }
-interface SortConfig {
-  key: string;
-  direction: "asc" | "desc";
-}
+// interface SortConfig {
+//   key: string;
+//   direction: "asc" | "desc";
+// }
 export default function UpdatedKpiTable() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Initialize the state with the correct type
-  const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "employeeName", // Default sort column
-    direction: "asc", // Default sort direction
-  });
+  const userData = useSelector(getUserDetail);
+
+  // const [sortConfig, setSortConfig] = useState<SortConfig>({
+  //   key: "sequence",
+  //   direction: "asc",
+  // });
 
   const { data: kpiStructure, isLoading: isKpiStructureLoading } =
     useGetKpiDashboardStructure({
-      sortBy: sortConfig.key,
-      sortOrder: sortConfig.direction,
+      sortBy: "sequence",
+      sortOrder: "asc",
     });
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -115,6 +120,7 @@ export default function UpdatedKpiTable() {
   const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
     {},
   );
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const originalPushState = history.pushState;
@@ -427,13 +433,82 @@ export default function UpdatedKpiTable() {
     setShowWarning(false);
   };
 
-  const handleSort = (key: string) => {
-    let direction: "asc" | "desc" = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-    setSortConfig({ key, direction });
+  // const handleSort = (key: string) => {
+  //   let direction: "asc" | "desc" = "asc";
+  //   if (sortConfig.key === key && sortConfig.direction === "asc") {
+  //     direction = "desc";
+  //   }
+  //   setSortConfig({ key, direction });
+  // };
+
+  const handleFocus = (
+    e: React.FocusEvent<HTMLInputElement>,
+    cellKey: string,
+  ) => {
+    setInputFocused((prev) => ({
+      ...prev,
+      [cellKey]: true,
+    }));
+    setTimeout(() => e.target.select(), 10);
   };
+
+  const handleBlur = (cellKey: string) => {
+    setInputFocused((prev) => ({
+      ...prev,
+      [cellKey]: false,
+    }));
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    cellKey: string,
+  ) => {
+    const val = e.target.value;
+
+    // Only allow numbers, decimal point, and empty string
+    const isValidNumber = /^-?\d*\.?\d*$/.test(val) || val === "";
+
+    if (isValidNumber) {
+      setInputValues((prev) => ({
+        ...prev,
+        [cellKey]: val,
+      }));
+      setTempValues((prev) => ({
+        ...prev,
+        [cellKey]: val,
+      }));
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const charCode = e.which ? e.which : e.keyCode;
+    const char = String.fromCharCode(charCode);
+
+    if (
+      !/[\d.]/.test(char) &&
+      charCode > 31 &&
+      (charCode < 48 || charCode > 57)
+    ) {
+      e.preventDefault();
+    }
+
+    // Allow only one decimal point
+    if (char === "." && e.currentTarget.value.includes(".")) {
+      e.preventDefault();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    // Validate pasted content
+    const pastedText = e.clipboardData.getData("text");
+    const isValidPaste = /^-?\d*\.?\d*$/.test(pastedText);
+
+    if (!isValidPaste) {
+      e.preventDefault();
+    }
+  };
+
+  const handleSidebarOpen = () => setOpen(true);
 
   //   if (isLoading) {
   //     return <Loader />;
@@ -460,17 +535,35 @@ export default function UpdatedKpiTable() {
     <FormProvider {...methods}>
       <div className="sticky top-0 z-10 bg-white p-4 m-0">
         <div className="flex justify-between">
-          {" "}
           <div className="flex justify-between items-center">
             <TabsSection
               selectedPeriod={selectedPeriod}
               onSelectPeriod={handlePeriodChange}
               kpiStructure={kpiStructure}
             />
-          </div>{" "}
+          </div>
           <div className="flex gap-4 items-center justify-end">
             {Object.keys(tempValues).length > 0 && (
               <Button onClick={handleSubmit}>Submit</Button>
+            )}
+            {userData.isSuperAdmin && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleSidebarOpen}
+                      variant="ghost"
+                      className="bg-primary hover:bg-primary text-white rotate-270 cursor-pointer"
+                      size="icon"
+                    >
+                      <ChartNoAxesColumn className="text-white w-8 h-8" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>ReArrange</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
             <FormDatePicker
               value={selectedDate}
@@ -498,6 +591,7 @@ export default function UpdatedKpiTable() {
           </div>
         </div>
       </div>
+
       <div className="flex w-full gap-0 p-2">
         {/* LEFT TABLE */}
         <div
@@ -510,11 +604,11 @@ export default function UpdatedKpiTable() {
               <tr>
                 <th
                   className="w-[75px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
-                  onClick={() => handleSort("employeeName")}
+                  // onClick={() => handleSort("employeeName")}
                 >
                   <div className="flex items-center gap-1">
                     Who
-                    {sortConfig.key === "employeeName" &&
+                    {/* {sortConfig.key === "employeeName" &&
                       (sortConfig.direction === "asc" ? (
                         <ArrowUp className="w-4 h-4 ml-1" />
                       ) : (
@@ -522,16 +616,16 @@ export default function UpdatedKpiTable() {
                       ))}
                     {sortConfig.key !== "employeeName" && (
                       <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
-                    )}
+                    )} */}
                   </div>
                 </th>
                 <th
                   className="w-[190px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
-                  onClick={() => handleSort("KPIName")}
+                  // onClick={() => handleSort("KPIName")}
                 >
                   <div className="flex items-center gap-1">
                     KPI
-                    {sortConfig.key === "KPIName" &&
+                    {/* {sortConfig.key === "KPIName" &&
                       (sortConfig.direction === "asc" ? (
                         <ArrowUp className="w-4 h-4 ml-1" />
                       ) : (
@@ -539,16 +633,16 @@ export default function UpdatedKpiTable() {
                       ))}
                     {sortConfig.key !== "KPIName" && (
                       <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
-                    )}
+                    )} */}
                   </div>
                 </th>
                 <th
                   className="w-[120px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
-                  onClick={() => handleSort("tag")}
+                  // onClick={() => handleSort("tag")}
                 >
                   <div className="flex items-center gap-1">
                     Tag
-                    {sortConfig.key === "tag" &&
+                    {/* {sortConfig.key === "tag" &&
                       (sortConfig.direction === "asc" ? (
                         <ArrowUp className="w-4 h-4 ml-1" />
                       ) : (
@@ -556,7 +650,7 @@ export default function UpdatedKpiTable() {
                       ))}
                     {sortConfig.key !== "tag" && (
                       <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
-                    )}
+                    )} */}
                   </div>
                 </th>
                 <th className="w-[100px] p-2 font-semibold text-white text-left h-[51px]">
@@ -644,19 +738,27 @@ export default function UpdatedKpiTable() {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <span className="line-clamp-2 break-words cursor-default">
-                                {getFormattedValue(
-                                  kpi.validationType,
-                                  kpi?.value1,
-                                  kpi?.value2,
-                                  kpi?.unit,
-                                )}
+                                {kpi.validationType === "YES_NO"
+                                  ? kpi.goalValue === 1
+                                    ? "Yes"
+                                    : "No" // Show Yes/No based on goalValue
+                                  : getFormattedValue(
+                                      kpi.validationType,
+                                      kpi?.value1,
+                                      kpi?.value2,
+                                      kpi?.unit,
+                                    )}
                               </span>
                             </TooltipTrigger>
                             <TooltipContent>
                               <span>
-                                {kpi.validationType === "BETWEEN"
-                                  ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(kpi?.value2)}`
-                                  : formatToThreeDecimals(kpi?.value1)}
+                                {kpi.validationType === "YES_NO"
+                                  ? kpi.goalValue === 1
+                                    ? `Yes ${formatToThreeDecimals(kpi.value1)}`
+                                    : `No ${formatToThreeDecimals(kpi.value1)}`
+                                  : kpi.validationType === "BETWEEN"
+                                    ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(kpi?.value2)}`
+                                    : formatToThreeDecimals(kpi?.value1)}
                               </span>
                             </TooltipContent>
                           </Tooltip>
@@ -765,31 +867,51 @@ export default function UpdatedKpiTable() {
                                               "opacity-60 border ",
                                           )}
                                         >
-                                          <FormSelect
-                                            value={inputVal}
-                                            onChange={
-                                              canInput
-                                                ? (val) => {
-                                                    setInputValues((prev) => ({
-                                                      ...prev,
-                                                      [key]: Array.isArray(val)
-                                                        ? val.join(", ")
-                                                        : String(val),
-                                                    }));
-                                                    setTempValues((prev) => ({
-                                                      ...prev,
-                                                      [key]: Array.isArray(val)
-                                                        ? val.join(", ")
-                                                        : String(val),
-                                                    }));
-                                                  }
-                                                : () => {}
-                                            }
-                                            options={selectOptions}
-                                            placeholder="Select"
-                                            disabled={!canInput}
-                                            triggerClassName="text-sm px-1 text-center justify-center"
-                                          />
+                                          {!isVisualized ? (
+                                            <FormSelect
+                                              value={inputVal}
+                                              onChange={
+                                                canInput
+                                                  ? (val) => {
+                                                      setInputValues(
+                                                        (prev) => ({
+                                                          ...prev,
+                                                          [key]: Array.isArray(
+                                                            val,
+                                                          )
+                                                            ? val.join(", ")
+                                                            : String(val),
+                                                        }),
+                                                      );
+                                                      setTempValues((prev) => ({
+                                                        ...prev,
+                                                        [key]: Array.isArray(
+                                                          val,
+                                                        )
+                                                          ? val.join(", ")
+                                                          : String(val),
+                                                      }));
+                                                    }
+                                                  : () => {}
+                                              }
+                                              options={selectOptions}
+                                              placeholder="Select"
+                                              disabled={!canInput}
+                                              triggerClassName="text-sm px-1 text-center justify-center"
+                                            />
+                                          ) : (
+                                            <div className="flex flex-col items-center  justify-center h-full w-full cursor-not-allowed">
+                                              <span className="text-black">
+                                                {
+                                                  inputFocused[key]
+                                                    ? inputVal // Show raw value when focused
+                                                    : formatCompactNumber(
+                                                        inputVal,
+                                                      ) // Show formatted value when blurred
+                                                }
+                                              </span>
+                                            </div>
+                                          )}
                                         </div>
                                       </TooltipTrigger>
                                     </Tooltip>
@@ -801,7 +923,7 @@ export default function UpdatedKpiTable() {
                               <td
                                 key={colIdx}
                                 className={clsx(
-                                  "p-2 border text-center w-[80px] h-[42px]",
+                                  "p-2 border text-center w-[80px] h-[42px] relative",
                                   headers[colIdx].isSunday && "bg-gray-100",
                                 )}
                               >
@@ -810,55 +932,35 @@ export default function UpdatedKpiTable() {
                                     <TooltipTrigger asChild>
                                       <input
                                         type="text"
+                                        inputMode="decimal"
                                         value={
                                           inputFocused[key]
-                                            ? inputVal
-                                            : formatCompactNumber(inputVal)
+                                            ? inputVal // Show raw value when focused
+                                            : formatCompactNumber(inputVal) // Show formatted value when blurred
                                         }
                                         onFocus={
                                           canInput
-                                            ? () =>
-                                                setInputFocused((prev) => ({
-                                                  ...prev,
-                                                  [key]: true,
-                                                }))
+                                            ? (e) => handleFocus(e, key)
                                             : undefined
                                         }
                                         onBlur={
                                           canInput
-                                            ? () =>
-                                                setInputFocused((prev) => ({
-                                                  ...prev,
-                                                  [key]: false,
-                                                }))
+                                            ? () => handleBlur(key)
                                             : undefined
                                         }
                                         onChange={
                                           canInput
-                                            ? (e) => {
-                                                const val = e.target.value;
-                                                const isValidNumber =
-                                                  /^(\d+(\.\d*)?|\.\d*)?$/.test(
-                                                    val,
-                                                  ) || val === "";
-                                                if (isValidNumber) {
-                                                  setInputValues((prev) => ({
-                                                    ...prev,
-                                                    [key]: val,
-                                                  }));
-                                                }
-                                                setTempValues((prev) => ({
-                                                  ...prev,
-                                                  [key]: e?.target.value,
-                                                }));
-                                              }
+                                            ? (e) => handleChange(e, key)
                                             : undefined
                                         }
+                                        onKeyPress={handleKeyPress}
+                                        onPaste={handlePaste}
                                         className={clsx(
-                                          "border p-2 rounded-sm text-center text-sm w-[80px] h-[42px]",
+                                          "border p-2 rounded-sm text-center text-sm w-full h-[42px] transition-all",
+                                          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
                                           inputVal !== "" &&
                                             validationType &&
-                                            selectedPeriod !== "YEARLY" && // 👈 yearly skip
+                                            selectedPeriod !== "YEARLY" &&
                                             (isValidInput(
                                               validationType,
                                               inputVal,
@@ -870,7 +972,7 @@ export default function UpdatedKpiTable() {
                                           (!canInput || isVisualized) &&
                                             "opacity-60 cursor-not-allowed bg-gray-50",
                                         )}
-                                        placeholder=""
+                                        placeholder="0"
                                         disabled={!canInput}
                                         readOnly={!canInput}
                                       />
@@ -906,6 +1008,16 @@ export default function UpdatedKpiTable() {
         onSubmit={handleWarningSubmit}
         onDiscard={handleWarningDiscard}
         onClose={handleWarningClose}
+      />
+      <KPISideBar
+        open={open}
+        onClose={() => setOpen(false)}
+        selectedType={selectedPeriod}
+        data={groupedKpiRows.map((row) => ({
+          coreParameterId: row.coreParameter.coreParameterId,
+          coreParameterName: row.coreParameter.coreParameterName,
+          kpis: row.kpis.map((k) => k.kpi),
+        }))}
       />
     </FormProvider>
   );

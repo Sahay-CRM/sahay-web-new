@@ -13,6 +13,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import SearchInput from "@/components/shared/SearchInput";
+
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 
@@ -586,7 +587,7 @@ export default function useAddDataPoint() {
             <Controller
               control={control}
               name="employeeId"
-              rules={{ required: "Employee is required" }}
+              rules={{ required: "Assign User is required" }}
               render={({ field }) => (
                 <SearchDropdown
                   options={allOptions}
@@ -595,13 +596,14 @@ export default function useAddDataPoint() {
                     field.onChange(value.value);
                     setValue("employeeId", value.value);
                   }}
-                  placeholder="Select an employee..."
-                  label="Employee"
+                  placeholder="Select an Assign User..."
+                  label="Assign User"
                   error={errors.employeeId}
                   isMandatory
                 />
               )}
             />
+
             {/* <Controller
                 control={control}
                 name="employeeId"
@@ -621,6 +623,7 @@ export default function useAddDataPoint() {
                 )}
               /> */}
           </div>
+
           {employee && (
             <div>
               <div key={employee} className="flex mb-2 flex-col gap-2">

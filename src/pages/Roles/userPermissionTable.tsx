@@ -25,6 +25,8 @@ import WarningDialog from "../kpiDashboard/WarningModal";
 import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { getRouteByLabel } from "@/features/utils/navigation.data";
+import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 
 // Interfaces
 interface Permission {
@@ -70,7 +72,6 @@ interface ModuleWithChildren extends ModuleDetails {
   children?: ModuleWithChildren[];
 }
 
-// PermissionTable component (inner)
 function PermissionTableInner({ data, onChange }: PermissionTableProps) {
   const { data: moduleData, isLoading: moduleLoading } = useGetAllModule();
   const { data: permissionData, isLoading: permissionLoading } =
@@ -333,6 +334,7 @@ export default function UserPermissionTableMerged() {
   const { id: employeeId } = useParams();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const updatePermission = useUpdateUserPermission();
+  const { data: employeeApiData } = useGetEmployeeById(employeeId || "");
   const { data: userPerm } = useGetUserPerById(employeeId || "");
   const { setBreadcrumbs } = useBreadcrumbs();
   const location = useLocation();
@@ -476,37 +478,15 @@ export default function UserPermissionTableMerged() {
         target.closest('[data-slot="sidebar-menu-button"]');
 
       if (isDrawerNavigation) {
+        const textContent = target.textContent?.toLowerCase().trim();
+        const matchedRoute = textContent ? getRouteByLabel(textContent) : null;
+        if (matchedRoute === null) {
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
-
-        let href = target.closest("a")?.getAttribute("href") ?? null;
-
-        if (!href) {
-          const textContent = target.textContent?.toLowerCase().trim();
-          const routeMap: { [key: string]: string } = {
-            "company designation": "/dashboard/company-designation",
-            "company employee": "/dashboard/company-employee",
-            calendar: "/dashboard/calendar",
-            meeting: "/dashboard/meeting",
-            "meeting list": "/dashboard/meeting",
-            "company task list": "/dashboard/tasks",
-            "company project list": "/dashboard/projects",
-            "kpi list": "/dashboard/kpi",
-            "kpi dashboard": "/dashboard/kpi-dashboard",
-            "health weightage": "/dashboard/business/health-weightage",
-            "health score": "/dashboard/business/healthscore-achieve",
-            "business health": "/dashboard/business/health-weightage",
-            "company level assign": "/dashboard/business/company-level-assign",
-            "role & permission": "/dashboard/roles/user-permission",
-            brand: "/dashboard/brand",
-            product: "/dashboard/product",
-            "user log": "/dashboard/user-log",
-          };
-          if (textContent) href = routeMap[textContent] || null;
-        }
-
-        if (href && href !== location.pathname) {
-          setPendingNavigation(href);
+        if (matchedRoute && matchedRoute !== location.pathname) {
+          setPendingNavigation(matchedRoute);
           setShowWarning(true);
         }
       }
@@ -523,6 +503,13 @@ export default function UserPermissionTableMerged() {
 
   if (permission && permission.View === false) {
     return <PageNotAccess />;
+  }
+  if (employeeApiData?.data.isSuperAdmin) {
+    return (
+      <div className="h-full w-full text-3xl text-primary font-semibold uppercase flex flex-col items-center justify-center">
+        Cannot assign permissions to a Super Admin.
+      </div>
+    );
   }
 
   return (

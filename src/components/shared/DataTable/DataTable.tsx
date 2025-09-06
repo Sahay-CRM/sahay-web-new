@@ -100,6 +100,7 @@ interface TableProps<T extends Record<string, unknown>> {
   isEditDeleteShow?: boolean;
   showActionsColumn?: boolean;
   actionColumnWidth?: string;
+  isPermissionIcon?: (item: T) => boolean;
 }
 
 const TableData = <T extends Record<string, unknown>>({
@@ -126,16 +127,17 @@ const TableData = <T extends Record<string, unknown>>({
   selectedValue = [],
   handleChange,
   onCheckbox,
-  isEditDelete,
+  // isEditDelete,
   moduleKey = "",
   dropdownColumns = {},
   sortableColumns = [],
   onToggleActive,
   showActiveToggle = false,
   activeToggleKey,
-  isEditDeleteShow = true,
+  isEditDeleteShow = false,
   showActionsColumn = true,
   actionColumnWidth,
+  isPermissionIcon,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   // Only show checkboxes if explicitly enabled with multiSelect OR if both selectedValue and handleChange are provided
@@ -469,159 +471,9 @@ const TableData = <T extends Record<string, unknown>>({
                     >
                       <div className="flex gap-1 justify-end items-end">
                         {customActions?.(item)}
-                        {isEditDeleteShow ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                                onClick={() =>
-                                  !(item as { isDisabled?: boolean })
-                                    .isDisabled && onEdit?.(item)
-                                }
-                                disabled={
-                                  (item as { isDisabled?: boolean }).isDisabled
-                                }
-                              >
-                                <Pencil className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Edit</TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          isEditDelete &&
-                          isActionButton?.(item) &&
-                          permission?.Edit && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
-                                  onClick={() =>
-                                    !(item as { isDisabled?: boolean })
-                                      .isDisabled && onEdit?.(item)
-                                  }
-                                  disabled={
-                                    (item as { isDisabled?: boolean })
-                                      .isDisabled
-                                  }
-                                >
-                                  <Pencil className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Edit</TooltipContent>
-                            </Tooltip>
-                          )
-                        )}
-
-                        {isEditDeleteShow ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-red-600"
-                                onClick={() =>
-                                  !(item as { isDisabled?: boolean })
-                                    .isDisabled && onDelete?.(item)
-                                }
-                                disabled={
-                                  (item as { isDisabled?: boolean }).isDisabled
-                                }
-                              >
-                                <Trash className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Delete</TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          isEditDelete &&
-                          isActionButton?.(item) &&
-                          permission?.Delete &&
-                          (!canDelete || canDelete(item)) && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 text-red-600"
-                                  onClick={() =>
-                                    !(item as { isDisabled?: boolean })
-                                      .isDisabled && onDelete?.(item)
-                                  }
-                                  disabled={
-                                    (item as { isDisabled?: boolean })
-                                      .isDisabled
-                                  }
-                                >
-                                  <Trash className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Delete</TooltipContent>
-                            </Tooltip>
-                          )
-                        )}
-                        {permission?.Delete &&
-                          showActiveToggle &&
-                          isActionButton?.(item) &&
-                          (!canDelete || canDelete(item)) && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  className={`h-8 w-auto px-2 ${
-                                    getActiveState(item)
-                                      ? "bg-primary hover:bg-primary"
-                                      : "bg-red-700/80 hover:bg-red-700"
-                                  }`}
-                                  onClick={() =>
-                                    !(item as { isDisabled?: boolean })
-                                      .isDisabled && onToggleActive?.(item)
-                                  }
-                                  disabled={
-                                    (item as { isDisabled?: boolean })
-                                      .isDisabled
-                                  }
-                                >
-                                  {getActiveState(item) ? "Active" : "Inactive"}
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {getActiveState(item)
-                                  ? "Set Inactive"
-                                  : "Set Active"}
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-
-                        {typeof additionalButton === "function"
-                          ? additionalButton(item) &&
-                            permission?.Edit && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 w-8 p-0"
-                                    onClick={() =>
-                                      !(item as { isDisabled?: boolean })
-                                        .isDisabled && onAdditionButton(item)
-                                    }
-                                    disabled={
-                                      (item as { isDisabled?: boolean })
-                                        .isDisabled
-                                    }
-                                  >
-                                    <KeyRound className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Permission</TooltipContent>
-                              </Tooltip>
-                            )
-                          : additionalButton &&
-                            permission?.Edit && (
+                        {additionalButton ? (
+                          <div>
+                            {isPermissionIcon?.(item) && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
@@ -643,6 +495,140 @@ const TableData = <T extends Record<string, unknown>>({
                                 <TooltipContent>Permission</TooltipContent>
                               </Tooltip>
                             )}
+                          </div>
+                        ) : (
+                          <>
+                            {isEditDeleteShow ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    onClick={() =>
+                                      !(item as { isDisabled?: boolean })
+                                        .isDisabled && onEdit?.(item)
+                                    }
+                                    disabled={
+                                      (item as { isDisabled?: boolean })
+                                        .isDisabled
+                                    }
+                                  >
+                                    <Pencil className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Edit</TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              isActionButton?.(item) &&
+                              permission?.Edit && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8 w-8 p-0"
+                                      onClick={() =>
+                                        !(item as { isDisabled?: boolean })
+                                          .isDisabled && onEdit?.(item)
+                                      }
+                                      disabled={
+                                        (item as { isDisabled?: boolean })
+                                          .isDisabled
+                                      }
+                                    >
+                                      <Pencil className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Edit</TooltipContent>
+                                </Tooltip>
+                              )
+                            )}
+
+                            {isEditDeleteShow ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 text-red-600"
+                                    onClick={() =>
+                                      !(item as { isDisabled?: boolean })
+                                        .isDisabled && onDelete?.(item)
+                                    }
+                                    disabled={
+                                      (item as { isDisabled?: boolean })
+                                        .isDisabled
+                                    }
+                                  >
+                                    <Trash className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete</TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              isActionButton?.(item) &&
+                              permission?.Delete &&
+                              (!canDelete || canDelete(item)) && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8 w-8 p-0 text-red-600"
+                                      onClick={() =>
+                                        !(item as { isDisabled?: boolean })
+                                          .isDisabled && onDelete?.(item)
+                                      }
+                                      disabled={
+                                        (item as { isDisabled?: boolean })
+                                          .isDisabled
+                                      }
+                                    >
+                                      <Trash className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Delete</TooltipContent>
+                                </Tooltip>
+                              )
+                            )}
+
+                            {permission?.Delete &&
+                              showActiveToggle &&
+                              isActionButton?.(item) &&
+                              (!canDelete || canDelete(item)) && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      className={`h-8 w-auto px-2 ${
+                                        getActiveState(item)
+                                          ? "bg-primary hover:bg-primary"
+                                          : "bg-red-700/80 hover:bg-red-700"
+                                      }`}
+                                      onClick={() =>
+                                        !(item as { isDisabled?: boolean })
+                                          .isDisabled && onToggleActive?.(item)
+                                      }
+                                      disabled={
+                                        (item as { isDisabled?: boolean })
+                                          .isDisabled
+                                      }
+                                    >
+                                      {getActiveState(item)
+                                        ? "Active"
+                                        : "Inactive"}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {getActiveState(item)
+                                      ? "Set Inactive"
+                                      : "Set Active"}
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
+                          </>
+                        )}
 
                         {viewButton && (
                           <Tooltip>

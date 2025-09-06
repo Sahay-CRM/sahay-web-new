@@ -1,4 +1,4 @@
-import { useSidebarTheme } from "@/features/auth/useSidebarTheme";
+import { useSidebarTheme } from "@/features/layouts/useSidebarTheme";
 
 const colors = [
   "#ffffff",

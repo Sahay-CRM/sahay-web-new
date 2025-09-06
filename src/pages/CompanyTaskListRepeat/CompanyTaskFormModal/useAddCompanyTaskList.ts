@@ -253,20 +253,20 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
         ...(isLastDayOfMonth
           ? [
               {
-                value: "MONTHLYLASTDAY",
+                value: "MONTHLYEOM",
                 label: `Monthly on the last day (${getOrdinalDate(lastDateOfMonth)})`,
               },
             ]
           : []),
 
         {
-          value: "YEARLYDATE",
+          value: "YEARLYXMONTHDATE",
           label: `Yearly on ${monthName} ${getOrdinalDate(dateOfMonth)}`, // Yearly - Date (e.g., March 14th)
         },
         ...(!isLastDayOfMonth
           ? [
               {
-                value: "YEARLYMONTHNWEEKDAY",
+                value: "YEARLYXMONTHNWEEKDAY",
                 label: `Yearly on the ${ordinalWeekday} of ${monthName}  `,
               },
             ]
@@ -274,7 +274,7 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
         ...(isLastDayOfMonth
           ? [
               {
-                value: "YEARLYMONTHLASTWEEKDAY",
+                value: "YEARLYXMONTHLASTWEEKDAY",
                 label: `Yearly on the last ${dayName} of ${monthName}  `,
               },
             ]

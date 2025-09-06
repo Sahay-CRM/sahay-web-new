@@ -16,6 +16,7 @@ import {
   Logs,
   Presentation,
   Target,
+  ListTodo,
 } from "lucide-react";
 
 // Icon mapping object
@@ -37,6 +38,7 @@ export const iconMap = {
   Logs,
   Presentation,
   Target,
+  ListTodo,
 };
 
 export type IconName = keyof typeof iconMap;

@@ -109,7 +109,9 @@ function Calendar() {
             <div>
               <FormSelect
                 value={selectedOption}
-                onChange={handleOptionChange}
+                onChange={(item) =>
+                  handleOptionChange(item as string | string[])
+                }
                 options={selectOptions}
                 className="h-9"
               />

@@ -131,24 +131,28 @@ export default function CompanyTaskList() {
     },
     {
       key: "validationType",
-      label: "Validation Type",
+      label: "Validation",
       visible: true,
       tooltipColumn: "validationTypeFullLabel",
+    },
+    {
+      key: "goal",
+      label: "Goal",
+      visible: true,
+    },
+    {
+      key: "unit",
+      label: "Unit",
+      visible: true,
     },
     {
       key: "frequencyType",
       label: "Frequency",
       visible: true,
-      // tooltipColumn: "frequencyTypeFullName",
     },
     {
       key: "coreParameterName",
       label: "Business Function Name",
-      visible: true,
-    },
-    {
-      key: "goal", // Use a new, descriptive key
-      label: "Goal",
       visible: true,
     },
   ]);
@@ -236,6 +240,7 @@ export default function CompanyTaskList() {
                 (datpointData.currentPage - 1) * datpointData.pageSize +
                 index +
                 1,
+
               validationType: getValidationSymbol(item.validationType),
               validationTypeFullLabel: getValidationLabel(item.validationType),
               frequencyType: formatFrequencyType(item.frequencyType),

@@ -491,7 +491,9 @@ const UploadDoc = () => {
               key={idx} // Using index as key is okay if list order doesn't change unpredictably or items don't have stable IDs
               className="flex items-center justify-between p-2 bg-gray-50 rounded"
             >
-              <span className="font-medium truncate">{file.fileName}</span>
+              <span className="font-medium truncate">
+                {file.fileName || file.name}
+              </span>
               <div>
                 <button
                   type="button"
