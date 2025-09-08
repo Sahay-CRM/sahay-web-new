@@ -892,7 +892,7 @@ export const useAgenda = ({
           meetingId: meetingId,
           employeeId: item.employeeId,
           attendanceMark: attendanceMark,
-          updatedAt: new Date().toISOString(),
+          // updatedAt: new Date().toISOString(),
         },
         {
           onSuccess: () => {
@@ -904,7 +904,7 @@ export const useAgenda = ({
             } else {
               const db = getDatabase();
               const meetRef = ref(db, `meetings/${meetingId}/state`);
-              update(meetRef, { updatedAt: new Date() });
+              update(meetRef, { updatedAt: Date.now() });
             }
           },
         },

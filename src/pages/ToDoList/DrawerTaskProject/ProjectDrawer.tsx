@@ -1,5 +1,4 @@
 import { useRef, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 
 import FormSelect from "@/components/shared/Form/FormSelect";
@@ -14,6 +13,7 @@ import {
 } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import { addMeetingNotesMutation } from "@/features/api/detailMeeting";
+import { useDdCompanyMeeting } from "@/features/api/companyMeeting";
 
 type ProjectFormData = {
   projectId: string;
@@ -24,13 +24,14 @@ type ProjectFormData = {
   coreParameterId: string;
   subParameterId: string[];
   employeeId: string[];
+  meetingId: string;
 };
+
 interface ProjectDrawerProps {
   open: boolean;
   onClose: () => void;
   projectData?: CompanyProjectDataProps | null;
   issueId?: string;
-  projectsFireBase: () => void;
   ioType?: string;
 }
 
@@ -39,10 +40,8 @@ export default function ProjectDrawer({
   onClose,
   projectData,
   issueId,
-  projectsFireBase,
   ioType,
 }: ProjectDrawerProps) {
-  const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
   const { mutate: addProject } = useAddUpdateCompanyProject();
   const { data: projectStatusData } = useGetAllProjectStatus();
@@ -53,6 +52,7 @@ export default function ProjectDrawer({
     filter: { currentPage: 1, pageSize: 100 },
   });
   const { mutate: addNote } = addMeetingNotesMutation();
+
   // Prepare options
   const projectStatusOption = projectStatusData
     ? projectStatusData.data.map((status) => ({
@@ -62,16 +62,25 @@ export default function ProjectDrawer({
     : [];
   const employeeOption = employeeData
     ? employeeData.data.map((status) => ({
-        label: status.employeeName,
+        label: `${status.employeeName} ${status.designationName} ${status.employeeType}`,
         value: status.employeeId,
       }))
     : [];
-
   const coreParameterOption = coreParameterData
     ? coreParameterData.data.map((item) => ({
         label: item.coreParameterName,
         value: item.coreParameterId,
       }))
+    : [];
+  const { data: meetingListdata } = useDdCompanyMeeting();
+
+  const meetingOptions = meetingListdata
+    ? Array.isArray(meetingListdata)
+      ? meetingListdata.map((project) => ({
+          label: project.meetingName,
+          value: project.meetingId,
+        }))
+      : []
     : [];
 
   const defaultValues = projectData
@@ -137,6 +146,7 @@ export default function ProjectDrawer({
         value: item.subParameterId,
       }))
     : [];
+
   useEffect(() => {
     if (open && projectData) {
       reset(defaultValues);
@@ -148,25 +158,16 @@ export default function ProjectDrawer({
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as HTMLElement;
 
-      if (drawerRef.current && drawerRef.current.contains(target)) {
-        return;
-      }
-
+      if (drawerRef.current && drawerRef.current.contains(target)) return;
       if (
         target.closest('[data-slot="select-content"]') ||
         target.closest('[data-slot="popover-content"]') ||
-        target.closest("[data-radix-popper-content-wrapper]")
-      ) {
-        return;
-      }
-
-      if (
+        target.closest("[data-radix-popper-content-wrapper]") ||
         target.closest(".react-datepicker") ||
         target.closest(".react-datepicker-popper")
       ) {
         return;
       }
-
       onClose();
     }
 
@@ -182,43 +183,39 @@ export default function ProjectDrawer({
   }, [onClose, open]);
 
   const onSubmit = (data: ProjectFormData) => {
-    if (meetingId && issueId) {
-      const { employeeId, projectDeadline, ...rest } = data;
-      const payload = {
-        ...rest,
-        projectId: projectData?.projectId,
-        otherProjectEmployees: employeeId,
-        meetingId: meetingId,
-        projectDeadline: projectDeadline
-          ? new Date(projectDeadline).toISOString()
-          : null,
-        ...(ioType === "ISSUE"
-          ? { issueId: issueId }
-          : { objectiveId: issueId }),
-        ioType,
-      };
-      addProject(payload, {
-        onSuccess: () => {
-          if (projectData && projectData.meetingNoteId) {
-            addNote(
-              {
-                meetingNoteId: projectData?.meetingNoteId,
-                noteType: "TASKS",
+    // if (issueId) {
+    const { employeeId, projectDeadline, meetingId, ...rest } = data;
+    const payload = {
+      ...rest,
+      projectId: projectData?.projectId,
+      otherProjectEmployees: employeeId,
+      meetingId,
+      projectDeadline: projectDeadline
+        ? new Date(projectDeadline).toISOString()
+        : null,
+      ...(ioType === "ISSUE" ? { issueId: issueId } : { objectiveId: issueId }),
+      ioType,
+    };
+    addProject(payload, {
+      onSuccess: () => {
+        if (projectData && projectData.detailMeetingNoteId) {
+          addNote(
+            {
+              meetingNoteId: projectData?.detailMeetingNoteId,
+              noteType: "TASKS",
+            },
+            {
+              onSuccess: () => {
+                onClose();
               },
-              {
-                onSuccess: () => {
-                  projectsFireBase();
-                  onClose();
-                },
-              },
-            );
-          } else {
-            projectsFireBase();
-            onClose();
-          }
-        },
-      });
-    }
+            },
+          );
+        } else {
+          onClose();
+        }
+      },
+    });
+    // }
   };
 
   return (
@@ -284,6 +281,20 @@ export default function ProjectDrawer({
                   />
                 );
               }}
+            />
+            <Controller
+              control={control}
+              name="meetingId"
+              render={({ field }) => (
+                <FormSelect
+                  label="Meeting"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={meetingOptions}
+                  error={errors.meetingId}
+                  placeholder="Select meeting"
+                />
+              )}
             />
             <Controller
               control={control}

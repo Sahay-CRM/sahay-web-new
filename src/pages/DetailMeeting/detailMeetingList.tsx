@@ -40,8 +40,8 @@ export default function DetailMeetingList() {
     isChildData,
     permission,
     statusOptions,
-    filters,
-    handleFilterChange,
+    // filters,
+    // handleFilterChange,
     // handleRowsModalOpen,
     isViewModalOpen,
     setIsViewModalOpen,
@@ -136,7 +136,7 @@ export default function DetailMeetingList() {
                 onApply={handleDateRangeApply}
               />
             </div>
-            <div>
+            {/* <div>
               <DropdownSearchMenu
                 label="Status"
                 options={statusOptions}
@@ -146,7 +146,7 @@ export default function DetailMeetingList() {
                 }}
                 multiSelect
               />
-            </div>
+            </div> */}
 
             {canToggleColumns && (
               <TooltipProvider>
@@ -229,6 +229,12 @@ export default function DetailMeetingList() {
                 }
               };
 
+              const meetingDate = new Date(row.meetingDateTime);
+              const today = new Date();
+              const isPastAndNotStarted =
+                meetingDate < today &&
+                row.detailMeetingStatus === "NOT_STARTED";
+
               return (
                 <>
                   {(userData.employeeType === "CONSULTANT" ||
@@ -245,26 +251,42 @@ export default function DetailMeetingList() {
                       <CopyPlus className="block !w-5 !h-5" />
                     </Button>
                   )}
-
-                  <Button
-                    size="sm"
-                    className={`py-1 w-[150px] px-3 cursor-pointer ${getButtonColor(
-                      row.detailMeetingStatus!,
-                    )}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/dashboard/meeting/detail/${row.meetingId}`);
-                    }}
-                  >
-                    {row.detailMeetingStatus === "ENDED"
-                      ? "Meeting Details"
-                      : isTeamLeader &&
-                          row.detailMeetingStatus === "NOT_STARTED"
-                        ? "Start Meeting"
-                        : isTeamLeader
-                          ? "Join Meeting"
-                          : "Not Started"}
-                  </Button>
+                  {isPastAndNotStarted ? (
+                    <Button
+                      size="sm"
+                      className="py-1 w-[150px] px-3 cursor-pointer bg-red-800 hover:bg-red-700 text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/dashboard/meeting/detail/${row.meetingId}`);
+                      }}
+                    >
+                      Past Meeting
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        size="sm"
+                        className={`py-1 w-[150px] px-3 cursor-pointer ${getButtonColor(
+                          row.detailMeetingStatus!,
+                        )}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(
+                            `/dashboard/meeting/detail/${row.meetingId}`,
+                          );
+                        }}
+                      >
+                        {row.detailMeetingStatus === "ENDED"
+                          ? "Meeting Details"
+                          : isTeamLeader &&
+                              row.detailMeetingStatus === "NOT_STARTED"
+                            ? "Start Meeting"
+                            : isTeamLeader
+                              ? "Join Meeting"
+                              : "Not Started"}
+                      </Button>
+                    </>
+                  )}
                 </>
               );
             }}

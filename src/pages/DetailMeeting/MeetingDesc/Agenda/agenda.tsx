@@ -304,8 +304,8 @@ export default function Agenda({
     },
     {
       icon: <FileText className="w-8 h-8 text-blue-500" />,
-      title: "ALLOCATE TIME FOR ADDITIONAL",
-      description: "Allow a few minutes at the end",
+      title: "ALLOCATE TIME FOR CONCLUSION AND WRAP UP",
+      description: "Allow a few minutes at the at Conclusion and Wrap Up",
     },
   ];
 
@@ -1061,7 +1061,7 @@ export default function Agenda({
                                     <Button
                                       variant="ghost"
                                       onClick={() => handleMarkAsSolved(item)}
-                                      className=" cursor-pointer"
+                                      className=" cursor-pointer bg-transparent hover:bg-transparent"
                                     >
                                       {item.isResolved ? (
                                         <CopyX
@@ -1293,6 +1293,7 @@ export default function Agenda({
                       ioType={ioType}
                       selectedIssueId={isSelectedAgenda}
                       isTeamLeader={isTeamLeader}
+                      follow={follow}
                     />
                   )}
                 </div>
@@ -1304,7 +1305,7 @@ export default function Agenda({
                 </div>
               </div>
             ) : (
-              <div className="flex-1 h-[calc(100vh-280px)] overflow-x-scroll w-full">
+              <div className="flex-1 h-[calc(100vh-320px)] overflow-x-hidden overflow-y-auto w-full">
                 <div>
                   {!selectedItem || !hasChanges(selectedItem) ? (
                     <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg mt-6 p-8 text-center">
@@ -1561,7 +1562,15 @@ export default function Agenda({
                                     ]),
                                   ].filter((key) => key !== "kpiId") as Array<
                                     keyof typeof kpi.oldValues
-                                  >; // 🚀 filter out kpiId
+                                  >;
+                                  const hasChange =
+                                    allKeys.some(
+                                      (key) =>
+                                        kpi.oldValues[key] !==
+                                        kpi.newValues[key],
+                                    ) ||
+                                    (kpi.oldData?.length || 0) > 0 ||
+                                    (kpi.newData?.length || 0) > 0;
 
                                   return (
                                     <div
@@ -1582,34 +1591,40 @@ export default function Agenda({
                                           </>
                                         ) : (
                                           kpi.newValues.kpiName
-                                        )}
+                                        )}{" "}
+                                        &nbsp; DISCUSSION
                                       </h4>
 
-                                      <div className="mt-2 grid grid-cols-2 gap-4 px-4">
-                                        {/* Old Values */}
-                                        <div>
-                                          <p className="font-medium text-gray-600 mb-1">
-                                            Old Values
-                                          </p>
-                                          <div className="space-y-1 text-sm">
-                                            {allKeys.map((key) => (
-                                              <div key={String(key)}>
-                                                <span className="capitalize">
-                                                  {key
-                                                    .toString()
-                                                    .replace("kpi", "")
-                                                    .replace(/([A-Z])/g, " $1")
-                                                    .trim()}
-                                                  :
-                                                </span>{" "}
-                                                {kpi.oldValues[
-                                                  key
-                                                ]?.toString() || "N/A"}
-                                              </div>
-                                            ))}
+                                      {/* ✅ only show old/new values if there is a change */}
+                                      {hasChange && (
+                                        <div className="mt-2 grid grid-cols-2 gap-4 px-4">
+                                          {/* Old Values */}
+                                          <div>
+                                            <p className="font-medium text-gray-600 mb-1">
+                                              Old Values
+                                            </p>
+                                            <div className="space-y-1 text-sm">
+                                              {allKeys.map((key) => (
+                                                <div key={String(key)}>
+                                                  <span className="capitalize">
+                                                    {key
+                                                      .toString()
+                                                      .replace("kpi", "")
+                                                      .replace(
+                                                        /([A-Z])/g,
+                                                        " $1",
+                                                      )
+                                                      .trim()}
+                                                    :
+                                                  </span>{" "}
+                                                  {kpi.oldValues[
+                                                    key
+                                                  ]?.toString() || "N/A"}
+                                                </div>
+                                              ))}
 
-                                            {kpi.oldData
-                                              ? kpi.oldData.map(
+                                              {kpi.oldData &&
+                                                kpi.oldData.map(
                                                   (oldDataItem, i) => (
                                                     <div key={i}>
                                                       {formatDate(
@@ -1620,35 +1635,37 @@ export default function Agenda({
                                                         "N/A"}
                                                     </div>
                                                   ),
-                                                )
-                                              : null}
+                                                )}
+                                            </div>
                                           </div>
-                                        </div>
 
-                                        {/* New Values */}
-                                        <div>
-                                          <p className="font-medium text-gray-600 mb-1">
-                                            New Values
-                                          </p>
-                                          <div className="space-y-1 text-sm">
-                                            {allKeys.map((key) => (
-                                              <div key={String(key)}>
-                                                <span className="capitalize">
-                                                  {key
-                                                    .toString()
-                                                    .replace("kpi", "")
-                                                    .replace(/([A-Z])/g, " $1")
-                                                    .trim()}
-                                                  :
-                                                </span>{" "}
-                                                {kpi.newValues[
-                                                  key
-                                                ]?.toString() || "N/A"}
-                                              </div>
-                                            ))}
+                                          {/* New Values */}
+                                          <div>
+                                            <p className="font-medium text-gray-600 mb-1">
+                                              New Values
+                                            </p>
+                                            <div className="space-y-1 text-sm">
+                                              {allKeys.map((key) => (
+                                                <div key={String(key)}>
+                                                  <span className="capitalize">
+                                                    {key
+                                                      .toString()
+                                                      .replace("kpi", "")
+                                                      .replace(
+                                                        /([A-Z])/g,
+                                                        " $1",
+                                                      )
+                                                      .trim()}
+                                                    :
+                                                  </span>{" "}
+                                                  {kpi.newValues[
+                                                    key
+                                                  ]?.toString() || "N/A"}
+                                                </div>
+                                              ))}
 
-                                            {kpi.newData
-                                              ? kpi.newData.map(
+                                              {kpi.newData &&
+                                                kpi.newData.map(
                                                   (newDataItem, i) => (
                                                     <div key={i}>
                                                       {formatDate(
@@ -1659,11 +1676,11 @@ export default function Agenda({
                                                         "N/A"}
                                                     </div>
                                                   ),
-                                                )
-                                              : null}
+                                                )}
+                                            </div>
                                           </div>
                                         </div>
-                                      </div>
+                                      )}
                                     </div>
                                   );
                                 },

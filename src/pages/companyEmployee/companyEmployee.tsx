@@ -31,7 +31,7 @@ export default function CompanyDesignation() {
   const userData = useSelector(getUserDetail);
 
   const {
-    employeedata,
+    employeeData,
     isLoading,
     closeDeleteModal,
     setPaginationFilter,
@@ -148,10 +148,10 @@ export default function CompanyDesignation() {
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            tableData={employeedata?.data.map((item, index) => ({
+            tableData={employeeData?.data.map((item, index) => ({
               ...item,
               srNo:
-                (employeedata.currentPage - 1) * employeedata.pageSize +
+                (employeeData.currentPage - 1) * employeeData.pageSize +
                 index +
                 1,
             }))}
@@ -177,7 +177,7 @@ export default function CompanyDesignation() {
             }}
             onDelete={(row) => onDelete(row as unknown as EmployeeData)}
             canDelete={() => !!userData.isSuperAdmin}
-            paginationDetails={mapPaginationDetails(employeedata)}
+            paginationDetails={mapPaginationDetails(employeeData)}
             isLoading={isLoading}
             setPaginationFilter={setPaginationFilter}
             permissionKey="employeeId"

@@ -1,6 +1,5 @@
 import { useRef, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { useParams } from "react-router-dom";
 
 import FormSelect from "@/components/shared/Form/FormSelect";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
@@ -11,8 +10,8 @@ import {
 } from "@/features/api/companyTask";
 import { useGetCompanyProjectAll } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
+import { useDdCompanyMeeting } from "@/features/api/companyMeeting";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
-import { addMeetingNotesMutation } from "@/features/api/detailMeeting";
 
 type TaskFormData = {
   taskName: string;
@@ -21,16 +20,17 @@ type TaskFormData = {
   taskTypeId: string;
   projectId: string;
   assignUsers: string[];
+  meetingId?: string;
   taskStartDate?: string | Date | null;
   taskDeadline?: string | Date | null;
   repetition?: string;
 };
+
 interface TaskDrawerProps {
   open: boolean;
   onClose: () => void;
   taskData?: TaskGetPaging | null;
   issueId?: string;
-  tasksFireBase: () => void;
   ioType?: string;
 }
 
@@ -39,10 +39,8 @@ export default function TaskDrawer({
   onClose,
   taskData,
   issueId,
-  tasksFireBase,
   ioType,
 }: TaskDrawerProps) {
-  const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
   const { data: taskStatus } = useGetAllTaskStatus({ filter: {} });
   const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
@@ -51,9 +49,18 @@ export default function TaskDrawer({
     filter: { isDeactivated: false },
   });
   const { data: projectListdata } = useGetCompanyProjectAll();
-  const { mutate: addNote } = addMeetingNotesMutation();
+  const { data: meetingListdata } = useDdCompanyMeeting();
 
-  // Prepare options
+  const meetingOptions = meetingListdata
+    ? Array.isArray(meetingListdata)
+      ? meetingListdata.map((project) => ({
+          label: project.meetingName,
+          value: project.meetingId,
+        }))
+      : []
+    : [];
+
+  // Prepare dropdown options
   const taskTypeOption = taskTypeData
     ? taskTypeData.data.map((status) => ({
         label: status.taskTypeName,
@@ -68,11 +75,10 @@ export default function TaskDrawer({
     : [];
   const employeeOption = employeedata
     ? employeedata.data.map((status) => ({
-        label: status.employeeName,
+        label: `${status.employeeName}`,
         value: status.employeeId,
       }))
     : [];
-
   const projectListOption = projectListdata
     ? Array.isArray(projectListdata.data)
       ? projectListdata.data.map((project) => ({
@@ -82,6 +88,7 @@ export default function TaskDrawer({
       : []
     : [];
 
+  // Default form values
   const defaultValues = taskData
     ? {
         taskName: taskData.taskName || "",
@@ -117,6 +124,7 @@ export default function TaskDrawer({
     defaultValues,
   });
 
+  // Ensure default status when adding new task
   useEffect(() => {
     if (!taskData || !taskData.taskStatusId) {
       if (taskStatus?.data?.[0]?.taskStatusId) {
@@ -125,28 +133,23 @@ export default function TaskDrawer({
     }
   }, [setValue, taskData, taskStatus?.data]);
 
-  // Reset form when taskData changes
+  // Reset form on taskData change
   useEffect(() => {
-    if (open && taskData) {
+    if (open) {
       reset(defaultValues);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, taskData]);
 
+  // Close drawer on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as HTMLElement;
-      if (drawerRef.current && drawerRef.current.contains(target)) {
-        return;
-      }
+      if (drawerRef.current && drawerRef.current.contains(target)) return;
       if (
         target.closest('[data-slot="select-content"]') ||
         target.closest('[data-slot="popover-content"]') ||
-        target.closest("[data-radix-popper-content-wrapper]")
-      ) {
-        return;
-      }
-      if (
+        target.closest("[data-radix-popper-content-wrapper]") ||
         target.closest(".react-datepicker") ||
         target.closest(".react-datepicker-popper")
       ) {
@@ -166,49 +169,28 @@ export default function TaskDrawer({
     };
   }, [onClose, open]);
 
+  // Submit handler
   const onSubmit = (data: TaskFormData) => {
-    if (meetingId) {
-      const { assignUsers, taskStartDate, taskDeadline, ...rest } = data;
-      const payload: AddUpdateTask = {
-        ...rest,
-        employeeIds: assignUsers,
-        taskId: taskData?.taskId,
-        taskStartDate: taskStartDate ? new Date(taskStartDate) : null,
-        taskDeadline: taskDeadline ? new Date(taskDeadline) : null,
-        meetingId: meetingId,
-        ...(ioType === "ISSUE"
-          ? { issueId: issueId }
-          : { objectiveId: issueId }),
-        ioType: ioType,
-      };
-
-      addUpdateTask(payload, {
-        onSuccess: () => {
-          if (taskData && taskData.meetingNoteId) {
-            addNote(
-              {
-                meetingNoteId: taskData?.meetingNoteId,
-                noteType: "TASKS",
-              },
-              {
-                onSuccess: () => {
-                  tasksFireBase();
-                  onClose();
-                },
-              },
-            );
-          } else {
-            tasksFireBase();
-            onClose();
-          }
-        },
-      });
-    }
+    const { assignUsers, taskStartDate, taskDeadline, ...rest } = data;
+    const payload: AddUpdateTask = {
+      ...rest,
+      employeeIds: assignUsers,
+      taskId: taskData?.taskId,
+      taskStartDate: taskStartDate ? new Date(taskStartDate) : null,
+      taskDeadline: taskDeadline ? new Date(taskDeadline) : null,
+      meetingId: data.meetingId,
+      ...(ioType === "ISSUE" ? { issueId: issueId } : { objectiveId: issueId }),
+      ioType: ioType,
+    };
+    addUpdateTask(payload, {
+      onSuccess: () => {
+        onClose();
+      },
+    });
   };
 
   return (
     <>
-      {/* Overlay */}
       {open && (
         <div className="fixed inset-0 bg-black/60 z-50 transition-opacity" />
       )}
@@ -221,7 +203,9 @@ export default function TaskDrawer({
       >
         <div className="h-[calc(100vh-30px)] overflow-scroll">
           <div className="flex justify-between items-center p-4 border-b">
-            <h2 className="text-lg font-semibold">{taskData?.taskName}</h2>
+            <h2 className="text-lg font-semibold">
+              {taskData?.taskName || "New Task"}
+            </h2>
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700"
@@ -229,6 +213,8 @@ export default function TaskDrawer({
               &times;
             </button>
           </div>
+
+          {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4">
             <FormInputField
               label="Task Name"
@@ -238,6 +224,7 @@ export default function TaskDrawer({
               error={errors.taskName}
               isMandatory
             />
+
             <Controller
               control={control}
               name="taskDescription"
@@ -245,6 +232,7 @@ export default function TaskDrawer({
                 <FormInputField label="Description" {...field} />
               )}
             />
+
             <Controller
               control={control}
               name="taskStatusId"
@@ -261,6 +249,7 @@ export default function TaskDrawer({
                 />
               )}
             />
+
             <Controller
               control={control}
               name="taskTypeId"
@@ -277,6 +266,7 @@ export default function TaskDrawer({
                 />
               )}
             />
+
             <Controller
               control={control}
               name="projectId"
@@ -293,6 +283,7 @@ export default function TaskDrawer({
                 />
               )}
             />
+
             <Controller
               control={control}
               name="assignUsers"
@@ -306,6 +297,23 @@ export default function TaskDrawer({
                   error={errors.assignUsers}
                   isMulti={true}
                   placeholder="Select employees"
+                  isMandatory
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="meetingId"
+              rules={{ required: "Meeting is Required" }}
+              render={({ field }) => (
+                <FormSelect
+                  label="Meeting"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={meetingOptions}
+                  error={errors.meetingId}
+                  placeholder="Select meeting"
                   isMandatory
                 />
               )}

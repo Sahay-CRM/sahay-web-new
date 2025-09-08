@@ -72,7 +72,7 @@ export default function FormDateTimePicker({
       <style>
         {`
           .responsive-datepicker-popper {
-            z-index: 50;
+            z-index: 9999;
             min-width: 0;
             width: auto;
             max-width: 95vw;

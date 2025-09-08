@@ -14,33 +14,31 @@ export function useTodoList() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState("");
+  const selectDate = new Date().toISOString().split("T")[0];
+  const { data: tasks } = useGetAllTodoList(selectDate);
 
-  const { data: tasks } = useGetAllTodoList();
   const { mutate: modifyTodo } = addUpdateToDoListMutation();
   const { mutate: deleteTodo } = deleteToDoMutation();
 
-  // Add task
   const handleAddTask = () => {
     const payload = {
       toDoName: newTask.trim().replace(/\s+/g, " "),
     };
     modifyTodo(payload);
-
     setNewTask("");
   };
 
-  // Open drawer
   const handleOpenDrawer = (taskId: string, taskName: string) => {
     setSelectedTask({ id: taskId, name: taskName });
     setIsDrawerOpen(true);
   };
 
-  // Toggle complete
-  const toggleComplete = (toDoId: string) => {
+  const toggleComplete = (toDoId: string, currentState: boolean) => {
     const payload = {
       toDoId: toDoId,
-      isCompleted: true,
+      isCompleted: !currentState,
     };
+
     modifyTodo(payload);
   };
 

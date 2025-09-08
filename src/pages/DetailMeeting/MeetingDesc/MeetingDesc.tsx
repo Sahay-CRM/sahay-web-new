@@ -184,8 +184,8 @@ export default function MeetingDesc() {
                               className="flex items-center gap-3 cursor-pointer w-full"
                               onClick={() => {
                                 if (
-                                  isTeamLeader &&
-                                  item.employeeId !== follow
+                                  meetingStatus !== "NOT_STARTED" &&
+                                  meetingStatus !== "ENDED"
                                 ) {
                                   toggleOpen();
                                 }
@@ -268,33 +268,40 @@ export default function MeetingDesc() {
                           </div>
 
                           {/* Accordion content (only if open) */}
-                          {isOpen && meetingStatus !== "ENDED" && (
-                            <div className="mt-3 pl-12 flex flex-col gap-2">
-                              {item.employeeId !== userId && (
-                                <>
-                                  {!item.isTeamLeader && (
-                                    <button
-                                      onClick={() => handleAddTeamLeader(item)}
-                                      className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                    >
-                                      Add Team Leader
-                                    </button>
-                                  )}
-
-                                  {item.isTeamLeader && teamLeaderCount > 1 && (
-                                    <button
-                                      onClick={() => handleAddTeamLeader(item)}
-                                      className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                    >
-                                      Remove Team Leader
-                                    </button>
-                                  )}
-                                </>
-                              )}
-                              {meetingStatus !== "NOT_STARTED" &&
-                                item.attendanceMark && (
+                          {isOpen &&
+                            meetingStatus !== "ENDED" &&
+                            follow !== item.employeeId && (
+                              <div className="mt-3 pl-12 flex flex-col gap-2">
+                                {item.employeeId !== userId && (
                                   <>
-                                    {/* <button
+                                    {!item.isTeamLeader && (
+                                      <button
+                                        onClick={() =>
+                                          handleAddTeamLeader(item)
+                                        }
+                                        className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                      >
+                                        Add Team Leader
+                                      </button>
+                                    )}
+
+                                    {item.isTeamLeader &&
+                                      teamLeaderCount > 1 && (
+                                        <button
+                                          onClick={() =>
+                                            handleAddTeamLeader(item)
+                                          }
+                                          className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                        >
+                                          Remove Team Leader
+                                        </button>
+                                      )}
+                                  </>
+                                )}
+                                {meetingStatus !== "NOT_STARTED" &&
+                                  item.attendanceMark && (
+                                    <>
+                                      {/* <button
                                   onClick={() =>
                                     handleCheckOut(item.employeeId)
                                   }
@@ -303,22 +310,33 @@ export default function MeetingDesc() {
                                   Check Out
                                 </button> */}
 
-                                    {item.isTeamLeader &&
-                                      item.employeeId !== follow &&
-                                      userId === follow && (
-                                        <button
-                                          onClick={() =>
-                                            handleFollow(item.employeeId)
-                                          }
-                                          className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                        >
-                                          Follow
-                                        </button>
-                                      )}
-                                  </>
-                                )}
-                            </div>
-                          )}
+                                      {item.isTeamLeader &&
+                                        item.employeeId !== follow &&
+                                        userId === follow && (
+                                          <button
+                                            onClick={() =>
+                                              handleFollow(item.employeeId)
+                                            }
+                                            className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                          >
+                                            Follow
+                                          </button>
+                                        )}
+                                    </>
+                                  )}
+                                {follow !== item.employeeId &&
+                                  follow !== userId && (
+                                    <button
+                                      onClick={() =>
+                                        handleFollow(item.employeeId)
+                                      }
+                                      className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                    >
+                                      Follow Me Back
+                                    </button>
+                                  )}
+                              </div>
+                            )}
                         </div>
                       );
                     })}

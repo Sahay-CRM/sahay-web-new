@@ -43,6 +43,8 @@ import {
 import { docUploadMutation } from "@/features/api/file";
 import { queryClient } from "@/queryClient";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
+import TaskDrawer from "./DrawerTaskProject/TaskDrawer";
+import ProjectDrawer from "./DrawerTaskProject/ProjectDrawer";
 
 export default function TodoListDrawer({
   open,
@@ -186,6 +188,7 @@ export default function TodoListDrawer({
     const month = (today.getMonth() + 1).toString().padStart(2, "0");
     const day = today.getDate().toString().padStart(2, "0");
     const formattedDate = `${year}-${month}-${day}`;
+    // const formattedDate = new Date().toISOString().split("T")[0];
 
     let payload: RepeatPayload;
 
@@ -257,7 +260,17 @@ export default function TodoListDrawer({
   const selectedRepeatLabel =
     repeatOptions.find((item) => item.value === selectedRepeat)?.label ||
     (selectedRepeat === "CUSTOMTYPE" ? "Custom" : "Repeat");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  interface TaskData {
+    [key: string]: string | null;
+  }
+  const [selectedProject, setSelectedProject] = useState<
+    CompanyProjectDataProps | TaskData
+  >();
 
+  const [drawerProj, setDrawerProj] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<TaskGetPaging | TaskData>();
+  const deadline = new Date();
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -281,6 +294,37 @@ export default function TodoListDrawer({
         </SheetHeader>
 
         <div className="p-2 flex flex-col gap-2 flex-1 overflow-hidden">
+          {/* Add Task (Same design as Due Date) */}
+          <div className="divide-y divide-border rounded-md border flex-shrink-0">
+            <div
+              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent"
+              onClick={() => {
+                setSelectedTask({
+                  taskDescription: ` created in ${taskTitle}`,
+                  taskDeadline: deadline.toISOString(),
+                  taskName: taskTitle ?? "",
+                });
+                setDrawerOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Task</span>
+            </div>
+            <div
+              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent"
+              onClick={() => {
+                setSelectedProject({
+                  projectName: taskTitle,
+                  projectDescription: ` created in ${taskTitle}`,
+                });
+                setDrawerProj(true);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Project</span>
+            </div>
+          </div>
+
           {/* Due Date & Repeat */}
           <div className="divide-y divide-border rounded-md border flex-shrink-0">
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
@@ -549,6 +593,20 @@ export default function TodoListDrawer({
             </div>
           </div>
         </div>
+        {drawerProj && (
+          <ProjectDrawer
+            open={drawerProj}
+            onClose={() => setDrawerProj(false)}
+            projectData={selectedProject as CompanyProjectDataProps}
+          />
+        )}
+        {drawerOpen && (
+          <TaskDrawer
+            open={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+            taskData={selectedTask as TaskGetPaging}
+          />
+        )}
       </SheetContent>
     </Sheet>
   );

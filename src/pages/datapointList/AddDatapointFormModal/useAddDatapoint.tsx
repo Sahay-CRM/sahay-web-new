@@ -450,7 +450,7 @@ export default function useAddDataPoint() {
       .filter((item) => !item.isDeactivated)
       .map((emp) => ({
         value: emp.employeeId,
-        label: `${emp.employeeName} - ${emp.employeeType}`,
+        label: `${emp.employeeName}`,
       }));
 
     const employee = watch("employeeId");

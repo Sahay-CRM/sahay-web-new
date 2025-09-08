@@ -33,6 +33,7 @@ const EmployeeSearchDropdown: React.FC<EmployeeSearchDropdownProps> = ({
       currentPage: 1,
       pageSize: 25,
       search: searchValue,
+      isDeactivated: false,
       ...filterProps,
     },
     enable: !!shouldFetch,
@@ -108,9 +109,7 @@ const EmployeeSearchDropdown: React.FC<EmployeeSearchDropdownProps> = ({
                   {renderEmp ? (
                     renderEmp(emp, false)
                   ) : (
-                    <span>
-                      {emp.employeeName} - {emp.employeeType}
-                    </span>
+                    <span>{emp.employeeName}</span>
                   )}
                 </li>
               ))}

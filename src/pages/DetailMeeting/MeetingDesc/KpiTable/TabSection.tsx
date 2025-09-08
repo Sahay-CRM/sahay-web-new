@@ -8,13 +8,16 @@ export default function TabsSection({
   selectedPeriod,
   onSelectPeriod,
   kpiStructure,
+  isDisabled = false,
 }: {
   selectedPeriod: string;
   onSelectPeriod: (selectedPeriod: string) => void;
   kpiStructure?: BaseResponse<FrequencyData> | null;
+  isDisabled?: boolean;
 }) {
   const { id: meetingId } = useParams();
   const db = getDatabase();
+
   // 🔹 Listen to changes from Firebase in real-time
   useEffect(() => {
     if (!meetingId) return;
@@ -31,6 +34,8 @@ export default function TabsSection({
 
   // 🔹 Update Firebase when user changes tab
   const handleTabChange = (newTab: string) => {
+    if (isDisabled) return;
+
     onSelectPeriod(newTab);
 
     update(ref(db, `meetings/${meetingId}/state`), {
@@ -49,7 +54,8 @@ export default function TabsSection({
           <TabsTrigger
             key={tab.frequencyType}
             value={tab.frequencyType}
-            className="rounded-none bg-white border-b-2 border-transparent text-xs font-medium text-muted-foreground hover:text-primary data-[state=active]:border-b-primary data-[state=active]:text-primary"
+            disabled={isDisabled}
+            className="rounded-none bg-white border-b-2 border-transparent text-xs font-medium text-muted-foreground hover:text-primary data-[state=active]:border-b-primary data-[state=active]:text-primary disabled:opacity-80 disabled:cursor-not-allowed"
           >
             {tab.frequencyType}{" "}
             <span className="ml-0.5 text-xs">({tab?.count})</span>
