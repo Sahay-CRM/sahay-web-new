@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
+import TaskDrawer from "./DrawerTaskProject/TaskDrawer";
+import ProjectDrawer from "./DrawerTaskProject/ProjectDrawer";
 
 export default function TodoList() {
   const {
@@ -33,6 +35,19 @@ export default function TodoList() {
   const allowedTypes = ["CONSULTANT", "OWNER"];
   const canToggle = allowedTypes.includes(userData.employeeType ?? "");
   const { setBreadcrumbs } = useBreadcrumbs();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  interface TaskData {
+    [key: string]: string | null;
+  }
+  const [selectedProject, setSelectedProject] = useState<
+    CompanyProjectDataProps | TaskData
+  >();
+
+  const [drawerProj, setDrawerProj] = useState(false);
+  const [selectedTaskDrawer, setSelectedTask] = useState<
+    TaskGetPaging | TaskData
+  >();
+  const deadline = new Date();
   useEffect(() => {
     setBreadcrumbs([{ label: "ToDo List", href: "" }]);
   }, [setBreadcrumbs]);
@@ -48,13 +63,20 @@ export default function TodoList() {
       d1.getDate() === d2.getDate();
     if (isSameDay(due, today)) return "Today";
     if (isSameDay(due, tomorrow)) return "Tomorrow";
-    return `Due ${due.toLocaleDateString("en-US", { weekday: "short", month: "long", day: "numeric", year: "numeric" })}`;
+    return `Due ${due.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    })}`;
   };
 
   return (
     <div className="flex h-[calc(100vh-90px)] w-full bg-background">
       <div
-        className={`flex flex-col transition-all duration-300 ${isDrawerOpen ? "w-3/4" : "w-full"}`}
+        className={`flex flex-col transition-all duration-300 ${
+          isDrawerOpen ? "w-3/4" : "w-full"
+        }`}
       >
         <div className="flex-1 space-y-1 p-4 overflow-y-auto pr-1">
           {tasks?.length === 0 && (
@@ -65,7 +87,11 @@ export default function TodoList() {
           {activeTasks.map((task) => (
             <div
               key={task.toDoId}
-              className={`flex justify-between p-1 rounded-sm border bg-card hover:bg-accent pl-2 transition ${task.isCompleted ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+              className={`group flex h-10 justify-between p-1 rounded-sm border bg-card hover:bg-accent pl-2 transition ${
+                task.isCompleted
+                  ? "cursor-not-allowed opacity-70"
+                  : "cursor-pointer"
+              }`}
               onClick={() =>
                 !task.isCompleted &&
                 editTaskId === null &&
@@ -143,25 +169,60 @@ export default function TodoList() {
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-2 mr-2">
-                  <span
-                    title="Delete task"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (task.toDoId) {
-                        handleDelete(task.toDoId);
-                        if (editTaskId === task.toDoId) {
-                          setEditTaskId(null);
-                          setEditValue("");
+
+                {/* Hover-only action buttons */}
+                {editTaskId !== task.toDoId && (
+                  <div className="items-center gap-2 mr-2 hidden group-hover:flex">
+                    {/* Add to Task button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTask({
+                          taskDescription: ` created in ${task.toDoName}`,
+                          taskDeadline: deadline.toISOString(),
+                          taskName: task.toDoName ?? "",
+                        });
+                        setDrawerOpen(true);
+                      }}
+                      className="px-2 py-1 text-xs rounded-md bg-primary text-white"
+                    >
+                      Add to Task
+                    </button>
+
+                    {/* Add to Project button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedProject({
+                          projectName: `${task.toDoName}`,
+                          projectDescription: ` created in ${task.toDoName}`,
+                        });
+                        setDrawerProj(true);
+                      }}
+                      className="px-2 py-1 text-xs rounded-md bg-primary text-white"
+                    >
+                      Add to Project
+                    </button>
+                    {/* Delete button */}
+                    <span
+                      title="Delete task"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (task.toDoId) {
+                          handleDelete(task.toDoId);
+                          if (editTaskId === task.toDoId) {
+                            setEditTaskId(null);
+                            setEditValue("");
+                          }
                         }
-                      }
-                    }}
-                    className={`cursor-pointer p-2 rounded-md hover:bg-red-100 
-        ${task.isCompleted || editTaskId === task.toDoId ? "opacity-50 hidden pointer-events-none" : ""}`}
-                  >
-                    <Trash className="w-4 h-4 text-red-500" />
-                  </span>
-                  {editTaskId !== task.toDoId && (
+                      }}
+                      className={`cursor-pointer p-2 rounded-md hover:bg-red-100 
+      ${task.isCompleted ? "opacity-50 pointer-events-none" : ""}`}
+                    >
+                      <Trash className="w-4 h-4 text-red-500" />
+                    </span>
+
+                    {/* Edit button */}
                     <span
                       title="Edit task"
                       onClick={(e) => {
@@ -169,15 +230,18 @@ export default function TodoList() {
                         setEditTaskId(task.toDoId ?? null);
                         setEditValue(task.toDoName || "");
                       }}
-                      className={`cursor-pointer p-2 rounded-md hover:bg-gray-200 ${task.isCompleted ? "opacity-50 pointer-events-none" : ""}`}
+                      className={`cursor-pointer p-2 rounded-md hover:bg-gray-200 ${
+                        task.isCompleted ? "opacity-50 pointer-events-none" : ""
+                      }`}
                     >
                       <Pencil className="w-4 h-4 text-primary" />
                     </span>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
+
           <div className="space-y-1 overflow-auto flex-1 pr-1">
             <h2 className="mt-2 text-primary border-b mb-3 font-medium">
               COMPLETED
@@ -201,7 +265,11 @@ export default function TodoList() {
                       <RadioGroupItem
                         value="notdonef"
                         id={`task-${task.toDoId}`}
-                        className={`w-4 h-4 rounded-full border border-gray-400 bg-gray-600 ${canToggle ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
+                        className={`w-4 h-4 rounded-full border border-gray-400 bg-gray-600 ${
+                          canToggle
+                            ? "cursor-pointer"
+                            : "cursor-not-allowed opacity-50"
+                        }`}
                       />
                     </RadioGroup>
                   </div>
@@ -226,6 +294,8 @@ export default function TodoList() {
             ))}
           </div>
         </div>
+
+        {/* Add Task */}
         <div className="mt-3 bg-primary p-2 pb-3 flex items-center gap-2 rounded-md">
           <Input
             type="text"
@@ -239,12 +309,29 @@ export default function TodoList() {
           />
         </div>
       </div>
+
+      {/* Drawer */}
       <TaskSheet
         open={isDrawerOpen}
         onOpenChange={setIsDrawerOpen}
         taskId={selectedTask?.id || null}
         taskTitle={selectedTask?.name || null}
       />
+      {drawerOpen && (
+        <TaskDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          taskData={selectedTaskDrawer as TaskGetPaging}
+        />
+      )}
+
+      {drawerProj && (
+        <ProjectDrawer
+          open={drawerProj}
+          onClose={() => setDrawerProj(false)}
+          projectData={selectedProject as CompanyProjectDataProps}
+        />
+      )}
     </div>
   );
 }
