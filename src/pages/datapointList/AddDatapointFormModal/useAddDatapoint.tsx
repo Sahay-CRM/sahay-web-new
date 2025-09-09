@@ -26,6 +26,7 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { formatIndianNumber } from "@/features/utils/app.utils";
+// import { Button } from "@/components/ui/button";
 // import { useGetProduct } from "@/features/api/Product";
 
 export default function useAddDataPoint() {
@@ -68,8 +69,6 @@ export default function useAddDataPoint() {
     }
   }, [watchedFrequency, setValue]);
 
-  // const handleClose = () => setModalOpen(false);
-
   // const onFinish = useCallback(async () => {
   //   const isValid = await trigger();
   //   if (isValid) {
@@ -104,6 +103,12 @@ export default function useAddDataPoint() {
     });
     navigate("/dashboard/kpi");
   });
+
+  // const handleRequestModalOpen = () => {
+  //   setModalOpen(true);
+  // };
+
+  // const handleClose = () => setModalOpen(false);
 
   const handleModalClose = () => {
     reset();
@@ -171,6 +176,9 @@ export default function useAddDataPoint() {
 
           {/* Column Toggle Icon */}
           <div className="flex items-center">
+            {/* <Button className="py-2 w-fit" onClick={handleRequestModalOpen}>
+              Request KPI
+            </Button> */}
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>
@@ -851,7 +859,6 @@ export default function useAddDataPoint() {
 
   return {
     // isModalOpen,
-    // handleClose,
     // onFinish,
     onSubmit,
     Kpi,
@@ -862,5 +869,7 @@ export default function useAddDataPoint() {
     isPending,
     permission,
     selectedKpi,
+    // isModalOpen,
+    // handleClose,
   };
 }

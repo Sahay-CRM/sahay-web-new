@@ -12,7 +12,6 @@ import {
   useGetSubParaFilter,
 } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
-import { addMeetingNotesMutation } from "@/features/api/detailMeeting";
 import { useDdCompanyMeeting } from "@/features/api/companyMeeting";
 
 type ProjectFormData = {
@@ -51,7 +50,6 @@ export default function ProjectDrawer({
   const { data: coreParameterData } = useGetCorparameter({
     filter: { currentPage: 1, pageSize: 100 },
   });
-  const { mutate: addNote } = addMeetingNotesMutation();
 
   // Prepare options
   const projectStatusOption = projectStatusData
@@ -198,21 +196,7 @@ export default function ProjectDrawer({
     };
     addProject(payload, {
       onSuccess: () => {
-        if (projectData && projectData.detailMeetingNoteId) {
-          addNote(
-            {
-              meetingNoteId: projectData?.detailMeetingNoteId,
-              noteType: "TASKS",
-            },
-            {
-              onSuccess: () => {
-                onClose();
-              },
-            },
-          );
-        } else {
-          onClose();
-        }
+        onClose();
       },
     });
     // }

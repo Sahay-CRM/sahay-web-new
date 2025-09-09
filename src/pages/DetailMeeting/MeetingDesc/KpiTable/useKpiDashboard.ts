@@ -11,7 +11,9 @@ export default function useKpiDashboard({
   selectedPeriod: string;
   selectedDate: Date | null;
 }) {
-  const { data: kpiStructure } = useGetKpiDashboardStructure();
+  const { data: kpiStructure } = useGetKpiDashboardStructure({
+    filter: {},
+  });
 
   const data = {
     frequencyType: selectedPeriod,

@@ -5,6 +5,7 @@ import useAddDatapoint from "./useAddDatapoint";
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import PageNotAccess from "@/pages/PageNoAccess";
+// import RequestModal from "@/components/shared/Modal/RequestModal/requestModal";
 
 const AddDatapoint = () => {
   const {
@@ -22,6 +23,7 @@ const AddDatapoint = () => {
     Details,
     permission,
     selectedKpi,
+    // isModalOpen,
   } = useAddDatapoint();
 
   const methods = useForm({ mode: "onChange" });
@@ -72,12 +74,11 @@ const AddDatapoint = () => {
         <div className="step-content w-full">{stepContent}</div>
 
         {/* {isModalOpen && (
-          <AddDatapointModal
-            modalData={KpiPreview}
+          <RequestModal
+            type="KPI"
             isModalOpen={isModalOpen}
             modalClose={handleClose}
-            onSubmit={onSubmit}
-            isLoading={isPending}
+            modalTitle="Request KPI"
           />
         )} */}
       </div>
