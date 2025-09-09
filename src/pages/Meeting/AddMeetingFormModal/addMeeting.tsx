@@ -492,17 +492,31 @@ const UploadDoc = () => {
               className="flex items-center justify-between p-2 bg-gray-50 rounded"
             >
               <span className="font-medium truncate">
-                {file.fileName || file.name}
+                {("fileName" in file && file.fileName) ||
+                  ("name" in file && file.name)}
               </span>
               <div>
                 <button
                   type="button"
                   className="ml-2 px-2 py-1 bg-primary text-white rounded text-xs hover:bg-red-600 transition"
                   onClick={() => {
-                    window.open(
-                      `${ImageBaseURL}/share/mDocs/${file.fileName}`,
-                      "_blank",
-                    );
+                    // Check if the file is a new File object (locally selected)
+                    if (file instanceof File) {
+                      // Create a temporary URL and trigger download
+                      const fileUrl = URL.createObjectURL(file);
+                      const link = document.createElement("a");
+                      link.href = fileUrl;
+                      link.download = file.name; // Use the original file name
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      URL.revokeObjectURL(fileUrl); // Clean up the temporary URL
+                    } else {
+                      window.open(
+                        `${ImageBaseURL}/share/mDocs/${file.fileName}`,
+                        "_blank",
+                      );
+                    }
                   }}
                 >
                   Download

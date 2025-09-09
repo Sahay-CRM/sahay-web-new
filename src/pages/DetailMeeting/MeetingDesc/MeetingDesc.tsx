@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { Suspense, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 
 import {
@@ -38,6 +38,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
+import { SpinnerIcon } from "@/components/shared/Icons";
 // import EmployeeSearchDropdown from "./EmployeeSearchDropdown";
 
 const Agenda = React.lazy(() => import("./Agenda"));
@@ -146,11 +147,19 @@ export default function MeetingDesc() {
               <div className="h-[calc(100vh-170px)] overflow-auto">
                 {meetingStatus !== "ENDED" && isTeamLeader && (
                   <div className="px-4 mb-2">
-                    <EmployeeSearchDropdown
-                      onAdd={handleAddEmp}
-                      minSearchLength={2}
-                      filterProps={{ pageSize: 20 }}
-                    />
+                    <Suspense
+                      fallback={
+                        <div className="animate-spin">
+                          <SpinnerIcon />
+                        </div>
+                      }
+                    >
+                      <EmployeeSearchDropdown
+                        onAdd={handleAddEmp}
+                        minSearchLength={2}
+                        filterProps={{ pageSize: 20 }}
+                      />
+                    </Suspense>
                   </div>
                 )}
 
@@ -175,8 +184,8 @@ export default function MeetingDesc() {
                               className="flex items-center gap-3 cursor-pointer w-full"
                               onClick={() => {
                                 if (
-                                  isTeamLeader &&
-                                  item.employeeId !== follow
+                                  meetingStatus !== "NOT_STARTED" &&
+                                  meetingStatus !== "ENDED"
                                 ) {
                                   toggleOpen();
                                 }
@@ -184,8 +193,8 @@ export default function MeetingDesc() {
                             >
                               <div className="relative">
                                 {item.isTeamLeader && (
-                                  <span className="absolute -top-1 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
-                                    <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
+                                  <span className="absolute -top-2 right-3 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                                    <Crown className="w-3 h-3 text-[#303290] drop-shadow" />
                                   </span>
                                 )}
 
@@ -213,7 +222,7 @@ export default function MeetingDesc() {
                                 </Avatar>
                                 {item.employeeId === follow && (
                                   <span className="absolute -bottom-0 right-0 z-10 bg-white shadow-2xl rounded-full p-0.5">
-                                    <CircleCheckBig className="w-4 h-4 text-[#303290] drop-shadow" />
+                                    <CircleCheckBig className="w-3 h-3 text-[#303290] drop-shadow" />
                                   </span>
                                 )}
                               </div>
@@ -259,33 +268,40 @@ export default function MeetingDesc() {
                           </div>
 
                           {/* Accordion content (only if open) */}
-                          {isOpen && meetingStatus !== "ENDED" && (
-                            <div className="mt-3 pl-12 flex flex-col gap-2">
-                              {item.employeeId !== userId && (
-                                <>
-                                  {!item.isTeamLeader && (
-                                    <button
-                                      onClick={() => handleAddTeamLeader(item)}
-                                      className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                    >
-                                      Add Team Leader
-                                    </button>
-                                  )}
-
-                                  {item.isTeamLeader && teamLeaderCount > 1 && (
-                                    <button
-                                      onClick={() => handleAddTeamLeader(item)}
-                                      className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                    >
-                                      Remove Team Leader
-                                    </button>
-                                  )}
-                                </>
-                              )}
-                              {meetingStatus !== "NOT_STARTED" &&
-                                item.attendanceMark && (
+                          {isOpen &&
+                            meetingStatus !== "ENDED" &&
+                            follow !== item.employeeId && (
+                              <div className="mt-3 pl-12 flex flex-col gap-2">
+                                {item.employeeId !== userId && (
                                   <>
-                                    {/* <button
+                                    {!item.isTeamLeader && (
+                                      <button
+                                        onClick={() =>
+                                          handleAddTeamLeader(item)
+                                        }
+                                        className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                      >
+                                        Add Team Leader
+                                      </button>
+                                    )}
+
+                                    {item.isTeamLeader &&
+                                      teamLeaderCount > 1 && (
+                                        <button
+                                          onClick={() =>
+                                            handleAddTeamLeader(item)
+                                          }
+                                          className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                        >
+                                          Remove Team Leader
+                                        </button>
+                                      )}
+                                  </>
+                                )}
+                                {meetingStatus !== "NOT_STARTED" &&
+                                  item.attendanceMark && (
+                                    <>
+                                      {/* <button
                                   onClick={() =>
                                     handleCheckOut(item.employeeId)
                                   }
@@ -294,22 +310,33 @@ export default function MeetingDesc() {
                                   Check Out
                                 </button> */}
 
-                                    {item.isTeamLeader &&
-                                      item.employeeId !== follow &&
-                                      userId === follow && (
-                                        <button
-                                          onClick={() =>
-                                            handleFollow(item.employeeId)
-                                          }
-                                          className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                        >
-                                          Follow
-                                        </button>
-                                      )}
-                                  </>
-                                )}
-                            </div>
-                          )}
+                                      {item.isTeamLeader &&
+                                        item.employeeId !== follow &&
+                                        userId === follow && (
+                                          <button
+                                            onClick={() =>
+                                              handleFollow(item.employeeId)
+                                            }
+                                            className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                          >
+                                            Follow
+                                          </button>
+                                        )}
+                                    </>
+                                  )}
+                                {follow !== item.employeeId &&
+                                  follow !== userId && (
+                                    <button
+                                      onClick={() =>
+                                        handleFollow(item.employeeId)
+                                      }
+                                      className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                    >
+                                      Follow Me Back
+                                    </button>
+                                  )}
+                              </div>
+                            )}
                         </div>
                       );
                     })}
@@ -330,15 +357,23 @@ export default function MeetingDesc() {
               </div>
               <div className="px-2">
                 {meetingId && (meetingTiming?.joiners as Joiners[]) && (
-                  <MeetingNotes
-                    joiners={meetingTiming?.joiners as Joiners[]}
-                    meetingId={meetingId}
-                    // detailMeetingId={meetingTiming?.detailMeetingId}
-                    employeeId={userId}
-                    className="mt-2"
-                    meetingName={meetingTiming?.meetingName}
-                    meetingStatus={meetingStatus}
-                  />
+                  <Suspense
+                    fallback={
+                      <div className="animate-spin">
+                        <SpinnerIcon />
+                      </div>
+                    }
+                  >
+                    <MeetingNotes
+                      joiners={meetingTiming?.joiners as Joiners[]}
+                      meetingId={meetingId}
+                      // detailMeetingId={meetingTiming?.detailMeetingId}
+                      employeeId={userId}
+                      className="mt-2"
+                      meetingName={meetingTiming?.meetingName}
+                      meetingStatus={meetingStatus}
+                    />
+                  </Suspense>
                 )}
               </div>
             </div>

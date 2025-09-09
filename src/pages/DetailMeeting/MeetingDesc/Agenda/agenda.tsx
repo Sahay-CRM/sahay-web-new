@@ -213,7 +213,7 @@ export default function Agenda({
 
   const canEdit = true;
 
-  const formatTime = (totalSeconds: number) => {
+  const formatAgendaTime = (totalSeconds: number) => {
     if (!totalSeconds || isNaN(totalSeconds)) {
       return "00:00";
     }
@@ -225,6 +225,25 @@ export default function Agenda({
       .toString()
       .padStart(2, "0")}`;
   };
+
+  function formatTime(seconds: number): string {
+    const totalSeconds = Math.round(Number(seconds)); // round first
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+
+    if (hours > 0) {
+      // Show HH:MM:SS if more than 1 hour
+      return `${hours.toString().padStart(2, "0")}h : ${minutes
+        .toString()
+        .padStart(2, "0")}m : ${secs.toString().padStart(2, "0")}s`;
+    }
+
+    // Otherwise show MM:SS
+    return `${minutes.toString().padStart(2, "0")}m : ${secs
+      .toString()
+      .padStart(2, "0")}s`;
+  }
 
   const formatLocalDate = (dateString: string | null | undefined) => {
     if (!dateString) return "N/A";
@@ -246,7 +265,7 @@ export default function Agenda({
   function formatSecondsToHHMM(seconds: number): string {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    return `${hours.toString().padStart(2, "0")}h:${minutes.toString().padStart(2, "0")}m`;
+    return `${hours.toString().padStart(2, "0")}h : ${minutes.toString().padStart(2, "0")}m`;
   }
 
   const meetingStatusLabels = {
@@ -285,8 +304,8 @@ export default function Agenda({
     },
     {
       icon: <FileText className="w-8 h-8 text-blue-500" />,
-      title: "ALLOCATE TIME FOR ADDITIONAL",
-      description: "Allow a few minutes at the end",
+      title: "ALLOCATE TIME FOR CONCLUSION AND WRAP UP",
+      description: "Allow a few minutes at the at Conclusion and Wrap Up",
     },
   ];
 
@@ -449,7 +468,7 @@ export default function Agenda({
                   <Clock className="w-4 h-4 text-green-600" />
                   <span className="font-medium text-sm">Agenda Actual:</span>
                   <span className="font-bold">
-                    {formatTime(Number(conclusionTime?.agendaActual))}m
+                    {formatTime(Number(conclusionTime?.agendaActual))}
                   </span>
                 </div>
 
@@ -459,7 +478,7 @@ export default function Agenda({
                     Discussion Actual:
                   </span>
                   <span className="font-bold">
-                    {formatTime(Number(conclusionTime?.discussionTotalActual))}m
+                    {formatTime(Number(conclusionTime?.discussionTotalActual))}
                   </span>
                 </div>
 
@@ -470,7 +489,7 @@ export default function Agenda({
                       Conclusion Actual:
                     </span>
                     <span className="font-bold">
-                      {formatTime(Number(conclusionTime.conclusionActual))}m
+                      {formatTime(Number(conclusionTime.conclusionActual))}
                     </span>
                   </div>
                 )}
@@ -700,7 +719,12 @@ export default function Agenda({
                 <Tabs
                   defaultValue="UNSOLVED"
                   onValueChange={(value) => {
-                    if (isTeamLeader) {
+                    if (isTeamLeader && follow) {
+                      handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
+                    } else if (
+                      meetingStatus === "NOT_STARTED" ||
+                      meetingStatus === "ENDED"
+                    ) {
                       handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
                     }
                   }}
@@ -712,13 +736,13 @@ export default function Agenda({
                       value="UNSOLVED"
                       className="data-[state=active]:bg-primary data-[state=active]:text-white"
                     >
-                      Unsolved
+                      Unresolved
                     </TabsTrigger>
                     <TabsTrigger
                       value="SOLVED"
                       className="data-[state=active]:bg-primary data-[state=active]:text-white"
                     >
-                      Solved
+                      Resolved
                     </TabsTrigger>
                   </TabsList>
 
@@ -909,8 +933,8 @@ export default function Agenda({
                                         <TooltipContent>
                                           <p>
                                             {item.isResolved
-                                              ? "Mark As Unsolved"
-                                              : "Mark As Solved"}
+                                              ? "Mark As Unresolved"
+                                              : "Mark As Resolved"}
                                           </p>
                                         </TooltipContent>
                                       </Tooltip>
@@ -935,16 +959,25 @@ export default function Agenda({
                                   >
                                     <SquarePen className="h-4 w-4 text-primary" />
                                   </Button>
-                                  <Button
-                                    variant="ghost"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDelete(item);
-                                    }}
-                                    className="w-5"
-                                  >
-                                    <Unlink className="h-4 w-4 text-red-500" />
-                                  </Button>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDelete(item);
+                                          }}
+                                          className="w-5"
+                                        >
+                                          <Unlink className="h-4 w-4 text-red-500" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Unlink from this Meeting</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                 </div>
                               )}
                             </div>
@@ -1001,7 +1034,7 @@ export default function Agenda({
                                         : ""
                                     }`}
                                   >
-                                    {formatTime(
+                                    {formatAgendaTime(
                                       Number(
                                         conclusionTime
                                           ? conclusionTime?.agenda?.find(
@@ -1028,20 +1061,24 @@ export default function Agenda({
                                     <Button
                                       variant="ghost"
                                       onClick={() => handleMarkAsSolved(item)}
-                                      className="w-10 cursor-pointer"
+                                      className=" cursor-pointer bg-transparent hover:bg-transparent"
                                     >
                                       {item.isResolved ? (
-                                        <CopyX className="w-7 h-7 text-red-600" />
+                                        <CopyX
+                                          className={`w-7 h-7 ${isSelectedAgenda === item.issueObjectiveId ? "text-white" : "text-red-600"}`}
+                                        />
                                       ) : (
-                                        <CopyCheck className="w-10 block h-10 text-green-600" />
+                                        <CopyCheck
+                                          className={`w-10 block h-10 ${isSelectedAgenda === item.issueObjectiveId ? "text-white" : "text-green-600"}`}
+                                        />
                                       )}
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
                                     <p>
                                       {item.isResolved
-                                        ? "Mark As Unsolved"
-                                        : "Mark As Solved"}
+                                        ? "Mark As Unresolved"
+                                        : "Mark As Resolved"}
                                     </p>
                                   </TooltipContent>
                                 </Tooltip>
@@ -1144,14 +1181,14 @@ export default function Agenda({
                           key={item.employeeId}
                           className="flex items-center"
                         >
-                          <div className="flex items-center gap-2 w-40">
+                          <div className="flex gap-2 w-40">
                             <div className="relative">
                               {item.isTeamLeader && (
-                                <span className="absolute -top-4 right-2 z-10 bg-white shadow-2xl rounded-full p-0.5">
-                                  <Crown className="w-5 h-5 text-[#303290] drop-shadow" />
+                                <span className="absolute -top-2 right-3 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                                  <Crown className="w-3 h-3 text-[#303290] drop-shadow" />
                                 </span>
                               )}
-                              <div className="w-10 h-10 rounded-lg overflow-hidden">
+                              <div className="w-10 h-10 rounded-full overflow-hidden">
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -1159,7 +1196,7 @@ export default function Agenda({
                                         <img
                                           src={`${ImageBaseURL}/share/company/profilePics/${item.employeeImage}`}
                                           alt={item.employeeName}
-                                          className="w-full h-full rounded-md object-cover outline-2 outline-blue-400 bg-black"
+                                          className="w-full h-full object-cover outline-2 outline-blue-400 bg-black"
                                         />
                                       ) : (
                                         <div className="bg-gray-300 text-gray-700 w-full h-full content-center font-semibold text-sm">
@@ -1173,24 +1210,24 @@ export default function Agenda({
                                   </Tooltip>
                                 </TooltipProvider>
                               </div>
+                              <div>
+                                <FormCheckbox
+                                  id={`${item.employeeId}-checkbox`}
+                                  className="w-[15px] h-[15px]"
+                                  containerClass="p-0 ml-3"
+                                  checked={item.attendanceMark}
+                                  onChange={(e) => {
+                                    const updatedAttendance = e.target.checked;
+                                    handleCheckIn(item, updatedAttendance);
+                                  }}
+                                  disabled={!isTeamLeader}
+                                />
+                              </div>
                             </div>
 
                             <div className="text-sm font-medium text-gray-800 mt-2">
                               {item.employeeName}
                             </div>
-                          </div>
-                          <div>
-                            <FormCheckbox
-                              id={`${item.employeeId}-checkbox`}
-                              className="w-[16px] h-[16px]"
-                              containerClass="p-0 ml-1"
-                              checked={item.attendanceMark}
-                              onChange={(e) => {
-                                const updatedAttendance = e.target.checked;
-                                handleCheckIn(item, updatedAttendance);
-                              }}
-                              disabled={!isTeamLeader}
-                            />
                           </div>
                         </div>
                       );
@@ -1216,6 +1253,7 @@ export default function Agenda({
                       }
                       ioType={ioType}
                       selectedIssueId={isSelectedAgenda}
+                      isTeamLeader={isTeamLeader}
                     />
                   )}
                   {activeTab === "projects" && (
@@ -1234,6 +1272,7 @@ export default function Agenda({
                       }
                       ioType={ioType}
                       selectedIssueId={isSelectedAgenda}
+                      isTeamLeader={isTeamLeader}
                     />
                   )}
                   {activeTab === "kpis" && (
@@ -1253,6 +1292,8 @@ export default function Agenda({
                       }
                       ioType={ioType}
                       selectedIssueId={isSelectedAgenda}
+                      isTeamLeader={isTeamLeader}
+                      follow={follow}
                     />
                   )}
                 </div>
@@ -1264,7 +1305,7 @@ export default function Agenda({
                 </div>
               </div>
             ) : (
-              <div className="flex-1 h-[calc(100vh-280px)] overflow-x-scroll w-full">
+              <div className="flex-1 h-[calc(100vh-320px)] overflow-x-hidden overflow-y-auto w-full">
                 <div>
                   {!selectedItem || !hasChanges(selectedItem) ? (
                     <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg mt-6 p-8 text-center">
@@ -1272,11 +1313,11 @@ export default function Agenda({
                         <Target className="w-12 h-12 mx-auto" />
                       </div>
                       <h3 className="text-lg font-medium text-gray-600 mb-2">
-                        No Updates Recorded
+                        Select Issue or Objective
                       </h3>
                       <p className="text-gray-500">
-                        This agenda item was discussed but no specific updates
-                        were recorded.
+                        Please Select any Issue or Objective to Detail
+                        Discussion of it.
                       </p>
                     </div>
                   ) : (
@@ -1521,7 +1562,15 @@ export default function Agenda({
                                     ]),
                                   ].filter((key) => key !== "kpiId") as Array<
                                     keyof typeof kpi.oldValues
-                                  >; // 🚀 filter out kpiId
+                                  >;
+                                  const hasChange =
+                                    allKeys.some(
+                                      (key) =>
+                                        kpi.oldValues[key] !==
+                                        kpi.newValues[key],
+                                    ) ||
+                                    (kpi.oldData?.length || 0) > 0 ||
+                                    (kpi.newData?.length || 0) > 0;
 
                                   return (
                                     <div
@@ -1542,34 +1591,40 @@ export default function Agenda({
                                           </>
                                         ) : (
                                           kpi.newValues.kpiName
-                                        )}
+                                        )}{" "}
+                                        &nbsp; DISCUSSION
                                       </h4>
 
-                                      <div className="mt-2 grid grid-cols-2 gap-4 px-4">
-                                        {/* Old Values */}
-                                        <div>
-                                          <p className="font-medium text-gray-600 mb-1">
-                                            Old Values
-                                          </p>
-                                          <div className="space-y-1 text-sm">
-                                            {allKeys.map((key) => (
-                                              <div key={String(key)}>
-                                                <span className="capitalize">
-                                                  {key
-                                                    .toString()
-                                                    .replace("kpi", "")
-                                                    .replace(/([A-Z])/g, " $1")
-                                                    .trim()}
-                                                  :
-                                                </span>{" "}
-                                                {kpi.oldValues[
-                                                  key
-                                                ]?.toString() || "N/A"}
-                                              </div>
-                                            ))}
+                                      {/* ✅ only show old/new values if there is a change */}
+                                      {hasChange && (
+                                        <div className="mt-2 grid grid-cols-2 gap-4 px-4">
+                                          {/* Old Values */}
+                                          <div>
+                                            <p className="font-medium text-gray-600 mb-1">
+                                              Old Values
+                                            </p>
+                                            <div className="space-y-1 text-sm">
+                                              {allKeys.map((key) => (
+                                                <div key={String(key)}>
+                                                  <span className="capitalize">
+                                                    {key
+                                                      .toString()
+                                                      .replace("kpi", "")
+                                                      .replace(
+                                                        /([A-Z])/g,
+                                                        " $1",
+                                                      )
+                                                      .trim()}
+                                                    :
+                                                  </span>{" "}
+                                                  {kpi.oldValues[
+                                                    key
+                                                  ]?.toString() || "N/A"}
+                                                </div>
+                                              ))}
 
-                                            {kpi.oldData
-                                              ? kpi.oldData.map(
+                                              {kpi.oldData &&
+                                                kpi.oldData.map(
                                                   (oldDataItem, i) => (
                                                     <div key={i}>
                                                       {formatDate(
@@ -1580,35 +1635,37 @@ export default function Agenda({
                                                         "N/A"}
                                                     </div>
                                                   ),
-                                                )
-                                              : null}
+                                                )}
+                                            </div>
                                           </div>
-                                        </div>
 
-                                        {/* New Values */}
-                                        <div>
-                                          <p className="font-medium text-gray-600 mb-1">
-                                            New Values
-                                          </p>
-                                          <div className="space-y-1 text-sm">
-                                            {allKeys.map((key) => (
-                                              <div key={String(key)}>
-                                                <span className="capitalize">
-                                                  {key
-                                                    .toString()
-                                                    .replace("kpi", "")
-                                                    .replace(/([A-Z])/g, " $1")
-                                                    .trim()}
-                                                  :
-                                                </span>{" "}
-                                                {kpi.newValues[
-                                                  key
-                                                ]?.toString() || "N/A"}
-                                              </div>
-                                            ))}
+                                          {/* New Values */}
+                                          <div>
+                                            <p className="font-medium text-gray-600 mb-1">
+                                              New Values
+                                            </p>
+                                            <div className="space-y-1 text-sm">
+                                              {allKeys.map((key) => (
+                                                <div key={String(key)}>
+                                                  <span className="capitalize">
+                                                    {key
+                                                      .toString()
+                                                      .replace("kpi", "")
+                                                      .replace(
+                                                        /([A-Z])/g,
+                                                        " $1",
+                                                      )
+                                                      .trim()}
+                                                    :
+                                                  </span>{" "}
+                                                  {kpi.newValues[
+                                                    key
+                                                  ]?.toString() || "N/A"}
+                                                </div>
+                                              ))}
 
-                                            {kpi.newData
-                                              ? kpi.newData.map(
+                                              {kpi.newData &&
+                                                kpi.newData.map(
                                                   (newDataItem, i) => (
                                                     <div key={i}>
                                                       {formatDate(
@@ -1619,11 +1676,11 @@ export default function Agenda({
                                                         "N/A"}
                                                     </div>
                                                   ),
-                                                )
-                                              : null}
+                                                )}
+                                            </div>
                                           </div>
                                         </div>
-                                      </div>
+                                      )}
                                     </div>
                                   );
                                 },

@@ -46,6 +46,20 @@ export default function FormDateTimePicker({
     return compareDate.getTime() > disableUntilDate.getTime();
   };
 
+  const handleChange = (date: Date | null) => {
+    if (!date) {
+      onChange(date);
+      return;
+    }
+
+    const pickedDate = new Date(date);
+    if (pickedDate.getHours() === 0 && pickedDate.getMinutes() === 0) {
+      pickedDate.setHours(18, 0, 0, 0); // 6:00 PM
+    }
+
+    onChange(pickedDate);
+  };
+
   return (
     <div className="w-full">
       {label && (
@@ -57,7 +71,7 @@ export default function FormDateTimePicker({
       <div className="relative w-full min-w-0">
         <DatePicker
           selected={dateValue}
-          onChange={onChange}
+          onChange={handleChange}
           showTimeSelect
           dateFormat="dd/MM/yyyy h:mm aa"
           placeholderText="Select date and time"
@@ -72,7 +86,7 @@ export default function FormDateTimePicker({
       <style>
         {`
           .responsive-datepicker-popper {
-            z-index: 50;
+            z-index: 9999;
             min-width: 0;
             width: auto;
             max-width: 95vw;

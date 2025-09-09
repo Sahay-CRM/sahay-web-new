@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 
 import {
   Unlink,
@@ -25,6 +25,8 @@ import {
 } from "@/features/api/detailMeeting";
 import { get, getDatabase, ref, update } from "firebase/database";
 import { queryClient } from "@/queryClient";
+import { useSelector } from "react-redux";
+import { getUserId } from "@/features/selectors/auth.selector";
 
 interface MeetingNotesProps {
   joiners: Joiners[];
@@ -57,6 +59,8 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   const [selectedProject, setSelectedProject] = useState<
     CompanyProjectDataProps | TaskData
   >();
+
+  const userId = useSelector(getUserId);
 
   // New states for editing notes
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
@@ -237,6 +241,13 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
     });
   };
 
+  const isTeamLeader = useMemo(
+    () =>
+      (joiners as Joiners[])?.some(
+        (item) => item.employeeId === userId && item.isTeamLeader,
+      ),
+    [joiners, userId],
+  );
   return (
     <div className={cn("px-2", className)}>
       {meetingStatus !== "ENDED" && (
@@ -382,15 +393,18 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                               }
                             >
                               <DropdownMenuTrigger asChild>
-                                <button
-                                  className="text-gray-500 items-center text-sm w-fit py-1.5 px-2 cursor-pointer"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    toggleDropdown(note.meetingNoteId);
-                                  }}
-                                >
-                                  <EllipsisVertical className="h-5 w-5" />
-                                </button>
+                                {(note.employeeId === userId ||
+                                  isTeamLeader) && (
+                                  <button
+                                    className="text-gray-500 items-center text-sm w-fit py-1.5 px-2 cursor-pointer"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      toggleDropdown(note.meetingNoteId);
+                                    }}
+                                  >
+                                    <EllipsisVertical className="h-5 w-5" />
+                                  </button>
+                                )}
                               </DropdownMenuTrigger>
 
                               <DropdownMenuContent
@@ -467,7 +481,8 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
           onClose={() => setDrawerOpen(false)}
           taskData={selectedTask as TaskGetPaging}
           tasksFireBase={function (): void {
-            throw new Error("Function not implemented.");
+            // eslint-disable-next-line no-console
+            console.error("Function not implemented.");
           }}
         />
       )}
@@ -477,7 +492,8 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
           onClose={() => setDrawerProj(false)}
           projectData={selectedProject as CompanyProjectDataProps}
           projectsFireBase={function (): void {
-            throw new Error("Function not implemented.");
+            // eslint-disable-next-line no-console
+            console.error("Function not implemented.");
           }}
         />
       )}

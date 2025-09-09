@@ -151,10 +151,8 @@ const Urls = {
   detailMeetingCheckStatus: (id: string) =>
     `${baseUrl}/company/detail-meeting/start/${id}`,
 
-
   updateDetailMeetingCheckStatus: (id: string) =>
     `${baseUrl}/company/detail-meeting/update/${id}`,
-
 
   endMeeting: (id: string) => `${baseUrl}/company/detail-meeting/end/${id}`,
 
@@ -203,7 +201,6 @@ const Urls = {
   detailMeetingGet: () => `${baseUrl}/company/detail-meeting/get`,
   detailMeetingDelete: (id: string) =>
     `${baseUrl}/company/detail-meeting/delete/${id}`,
-
 
   getConclusionByMeeting: (id: string) =>
     `${baseUrl}/company/detail-meeting/get-conclusion/${id}`,
@@ -274,6 +271,13 @@ const Urls = {
   createRepeatMeetingIo: () =>
     `${baseUrl}/company/repetitive-meeting/agenda/io/create-add`,
 
+  getRepeatMeetingNotes: () => `${baseUrl}/company/repetitive-meeting/note/get`,
+  addRepeatMeetingNotes: () => `${baseUrl}/company/repetitive-meeting/note/add`,
+  updateRepeatMeetingNotes: (id: string) =>
+    `${baseUrl}/company/repetitive-meeting/note/update/${id}`,
+  deleteRepeatMeetingNotes: (id: string) =>
+    `${baseUrl}/company/repetitive-meeting/note/delete/${id}`,
+
   getRepeatMeetingAgendaIo: () =>
     `${baseUrl}/company/repetitive-meeting/agenda/io/get`,
   deleteRepeatMeetingAgendaIo: () =>
@@ -283,6 +287,19 @@ const Urls = {
 
   ddAllNonSelectDatapointList: () => `${baseUrl}/kpi/get-all`,
 
+  updateKPISequence: () => `${baseUrl}/company/kpi-data/sequence/update`,
+
+  createTODOList: () => `${baseUrl}/company/to-do/create`,
+  getAllTODOList: () => `${baseUrl}/company/to-do/get-all`,
+
+  getAllTODOListFile: (id: string) => `${baseUrl}/company/to-do/get-all/${id}`,
+  getByIdTODOList: (id: string) => `${baseUrl}/company/to-do/get/${id}`,
+  updateTODOList: (id: string) => `${baseUrl}/company/to-do/update/${id}`,
+  deleteTODOList: (id: string) => `${baseUrl}/company/to-do/delete/${id}`,
+  updateTODOnotes: (id: string) => `${baseUrl}/company/to-do/note/update/${id}`,
+  addTODOnotes: () => `${baseUrl}/company/to-do/note/create`,
+  getTODOnotes: (id: string) => `${baseUrl}/company/to-do/note/get/${id}`,
+  deleteTODOnote: (id: string) => `${baseUrl}/company/to-do/note/delete/${id}`,
 };
 
 export default Urls;

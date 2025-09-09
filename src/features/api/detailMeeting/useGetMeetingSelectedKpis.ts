@@ -9,7 +9,7 @@ export default function useGetMeetingSelectedKpis({
   enable,
 }: FilterDataProps) {
   const query = useQuery({
-    queryKey: ["get-meeting-kpis-res", filter],
+    queryKey: ["get-detailMeeting-kpis-res", filter],
     queryFn: async () => {
       const { data: resData } = await Api.post<DatePaging>({
         url: Urls.getMeetingSelectedKpisData(),

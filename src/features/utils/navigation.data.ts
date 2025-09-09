@@ -201,6 +201,14 @@ export const companyNavigationData = [
     permission: "View",
     moduleKey: "ROLES_PERMISSION",
   },
+  {
+    id: 12,
+    icon: "ListTodo",
+    label: "My Day",
+    link: "/dashboard/todo-list",
+    permission: "View",
+    moduleKey: "TASK",
+  },
   // {
   //   id: 12,
   //   icon: "Tag",

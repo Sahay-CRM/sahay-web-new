@@ -34,15 +34,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 import useMeetingDesc from "../../MeetingDesc/useMeetingDesc";
 import DetailRepeatMeeting from "./detailRepeatMeeting";
 import EmployeeSearchDropdown from "../../MeetingDesc/EmployeeSearchDropdown";
-import MeetingNotes from "../../MeetingDesc/Agenda/meetingNotes";
+
 import {
   addUpdateRepeatMeetingMutation,
   useGetRepeatMeetingById,
 } from "@/features/api/RepeatMeetingApi";
+import RepeatMeetingNotes from "./repeatMeetingNotes";
 
 export default function RepeatMeeting() {
   const {
@@ -61,7 +61,6 @@ export default function RepeatMeeting() {
     // handleCheckOut,
     follow,
     handleFollow,
-    handleCheckIn,
     meetingNotes,
     handleUpdateNotes,
     dropdownOpen,
@@ -175,7 +174,7 @@ export default function RepeatMeeting() {
                     <EmployeeSearchDropdown
                       onAdd={handleAddEmp}
                       minSearchLength={2}
-                      filterProps={{ pageSize: 20 }}
+                      filterProps={{ pageSize: 100 }}
                     />
                   </div>
                 )}
@@ -248,27 +247,6 @@ export default function RepeatMeeting() {
                                 {item.employeeName}
                               </div>
                             </div>
-                            <div>
-                              <FormCheckbox
-                                id={`${item.employeeId}-checkbox`}
-                                className="w-[16px] h-[16px]"
-                                containerClass="p-0 ml-1"
-                                checked={item.attendanceMark as boolean}
-                                onChange={(e) => {
-                                  const updatedAttendance = e.target.checked;
-                                  handleCheckIn(
-                                    item.employeeId,
-                                    updatedAttendance,
-                                  );
-                                }}
-                                disabled={
-                                  meetingStatus === "NOT_STARTED" ||
-                                  meetingStatus === "ENDED" ||
-                                  !isTeamLeader
-                                }
-                              />
-                            </div>
-                            {/* <div> */}
 
                             <Trash2
                               className="w-6 h-6 mt-1.5"
@@ -355,10 +333,10 @@ export default function RepeatMeeting() {
                 </div>
               </div>
               <div className="px-2">
-                {meetingId && (meetingTiming?.joiners as Joiners[]) && (
-                  <MeetingNotes
+                {meetingId && (
+                  <RepeatMeetingNotes
                     joiners={meetingTiming?.joiners as Joiners[]}
-                    meetingId={meetingId}
+                    repetitiveMeetingId={meetingId}
                     // detailMeetingId={meetingTiming?.detailMeetingId}
                     employeeId={userId}
                     className="mt-2"

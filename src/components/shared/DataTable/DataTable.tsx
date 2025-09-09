@@ -100,7 +100,7 @@ interface TableProps<T extends Record<string, unknown>> {
   isEditDeleteShow?: boolean;
   showActionsColumn?: boolean;
   actionColumnWidth?: string;
-  isPermissionIcon?: boolean;
+  isPermissionIcon?: (item: T) => boolean;
 }
 
 const TableData = <T extends Record<string, unknown>>({
@@ -137,7 +137,7 @@ const TableData = <T extends Record<string, unknown>>({
   isEditDeleteShow = false,
   showActionsColumn = true,
   actionColumnWidth,
-  isPermissionIcon = false,
+  isPermissionIcon,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   // Only show checkboxes if explicitly enabled with multiSelect OR if both selectedValue and handleChange are provided
@@ -473,7 +473,7 @@ const TableData = <T extends Record<string, unknown>>({
                         {customActions?.(item)}
                         {additionalButton ? (
                           <div>
-                            {isPermissionIcon && (
+                            {isPermissionIcon?.(item) && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button

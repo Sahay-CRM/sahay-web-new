@@ -29,8 +29,8 @@ export default function useAdminUser() {
     search: "",
   });
 
-  const { data: employeedata, isLoading } = getEmployee({
-    filter: { ...paginationFilter, isDeactivated: currentStatus },
+  const { data: employeeData, isLoading } = getEmployee({
+    filter: { ...paginationFilter },
   });
 
   const { mutate: addEmployee } = useAddOrUpdateEmployee();
@@ -165,7 +165,7 @@ export default function useAdminUser() {
 
   return {
     isLoading,
-    employeedata,
+    employeeData,
     closeDeleteModal,
     openModal,
     setPaginationFilter,

@@ -362,7 +362,7 @@ interface CompanyProjectDataProps {
   coreParameterId?: string;
   coreParameterName?: string;
   detailMeetingProjectId?: string;
-  detailMeetingNoteId?: string;
+  meetingNoteId?: string;
   ioType?: string;
 }
 
@@ -652,7 +652,7 @@ interface TaskGetPaging {
   projectId?: string;
   issueTaskId?: string;
   repetition?: string;
-  detailMeetingNoteId?: string;
+  meetingNoteId?: string;
   repetitiveTaskId?: string;
   employeeName?: string;
   isActive?: boolean;
@@ -1000,6 +1000,7 @@ interface Kpi {
   tag?: string;
   detailMeetingKPIId?: string;
   goalValue?: number;
+  sequence?: number;
 }
 
 interface CoreParameterGroup {
@@ -1322,4 +1323,14 @@ interface CompanyNavItem {
   permission: string;
   moduleKey?: string;
   items?: CompanyNavItem[];
+}
+
+interface RepeatMeetingNotesRes {
+  employeeId?: string;
+  note?: string;
+  noteId?: string;
+  repetitiveMeetingId?: string;
+  createdAt?: string;
+  noteType?: string;
+  employeeName?: string;
 }

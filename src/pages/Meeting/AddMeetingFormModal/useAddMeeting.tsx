@@ -107,8 +107,6 @@ export default function useAddMeeting() {
               projectId ? `&projectId=${projectId}` : ""
             }`,
           );
-
-          window.location.reload();
         } else {
           navigate("/dashboard/meeting");
         }

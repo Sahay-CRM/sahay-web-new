@@ -131,9 +131,9 @@ export default function MeetingList() {
             isEditDeleteShow={false}
             localStorageId="UserPermissionList"
             moduleKey="ROLES_PERMISSION"
-            additionalButton={(item) => !item.isSuperAdmin}
+            additionalButton={() => true}
             isEditDelete={() => false}
-            isPermissionIcon={true}
+            isPermissionIcon={(item) => !item.isSuperAdmin}
             onAdditionButton={(data) => {
               navigate(
                 `/dashboard/roles/user-permission/edit/${data.employeeId}`,

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { get, getDatabase, off, onValue, ref, update } from "firebase/database";
 
-import { useAddUpdateCompanyMeeting } from "@/features/api/companyMeeting";
+// import { useAddUpdateCompanyMeeting } from "@/features/api/companyMeeting";
 import { queryClient } from "@/queryClient";
 import {
   addMeetingNotesMutation,
@@ -41,7 +41,7 @@ export default function useMeetingDesc() {
   // const { mutate: updateTime } = addMeetingTimeMutation();
   const { mutate: addNote } = addMeetingNotesMutation();
   const deleteNoteMutation = deleteCompanyMeetingMutation();
-  const { mutate: addMeeting } = useAddUpdateCompanyMeeting();
+  // const { mutate: addMeeting } = useAddUpdateCompanyMeeting();
 
   const { mutate: addDetailMeeting } = addUpdateDetailMeetingMutation();
 
@@ -138,14 +138,17 @@ export default function useMeetingDesc() {
     return () => unsubscribe();
   }, [db, handleUpdatedRefresh, meetingId]);
 
-  const handleTabChange = (tab: string) => {
-    if (activeTab === tab) {
-      setIsCardVisible(!isCardVisible);
-    } else {
-      setActiveTab(tab);
-      setIsCardVisible(true);
-    }
-  };
+  const handleTabChange = useCallback((tab: string) => {
+    setActiveTab((prevTab) => {
+      if (prevTab === tab) {
+        setIsCardVisible((prev) => !prev);
+        return tab;
+      } else {
+        setIsCardVisible(true);
+        return tab;
+      }
+    });
+  }, []);
 
   const handleConclusionMeeting = () => {
     if (meetingId) {
@@ -321,10 +324,10 @@ export default function useMeetingDesc() {
 
     if (meetingId && meetingTiming?.meetingId) {
       const payload = {
-        companyMeetingId: meetingId,
+        meetingId: meetingId,
         joiners: joiners,
       };
-      addMeeting(payload, {
+      addDetailMeeting(payload, {
         onSuccess: () => {
           if (!meetingSnapshot.exists()) {
             queryClient.invalidateQueries({
@@ -351,6 +354,9 @@ export default function useMeetingDesc() {
         });
         queryClient.invalidateQueries({
           queryKey: ["get-meeting-notes"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["get-detail-meeting-obj-issue"],
         });
       }
     });

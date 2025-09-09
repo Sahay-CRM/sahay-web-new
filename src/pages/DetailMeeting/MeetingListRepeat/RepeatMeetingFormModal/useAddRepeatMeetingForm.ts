@@ -9,6 +9,7 @@ import {
 } from "@/features/api/RepeatMeetingApi";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { queryClient } from "@/queryClient";
 
 // Renamed function
 export default function useAddRepeatMeetingForm() {
@@ -101,6 +102,7 @@ export default function useAddRepeatMeetingForm() {
 
     addDetailMeeting(payload, {
       onSuccess: () => {
+        queryClient.resetQueries({ queryKey: ["get-detail-meeting-list"] });
         handleModalClose();
         navigate("/dashboard/repeat-meeting");
       },

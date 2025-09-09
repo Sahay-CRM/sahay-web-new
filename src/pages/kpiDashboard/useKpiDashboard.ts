@@ -7,15 +7,22 @@ import { format } from "date-fns";
 export default function useKpiDashboard({
   selectedPeriod,
   selectedDate,
+  isDataFilter,
 }: {
   selectedPeriod: string;
   selectedDate: Date | null;
+  isDataFilter?: string;
 }) {
-  const { data: kpiStructure } = useGetKpiDashboardStructure();
+  const { data: kpiStructure } = useGetKpiDashboardStructure({
+    filter: {
+      filter: isDataFilter,
+    },
+  });
 
   const data = {
     frequencyType: selectedPeriod,
     selectDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : null,
+    filter: isDataFilter,
   };
 
   const { data: kpiData } = useGetKpiDashboardData({
