@@ -26,11 +26,11 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { formatIndianNumber } from "@/features/utils/app.utils";
-// import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 // import { useGetProduct } from "@/features/api/Product";
 
 export default function useAddDataPoint() {
-  // const [isModalOpen, setModalOpen] = useState(false);
+  const [isModalOpen, setModalOpen] = useState(false);
 
   const { mutate: addDatapoint, isPending } = useAddUpdateDatapoint();
   const navigate = useNavigate();
@@ -104,11 +104,11 @@ export default function useAddDataPoint() {
     navigate("/dashboard/kpi");
   });
 
-  // const handleRequestModalOpen = () => {
-  //   setModalOpen(true);
-  // };
+  const handleRequestModalOpen = () => {
+    setModalOpen(true);
+  };
 
-  // const handleClose = () => setModalOpen(false);
+  const handleClose = () => setModalOpen(false);
 
   const handleModalClose = () => {
     reset();
@@ -176,9 +176,9 @@ export default function useAddDataPoint() {
 
           {/* Column Toggle Icon */}
           <div className="flex items-center">
-            {/* <Button className="py-2 w-fit" onClick={handleRequestModalOpen}>
+            <Button className="py-2 w-fit" onClick={handleRequestModalOpen}>
               Request KPI
-            </Button> */}
+            </Button>
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>
@@ -869,7 +869,7 @@ export default function useAddDataPoint() {
     isPending,
     permission,
     selectedKpi,
-    // isModalOpen,
-    // handleClose,
+    isModalOpen,
+    handleClose,
   };
 }

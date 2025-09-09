@@ -190,6 +190,7 @@ export default function Agenda({
     meetingStatus,
     meetingResponse,
     canEdit: true,
+    joiners,
   });
   const [contentWidth, setContentWidth] = useState("90%");
 

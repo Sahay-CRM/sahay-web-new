@@ -300,6 +300,12 @@ const Urls = {
   addTODOnotes: () => `${baseUrl}/company/to-do/note/create`,
   getTODOnotes: (id: string) => `${baseUrl}/company/to-do/note/get/${id}`,
   deleteTODOnote: (id: string) => `${baseUrl}/company/to-do/note/delete/${id}`,
+
+  // Request
+  createRequest: () => `${baseUrl}/company/change-request/register`,
+  modifyRequest: (id: string) =>
+    `${baseUrl}/company/change-request/modify/${id}`,
+  getRequest: () => `${baseUrl}/company/change-request/get`,
 };
 
 export default Urls;

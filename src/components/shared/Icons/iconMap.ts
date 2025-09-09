@@ -17,6 +17,7 @@ import {
   Presentation,
   Target,
   ListTodo,
+  GitPullRequestArrow,
 } from "lucide-react";
 
 // Icon mapping object
@@ -39,6 +40,7 @@ export const iconMap = {
   Presentation,
   Target,
   ListTodo,
+  GitPullRequestArrow,
 };
 
 export type IconName = keyof typeof iconMap;

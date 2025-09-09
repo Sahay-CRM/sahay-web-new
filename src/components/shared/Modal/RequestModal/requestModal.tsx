@@ -1,5 +1,6 @@
 import { useState } from "react";
 import ModalData from "@/components/shared/Modal/ModalData";
+import { useAddUpdateRequestMutation } from "@/features/api/Request";
 
 interface RequestModalProps {
   type: string;
@@ -15,8 +16,18 @@ export default function RequestModal({
   modalTitle,
 }: RequestModalProps) {
   const [notes, setNotes] = useState("");
+  const { mutate: addRequest } = useAddUpdateRequestMutation();
 
   const handleSubmit = () => {
+    const payload = {
+      requestType: type,
+      requesterNote: notes,
+    };
+    addRequest(payload, {
+      onSuccess: (res) => {
+        console.log(res, "success");
+      },
+    });
     console.log("Type:", type);
     console.log("Notes:", notes);
   };

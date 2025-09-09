@@ -35,9 +35,7 @@ export default function useEditDatapointFormModal({
     control,
     watch,
     setValue,
-    getValues,
   } = useForm();
-  console.log(getValues());
 
   useEffect(() => {
     if (datapointApiData) {
@@ -203,6 +201,26 @@ export default function useEditDatapointFormModal({
     );
     return found?.employeeName || emp.employeeId || "";
   };
+
+  useEffect(() => {
+    if (!selectedFrequency) return;
+
+    // Allowed options after selectedFrequency
+    const validOptions = getFilteredVisualFrequencyOptions().map(
+      (opt) => opt.value,
+    );
+
+    // Remove invalid visualFrequencyTypes
+    if (Array.isArray(visualFrequencyTypes)) {
+      const filtered = visualFrequencyTypes.filter((val) =>
+        validOptions.includes(val),
+      );
+      if (filtered.length !== visualFrequencyTypes.length) {
+        setValue("visualFrequencyTypes", filtered, { shouldValidate: true });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFrequency]);
 
   return {
     register,

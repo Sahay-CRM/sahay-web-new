@@ -209,6 +209,14 @@ export const companyNavigationData = [
     permission: "View",
     moduleKey: "TASK",
   },
+  {
+    id: 13,
+    icon: "GitPullRequestArrow",
+    label: "My Requests",
+    link: "/dashboard/requests",
+    permission: "View",
+    moduleKey: "TASK",
+  },
   // {
   //   id: 12,
   //   icon: "Tag",

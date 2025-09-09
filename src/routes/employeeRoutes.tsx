@@ -86,6 +86,8 @@ const Issues = lazy(() => import("../pages/Obj/Issues"));
 const Objective = lazy(() => import("../pages/Obj/Objective"));
 const GroupKpis = lazy(() => import("../pages/datapointList/GroupKpis"));
 
+const Request = lazy(() => import("../pages/Request"));
+
 const AddCompanyTaskListRepeat = lazy(
   () =>
     import(
@@ -123,6 +125,8 @@ export default function EmployeeRoutes() {
         <Route path="meeting/detail" Component={DetailMeeting} />
         <Route path="meeting/detail/add" Component={AddDetailMeeting} />
         <Route path="meeting/detail/update/:id" Component={AddDetailMeeting} />
+
+        <Route path="requests" Component={Request} />
 
         <Route path="repeat-meeting/">
           <Route index Component={RepeatDetailMeeting} />

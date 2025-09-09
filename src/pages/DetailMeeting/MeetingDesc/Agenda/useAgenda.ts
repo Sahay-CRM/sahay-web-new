@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { get, getDatabase, off, onValue, ref, update } from "firebase/database";
 
 import { addUpdateIssues } from "@/features/api/Issues";
@@ -22,6 +22,7 @@ import {
   useGetDetailMeetingObj,
   useGetMeetingConclusionTime,
 } from "@/features/api/detailMeeting";
+import { getUserId } from "@/features/selectors/auth.selector";
 // import { getUserId } from "@/features/selectors/auth.selector";
 
 interface UseAgendaProps {
@@ -29,6 +30,7 @@ interface UseAgendaProps {
   meetingStatus?: string;
   meetingResponse?: MeetingResFire | null;
   canEdit: boolean;
+  joiners: Joiners[];
 }
 
 type ActiveTab = "tasks" | "projects" | "kpis";
@@ -38,11 +40,13 @@ export const useAgenda = ({
   meetingStatus,
   meetingResponse,
   canEdit,
+  joiners,
 }: UseAgendaProps) => {
   const dispatch = useDispatch();
   const db = getDatabase();
   const meetStateRef = ref(db, `meetings/${meetingId}/state`);
   const sidebarControl = useContext(SidebarControlContext);
+  const userId = useSelector(getUserId);
 
   const [issueInput, setIssueInput] = useState("");
   const [editing, setEditing] = useState<{
@@ -882,6 +886,62 @@ export const useAgenda = ({
       ) || null;
     setSelectedItem(foundItem);
   }, [conclusionData, isSelectedAgenda]);
+
+  const [hasMarkedAttendance, setHasMarkedAttendance] = useState(false);
+
+  useEffect(() => {
+    const fetchAndMarkAttendance = async () => {
+      if (hasMarkedAttendance) return; // prevent duplicate calls
+
+      // ✅ find current user in joiners
+      const currentUser = joiners?.find((item) => item.employeeId === userId);
+
+      // ✅ check conditions
+      if (
+        userId &&
+        currentUser &&
+        !currentUser.attendanceMark && // only if false
+        meetingStatus !== "NOT_STARTED" &&
+        meetingStatus !== "ENDED"
+      ) {
+        const meetingRef = ref(db, `meetings/${meetingId}`);
+        const meetingSnapshot = await get(meetingRef);
+
+        updateTime(
+          {
+            meetingId,
+            employeeId: userId,
+            attendanceMark: true,
+          },
+          {
+            onSuccess: () => {
+              if (!meetingSnapshot.exists()) {
+                queryClient.resetQueries({
+                  queryKey: ["get-meeting-details-timing"],
+                });
+              } else {
+                const db = getDatabase();
+                const meetRef = ref(db, `meetings/${meetingId}/state`);
+                update(meetRef, { updatedAt: Date.now() });
+              }
+              setHasMarkedAttendance(true); // ✅ ensure only once
+            },
+          },
+        );
+      }
+    };
+
+    fetchAndMarkAttendance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    joiners,
+    userId,
+    meetingId,
+    meetingStatus,
+    updateTime,
+    queryClient,
+    hasMarkedAttendance,
+  ]);
 
   const handleCheckIn = async (item: Joiners, attendanceMark: boolean) => {
     const meetingRef = ref(db, `meetings/${meetingId}`);
