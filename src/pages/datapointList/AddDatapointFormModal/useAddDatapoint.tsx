@@ -378,8 +378,15 @@ export default function useAddDataPoint() {
   // };
 
   const Details = () => {
+    const [isEmployeeSearch, setIsEmployeeSearch] = useState("");
+
     const { data: employeeData } = useGetEmployeeDd({
-      filter: { isDeactivated: false },
+      filter: {
+        isDeactivated: false,
+        search: isEmployeeSearch.length >= 3 ? isEmployeeSearch : undefined,
+        pageSize: 25,
+      },
+      enable: isEmployeeSearch.length >= 3,
     });
 
     const frequenceOptions = [
@@ -608,6 +615,7 @@ export default function useAddDataPoint() {
                   label="Assign User"
                   error={errors.employeeId}
                   isMandatory
+                  onSearchChange={setIsEmployeeSearch}
                 />
               )}
             />

@@ -25,6 +25,7 @@ interface SearchDropdownProps {
   labelClass?: string;
   isMandatory?: boolean;
   error?: { message?: string };
+  onSearchChange: (value: string) => void;
 }
 
 const SearchDropdown = ({
@@ -37,6 +38,7 @@ const SearchDropdown = ({
   labelClass,
   isMandatory,
   error,
+  onSearchChange,
 }: SearchDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -106,7 +108,10 @@ const SearchDropdown = ({
             <Input
               ref={inputRef}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                if (onSearchChange) onSearchChange(e.target.value);
+              }}
               placeholder="Search..."
               className="h-9"
             />

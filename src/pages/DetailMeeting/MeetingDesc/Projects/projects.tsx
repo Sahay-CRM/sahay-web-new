@@ -59,7 +59,9 @@ export default function Projects({
 
   const { mutate: addProject } = useAddUpdateCompanyProject();
 
-  const { data: projectStatusList } = useGetAllProjectStatus();
+  const { data: projectStatusList } = useGetAllProjectStatus({
+    filter: {},
+  });
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selected, setSelected] = useState<CompanyProjectDataProps | null>(

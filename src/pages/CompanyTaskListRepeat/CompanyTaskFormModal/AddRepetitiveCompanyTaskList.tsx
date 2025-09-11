@@ -13,6 +13,7 @@ import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import SearchInput from "@/components/shared/SearchInput";
 import AddDatapointModal from "./addRepetitiveTaskModal";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 
 const ProjectSelectionStep = () => {
   const {
@@ -224,11 +225,16 @@ const TaskDetailsStep = () => {
     control,
     formState: { errors },
     watch: watchForm,
+    setValue,
   } = useFormContext();
   const taskDeadline = watchForm("taskDeadline"); // 👈 This is where we watch the date
 
-  const { repetitionOptions, taskStatusOptions, taskTypeOptions } =
-    useAddCompanyTask(taskDeadline);
+  const {
+    repetitionOptions,
+    taskStatusOptions,
+    taskTypeOptions,
+    setIsTypeSearch,
+  } = useAddCompanyTask(taskDeadline);
 
   return (
     <div className="grid mb-10 grid-cols-2 gap-4">
@@ -331,12 +337,18 @@ const TaskDetailsStep = () => {
                 name="taskTypeId"
                 rules={{ required: "Please select Task Type" }}
                 render={({ field }) => (
-                  <FormSelect
-                    label="Task Type"
+                  <SearchDropdown
                     options={taskTypeOptions}
+                    selectedValues={field.value ? [field.value] : []}
+                    onSelect={(value) => {
+                      field.onChange(value.value);
+                      setValue("taskTypeId", value.value);
+                    }}
+                    placeholder="Select Task Type..."
+                    label="Task Type"
                     error={errors.taskTypeId}
-                    {...field}
-                    isMandatory={true}
+                    isMandatory
+                    onSearchChange={setIsTypeSearch}
                   />
                 )}
               />

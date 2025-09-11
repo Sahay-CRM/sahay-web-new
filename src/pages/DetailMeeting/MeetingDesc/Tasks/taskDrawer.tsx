@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useParams } from "react-router-dom";
 
@@ -13,6 +13,7 @@ import { useGetCompanyProjectAll } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import { addMeetingNotesMutation } from "@/features/api/detailMeeting";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 
 type TaskFormData = {
   taskName: string;
@@ -44,20 +45,33 @@ export default function TaskDrawer({
 }: TaskDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
+
+  const [isTypeSearch, setIsTypeSearch] = useState("");
+  const [isProjectSearch, setIsProjectSearch] = useState("");
+
   const { data: taskStatus } = useGetAllTaskStatus({ filter: {} });
   const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
-  const { data: taskTypeData } = useDdTaskType();
+  const { data: taskTypeData } = useDdTaskType({
+    filter: {
+      search: isTypeSearch.length >= 3 ? isTypeSearch : undefined,
+    },
+    enable: isTypeSearch.length >= 3,
+  });
   const { data: employeedata } = useGetEmployeeDd({
     filter: { isDeactivated: false },
   });
-  const { data: projectListdata } = useGetCompanyProjectAll();
+  const { data: projectListdata } = useGetCompanyProjectAll({
+    filter: {
+      search: isProjectSearch.length >= 3 ? isProjectSearch : undefined,
+    },
+    enable: isProjectSearch.length >= 3,
+  });
   const { mutate: addNote } = addMeetingNotesMutation();
 
-  // Prepare options
   const taskTypeOption = taskTypeData
     ? taskTypeData.data.map((status) => ({
-        label: status.taskTypeName,
-        value: status.taskTypeId,
+        label: status.taskTypeName || "Unnamed",
+        value: status.taskTypeId || "", // Fallback to empty string
       }))
     : [];
   const taskStatusOption = taskStatus
@@ -75,10 +89,12 @@ export default function TaskDrawer({
 
   const projectListOption = projectListdata
     ? Array.isArray(projectListdata.data)
-      ? projectListdata.data.map((project) => ({
-          label: project.projectName,
-          value: project.projectId,
-        }))
+      ? projectListdata.data
+          .filter((project) => project.projectName && project.projectId)
+          .map((project) => ({
+            label: project.projectName!,
+            value: project.projectId!,
+          }))
       : []
     : [];
 
@@ -264,16 +280,20 @@ export default function TaskDrawer({
             <Controller
               control={control}
               name="taskTypeId"
-              rules={{ required: "Task Type is Required" }}
+              rules={{ required: "Please select Task Type" }}
               render={({ field }) => (
-                <FormSelect
-                  label="Task Type"
-                  value={field.value}
-                  onChange={field.onChange}
+                <SearchDropdown
                   options={taskTypeOption}
+                  selectedValues={field.value ? [field.value] : []}
+                  onSelect={(value) => {
+                    field.onChange(value.value);
+                    setValue("taskTypeId", value.value);
+                  }}
+                  placeholder="Select Task Type..."
+                  label="Task Type"
                   error={errors.taskTypeId}
-                  placeholder="Select type"
                   isMandatory
+                  onSearchChange={setIsTypeSearch}
                 />
               )}
             />
@@ -282,14 +302,18 @@ export default function TaskDrawer({
               name="projectId"
               rules={{ required: "Project is Required" }}
               render={({ field }) => (
-                <FormSelect
+                <SearchDropdown
+                  options={projectListOption ?? []}
+                  selectedValues={field.value ? [field.value] : []}
+                  onSelect={(value) => {
+                    field.onChange(value.value);
+                    setValue("projectId", value.value);
+                  }}
+                  placeholder="Select Project..."
                   label="Project"
-                  value={field.value}
-                  onChange={field.onChange}
-                  options={projectListOption}
                   error={errors.projectId}
-                  placeholder="Select project"
                   isMandatory
+                  onSearchChange={setIsProjectSearch}
                 />
               )}
             />

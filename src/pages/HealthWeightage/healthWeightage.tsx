@@ -23,6 +23,8 @@ export default function HealthWeightage() {
     companyLevel,
     level,
     handleSwitchChange,
+    setIsCoreParaSearch,
+    setIsCompanyLevelSearch,
   } = useHealthWeightage();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -143,6 +145,7 @@ export default function HealthWeightage() {
                     field.onChange(value.value);
                     setValue("coreParameterId", value.value);
                   }}
+                  onSearchChange={setIsCoreParaSearch}
                 />
               )}
             />
@@ -189,6 +192,7 @@ export default function HealthWeightage() {
                       field.onChange(value.value);
                       setValue("level", value.value);
                     }}
+                    onSearchChange={setIsCompanyLevelSearch}
                   />
                 )}
               />

@@ -45,10 +45,13 @@ export default function useProjectTabs() {
 
   const { mutateAsync: addUpdateGroup } = groupMutation();
   const { mutate: deleteGroup } = deleteGroupMutation();
+  const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
+    search: "",
+  });
 
   const { data: projectlistdata, isPending: isLoadingProject } =
     useGetCompanyProjectAll({
-      filter: { groupId: filters.selected },
+      filter: { groupId: filters.selected, ...paginationFilter },
       enable: true,
     });
 
@@ -165,7 +168,7 @@ export default function useProjectTabs() {
   };
 
   const openAddProjectDrawer = (tab: TabItem) => {
-    setCurrentTabForProject(tab); // store tab info
+    setCurrentTabForProject(tab);
     setIsDrawerOpen(true);
   };
 
@@ -199,5 +202,7 @@ export default function useProjectTabs() {
     updateGroupSequence,
     isPending,
     isLoadingProject,
+    setPaginationFilter,
+    paginationFilter,
   };
 }

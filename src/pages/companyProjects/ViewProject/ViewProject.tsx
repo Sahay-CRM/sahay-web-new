@@ -11,6 +11,13 @@ import { Button } from "@/components/ui/button";
 import useViewProject from "./useViewProject";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { Tooltip } from "@radix-ui/react-tooltip";
+import {
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { getInitials } from "@/features/utils/app.utils";
 
 const ProjectView = () => {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -56,17 +63,18 @@ const ProjectView = () => {
     <FormProvider {...methods}>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* ================= Project Overview ================= */}
-        <div className="bg-white rounded-2xl shadow-md p-8 space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
+        <div className="bg-white rounded-2xl shadow-md p-8 space-y-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div>
               <h1 className="text-3xl font-bold">{project.projectName}</h1>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm text-gray-500 mt-2">
                 {project.projectDescription || "-"}
               </p>
             </div>
             {permission?.Edit && (
               <Button
+                size="sm"
+                variant="outline"
                 onClick={() =>
                   navigate(
                     `/dashboard/projects/edit/${project.projectId}?source=view`,
@@ -78,57 +86,49 @@ const ProjectView = () => {
             )}
           </div>
 
-          {/* Meta Info */}
-          <div className="grid grid-cols-2 gap-6">
-            <div className="">
-              <div>
-                <p className="text-sm text-muted-foreground font-medium">
-                  Status
-                </p>
-                <Controller
-                  name="projectStatus"
-                  control={methods.control}
-                  render={({ field, fieldState }) => (
-                    <FormSelect
-                      {...field}
-                      options={statusOptions}
-                      error={fieldState.error}
-                      onChange={(val) => handleStatusChange(val as string)}
-                    />
-                  )}
-                />
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm font-medium text-gray-500">Status</p>
+              <Controller
+                name="projectStatus"
+                control={methods.control}
+                render={({ field, fieldState }) => (
+                  <FormSelect
+                    {...field}
+                    options={statusOptions}
+                    error={fieldState.error}
+                    onChange={(val) => handleStatusChange(val as string)}
+                  />
+                )}
+              />
+
               {project.projectDeadline && (
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium">
-                    Deadline
-                  </p>
-                  <p className="text-md font-semibold mt-1">
-                    {formattedDeadline}
-                  </p>
+                  <p className="text-sm font-medium text-gray-500">Deadline</p>
+                  <p className="mt-1 font-semibold">{formattedDeadline}</p>
                 </div>
               )}
             </div>
 
-            <div className="">
+            <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
               <div>
-                <p className="text-sm text-muted-foreground font-medium">
-                  Created By
-                </p>
+                <p className="text-sm font-medium text-gray-500">Created By</p>
                 <p className="mt-1 font-semibold">
                   {project.createdBy?.employeeName || "-"}
                 </p>
               </div>
+
               {(project.ProjectParameters?.subParameters?.length ?? 0) > 0 && (
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium">
+                  <p className="text-sm font-medium text-gray-500">
                     Key Result Areas
                   </p>
-                  <div className="flex flex-wrap gap-2 mt-1">
+                  <div className="flex flex-wrap gap-1 mt-2">
                     {project.ProjectParameters?.subParameters.map((sub) => (
                       <Badge
                         key={sub.projectSubParameterId}
                         variant="secondary"
+                        className="text-sm px-2 py-1"
                       >
                         {sub.subParameterName}
                       </Badge>
@@ -136,18 +136,34 @@ const ProjectView = () => {
                   </div>
                 </div>
               )}
+
               <div>
-                <p className="text-sm text-muted-foreground font-medium">
-                  Assignees
-                </p>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {project.ProjectEmployees?.map((emp) => (
+                <p className="text-sm font-medium text-gray-500">Assignees</p>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {/* {project.ProjectEmployees?.map((emp) => (
                     <Badge
                       key={emp.employeeId}
-                      className="bg-primary text-white"
+                      className="bg-primary text-white text-sm px-2 py-1"
                     >
                       {emp.employeeName}
                     </Badge>
+                  ))} */}
+
+                  {project.ProjectEmployees?.map((emp, idx) => (
+                    <span key={idx} className="inline-flex items-center gap-1">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className=" rounded-full h-6 w-6  bg-gray-100 text-xs  flex items-center justify-center font-medium">
+                              {getInitials(emp.employeeName)}
+                            </p>
+                          </TooltipTrigger>
+                          <TooltipContent>{emp.employeeName}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      {/* Add comma except for last item */}
+                      {/* {idx < emp.length - 1 && <span>,</span>} */}
+                    </span>
                   ))}
                 </div>
               </div>

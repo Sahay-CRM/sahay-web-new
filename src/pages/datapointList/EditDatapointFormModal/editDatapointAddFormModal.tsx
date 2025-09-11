@@ -48,6 +48,8 @@ export default function EditDatapointAddFormModal({
     showBoth,
     yesnoOptions,
     allKpi,
+    setIsKpiSearch,
+    setIsEmployeeSearch,
   } = useEditDatapointFormModal({ modalClose, kpiId });
 
   return (
@@ -84,6 +86,7 @@ export default function EditDatapointAddFormModal({
                 error={errors.KPIMasterId}
                 isMandatory
                 className="mb-2"
+                onSearchChange={setIsKpiSearch}
               />
             )}
           />
@@ -203,6 +206,7 @@ export default function EditDatapointAddFormModal({
                 label="Assign User"
                 error={errors.employeeId}
                 isMandatory
+                onSearchChange={setIsEmployeeSearch}
               />
             )}
           />

@@ -32,6 +32,8 @@ interface FormValues {
 
 // Renamed hook
 export const useAddCompanyTask = (taskDeadline?: string | Date) => {
+  const [isTypeSearch, setIsTypeSearch] = useState("");
+
   const { mutate: addUpdateTask, isPending } =
     addUpdateRepeatCompanyTaskMutation();
   const { id: repetitiveTaskId } = useParams();
@@ -62,7 +64,13 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
     mode: "onChange",
   });
   const { reset, trigger, getValues } = methods;
-  const { data: taskTypeData, isLoading: typeLoading } = useDdTaskType();
+  const { data: taskTypeData, isLoading: typeLoading } = useDdTaskType({
+    filter: {
+      search: isTypeSearch.length >= 3 ? isTypeSearch : undefined,
+    },
+    enable: isTypeSearch.length >= 3,
+  });
+
   const [paginationFilterEmployee, setPaginationFilterEmployee] =
     useState<PaginationFilter>({
       currentPage: 1,
@@ -169,8 +177,8 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
 
   const taskTypeOptions = taskTypeData
     ? taskTypeData.data.map((status) => ({
-        label: status.taskTypeName,
-        value: status.taskTypeId,
+        label: status.taskTypeName || "Unnamed",
+        value: status.taskTypeId || "", // Fallback to empty string
       }))
     : [];
 
@@ -469,5 +477,6 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
     isModalOpen,
     handleClose,
     taskpreviewData: getValues(),
+    setIsTypeSearch,
   };
 };

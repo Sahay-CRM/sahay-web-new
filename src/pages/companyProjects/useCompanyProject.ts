@@ -42,7 +42,9 @@ export default function useAdminUser() {
   });
 
   const { mutate: deleteProjectById } = useDeleteCompanyProject();
-  const { data: projectStatusList } = useGetAllProjectStatus();
+  const { data: projectStatusList } = useGetAllProjectStatus({
+    filter: {},
+  });
 
   const statusOptions = Array.isArray(projectStatusList?.data)
     ? projectStatusList.data.map((item: ProjectStatusRes) => ({

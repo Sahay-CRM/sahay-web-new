@@ -124,6 +124,8 @@ const MeetingType = () => {
 };
 
 const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
+  const [isStatusSearch, setIsStatusSearch] = useState("");
+
   const {
     register,
     formState: { errors },
@@ -134,7 +136,12 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
 
   const meetingType = watch("meetingTypeId");
 
-  const { data: meetingStatusData } = useDdMeetingStatus();
+  const { data: meetingStatusData } = useDdMeetingStatus({
+    filter: {
+      search: isStatusSearch.length >= 3 ? isStatusSearch : undefined,
+    },
+    enable: isStatusSearch.length >= 3,
+  });
 
   const meetingStatusOptions = useMemo(() => {
     return (
@@ -235,6 +242,7 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
                   setValue("meetingStatusId", value.value);
                 }}
                 className="h-10 mt-0.5"
+                onSearchChange={setIsStatusSearch}
               />
             )}
           />

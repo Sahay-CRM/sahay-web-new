@@ -17,15 +17,30 @@ interface Score {
   isDisabled?: boolean;
 }
 export default function useHealthWeightage() {
+  const [isCoreParaSearch, setIsCoreParaSearch] = useState("");
+  const [isCompanyLevelSearch, setIsCompanyLevelSearch] = useState("");
+
   const formMethods = useForm();
   const { control } = formMethods;
   const coreParameterId = useWatch({ control, name: "coreParameterId" });
   const level = useWatch({ control, name: "level" });
 
-  const { data: companyLevel } = useGetCompanyLevel(coreParameterId);
+  const { data: companyLevel } = useGetCompanyLevel({
+    filter: {
+      search:
+        isCompanyLevelSearch.length >= 3 ? isCompanyLevelSearch : undefined,
+      coreParameterId: coreParameterId,
+    },
+    enable: isCompanyLevelSearch.length >= 3 && !!coreParameterId,
+  });
 
   const [isEditable, setIsEditable] = useState(false);
-  const { data: coreParams } = useGetCoreParameterDropdown();
+  const { data: coreParams } = useGetCoreParameterDropdown({
+    filter: {
+      search: isCoreParaSearch.length >= 3 ? isCoreParaSearch : undefined,
+    },
+    enable: isCoreParaSearch.length >= 3,
+  });
   const { data: healthScoreList } = useGetSubParaByLevel({
     filter: {
       coreParameterId: coreParameterId,
@@ -95,6 +110,8 @@ export default function useHealthWeightage() {
     permission,
     companyLevel,
     level,
-    handleSwitchChange, // <-- expose the handler
+    handleSwitchChange,
+    setIsCoreParaSearch,
+    setIsCompanyLevelSearch,
   };
 }

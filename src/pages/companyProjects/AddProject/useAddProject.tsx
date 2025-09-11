@@ -18,11 +18,24 @@ export default function useAddProject() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [hasInitializedData, setHasInitializedData] = useState(false);
 
+  const [isStatusSearch, setIsStatusSearch] = useState("");
+  const [isBusFuncSearch, setIsBusFuncSearch] = useState("");
+
   const permission = useSelector(getUserPermission).PROJECT_LIST;
 
   /** Dropdown options */
-  const { data: StatusOptionsData } = useGetAllProjectStatus();
-  const { data: coreParams } = useGetCoreParameterDropdown();
+  const { data: StatusOptionsData } = useGetAllProjectStatus({
+    filter: {
+      search: isStatusSearch.length >= 3 ? isStatusSearch : undefined,
+    },
+    enable: isStatusSearch.length >= 3,
+  });
+  const { data: coreParams } = useGetCoreParameterDropdown({
+    filter: {
+      search: isBusFuncSearch.length >= 3 ? isBusFuncSearch : undefined,
+    },
+    enable: isBusFuncSearch.length >= 3,
+  });
 
   const StatusOptions = (StatusOptionsData?.data || []).map((status) => ({
     value: status.projectStatusId,
@@ -189,5 +202,7 @@ export default function useAddProject() {
     StatusOptions,
     bussinessFunctOptions,
     isCoreParameterSelected,
+    setIsStatusSearch,
+    setIsBusFuncSearch,
   };
 }

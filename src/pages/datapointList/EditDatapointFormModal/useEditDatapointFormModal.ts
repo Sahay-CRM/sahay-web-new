@@ -3,7 +3,7 @@ import {
   useAddUpdateDatapoint,
   useGetDatapointById,
 } from "@/features/api/companyDatapoint";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import { useDdNonSelectAllKpiList } from "@/features/api/KpiList";
 
@@ -16,15 +16,25 @@ export default function useEditDatapointFormModal({
   modalClose,
   kpiId,
 }: UseEditDatapointFormModalProps) {
+  const [isKpiSearch, setIsKpiSearch] = useState("");
+  const [isEmployeeSearch, setIsEmployeeSearch] = useState("");
+
   const { mutate: addDatapoint, isPending } = useAddUpdateDatapoint();
 
   const { data: datapointApiData } = useGetDatapointById(kpiId);
   const { data: employeeData } = useGetEmployeeDd({
-    filter: { isDeactivated: false },
+    filter: {
+      isDeactivated: false,
+      search: isEmployeeSearch.length >= 3 ? isEmployeeSearch : undefined,
+      pageSize: 25,
+    },
+    enable: isEmployeeSearch.length >= 3,
   });
   const { data: datpointData } = useDdNonSelectAllKpiList({
-    filter: {},
-    enable: true,
+    filter: {
+      search: isKpiSearch.length >= 3 ? isKpiSearch : undefined,
+    },
+    enable: isKpiSearch.length >= 3,
   });
 
   const {
@@ -249,5 +259,7 @@ export default function useEditDatapointFormModal({
     showYesNo,
     showBoth,
     yesnoOptions,
+    setIsKpiSearch,
+    setIsEmployeeSearch,
   };
 }

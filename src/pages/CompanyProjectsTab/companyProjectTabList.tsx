@@ -14,6 +14,7 @@ import AddProjectDrawer from "./AssignProject/AddProjectDrawer";
 import { useState } from "react";
 import ViewMeetingModal from "./ViewProjectModal";
 import RearrangeTabsSheet from "./RearrangeTabsSheet";
+import SearchInput from "@/components/shared/SearchInput";
 
 export default function CompanyProjectTabList() {
   const {
@@ -42,6 +43,8 @@ export default function CompanyProjectTabList() {
     openAddProjectDrawer,
     closeAddProjectDrawer,
     updateGroupSequence,
+    paginationFilter,
+    setPaginationFilter,
   } = useProjectTabs();
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -65,80 +68,100 @@ export default function CompanyProjectTabList() {
   }
   return (
     <div className="w-full h-screen flex flex-col">
-      <div className="flex flex-wrap justify-end items-center gap-2 p-4 bg-white sticky top-0 z-50">
-        {tabs.map((tab) => (
-          <div
-            key={tab.id}
-            draggable={tab.id !== "all"}
-            className="relative"
-            onMouseDown={() => startPress(tab)}
-            onMouseUp={cancelPress}
-            onMouseLeave={cancelPress}
-            onTouchStart={() => startPress(tab)}
-            onTouchEnd={cancelPress}
-          >
-            <input
-              type="radio"
-              name="tabset"
-              id={tab.id}
-              checked={activeTab === tab.id}
-              onChange={() => handleTabChange(tab)}
-              className="absolute left-[-200vw]"
-            />
-            <label
-              htmlFor={tab.id}
-              className={`px-3 py-1 cursor-pointer rounded-full font-semibold transition text-sm
-          ${
-            activeTab === tab.id
-              ? "bg-primary text-white"
-              : "text-black bg-white border border-gray-300"
-          }`}
+      <div className="bg-white sticky top-0 z-50 p-4 space-y-3">
+        {/* Row 1: Tabs */}
+        <div className="flex flex-wrap justify-end items-center gap-2">
+          {tabs.map((tab) => (
+            <div
+              key={tab.id}
+              draggable={tab.id !== "all"}
+              className="relative"
+              onMouseDown={() => startPress(tab)}
+              onMouseUp={cancelPress}
+              onMouseLeave={cancelPress}
+              onTouchStart={() => startPress(tab)}
+              onTouchEnd={cancelPress}
             >
-              {tab.label}
-            </label>
-
-            {longPressTab?.id === tab.id && (
-              <div
-                ref={dropdownRef}
-                className="absolute text-sm top-full right-0 mt-1 w-45 border bg-white shadow-lg rounded-md z-50"
+              <input
+                type="radio"
+                name="tabset"
+                id={tab.id}
+                checked={activeTab === tab.id}
+                onChange={() => handleTabChange(tab)}
+                className="absolute left-[-200vw]"
+              />
+              <label
+                htmlFor={tab.id}
+                className={`px-3 py-1 cursor-pointer rounded-full font-semibold transition text-sm
+            ${
+              activeTab === tab.id
+                ? "bg-primary text-white"
+                : "text-black bg-white border border-gray-300"
+            }`}
               >
-                <button
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                  onClick={() => {
-                    openDialogForEdit(tab);
-                    setLongPressTab(null);
-                  }}
+                {tab.label}
+              </label>
+
+              {longPressTab?.id === tab.id && (
+                <div
+                  ref={dropdownRef}
+                  className="absolute text-sm top-full right-0 mt-1 w-45 border bg-white shadow-lg rounded-md z-50"
                 >
-                  Edit
-                </button>
-                <button
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                  onClick={() => deleteTab(tab.id)}
-                >
-                  Delete
-                </button>
-                <button
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                  onClick={() => {
-                    openAddProjectDrawer(tab);
-                    setLongPressTab(null);
-                  }}
-                >
-                  Manage Project
-                </button>
-                <button
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                  onClick={() => {
-                    setIsRearrangeOpen(tab);
-                    setLongPressTab(null);
-                  }}
-                >
-                  Manage Sequence
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
+                  <button
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    onClick={() => {
+                      openDialogForEdit(tab);
+                      setLongPressTab(null);
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    onClick={() => deleteTab(tab.id)}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    onClick={() => {
+                      openAddProjectDrawer(tab);
+                      setLongPressTab(null);
+                    }}
+                  >
+                    Manage Project
+                  </button>
+                  <button
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    onClick={() => {
+                      setIsRearrangeOpen(tab);
+                      setLongPressTab(null);
+                    }}
+                  >
+                    Manage Sequence
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Add Tab Button */}
+          <button
+            onClick={openDialogForAdd}
+            className="p-2 bg-primary text-white rounded-full flex items-center"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Row 2: Search Input */}
+        <div className="flex justify-end">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+          />
+        </div>
 
         {/* Rearrange Tabs Sheet */}
         <RearrangeTabsSheet
@@ -153,14 +176,6 @@ export default function CompanyProjectTabList() {
             updateGroupSequence({ groupSequenceArray: updatedTabsa });
           }}
         />
-
-        {/* Add Tab Button */}
-        <button
-          onClick={openDialogForAdd}
-          className="p-2 bg-primary text-white rounded-full flex items-center"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
       </div>
 
       {/* Scrollable content */}

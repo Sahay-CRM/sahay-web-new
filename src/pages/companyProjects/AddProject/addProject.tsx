@@ -35,7 +35,12 @@ const ProjectInfo = () => {
     control,
     formState: { errors },
   } = useFormContext();
-  const { StatusOptions, bussinessFunctOptions } = useAddProject();
+  const {
+    StatusOptions,
+    bussinessFunctOptions,
+    setIsStatusSearch,
+    setIsBusFuncSearch,
+  } = useAddProject();
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -108,6 +113,7 @@ const ProjectInfo = () => {
                 field.onChange(value.value);
                 setValue("projectStatusId", value.value);
               }}
+              onSearchChange={setIsStatusSearch}
             />
           )}
         />
@@ -132,6 +138,7 @@ const ProjectInfo = () => {
                 field.onChange(value.value);
                 setValue("coreParameterId", value.value);
               }}
+              onSearchChange={setIsBusFuncSearch}
             />
           )}
         />

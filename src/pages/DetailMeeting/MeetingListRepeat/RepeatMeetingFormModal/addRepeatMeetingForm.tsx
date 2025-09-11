@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react"; // Added useState, useRef, ChangeEvent
+import { useEffect, useState } from "react"; // Added useState, useRef, ChangeEvent
 import { FormProvider, useFormContext, Controller } from "react-hook-form"; // Added useFormContext, Controller
 
 import { Button } from "@/components/ui/button";
@@ -17,16 +17,16 @@ import useAddRepeatMeetingForm from "./useAddRepeatMeetingForm"; // Renamed impo
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { getEmployee } from "@/features/api/companyEmployee";
 import { getMeetingType } from "@/features/api/meetingType";
-import { useDdMeetingStatus } from "@/features/api/meetingStatus";
+// import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import FormSelect from "@/components/shared/Form/FormSelect";
 // import DatePicker from "react-datepicker";
 import PageNotAccess from "@/pages/PageNoAccess";
 
-interface MeetingInfoProps {
-  isUpdateMeeting: boolean;
-}
+// interface MeetingInfoProps {
+//   isUpdateMeeting: boolean;
+// }
 
 const MeetingType = () => {
   const {
@@ -123,16 +123,16 @@ const MeetingType = () => {
   );
 };
 
-const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
+const MeetingInfo = () => {
   const {
     register,
     formState: { errors },
     control,
     watch,
-    setValue,
+    // setValue,
   } = useFormContext();
 
-  const meetingType = watch("meetingTypeId");
+  // const meetingType = watch("meetingTypeId");
   const meetingDateTime = watch("meetingDateTime");
 
   let repetitionOptions = [{}];
@@ -253,32 +253,32 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
 
-  const { data: meetingStatusData } = useDdMeetingStatus();
+  // const { data: meetingStatusData } = useDdMeetingStatus();
 
-  const meetingStatusOptions = useMemo(() => {
-    return (
-      meetingStatusData?.map((status) => ({
-        label: status.meetingStatus,
-        value: status.meetingStatusId,
-        order: status.meetingStatusOrder,
-      })) || []
-    );
-  }, [meetingStatusData]);
+  // const meetingStatusOptions = useMemo(() => {
+  //   return (
+  //     meetingStatusData?.map((status) => ({
+  //       label: status.meetingStatus,
+  //       value: status.meetingStatusId,
+  //       order: status.meetingStatusOrder,
+  //     })) || []
+  //   );
+  // }, [meetingStatusData]);
 
-  const shouldHideStatus =
-    !isUpdateMeeting && meetingType?.parentType === "DETAIL";
+  // const shouldHideStatus =
+  //   !isUpdateMeeting && meetingType?.parentType === "DETAIL";
 
-  useEffect(() => {
-    if (shouldHideStatus && meetingStatusOptions.length > 0) {
-      const defaultStatus = meetingStatusOptions.find((s) => s.order === 1);
-      if (defaultStatus) {
-        setValue("meetingStatusId", defaultStatus.value, {
-          shouldValidate: true,
-          shouldDirty: true,
-        });
-      }
-    }
-  }, [shouldHideStatus, meetingStatusOptions, setValue]);
+  // useEffect(() => {
+  //   if (shouldHideStatus && meetingStatusOptions.length > 0) {
+  //     const defaultStatus = meetingStatusOptions.find((s) => s.order === 1);
+  //     if (defaultStatus) {
+  //       setValue("meetingStatusId", defaultStatus.value, {
+  //         shouldValidate: true,
+  //         shouldDirty: true,
+  //       });
+  //     }
+  //   }
+  // }, [shouldHideStatus, meetingStatusOptions, setValue]);
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -548,7 +548,7 @@ const AddRepeatMeeting = () => {
 
   const steps = [
     <MeetingType key="meetingType" />,
-    <MeetingInfo isUpdateMeeting={repetitiveMeetingId ? true : false} />,
+    <MeetingInfo />,
     <Joiners key="joiners" />,
   ];
 

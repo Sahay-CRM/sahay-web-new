@@ -43,7 +43,9 @@ export default function ProjectDrawer({
 }: ProjectDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
   const { mutate: addProject } = useAddUpdateCompanyProject();
-  const { data: projectStatusData } = useGetAllProjectStatus();
+  const { data: projectStatusData } = useGetAllProjectStatus({
+    filter: {},
+  });
   const { data: employeeData } = useGetEmployeeDd({
     filter: { isDeactivated: false },
   });

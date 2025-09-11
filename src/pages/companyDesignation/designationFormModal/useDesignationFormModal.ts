@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getALLDepartmentList } from "@/features/api/department";
 import {
   addUpdateDesignation,
@@ -54,7 +54,14 @@ export default function useDesignationFormModal({
 
 // Export as default and named for compatibility
 export function useDesignationFormModalOptions() {
-  const { data: departmentData } = getALLDepartmentList();
+  const [isDepartmentSearch, setIsDepartmentSearch] = useState("");
+
+  const { data: departmentData } = getALLDepartmentList({
+    filter: {
+      search: isDepartmentSearch.length >= 3 ? isDepartmentSearch : undefined,
+    },
+    enable: isDepartmentSearch.length >= 3,
+  });
   const DepartmentOptions = [
     ...(
       (departmentData?.data ?? []) as Array<{
@@ -66,14 +73,18 @@ export function useDesignationFormModalOptions() {
       value: item.departmentId,
     })),
   ];
-  return { DepartmentOptions };
+  return { DepartmentOptions, setIsDepartmentSearch };
 }
 
 export function useDesignationDropdownOptions(departmentId?: string) {
+  const [isParentDesSearch, setIsParentDesSearch] = useState("");
+
   const { data: designationData } = getDesignationDropdown({
     filter: {
       departmentId: departmentId || "",
+      search: isParentDesSearch.length >= 3 ? isParentDesSearch : undefined,
     },
+    enable: isParentDesSearch.length >= 3,
   });
   const designationOptions = [
     ...(
@@ -86,7 +97,7 @@ export function useDesignationDropdownOptions(departmentId?: string) {
       value: item.designationId,
     })),
   ];
-  return { designationOptions };
+  return { designationOptions, setIsParentDesSearch };
 }
 
 export function useDesignationFormSubmit(modalClose: () => void) {

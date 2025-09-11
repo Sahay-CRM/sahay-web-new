@@ -2,19 +2,20 @@ import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 
-export default function useGetCompanyLevel(coreParameterId: string) {
+export default function useGetCompanyLevel({
+  filter,
+  enable,
+}: FilterDataProps) {
   const query = useQuery({
-    queryKey: ["get-company-level-core", coreParameterId],
+    queryKey: ["get-company-level-core", filter],
     queryFn: async () => {
       const { data: resData } = await Api.post<{ data: CompanyLevelRes[] }>({
         url: Urls.getCompanyLevelByCore(),
-        data: {
-          coreParameterId: coreParameterId,
-        },
+        data: filter,
       });
       return resData;
     },
-    enabled: !!coreParameterId,
+    enabled: !!enable || !!filter,
   });
   return query;
 }

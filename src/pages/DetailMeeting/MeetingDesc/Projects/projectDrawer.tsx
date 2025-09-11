@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 
@@ -14,6 +14,7 @@ import {
 } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import { addMeetingNotesMutation } from "@/features/api/detailMeeting";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 
 type ProjectFormData = {
   projectId: string;
@@ -44,8 +45,15 @@ export default function ProjectDrawer({
 }: ProjectDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
+  const [isStatusSearch, setIsStatusSearch] = useState("");
+
   const { mutate: addProject } = useAddUpdateCompanyProject();
-  const { data: projectStatusData } = useGetAllProjectStatus();
+  const { data: projectStatusData } = useGetAllProjectStatus({
+    filter: {
+      search: isStatusSearch.length >= 3 ? isStatusSearch : undefined,
+    },
+    enable: isStatusSearch.length >= 3,
+  });
   const { data: employeeData } = useGetEmployeeDd({
     filter: { isDeactivated: false },
   });
@@ -286,16 +294,30 @@ export default function ProjectDrawer({
               }}
             />
             <Controller
-              control={control}
               name="projectStatusId"
+              control={control}
+              rules={{
+                required: {
+                  value: true,
+                  message: "Please select a project status",
+                },
+              }}
               render={({ field }) => (
-                <FormSelect
+                <SearchDropdown
+                  placeholder="Select Project Status..."
                   label="Project Status"
-                  value={field.value}
-                  onChange={field.onChange}
-                  options={projectStatusOption}
                   error={errors.projectStatusId}
-                  placeholder="Select status"
+                  isMandatory
+                  {...field}
+                  labelClass="mb-5"
+                  className="h-10"
+                  options={projectStatusOption}
+                  selectedValues={field.value ? [field.value] : []} // Ensure it's an array
+                  onSelect={(value) => {
+                    field.onChange(value.value);
+                    setValue("projectStatusId", value.value);
+                  }}
+                  onSearchChange={setIsStatusSearch}
                 />
               )}
             />

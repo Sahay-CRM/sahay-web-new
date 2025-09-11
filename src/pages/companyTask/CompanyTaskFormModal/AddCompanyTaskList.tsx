@@ -198,7 +198,12 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
     formState: { errors },
     setValue,
   } = useFormContext();
-  const { taskStatusOptions, taskTypeOptions } = useAddCompanyTask();
+  const {
+    taskStatusOptions,
+    taskTypeOptions,
+    setIsTypeSearch,
+    setIsStatusSearch,
+  } = useAddCompanyTask();
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -263,6 +268,7 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
                 label="Task Type"
                 error={errors.taskTypeId}
                 isMandatory
+                onSearchChange={setIsTypeSearch}
               />
             )}
           />
@@ -284,6 +290,7 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
                 label="Task Status"
                 error={errors.taskStatusId}
                 isMandatory
+                onSearchChange={setIsStatusSearch}
               />
             )}
           />
