@@ -11,13 +11,17 @@ import {
 import useProjectTabs from "./useProjectTabs";
 import { Button } from "@/components/ui/button";
 import AddProjectDrawer from "./AssignProject/AddProjectDrawer";
+import { useState } from "react";
+import ViewMeetingModal from "./ViewProjectModal";
+import RearrangeTabsSheet from "./RearrangeTabsSheet";
 
 export default function CompanyProjectTabList() {
   const {
     tabs,
+    isPending,
+    isLoadingProject,
     activeTab,
     longPressTab,
-    dragItemIndex,
     isDialogOpen,
     newTabName,
     dropdownRef,
@@ -25,9 +29,6 @@ export default function CompanyProjectTabList() {
     startPress,
     cancelPress,
     handleTabChange,
-    handleOrderUpdate,
-    handleDragStart,
-    handleDragEnd,
     setIsDialogOpen,
     setNewTabName,
     projects,
@@ -40,28 +41,35 @@ export default function CompanyProjectTabList() {
     currentTabForProject,
     openAddProjectDrawer,
     closeAddProjectDrawer,
+    updateGroupSequence,
   } = useProjectTabs();
 
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewModalData, setViewModalData] = useState<IProjectFormData>(
+    {} as IProjectFormData,
+  );
+  const [isRearrangeOpen, setIsRearrangeOpen] = useState<TabItem | null>(null);
+
+  const handleCardClick = (project: IProjectFormData) => {
+    setViewModalData(project);
+    setIsViewModalOpen(true);
+  };
+  const isLoading = isPending || isLoadingProject;
+
+  if (isLoading) {
+    return (
+      <div className="w-full flex justify-center items-center h-96">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
   return (
-    <div className="w-full p-4">
-      {/* Tabs container */}
-      <div className="flex justify-end items-center gap-2 mb-4">
-        {tabs.map((tab, index) => (
+    <div className="w-full h-screen flex flex-col">
+      <div className="flex flex-wrap justify-end items-center gap-2 p-4 bg-white sticky top-0 z-50">
+        {tabs.map((tab) => (
           <div
             key={tab.id}
             draggable={tab.id !== "all"}
-            onDragStart={(e) => handleDragStart(e, index)}
-            onDragOver={(e) => {
-              e.preventDefault();
-              if (
-                dragItemIndex.current !== null &&
-                dragItemIndex.current !== index
-              ) {
-                handleOrderUpdate(tabs[dragItemIndex.current].id, index);
-                dragItemIndex.current = index;
-              }
-            }}
-            onDragEnd={handleDragEnd}
             className="relative"
             onMouseDown={() => startPress(tab)}
             onMouseUp={cancelPress}
@@ -80,20 +88,19 @@ export default function CompanyProjectTabList() {
             <label
               htmlFor={tab.id}
               className={`px-3 py-1 cursor-pointer rounded-full font-semibold transition text-sm
-                ${
-                  activeTab === tab.id
-                    ? "bg-primary text-white"
-                    : "text-black bg-white border border-gray-300"
-                }`}
+          ${
+            activeTab === tab.id
+              ? "bg-primary text-white"
+              : "text-black bg-white border border-gray-300"
+          }`}
             >
               {tab.label}
             </label>
 
-            {/* Long-press dropdown */}
             {longPressTab?.id === tab.id && (
               <div
                 ref={dropdownRef}
-                className="absolute top-full right-0 mt-1 w-40 border bg-white shadow-lg rounded-md z-50"
+                className="absolute text-sm top-full right-0 mt-1 w-45 border bg-white shadow-lg rounded-md z-50"
               >
                 <button
                   className="block w-full text-left px-4 py-2 hover:bg-gray-100"
@@ -104,7 +111,6 @@ export default function CompanyProjectTabList() {
                 >
                   Edit
                 </button>
-
                 <button
                   className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                   onClick={() => deleteTab(tab.id)}
@@ -118,22 +124,37 @@ export default function CompanyProjectTabList() {
                     setLongPressTab(null);
                   }}
                 >
-                  Add Project
+                  Manage Project
                 </button>
-
-                {/* <button
+                <button
                   className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                   onClick={() => {
-                    alert(`Remove Project for ${tab.label}`);
+                    setIsRearrangeOpen(tab);
+                    setLongPressTab(null);
                   }}
                 >
-                  Remove Project
-                </button> */}
+                  Manage Sequence
+                </button>
               </div>
             )}
           </div>
         ))}
 
+        {/* Rearrange Tabs Sheet */}
+        <RearrangeTabsSheet
+          isOpen={!!isRearrangeOpen}
+          onClose={() => setIsRearrangeOpen(null)}
+          tabs={tabs}
+          activeTab={isRearrangeOpen}
+          onSave={(updatedTabs) => {
+            const updatedTabsa = updatedTabs
+              .map((tab) => tab.id)
+              .filter((tabId) => tabId !== "all");
+            updateGroupSequence({ groupSequenceArray: updatedTabsa });
+          }}
+        />
+
+        {/* Add Tab Button */}
         <button
           onClick={openDialogForAdd}
           className="p-2 bg-primary text-white rounded-full flex items-center"
@@ -142,31 +163,41 @@ export default function CompanyProjectTabList() {
         </button>
       </div>
 
-      {/* Project Cards */}
-      <div className="flex mt-10 flex-wrap justify-center sm:justify-start gap-4 sm:gap-6 mb-4 px-1">
-        {projects.map((project) => (
-          <div
-            key={project.id}
-            className="w-full sm:w-[48%] md:w-[45%] lg:w-[45%] max-w-[360px]"
-          >
-            <ProjectCard
-              name={project.name}
-              description={project.description}
-              assignees={project.assignees}
-              endDate={project.deadline}
-              priority={project.status}
-              color={project.color}
-            />
-          </div>
-        ))}
+      {/* Scrollable content */}
+      <div className="flex-1  p-4">
+        <div className="flex flex-wrap justify-center sm:justify-start gap-4 sm:gap-6 mb-4 px-1">
+          {projects.map((project) => (
+            <div
+              key={project.projectId}
+              className="w-full sm:w-[48%] md:w-[45%] lg:w-[45%] max-w-[360px]"
+              onClick={() => handleCardClick(project)}
+            >
+              <ProjectCard
+                name={project.projectName}
+                description={project.projectDescription}
+                assignees={project.employeeIds}
+                endDate={project.projectDeadline}
+                priority={project.projectStatusId}
+                color={project.color}
+              />
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* Modals */}
+      <ViewMeetingModal
+        isModalOpen={isViewModalOpen}
+        modalData={viewModalData}
+        modalClose={() => setIsViewModalOpen(false)}
+      />
       <AddProjectDrawer
         isOpen={isDrawerOpen}
         onClose={closeAddProjectDrawer}
         tab={currentTabForProject}
       />
 
-      {/* Add Tab Modal */}
+      {/* Add/Edit Tab Modal */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>

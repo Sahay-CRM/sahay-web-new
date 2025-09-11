@@ -1,4 +1,4 @@
-import { useGetRequest } from "@/features/api/Request";
+import { deleteRequestMutation, useGetRequest } from "@/features/api/Request";
 import { useState } from "react";
 
 export default function useRequest() {
@@ -11,6 +11,7 @@ export default function useRequest() {
   const [isEditData, setIsEditData] = useState<CreateRequest | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
 
+  const { mutate: deleteReq } = deleteRequestMutation();
   const { data: reqData, isLoading } = useGetRequest({
     filter: {
       ...paginationFilter,
@@ -29,6 +30,10 @@ export default function useRequest() {
     setIsEditData(null);
   };
 
+  const onDelete = (changeRequestId: string) => {
+    deleteReq(changeRequestId);
+  };
+
   return {
     paginationFilter,
     reqData,
@@ -36,7 +41,7 @@ export default function useRequest() {
     isLoading,
     isDataFilter,
     setIsDataFilter,
-    // onDelete,
+    onDelete,
     openModal,
     isEditData,
     isModalOpen,

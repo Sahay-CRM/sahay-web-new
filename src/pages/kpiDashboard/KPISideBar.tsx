@@ -1,22 +1,5 @@
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  DragOverlay,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import SortableItem from "./sortableItem";
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, ChevronUp, ChevronDown } from "lucide-react";
 import { updateKPISequenceMutation } from "@/features/api/KpiList";
 
 // Types
@@ -70,82 +53,61 @@ export default function DraggableKPISidebar({
     })),
   );
 
-  const [activeItem, setActiveItem] = useState<{
-    type: "group" | "kpi";
-    id: string;
-    groupId?: string;
-  } | null>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
-
-  function handleDragEnd(event: DragEndEvent) {
-    setActiveItem(null);
-    const { active, over } = event;
-    if (!over) return;
-
-    // ✅ Group reorder
-    if (
-      active.data.current?.type === "group" &&
-      over.data.current?.type === "group"
-    ) {
-      if (active.id !== over.id) {
-        const oldIndex = groups.findIndex(
-          (g) => g.coreParameterId === active.id,
-        );
-        const newIndex = groups.findIndex((g) => g.coreParameterId === over.id);
-        setGroups((items) => arrayMove(items, oldIndex, newIndex));
-      }
+  const moveGroupUp = (groupIndex: number) => {
+    if (groupIndex > 0) {
+      setGroups((prev) => {
+        const newGroups = [...prev];
+        [newGroups[groupIndex - 1], newGroups[groupIndex]] = [
+          newGroups[groupIndex],
+          newGroups[groupIndex - 1],
+        ];
+        return newGroups;
+      });
     }
+  };
 
-    // ✅ KPI reorder within group
-    if (
-      active.data.current?.type === "kpi" &&
-      over.data.current?.type === "kpi"
-    ) {
-      const groupId = active.data.current?.groupId as string;
-      if (groupId === over.data.current?.groupId) {
-        setGroups((prev) =>
-          prev.map((g) => {
-            if (g.coreParameterId !== groupId) return g;
-            const oldIndex = g.kpis.findIndex((k) => k.kpiId === active.id);
-            const newIndex = g.kpis.findIndex((k) => k.kpiId === over.id);
-            return { ...g, kpis: arrayMove(g.kpis, oldIndex, newIndex) };
-          }),
-        );
-      }
+  const moveGroupDown = (groupIndex: number) => {
+    if (groupIndex < groups.length - 1) {
+      setGroups((prev) => {
+        const newGroups = [...prev];
+        [newGroups[groupIndex], newGroups[groupIndex + 1]] = [
+          newGroups[groupIndex + 1],
+          newGroups[groupIndex],
+        ];
+        return newGroups;
+      });
     }
-  }
+  };
 
-  const renderGroupOverlay = (groupId: string) => {
-    const group = groups.find((g) => g.coreParameterId === groupId);
-    if (!group) return null;
+  const moveKpiUp = (groupIndex: number, kpiIndex: number) => {
+    if (kpiIndex > 0) {
+      setGroups((prev) => {
+        const newGroups = [...prev];
+        const newKpis = [...newGroups[groupIndex].kpis];
+        [newKpis[kpiIndex - 1], newKpis[kpiIndex]] = [
+          newKpis[kpiIndex],
+          newKpis[kpiIndex - 1],
+        ];
+        newGroups[groupIndex] = { ...newGroups[groupIndex], kpis: newKpis };
+        return newGroups;
+      });
+    }
+  };
 
-    return (
-      <div className="border rounded-md bg-white shadow-2xl transform rotate-2 scale-105">
-        <div className="bg-blue-50 px-3 py-2 font-semibold flex items-center gap-2 rounded-t-md">
-          <span>⋮⋮</span>
-          {group.coreParameterName}
-        </div>
-        {group.kpis.map((kpi, index) => (
-          <div
-            key={kpi.kpiId}
-            className={`flex items-center gap-2 px-3 py-2 ${
-              index < group.kpis.length - 1
-                ? "border-t"
-                : "border-t rounded-b-md"
-            }`}
-          >
-            <span>⋮⋮</span>
-            {kpi.kpiName}
-          </div>
-        ))}
-      </div>
-    );
+  const moveKpiDown = (groupIndex: number, kpiIndex: number) => {
+    const group = groups[groupIndex];
+    if (kpiIndex < group.kpis.length - 1) {
+      setGroups((prev) => {
+        const newGroups = [...prev];
+        const newKpis = [...newGroups[groupIndex].kpis];
+        [newKpis[kpiIndex], newKpis[kpiIndex + 1]] = [
+          newKpis[kpiIndex + 1],
+          newKpis[kpiIndex],
+        ];
+        newGroups[groupIndex] = { ...newGroups[groupIndex], kpis: newKpis };
+        return newGroups;
+      });
+    }
   };
 
   const handleUpdateKpi = (data: string[]) => {
@@ -183,119 +145,100 @@ export default function DraggableKPISidebar({
         </div>
 
         <div className="p-4 overflow-y-auto h-[calc(100%-130px)] overflow-scroll pb-0">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={(event) => {
-              setActiveItem({
-                type: event.active.data.current?.type,
-                id: String(event.active.id),
-                groupId: event.active.data.current?.groupId,
-              });
-            }}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={groups.map((g) => g.coreParameterId)}
-              strategy={verticalListSortingStrategy}
-            >
-              {groups.map((group, groupIndex) => {
-                const isDragging =
-                  activeItem?.type === "group" &&
-                  activeItem.id === group.coreParameterId;
+          {groups.map((group, groupIndex) => {
+            const sequenceOffset = groups
+              .slice(0, groupIndex)
+              .reduce((acc, g) => acc + g.kpis.length, 0);
 
-                const sequenceOffset = groups
-                  .slice(0, groupIndex)
-                  .reduce((acc, g) => acc + g.kpis.length, 0);
+            return (
+              <div
+                key={group.coreParameterId}
+                className="border rounded-md mb-4 transition-all duration-200"
+              >
+                <div className="bg-blue-50 px-3 py-0.5 font-semibold flex items-center gap-2 rounded-t-md justify-between">
+                  <div className="flex items-center gap-2">
+                    {group.coreParameterName}
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <button
+                      onClick={() => moveGroupUp(groupIndex)}
+                      disabled={groupIndex === 0}
+                      className={`p-0 rounded ${
+                        groupIndex === 0
+                          ? "text-gray-300 cursor-not-allowed"
+                          : "text-gray-600 hover:text-blue-600 hover:bg-blue-100"
+                      }`}
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => moveGroupDown(groupIndex)}
+                      disabled={groupIndex === groups.length - 1}
+                      className={`p-0 rounded ${
+                        groupIndex === groups.length - 1
+                          ? "text-gray-300 cursor-not-allowed"
+                          : "text-gray-600 hover:text-blue-600 hover:bg-blue-100"
+                      }`}
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
 
-                return (
-                  <div
-                    key={group.coreParameterId}
-                    className={`border rounded-md mb-4 transition-all duration-200 ${
-                      isDragging
-                        ? "opacity-30 scale-95 rotate-1"
-                        : "opacity-100 scale-100 rotate-0"
-                    }`}
-                  >
-                    <SortableItem id={group.coreParameterId} type="group">
-                      <div className="cursor-grab active:cursor-grabbing">
-                        <div className="bg-blue-50 px-3 py-2 font-semibold flex items-center gap-2 rounded-t-md">
-                          <span className="text-gray-400">⋮⋮</span>
-                          {group.coreParameterName}
-                        </div>
+                <div>
+                  {group.kpis.map((kpi, kpiIndex) => {
+                    const sequenceNumber = sequenceOffset + kpiIndex + 1;
 
-                        <div
-                          className={`${isDragging ? "pointer-events-none" : ""}`}
-                        >
-                          <SortableContext
-                            items={group.kpis.map((k) => k.kpiId)}
-                            strategy={verticalListSortingStrategy}
-                          >
-                            {group.kpis.map((kpi, index) => {
-                              const sequenceNumber = sequenceOffset + index + 1;
-                              const isDraggingKpi =
-                                activeItem?.type === "kpi" &&
-                                activeItem.id === kpi.kpiId;
-
-                              return (
-                                <SortableItem
-                                  key={kpi.kpiId}
-                                  id={kpi.kpiId}
-                                  type="kpi"
-                                  groupId={group.coreParameterId}
-                                >
-                                  <div
-                                    className={`flex items-center gap-2 py-2 pl-8 border-t ${
-                                      isDraggingKpi ? "opacity-40" : ""
-                                    } ${
-                                      index === group.kpis.length - 1
-                                        ? "rounded-b-md"
-                                        : ""
-                                    } ${
-                                      !isDragging
-                                        ? "cursor-grab active:cursor-grabbing"
-                                        : "cursor-default"
-                                    }`}
-                                  >
-                                    <span className="text-gray-400">⋮⋮</span>
-                                    <div className="flex justify-between w-full pr-4">
-                                      <span>{kpi.kpiName}</span>
-                                      <div>{sequenceNumber}</div>
-                                    </div>
-                                  </div>
-                                </SortableItem>
-                              );
-                            })}
-                          </SortableContext>
+                    return (
+                      <div
+                        key={kpi.kpiId}
+                        className={`flex items-center pl-3 pr-2 border-t ${
+                          kpiIndex === group.kpis.length - 1
+                            ? "rounded-b-md"
+                            : ""
+                        }`}
+                      >
+                        <div className="flex justify-between w-full items-center ml-4">
+                          <div>
+                            {sequenceNumber}
+                            <span className="ml-2">{kpi.kpiName}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex flex-col items-center">
+                              <button
+                                onClick={() => moveKpiUp(groupIndex, kpiIndex)}
+                                disabled={kpiIndex === 0}
+                                className={`p-1 rounded ${
+                                  kpiIndex === 0
+                                    ? "text-gray-300 cursor-not-allowed"
+                                    : "text-gray-600 hover:text-blue-600 hover:bg-blue-100"
+                                }`}
+                              >
+                                <ChevronUp className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  moveKpiDown(groupIndex, kpiIndex)
+                                }
+                                disabled={kpiIndex === group.kpis.length - 1}
+                                className={`p-1 rounded ${
+                                  kpiIndex === group.kpis.length - 1
+                                    ? "text-gray-300 cursor-not-allowed"
+                                    : "text-gray-600 hover:text-blue-600 hover:bg-blue-100"
+                                }`}
+                              >
+                                <ChevronDown className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </SortableItem>
-                  </div>
-                );
-              })}
-            </SortableContext>
-
-            <DragOverlay
-              dropAnimation={null}
-              style={{ transformOrigin: "top left" }}
-            >
-              {activeItem ? (
-                activeItem.type === "group" ? (
-                  renderGroupOverlay(activeItem.id)
-                ) : (
-                  <div className="flex items-center gap-2 px-3 py-2 border shadow-2xl rounded-md bg-white transform rotate-1 scale-105 w-fit max-w-[400px]">
-                    <span className="text-gray-400 flex-shrink-0">⋮⋮</span>
-                    <span className="truncate">
-                      {groups
-                        .flatMap((g) => g.kpis)
-                        .find((k) => k.kpiId === activeItem.id)?.kpiName ||
-                        "KPI"}
-                    </span>
-                  </div>
-                )
-              ) : null}
-            </DragOverlay>
-          </DndContext>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         <div className="flex items-center justify-between p-4 border-b">

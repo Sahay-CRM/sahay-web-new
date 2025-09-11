@@ -315,7 +315,7 @@ const Urls = {
   deleteGroup: (id: string) => `${baseUrl}/company/group/delete/${id}`,
   removeProjectFromGroup: () => `${baseUrl}/company/project/remove-from-group`,
   addProjectToGroup: () => `${baseUrl}/company/project/add-to-group`,
-  updateGroupSequence: () => `${baseUrl}/company/project/add-to-group`,
+  updateGroupSequence: () => `${baseUrl}/company/group/rearrange`,
 };
 
 export default Urls;

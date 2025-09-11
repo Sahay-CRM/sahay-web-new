@@ -21,9 +21,9 @@ const CompanyImportantDates = lazy(
 );
 const CompanyMeeting = lazy(() => import("../pages/Meeting/MeetingList"));
 const CompanyTask = lazy(() => import("../pages/companyTask/CompanyTaskList"));
-const CompanyProjects = lazy(
-  () => import("../pages/companyProjects/CompanyProjects"),
-);
+// const CompanyProjects = lazy(
+//   () => import("../pages/companyProjects/CompanyProjects")
+// );
 const CompanyProjectView = lazy(
   () => import("../pages/companyProjects/ViewProject/ViewProject"),
 );
@@ -99,6 +99,7 @@ const CompanyTaskRe = lazy(
 );
 
 const CompanyTaskNew = lazy(() => import("../pages/ToDoList"));
+const CompanyProjectTab = lazy(() => import("../pages/CompanyProjectsTab"));
 
 export default function EmployeeRoutes() {
   return (
@@ -151,7 +152,7 @@ export default function EmployeeRoutes() {
         <Route path="tasksrepeat/add" element={<AddCompanyTaskListRepeat />} />
         <Route path="tasksrepeat" element={<CompanyTaskRe />} />
 
-        <Route path="projects" Component={CompanyProjects} />
+        <Route path="projects" Component={CompanyProjectTab} />
         <Route path="projects/add" element={<AddCompanyProjectList />} />
         <Route path="projects/edit/:id" element={<AddCompanyProjectList />} />
         <Route path="projects/view/:id" Component={CompanyProjectView} />

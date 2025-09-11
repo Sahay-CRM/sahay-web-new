@@ -30,7 +30,7 @@ export default function Request() {
     isLoading,
     isDataFilter,
     setIsDataFilter,
-    // onDelete,
+    onDelete,
     openModal,
     isEditData,
     isModalOpen,
@@ -94,55 +94,49 @@ export default function Request() {
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
-        <div className="flex mb-5 justify-between items-center">
+        <div className="flex justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             Requests
           </h1>
-          <div>
+          <div className="flex justify-between items-center gap-4">
             <FormSelect
               value={isDataFilter}
               options={dataFilterOption}
               onChange={(ele) => {
                 setIsDataFilter(ele as string);
               }}
+              triggerClassName="mb-0"
             />
-          </div>
-          {/* <div className="flex items-center space-x-5 tb:space-x-7">
-            {permission.Add && (
-              <Button className="py-2 w-fit" onClick={handleAdd}>
-                Add Product
-              </Button>
-            )}
-          </div> */}
-        </div>
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <SearchInput
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-              className="w-80"
-            />
-          </div>{" "}
-          <div className="flex items-center gap-2">
-            {canToggleColumns && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <DropdownSearchMenu
-                        columns={columnToggleOptions}
-                        onToggleColumn={onToggleColumn}
-                        columnIcon={true}
-                      />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs text-white">Toggle Visible Columns</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+            <div>
+              <SearchInput
+                placeholder="Search..."
+                searchValue={paginationFilter?.search || ""}
+                setPaginationFilter={setPaginationFilter}
+                className="w-80"
+              />
+            </div>{" "}
+            <div className="flex items-center gap-2">
+              {canToggleColumns && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div>
+                        <DropdownSearchMenu
+                          columns={columnToggleOptions}
+                          onToggleColumn={onToggleColumn}
+                          columnIcon={true}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs text-white">
+                        Toggle Visible Columns
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
           </div>
         </div>
 
@@ -155,7 +149,7 @@ export default function Request() {
             columns={visibleColumns}
             primaryKey="changeRequestId"
             onEdit={openModal}
-            // onDelete={onDelete}
+            onDelete={(row) => onDelete(row.changeRequestId!)}
             paginationDetails={mapPaginationDetails(reqData)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
@@ -165,6 +159,7 @@ export default function Request() {
             isEditDeleteShow={true}
             permissionKey="users"
             sortableColumns={["productName", "brandName"]}
+            actionColumnWidth="w-24"
           />
         </div>
         {isModalOpen && (

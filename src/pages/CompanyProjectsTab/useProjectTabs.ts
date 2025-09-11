@@ -11,7 +11,7 @@ export default function useProjectTabs() {
   const [tabs, setTabs] = useState<TabItem[]>([{ id: "all", label: "All" }]);
 
   const { mutate: updateGroupSequence } = groupSequenceMutation();
-  const { data: groupListRes } = useGetAllGroup();
+  const { data: groupListRes, isPending } = useGetAllGroup();
 
   useEffect(() => {
     if (groupListRes?.data) {
@@ -27,39 +27,12 @@ export default function useProjectTabs() {
     }
   }, [groupListRes]);
 
-  /*
-  useEffect(() => {
-  if (groupListRes?.data) {
-    const apiTabs: TabItem[] = [];
-
-    groupListRes.data.forEach((group: GroupData) => {
-      const tab: TabItem = {
-        id: group.groupId,
-        label: group.groupName,
-        groupType: group.groupType,
-        selectedIds: group.selectedIds,
-        sequence: group.sequence, // use srNo as sequence
-      };
-
-      // Place tab at the right position (srNo - 1 because "All" is first)
-      const targetIndex = (group.srNo ?? 1); 
-      apiTabs[targetIndex - 1] = tab;
-    });
-
-    // Remove any empty spots
-    const orderedTabs = apiTabs.filter(Boolean);
-
-    setTabs([{ id: "all", label: "All" }, ...orderedTabs]);
-  }
-}, [groupListRes]);
-   */
   const [activeTab, setActiveTab] = useState<string>("all");
   const [longPressTab, setLongPressTab] = useState<TabItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newTabName, setNewTabName] = useState("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const dragItemIndex = useRef<number | null>(null);
   const [editingTab, setEditingTab] = useState<TabItem | null>(null);
   interface Filters {
     selected: string;
@@ -73,10 +46,11 @@ export default function useProjectTabs() {
   const { mutateAsync: addUpdateGroup } = groupMutation();
   const { mutate: deleteGroup } = deleteGroupMutation();
 
-  const { data: projectlistdata } = useGetCompanyProjectAll({
-    filter: { groupId: filters.selected },
-    enable: true,
-  });
+  const { data: projectlistdata, isPending: isLoadingProject } =
+    useGetCompanyProjectAll({
+      filter: { groupId: filters.selected },
+      enable: true,
+    });
 
   const deleteTab = async (id: string) => {
     if (id === "all") return;
@@ -121,52 +95,24 @@ export default function useProjectTabs() {
     }
   };
 
-  const handleOrderUpdate = (id: string, newIndex: number) => {
-    if (id === "all") return;
-
-    const fromIndex = tabs.findIndex((tab) => tab.id === id);
-    if (fromIndex === -1) return;
-
-    const targetIndex = newIndex === 0 ? 1 : newIndex;
-
-    const newTabs = [...tabs];
-    const [moved] = newTabs.splice(fromIndex, 1);
-    newTabs.splice(targetIndex, 0, moved);
-
-    setTabs(newTabs);
-  };
-  const handleDragEnd = () => {
-    const newTabOrder = tabs
-      .map((tab) => tab.id)
-      .filter((tabId) => tabId !== "all");
-    updateGroupSequence({ sequence: newTabOrder });
-  };
-
-  const handleDragStart = (
-    e: React.DragEvent<HTMLDivElement>,
-    index: number,
-  ) => {
-    dragItemIndex.current = index;
-
-    const img = new Image();
-    img.src = "";
-    e.dataTransfer.setDragImage(img, 0, 0);
-  };
-
   const projects =
     projectlistdata?.data?.map((project: CompanyProjectDataProps) => ({
-      id: project.projectId || "",
-      name: project.projectName || "",
-      description: project.projectDescription || "",
-      assignees:
+      projectId: project.projectId || "",
+      projectName: project.projectName || "",
+      projectDescription: project.projectDescription || "",
+      employeeIds:
         project.ProjectEmployees?.map((emp: Employee) => emp.employeeName) ||
         [],
-      deadline: project.projectDeadline
+      subParameterIds: [],
+      projectDeadline: project.projectDeadline
         ? new Date(project.projectDeadline).toLocaleDateString("en-GB")
         : "No deadline",
-      status: project.projectStatus ? String(project.projectStatus) : "",
+      projectStatusId: project.projectStatus
+        ? String(project.projectStatus)
+        : "",
       color: project.color || "#000000",
     })) || [];
+
   const openDialogForAdd = () => {
     setEditingTab(null);
     setNewTabName("");
@@ -182,46 +128,40 @@ export default function useProjectTabs() {
   const confirmAddOrEditTab = async () => {
     if (!newTabName.trim()) return;
 
-    try {
-      if (editingTab) {
-        const payload = {
-          groupId: editingTab.id,
-          groupName: newTabName,
-          groupType: "PROJECT",
-        };
+    if (editingTab) {
+      const payload = {
+        groupId: editingTab.id,
+        groupName: newTabName,
+        groupType: "PROJECT",
+      };
 
-        const res = await addUpdateGroup(payload);
+      const res = await addUpdateGroup(payload);
 
-        const updatedTabs = tabs.map((tab) =>
-          tab.id === editingTab.id
-            ? { ...tab, label: res.data.groupName }
-            : tab,
-        );
-        setTabs(updatedTabs);
+      const updatedTabs = tabs.map((tab) =>
+        tab.id === editingTab.id ? { ...tab, label: res.data.groupName } : tab,
+      );
+      setTabs(updatedTabs);
 
-        if (activeTab === editingTab.id) {
-          setFilters({ selected: res.data.groupName });
-        }
-      } else {
-        const payload = {
-          groupName: newTabName,
-          groupType: "PROJECT",
-        };
-
-        const res = await addUpdateGroup(payload);
-
-        const newTab = { id: res.data.groupId, label: res.data.groupName };
-        setTabs([...tabs, newTab]);
-        setActiveTab(res.data.groupId);
+      if (activeTab === editingTab.id) {
         setFilters({ selected: res.data.groupName });
       }
+    } else {
+      const payload = {
+        groupName: newTabName,
+        groupType: "PROJECT",
+      };
 
-      setNewTabName("");
-      setEditingTab(null);
-      setIsDialogOpen(false);
-    } catch (error) {
-      console.error("Error in add/update group", error);
+      const res = await addUpdateGroup(payload);
+
+      const newTab = { id: res.data.groupId, label: res.data.groupName };
+      setTabs([...tabs, newTab]);
+      setActiveTab(res.data.groupId);
+      setFilters({ selected: res.data.groupName });
     }
+
+    setNewTabName("");
+    setEditingTab(null);
+    setIsDialogOpen(false);
   };
 
   const openAddProjectDrawer = (tab: TabItem) => {
@@ -244,12 +184,8 @@ export default function useProjectTabs() {
     startPress,
     cancelPress,
     handleTabChange,
-    handleOrderUpdate,
-    handleDragStart,
-    handleDragEnd,
     setIsDialogOpen,
     setNewTabName,
-    dragItemIndex,
     projects,
     editingTab,
     openDialogForAdd,
@@ -260,5 +196,8 @@ export default function useProjectTabs() {
     currentTabForProject,
     isDrawerOpen,
     setLongPressTab,
+    updateGroupSequence,
+    isPending,
+    isLoadingProject,
   };
 }

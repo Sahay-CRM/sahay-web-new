@@ -7,7 +7,7 @@ import Urls from "@/features/utils/urls.utils";
 import { queryClient } from "@/queryClient";
 
 interface GroupSequenceProps {
-  sequence: string[];
+  groupSequenceArray: string[];
 }
 
 export default function useUpdateGroupSequence() {
