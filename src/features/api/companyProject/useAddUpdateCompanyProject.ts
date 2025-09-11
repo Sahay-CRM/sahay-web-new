@@ -30,7 +30,10 @@ export default function useAddUpdateCompanyProject() {
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["get-project-list-meeting"] });
-      queryClient.resetQueries({ queryKey: ["get-project-by-id"] });
+      queryClient.resetQueries({ queryKey: ["get-project-list-dropdown"] });
+      queryClient.resetQueries({
+        queryKey: ["get-project-by-id", res.data.projectId],
+      });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message || "Something went wrong");

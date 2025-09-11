@@ -289,7 +289,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
               <div className="flex justify-end items-center mt-2">
                 <button
                   onClick={handleAddNote}
-                  className="text-sm text-gray-600 cursor-pointer flex flex-col z-50"
+                  className="text-sm text-gray-600 cursor-pointer flex flex-col"
                 >
                   Done
                 </button>

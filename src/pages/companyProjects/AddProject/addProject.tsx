@@ -21,6 +21,12 @@ import {
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import PageNotAccess from "@/pages/PageNoAccess";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import { Button } from "@/components/ui/button";
+import RequestModal from "@/components/shared/Modal/RequestModal";
+
+interface SubParameterProps {
+  setIsReqModalOpen: (value: boolean) => void;
+}
 
 const ProjectInfo = () => {
   const {
@@ -351,13 +357,13 @@ const ProjectInfo = () => {
 //   );
 // };
 
-const SubParameter = () => {
+const SubParameter = ({ setIsReqModalOpen }: SubParameterProps) => {
   const {
     control,
     watch,
     formState: { errors },
   } = useFormContext();
-  const { isInitialLoad, hasInitializedData } = useAddProject(); // Get state from hook
+  const { isInitialLoad, hasInitializedData } = useAddProject();
 
   const coreParameterIdValue = watch("coreParameterId");
 
@@ -429,15 +435,25 @@ const SubParameter = () => {
           )}
         </div>
 
-        {canToggleColumns && (
-          <div className="ml-3">
-            <DropdownSearchMenu
-              columns={columnToggleOptions}
-              onToggleColumn={onToggleColumn}
-              columnIcon={true}
-            />
-          </div>
-        )}
+        <div>
+          {canToggleColumns && (
+            <div className="ml-3">
+              <DropdownSearchMenu
+                columns={columnToggleOptions}
+                onToggleColumn={onToggleColumn}
+                columnIcon={true}
+              />
+            </div>
+          )}
+          <Button
+            className="py-2 w-fit cursor-pointer"
+            onClick={() => {
+              setIsReqModalOpen(true);
+            }}
+          >
+            Request Business Function
+          </Button>
+        </div>
       </div>
       <Controller
         name="subParameterId"
@@ -580,7 +596,7 @@ const Employees = () => {
   );
 };
 
-const AddProject = () => {
+export default function AddProject() {
   const {
     onFinish,
     isModalOpen,
@@ -594,7 +610,11 @@ const AddProject = () => {
     projectApiData,
     permission,
     isCoreParameterSelected,
+    // isReqModalOpen,
+    // setIsReqModalOpen,
   } = useAddProject();
+
+  const [isReqModalOpen, setIsReqModalOpen] = useState(false);
 
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -625,7 +645,14 @@ const AddProject = () => {
 
   const steps = [
     <ProjectInfo key="projectInfo" />,
-    ...(isCoreParameterSelected ? [<SubParameter key="subParameter" />] : []),
+    ...(isCoreParameterSelected
+      ? [
+          <SubParameter
+            key="subParameter"
+            setIsReqModalOpen={setIsReqModalOpen}
+          />,
+        ]
+      : []),
     <Employees key="employees" />,
   ];
 
@@ -684,8 +711,14 @@ const AddProject = () => {
           />
         )}
       </div>
+      {/* {isReqModalOpen && ( */}
+      <RequestModal
+        type="SubParameter"
+        isModalOpen={isReqModalOpen}
+        modalClose={() => setIsReqModalOpen(false)}
+        modalTitle="Request Business Function"
+      />
+      {/* )} */}
     </FormProvider>
   );
-};
-
-export default AddProject;
+}

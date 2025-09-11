@@ -26,7 +26,10 @@ export default function useMeetingDesc() {
   const [openEmployeeId, setOpenEmployeeId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
 
-  const { data: meetingTiming } = useGetMeetingTiming(meetingId ?? "");
+  const { data: meetingData } = useGetMeetingTiming(meetingId ?? "");
+
+  const meetingTiming = meetingData?.data as CompanyMeetingDataProps;
+
   const { data: meetingNotes } = useGetMeetingNotes({
     filter: {
       meetingId: meetingTiming?.meetingId,
@@ -394,5 +397,6 @@ export default function useMeetingDesc() {
     handleDelete,
     handleAddEmp,
     handleDeleteEmp,
+    meetingData,
   };
 }

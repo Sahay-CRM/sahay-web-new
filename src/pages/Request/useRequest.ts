@@ -8,6 +8,8 @@ export default function useRequest() {
     pageSize: 25,
     search: "",
   });
+  const [isEditData, setIsEditData] = useState<CreateRequest | null>(null);
+  const [isModalOpen, setModalOpen] = useState(false);
 
   const { data: reqData, isLoading } = useGetRequest({
     filter: {
@@ -17,6 +19,16 @@ export default function useRequest() {
     enable: !!isDataFilter,
   });
 
+  const openModal = (data: CreateRequest) => {
+    setModalOpen(true);
+    setIsEditData(data);
+  };
+
+  const handleClose = () => {
+    setModalOpen(false);
+    setIsEditData(null);
+  };
+
   return {
     paginationFilter,
     reqData,
@@ -24,5 +36,10 @@ export default function useRequest() {
     isLoading,
     isDataFilter,
     setIsDataFilter,
+    // onDelete,
+    openModal,
+    isEditData,
+    isModalOpen,
+    handleClose,
   };
 }

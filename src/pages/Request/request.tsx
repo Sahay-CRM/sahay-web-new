@@ -14,6 +14,7 @@ import {
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import useRequest from "./useRequest";
 import FormSelect from "@/components/shared/Form/FormSelect";
+import RequestModal from "@/components/shared/Modal/RequestModal";
 
 export default function Request() {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -29,17 +30,23 @@ export default function Request() {
     isLoading,
     isDataFilter,
     setIsDataFilter,
+    // onDelete,
+    openModal,
+    isEditData,
+    isModalOpen,
+    handleClose,
   } = useRequest();
 
-  // Column visibility state
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
-    { key: "requestType", label: "Request Type", visible: true },
+    { key: "requestType", label: "Type", visible: true },
+    { key: "requestType", label: "Title", visible: true },
     { key: "requesterNote", label: "Request Notes", visible: true },
-    { key: "requestStatus", label: "Request Status", visible: true },
+    { key: "requestStatus", label: "Status", visible: true },
     { key: "reviewerNote", label: "Review Notes", visible: true },
+    { key: "reviewerName", label: "Reviewer Name", visible: true },
   ]);
-  // Filter visible columns
+
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
       if (col.visible) acc[col.key] = col.label;
@@ -48,7 +55,6 @@ export default function Request() {
     {} as Record<string, string>,
   );
 
-  // Toggle column visibility
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
@@ -148,18 +154,28 @@ export default function Request() {
             }))}
             columns={visibleColumns}
             primaryKey="changeRequestId"
-            // onEdit={openModal}
+            onEdit={openModal}
             // onDelete={onDelete}
             paginationDetails={mapPaginationDetails(reqData)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
             moduleKey="PRODUCT"
             showIndexColumn={false}
-            showActionsColumn={false}
+            // showActionsColumn={false}
+            isEditDeleteShow={true}
             permissionKey="users"
             sortableColumns={["productName", "brandName"]}
           />
         </div>
+        {isModalOpen && (
+          <RequestModal
+            type={isEditData?.requestType || ""}
+            isModalOpen={isModalOpen}
+            modalClose={handleClose}
+            modalTitle="Request KPI"
+            defaultData={isEditData}
+          />
+        )}
       </div>
     </FormProvider>
   );

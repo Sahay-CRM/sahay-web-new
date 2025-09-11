@@ -72,6 +72,7 @@ export default function MeetingDesc() {
     handleDelete,
     handleAddEmp,
     handleDeleteEmp,
+    meetingData,
   } = useMeetingDesc();
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -98,6 +99,10 @@ export default function MeetingDesc() {
         .length,
     [meetingTiming?.joiners],
   );
+
+  if (meetingData?.status === 401) {
+    return <div>You are Not Authorized</div>;
+  }
 
   return (
     <div className="flex w-full h-full bg-gray-200 overflow-hidden">

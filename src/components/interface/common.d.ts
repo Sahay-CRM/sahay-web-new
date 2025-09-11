@@ -220,6 +220,7 @@ interface IProjectFormData {
   detailMeetingProjectId?: string;
   objectiveProjectId?: string;
   issueProjectId?: string;
+  color?: string;
 }
 
 //
@@ -271,33 +272,6 @@ interface ImportantDatesDataProps {
   color?: string;
   textColor?: string;
   eventType?: string;
-}
-
-interface CompanyMeetingDataProps {
-  meetingId?: string;
-  meetingName?: string;
-  meetingDescription?: string;
-  meetingDateTime?: string;
-  meetingTypeId?: string;
-  parentType?: string;
-  meetingStatusId?: string;
-  companyMeetingId?: string;
-  joiners?: string[] | Joiners[];
-  meetingStatus?: CompanyMeetingStatusDataProps;
-  meetingType?: CompanyMeetingTypeDataProps;
-  files?: [
-    {
-      fileId: string;
-      fileName: string;
-    },
-  ];
-  teamLeaders?: string[];
-  employeeId?: string;
-  attendanceMark?: boolean;
-  detailMeetingStatus?: string;
-  isDetailMeeting?: boolean;
-  meetingTimePlanned?: string;
-  selectDate?: Date | string;
 }
 
 interface Joiners {
@@ -364,7 +338,32 @@ interface CompanyProjectDataProps {
   detailMeetingProjectId?: string;
   meetingNoteId?: string;
   ioType?: string;
+  color?: string;
 }
+
+// interface CompanyMeetingDataProps {
+//   meetingId?: string;
+//   meetingName?: string;
+//   meetingDescription?: string;
+//   meetingDateTime?: string;
+//   meetingTypeId?: string;
+//   parentType?: string;
+//   meetingStatusId?: string;
+//   companyMeetingId?: string;
+//   joiners?: string[] | Joiners[];
+//   meetingStatus?: CompanyMeetingStatusDataProps;
+//   meetingType?: CompanyMeetingTypeDataProps;
+//   files?: [
+//     {
+//       fileId: string;
+//       fileName: string;
+//     },
+//   ];
+//   teamLeaders?: string[];
+//   employeeId?: string;
+//   attendanceMark?: boolean;
+//   detailMeetingStatus?: string;
+// }
 
 interface CompanyMeetingDataProps {
   meetingId?: string;
@@ -388,6 +387,9 @@ interface CompanyMeetingDataProps {
   employeeId?: string;
   attendanceMark?: boolean;
   detailMeetingStatus?: string;
+  isDetailMeeting?: boolean;
+  meetingTimePlanned?: string;
+  selectDate?: Date | string;
 }
 
 interface ProjectParameters {
@@ -1333,4 +1335,24 @@ interface RepeatMeetingNotesRes {
   createdAt?: string;
   noteType?: string;
   employeeName?: string;
+}
+
+interface GroupData {
+  srNo?: number;
+  groupId: string;
+  groupName: string;
+  sequence: number;
+  groupType: string;
+  selectedIds?: string[];
+}
+interface GroupInput {
+  groupId?: string;
+  groupName: string;
+  groupType: string;
+}
+
+interface TabItem {
+  id: string;
+  label: string;
+  color?: string;
 }

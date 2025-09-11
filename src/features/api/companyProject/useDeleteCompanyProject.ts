@@ -19,7 +19,7 @@ export default function useDeleteCompanyProject() {
     },
     onSuccess: (response) => {
       toast.success(response?.message);
-      queryClient.resetQueries({ queryKey: ["get-project-by-id"] });
+      queryClient.resetQueries({ queryKey: ["get-project-list-dropdown"] });
       queryClient.resetQueries({ queryKey: ["get-project-list"] });
     },
   });

@@ -306,6 +306,16 @@ const Urls = {
   modifyRequest: (id: string) =>
     `${baseUrl}/company/change-request/modify/${id}`,
   getRequest: () => `${baseUrl}/company/change-request/get`,
+  deleteRequest: (id: string) =>
+    `${baseUrl}/company/change-request/delete/${id}`,
+
+  addGroup: () => `${baseUrl}/company/group/create`,
+  getGroupList: () => `${baseUrl}/company/group/get-all`,
+  updateGroup: (id: string) => `${baseUrl}/company/group/update/${id}`,
+  deleteGroup: (id: string) => `${baseUrl}/company/group/delete/${id}`,
+  removeProjectFromGroup: () => `${baseUrl}/company/project/remove-from-group`,
+  addProjectToGroup: () => `${baseUrl}/company/project/add-to-group`,
+  updateGroupSequence: () => `${baseUrl}/company/project/add-to-group`,
 };
 
 export default Urls;

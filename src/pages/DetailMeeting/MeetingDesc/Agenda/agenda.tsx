@@ -329,7 +329,6 @@ export default function Agenda({
         issueInput={issueInput}
         setIssueInput={setIssueInput}
         setDropdownVisible={setDropdownVisible}
-        handleAddIssue={handleAddIssue}
         dropdownVisible={dropdownVisible}
         filteredIssues={filteredIssues}
         searchOptions={searchOptions}

@@ -15,6 +15,7 @@ export default function useGetRequest({ filter, enable }: FilterDataProps) {
 
       return resData;
     },
+    staleTime: 0,
     enabled: !!enable || !!filter,
   });
 
