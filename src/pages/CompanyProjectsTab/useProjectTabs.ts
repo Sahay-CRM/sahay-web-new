@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import {
   useGetAllGroup,
-  useGetCompanyProjectAll,
   deleteGroupMutation,
   groupMutation,
   groupSequenceMutation,
+  useGetCompanyProject,
 } from "@/features/api/companyProject";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useSelector } from "react-redux";
@@ -49,7 +49,10 @@ export default function useProjectTabs() {
   const { mutateAsync: addUpdateGroup } = groupMutation();
   const { mutate: deleteGroup } = deleteGroupMutation();
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-    search: "",
+    currentPage: 1,
+    pageSize: 25,
+    totalPage: 1,
+    totalCount: 0,
   });
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -70,7 +73,7 @@ export default function useProjectTabs() {
     data: projectlistdata,
     isPending: isLoadingProject,
     refetch,
-  } = useGetCompanyProjectAll({
+  } = useGetCompanyProject({
     filter: { groupId: filters.selected, ...paginationFilter },
     enable: true,
   });
@@ -233,5 +236,6 @@ export default function useProjectTabs() {
     permission,
     handleCardClick,
     setIsViewModalOpen,
+    projectlistdata,
   };
 }

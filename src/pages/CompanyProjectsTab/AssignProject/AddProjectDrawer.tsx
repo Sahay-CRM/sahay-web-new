@@ -11,9 +11,6 @@ import {
   addProjectToGroupMutation,
   removeProjectGroupMutation,
 } from "@/features/api/companyProject";
-
-// import your APIs
-
 interface TabItem {
   id: string;
   label: string;
@@ -76,21 +73,15 @@ const AddProjectDrawer: FC<AddProjectDrawerProps> = ({
       (id) => !selectedProjectIds.includes(id),
     );
 
-    try {
-      if (toAdd.length > 0) {
-        await addProjectToGroup({ groupId: tab.id, projectIds: toAdd });
-      }
-      if (toRemove.length > 0) {
-        await removeProjectFromGroup({ groupId: tab.id, projectIds: toRemove });
-      }
-
-      // optionally update the tab.selectedIds to reflect new state
-      tab.selectedIds = selectedProjectIds;
-
-      onClose();
-    } catch (err) {
-      console.error("Error updating projects:", err);
+    if (toAdd.length > 0) {
+      addProjectToGroup({ groupId: tab.id, projectIds: toAdd });
     }
+    if (toRemove.length > 0) {
+      removeProjectFromGroup({ groupId: tab.id, projectIds: toRemove });
+    }
+    tab.selectedIds = selectedProjectIds;
+
+    onClose();
   };
 
   return (
@@ -124,7 +115,7 @@ const AddProjectDrawer: FC<AddProjectDrawerProps> = ({
 
           <div className="flex flex-col mt-1 gap-2 flex-1 overflow-y-auto mb-4">
             {isLoading && (
-              <p className="text-sm text-gray-500">Loading projects...</p>
+              <p className="text-sm mt-5 text-gray-500">Loading projects...</p>
             )}
             {!isLoading && projects.length === 0 && (
               <p className="text-sm text-gray-500">No projects found.</p>
@@ -143,7 +134,9 @@ const AddProjectDrawer: FC<AddProjectDrawerProps> = ({
                         )}
                         onChange={() => toggleProject(project.projectId || "")}
                       />
-                      <span>{project.projectName}</span>
+                      <span className="flex-1 text-left break-words">
+                        {project.projectName}
+                      </span>
                     </label>
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs text-sm">
@@ -157,12 +150,7 @@ const AddProjectDrawer: FC<AddProjectDrawerProps> = ({
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button
-              onClick={handleSave}
-              disabled={selectedProjectIds.length === 0}
-            >
-              Save
-            </Button>
+            <Button onClick={handleSave}>Save</Button>
           </div>
         </div>
       </div>

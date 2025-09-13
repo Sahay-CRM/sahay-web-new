@@ -1363,7 +1363,7 @@ interface ProjectComment {
   employeeId: string;
   employeeName: string;
   comment: string;
-  commentDate: string;
+  createdAt: string;
 }
 
 interface CommentResponse {

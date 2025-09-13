@@ -13,7 +13,6 @@ export const loginToFirebase = async (firebaseToken: string) => {
 
   if (!newUid) throw new Error("UID not found in token");
 
-  console.log(firebaseToken);
   if (auth.currentUser) {
     await signInWithCustomToken(auth, firebaseToken);
   } else {
@@ -23,10 +22,8 @@ export const loginToFirebase = async (firebaseToken: string) => {
   return new Promise((resolve) => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log("✅ Logged in with UID:", user.uid);
         resolve(user.uid);
       } else {
-        console.log("❌ Not logged in");
         resolve(null);
       }
     });

@@ -15,6 +15,7 @@ import ViewMeetingModal from "./ViewProjectModal";
 import RearrangeTabsSheet from "./RearrangeTabsSheet";
 import SearchInput from "@/components/shared/SearchInput";
 import { Link } from "react-router-dom";
+import Pagination from "@/components/shared/Pagination/Pagination";
 
 export default function CompanyProjectTabList() {
   const {
@@ -52,6 +53,7 @@ export default function CompanyProjectTabList() {
     permission,
     handleCardClick,
     setIsViewModalOpen,
+    projectlistdata,
   } = useProjectTabs();
 
   const isLoading = isPending || isLoadingProject;
@@ -66,9 +68,7 @@ export default function CompanyProjectTabList() {
   return (
     <div className="w-full  h-[calc(100vh-90px)] flex flex-col">
       <div className="bg-white sticky top-0 z-30 p-4 space-y-3">
-        {/* Row 1: Search + Tabs + Buttons */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Search fixed left */}
           <div className="flex-shrink-0">
             <SearchInput
               className="w-60"
@@ -188,7 +188,7 @@ export default function CompanyProjectTabList() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 mb-25 p-1">
+      <div className="flex-1  p-4">
         {projects.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div
@@ -209,7 +209,7 @@ export default function CompanyProjectTabList() {
             {projects.map((project) => (
               <div
                 key={project.projectId}
-                className="w-full sm:w-[48%] md:w-[45%] lg:w-[45%] max-w-[360px]"
+                className="w-full cursor-pointer sm:w-[48%] md:w-[45%] lg:w-[45%] max-w-[360px]"
                 onClick={() => handleCardClick(project)}
               >
                 <ProjectCard
@@ -226,7 +226,15 @@ export default function CompanyProjectTabList() {
         )}
       </div>
 
-      {/* Modals */}
+      {/* Sticky Pagination */}
+      {projectlistdata && projectlistdata.data?.length > 0 && (
+        <div className="sticky bottom-0 bg-white z-10  py-1">
+          <Pagination
+            paginationDetails={projectlistdata as PaginationFilter}
+            setPaginationFilter={setPaginationFilter}
+          />
+        </div>
+      )}
       <ViewMeetingModal
         isModalOpen={isViewModalOpen}
         modalData={viewModalData}

@@ -25,7 +25,12 @@ export default function useAddProjectToGroup() {
     onSuccess: (res) => {
       toast.success(res.message || "Projects added to group");
       queryClient.resetQueries({ queryKey: ["get-group-list"] });
-      queryClient.resetQueries({ queryKey: ["get-group-by-id"] });
+      queryClient.resetQueries({
+        queryKey: ["get-group-by-id", res.data.groupId],
+      });
+      queryClient.resetQueries({
+        queryKey: ["get-project-list-meeting", "get-project-list"],
+      });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message || "Failed to add projects");
