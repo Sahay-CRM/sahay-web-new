@@ -148,6 +148,10 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
             employeeIds.includes(emp.employeeId),
           ) ?? [],
       });
+    } else {
+      reset({
+        isActive: "active",
+      });
     }
   }, [
     taskDataById,

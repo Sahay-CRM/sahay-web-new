@@ -1,6 +1,7 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { get, getDatabase, off, onValue, ref, update } from "firebase/database";
+import { get, off, onValue, ref, update } from "firebase/database";
+import { database } from "@/firebaseConfig";
 
 import { addUpdateIssues } from "@/features/api/Issues";
 import { addUpdateObjective } from "@/features/api/Objective";
@@ -43,7 +44,7 @@ export const useAgenda = ({
   joiners,
 }: UseAgendaProps) => {
   const dispatch = useDispatch();
-  const db = getDatabase();
+  const db = database;
   const meetStateRef = ref(db, `meetings/${meetingId}/state`);
   const sidebarControl = useContext(SidebarControlContext);
   const userId = useSelector(getUserId);
@@ -488,7 +489,7 @@ export const useAgenda = ({
           setIssueInput("");
           return;
         } else {
-          const db = getDatabase();
+          const db = database;
           const meetRef = ref(db, `meetings/${meetingId}/state`);
           update(meetRef, { updatedAt: new Date() });
           setModalOpen(false);
@@ -616,7 +617,7 @@ export const useAgenda = ({
   const handleConclusionMeeting = async () => {
     if (!meetingId) return;
 
-    const db = getDatabase();
+    const db = database;
     const now = Date.now();
     const elapsedSeconds =
       (now - Number(meetingResponse?.state.lastSwitchTimestamp)) / 1000;
@@ -691,7 +692,7 @@ export const useAgenda = ({
       now - Number(meetingResponse?.state.lastSwitchTimestamp);
 
     if (meetingId) {
-      const db = getDatabase();
+      const db = database;
       const meetStateRef = ref(db, `meetings/${meetingId}/state`);
       const meetAgendaRef = ref(db, `meetings/${meetingId}/timers/agenda`);
 
@@ -741,7 +742,7 @@ export const useAgenda = ({
   };
 
   useEffect(() => {
-    const db = getDatabase();
+    const db = database;
     const meetingRef = ref(
       db,
       `meetings/${meetingId}/timers/objectives/${isSelectedAgenda}`,
@@ -763,7 +764,7 @@ export const useAgenda = ({
     const ioId = meetingResponse?.state.currentAgendaItemId;
     if (!issueObjectiveId || !meetingId) return;
 
-    const db = getDatabase();
+    const db = database;
     const now = Date.now();
 
     const meetingRef = ref(db, `meetings/${meetingId}`);
@@ -809,7 +810,7 @@ export const useAgenda = ({
 
   const tasksFireBase = () => {
     if (meetingResponse?.state.status === "DISCUSSION" && isSelectedAgenda) {
-      const db = getDatabase();
+      const db = database;
       const meetTaskRef = ref(
         db,
         `meetings/${meetingId}/timers/objectives/${isSelectedAgenda}/tasks`,
@@ -822,7 +823,7 @@ export const useAgenda = ({
 
   const projectsFireBase = () => {
     if (meetingResponse?.state.status === "DISCUSSION" && isSelectedAgenda) {
-      const db = getDatabase();
+      const db = database;
       const meetTaskRef = ref(
         db,
         `meetings/${meetingId}/timers/objectives/${isSelectedAgenda}/projects`,
@@ -835,7 +836,7 @@ export const useAgenda = ({
 
   const kpisFireBase = () => {
     if (meetingResponse?.state.status === "DISCUSSION" && isSelectedAgenda) {
-      const db = getDatabase();
+      const db = database;
       const meetTaskRef = ref(
         db,
         `meetings/${meetingId}/timers/objectives/${isSelectedAgenda}/kpis`,
@@ -920,7 +921,7 @@ export const useAgenda = ({
                   queryKey: ["get-meeting-details-timing"],
                 });
               } else {
-                const db = getDatabase();
+                const db = database;
                 const meetRef = ref(db, `meetings/${meetingId}/state`);
                 update(meetRef, { updatedAt: Date.now() });
               }
@@ -962,7 +963,7 @@ export const useAgenda = ({
               });
               return;
             } else {
-              const db = getDatabase();
+              const db = database;
               const meetRef = ref(db, `meetings/${meetingId}/state`);
               update(meetRef, { updatedAt: Date.now() });
             }
@@ -977,7 +978,7 @@ export const useAgenda = ({
   };
 
   const handleMarkAsSolved = async (data: MeetingAgenda) => {
-    const db = getDatabase();
+    const db = database;
 
     const meetingRef = ref(db, `meetings/${meetingId}`);
     const meetingSnapshot = await get(meetingRef);
@@ -1030,7 +1031,7 @@ export const useAgenda = ({
   };
 
   const handleAgendaTabFilter = async (data: string) => {
-    const db = getDatabase();
+    const db = database;
 
     const meetingRef = ref(db, `meetings/${meetingId}`);
     const meetingSnapshot = await get(meetingRef);
@@ -1047,7 +1048,7 @@ export const useAgenda = ({
   };
 
   useEffect(() => {
-    const db = getDatabase();
+    const db = database;
     const meetingRef = ref(db, `meetings/${meetingId}/state/agendaActiveTab`);
 
     onValue(meetingRef, (snapshot) => {

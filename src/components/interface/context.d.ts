@@ -15,6 +15,7 @@ interface AuthState {
   kpiData?: KpiData;
   userId?: string;
   fireBaseToken?: string | null;
+  fbToken?: string;
 }
 
 interface CustomError {

@@ -11,10 +11,10 @@ import {
 import useProjectTabs from "./useProjectTabs";
 import { Button } from "@/components/ui/button";
 import AddProjectDrawer from "./AssignProject/AddProjectDrawer";
-import { useState } from "react";
 import ViewMeetingModal from "./ViewProjectModal";
 import RearrangeTabsSheet from "./RearrangeTabsSheet";
 import SearchInput from "@/components/shared/SearchInput";
+import { Link } from "react-router-dom";
 
 export default function CompanyProjectTabList() {
   const {
@@ -45,18 +45,15 @@ export default function CompanyProjectTabList() {
     updateGroupSequence,
     paginationFilter,
     setPaginationFilter,
+    isViewModalOpen,
+    viewModalData,
+    setIsRearrangeOpen,
+    isRearrangeOpen,
+    permission,
+    handleCardClick,
+    setIsViewModalOpen,
   } = useProjectTabs();
 
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [viewModalData, setViewModalData] = useState<IProjectFormData>(
-    {} as IProjectFormData,
-  );
-  const [isRearrangeOpen, setIsRearrangeOpen] = useState<TabItem | null>(null);
-
-  const handleCardClick = (project: IProjectFormData) => {
-    setViewModalData(project);
-    setIsViewModalOpen(true);
-  };
   const isLoading = isPending || isLoadingProject;
 
   if (isLoading) {
@@ -67,100 +64,112 @@ export default function CompanyProjectTabList() {
     );
   }
   return (
-    <div className="w-full h-screen flex flex-col">
-      <div className="bg-white sticky top-0 z-50 p-4 space-y-3">
-        {/* Row 1: Tabs */}
-        <div className="flex flex-wrap justify-end items-center gap-2">
-          {tabs.map((tab) => (
-            <div
-              key={tab.id}
-              draggable={tab.id !== "all"}
-              className="relative"
-              onMouseDown={() => startPress(tab)}
-              onMouseUp={cancelPress}
-              onMouseLeave={cancelPress}
-              onTouchStart={() => startPress(tab)}
-              onTouchEnd={cancelPress}
-            >
-              <input
-                type="radio"
-                name="tabset"
-                id={tab.id}
-                checked={activeTab === tab.id}
-                onChange={() => handleTabChange(tab)}
-                className="absolute left-[-200vw]"
-              />
-              <label
-                htmlFor={tab.id}
-                className={`px-3 py-1 cursor-pointer rounded-full font-semibold transition text-sm
-            ${
-              activeTab === tab.id
-                ? "bg-primary text-white"
-                : "text-black bg-white border border-gray-300"
-            }`}
+    <div className="w-full  h-[calc(100vh-90px)] flex flex-col">
+      <div className="bg-white sticky top-0 z-30 p-4 space-y-3">
+        {/* Row 1: Search + Tabs + Buttons */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Search fixed left */}
+          <div className="flex-shrink-0">
+            <SearchInput
+              className="w-60"
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+            />
+          </div>
+
+          {/* Tabs + Buttons (wrap together) */}
+          <div className="flex flex-wrap items-center gap-2 flex-1 justify-end">
+            {tabs.map((tab) => (
+              <div
+                key={tab.id}
+                draggable={tab.id !== "all"}
+                className="relative"
+                onMouseDown={() => startPress(tab)}
+                onMouseUp={cancelPress}
+                onMouseLeave={cancelPress}
+                onTouchStart={() => startPress(tab)}
+                onTouchEnd={cancelPress}
               >
-                {tab.label}
-              </label>
-
-              {longPressTab?.id === tab.id && (
-                <div
-                  ref={dropdownRef}
-                  className="absolute text-sm top-full right-0 mt-1 w-45 border bg-white shadow-lg rounded-md z-50"
+                <input
+                  type="radio"
+                  name="tabset"
+                  id={tab.id}
+                  checked={activeTab === tab.id}
+                  onChange={() => handleTabChange(tab)}
+                  className="absolute left-[-200vw]"
+                />
+                <label
+                  htmlFor={tab.id}
+                  className={`px-3 py-1 cursor-pointer rounded-full font-semibold transition text-sm
+              ${
+                activeTab === tab.id
+                  ? "bg-primary text-white"
+                  : "text-black bg-white border border-gray-300"
+              }`}
                 >
-                  <button
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                    onClick={() => {
-                      openDialogForEdit(tab);
-                      setLongPressTab(null);
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                    onClick={() => deleteTab(tab.id)}
-                  >
-                    Delete
-                  </button>
-                  <button
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                    onClick={() => {
-                      openAddProjectDrawer(tab);
-                      setLongPressTab(null);
-                    }}
-                  >
-                    Manage Project
-                  </button>
-                  <button
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                    onClick={() => {
-                      setIsRearrangeOpen(tab);
-                      setLongPressTab(null);
-                    }}
-                  >
-                    Manage Sequence
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+                  {tab.label}
+                </label>
 
-          {/* Add Tab Button */}
-          <button
-            onClick={openDialogForAdd}
-            className="p-2 bg-primary text-white rounded-full flex items-center"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
-        </div>
+                {longPressTab?.id === tab.id && (
+                  <div
+                    ref={dropdownRef}
+                    className="absolute text-sm top-full right-0 mt-2 w-45 border bg-white shadow-lg rounded-md z-50"
+                  >
+                    <button
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      onClick={() => {
+                        openDialogForEdit(tab);
+                        setLongPressTab(null);
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      onClick={() => deleteTab(tab.id)}
+                    >
+                      Delete
+                    </button>
+                    <button
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      onClick={() => {
+                        openAddProjectDrawer(tab);
+                        setLongPressTab(null);
+                      }}
+                    >
+                      Manage Project
+                    </button>
+                    <button
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      onClick={() => {
+                        setIsRearrangeOpen(tab);
+                        setLongPressTab(null);
+                      }}
+                    >
+                      Manage Sequence
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
 
-        {/* Row 2: Search Input */}
-        <div className="flex justify-end">
-          <SearchInput
-            placeholder="Search..."
-            searchValue={paginationFilter?.search || ""}
-            setPaginationFilter={setPaginationFilter}
-          />
+            {/* Add Tab Button */}
+            <button
+              onClick={openDialogForAdd}
+              className="p-2 bg-primary text-white rounded-full flex items-center"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+
+            {permission.Add && (
+              <Link to="/dashboard/projects/add">
+                <Button size="sm" className="py-2 w-fit">
+                  Add Company Project
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Rearrange Tabs Sheet */}
@@ -179,25 +188,42 @@ export default function CompanyProjectTabList() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1  p-4">
-        <div className="flex flex-wrap justify-center sm:justify-start gap-4 sm:gap-6 mb-4 px-1">
-          {projects.map((project) => (
+      <div className="flex-1 mb-25 p-1">
+        {projects.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
             <div
-              key={project.projectId}
-              className="w-full sm:w-[48%] md:w-[45%] lg:w-[45%] max-w-[360px]"
-              onClick={() => handleCardClick(project)}
+              onClick={() => {
+                const currentTab = tabs.find(
+                  (t) => t.id === activeTab,
+                ) as TabItem;
+                openAddProjectDrawer(currentTab);
+              }}
+              className="w-full max-w-[360px] border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center p-10 cursor-pointer hover:border-blue-400 hover:text-primary transition"
             >
-              <ProjectCard
-                name={project.projectName}
-                description={project.projectDescription}
-                assignees={project.employeeIds}
-                endDate={project.projectDeadline}
-                priority={project.projectStatusId}
-                color={project.color}
-              />
+              <span className="text-4xl font-bold">+</span>
+              <span className="mt-2 text-sm text-gray-500">Add Project</span>
             </div>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap justify-center sm:justify-start gap-4 sm:gap-6 mb-4 px-1">
+            {projects.map((project) => (
+              <div
+                key={project.projectId}
+                className="w-full sm:w-[48%] md:w-[45%] lg:w-[45%] max-w-[360px]"
+                onClick={() => handleCardClick(project)}
+              >
+                <ProjectCard
+                  name={project.projectName}
+                  description={project.projectDescription}
+                  assignees={project.employeeIds}
+                  endDate={project.projectDeadline}
+                  priority={project.projectStatusId}
+                  color={project.color}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Modals */}

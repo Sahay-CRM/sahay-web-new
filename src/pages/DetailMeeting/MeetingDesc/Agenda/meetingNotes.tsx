@@ -23,10 +23,11 @@ import {
   deleteCompanyMeetingMutation,
   useGetMeetingNotes,
 } from "@/features/api/detailMeeting";
-import { get, getDatabase, ref, update } from "firebase/database";
+import { get, ref, update } from "firebase/database";
 import { queryClient } from "@/queryClient";
 import { useSelector } from "react-redux";
 import { getUserId } from "@/features/selectors/auth.selector";
+import { database } from "@/firebaseConfig";
 
 interface MeetingNotesProps {
   joiners: Joiners[];
@@ -66,7 +67,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingNoteText, setEditingNoteText] = useState("");
 
-  const db = getDatabase();
+  const db = database;
 
   const meetingRef = ref(db, `meetings/${meetingId}`);
 

@@ -316,6 +316,14 @@ const Urls = {
   removeProjectFromGroup: () => `${baseUrl}/company/project/remove-from-group`,
   addProjectToGroup: () => `${baseUrl}/company/project/add-to-group`,
   updateGroupSequence: () => `${baseUrl}/company/group/rearrange`,
+
+  getProjectComments: (id: string) =>
+    `${baseUrl}/company/project/comment/get/${id}`,
+  addProjectComment: () => `${baseUrl}/company/project/comment/add`,
+  updateProjectComment: (id: string) =>
+    `${baseUrl}/company/project/comment/update/${id}`,
+  deleteProjectComment: (id: string) =>
+    `${baseUrl}/company/project/comment/delete/${id}`,
 };
 
 export default Urls;

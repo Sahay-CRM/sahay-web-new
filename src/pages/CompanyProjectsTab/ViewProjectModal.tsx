@@ -8,6 +8,7 @@ interface ViewMeetingModalProps {
   isModalOpen: boolean;
   modalClose: () => void;
 }
+
 const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
   modalData,
   isModalOpen,
@@ -16,7 +17,6 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
   const navigate = useNavigate();
   const permission = useSelector(getUserPermission).PROJECT_LIST;
 
-  // Edit handler
   const handleEdit = () => {
     if (modalData?.projectId) {
       navigate(`/dashboard/projects/edit/${modalData.projectId}`);
@@ -28,6 +28,17 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
       navigate(`/dashboard/projects/view/${modalData.projectId}`);
     }
   };
+
+  // Prepare comma-separated project parameters
+  const projectParameters = modalData?.ProjectSubParameterJunction?.map(
+    (item) =>
+      `${item.subPara?.coreParameter?.coreParameterName} | ${item.subPara?.subParameterName}`,
+  ).join(", ");
+
+  // Prepare comma-separated employees
+  const projectEmployees = modalData?.ProjectEmployees
+    ? modalData.ProjectEmployees.map((emp) => emp.employeeName).join(", ")
+    : modalData?.employeeIds?.join(", ");
 
   return (
     <ModalData
@@ -49,7 +60,6 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
               },
             ]
           : []),
-
         {
           btnText: "View",
           buttonCss: "py-1.5 px-5",
@@ -58,12 +68,15 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
       ]}
     >
       <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-700">
+        {/* Project Name */}
         {modalData?.projectName && (
           <div>
             <span className="font-medium text-primary">Project Name: </span>
             {modalData.projectName}
           </div>
         )}
+
+        {/* Project Description */}
         {modalData?.projectDescription && (
           <div>
             <span className="font-medium text-primary">
@@ -72,12 +85,16 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
             {modalData.projectDescription}
           </div>
         )}
+
+        {/* Project Deadline */}
         {modalData?.projectDeadline && (
           <div>
             <span className="font-medium text-primary">Project Deadline: </span>
             {modalData.projectDeadline}
           </div>
         )}
+
+        {/* Project Status */}
         {modalData?.projectStatusId && (
           <div>
             <span className="font-medium text-primary">Project Status: </span>
@@ -87,40 +104,23 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
           </div>
         )}
 
-        {(modalData?.ProjectEmployees?.length ??
-          modalData?.employeeIds?.length ??
-          0) > 0 && (
+        {/* Project Employees */}
+        {projectEmployees && (
           <div className="col-span-2">
             <span className="font-medium text-primary">
               Project Employees:{" "}
             </span>
-            <ul className="list-disc list-inside text-gray-700">
-              {modalData.ProjectEmployees
-                ? modalData.ProjectEmployees.map((emp) => (
-                    <li key={emp.employeeId}>{emp.employeeName}</li>
-                  ))
-                : modalData.employeeIds?.map((emp, idx) => (
-                    <li key={idx}>{emp}</li>
-                  ))}
-            </ul>
+            <span className="text-gray-700">{projectEmployees}</span>
           </div>
         )}
 
-        {(modalData?.ProjectSubParameterJunction?.length ?? 0) > 0 && (
+        {/* Project Parameters */}
+        {projectParameters && (
           <div className="col-span-2">
             <span className="font-medium text-primary">
               Project Parameters:{" "}
             </span>
-            <ul className="list-disc list-inside text-gray-700">
-              {modalData.ProjectSubParameterJunction?.map((item) => (
-                <li key={item.projectSubParameterId}>
-                  <span className="font-medium">Business Function:</span>{" "}
-                  {item.subPara?.coreParameter?.coreParameterName} |{" "}
-                  <span className="font-medium">Key Result Area:</span>{" "}
-                  {item.subPara?.subParameterName}
-                </li>
-              ))}
-            </ul>
+            <span className="text-gray-700">{projectParameters}</span>
           </div>
         )}
       </div>

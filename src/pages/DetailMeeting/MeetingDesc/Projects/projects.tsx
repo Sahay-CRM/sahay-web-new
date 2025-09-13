@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import { useParams } from "react-router-dom";
-import { getDatabase, off, onValue, ref } from "firebase/database";
+import { off, onValue, ref } from "firebase/database";
 import { toast } from "sonner";
 import { queryClient } from "@/queryClient";
+import { database } from "@/firebaseConfig";
 
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
@@ -170,7 +171,7 @@ export default function Projects({
   );
 
   useEffect(() => {
-    const db = getDatabase();
+    const db = database;
     const meetingRef = ref(
       db,
       `meetings/${meetingId}/timers/objectives/${selectedIssueId}/projects`,

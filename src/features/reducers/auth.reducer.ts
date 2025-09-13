@@ -26,6 +26,7 @@ export const authSlice = createSlice({
       state.isLoading = action.payload.isLoading;
       state.userId = action.payload.userId;
       state.isAuthenticated = action.payload.isAuthenticated;
+      state.fbToken = action.payload.fbToken;
     },
     setUserId: (state, action: PayloadAction<string>) => {
       state.userId = action.payload;
@@ -41,6 +42,9 @@ export const authSlice = createSlice({
     },
     setFireBaseToken: (state, action: PayloadAction<string>) => {
       state.fireBaseToken = action.payload;
+    },
+    setFBToken: (state, action: PayloadAction<string>) => {
+      state.fbToken = action.payload;
     },
     logout: () => initialState,
   },

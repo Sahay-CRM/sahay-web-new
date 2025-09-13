@@ -11,7 +11,8 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { ArrowDown, ArrowUp, ArrowUpDown, RefreshCcw } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import clsx from "clsx";
-import { getDatabase, off, onValue, ref } from "firebase/database";
+import { off, onValue, ref } from "firebase/database";
+import { database } from "@/firebaseConfig";
 
 import {
   formatCompactNumber,
@@ -189,7 +190,7 @@ export default function KPITable({
   const [ioKPIId, setIoKPIId] = useState("");
 
   useEffect(() => {
-    const db = getDatabase();
+    const db = database;
     const meetingRef = ref(
       db,
       `meetings/${meetingId}/timers/objectives/${selectedIssueId}/kpis`,

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { get, getDatabase, off, onValue, ref, update } from "firebase/database";
+import { get, off, onValue, ref, update } from "firebase/database";
+import { database } from "@/firebaseConfig";
 
 // import { useAddUpdateCompanyMeeting } from "@/features/api/companyMeeting";
 import { queryClient } from "@/queryClient";
@@ -56,7 +57,7 @@ export default function useMeetingDesc() {
     ]);
   }, []);
 
-  const db = getDatabase();
+  const db = database;
 
   useEffect(() => {
     const meetingRef = ref(db, `meetings/${meetingId}`);
@@ -155,7 +156,7 @@ export default function useMeetingDesc() {
 
   const handleConclusionMeeting = () => {
     if (meetingId) {
-      const db = getDatabase();
+      const db = database;
       const meetStateRef = ref(db, `meetings/${meetingId}/state`);
 
       updateDetailMeeting(
@@ -229,7 +230,7 @@ export default function useMeetingDesc() {
   //       {
   //         onSuccess: () => {
   //           if (meetingId) {
-  //             const db = getDatabase();
+  //             const db = database;
   //             const meetRef = ref(db, `meetings/${meetingId}/state`);
   //             update(meetRef, { updatedAt: new Date() });
   //           }
@@ -261,7 +262,7 @@ export default function useMeetingDesc() {
         {
           onSuccess: () => {
             if (meetingId) {
-              const db = getDatabase();
+              const db = database;
               const meetRef = ref(db, `meetings/${meetingId}/state`);
               update(meetRef, { updatedAt: new Date() });
             }
@@ -347,7 +348,7 @@ export default function useMeetingDesc() {
   };
 
   useEffect(() => {
-    const db = getDatabase();
+    const db = database;
     const meetingRef = ref(db, `meetings/${meetingId}/state/updatedAt`);
 
     onValue(meetingRef, (snapshot) => {

@@ -17,6 +17,8 @@ import { getDepartmentList } from "@/features/api/department";
 import useGetDesignation from "@/features/api/designation/useGetDesignation";
 import { getEmployee } from "@/features/api/companyEmployee";
 import SearchInput from "@/components/shared/SearchInput";
+import DesignationAddFormModal from "@/pages/companyDesignation/designationFormModal/designationAddFormModal";
+import { Button } from "@/components/ui/button";
 
 const EmployeeStatus = () => {
   const {
@@ -209,6 +211,11 @@ const DepartmentSelect = () => {
 };
 
 const Designation = () => {
+  const [addDesignationModal, setAddDesignationModal] = useState(false);
+  const [modalData, setModalData] = useState<DesignationData>(
+    {} as DesignationData,
+  );
+
   const {
     control,
     watch,
@@ -249,6 +256,32 @@ const Designation = () => {
   };
   const canToggleColumns = columnToggleOptions.length > 3;
 
+  const closeDeleteModal = (): void => {
+    setModalData({
+      designationId: "",
+      designationName: "",
+      parentId: null,
+      companyId: "",
+      departmentId: "",
+      departmentName: "",
+      companyName: "",
+    });
+    setAddDesignationModal(false);
+  };
+
+  const handleAdd = () => {
+    setModalData({
+      designationId: "",
+      designationName: "",
+      parentId: null,
+      companyId: "",
+      departmentId: departmentId,
+      departmentName: "",
+      companyName: "",
+    });
+    setAddDesignationModal(true);
+  };
+
   return (
     <div>
       <div className="mt-1 mb-4 flex items-start justify-between">
@@ -261,6 +294,10 @@ const Designation = () => {
             setPaginationFilter={setPaginationFilter}
             className="w-80"
           />
+
+          <Button className="py-2 w-fit" onClick={handleAdd}>
+            Add Designation
+          </Button>
 
           {/* Inline, No-Wrap Error Message */}
           {formErrors?.designation && (
@@ -315,6 +352,14 @@ const Designation = () => {
           </>
         )}
       />
+
+      {addDesignationModal && (
+        <DesignationAddFormModal
+          isModalOpen={addDesignationModal}
+          modalClose={closeDeleteModal}
+          modalData={modalData}
+        />
+      )}
     </div>
   );
 };

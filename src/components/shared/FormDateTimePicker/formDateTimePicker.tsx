@@ -2,6 +2,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { CalendarIcon } from "lucide-react";
 import { FormLabel } from "@/components/ui/form";
+import { twMerge } from "tailwind-merge";
 
 interface Props {
   label: string;
@@ -9,9 +10,10 @@ interface Props {
   onChange: (date: Date | null) => void;
   error?: { message?: string };
   isMandatory?: boolean;
-  timeZone?: string; // Optional timezone prop
-  disableDaysFromToday?: number; // Number of days from today to disable (default: 0)
-  disablePastDates?: boolean; // Whether to disable past dates (default: true)
+  timeZone?: string;
+  disableDaysFromToday?: number;
+  disablePastDates?: boolean;
+  labelClass?: string;
 }
 
 export default function FormDateTimePicker({
@@ -22,6 +24,7 @@ export default function FormDateTimePicker({
   isMandatory,
   disableDaysFromToday = 0,
   disablePastDates = false,
+  labelClass,
 }: Props) {
   const dateValue = typeof value === "string" ? new Date(value) : value;
 
@@ -63,7 +66,7 @@ export default function FormDateTimePicker({
   return (
     <div className="w-full">
       {label && (
-        <FormLabel className="mb-4">
+        <FormLabel className={twMerge("mb-4", labelClass)}>
           {label}{" "}
           {isMandatory && <span className="text-red-500 text-[20px]">*</span>}
         </FormLabel>
@@ -75,7 +78,7 @@ export default function FormDateTimePicker({
           showTimeSelect
           dateFormat="dd/MM/yyyy h:mm aa"
           placeholderText="Select date and time"
-          className="border px-10 py-2 rounded-md w-full text-sm sm:text-base"
+          className="border px-10 py-1.5 rounded-md w-full text-sm sm:text-base"
           portalId="root"
           popperClassName="responsive-datepicker-popper"
           filterDate={filterDate}

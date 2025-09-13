@@ -1,8 +1,9 @@
 import { useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { getDatabase, ref, update } from "firebase/database";
+import { ref, update } from "firebase/database";
 import { useSelector } from "react-redux";
 import { queryClient } from "@/queryClient";
+import { database } from "@/firebaseConfig";
 
 import { getUserId } from "@/features/selectors/auth.selector";
 import { addUpdateCompanyMeetingMutation } from "@/features/api/companyMeeting";
@@ -42,7 +43,7 @@ export default function useMeetingUi({
 
   const tasksFireBase = () => {
     if (meetingStart) {
-      const db = getDatabase();
+      const db = database;
       const meetRef = ref(db, `meetings/${meetingId}/discussion/tasks`);
       update(meetRef, {
         updatedAt: Date.now(),
@@ -52,7 +53,7 @@ export default function useMeetingUi({
 
   const projectFireBase = () => {
     if (meetingStart) {
-      const db = getDatabase();
+      const db = database;
       const meetRef = ref(db, `meetings/${meetingId}/discussion/projects`);
       update(meetRef, {
         updatedAt: Date.now(),
@@ -61,7 +62,7 @@ export default function useMeetingUi({
   };
   const kpisFireBase = () => {
     if (meetingStart) {
-      const db = getDatabase();
+      const db = database;
       const meetRef = ref(db, `meetings/${meetingId}/discussion/kpis`);
       update(meetRef, {
         updatedAt: Date.now(),
@@ -71,7 +72,7 @@ export default function useMeetingUi({
 
   const conclusionFireBase = () => {
     if (meetingStart) {
-      const db = getDatabase();
+      const db = database;
       const meetRef = ref(db, `meetings/${meetingId}/conclusion`);
       update(meetRef, {
         updatedAt: Date.now(),
@@ -83,7 +84,7 @@ export default function useMeetingUi({
     async (tab: string) => {
       tab = tab.toLowerCase();
       if (meetingStart) {
-        const db = getDatabase();
+        const db = database;
         const meetRef = ref(db, `meetings/${meetingId}`);
         update(meetRef, {
           activeScreen: tab,
@@ -129,7 +130,7 @@ export default function useMeetingUi({
         {
           onSuccess: () => {
             if (meetingId) {
-              const db = getDatabase();
+              const db = database;
               const meetRef = ref(db, `meetings/${meetingId}`);
               update(meetRef, { updatedAt: new Date().toISOString() });
             }
@@ -151,7 +152,7 @@ export default function useMeetingUi({
         {
           onSuccess: () => {
             if (meetingId) {
-              const db = getDatabase();
+              const db = database;
               const meetRef = ref(db, `meetings/${meetingId}`);
               update(meetRef, { updatedAt: new Date().toISOString() });
             }
@@ -164,7 +165,7 @@ export default function useMeetingUi({
   // Add handleFollow to update 'follow' field in Firebase
   const handleFollow = (employeeId: string) => {
     if (meetingId) {
-      const db = getDatabase();
+      const db = database;
       const meetRef = ref(db, `meetings/${meetingId}`);
       update(meetRef, { follow: employeeId });
     }

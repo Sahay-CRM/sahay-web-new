@@ -1356,3 +1356,18 @@ interface TabItem {
   label: string;
   color?: string;
 }
+
+interface ProjectComment {
+  projectCommentId: string;
+  projectId: string;
+  employeeId: string;
+  employeeName: string;
+  comment: string;
+  commentDate: string;
+}
+
+interface CommentResponse {
+  data: ProjectComment[];
+  projectId: string;
+  message: string;
+}

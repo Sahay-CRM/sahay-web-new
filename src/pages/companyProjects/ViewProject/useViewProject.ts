@@ -8,24 +8,38 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { useGetCompanyMeeting } from "@/features/api/companyMeeting";
-import { useDdTaskType, useGetAllTaskStatus } from "@/features/api/companyTask";
+import {
+  addUpdateCompanyTaskMutation,
+  useDdTaskType,
+  useGetAllTaskStatus,
+} from "@/features/api/companyTask";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
+import { useGetCompanyMeeting } from "@/features/api/companyMeeting";
+import { queryClient } from "@/queryClient";
 
 export default function useViewProject() {
+  const { id: projectId } = useParams();
   const methods = useForm();
+  const {
+    control,
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = methods;
   const navigate = useNavigate();
   const { id: companyProjectId } = useParams();
   const permission = useSelector(getUserPermission);
   const { data: projectApiData } = useGetCompanyProjectById(
     companyProjectId || "",
   );
-
+  const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
   const [isMeetingSearch, setIsMeetingSearch] = useState("");
   const [isTypeSearch, setIsTypeSearch] = useState("");
   const [isStatusSearch, setIsStatusSearch] = useState("");
   const [isProjStatusSearch, setIsProjStatusSearch] = useState("");
-  const [isEmployeeSearch, setIsEmployeeSearch] = useState("");
+
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
 
   const { data: projectStatusList } = useGetAllProjectStatus({
     filter: {
@@ -48,21 +62,16 @@ export default function useViewProject() {
     },
     enable: isStatusSearch.length >= 3,
   });
-  const { data: employeeData } = useGetEmployeeDd({
-    filter: {
-      isDeactivated: false,
-      search: isEmployeeSearch.length >= 3 ? isEmployeeSearch : undefined,
-      pageSize: 25,
-    },
-    enable: isEmployeeSearch.length >= 3,
+  const { data: employeedata } = useGetEmployeeDd({
+    filter: { isDeactivated: false },
   });
 
-  const {
-    register,
-    control,
-    formState: { errors },
-    setValue,
-  } = useForm();
+  const employeeOption = employeedata
+    ? employeedata.data.map((status) => ({
+        label: status.employeeName,
+        value: status.employeeId,
+      }))
+    : [];
 
   const { data: meetingData } = useGetCompanyMeeting({
     filter: {
@@ -95,13 +104,6 @@ export default function useViewProject() {
       }))
     : [];
 
-  const employeeOptions = taskTypeData
-    ? employeeData?.data.map((status) => ({
-        label: status.employeeName || "Unnamed",
-        value: status.employeeId || "",
-      }))
-    : [];
-
   const handleStatusChange = (ele: string) => {
     const payload = {
       projectStatusId: ele,
@@ -118,8 +120,33 @@ export default function useViewProject() {
     }
   }, [projectApiData, methods]);
 
+  const onSubmittask = handleSubmit(async (data) => {
+    const assigneeIds = data.assignUsers;
+
+    const payload = {
+      taskName: data.taskName,
+      taskDescription: data.taskDescription,
+      taskDeadline: data.taskDeadline ? new Date(data.taskDeadline) : null,
+      taskStatusId: data?.taskStatusId,
+      employeeIds: assigneeIds,
+      projectId: projectId,
+      meetingId: data.meetingId,
+      taskTypeId: data.taskTypeId,
+    };
+
+    addUpdateTask(payload, {
+      onSuccess: () => {
+        queryClient.resetQueries({
+          queryKey: ["get-project-by-id", projectId],
+        });
+        setIsAddTaskOpen(false);
+      },
+    });
+  });
+
   return {
     projectApiData,
+    projectId,
     navigate,
     statusOptions,
     methods,
@@ -134,10 +161,12 @@ export default function useViewProject() {
     setIsMeetingSearch,
     setIsTypeSearch,
     setIsStatusSearch,
-    setIsEmployeeSearch,
     taskTypeOptions,
     taskStatusOptions,
-    employeeOptions,
     setIsProjStatusSearch,
+    setIsAddTaskOpen,
+    isAddTaskOpen,
+    employeeOption,
+    onSubmittask,
   };
 }

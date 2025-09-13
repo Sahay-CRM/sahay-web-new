@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-import { get, getDatabase, ref, update } from "firebase/database";
+import { get, ref, update } from "firebase/database";
+import { database } from "@/firebaseConfig";
 import { queryClient } from "@/queryClient";
 import {
   addRepeatMeetingNotesMutation,
@@ -61,7 +62,7 @@ const RepeatMeetingNotes: React.FC<MeetingNotesProps> = ({
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingNoteText, setEditingNoteText] = useState("");
 
-  const db = getDatabase();
+  const db = database;
 
   const meetingRef = ref(db, `meetings/${repetitiveMeetingId}`);
 

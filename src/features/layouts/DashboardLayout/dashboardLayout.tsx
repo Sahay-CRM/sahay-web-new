@@ -58,6 +58,7 @@ import { updateNotiMutation } from "@/features/api/Notification";
 import SidebarControlContext from "./SidebarControlContext";
 import ModalData from "@/components/shared/Modal/ModalData";
 import { ExclamationRoundIcon } from "@/components/shared/Icons";
+import { loginToFirebase } from "@/pages/auth/login/loginToFirebase";
 
 interface FailureReasonType {
   response?: {
@@ -187,17 +188,20 @@ const DashboardLayout = () => {
     };
 
     companyVerifyOtp(verifyCompanyData, {
-      onSuccess: (response) => {
+      onSuccess: async (response) => {
         if (response?.status) {
-          // setToken(response?.data?.token ?? "", response?.data);
+          await loginToFirebase(response.data.fbToken!);
+
           dispatch(
             setAuth({
               userId: response.data.employeeId,
               token: response.data.token ?? null,
               isLoading: false,
               isAuthenticated: true,
+              fbToken: response.data.fbToken,
             }),
           );
+
           requestFirebaseNotificationPermission().then((firebaseToken) => {
             if (firebaseToken && typeof firebaseToken === "string") {
               dispatch(setFireBaseToken(firebaseToken));

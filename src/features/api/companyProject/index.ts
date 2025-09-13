@@ -17,3 +17,7 @@ export { default as removeProjectGroupMutation } from "./useRemoveProjectFromGro
 export { default as addProjectToGroupMutation } from "./useAddProjectToGroup";
 export { default as groupSequenceMutation } from "./useUpdateGroupSequence";
 export { default as useGetAllGroup } from "./useGetAllGroup";
+
+export { default as addUpdateCommentMutation } from "./useAddProjectComment";
+export { default as deleteCommentMutation } from "./useDeleteProjectComment";
+export { default as useGetProjectComments } from "./useGetProjectComments";

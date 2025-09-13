@@ -6,6 +6,9 @@ import {
   groupMutation,
   groupSequenceMutation,
 } from "@/features/api/companyProject";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 
 export default function useProjectTabs() {
   const [tabs, setTabs] = useState<TabItem[]>([{ id: "all", label: "All" }]);
@@ -48,12 +51,29 @@ export default function useProjectTabs() {
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     search: "",
   });
+  const { setBreadcrumbs } = useBreadcrumbs();
 
-  const { data: projectlistdata, isPending: isLoadingProject } =
-    useGetCompanyProjectAll({
-      filter: { groupId: filters.selected, ...paginationFilter },
-      enable: true,
-    });
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Company Project", href: "" }]);
+  }, [setBreadcrumbs]);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewModalData, setViewModalData] = useState<IProjectFormData>(
+    {} as IProjectFormData,
+  );
+  const [isRearrangeOpen, setIsRearrangeOpen] = useState<TabItem | null>(null);
+  const permission = useSelector(getUserPermission).PROJECT_LIST;
+  const handleCardClick = (project: IProjectFormData) => {
+    setViewModalData(project);
+    setIsViewModalOpen(true);
+  };
+  const {
+    data: projectlistdata,
+    isPending: isLoadingProject,
+    refetch,
+  } = useGetCompanyProjectAll({
+    filter: { groupId: filters.selected, ...paginationFilter },
+    enable: true,
+  });
 
   const deleteTab = async (id: string) => {
     if (id === "all") return;
@@ -90,12 +110,12 @@ export default function useProjectTabs() {
 
   const handleTabChange = (tab: TabItem) => {
     setActiveTab(tab.id);
-
     if (tab.id === "all") {
-      setFilters({ selected: "" }); // empty string for "All"
+      setFilters({ selected: "" });
     } else {
-      setFilters({ selected: tab.id }); // single string
+      setFilters({ selected: tab.id });
     }
+    refetch();
   };
 
   const projects =
@@ -170,11 +190,13 @@ export default function useProjectTabs() {
   const openAddProjectDrawer = (tab: TabItem) => {
     setCurrentTabForProject(tab);
     setIsDrawerOpen(true);
+    refetch();
   };
 
   const closeAddProjectDrawer = () => {
     setCurrentTabForProject(null);
     setIsDrawerOpen(false);
+    refetch();
   };
   return {
     tabs,
@@ -204,5 +226,12 @@ export default function useProjectTabs() {
     isLoadingProject,
     setPaginationFilter,
     paginationFilter,
+    isViewModalOpen,
+    viewModalData,
+    setIsRearrangeOpen,
+    isRearrangeOpen,
+    permission,
+    handleCardClick,
+    setIsViewModalOpen,
   };
 }
