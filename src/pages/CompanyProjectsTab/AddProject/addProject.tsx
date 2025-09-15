@@ -677,7 +677,7 @@ export default function AddProject() {
     "Project Info",
     // "Project Status",
     // "Business Function",
-    ...(isCoreParameterSelected ? ["Sub Parameter"] : []),
+    ...(isCoreParameterSelected ? ["Key Result Area"] : []),
     "Assignees",
   ];
 

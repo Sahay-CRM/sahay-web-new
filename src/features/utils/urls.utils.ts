@@ -158,6 +158,8 @@ const Urls = {
 
   getUserFireNotification: () =>
     `${baseUrl}/company/employee/logs/notification-get`,
+  updateNotificationAsReadAll: () =>
+    `${baseUrl}/company/employee/logs/notification-update-all`,
 
   updateFireNotificationAsRead: () =>
     `${baseUrl}/company/employee/logs/notification-update`,

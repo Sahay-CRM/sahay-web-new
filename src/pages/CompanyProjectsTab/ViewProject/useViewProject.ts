@@ -7,7 +7,11 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-
+import useGetProjectComments from "@/features/api/companyProject/useGetProjectComments";
+import {
+  addUpdateCommentMutation,
+  deleteCommentMutation,
+} from "@/features/api/companyProject";
 export default function useViewProject() {
   const { id: projectId } = useParams();
 
@@ -17,12 +21,13 @@ export default function useViewProject() {
   const { data: projectApiData } = useGetCompanyProjectById(
     companyProjectId || "",
   );
-  // const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
-  // const [isMeetingSearch, setIsMeetingSearch] = useState("");
-  // const [isTypeSearch, setIsTypeSearch] = useState("");
-  // const [isStatusSearch, setIsStatusSearch] = useState("");
   const [isProjStatusSearch, setIsProjStatusSearch] = useState("");
-
+  const [showCommentInput, setShowCommentInput] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [showAll, setShowAll] = useState(false);
+  const [showFull, setShowFull] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState<string>("");
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
 
   const { data: projectStatusList } = useGetAllProjectStatus({
@@ -33,6 +38,45 @@ export default function useViewProject() {
   });
 
   const { mutate: addProject } = useAddUpdateCompanyProject();
+  const commentsData = useGetProjectComments(projectId || "");
+  const { mutate: addcomment, isPending } = addUpdateCommentMutation();
+  const { mutate: deleteComment } = deleteCommentMutation();
+
+  const handleEditComment = (projectCommentId: string, currentText: string) => {
+    setEditingCommentId(projectCommentId);
+    setEditingText(currentText);
+  };
+
+  const handleSaveComment = (projectCommentId?: string) => {
+    if (!editingText.trim()) return;
+    addcomment({
+      projectId: projectId!,
+      comment: editingText,
+      projectCommentId,
+    });
+    setEditingCommentId(null);
+    setEditingText("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditingText("");
+  };
+
+  const handleDeleteComment = (id: string) => {
+    deleteComment(id);
+  };
+
+  const onSubmitComment = () => {
+    if (!newComment.trim()) return;
+    addcomment({
+      projectId: projectId!,
+      comment: newComment,
+    });
+    setShowCommentInput(false);
+    setNewComment("");
+  };
+
   // const { data: taskTypeData } = useDdTaskType({
   //   filter: {
   //     search: isTypeSearch.length >= 3 ? isTypeSearch : undefined,
@@ -119,7 +163,6 @@ export default function useViewProject() {
   //     },
   //   });
   // });
-
   return {
     projectApiData,
     projectId,
@@ -142,7 +185,24 @@ export default function useViewProject() {
     setIsProjStatusSearch,
     setIsAddTaskOpen,
     isAddTaskOpen,
-    // employeeOption,
-    // onSubmittask,
+    editingText,
+    setEditingText,
+    editingCommentId,
+    setEditingCommentId,
+    showFull,
+    setShowFull,
+    showAll,
+    setShowAll,
+    newComment,
+    setNewComment,
+    showCommentInput,
+    setShowCommentInput,
+    commentsData,
+    onSubmitComment,
+    handleDeleteComment,
+    handleCancelEdit,
+    handleSaveComment,
+    handleEditComment,
+    isPending,
   };
 }

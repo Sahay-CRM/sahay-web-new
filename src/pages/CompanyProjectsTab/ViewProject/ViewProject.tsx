@@ -1,12 +1,8 @@
-import { useEffect, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { EditIcon, TrashIcon } from "lucide-react";
 import { format } from "date-fns";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
-import useViewProject from "./useViewProject";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { Tooltip } from "@radix-ui/react-tooltip";
@@ -17,15 +13,11 @@ import {
 } from "@/components/ui/tooltip";
 import { getInitials } from "@/features/utils/app.utils";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
-import useGetProjectComments from "@/features/api/companyProject/useGetProjectComments";
-import {
-  addUpdateCommentMutation,
-  deleteCommentMutation,
-} from "@/features/api/companyProject";
-import ProjectTaskList from "./projectTaskList";
-// import SearchDropdown from "@/components/shared/Form/SearchDropdown";
-// import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 
+import ProjectTaskList from "./projectTaskList";
+import useViewProject from "./useViewProject";
+
+import { useEffect } from "react";
 const ProjectView = () => {
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -41,97 +33,52 @@ const ProjectView = () => {
     navigate,
     statusOptions,
     handleStatusChange,
-    // methods,
-    // taskPermission,
     permission,
-    // setIsAddTaskOpen,
-    // isAddTaskOpen,
-    // taskTypeOptions,
-    // setIsTypeSearch,
-    // meetingDataOption,
-    // setIsMeetingSearch,
-    // taskStatusOptions,
-    // setIsStatusSearch,
-    // employeeOption,
-    // onSubmittask,
-    projectId,
-    // control,
-    // register,
-    // setValue,
-    // errors,
+    editingText,
+    setEditingText,
+    editingCommentId,
+    showAll,
+    setShowAll,
+    newComment,
+    setNewComment,
+    showCommentInput,
+    setShowCommentInput,
+    commentsData,
+    onSubmitComment,
+    handleDeleteComment,
+    handleCancelEdit,
+    handleSaveComment,
+    handleEditComment,
+    isPending,
+    setShowFull,
+    showFull,
   } = useViewProject();
-
-  // const { reset } = methods;
-  const [showCommentInput, setShowCommentInput] = useState(false);
-  const [newComment, setNewComment] = useState("");
-
-  const commentsData = useGetProjectComments(projectId || "");
-  const { mutate: addcomment, isPending } = addUpdateCommentMutation();
-  const { mutate: deleteComment } = deleteCommentMutation();
-  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
-  const [editingText, setEditingText] = useState<string>("");
-
-  const handleEditComment = (projectCommentId: string, currentText: string) => {
-    setEditingCommentId(projectCommentId);
-    setEditingText(currentText);
-  };
-
-  const handleSaveComment = (projectCommentId?: string) => {
-    if (!editingText.trim()) return;
-
-    addcomment({
-      projectId: projectId!,
-      comment: editingText,
-      projectCommentId,
-    });
-
-    setEditingCommentId(null);
-    setEditingText("");
-  };
-
-  const handleCancelEdit = () => {
-    setEditingCommentId(null);
-    setEditingText("");
-  };
-  const handleDeleteComment = (id: string) => {
-    deleteComment(id);
-  };
-
-  const onSubmitComment = () => {
-    if (!newComment.trim()) return;
-
-    addcomment({
-      projectId: projectId!,
-      comment: newComment,
-    });
-
-    setShowCommentInput(false);
-    setNewComment("");
-    // reset({ comment: "" });
-  };
   const methods = useForm();
+  useEffect(() => {
+    if (projectApiData?.data?.projectStatus?.projectStatusId) {
+      methods.reset({
+        projectStatus: projectApiData.data?.projectStatus.projectStatusId,
+      });
+    }
+  }, [methods, projectApiData]);
 
   const project = projectApiData?.data;
   if (!project) return null;
 
   // const tasks = project.ProjectTasks || [];
-
   return (
     <FormProvider {...methods}>
       <div className="grid grid-cols-1 p-4  lg:grid-cols-2 gap-8">
-        {/* ================= Left Column ================= */}
         <div className="space-y-5">
-          {/* Project Overview */}
-          <div className="bg-white rounded-2xl shadow-md p-5 space-y-5">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+          <div className="bg-white h-85 p-5    rounded-2xl shadow-md flex flex-col">
+            <div className="flex mb-3 flex-col sm:flex-row sm:justify-between sm:items-start  ">
               <div>
                 <h1 className="text-xl font-bold">{project.projectName}</h1>
-                <p className="text-sm text-gray-500 mt-2">
-                  {project.projectDescription || "-"}
-                </p>
               </div>
+
               {permission?.Edit && (
                 <Button
+                  size="sm"
                   onClick={() =>
                     navigate(
                       `/dashboard/projects/edit/${project.projectId}?source=view`,
@@ -143,78 +90,99 @@ const ProjectView = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm font-medium text-gray-500">Status</p>
-                <Controller
-                  name="projectStatus"
-                  control={methods.control}
-                  render={({ field, fieldState }) => (
-                    <FormSelect
-                      {...field}
-                      options={statusOptions}
-                      error={fieldState.error}
-                      onChange={(val) => handleStatusChange(val as string)}
-                    />
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto space-y-5">
+              {/* Description */}
+              <div className="text-sm text-gray-500">
+                <p
+                  className={`transition-all ${
+                    showFull ? " overflow-y-auto pr-2" : "line-clamp-2"
+                  }`}
+                >
+                  {project.projectDescription || "-"}
+                </p>
+
+                {project.projectDescription &&
+                  project.projectDescription.length > 70 && (
+                    <button
+                      className="text-xs text-primary hover:underline mt-1"
+                      onClick={() => setShowFull(!showFull)}
+                    >
+                      {showFull ? "Show less" : "Show more"}
+                    </button>
                   )}
-                />
-
-                {project.projectDeadline && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">
-                      Deadline
-                    </p>
-                    <p className="mt-1 font-semibold">
-                      {project.projectDeadline
-                        ? format(
-                            new Date(project.projectDeadline),
-                            "dd/MM/yyyy h:mm a",
-                          )
-                        : "-"}
-                    </p>
-                  </div>
-                )}
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="font-medium text-gray-500">
+                      Created By:
+                    </span>
+                    <span className="font-semibold">
+                      {project.createdBy?.employeeName || "-"}
+                    </span>
+                  </div>
 
-              <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    Created By
-                  </p>
-                  <p className="mt-1 font-semibold">
-                    {project.createdBy?.employeeName || "-"}
-                  </p>
+                  {project.projectDeadline && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-medium text-gray-500">
+                        Deadline:
+                      </span>
+                      <span className="font-semibold">
+                        {format(
+                          new Date(project.projectDeadline),
+                          "dd/MM/yyyy h:mm a",
+                        )}
+                      </span>
+                    </div>
+                  )}
+
+                  {(project.ProjectParameters?.subParameters?.length ?? 0) >
+                    0 && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">
+                        Key Result Areas :
+                      </p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {project.ProjectParameters?.subParameters.map((sub) => (
+                          <Badge
+                            key={sub.projectSubParameterId}
+                            variant="secondary"
+                            className="text-sm px-2 "
+                          >
+                            {sub.subParameterName}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-
-                {(project.ProjectParameters?.subParameters?.length ?? 0) >
-                  0 && (
+                <div className="space-y-2 p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm font-medium text-gray-500">
+                    Project Status
+                  </p>
+                  <Controller
+                    name="projectStatus"
+                    control={methods.control}
+                    render={({ field, fieldState }) => (
+                      <FormSelect
+                        {...field}
+                        options={statusOptions}
+                        error={fieldState.error}
+                        onChange={(val) => handleStatusChange(val as string)}
+                      />
+                    )}
+                  />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">
-                      Key Result Areas
+                    <p className="text-sm font-medium text-gray-500 mb-1">
+                      Assignees
                     </p>
                     <div className="flex flex-wrap gap-1 mt-2">
-                      {project.ProjectParameters?.subParameters.map((sub) => (
-                        <Badge
-                          key={sub.projectSubParameterId}
-                          variant="secondary"
-                          className="text-sm px-2 py-1"
-                        >
-                          {sub.subParameterName}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Assignees</p>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {project.ProjectEmployees?.map((emp, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center gap-1.5"
-                      >
-                        <TooltipProvider>
+                      {(showAll
+                        ? project.ProjectEmployees
+                        : project?.ProjectEmployees?.slice(0, 10)
+                      )?.map((emp, idx) => (
+                        <TooltipProvider key={idx}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <p className="rounded-full h-6 w-6 bg-gray-200 text-xs flex items-center justify-center font-medium">
@@ -224,19 +192,29 @@ const ProjectView = () => {
                             <TooltipContent>{emp.employeeName}</TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                      </span>
-                    ))}
+                      ))}
+                      {project?.ProjectEmployees &&
+                        !showAll &&
+                        project.ProjectEmployees.length > 10 && (
+                          <span
+                            className="rounded-full h-6 w-6 bg-gray-300 text-xs flex items-center justify-center font-medium cursor-pointer"
+                            onClick={() => setShowAll(true)}
+                          >
+                            +{project.ProjectEmployees.length - 10}
+                          </span>
+                        )}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-5 h-[calc(100vh-450px)] overflow-auto rounded-xl shadow-md flex flex-col">
+          <div className="bg-white p-5 h-[calc(100vh-480px)]  rounded-xl shadow-md flex flex-col">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Comments</h2>
+              <h2 className="text-xl font-semibold">Updates</h2>
               <Button onClick={() => setShowCommentInput((v) => !v)}>
-                {showCommentInput ? "Cancel" : "Add Comment"}
+                {showCommentInput ? "Cancel" : "Add Updates"}
               </Button>
             </div>
 
@@ -245,7 +223,7 @@ const ProjectView = () => {
                 <FormInputField
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Enter Comment .."
+                  placeholder="Enter Update .."
                 />
 
                 <Button
@@ -262,7 +240,7 @@ const ProjectView = () => {
               <div className="space-y-2 pr-2">
                 {commentsData.isLoading ? (
                   <p className="text-muted-foreground text-sm">
-                    Loading comments...
+                    Loading Updates...
                   </p>
                 ) : commentsData.data?.length ? (
                   [...commentsData.data]
@@ -355,7 +333,7 @@ const ProjectView = () => {
                     ))
                 ) : (
                   <span className="font-medium text-center text-muted-foreground block">
-                    No Comments Found
+                    No Updates Found
                   </span>
                 )}
               </div>

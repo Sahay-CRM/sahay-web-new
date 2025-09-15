@@ -71,25 +71,36 @@ export default function ProjectCard({
         {/* <div className="text-gray-500 text-sm mb-2 line-clamp-2 overflow-hidden">
           <TableTooltip text={description} />
         </div> */}
-        {/* <p className="text-gray-500 text-sm mb-2 line-clamp-2" title={description}>{description}</p> */}
-        <p className="text-gray-500 text-sm mb-2">{description}</p>
+        <p
+          className="text-gray-500 text-sm mb-2 line-clamp-2"
+          title={description}
+        >
+          {description}
+        </p>
+        {/* <p className="text-gray-500 text-sm mb-2">{description}</p> */}
 
-        <div className="mb-3 text-sm text-gray-600  flex flex-wrap items-center gap-1">
+        <div className="mb-3 text-sm text-gray-600 flex flex-wrap items-center gap-1">
           <span className="font-semibold mr-2">Assignees:</span>
 
-          {assignees.map((name, idx) => (
+          {assignees.slice(0, 7).map((name, idx) => (
             <span key={idx} className="inline-flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <p className=" rounded-full h-6 w-6  bg-gray-100 text-xs  flex items-center justify-center font-medium">
+                  <p className="rounded-full h-6 w-6 bg-gray-100 text-xs flex items-center justify-center font-medium">
                     {getInitials(name)}
                   </p>
                 </TooltipTrigger>
                 <TooltipContent>{name}</TooltipContent>
               </Tooltip>
-              {idx < assignees.length - 1 && <span>,</span>}
             </span>
           ))}
+
+          {/* Agar extra assignees ho to +X show karo */}
+          {assignees.length > 7 && (
+            <span className="rounded-full h-6 w-6 bg-gray-200 text-xs flex items-center justify-center font-medium cursor-default">
+              +{assignees.length - 7}
+            </span>
+          )}
         </div>
       </div>
 

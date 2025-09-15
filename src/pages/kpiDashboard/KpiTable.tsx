@@ -887,6 +887,7 @@ export default function UpdatedKpiTable() {
                                     className={clsx(
                                       "p-2 border text-center w-[80px] h-[42px]",
                                       headers[colIdx].isSunday && "bg-gray-100",
+                                      cell?.isSkipDay && "bg-gray-400",
                                     )}
                                   >
                                     <TooltipProvider>
@@ -902,13 +903,15 @@ export default function UpdatedKpiTable() {
                                                   : "bg-red-100 border border-red-500"),
                                               isVisualized &&
                                                 "opacity-60 border ",
+                                              cell?.isSkipDay &&
+                                                "opacity-40 cursor-not-allowed bg-gray-100",
                                             )}
                                           >
                                             {!isVisualized ? (
                                               <FormSelect
                                                 value={inputVal}
                                                 onChange={
-                                                  canInput
+                                                  canInput && !cell?.isSkipDay
                                                     ? (val) => {
                                                         setInputValues(
                                                           (prev) => ({
@@ -933,7 +936,9 @@ export default function UpdatedKpiTable() {
                                                 }
                                                 options={selectOptions}
                                                 placeholder="Select"
-                                                disabled={!canInput}
+                                                disabled={
+                                                  !canInput || cell?.isSkipDay
+                                                }
                                                 triggerClassName="text-sm px-1 text-center justify-center"
                                               />
                                             ) : (
@@ -962,6 +967,7 @@ export default function UpdatedKpiTable() {
                                   className={clsx(
                                     "p-2 border text-center w-[80px] h-[42px] relative",
                                     headers[colIdx].isSunday && "bg-gray-100",
+                                    cell?.isSkipDay && "bg-gray-200",
                                   )}
                                 >
                                   <TooltipProvider>
@@ -1006,12 +1012,18 @@ export default function UpdatedKpiTable() {
                                               )
                                                 ? "bg-green-100 border-green-500"
                                                 : "bg-red-100 border-red-500"),
-                                            (!canInput || isVisualized) &&
+                                            (!canInput ||
+                                              isVisualized ||
+                                              cell?.isSkipDay) &&
                                               "opacity-60 cursor-not-allowed bg-gray-50",
                                           )}
                                           placeholder="0"
-                                          disabled={!canInput}
-                                          readOnly={!canInput}
+                                          disabled={
+                                            !canInput || cell?.isSkipDay
+                                          }
+                                          readOnly={
+                                            !canInput || cell?.isSkipDay
+                                          }
                                         />
                                       </TooltipTrigger>
                                       {inputVal !== "" &&

@@ -12,3 +12,7 @@ export { default as addUpdateRepeatCompanyTaskMutation } from "./useAddUpdateRep
 export { default as deleteRepeatCompanyTaskMutation } from "./useDeleteRepeatCompanyTask";
 export { default as useGetRepeatCompanyTask } from "./useGetRepeatCompanyTask";
 export { default as useGetRepeatCompanyTaskById } from "./useGetRepeatCompanyTaskById";
+
+export { default as addUpdateTaskCommentMutation } from "./useAddCompanyTaskComment";
+export { default as deleteCommentMutation } from "./useDeleteTaskComment";
+export { default as useGetTaskComments } from "./useGetTaskComments";

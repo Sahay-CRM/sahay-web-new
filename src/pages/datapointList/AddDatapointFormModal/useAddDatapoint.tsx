@@ -95,6 +95,7 @@ export default function useAddDataPoint() {
       frequencyType: data.frequencyType,
       visualFrequencyTypes: visualFrequencyTypesStr,
       visualFrequencyAggregate: data.visualFrequencyAggregate,
+      skipDays: data.skipDays,
     };
     addDatapoint(simplePayload, {
       onSuccess: () => {
@@ -488,6 +489,16 @@ export default function useAddDataPoint() {
       { label: "No", value: "0" },
     ];
 
+    const skipDaysOption = [
+      { label: "Sun", value: "0" },
+      { label: "Mon", value: "1" },
+      { label: "Tue", value: "2" },
+      { label: "Wed", value: "3" },
+      { label: "Thu", value: "4" },
+      { label: "Fri", value: "5" },
+      { label: "Sat", value: "6" },
+    ];
+
     return (
       <div className="h-[calc(100vh-200px)]">
         <div className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
@@ -730,6 +741,22 @@ export default function useAddDataPoint() {
             </div>
           )}
         </div>
+        <Controller
+          control={control}
+          name="skipDays"
+          render={({ field }) => (
+            <FormSelect
+              label="Skip Days"
+              value={field.value}
+              onChange={field.onChange}
+              options={skipDaysOption}
+              error={errors.skipDays}
+              className="rounded-md"
+              triggerClassName="py-4"
+              isMulti
+            />
+          )}
+        />
       </div>
     );
   };

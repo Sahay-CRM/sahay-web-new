@@ -894,6 +894,7 @@ interface KPIFormData {
   employeeName?: string;
   visualFrequencyAggregate: string | null;
   ioKPIId?: string;
+  skipDays?: string[];
 }
 
 interface KPIFormDataProp {
@@ -993,6 +994,7 @@ interface Kpi {
   detailMeetingKPIId?: string;
   goalValue?: number;
   sequence?: number;
+  isSkipDay?: boolean;
 }
 
 interface CoreParameterGroup {
@@ -1049,6 +1051,7 @@ interface KpiDataCell {
   value2?: string | number | null;
   avg?: string | number | null;
   isSunday?: boolean;
+  isSkipDay?: boolean;
 }
 
 interface UserLogDetails {
@@ -1360,4 +1363,12 @@ interface CommentResponse {
   data: ProjectComment[];
   projectId: string;
   message: string;
+}
+
+interface TaskCommentData {
+  taskCommentId: string;
+  taskId: string;
+  employeeName: string;
+  comment: string;
+  createdDatetime: string;
 }

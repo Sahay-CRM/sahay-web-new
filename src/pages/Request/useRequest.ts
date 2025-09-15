@@ -20,11 +20,6 @@ export default function useRequest() {
     enable: !!isDataFilter,
   });
 
-  const openModal = (data: CreateRequest) => {
-    setModalOpen(true);
-    setIsEditData(data);
-  };
-
   const handleClose = () => {
     setModalOpen(false);
     setIsEditData(null);
@@ -42,7 +37,6 @@ export default function useRequest() {
     isDataFilter,
     setIsDataFilter,
     onDelete,
-    openModal,
     isEditData,
     isModalOpen,
     handleClose,

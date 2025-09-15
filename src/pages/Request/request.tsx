@@ -15,6 +15,8 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import useRequest from "./useRequest";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import RequestModal from "@/components/shared/Modal/RequestModal";
+import { Button } from "@/components/ui/button";
+import { Trash } from "lucide-react";
 
 export default function Request() {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -31,7 +33,6 @@ export default function Request() {
     isDataFilter,
     setIsDataFilter,
     onDelete,
-    openModal,
     isEditData,
     isModalOpen,
     handleClose,
@@ -148,15 +149,26 @@ export default function Request() {
             }))}
             columns={visibleColumns}
             primaryKey="changeRequestId"
-            onEdit={openModal}
-            onDelete={(row) => onDelete(row.changeRequestId!)}
+            // onEdit={openModal}
+            customActions={(row) => {
+              return (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-red-600"
+                  onClick={() => onDelete(row.changeRequestId!)}
+                >
+                  <Trash className="w-4 h-4" />
+                </Button>
+              );
+            }}
             paginationDetails={mapPaginationDetails(reqData)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
             moduleKey="PRODUCT"
             showIndexColumn={false}
             // showActionsColumn={false}
-            isEditDeleteShow={true}
+            isEditDeleteShow={false}
             permissionKey="users"
             sortableColumns={["productName", "brandName"]}
             actionColumnWidth="w-24"

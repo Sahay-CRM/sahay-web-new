@@ -49,6 +49,17 @@ export default function useEditDatapointFormModal({
 
   useEffect(() => {
     if (datapointApiData) {
+      const rawSkipDays = datapointApiData.skipDays as
+        | string
+        | string[]
+        | undefined;
+
+      const skipDaysValue = Array.isArray(rawSkipDays)
+        ? rawSkipDays
+        : rawSkipDays
+          ? rawSkipDays.split(",")
+          : [];
+
       setValue("KPIMasterId", datapointApiData.KPIMasterId);
 
       setValue("kpiId", datapointApiData.kpiId);
@@ -66,6 +77,8 @@ export default function useEditDatapointFormModal({
       setValue("value1", datapointApiData.value1);
       setValue("value2", datapointApiData.value2);
       setValue("tag", datapointApiData.tag);
+
+      setValue("skipDays", skipDaysValue);
       if (
         datapointApiData.validationType === "YES_NO" &&
         datapointApiData.employeeId
@@ -113,6 +126,7 @@ export default function useEditDatapointFormModal({
       frequencyType: data.frequencyType,
       visualFrequencyTypes: visualFrequencyTypesStr,
       visualFrequencyAggregate: data.visualFrequencyAggregate,
+      skipDays: data.skipDays,
     };
     addDatapoint(payload, {
       onSuccess: () => {
@@ -203,6 +217,15 @@ export default function useEditDatapointFormModal({
     { label: "Yes", value: "1" },
     { label: "No", value: "0" },
   ];
+  const skipDaysOption = [
+    { label: "Sun", value: "0" },
+    { label: "Mon", value: "1" },
+    { label: "Tue", value: "2" },
+    { label: "Wed", value: "3" },
+    { label: "Thu", value: "4" },
+    { label: "Fri", value: "5" },
+    { label: "Sat", value: "6" },
+  ];
 
   const getEmployeeName = (emp: DataPointEmployee) => {
     if (emp?.employeeName) return emp.employeeName;
@@ -261,5 +284,6 @@ export default function useEditDatapointFormModal({
     yesnoOptions,
     setIsKpiSearch,
     setIsEmployeeSearch,
+    skipDaysOption,
   };
 }

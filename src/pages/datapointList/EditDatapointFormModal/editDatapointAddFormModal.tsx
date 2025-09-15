@@ -50,6 +50,7 @@ export default function EditDatapointAddFormModal({
     allKpi,
     setIsKpiSearch,
     setIsEmployeeSearch,
+    skipDaysOption,
   } = useEditDatapointFormModal({ modalClose, kpiId });
 
   return (
@@ -340,6 +341,23 @@ export default function EditDatapointAddFormModal({
               </div>
             </div>
           )}
+
+          <Controller
+            control={control}
+            name="skipDays"
+            render={({ field }) => (
+              <FormSelect
+                label="Skip Days"
+                value={field.value}
+                onChange={field.onChange}
+                options={skipDaysOption}
+                error={errors.skipDays}
+                className="rounded-md"
+                triggerClassName="py-4"
+                isMulti
+              />
+            )}
+          />
         </div>
       </ModalData>
     </FormProvider>

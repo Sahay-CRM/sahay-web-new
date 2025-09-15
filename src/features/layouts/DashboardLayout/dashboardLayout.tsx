@@ -54,7 +54,10 @@ import {
 } from "@/features/reducers/notification.reducer";
 import { fireTokenMutation } from "@/features/api";
 import useGetUserNotification from "./useGetUserNotification";
-import { updateNotiMutation } from "@/features/api/Notification";
+import {
+  updateNotiMutation,
+  updateReadNotificationMutation,
+} from "@/features/api/Notification";
 import SidebarControlContext from "./SidebarControlContext";
 import ModalData from "@/components/shared/Modal/ModalData";
 import { ExclamationRoundIcon } from "@/components/shared/Icons";
@@ -102,6 +105,7 @@ const DashboardLayout = () => {
   const { data: permission } = useGetUserPermission();
   const { data: userData, failureReason } = useGetEmployeeById(userId);
   const { data: notificationData } = useGetUserNotification();
+  const { mutate: readAllNoti } = updateReadNotificationMutation();
 
   const dataFetchingErr =
     typeof failureReason === "object" &&
@@ -126,10 +130,14 @@ const DashboardLayout = () => {
 
   useEffect(() => {
     if (notificationData && Array.isArray(notificationData.data)) {
+      const unreadCount = notificationData.data.filter(
+        (notification) => notification.isRead === false,
+      ).length;
+
       dispatch(
         setNotifications({
           data: notificationData.data,
-          totalCount: notificationData.totalCount,
+          totalCount: unreadCount,
         }),
       );
     }
@@ -230,6 +238,10 @@ const DashboardLayout = () => {
         }
       },
     });
+  };
+
+  const handleAllRead = () => {
+    readAllNoti();
   };
 
   const { breadcrumbs } = useBreadcrumbs();
@@ -353,7 +365,7 @@ const DashboardLayout = () => {
                                   </li>
                                 ))}
                             </ul>
-                            <div className="text-center mt-2 border-t">
+                            <div className="flex justify-between w-full mt-2 border-t">
                               <Button
                                 variant="link"
                                 onClick={() => {
@@ -362,6 +374,12 @@ const DashboardLayout = () => {
                                 }}
                               >
                                 View All Notifications
+                              </Button>
+                              <Button
+                                variant="link"
+                                onClick={() => handleAllRead()}
+                              >
+                                Mark all as Read
                               </Button>
                             </div>
                           </>
