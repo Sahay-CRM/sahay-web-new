@@ -120,6 +120,7 @@ export default function useProjectTabs() {
     }
     refetch();
   };
+  console.log(projectlistdata);
 
   const projects =
     projectlistdata?.data?.map((project: CompanyProjectDataProps) => ({
@@ -133,9 +134,8 @@ export default function useProjectTabs() {
       projectDeadline: project.projectDeadline
         ? new Date(project.projectDeadline).toLocaleDateString("en-GB")
         : "No deadline",
-      projectStatusId: project.projectStatus
-        ? String(project.projectStatus)
-        : "",
+      projectStatus: project.projectStatus ? String(project.projectStatus) : "",
+      projectStatusId: project.projectStatusId,
       color: project.color || "#000000",
     })) || [];
 

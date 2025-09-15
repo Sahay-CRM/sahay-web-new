@@ -213,11 +213,12 @@ export default function CompanyProjectTabList() {
                 onClick={() => handleCardClick(project)}
               >
                 <ProjectCard
+                  projectId={project.projectId}
                   name={project.projectName}
                   description={project.projectDescription}
                   assignees={project.employeeIds}
                   endDate={project.projectDeadline}
-                  priority={project.projectStatusId}
+                  priority={project.projectStatus}
                   color={project.color}
                 />
               </div>

@@ -25,7 +25,7 @@ const CompanyTask = lazy(() => import("../pages/companyTask/CompanyTaskList"));
 //   () => import("../pages/companyProjects/CompanyProjects")
 // );
 const CompanyProjectView = lazy(
-  () => import("../pages/companyProjects/ViewProject/ViewProject"),
+  () => import("../pages/CompanyProjectsTab/ViewProject"),
 );
 const DatapointList = lazy(
   () => import("../pages/datapointList/DatapointList"),
@@ -44,7 +44,7 @@ const CompanyLevelAssign = lazy(() => import("../pages/CompanyLevel"));
 const CompanyTaskView = lazy(() => import("../pages/companyTask/ViewProject"));
 
 const AddCompanyProjectList = lazy(
-  () => import("../pages/companyProjects/AddProject"),
+  () => import("../pages/CompanyProjectsTab/AddProject"),
 );
 
 const AddCompanyDatapoint = lazy(

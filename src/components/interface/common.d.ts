@@ -182,17 +182,16 @@ interface MeetingData {
   joiners?: Employee[];
   [key: string]: string | string[] | number | undefined;
 }
-///kk
+
 interface IProjectFormData {
   projectId?: string;
   projectName: string;
   projectDescription: string;
   projectDeadline: string;
-  projectStatusId: string;
+  projectStatus: string;
+  projectStatusId?: string;
   employeeIds: string[];
-  projectStatus?: {
-    projectStatus: string;
-  };
+
   subParameterIds: string[];
   createdBy?: {
     employeeId: string;
@@ -230,7 +229,7 @@ interface RolePermission {
   employeeEmail: string;
   employeeMobile: string;
   companyId: string;
-  employeeType: string; // You can restrict this more based on allowed values
+  employeeType: string;
   departmentId: string;
   designationId: string;
   isSuperAdmin: boolean;
@@ -619,6 +618,7 @@ interface AddUpdateTask {
   issueId?: string;
   repetitiveTaskId?: string;
   ioType?: string;
+  commentId?: string;
 }
 
 interface TaskGetPaging {
@@ -685,16 +685,6 @@ interface Employee {
     companyId: string;
   };
   reportingManager: string;
-}
-
-interface TaskComment {
-  comment: string;
-  commentDate: string;
-  employeeId: string;
-  Employee: {
-    employeeName: string;
-    employeeId: string;
-  };
 }
 
 interface TaskEmployee {
@@ -786,7 +776,7 @@ interface Meeting {
 }
 
 interface TaskComment {
-  commentId: string;
+  commentId?: string;
   comment: string;
   commentDate: string;
   employeeId: string;

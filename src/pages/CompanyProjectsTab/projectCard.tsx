@@ -1,4 +1,4 @@
-import { Calendar } from "lucide-react";
+import { Calendar, Edit, Eye } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -6,7 +6,9 @@ import {
 } from "@/components/ui/tooltip";
 import { TableTooltip } from "@/components/shared/DataTable/tableTooltip";
 import { getInitials } from "@/features/utils/app.utils";
+import { useNavigate } from "react-router-dom";
 interface ProjectCardProps {
+  projectId: string;
   name: string;
   description: string;
   assignees: string[];
@@ -17,6 +19,7 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({
+  projectId,
   name,
   description,
   assignees,
@@ -25,19 +28,46 @@ export default function ProjectCard({
   priority,
   color,
 }: ProjectCardProps) {
+  const navigate = useNavigate();
+  const handleEdit = () => {
+    navigate(`/dashboard/projects/edit/${projectId}`);
+  };
+
+  const handleView = () => {
+    navigate(`/dashboard/projects/view/${projectId}`);
+  };
+
   return (
-    <div className="bg-white border shadow-lg rounded-xl p-6 relative hover:shadow-md transition flex flex-col w-full h-full">
-      {/* Top content */}
+    <div className="bg-white border shadow-lg rounded-xl p-5 relative hover:shadow-md transition flex flex-col w-full h-full">
       <div>
-        {/* Name + edit */}
         <div className="flex items-start justify-between mb-1">
           <h3 className="text-md font-semibold text-gray-800 flex-1 pr-2 break-words">
             {name}
           </h3>
-          {/* <button className="flex-shrink-0 flex items-center justify-center text-gray-500 hover:text-gray-700">
-            <Edit className="h-5 w-5" />
-          </button> */}
+
+          <div className="flex ">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit();
+              }}
+              className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleView();
+              }}
+              className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
+            >
+              <Eye className="h-4 w-4" />
+            </button>
+          </div>
         </div>
+
         {/* <div className="text-gray-500 text-sm mb-2 line-clamp-2 overflow-hidden">
           <TableTooltip text={description} />
         </div> */}
@@ -57,7 +87,6 @@ export default function ProjectCard({
                 </TooltipTrigger>
                 <TooltipContent>{name}</TooltipContent>
               </Tooltip>
-              {/* Add comma except for last item */}
               {idx < assignees.length - 1 && <span>,</span>}
             </span>
           ))}
