@@ -189,7 +189,7 @@ export default function MeetingDesc() {
                               className="flex items-center gap-3 cursor-pointer w-full"
                               onClick={() => {
                                 if (
-                                  meetingStatus !== "NOT_STARTED" &&
+                                  meetingStatus === "NOT_STARTED" ||
                                   meetingStatus !== "ENDED"
                                 ) {
                                   toggleOpen();
@@ -329,7 +329,9 @@ export default function MeetingDesc() {
                                         )}
                                     </>
                                   )}
-                                {follow !== item.employeeId &&
+                                {meetingStatus !== "NOT_STARTED" &&
+                                  meetingStatus !== "ENDED" &&
+                                  follow !== item.employeeId &&
                                   follow !== userId && (
                                     <button
                                       onClick={() =>

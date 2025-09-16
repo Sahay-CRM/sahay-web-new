@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Bell, LogOut, User2Icon } from "lucide-react";
@@ -90,6 +90,7 @@ const DashboardLayout = () => {
 
   const [isCompanyModalOpen, setCompanyModalOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   // const { setToken } = useAuth();
 
   const user = useSelector(getUserDetail);
@@ -142,6 +143,23 @@ const DashboardLayout = () => {
       );
     }
   }, [dispatch, notificationData]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsNotificationOpen(false);
+      }
+    }
+    if (isNotificationOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isNotificationOpen]);
 
   useEffect(() => {
     if (userData && userData.data) {
@@ -317,11 +335,13 @@ const DashboardLayout = () => {
                   {isNotificationOpen && (
                     <div>
                       <div
-                        className="fixed inset-0"
+                        className="fixed inset-0 z-40"
                         onClick={() => setIsNotificationOpen(false)}
-                        style={{ background: "transparent" }}
                       />
-                      <div className="absolute right-0 top-12 bg-white shadow-2xl border rounded-lg p-4 w-[400px] z-50">
+                      <div
+                        ref={dropdownRef}
+                        className="absolute right-0 top-12 bg-white shadow-2xl border rounded-lg p-4 w-[400px] z-50"
+                      >
                         {notifications.length > 0 ? (
                           <>
                             <ul className="h-80 overflow-scroll">

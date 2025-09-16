@@ -9,7 +9,6 @@ import {
   addMeetingNotesMutation,
   addUpdateDetailMeetingMutation,
   deleteCompanyMeetingMutation,
-  endMeetingMutation,
   updateDetailMeetingMutation,
   useGetMeetingNotes,
   useGetMeetingTiming,
@@ -39,7 +38,6 @@ export default function useMeetingDesc() {
     enable: !!meetingTiming?.meetingId,
   });
 
-  const { mutate: endMeet } = endMeetingMutation();
   const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
   // const { mutate: updateMeetingTeamLeader } = addUpdateCompanyMeetingMutation();
   // const { mutate: updateTime } = addMeetingTimeMutation();
@@ -107,6 +105,10 @@ export default function useMeetingDesc() {
 
     const meetingRef = ref(db, `meetings/${meetingId}/state/activeTab`);
 
+    const filter = {
+      meetingId: meetingId,
+    };
+
     const unsubscribe = onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
         const activeTab = snapshot.val();
@@ -119,7 +121,7 @@ export default function useMeetingDesc() {
               queryKey: ["get-meeting-conclusion-res"],
             });
             queryClient.resetQueries({
-              queryKey: ["get-meeting-conclusion-time-by-meetingId"],
+              queryKey: ["get-meeting-conclusion-time-by-meetingId", filter],
             });
           } else if (activeTab === "ENDED") {
             handleUpdatedRefresh();
@@ -136,6 +138,41 @@ export default function useMeetingDesc() {
         }, 1000);
 
         return () => clearTimeout(timer);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [db, handleUpdatedRefresh, meetingId]);
+
+  useEffect(() => {
+    if (!meetingId) return;
+
+    const meetingRef = ref(db, `meetings/${meetingId}/state/status`);
+
+    const filter = {
+      meetingId: meetingId,
+    };
+
+    const unsubscribe = onValue(meetingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const activeTab = snapshot.val();
+        handleUpdatedRefresh();
+
+        if (activeTab === "IN_PROGRESS") {
+          queryClient.resetQueries({
+            queryKey: ["get-meeting-conclusion-res"],
+          });
+          queryClient.resetQueries({
+            queryKey: ["get-meeting-conclusion-time-by-meetingId", filter],
+          });
+        } else if (activeTab === "ENDED") {
+          handleUpdatedRefresh();
+        }
+      } else {
+        handleUpdatedRefresh();
+        queryClient.resetQueries({
+          queryKey: ["get-meeting-conclusion-res"],
+        });
       }
     });
 
@@ -177,46 +214,69 @@ export default function useMeetingDesc() {
     }
   };
 
-  const handleEndMeeting = () => {
-    if (meetingId) {
-      endMeet(meetingId);
-    }
-  };
-
   const handleAddTeamLeader = async (data: Joiners) => {
-    const meetRef = ref(db, `meetings/${meetingId}/state`);
-    const meetingSnapshot = await get(meetRef);
+    if (
+      meetingTiming?.detailMeetingStatus === "NOT_STARTED" ||
+      meetingTiming?.detailMeetingStatus === "ENDED"
+    ) {
+      const meetingJoiners = meetingTiming?.joiners;
+      const teamLeader = (meetingJoiners as Joiners[])
+        ?.filter((da) => da.isTeamLeader)
+        .map((item) => item.employeeId);
 
-    const meetingJoiners = meetingTiming?.joiners;
-    const teamLeader = (meetingJoiners as Joiners[])
-      ?.filter((da) => da.isTeamLeader)
-      .map((item) => item.employeeId);
+      let updatedTeamLeaders: string[];
+      if (teamLeader?.includes(data.employeeId)) {
+        updatedTeamLeaders = teamLeader.filter((id) => id !== data.employeeId);
+      } else {
+        updatedTeamLeaders = [...(teamLeader || []), data.employeeId];
+      }
 
-    let updatedTeamLeaders: string[];
-    if (teamLeader?.includes(data.employeeId)) {
-      updatedTeamLeaders = teamLeader.filter((id) => id !== data.employeeId);
-    } else {
-      updatedTeamLeaders = [...(teamLeader || []), data.employeeId];
-    }
-
-    const payload = {
-      meetingId: meetingId,
-      teamLeaders: updatedTeamLeaders,
-    };
-    addDetailMeeting(payload, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: ["get-meeting-details-timing"],
-        });
-        if (!meetingSnapshot.exists()) {
-          return;
-        } else {
-          update(meetRef, {
-            updatedAt: new Date(),
+      const payload = {
+        meetingId: meetingId,
+        teamLeaders: updatedTeamLeaders,
+      };
+      addDetailMeeting(payload, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: ["get-meeting-details-timing"],
           });
-        }
-      },
-    });
+        },
+      });
+    } else {
+      const meetRef = ref(db, `meetings/${meetingId}/state`);
+      const meetingSnapshot = await get(meetRef);
+
+      const meetingJoiners = meetingTiming?.joiners;
+      const teamLeader = (meetingJoiners as Joiners[])
+        ?.filter((da) => da.isTeamLeader)
+        .map((item) => item.employeeId);
+
+      let updatedTeamLeaders: string[];
+      if (teamLeader?.includes(data.employeeId)) {
+        updatedTeamLeaders = teamLeader.filter((id) => id !== data.employeeId);
+      } else {
+        updatedTeamLeaders = [...(teamLeader || []), data.employeeId];
+      }
+
+      const payload = {
+        meetingId: meetingId,
+        teamLeaders: updatedTeamLeaders,
+      };
+      addDetailMeeting(payload, {
+        onSuccess: () => {
+          if (!meetingSnapshot.exists()) {
+            queryClient.invalidateQueries({
+              queryKey: ["get-meeting-details-timing"],
+            });
+            return;
+          } else {
+            update(meetRef, {
+              updatedAt: new Date(),
+            });
+          }
+        },
+      });
+    }
   };
   // const handleCheckOut = (employeeId: string) => {
   //   if (meetingId) {
@@ -287,11 +347,10 @@ export default function useMeetingDesc() {
   };
 
   const handleAddEmp = async (data: EmployeeDetails[]) => {
-    const meetingRef = ref(db, `meetings/${meetingId}`);
-    const meetingSnapshot = await get(meetingRef);
-    const meetStateRef = ref(db, `meetings/${meetingId}/state`);
-
-    if (meetingId && meetingTiming?.meetingId) {
+    if (
+      meetingTiming?.detailMeetingStatus === "NOT_STARTED" ||
+      meetingTiming?.detailMeetingStatus === "ENDED"
+    ) {
       const payload = {
         meetingId: meetingId,
         joiners: [
@@ -303,47 +362,91 @@ export default function useMeetingDesc() {
       };
       addDetailMeeting(payload, {
         onSuccess: () => {
-          if (!meetingSnapshot.exists()) {
-            queryClient.invalidateQueries({
-              queryKey: ["get-meeting-details-timing"],
-            });
-            return;
-          }
-          update(meetStateRef, {
-            updatedAt: Date.now(),
+          queryClient.invalidateQueries({
+            queryKey: ["get-meeting-details-timing"],
           });
         },
       });
+    } else {
+      const meetingRef = ref(db, `meetings/${meetingId}`);
+      const meetingSnapshot = await get(meetingRef);
+      const meetStateRef = ref(db, `meetings/${meetingId}/state`);
+
+      if (meetingId && meetingTiming?.meetingId) {
+        const payload = {
+          meetingId: meetingId,
+          joiners: [
+            ...(data?.map((item) => item.employeeId) || []),
+            ...((meetingTiming.joiners as Joiners[])?.map(
+              (em) => em.employeeId,
+            ) || []),
+          ],
+        };
+        addDetailMeeting(payload, {
+          onSuccess: () => {
+            if (!meetingSnapshot.exists()) {
+              queryClient.invalidateQueries({
+                queryKey: ["get-meeting-details-timing"],
+              });
+              return;
+            }
+            update(meetStateRef, {
+              updatedAt: Date.now(),
+            });
+          },
+        });
+      }
     }
   };
 
   const handleDeleteEmp = async (employeeId: string) => {
-    const meetingRef = ref(db, `meetings/${meetingId}`);
-    const meetingSnapshot = await get(meetingRef);
-    const meetStateRef = ref(db, `meetings/${meetingId}/state`);
+    if (
+      meetingTiming?.detailMeetingStatus === "NOT_STARTED" ||
+      meetingTiming?.detailMeetingStatus === "ENDED"
+    ) {
+      const joiners = (meetingTiming?.joiners as Joiners[])
+        ?.filter((item) => item.employeeId !== employeeId)
+        ?.map((item) => item.employeeId);
 
-    const joiners = (meetingTiming?.joiners as Joiners[])
-      ?.filter((item) => item.employeeId !== employeeId)
-      ?.map((item) => item.employeeId);
-
-    if (meetingId && meetingTiming?.meetingId) {
       const payload = {
         meetingId: meetingId,
         joiners: joiners,
       };
       addDetailMeeting(payload, {
         onSuccess: () => {
-          if (!meetingSnapshot.exists()) {
-            queryClient.invalidateQueries({
-              queryKey: ["get-meeting-details-timing"],
-            });
-            return;
-          }
-          update(meetStateRef, {
-            updatedAt: Date.now(),
+          queryClient.invalidateQueries({
+            queryKey: ["get-meeting-details-timing"],
           });
         },
       });
+    } else {
+      const meetingRef = ref(db, `meetings/${meetingId}`);
+      const meetingSnapshot = await get(meetingRef);
+      const meetStateRef = ref(db, `meetings/${meetingId}/state`);
+
+      const joiners = (meetingTiming?.joiners as Joiners[])
+        ?.filter((item) => item.employeeId !== employeeId)
+        ?.map((item) => item.employeeId);
+
+      if (meetingId && meetingTiming?.meetingId) {
+        const payload = {
+          meetingId: meetingId,
+          joiners: joiners,
+        };
+        addDetailMeeting(payload, {
+          onSuccess: () => {
+            if (!meetingSnapshot.exists()) {
+              queryClient.invalidateQueries({
+                queryKey: ["get-meeting-details-timing"],
+              });
+              return;
+            }
+            update(meetStateRef, {
+              updatedAt: Date.now(),
+            });
+          },
+        });
+      }
     }
   };
 
@@ -383,7 +486,6 @@ export default function useMeetingDesc() {
     setIsCardVisible,
     // handleTimeUpdate,
     handleConclusionMeeting,
-    handleEndMeeting,
     openEmployeeId,
     setOpenEmployeeId,
     handleAddTeamLeader,

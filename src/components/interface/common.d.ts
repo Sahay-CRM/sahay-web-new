@@ -660,6 +660,20 @@ interface TaskGetPaging {
   isActive?: boolean;
 }
 
+interface RepeatTaskAllRes {
+  taskId: string;
+  repetitiveTaskId: string;
+  taskName: string;
+  isCompleted?: boolean;
+  taskStatus: string;
+  winLostTask: number;
+  taskStatusId: string;
+  taskTypeName: string;
+  taskDescription: string;
+  taskDeadline: string;
+  taskTypeId: string;
+}
+
 interface TaskProject {
   projectId: string;
   CompanyProjectMaster: {

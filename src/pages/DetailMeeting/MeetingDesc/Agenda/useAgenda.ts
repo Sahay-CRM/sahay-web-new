@@ -859,11 +859,6 @@ export const useAgenda = ({
   // }, [handleCheckMeetingExist, isMeetingStart, meetingResponse, meetingStatus]);
 
   const handleCloseMeetingWithLog = () => {
-    // const now = Date.now();
-
-    // const prevElapsedSeconds = meetingConclusionTime
-    //   ? (now - meetingConclusionTime) / 1000
-    //   : undefined;
     if (meetingId && meetingId) {
       endMeet(meetingId);
     }
@@ -1031,19 +1026,22 @@ export const useAgenda = ({
   };
 
   const handleAgendaTabFilter = async (data: string) => {
-    const db = database;
-
-    const meetingRef = ref(db, `meetings/${meetingId}`);
-    const meetingSnapshot = await get(meetingRef);
-
-    if (!meetingSnapshot.exists()) {
+    if (meetingStatus === "NOT_STARTED" || meetingStatus === "ENDED") {
       setResolutionFilter(data);
-      return;
     } else {
-      await update(ref(db, `meetings/${meetingId}/state`), {
-        agendaActiveTab: data,
-        updatedAt: Date.now(),
-      });
+      const db = database;
+
+      const meetingRef = ref(db, `meetings/${meetingId}`);
+      const meetingSnapshot = await get(meetingRef);
+
+      if (!meetingSnapshot.exists()) {
+        return;
+      } else {
+        await update(ref(db, `meetings/${meetingId}/state`), {
+          agendaActiveTab: data,
+          updatedAt: Date.now(),
+        });
+      }
     }
   };
 

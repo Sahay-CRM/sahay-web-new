@@ -16,3 +16,6 @@ export { default as useGetRepeatCompanyTaskById } from "./useGetRepeatCompanyTas
 export { default as addUpdateTaskCommentMutation } from "./useAddCompanyTaskComment";
 export { default as deleteCommentMutation } from "./useDeleteTaskComment";
 export { default as useGetTaskComments } from "./useGetTaskComments";
+
+export { default as useGetRepeatAllTask } from "./useGetRepeatAllTask";
+export { default as updateRepeatTaskIdMutation } from "./useUpdateRepeatTask";

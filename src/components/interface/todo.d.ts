@@ -22,18 +22,6 @@ interface FileItem {
   url?: string;
 }
 
-interface CustomObj {
-  day?: number;
-  baseFrequency: string;
-  toDoId?: string;
-  dateOrWeekly?: string;
-  date: number | null;
-  nWeek: number | "";
-  day: number | null;
-  qMonth: number | null | "";
-  hMonth: HalfType | number | null | "";
-  month: number | null;
-}
 interface TaskSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -72,14 +60,24 @@ interface CustomModalFileProps {
   onSave: (data: repeatTyped) => void;
   defaultValues?: CustomObj;
 }
-
+interface CustomObj {
+  days?: number[];
+  baseFrequency: string;
+  toDoId?: string;
+  dateOrWeekly?: string;
+  date: number | null;
+  nWeek: number | "";
+  qMonth: number | null | "";
+  hMonth: HalfType | number | null | "";
+  month: number | null;
+}
 interface repeatTyped {
   baseFrequency: string;
   toDoId?: string;
   dateOrWeekly?: string;
   date: number | null;
   nWeek: number | "";
-  day: number | null;
+  days: number[] | null;
   qMonth: number | null | "";
   hMonth: HalfType | number | null | "";
   month: number | null;

@@ -3,7 +3,7 @@ import { Calendar, Pencil, Trash, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import TaskSheet from "./todoListDrawer";
+import TaskSheet from "./ToDoListDrawer/todoListDrawer";
 import { useTodoList } from "./useTodoList";
 import { Button } from "@/components/ui/button";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
@@ -242,57 +242,59 @@ export default function TodoList() {
             </div>
           ))}
 
-          <div className="space-y-1 overflow-auto flex-1 pr-1">
-            <h2 className="mt-2 text-primary border-b mb-3 font-medium">
-              COMPLETED
-            </h2>
-            {completedTasks.map((task) => (
-              <div
-                key={task.toDoId}
-                className="flex h-10 justify-between border p-1 break-all rounded-sm bg-card hover:bg-accent transition items-center"
-              >
-                <div className="flex gap-3 flex-1 items-center">
-                  <div className="px-1 flex-shrink-0 flex items-center h-full">
-                    <RadioGroup
-                      value={task.isCompleted ? "notdone" : "todo"}
-                      onValueChange={() =>
-                        canToggle &&
-                        task.toDoId &&
-                        toggleComplete(task.toDoId, !!task.isCompleted)
-                      }
-                      onClick={(e) => !canToggle && e.stopPropagation()}
-                    >
-                      <RadioGroupItem
-                        value="notdonef"
-                        id={`task-${task.toDoId}`}
-                        className={`w-4 h-4 rounded-full border border-gray-400 bg-gray-600 ${
-                          canToggle
-                            ? "cursor-pointer"
-                            : "cursor-not-allowed opacity-50"
-                        }`}
-                      />
-                    </RadioGroup>
-                  </div>
-                  <div className="flex flex-col flex-1">
-                    <Label
-                      className="text-muted-foreground line-through text-[12px]"
-                      title={task.toDoName}
-                    >
-                      {task.toDoName}
-                    </Label>
-                    {task.dueDate && (
-                      <span className="flex items-center gap-1 text-[10px] text-primary leading-none">
-                        <Calendar className="w-2 h-2 shrink-0" />
-                        <span className="inline-block leading-none">
-                          {renderDate(task.dueDate)}
+          {completedTasks.length > 0 && (
+            <div className="space-y-1 overflow-auto flex-1 pr-1">
+              <h2 className="mt-2 text-primary border-b mb-3 font-medium">
+                COMPLETED
+              </h2>
+              {completedTasks.map((task) => (
+                <div
+                  key={task.toDoId}
+                  className="flex h-10 justify-between border p-1 break-all rounded-sm bg-card hover:bg-accent transition items-center"
+                >
+                  <div className="flex gap-3 flex-1 items-center">
+                    <div className="px-1 flex-shrink-0 flex items-center h-full">
+                      <RadioGroup
+                        value={task.isCompleted ? "notdone" : "todo"}
+                        onValueChange={() =>
+                          canToggle &&
+                          task.toDoId &&
+                          toggleComplete(task.toDoId, !!task.isCompleted)
+                        }
+                        onClick={(e) => !canToggle && e.stopPropagation()}
+                      >
+                        <RadioGroupItem
+                          value="notdonef"
+                          id={`task-${task.toDoId}`}
+                          className={`w-4 h-4 rounded-full border border-gray-400 bg-gray-600 ${
+                            canToggle
+                              ? "cursor-pointer"
+                              : "cursor-not-allowed opacity-50"
+                          }`}
+                        />
+                      </RadioGroup>
+                    </div>
+                    <div className="flex flex-col flex-1">
+                      <Label
+                        className="text-muted-foreground line-through text-[12px]"
+                        title={task.toDoName}
+                      >
+                        {task.toDoName}
+                      </Label>
+                      {task.dueDate && (
+                        <span className="flex items-center gap-1 text-[10px] text-primary leading-none">
+                          <Calendar className="w-2 h-2 shrink-0" />
+                          <span className="inline-block leading-none">
+                            {renderDate(task.dueDate)}
+                          </span>
                         </span>
-                      </span>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Add Task */}

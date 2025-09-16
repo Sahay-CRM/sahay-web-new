@@ -100,6 +100,14 @@ export const companyNavigationData = [
       },
     ],
   },
+  {
+    id: 14,
+    icon: "GitPullRequestArrow",
+    label: "Repeat Task List",
+    link: "/dashboard/repeat-task-list",
+    permission: "View",
+    moduleKey: "TASK",
+  },
   // {
   //   id: 6,
   //   icon: "CheckSquare",
@@ -193,6 +201,7 @@ export const companyNavigationData = [
       },
     ],
   },
+
   {
     id: 11,
     icon: "Shield",

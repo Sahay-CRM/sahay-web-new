@@ -1,11 +1,9 @@
-// utils/repeatOptions.ts
-
 export function getDayName(date: Date) {
   return date.toLocaleDateString("en-US", { weekday: "long" });
 }
 
 export function getOrdinalWeekday(date: Date) {
-  const day = date.getDay();
+  const days = date.getDay();
   const dateOfMonth = date.getDate();
   const lastDateOfMonth = new Date(
     date.getFullYear(),
@@ -29,7 +27,7 @@ export function getOrdinalWeekday(date: Date) {
   const isLastWeek = daysLeftInMonth < 7;
   const ordinalLabel = isLastWeek ? "last" : ordinals[weekNumber - 1];
 
-  return `${ordinalLabel} ${weekdayNames[day]}`;
+  return `${ordinalLabel} ${weekdayNames[days]}`;
 }
 
 export function getOrdinalDate(n: number) {
@@ -87,7 +85,7 @@ export function buildRepetitionOptions(taskDeadline?: string | Date | null) {
         ? [
             {
               value: "MONTHLYEOM",
-              label: `Monthly on the last day (${getOrdinalDate(
+              label: `Monthly on the last days (${getOrdinalDate(
                 lastDateOfMonth,
               )})`,
             },
@@ -123,7 +121,18 @@ export function buildRepetitionOptions(taskDeadline?: string | Date | null) {
   }
 }
 
-// utils/getRepeatTypeOrCustom.ts
+function isTodayMatchingDay(days?: number | number[]): boolean {
+  if (days === undefined) return false;
+  const todayDay = new Date().getDay();
+  if (Array.isArray(days)) {
+    if (days.length === 1) {
+      return days[0] === todayDay;
+    }
+    return false;
+  }
+  return days === todayDay;
+}
+
 export function getRepeatTypeOrCustom(data: TodoItem): string {
   if (!data?.repeatType) return "";
 
@@ -136,14 +145,15 @@ export function getRepeatTypeOrCustom(data: TodoItem): string {
       return "DAILYALTERNATE";
 
     case "WEEKLY": {
-      const sameDay = data.customObj?.day === today.getDay();
+      const sameDay = isTodayMatchingDay(data.customObj?.days);
+      // const sameDay = data.customObj?.days === today.getDay();
       return sameDay ? "WEEKLY" : "CUSTOMTYPE";
     }
 
     case "MONTHLYNWEEKDAY": {
       const weekNumber = Math.ceil(today.getDate() / 7);
       const sameWeek = data.customObj?.nWeek === weekNumber;
-      const sameDay = data.customObj?.day === today.getDay();
+      const sameDay = isTodayMatchingDay(data.customObj?.days);
       return sameWeek && sameDay ? "MONTHLYNWEEKDAY" : "CUSTOMTYPE";
     }
 
@@ -170,7 +180,7 @@ export function getRepeatTypeOrCustom(data: TodoItem): string {
       ).getDate();
       const todayWeek = Math.ceil(today.getDate() / 7);
       const lastWeek = Math.ceil(lastDate / 7);
-      const sameDay = data.customObj?.day === today.getDay();
+      const sameDay = isTodayMatchingDay(data.customObj?.days);
       const sameWeek = todayWeek === lastWeek;
       return sameDay && sameWeek ? "MONTHLYLASTWEEKDAY" : "CUSTOMTYPE";
     }
@@ -184,7 +194,7 @@ export function getRepeatTypeOrCustom(data: TodoItem): string {
     case "YEARLYXMONTHNWEEKDAY": {
       const weekNumber = Math.ceil(today.getDate() / 7);
       const sameWeek = data.customObj?.nWeek === weekNumber;
-      const sameDay = data.customObj?.day === today.getDay();
+      const sameDay = isTodayMatchingDay(data.customObj?.days);
       const sameMonth = data.customObj?.month === today.getMonth() + 1;
       return sameWeek && sameDay && sameMonth
         ? "YEARLYXMONTHNWEEKDAY"
@@ -199,7 +209,7 @@ export function getRepeatTypeOrCustom(data: TodoItem): string {
       ).getDate();
       const todayWeek = Math.ceil(today.getDate() / 7);
       const lastWeek = Math.ceil(lastDate / 7);
-      const sameDay = data.customObj?.day === today.getDay();
+      const sameDay = isTodayMatchingDay(data.customObj?.days);
       const sameMonth = data.customObj?.month === today.getMonth() + 1;
       return sameDay && sameMonth && todayWeek === lastWeek
         ? "YEARLYXMONTHLASTWEEKDAY"

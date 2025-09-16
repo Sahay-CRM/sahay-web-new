@@ -141,20 +141,28 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
     };
     addNote(payload, {
       onSuccess: async () => {
-        const meetingSnapshot = await get(meetingRef);
-        if (!meetingSnapshot.exists()) {
+        if (meetingStatus === "NOT_STARTED" || meetingStatus === "ENDED") {
           queryClient.invalidateQueries({
             queryKey: ["get-meeting-notes"],
           });
           refetchMeetingNotes();
           setDropdownOpen(null);
-          return;
         } else {
-          update(ref(db, `meetings/${meetingId}/state`), {
-            updatedAt: Date.now(),
-          });
-          refetchMeetingNotes();
-          setDropdownOpen(null);
+          const meetingSnapshot = await get(meetingRef);
+          if (!meetingSnapshot.exists()) {
+            queryClient.invalidateQueries({
+              queryKey: ["get-meeting-notes"],
+            });
+            refetchMeetingNotes();
+            setDropdownOpen(null);
+            return;
+          } else {
+            update(ref(db, `meetings/${meetingId}/state`), {
+              updatedAt: Date.now(),
+            });
+            refetchMeetingNotes();
+            setDropdownOpen(null);
+          }
         }
       },
     });
@@ -178,22 +186,31 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
 
     addNote(payload, {
       onSuccess: async () => {
-        const meetingSnapshot = await get(meetingRef);
-        if (!meetingSnapshot.exists()) {
+        if (meetingStatus === "NOT_STARTED" || meetingStatus === "ENDED") {
           queryClient.invalidateQueries({
             queryKey: ["get-meeting-notes"],
           });
           refetchMeetingNotes();
           setEditingNoteId(null);
           setEditingNoteText("");
-          return;
         } else {
-          update(ref(db, `meetings/${meetingId}/state`), {
-            updatedAt: Date.now(),
-          });
-          refetchMeetingNotes();
-          setEditingNoteId(null);
-          setEditingNoteText("");
+          const meetingSnapshot = await get(meetingRef);
+          if (!meetingSnapshot.exists()) {
+            queryClient.invalidateQueries({
+              queryKey: ["get-meeting-notes"],
+            });
+            refetchMeetingNotes();
+            setEditingNoteId(null);
+            setEditingNoteText("");
+            return;
+          } else {
+            update(ref(db, `meetings/${meetingId}/state`), {
+              updatedAt: Date.now(),
+            });
+            refetchMeetingNotes();
+            setEditingNoteId(null);
+            setEditingNoteText("");
+          }
         }
       },
     });
@@ -219,8 +236,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
 
     addNote(payload, {
       onSuccess: async () => {
-        const meetingSnapshot = await get(meetingRef);
-        if (!meetingSnapshot.exists()) {
+        if (meetingStatus === "NOT_STARTED" || meetingStatus === "ENDED") {
           queryClient.invalidateQueries({
             queryKey: ["get-meeting-notes"],
           });
@@ -228,15 +244,26 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
           setTitleInput("");
           setNoteInput("");
           setIsAddingNote(false);
-          return;
         } else {
-          update(ref(db, `meetings/${meetingId}/state`), {
-            updatedAt: Date.now(),
-          });
-          refetchMeetingNotes();
-          setTitleInput("");
-          setNoteInput("");
-          setIsAddingNote(false);
+          const meetingSnapshot = await get(meetingRef);
+          if (!meetingSnapshot.exists()) {
+            queryClient.invalidateQueries({
+              queryKey: ["get-meeting-notes"],
+            });
+            refetchMeetingNotes();
+            setTitleInput("");
+            setNoteInput("");
+            setIsAddingNote(false);
+            return;
+          } else {
+            update(ref(db, `meetings/${meetingId}/state`), {
+              updatedAt: Date.now(),
+            });
+            refetchMeetingNotes();
+            setTitleInput("");
+            setNoteInput("");
+            setIsAddingNote(false);
+          }
         }
       },
     });

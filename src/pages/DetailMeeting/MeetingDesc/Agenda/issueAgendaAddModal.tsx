@@ -45,10 +45,12 @@ export default function IssueAgendaAddModal({
 
   const handleSubmit = () => {
     if (!onSubmit) return;
-    onSubmit({
-      type: selectedType,
-      value: issueInput,
-    });
+    if (issueInput.trim() !== "") {
+      onSubmit({
+        type: selectedType,
+        value: issueInput,
+      });
+    }
   };
 
   useEffect(() => {
@@ -62,8 +64,6 @@ export default function IssueAgendaAddModal({
   const handleListItemSelect = (item: DetailMeetingObjectives) => {
     handleUpdateSelectedObjective(item);
     setDropdownVisible(false);
-    // Optionally trigger add immediately after selection
-    // setTimeout(() => handleAddIssue(), 0);
   };
 
   const handleClose = () => {

@@ -669,7 +669,9 @@ export default function Agenda({
                   }
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      handleAddIssue();
+                      if (issueInput.trim() !== "") {
+                        handleAddIssue();
+                      }
                     }
                   }}
                   className="w-full h-[45px] sm:h-[50px] border-0 border-b-2 border-gray-300 rounded-none pr-10 text-sm sm:text-base focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[0px] "
@@ -811,8 +813,6 @@ export default function Agenda({
                         }
                       }}
                       style={{
-                        // opacity: draggedIndex === idx ? 0.5 : 1,
-
                         border:
                           hoverIndex === idx &&
                           (meetingStatus === "STARTED" ||
@@ -900,11 +900,13 @@ export default function Agenda({
                       </div>
 
                       <div className="flex items-center gap-2 relative">
-                        <div className="text-xs text-center w-20 text-gray-500 absolute top-0 right-0">
-                          <Badge variant="secondary" className="mb-1.5">
-                            {item.ioType}
-                          </Badge>
-                        </div>
+                        {!canEdit && (
+                          <div className="text-xs text-center w-20 text-gray-500 absolute top-0 right-0">
+                            <Badge variant="secondary" className="mb-1.5">
+                              {item.ioType}
+                            </Badge>
+                          </div>
+                        )}
 
                         {(meetingStatus === "STARTED" ||
                           meetingStatus === "NOT_STARTED") &&
@@ -1053,8 +1055,7 @@ export default function Agenda({
                               </div>
                             )}
 
-                          {/* Hover button */}
-                          {isTeamLeader && (
+                          {isTeamLeader && !canEdit && (
                             <div
                               className={`absolute -right-[2px] rounded-md w-24 flex flex-col justify-center items-end opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-10" : "h-[75px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
                             >

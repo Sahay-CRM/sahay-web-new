@@ -16,14 +16,16 @@ interface DateRangePickerProps {
   className?: string;
   onChange?: (range: DateRange | undefined) => void;
   onApply?: (range: DateRange | undefined) => void;
-  value?: { from: Date | undefined; to: Date | undefined }; // <-- add this line
+  onSaveApply?: (range: DateRange | undefined) => void;
+  value?: { from: Date | undefined; to: Date | undefined };
 }
 
 export default function DateRangePicker({
   className,
   onChange,
   onApply,
-  value, // <-- add this line
+  value,
+  onSaveApply,
 }: DateRangePickerProps) {
   // Use controlled value if provided, otherwise use local state
   const [date, setDate] = React.useState<DateRange | undefined>({
@@ -50,6 +52,15 @@ export default function DateRangePicker({
   const handleApply = () => {
     setDate(tempDate);
     onApply?.(tempDate); // trigger API call
+    setIsOpen(false);
+  };
+  const handleSave = () => {
+    setDate(tempDate);
+    onSaveApply?.(tempDate);
+    setIsOpen(false);
+  };
+
+  const handleClear = () => {
     setIsOpen(false);
   };
 
@@ -95,17 +106,28 @@ export default function DateRangePicker({
             onSelect={handleSelect}
             numberOfMonths={2}
           />
-          <div className="flex justify-end gap-2 mt-3 pt-3 border-t">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsOpen(false)}
-            >
+          <div className="flex justify-between gap-2 mt-3 pt-3 border-t">
+            <Button variant="outline" size="sm" onClick={handleClear}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleApply} disabled={!tempDate?.from}>
-              Apply
-            </Button>
+            <div className="flex gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSave}
+                disabled={!tempDate?.from}
+                className="border-primary"
+              >
+                Save & Apply
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleApply}
+                disabled={!tempDate?.from}
+              >
+                Apply
+              </Button>
+            </div>
           </div>
         </PopoverContent>
       </Popover>

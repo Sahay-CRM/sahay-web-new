@@ -61,9 +61,9 @@ const DropdownSearchMenu = ({
       <DropdownMenuContent className="w-56">
         {/* Render filter options if provided */}
         {options && options.length > 0
-          ? options.map((opt) => (
+          ? options.map((opt, idx) => (
               <DropdownMenuCheckboxItem
-                key={opt.value}
+                key={`${opt.value}-${idx}`}
                 checked={selected.includes(opt.value)}
                 onCheckedChange={() => handleOptionToggle(opt.value)}
               >
@@ -76,9 +76,9 @@ const DropdownSearchMenu = ({
               </DropdownMenuCheckboxItem>
             ))
           : // Otherwise, render columns for toggling
-            columns?.map((col) => (
+            columns?.map((col, idx) => (
               <DropdownMenuCheckboxItem
-                key={col.key}
+                key={`${col.key}-${idx}`}
                 checked={col.visible}
                 onCheckedChange={() => onToggleColumn?.(col.key)}
               >

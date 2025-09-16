@@ -326,6 +326,17 @@ const Urls = {
     `${baseUrl}/company/project/comment/update/${id}`,
   deleteProjectComment: (id: string) =>
     `${baseUrl}/company/project/comment/delete/${id}`,
+
+  addTaskComment: () => `${baseUrl}/company/task/comment/add`,
+  getTaskComments: (id: string) => `${baseUrl}/company/task/comment/get/${id}`,
+  updateTaskComment: (id: string) =>
+    `${baseUrl}/company/task/comment/update/${id}`,
+  deleteTaskComment: (id: string) =>
+    `${baseUrl}/company/task/comment/delete/${id}`,
+
+  getRepeatTaskListDropdown: () => `${baseUrl}/company/task/repeat/get-all`,
+  updateRepeatTaskList: (id: string) =>
+    `${baseUrl}/company/task/repeat/update/${id}`,
 };
 
 export default Urls;
