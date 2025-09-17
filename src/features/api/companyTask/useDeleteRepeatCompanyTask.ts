@@ -37,6 +37,7 @@ export default function useDeleteRepeatCompanyTask() {
     onSuccess: (response) => {
       toast.success(response?.message);
       queryClient.resetQueries({ queryKey: ["get-task-listrepeat"] });
+      queryClient.resetQueries({ queryKey: ["get-allRepeatTaskList"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

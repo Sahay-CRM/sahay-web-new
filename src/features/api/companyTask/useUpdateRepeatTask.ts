@@ -5,17 +5,12 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-interface UpdateRepeatTaskInter {
-  taskId: string;
-  isCompleted: boolean;
-}
-
 type DatePaging = BaseResponse<CompanyProjectDataProps>;
 
 export default function useUpdateRepeatTask() {
   const updateRepeatTaskIdMutation = useMutation({
     mutationKey: ["add-or-update-task-list"],
-    mutationFn: async (data: UpdateRepeatTaskInter) => {
+    mutationFn: async (data: RepeatTaskAllRes) => {
       const { data: resData } = await Api.post<DatePaging>({
         url: Urls.updateRepeatTaskList(data.taskId!),
         data: data,

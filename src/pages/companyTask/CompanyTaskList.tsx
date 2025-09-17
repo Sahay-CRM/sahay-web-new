@@ -50,6 +50,7 @@ export default function CompanyTaskList() {
     viewModalData,
     taskStatus,
     taskDateRange,
+    appliedDateRange,
   } = useCompanyTaskList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -131,6 +132,10 @@ export default function CompanyTaskList() {
                   }}
                   onChange={handleDateRangeChange}
                   onApply={handleDateRangeApply}
+                  defaultDate={{
+                    startDate: appliedDateRange.taskStartDate,
+                    deadline: appliedDateRange.taskDeadline,
+                  }}
                 />
               )}
             </div>

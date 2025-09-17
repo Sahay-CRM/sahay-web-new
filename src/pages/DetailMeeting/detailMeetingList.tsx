@@ -303,7 +303,7 @@ export default function DetailMeetingList() {
             permissionKey="users"
             localStorageId="MeetingList"
             moduleKey="LIVE_MEETING"
-            actionColumnWidth="w-fit"
+            actionColumnWidth="w-[300px]"
             sortableColumns={[
               "meetingName",
               "meetingDateTime",

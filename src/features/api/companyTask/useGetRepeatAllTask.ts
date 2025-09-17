@@ -20,7 +20,7 @@ export default function useGetRepeatAllTask({
 
       return resData;
     },
-    enabled: !!enable || !!filter,
+    enabled: !!enable,
   });
   return query;
 }

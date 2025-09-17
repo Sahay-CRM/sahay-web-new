@@ -18,6 +18,9 @@ interface DateRangePickerProps {
   onApply?: (range: DateRange | undefined) => void;
   onSaveApply?: (range: DateRange | undefined) => void;
   value?: { from: Date | undefined; to: Date | undefined };
+  isClear?: boolean;
+  handleClear?: () => void;
+  defaultDate?: { startDate: Date | undefined; deadline: Date | undefined };
 }
 
 export default function DateRangePicker({
@@ -26,17 +29,21 @@ export default function DateRangePicker({
   onApply,
   value,
   onSaveApply,
+  isClear,
+  handleClear,
+  defaultDate,
 }: DateRangePickerProps) {
-  // Use controlled value if provided, otherwise use local state
   const [date, setDate] = React.useState<DateRange | undefined>({
-    from: new Date(),
+    from: defaultDate?.startDate,
+    to: defaultDate?.deadline,
   });
   const [tempDate, setTempDate] = React.useState<DateRange | undefined>({
-    from: new Date(),
+    from: defaultDate?.startDate,
+    to: defaultDate?.deadline,
   });
   const [isOpen, setIsOpen] = React.useState(false);
 
-  // Sync local state with controlled value
+  // If parent gives controlled value, sync it
   React.useEffect(() => {
     if (value) {
       setDate(value);
@@ -44,29 +51,57 @@ export default function DateRangePicker({
     }
   }, [value]);
 
+  // When popover opens, reset tempDate from defaultDate
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (open && defaultDate) {
+      const revert: DateRange = {
+        from: defaultDate.startDate,
+        to: defaultDate.deadline,
+      };
+      setTempDate(revert);
+    }
+  };
+
   const handleSelect = (range: DateRange | undefined) => {
     setTempDate(range);
-    onChange?.(range); // notify parent for preview purposes
+    onChange?.(range);
   };
 
   const handleApply = () => {
     setDate(tempDate);
-    onApply?.(tempDate); // trigger API call
+    onApply?.(tempDate);
     setIsOpen(false);
   };
+
   const handleSave = () => {
     setDate(tempDate);
     onSaveApply?.(tempDate);
     setIsOpen(false);
   };
 
-  const handleClear = () => {
+  const onClear = () => {
+    if (isClear && handleClear) {
+      handleClear();
+      setIsOpen(false);
+    }
+  };
+
+  const onClose = () => {
+    if (defaultDate) {
+      const revert: DateRange = {
+        from: defaultDate.startDate,
+        to: defaultDate.deadline,
+      };
+      setTempDate(revert);
+      setDate(revert);
+    }
     setIsOpen(false);
   };
 
   return (
     <div className={cn("grid gap-2 bg-white", className)}>
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <Popover open={isOpen} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
             id="date"
@@ -83,9 +118,6 @@ export default function DateRangePicker({
                   {format(date.from, "LLL dd, y")} -{" "}
                   {format(date.to, "LLL dd, y")}
                 </>
-              ) : format(date.from, "yyyy-MM-dd") ===
-                format(new Date(), "yyyy-MM-dd") ? (
-                <>Today - {format(date.from, "dd MMMM yyyy")}</>
               ) : (
                 format(date.from, "LLL dd, y")
               )
@@ -107,19 +139,28 @@ export default function DateRangePicker({
             numberOfMonths={2}
           />
           <div className="flex justify-between gap-2 mt-3 pt-3 border-t">
-            <Button variant="outline" size="sm" onClick={handleClear}>
-              Cancel
-            </Button>
-            <div className="flex gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSave}
-                disabled={!tempDate?.from}
-                className="border-primary"
-              >
-                Save & Apply
+            <div className="flex gap-2">
+              {isClear && (
+                <Button variant="outline" size="sm" onClick={onClear}>
+                  Clear
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={onClose}>
+                Close
               </Button>
+            </div>
+            <div className="flex gap-4">
+              {onSaveApply && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={!tempDate?.from}
+                  className="border-primary"
+                >
+                  Save & Apply
+                </Button>
+              )}
               <Button
                 size="sm"
                 onClick={handleApply}

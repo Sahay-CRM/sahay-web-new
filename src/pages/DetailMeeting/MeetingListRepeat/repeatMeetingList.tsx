@@ -221,7 +221,7 @@ export default function RepeatMeetingList() {
               handleRowsModalOpen(row);
             }}
             sortableColumns={["meetingName"]}
-            actionColumnWidth="w-60"
+            actionColumnWidth="w-[300px]"
           />
         </div>
 

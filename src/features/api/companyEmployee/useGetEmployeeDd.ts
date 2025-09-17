@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export default function useGetEmployeeDd({ filter, enable }: FilterDataProps) {
   return useQuery({
-    queryKey: ["get-employee-list-dd"],
+    queryKey: ["get-employee-list-dd", filter],
     queryFn: async () => {
       const { data } = await Api.post<{ data: EmployeeDetails[] }>({
         url: Urls.getAllEmployeeDd(),

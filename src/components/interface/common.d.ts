@@ -662,16 +662,18 @@ interface TaskGetPaging {
 
 interface RepeatTaskAllRes {
   taskId: string;
-  repetitiveTaskId: string;
-  taskName: string;
+  repetitiveTaskId?: string;
+  taskName?: string;
   isCompleted?: boolean;
-  taskStatus: string;
-  winLostTask: number;
-  taskStatusId: string;
-  taskTypeName: string;
-  taskDescription: string;
-  taskDeadline: string;
-  taskTypeId: string;
+  taskStatus?: string;
+  winLostTask?: number;
+  taskStatusId?: string;
+  taskTypeName?: string;
+  taskDescription?: string;
+  taskDeadline?: string | Date | null;
+  taskTypeId?: string;
+  TaskEmployeeJunction?: Employee[];
+  employeeIds?: string[];
 }
 
 interface TaskProject {

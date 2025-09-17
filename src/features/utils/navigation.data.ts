@@ -96,7 +96,7 @@ export const companyNavigationData = [
         label: "Company Repetition Task ",
         link: "/dashboard/tasksrepeat",
         permission: "View",
-        moduleKey: "TASK",
+        moduleKey: "ROUTINE_TASK",
       },
     ],
   },
@@ -106,7 +106,7 @@ export const companyNavigationData = [
     label: "Repeat Task List",
     link: "/dashboard/repeat-task-list",
     permission: "View",
-    moduleKey: "TASK",
+    moduleKey: "ROUTINE_TASK",
   },
   // {
   //   id: 6,

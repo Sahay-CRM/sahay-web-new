@@ -1,12 +1,23 @@
+import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import {
+  deleteCompanyTaskMutation,
   updateRepeatTaskIdMutation,
   useGetRepeatAllTask,
 } from "@/features/api/companyTask";
+import {
+  getUserId,
+  getUserPermission,
+} from "@/features/selectors/auth.selector";
 import { useState, useEffect } from "react";
 import { DateRange } from "react-day-picker";
+import { useSelector } from "react-redux";
 
 export function useRepeatTaskToDo() {
+  const permission = useSelector(getUserPermission).ROUTINE_TASK;
+  const userid = useSelector(getUserId);
+
   const today = new Date();
+
   const before14 = new Date(today);
   before14.setDate(today.getDate() - 14);
   const after14 = new Date(today);
@@ -20,7 +31,6 @@ export function useRepeatTaskToDo() {
     return `${year}-${month}-${day}`;
   };
 
-  // Load initial values from localStorage (or use defaults)
   const loadSavedDateRange = () => {
     const saved = localStorage.getItem("taskDateRange");
     if (saved) {
@@ -37,17 +47,21 @@ export function useRepeatTaskToDo() {
     }
   };
 
+  const [isEmployeeId, setIsEmployeeId] = useState("");
+  const [isEmpSearch, setIsEmpSearch] = useState("");
   const [isDateRange, setIsDateRange] = useState<{
     startDate: Date | undefined;
     deadline: Date | undefined;
   }>(loadSavedDateRange());
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalData, setModalData] = useState<RepeatTaskAllRes | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   const [isAppliedDateRange, setIsAppliedDateRange] = useState<{
     startDate: Date | undefined;
     deadline: Date | undefined;
   }>(loadSavedDateRange());
 
-  // Save any changes to isAppliedDateRange in localStorage
   useEffect(() => {
     localStorage.setItem(
       "taskDateRange",
@@ -58,13 +72,36 @@ export function useRepeatTaskToDo() {
     );
   }, [isAppliedDateRange]);
 
-  const { mutate: updateRepeatTask } = updateRepeatTaskIdMutation();
+  const todayStr = toLocalISOString(today);
+  const shouldUseSelectedRange = permission.Add || permission.Edit;
 
-  const { data: companyTaskData } = useGetRepeatAllTask({
+  const { mutate: updateRepeatTask } = updateRepeatTaskIdMutation();
+  const { mutate: deleteTaskById } = deleteCompanyTaskMutation();
+
+  const { data: employeeList } = useGetEmployeeDd({
     filter: {
-      startDate: toLocalISOString(isAppliedDateRange.startDate),
-      endDate: toLocalISOString(isAppliedDateRange.deadline),
+      search: isEmpSearch,
     },
+    enable: isEmpSearch.trim().length >= 3,
+  });
+
+  useEffect(() => {
+    if (!isEmployeeId && employeeList?.data[0].employeeId) {
+      setIsEmployeeId(employeeList?.data[0].employeeId);
+    }
+  }, [employeeList?.data, isEmployeeId]);
+
+  const { data: companyTaskData, isLoading } = useGetRepeatAllTask({
+    filter: {
+      employeeId: shouldUseSelectedRange ? isEmployeeId : userid,
+      startDate: shouldUseSelectedRange
+        ? toLocalISOString(isAppliedDateRange.startDate)
+        : todayStr,
+      endDate: shouldUseSelectedRange
+        ? toLocalISOString(isAppliedDateRange.deadline)
+        : todayStr,
+    },
+    enable: !!isEmployeeId,
   });
 
   const toggleComplete = (taskId: string, isCompleted: boolean) => {
@@ -101,12 +138,52 @@ export function useRepeatTaskToDo() {
     if (range) {
       const newTaskDateRange = {
         startDate: range.from,
-        deadline: range.from,
+        deadline: range.to,
       };
       localStorage.setItem("taskDateRange", JSON.stringify(newTaskDateRange));
       setIsDateRange(newTaskDateRange);
       setIsAppliedDateRange(newTaskDateRange);
     }
+  };
+
+  const handleClear = () => {
+    localStorage.removeItem("taskDateRange");
+
+    const defaultRange = {
+      startDate: before14,
+      deadline: after14,
+    };
+
+    setIsDateRange(defaultRange);
+    setIsAppliedDateRange(defaultRange);
+  };
+
+  const employeeOption = employeeList?.data
+    ? employeeList.data.map((status) => ({
+        label: status.employeeName || "Unnamed",
+        value: status.employeeId || "",
+      }))
+    : [];
+
+  const handleEditTask = (data: RepeatTaskAllRes) => {
+    setIsModalOpen(true);
+    setModalData(data);
+    setIsViewModalOpen(false);
+  };
+
+  const handleClose = () => {
+    setIsModalOpen(false);
+    setModalData(null);
+    setIsViewModalOpen(false);
+  };
+
+  const handleViewTask = (data: RepeatTaskAllRes) => {
+    setIsViewModalOpen(true);
+    setModalData(data);
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    deleteTaskById(taskId);
   };
 
   return {
@@ -117,5 +194,19 @@ export function useRepeatTaskToDo() {
     handleDateRangeChange,
     handleDateRangeApply,
     handleDateRangeSaveApply,
+    handleClear,
+    setIsEmployeeId,
+    employeeOption,
+    isEmployeeId,
+    setIsEmpSearch,
+    permission,
+    handleEditTask,
+    modalData,
+    isModalOpen,
+    handleClose,
+    handleViewTask,
+    isViewModalOpen,
+    handleDeleteTask,
+    isLoading,
   };
 }

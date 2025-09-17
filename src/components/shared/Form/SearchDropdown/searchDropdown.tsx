@@ -26,6 +26,7 @@ interface SearchDropdownProps {
   isMandatory?: boolean;
   error?: { message?: string };
   onSearchChange: (value: string) => void;
+  dropdownClass?: string;
 }
 
 const SearchDropdown = ({
@@ -39,6 +40,7 @@ const SearchDropdown = ({
   isMandatory,
   error,
   onSearchChange,
+  dropdownClass,
 }: SearchDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -102,7 +104,7 @@ const SearchDropdown = ({
 
         <PopoverContent
           align="start"
-          className="w-[var(--radix-popover-trigger-width)] p-0 pointer-events-auto"
+          className={twMerge(`p-0 pointer-events-auto ${dropdownClass}`)}
         >
           <div className="p-2">
             <Input
