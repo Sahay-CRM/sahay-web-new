@@ -122,8 +122,6 @@ export default function RoutineTaskDrawer({
   }, [onClose, open]);
 
   const onSubmit = (data: RepeatTaskAllRes) => {
-    console.log(data);
-
     if (data.taskId) {
       const payload = {
         taskId: data.taskId,

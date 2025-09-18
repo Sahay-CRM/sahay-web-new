@@ -17,12 +17,13 @@ import FormSelect from "@/components/shared/Form/FormSelect";
 import RequestModal from "@/components/shared/Modal/RequestModal";
 import { Button } from "@/components/ui/button";
 import { Trash } from "lucide-react";
+import CreateRequestModal from "./createRequestModal";
 
 export default function Request() {
   const { setBreadcrumbs } = useBreadcrumbs();
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Requests", href: "" }]);
+    setBreadcrumbs([{ label: "My Ticket", href: "" }]);
   }, [setBreadcrumbs]);
 
   const {
@@ -36,6 +37,8 @@ export default function Request() {
     isEditData,
     isModalOpen,
     handleClose,
+    handleRequestModalOpen,
+    isRequestModal,
   } = useRequest();
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -97,7 +100,7 @@ export default function Request() {
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
         <div className="flex justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
-            Requests
+            My Ticket
           </h1>
           <div className="flex justify-between items-center gap-4">
             <FormSelect
@@ -115,7 +118,10 @@ export default function Request() {
                 setPaginationFilter={setPaginationFilter}
                 className="w-80"
               />
-            </div>{" "}
+            </div>
+            <Button className="py-2 w-fit" onClick={handleRequestModalOpen}>
+              New Request
+            </Button>
             <div className="flex items-center gap-2">
               {canToggleColumns && (
                 <TooltipProvider>
@@ -152,14 +158,18 @@ export default function Request() {
             // onEdit={openModal}
             customActions={(row) => {
               return (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-red-600"
-                  onClick={() => onDelete(row.changeRequestId!)}
-                >
-                  <Trash className="w-4 h-4" />
-                </Button>
+                <>
+                  {row.requestStatus === "PENDING" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-red-600"
+                      onClick={() => onDelete(row.changeRequestId!)}
+                    >
+                      <Trash className="w-4 h-4" />
+                    </Button>
+                  )}
+                </>
               );
             }}
             paginationDetails={mapPaginationDetails(reqData)}
@@ -183,6 +193,11 @@ export default function Request() {
             defaultData={isEditData}
           />
         )}
+
+        <CreateRequestModal
+          isModalOpen={isRequestModal}
+          modalClose={handleClose}
+        />
       </div>
     </FormProvider>
   );

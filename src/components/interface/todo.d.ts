@@ -57,28 +57,29 @@ interface ToDoList {
 interface CustomModalFileProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (data: repeatTyped) => void;
+  onSave: (data: CustomObj) => void;
   defaultValues?: CustomObj;
 }
-interface CustomObj {
-  days?: number[];
-  baseFrequency: string;
-  toDoId?: string;
-  dateOrWeekly?: string;
-  date: number | null;
-  nWeek: number | "";
-  qMonth: number | null | "";
-  hMonth: HalfType | number | null | "";
-  month: number | null;
+
+interface WeeklyPattern {
+  week: number | null;
+  daysOfWeek: number[];
 }
-interface repeatTyped {
-  baseFrequency: string;
-  toDoId?: string;
-  dateOrWeekly?: string;
-  date: number | null;
-  nWeek: number | "";
-  days: number[] | null;
-  qMonth: number | null | "";
-  hMonth: HalfType | number | null | "";
-  month: number | null;
+
+interface WeekDaysMapping {
+  week: number;
+  daysOfWeek: number[];
+}
+
+interface RepeatPattern {
+  months: number[];
+  weekDaysMapping: WeekDaysMapping[];
+  dates: number[];
+  multiSelect: boolean;
+  daysOfWeek: number[];
+}
+
+interface CustomObj {
+  baseFrequency: FrequencyType;
+  repeatPattern: RepeatPattern;
 }

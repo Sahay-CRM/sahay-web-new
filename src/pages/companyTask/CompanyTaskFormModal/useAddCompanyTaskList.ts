@@ -80,7 +80,6 @@ export const useAddCompanyTask = () => {
       });
     }
   }, [taskId, taskDataById, reset]);
-  // console.log(getValues());
   const [step, setStep] = useState(1);
 
   const [paginationFilterEmployee, setPaginationFilterEmployee] =

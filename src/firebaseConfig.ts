@@ -9,6 +9,7 @@ import {
 import { addNotification } from "./features/reducers/notification.reducer";
 import store from "./features/store";
 import { getDatabase } from "firebase/database";
+import { queryClient } from "./queryClient";
 
 const firebaseConfig = {
   apiKey: "AIzaSyApKwRS0eZK2Dkjwb7gTpbuLvQ5Yf2EzT4",
@@ -61,6 +62,7 @@ export const onFirebaseMessageListener = () => {
       toast.success(title || "You have a new notification!", {
         description: body,
       });
+      queryClient.resetQueries({ queryKey: ["userNotifications"] });
     });
   });
 };

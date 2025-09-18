@@ -50,7 +50,6 @@ import {
   clearNotifications,
   markNotificationRead,
   setNotifications,
-  selectNotificationTotalCount,
 } from "@/features/reducers/notification.reducer";
 import { fireTokenMutation } from "@/features/api";
 import useGetUserNotification from "./useGetUserNotification";
@@ -96,7 +95,7 @@ const DashboardLayout = () => {
   const user = useSelector(getUserDetail);
   const userId = useSelector(getUserId);
   const notifications = useSelector(selectNotifications);
-  const unreadCount = useSelector(selectNotificationTotalCount);
+  // const unreadCount = useSelector(selectNotificationTotalCount);
   const isLoggedIn = useSelector(getIsLoading);
 
   const { mutate: foreToken } = fireTokenMutation();
@@ -325,11 +324,18 @@ const DashboardLayout = () => {
                       }}
                     >
                       <Bell />
-                      {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
-                          {unreadCount}
-                        </span>
-                      )}
+                      {notificationData &&
+                        notificationData.data.filter(
+                          (notification) => notification.isRead === false,
+                        ).length > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                            {
+                              notificationData.data.filter(
+                                (notification) => notification.isRead === false,
+                              ).length
+                            }
+                          </span>
+                        )}
                     </Button>
                   </div>
                   {isNotificationOpen && (

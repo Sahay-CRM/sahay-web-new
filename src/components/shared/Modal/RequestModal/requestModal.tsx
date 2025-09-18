@@ -12,11 +12,6 @@ interface RequestModalProps {
   defaultData?: CreateRequest | null;
 }
 
-interface RequestFormValues {
-  requestName: string;
-  notes: string;
-}
-
 export default function RequestModal({
   type,
   isModalOpen,

@@ -1,5 +1,5 @@
 import { Controller, FormProvider, useFormContext } from "react-hook-form";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,16 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import SearchInput from "@/components/shared/SearchInput";
 import AddDatapointModal from "./addRepetitiveTaskModal";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Repeat } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { buildRepetitionOptions } from "@/components/shared/RepeatOption/repeatOption";
+import CustomModalFile from "@/components/shared/CustomModal";
 
 const ProjectSelectionStep = () => {
   const {
@@ -227,14 +237,18 @@ const TaskDetailsStep = () => {
     watch: watchForm,
     setValue,
   } = useFormContext();
-  const taskDeadline = watchForm("taskDeadline"); // 👈 This is where we watch the date
+  const repeatOptions = buildRepetitionOptions(new Date());
+  const [openCustomModal, setOpenCustomModal] = useState(false);
 
   const {
-    repetitionOptions,
     taskStatusOptions,
     taskTypeOptions,
     setIsTypeSearch,
-  } = useAddCompanyTask(taskDeadline);
+    saveCustomRepeatData,
+    taskDataById,
+    selectedRepeat,
+    setSelectedRepeat,
+  } = useAddCompanyTask();
 
   return (
     <div className="grid mb-10 grid-cols-2 gap-4">
@@ -281,7 +295,7 @@ const TaskDetailsStep = () => {
                 )}
               />
             )}
-            <Controller
+            {/* <Controller
               control={control}
               name="taskDeadline"
               rules={{ required: "Task Deadline is required" }}
@@ -294,26 +308,73 @@ const TaskDetailsStep = () => {
                   // disableDaysFromToday={5}
                 />
               )}
-            />
+            /> */}
           </div>
           <Controller
             control={control}
             name="repeatType"
             rules={{ required: "Please select Repetition Type" }}
-            render={({ field }) => (
-              <FormSelect
-                label="Repetition"
-                options={repetitionOptions}
-                placeholder="Select Repetition"
-                {...field}
-                // value={field.value || ""}
-                // onChange={field.onChange}
-                error={errors.repeatType}
-                isMandatory={true}
-                disabled={!taskDeadline}
-              />
-            )}
+            render={({ field }) => {
+              const selectedRepeatLabel =
+                repeatOptions.find((item) => item.value === selectedRepeat)
+                  ?.label ||
+                (selectedRepeat === "CUSTOMTYPE" ? "Custom" : "Repeat");
+
+              return (
+                <>
+                  <Label>Repeat Type</Label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <div className="flex items-center gap-2 px-3 py-2 cursor-pointer border rounded-md hover:bg-accent">
+                        <Repeat className="w-4 h-4" />
+                        <span>{selectedRepeatLabel}</span>
+                      </div>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent align="start" className="w-fit">
+                      {repeatOptions.map((item) => {
+                        const isSelected = item.value === selectedRepeat;
+                        return (
+                          <DropdownMenuItem
+                            key={item.value}
+                            onClick={() => {
+                              if (item.value === "CUSTOMTYPE") {
+                                setOpenCustomModal(true);
+                              } else {
+                                field.onChange(item.value);
+                                setSelectedRepeat(item.value);
+                              }
+                            }}
+                            className={`flex items-center justify-between ${
+                              isSelected
+                                ? "bg-accent text-accent-foreground"
+                                : ""
+                            }`}
+                          >
+                            <span>{item.label}</span>
+                            {isSelected && <span className="ml-2">✔</span>}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <CustomModalFile
+                    open={openCustomModal}
+                    defaultValues={taskDataById?.data.customObj ?? undefined}
+                    onOpenChange={setOpenCustomModal}
+                    onSave={(data) => {
+                      field.onChange("CUSTOMTYPE");
+                      setSelectedRepeat("CUSTOMTYPE");
+                      setValue("customObj", data);
+                      saveCustomRepeatData(data);
+                    }}
+                  />
+                </>
+              );
+            }}
           />
+
           <div className="flex gap-4">
             <div className="w-1/2">
               <Controller
@@ -326,6 +387,7 @@ const TaskDetailsStep = () => {
                     options={taskStatusOptions}
                     error={errors.isActive}
                     {...field}
+                    triggerClassName="py-3"
                     isMandatory={true}
                   />
                 )}
@@ -339,6 +401,7 @@ const TaskDetailsStep = () => {
                 render={({ field }) => (
                   <SearchDropdown
                     options={taskTypeOptions}
+                    className="mt-0.5"
                     selectedValues={field.value ? [field.value] : []}
                     onSelect={(value) => {
                       field.onChange(value.value);
@@ -524,10 +587,10 @@ export default function AddCompanyTask() {
         <div className="flex items-center gap-5 mb-3">
           <StepProgress
             currentStep={step}
-            totalSteps={totalSteps} // Use adjusted totalSteps
+            totalSteps={totalSteps}
             stepNames={stepNamesArray}
             back={prevStep}
-            isFirstStep={step === 1} // ✅ add this
+            isFirstStep={step === 1}
             isLastStep={step === totalSteps}
             next={nextStep}
             isPending={isPending}

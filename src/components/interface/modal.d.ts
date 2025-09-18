@@ -11,4 +11,5 @@ interface ModalProps {
   modalClose: (open: boolean) => void;
   containerClass?: string;
   modalTitle?: string;
+  childclass?: string;
 }

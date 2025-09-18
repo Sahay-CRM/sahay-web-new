@@ -194,9 +194,6 @@ export default function Agenda({
   });
   const [contentWidth, setContentWidth] = useState("90%");
 
-  // console.log(meetingStatus, "meetingStatus");
-  // console.log(meetingResponse, "meetingStatus");
-
   const SIDEBAR_WIDTH = 600;
 
   const updateWidth = () => {

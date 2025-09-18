@@ -120,7 +120,6 @@ export default function useProjectTabs() {
     }
     refetch();
   };
-  console.log(projectlistdata);
 
   const projects =
     projectlistdata?.data?.map((project: CompanyProjectDataProps) => ({

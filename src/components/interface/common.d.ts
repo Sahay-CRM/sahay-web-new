@@ -752,6 +752,7 @@ interface Task {
   repetitiveTaskId?: string;
   employeeIds?: string | string[];
   isActive?: boolean;
+  customObj?: CustomObj;
 }
 
 interface ProjectTask {

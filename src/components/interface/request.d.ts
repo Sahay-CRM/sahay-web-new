@@ -11,3 +11,9 @@ interface CreateRequest {
   requesterName?: string;
   reviewerName?: string;
 }
+
+interface RequestFormValues {
+  requestName: string;
+  notes: string;
+  requestType?: string;
+}

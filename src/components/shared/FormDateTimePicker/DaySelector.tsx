@@ -19,23 +19,24 @@ interface DaySelectorProps {
 }
 
 const DaySelector: React.FC<DaySelectorProps> = ({
-  value,
+  value = [],
   onChange,
   multiSelectAllow = false,
   alternateDay = false,
   maxLength,
 }) => {
-  const today = new Date().getDay();
   const [selected, setSelected] = useState<number[]>([]);
 
   useEffect(() => {
-    if (!value || value.length === 0) {
-      setSelected([today]);
-      onChange([today]);
-    } else {
-      setSelected(value);
+    if (!multiSelectAllow && selected.length > 1) {
+      setSelected([]);
+      onChange([]);
     }
-  }, [value, onChange, today]);
+  }, [multiSelectAllow, selected, onChange]);
+
+  useEffect(() => {
+    setSelected(value ?? []);
+  }, [value]);
 
   const isDisabled = (dayKey: number): boolean => {
     if (!multiSelectAllow) return false;
@@ -87,11 +88,11 @@ const DaySelector: React.FC<DaySelectorProps> = ({
           type="button"
           onClick={() => toggleDay(days.key)}
           disabled={isDisabled(days.key)}
-          className={`w-10 h-10 rounded-md border flex items-center justify-center transition
+          className={`w-8 h-8 rounded-md border flex items-center justify-center transition
             ${
               selected.includes(days.key)
                 ? "bg-primary text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                : "border border-primary text-primary text-sm font-light hover:bg-gray-200"
             }
             ${isDisabled(days.key) ? "opacity-50 cursor-not-allowed" : ""}
           `}

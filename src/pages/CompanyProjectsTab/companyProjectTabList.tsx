@@ -16,6 +16,7 @@ import RearrangeTabsSheet from "./RearrangeTabsSheet";
 import SearchInput from "@/components/shared/SearchInput";
 import { Link } from "react-router-dom";
 import Pagination from "@/components/shared/Pagination/Pagination";
+import { SpinnerIcon } from "@/components/shared/Icons";
 
 export default function CompanyProjectTabList() {
   const {
@@ -58,24 +59,19 @@ export default function CompanyProjectTabList() {
 
   const isLoading = isPending || isLoadingProject;
 
-  if (isLoading) {
-    return (
-      <div className="w-full flex justify-center items-center h-96">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
   return (
     <div className="w-full  h-[calc(100vh-90px)] flex flex-col">
       <div className="bg-white sticky top-0 z-30 p-4 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex-shrink-0">
-            <SearchInput
-              className="w-60"
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-            />
+            {projects.length !== 0 && (
+              <SearchInput
+                className="w-60"
+                placeholder="Search..."
+                searchValue={paginationFilter?.search || ""}
+                setPaginationFilter={setPaginationFilter}
+              />
+            )}
           </div>
 
           {/* Tabs + Buttons (wrap together) */}
@@ -157,14 +153,17 @@ export default function CompanyProjectTabList() {
             {/* Add Tab Button */}
             <button
               onClick={openDialogForAdd}
-              className="p-2 bg-primary text-white rounded-full flex items-center"
+              className="p-2 bg-transparent border border-primary hover:bg-primary hover:text-white text-primary rounded-md flex items-center"
             >
               <Plus className="h-4 w-4" />
             </button>
 
             {permission.Add && (
               <Link to="/dashboard/projects/add">
-                <Button size="sm" className="py-2 w-fit">
+                <Button
+                  size="sm"
+                  className="py-2 w-fit border bg-transparent hover:text-white text-primary border-primary"
+                >
                   Add Company Project
                 </Button>
               </Link>
@@ -172,7 +171,6 @@ export default function CompanyProjectTabList() {
           </div>
         </div>
 
-        {/* Rearrange Tabs Sheet */}
         <RearrangeTabsSheet
           isOpen={!!isRearrangeOpen}
           onClose={() => setIsRearrangeOpen(null)}
@@ -187,45 +185,50 @@ export default function CompanyProjectTabList() {
         />
       </div>
 
-      {/* Scrollable content */}
-      <div className="flex-1  p-4">
-        {projects.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div
-              onClick={() => {
-                const currentTab = tabs.find(
-                  (t) => t.id === activeTab,
-                ) as TabItem;
-                openAddProjectDrawer(currentTab);
-              }}
-              className="w-full max-w-[360px] border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center p-10 cursor-pointer hover:border-blue-400 hover:text-primary transition"
-            >
-              <span className="text-4xl font-bold">+</span>
-              <span className="mt-2 text-sm text-gray-500">Add Project</span>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap justify-center sm:justify-start gap-4 sm:gap-6 mb-4 px-1">
-            {projects.map((project) => (
+      {isLoading ? (
+        <div className="animate-spin flex items-center justify-center w-full">
+          <SpinnerIcon />
+        </div>
+      ) : (
+        <div className="flex-1  p-4">
+          {projects.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
               <div
-                key={project.projectId}
-                className="w-full cursor-pointer sm:w-[48%] md:w-[45%] lg:w-[45%] max-w-[360px]"
-                onClick={() => handleCardClick(project)}
+                onClick={() => {
+                  const currentTab = tabs.find(
+                    (t) => t.id === activeTab,
+                  ) as TabItem;
+                  openAddProjectDrawer(currentTab);
+                }}
+                className="w-full max-w-[360px] border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center p-10 cursor-pointer hover:border-blue-400 hover:text-primary transition"
               >
-                <ProjectCard
-                  projectId={project.projectId}
-                  name={project.projectName}
-                  description={project.projectDescription}
-                  assignees={project.employeeIds}
-                  endDate={project.projectDeadline}
-                  priority={project.projectStatus}
-                  color={project.color}
-                />
+                <span className="text-4xl font-bold">+</span>
+                <span className="mt-2 text-sm text-gray-500">Add Project</span>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap justify-center sm:justify-start gap-4 sm:gap-6 mb-4 px-1">
+              {projects.map((project) => (
+                <div
+                  key={project.projectId}
+                  className="w-full cursor-pointer sm:w-[48%] md:w-[45%] lg:w-[45%] max-w-[360px]"
+                  onClick={() => handleCardClick(project)}
+                >
+                  <ProjectCard
+                    projectId={project.projectId}
+                    name={project.projectName}
+                    description={project.projectDescription}
+                    assignees={project.employeeIds}
+                    endDate={project.projectDeadline}
+                    priority={project.projectStatus}
+                    color={project.color}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Sticky Pagination */}
       {projectlistdata && projectlistdata.data?.length > 0 && (
@@ -252,11 +255,11 @@ export default function CompanyProjectTabList() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingTab ? "Edit Group" : "Add New Group"}
+              {editingTab ? "Edit Project Group" : "Add New Project Group"}
             </DialogTitle>
           </DialogHeader>
           <Input
-            placeholder="Enter tab name"
+            placeholder="Enter Project Group Name"
             value={newTabName}
             onChange={(e) => setNewTabName(e.target.value)}
           />

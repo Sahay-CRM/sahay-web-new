@@ -47,7 +47,7 @@ export default function ProjectDrawer({
   const drawerRef = useRef<HTMLDivElement>(null);
   const [isStatusSearch, setIsStatusSearch] = useState("");
 
-  const { mutate: addProject } = useAddUpdateCompanyProject();
+  const { mutate: addProject, isPending } = useAddUpdateCompanyProject();
   const { data: projectStatusData } = useGetAllProjectStatus({
     filter: {
       search: isStatusSearch.length >= 3 ? isStatusSearch : undefined,
@@ -190,7 +190,7 @@ export default function ProjectDrawer({
   }, [onClose, open]);
 
   const onSubmit = (data: ProjectFormData) => {
-    if (meetingId && issueId) {
+    if (meetingId) {
       const { employeeId, projectDeadline, ...rest } = data;
       const payload = {
         ...rest,
@@ -309,8 +309,8 @@ export default function ProjectDrawer({
                   error={errors.projectStatusId}
                   isMandatory
                   {...field}
-                  labelClass="mb-5"
-                  className="h-10"
+                  labelClass=""
+                  className=""
                   options={projectStatusOption}
                   selectedValues={field.value ? [field.value] : []} // Ensure it's an array
                   onSelect={(value) => {
@@ -367,7 +367,8 @@ export default function ProjectDrawer({
             />
             <button
               type="submit"
-              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80"
+              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80 disabled:cursor-not-allowed"
+              disabled={isPending}
             >
               Submit
             </button>

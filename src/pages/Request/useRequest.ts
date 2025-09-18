@@ -10,6 +10,7 @@ export default function useRequest() {
   });
   const [isEditData, setIsEditData] = useState<CreateRequest | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isRequestModal, setIsRequestModal] = useState(false);
 
   const { mutate: deleteReq } = deleteRequestMutation();
   const { data: reqData, isLoading } = useGetRequest({
@@ -23,10 +24,15 @@ export default function useRequest() {
   const handleClose = () => {
     setModalOpen(false);
     setIsEditData(null);
+    setIsRequestModal(false);
   };
 
   const onDelete = (changeRequestId: string) => {
     deleteReq(changeRequestId);
+  };
+
+  const handleRequestModalOpen = () => {
+    setIsRequestModal(true);
   };
 
   return {
@@ -40,5 +46,7 @@ export default function useRequest() {
     isEditData,
     isModalOpen,
     handleClose,
+    handleRequestModalOpen,
+    isRequestModal,
   };
 }

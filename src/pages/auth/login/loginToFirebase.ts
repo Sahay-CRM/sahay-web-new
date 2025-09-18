@@ -8,7 +8,6 @@ const decodeJwt = (token: string) => {
 
 export const loginToFirebase = async (firebaseToken: string) => {
   const decoded = decodeJwt(firebaseToken);
-  // console.log(decoded);
   const newUid = decoded?.uid || decoded?.sub;
 
   if (!newUid) throw new Error("UID not found in token");

@@ -312,7 +312,6 @@ export default function useMeetingDesc() {
 
   const handleCheckIn = (employeeId: string, attendanceMark: boolean) => {
     if (meetingId) {
-      // console.log(attendanceMark, meetingId, employeeId);
       addDetailMeeting(
         {
           meetingId: meetingId,
