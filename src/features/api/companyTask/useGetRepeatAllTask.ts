@@ -21,6 +21,7 @@ export default function useGetRepeatAllTask({
       return resData;
     },
     enabled: !!enable,
+    staleTime: 0,
   });
   return query;
 }

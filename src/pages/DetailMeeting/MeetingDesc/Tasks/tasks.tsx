@@ -139,6 +139,7 @@ export default function Tasks({
     };
     updateCompanyTask(payload, {
       onSuccess: () => {
+        // setDrawerOpen(drawerOpen);
         queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
         tasksFireBase();
       },

@@ -8,7 +8,7 @@ import {
   getUserId,
   getUserPermission,
 } from "@/features/selectors/auth.selector";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { DateRange } from "react-day-picker";
 import { useSelector } from "react-redux";
 
@@ -16,7 +16,7 @@ export function useRepeatTaskToDo() {
   const permission = useSelector(getUserPermission).ROUTINE_TASK;
   const userid = useSelector(getUserId);
 
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
 
   const before14 = new Date(today);
   before14.setDate(today.getDate() - 14);
@@ -57,6 +57,8 @@ export function useRepeatTaskToDo() {
   const [modalData, setModalData] = useState<RepeatTaskAllRes | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
+  const [isPastDate, setIsPastDate] = useState(false);
+
   const [isAppliedDateRange, setIsAppliedDateRange] = useState<{
     startDate: Date | undefined;
     deadline: Date | undefined;
@@ -86,10 +88,49 @@ export function useRepeatTaskToDo() {
   });
 
   useEffect(() => {
-    if (!isEmployeeId && employeeList?.data[0].employeeId) {
-      setIsEmployeeId(employeeList?.data[0].employeeId);
+    if (!isEmployeeId) {
+      setIsEmployeeId(userid);
     }
-  }, [employeeList?.data, isEmployeeId]);
+  }, [isEmployeeId, userid]);
+
+  useEffect(() => {
+    if (!permission.Add && !permission.Edit) {
+      const { startDate, deadline } = isAppliedDateRange;
+      if (startDate && deadline) {
+        const isSameDate =
+          startDate.getFullYear() === deadline.getFullYear() &&
+          startDate.getMonth() === deadline.getMonth() &&
+          startDate.getDate() === deadline.getDate();
+
+        const isStartToday =
+          startDate.getFullYear() === today.getFullYear() &&
+          startDate.getMonth() === today.getMonth() &&
+          startDate.getDate() === today.getDate();
+
+        const isDeadlineToday =
+          deadline.getFullYear() === today.getFullYear() &&
+          deadline.getMonth() === today.getMonth() &&
+          deadline.getDate() === today.getDate();
+
+        // If start and deadline are same but not today
+        if (isSameDate && (!isStartToday || !isDeadlineToday)) {
+          setIsPastDate(true);
+        } else {
+          setIsPastDate(false);
+        }
+      }
+    }
+  }, [permission, isAppliedDateRange, today]);
+
+  useEffect(() => {
+    if (!permission.Add && !permission.Edit) {
+      const today = new Date();
+      setIsAppliedDateRange({
+        startDate: today,
+        deadline: today,
+      });
+    }
+  }, [permission]);
 
   const { data: companyTaskData, isLoading } = useGetRepeatAllTask({
     filter: {
@@ -101,7 +142,7 @@ export function useRepeatTaskToDo() {
         ? toLocalISOString(isAppliedDateRange.deadline)
         : todayStr,
     },
-    enable: !!isEmployeeId,
+    enable: !!isEmployeeId || !!isAppliedDateRange,
   });
 
   const toggleComplete = (taskId: string, isCompleted: boolean) => {
@@ -208,5 +249,6 @@ export function useRepeatTaskToDo() {
     isViewModalOpen,
     handleDeleteTask,
     isLoading,
+    isPastDate,
   };
 }

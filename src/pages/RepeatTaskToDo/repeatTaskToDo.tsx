@@ -5,10 +5,17 @@ import DateRangePicker from "@/components/shared/DateRange";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import RoutineTaskDrawer from "./routineTaskDrawer";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Pencil, Trash2 } from "lucide-react";
+import { CalendarDays, Pencil, ReceiptText, Trash2 } from "lucide-react";
 import ViewRepeatTask from "./ViewRepeatTask";
 import { convertToLocalTime } from "@/features/utils/app.utils";
 import { SpinnerIcon } from "@/components/shared/Icons";
+import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function getDayDiff(deadline?: string | Date | null): number {
   if (!deadline) return Infinity;
@@ -51,7 +58,10 @@ export default function RepeatTaskToDo() {
     isViewModalOpen,
     handleDeleteTask,
     isLoading,
+    isPastDate,
   } = useRepeatTaskToDo();
+
+  console.log(isPastDate);
 
   const tasks = companyTaskData?.data || [];
 
@@ -72,7 +82,7 @@ export default function RepeatTaskToDo() {
               Repeat Task List
             </h1>
           </div>
-          {(permission.Add || permission.Edit) && (
+          {permission.Add || permission.Edit ? (
             <div className="z-15 relative flex items-center gap-2 w-full justify-end">
               <div>
                 <SearchDropdown
@@ -87,6 +97,21 @@ export default function RepeatTaskToDo() {
                   dropdownClass="min-w-60"
                 />
               </div>
+              <DateRangePicker
+                value={{
+                  from: isDateRange.startDate,
+                  to: isDateRange.deadline,
+                }}
+                onChange={handleDateRangeChange}
+                onApply={handleDateRangeApply}
+                onSaveApply={handleDateRangeSaveApply}
+                isClear={true}
+                handleClear={handleClear}
+                defaultDate={isAppliedDateRange}
+              />
+            </div>
+          ) : (
+            <div>
               <DateRangePicker
                 value={{
                   from: isDateRange.startDate,
@@ -150,7 +175,14 @@ export default function RepeatTaskToDo() {
                               <div className="w-full flex gap-2 group">
                                 <div
                                   className="flex flex-col flex-1 min-w-0 cursor-pointer py-1.5 w-full"
-                                  onClick={() => handleViewTask(task)}
+                                  onClick={() =>
+                                    task.taskId &&
+                                    toggleComplete(
+                                      task.taskId,
+                                      !task.isCompleted,
+                                    )
+                                  }
+                                  // onClick={() => handleViewTask(task)}
                                 >
                                   <Label
                                     className="text-black text-[14px] whitespace-normal break-words min-w-0"
@@ -170,25 +202,65 @@ export default function RepeatTaskToDo() {
                                   )}
                                 </div>
                                 <div className="flex items-center">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          size="sm"
+                                          className="text-black h-6 w-6 p-0 hover:bg-gray-300 bg-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-2"
+                                          onClick={() => handleViewTask(task)}
+                                        >
+                                          <ReceiptText className="w-4 h-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p className="text-xs text-white">
+                                          Task Detail
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                   {permission.Edit && (
-                                    <Button
-                                      size="sm"
-                                      className="text-black hover:bg-gray-300 h-6 w-6 p-0 bg-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                                      onClick={() => handleEditTask(task)}
-                                    >
-                                      <Pencil className="w-4 h-4" />
-                                    </Button>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            size="sm"
+                                            className="text-black hover:bg-gray-300 h-6 w-6 p-0 bg-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                            onClick={() => handleEditTask(task)}
+                                          >
+                                            <Pencil className="w-4 h-4" />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p className="text-xs text-white">
+                                            Edit Task
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
                                   )}
                                   {permission.Delete && (
-                                    <Button
-                                      size="sm"
-                                      className="text-black h-6 w-6 p-0 hover:bg-gray-300 bg-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-2"
-                                      onClick={() =>
-                                        handleDeleteTask(task.taskId)
-                                      }
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            size="sm"
+                                            className="text-black h-6 w-6 p-0 hover:bg-gray-300 bg-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-2"
+                                            onClick={() =>
+                                              handleDeleteTask(task.taskId)
+                                            }
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p className="text-xs text-white">
+                                            Delete Task
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
                                   )}
                                 </div>
                               </div>
@@ -214,21 +286,26 @@ export default function RepeatTaskToDo() {
                       className="flex h-12 justify-between border p-2 rounded-md bg-gray-100 hover:bg-gray-200 transition items-center mb-2"
                     >
                       <div className="flex gap-3 flex-1 items-center">
-                        <RadioGroup
-                          value="done"
-                          className="px-1 flex-shrink-0 flex items-center h-full"
-                        >
-                          <RadioGroupItem
-                            value="done"
-                            id={`task-${task.taskId}`}
-                            className="w-4 h-4 rounded-full border border-gray-400 bg-gray-500"
-                          />
-                        </RadioGroup>
+                        <FormCheckbox
+                          checked={task.isCompleted}
+                          onChange={() => {
+                            if (task.taskId) {
+                              toggleComplete(task.taskId, !task.isCompleted);
+                            }
+                          }}
+                          className="w-4 h-4 cursor-pointer rounded-full border border-gray-400 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          containerClass="rounded-full overflow-hidden mt-0"
+                          onClick={(e) => e.stopPropagation()}
+                        />
 
                         <div className="w-full flex gap-2 group">
                           <div
                             className="flex flex-col flex-1 min-w-0 cursor-pointer py-1.5 w-full"
-                            onClick={() => handleViewTask(task)}
+                            onClick={() =>
+                              task.taskId &&
+                              toggleComplete(task.taskId, !task.isCompleted)
+                            }
+                            // onClick={() => handleViewTask(task)}
                           >
                             <Label
                               className="text-black text-[14px] whitespace-normal break-words min-w-0"
