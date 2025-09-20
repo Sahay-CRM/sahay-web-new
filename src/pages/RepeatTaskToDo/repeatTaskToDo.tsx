@@ -43,7 +43,7 @@ export default function RepeatTaskToDo() {
   const { setBreadcrumbs } = useBreadcrumbs();
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Repeat Task List", href: "" }]);
+    setBreadcrumbs([{ label: "My Day", href: "" }]);
   }, [setBreadcrumbs]);
 
   const {
@@ -133,7 +133,10 @@ export default function RepeatTaskToDo() {
               <SingleDatePicker
                 value={selectedDate}
                 onChange={(date) => setSelectedDate(date)}
-                isClear
+                // events={[
+                //   { date: new Date(2025, 9, 19), label: "Meeting" }, // October 19, 2025
+                //   { date: new Date(2025, 9, 25), label: "Birthday" }, // October 25, 2025
+                // ]}
               />
             </div>
           ) : (
@@ -141,7 +144,10 @@ export default function RepeatTaskToDo() {
               <SingleDatePicker
                 value={selectedDate}
                 onChange={(date) => setSelectedDate(date)}
-                isClear
+                // events={[
+                //   { date: new Date(2025, 9, 19), label: "Meeting" }, // October 19, 2025
+                //   { date: new Date(2025, 9, 25), label: "Birthday" }, // October 25, 2025
+                // ]}
               />
               {/* <DateRangePicker
                 value={{
@@ -167,9 +173,7 @@ export default function RepeatTaskToDo() {
           </div>
         ) : (
           <div className="flex-1 flex flex-col overflow-hidden">
-            {tasks.length === 0 ? (
-              <div>No Repeat Task Data Found</div>
-            ) : (
+            {tasks.length === 0 && (
               <>
                 {activeTasks.length === 0 ? (
                   <p className="text-muted-foreground text-sm italic text-center py-4">

@@ -17,6 +17,12 @@ import SearchInput from "@/components/shared/SearchInput";
 import { Link } from "react-router-dom";
 import Pagination from "@/components/shared/Pagination/Pagination";
 import { SpinnerIcon } from "@/components/shared/Icons";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function CompanyProjectTabList() {
   const {
@@ -74,8 +80,22 @@ export default function CompanyProjectTabList() {
             )}
           </div>
 
-          {/* Tabs + Buttons (wrap together) */}
           <div className="flex flex-wrap items-center gap-2 flex-1 justify-end">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={openDialogForAdd}
+                    className="p-0.5 bg-transparent border border-primary hover:bg-primary hover:text-white text-primary rounded-full flex items-center"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs text-white">Add New Group</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             {tabs.map((tab) => (
               <div
                 key={tab.id}
@@ -150,21 +170,13 @@ export default function CompanyProjectTabList() {
               </div>
             ))}
 
-            {/* Add Tab Button */}
-            <button
-              onClick={openDialogForAdd}
-              className="p-2 bg-transparent border border-primary hover:bg-primary hover:text-white text-primary rounded-md flex items-center"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-
             {permission.Add && (
               <Link to="/dashboard/projects/add">
                 <Button
                   size="sm"
-                  className="py-2 w-fit border bg-transparent hover:text-white text-primary border-primary"
+                  className="py-2 w-fit border bg-primary text-white border-primary"
                 >
-                  Add Company Project
+                  Add New Project
                 </Button>
               </Link>
             )}

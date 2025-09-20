@@ -1,5 +1,13 @@
 export const companyNavigationData = [
   {
+    id: 14,
+    icon: "GitPullRequestArrow",
+    label: "My Day",
+    link: "/dashboard/repeat-task-list",
+    permission: "View",
+    moduleKey: "ROUTINE_TASK",
+  },
+  {
     id: 1,
     icon: "UserCheck",
     label: "Company Designation",
@@ -80,33 +88,25 @@ export const companyNavigationData = [
   {
     id: 6,
     icon: "CheckSquare",
-    label: "Company Task List",
+    label: "Tasks",
     permission: "View",
     moduleKey: "TASK",
     items: [
       {
         id: 1,
-        label: "Company Task List",
+        label: "Task List",
         link: "/dashboard/tasks",
         permission: "View",
         moduleKey: "TASK",
       },
       {
         id: 2,
-        label: "Company Repetition Task ",
+        label: "Task Repetition",
         link: "/dashboard/tasksrepeat",
         permission: "View",
         moduleKey: "ROUTINE_TASK",
       },
     ],
-  },
-  {
-    id: 14,
-    icon: "GitPullRequestArrow",
-    label: "Repeat Task List",
-    link: "/dashboard/repeat-task-list",
-    permission: "View",
-    moduleKey: "ROUTINE_TASK",
   },
   // {
   //   id: 6,
@@ -119,7 +119,7 @@ export const companyNavigationData = [
   {
     id: 7,
     icon: "FolderOpen",
-    label: "Company Project List",
+    label: "Projects",
     link: "/dashboard/projects",
     permission: "View",
     moduleKey: "PROJECT_LIST",

@@ -11,13 +11,13 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
   total,
   completed,
   showPercentage = true,
-  height = 20,
+  height = 16,
 }) => {
   const completedPercentage = total > 0 ? (completed / total) * 100 : 0;
   const safeCompletedPercentage = Math.min(completedPercentage, 100);
 
   return (
-    <div className="w-full space-y-3">
+    <div className="w-full">
       <div
         className="relative w-full bg-gray-200 rounded-full overflow-hidden"
         style={{ height: `${height}px` }}
@@ -30,7 +30,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
 
         {showPercentage && (
           <>
-            {completed !== total ? (
+            {completed !== total && (
               <>
                 {/* {safeCompletedPercentage > 20 && ( */}
                 <div className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-medium text-black">
@@ -42,14 +42,12 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
                   {total}
                 </div>
               </>
-            ) : (
-              // Show only one number when completed === total
-              <div className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white">
-                {total} of {completed} Items Completed
-              </div>
             )}
           </>
         )}
+      </div>
+      <div className="text-xs font-medium mt-1.5 text-black">
+        {total} of {completed} Items Completed
       </div>
     </div>
   );

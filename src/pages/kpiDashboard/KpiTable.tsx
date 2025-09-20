@@ -25,14 +25,34 @@ import {
   // ArrowDown,
   // ArrowUp,
   // ArrowUpDown,
-  ChartNoAxesColumn,
   RefreshCcw,
+  GripVertical,
 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import TabsSection from "./TabSection";
 import {
   addUpdateKpi,
   useGetKpiDashboardStructure,
 } from "@/features/api/kpiDashboard";
+import { updateKPISequenceMutation } from "@/features/api/KpiList";
 import WarningDialog from "./WarningModal";
 import { useSelector } from "react-redux";
 import {
@@ -40,7 +60,6 @@ import {
   getUserPermission,
 } from "@/features/selectors/auth.selector";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import KPISideBar from "./KPISideBar";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -63,6 +82,258 @@ function formatToThreeDecimals(value: string | number | null | undefined) {
     minimumFractionDigits: 0,
   });
 }
+
+// Active item types for drag and drop
+interface ActiveGroupItem {
+  type: "group";
+  data: {
+    coreParameter: {
+      coreParameterId: string;
+      coreParameterName: string;
+    };
+    kpis: Array<{
+      kpi: {
+        kpiId: string;
+        kpiName: string;
+        employeeName?: string;
+        tag?: string;
+        validationType: string;
+        goalValue?: number;
+        value1: string | number | null;
+        value2?: string | number | null;
+        unit?: string | null;
+      };
+    }>;
+  };
+}
+
+interface ActiveKpiItem {
+  type: "kpi";
+  data: {
+    kpiId: string;
+    kpiName: string;
+    employeeName?: string;
+    tag?: string;
+    validationType: string;
+    goalValue?: number;
+    value1: string | number | null;
+    value2?: string | number | null;
+    unit?: string | null;
+  };
+}
+
+type ActiveItem = ActiveGroupItem | ActiveKpiItem | null;
+
+// Sortable KPI Row Component
+interface SortableKpiRowProps {
+  id: string;
+  kpi: {
+    kpiId: string;
+    kpiName: string;
+    kpiLabel?: string;
+    employeeName?: string;
+    tag?: string;
+    validationType: string;
+    goalValue?: number;
+    value1: string | number | null;
+    value2?: string | number | null;
+    unit?: string | null;
+  };
+  disabled?: boolean;
+  isDragging?: boolean;
+  showDragHandle?: boolean;
+  getFormattedValue: (
+    validationType: string,
+    value1: string | number | null,
+    value2?: string | number | null,
+    unit?: string | null,
+  ) => string;
+}
+
+function SortableKpiRow({
+  id,
+  kpi,
+  disabled = false,
+  isDragging = false,
+  showDragHandle = true,
+  getFormattedValue,
+}: SortableKpiRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: isSortableDragging,
+  } = useSortable({ id, disabled });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isSortableDragging ? 0.5 : 1,
+  };
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className={`group/row border-b bg-gray-50 ${isDragging ? "pointer-events-none" : ""} ${isSortableDragging ? "z-10" : ""}`}
+      {...attributes}
+    >
+      <td className="p-3  w-[75px] h-[55px]">
+        <div className="flex items-center gap-2">
+          {showDragHandle && (
+            <div
+              className="cursor-grab active:cursor-grabbing opacity-0 group-hover/row:opacity-100 transition-opacity"
+              {...listeners}
+            >
+              <GripVertical className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+            </div>
+          )}
+          <Avatar className="h-6 w-6">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AvatarFallback
+                    className={clsx(
+                      "font-semibold",
+                      getColorFromName(kpi?.employeeName),
+                    )}
+                  >
+                    {(() => {
+                      if (!kpi?.employeeName) return "";
+                      const names = kpi.employeeName.split(" ");
+                      const firstInitial = names[0]?.[0] ?? "";
+                      const lastInitial =
+                        names.length > 1 ? names[names.length - 1][0] : "";
+                      return (firstInitial + lastInitial).toUpperCase();
+                    })()}
+                  </AvatarFallback>
+                </TooltipTrigger>
+                <TooltipContent>{kpi?.employeeName}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </Avatar>
+        </div>
+      </td>
+      <td className="px-3 border w-[180px] text-left h-[59px] align-middle">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="line-clamp-2 break-words cursor-default">
+                {kpi?.kpiName}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <span>{kpi?.kpiLabel}</span>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </td>
+      <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="line-clamp-2 break-words cursor-default">
+                {kpi?.tag}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <span>{kpi?.tag}</span>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </td>
+      <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="line-clamp-2 break-words cursor-default">
+                {kpi.validationType === "YES_NO"
+                  ? kpi.goalValue === 1
+                    ? "Yes"
+                    : "No"
+                  : getFormattedValue(
+                      kpi.validationType,
+                      kpi?.value1,
+                      kpi?.value2,
+                      kpi?.unit,
+                    )}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <span>
+                {kpi.validationType === "YES_NO"
+                  ? kpi.goalValue === 1
+                    ? `Yes ${formatToThreeDecimals(kpi.value1)}`
+                    : `No ${formatToThreeDecimals(kpi.value1)}`
+                  : kpi.validationType === "BETWEEN"
+                    ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(kpi?.value2)}`
+                    : formatToThreeDecimals(kpi?.value1)}
+              </span>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </td>
+    </tr>
+  );
+}
+
+// Sortable Core Parameter Group Component
+interface SortableCoreParameterGroupProps {
+  id: string;
+  children: React.ReactNode;
+  disabled?: boolean;
+  isDragging?: boolean;
+  showDragHandle?: boolean;
+}
+
+function SortableCoreParameterGroup({
+  id,
+  children,
+  disabled = false,
+  isDragging = false,
+  showDragHandle = true,
+}: SortableCoreParameterGroupProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: isSortableDragging,
+  } = useSortable({ id, disabled });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isSortableDragging ? 0.5 : 1,
+  };
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className={`sticky top-[50px] bg-blue-50 z-10 h-[39px] group/group ${isDragging ? "pointer-events-none" : ""} ${isSortableDragging ? "z-20" : ""}`}
+      {...attributes}
+    >
+      <td colSpan={4} className="p-2 text-blue-800 font-bold">
+        <div className="flex items-center gap-2">
+          {showDragHandle && (
+            <div
+              className="cursor-grab active:cursor-grabbing opacity-0 group-hover/group:opacity-100 transition-opacity"
+              {...listeners}
+            >
+              <GripVertical className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+            </div>
+          )}
+          {children}
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 // interface SortConfig {
 //   key: string;
 //   direction: "asc" | "desc";
@@ -125,7 +396,129 @@ export default function UpdatedKpiTable() {
   const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
     {},
   );
-  const [open, setOpen] = useState(false);
+
+  // Drag and drop state
+  const [isDragging, setIsDragging] = useState(false);
+  const [activeItem, setActiveItem] = useState<ActiveItem>(null);
+  const { mutate: updateSequence } = updateKPISequenceMutation();
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  // Drag handlers
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    setIsDragging(true);
+
+    // Find the active item data for the overlay
+    const activeData = String(active.id).split(":");
+    if (activeData[0] === "group") {
+      const group = groupedKpiRows?.find(
+        (g) => g.coreParameter.coreParameterId === activeData[1],
+      );
+      if (group) {
+        setActiveItem({ type: "group", data: group });
+      }
+    } else if (activeData[0] === "kpi") {
+      const group = groupedKpiRows?.find(
+        (g) => g.coreParameter.coreParameterId === activeData[2],
+      );
+      const kpi = group?.kpis.find((k) => k.kpi.kpiId === activeData[1]);
+      if (kpi?.kpi) {
+        setActiveItem({ type: "kpi", data: kpi.kpi });
+      }
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setIsDragging(false);
+    setActiveItem(null);
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    // Extract drag type and data from IDs
+    const activeData = String(active.id).split(":");
+    const overData = String(over.id).split(":");
+
+    if (activeData[0] === "group" && overData[0] === "group") {
+      // Handle core parameter group reordering
+      handleGroupReorder(activeData[1], overData[1]);
+    } else if (activeData[0] === "kpi" && overData[0] === "kpi") {
+      // Handle KPI reordering within groups
+      handleKpiReorder(activeData[1], overData[1], activeData[2], overData[2]);
+    }
+  };
+
+  // Helper functions for reordering
+  const handleGroupReorder = (activeGroupId: string, overGroupId: string) => {
+    if (!groupedKpiRows) return;
+
+    const activeIndex = groupedKpiRows.findIndex(
+      (group) => group.coreParameter.coreParameterId === activeGroupId,
+    );
+    const overIndex = groupedKpiRows.findIndex(
+      (group) => group.coreParameter.coreParameterId === overGroupId,
+    );
+
+    if (activeIndex !== -1 && overIndex !== -1) {
+      const newOrder = arrayMove(groupedKpiRows, activeIndex, overIndex);
+      const kpiIds = newOrder.flatMap((group) =>
+        group.kpis.map((k) => k.kpi.kpiId),
+      );
+
+      updateSequence({
+        frequencyType: selectedPeriod,
+        kpiSequenceArray: kpiIds,
+      });
+    }
+  };
+
+  const handleKpiReorder = (
+    activeKpiId: string,
+    overKpiId: string,
+    activeGroupId: string,
+    overGroupId: string,
+  ) => {
+    // Only allow reordering within the same group
+    if (activeGroupId !== overGroupId || !groupedKpiRows) return;
+
+    const groupIndex = groupedKpiRows.findIndex(
+      (group) => group.coreParameter.coreParameterId === activeGroupId,
+    );
+
+    if (groupIndex === -1) return;
+
+    const group = groupedKpiRows[groupIndex];
+    const activeKpiIndex = group.kpis.findIndex(
+      (k) => k.kpi.kpiId === activeKpiId,
+    );
+    const overKpiIndex = group.kpis.findIndex((k) => k.kpi.kpiId === overKpiId);
+
+    if (activeKpiIndex !== -1 && overKpiIndex !== -1) {
+      const newKpis = arrayMove(group.kpis, activeKpiIndex, overKpiIndex);
+      const newGroups = [...groupedKpiRows];
+      newGroups[groupIndex] = { ...group, kpis: newKpis };
+
+      const kpiIds = newGroups.flatMap((g) => g.kpis.map((k) => k.kpi.kpiId));
+
+      updateSequence({
+        frequencyType: selectedPeriod,
+        kpiSequenceArray: kpiIds,
+      });
+    }
+  };
 
   useEffect(() => {
     const originalPushState = history.pushState;
@@ -529,8 +922,6 @@ export default function UpdatedKpiTable() {
     },
   ];
 
-  const handleSidebarOpen = () => setOpen(true);
-
   //   if (isLoading) {
   //     return <Loader />;
   //   }
@@ -567,25 +958,6 @@ export default function UpdatedKpiTable() {
             {Object.keys(tempValues).length > 0 && (
               <Button onClick={handleSubmit}>Submit</Button>
             )}
-            {userData.isSuperAdmin && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      onClick={handleSidebarOpen}
-                      variant="ghost"
-                      className="bg-primary hover:bg-primary text-white rotate-270 cursor-pointer"
-                      size="icon"
-                    >
-                      <ChartNoAxesColumn className="text-white w-8 h-8" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>ReArrange</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
 
             {urlSelectedPeriod !== "DAILY" && (
               <div>
@@ -595,6 +967,7 @@ export default function UpdatedKpiTable() {
                   onChange={(ele) => {
                     setIsDataFilter(ele as string);
                   }}
+                  className="h-10"
                 />
               </div>
             )}
@@ -627,23 +1000,29 @@ export default function UpdatedKpiTable() {
       </div>
 
       {groupedKpiRows && groupedKpiRows.length > 0 && (
-        <div className="flex w-full gap-0 p-2">
-          {/* LEFT TABLE */}
-          <div
-            ref={leftScrollRef}
-            className="max-h-[78vh] overflow-y-scroll scrollbar-hide border shadow-sm"
-            style={{ width: "500px", minWidth: "500px", maxWidth: "500px" }}
-          >
-            <table className="w-full table-fixed border-collapse text-sm bg-white">
-              <thead className="bg-primary sticky top-0 z-20">
-                <tr>
-                  <th
-                    className="w-[75px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
-                    // onClick={() => handleSort("employeeName")}
-                  >
-                    <div className="flex items-center gap-1">
-                      Who
-                      {/* {sortConfig.key === "employeeName" &&
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={userData.isSuperAdmin ? handleDragStart : undefined}
+          onDragEnd={userData.isSuperAdmin ? handleDragEnd : undefined}
+        >
+          <div className="flex w-full gap-0 p-2">
+            {/* LEFT TABLE */}
+            <div
+              ref={leftScrollRef}
+              className="max-h-[78vh] overflow-y-scroll scrollbar-hide border shadow-sm"
+              style={{ width: "500px", minWidth: "500px", maxWidth: "500px" }}
+            >
+              <table className="w-full table-fixed border-collapse text-sm bg-white">
+                <thead className="bg-primary sticky top-0 z-20">
+                  <tr>
+                    <th
+                      className="w-[75px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
+                      // onClick={() => handleSort("employeeName")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Who
+                        {/* {sortConfig.key === "employeeName" &&
                       (sortConfig.direction === "asc" ? (
                         <ArrowUp className="w-4 h-4 ml-1" />
                       ) : (
@@ -652,15 +1031,15 @@ export default function UpdatedKpiTable() {
                     {sortConfig.key !== "employeeName" && (
                       <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
                     )} */}
-                    </div>
-                  </th>
-                  <th
-                    className="w-[190px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
-                    // onClick={() => handleSort("KPIName")}
-                  >
-                    <div className="flex items-center gap-1">
-                      KPI
-                      {/* {sortConfig.key === "KPIName" &&
+                      </div>
+                    </th>
+                    <th
+                      className="w-[190px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
+                      // onClick={() => handleSort("KPIName")}
+                    >
+                      <div className="flex items-center gap-1">
+                        KPI
+                        {/* {sortConfig.key === "KPIName" &&
                       (sortConfig.direction === "asc" ? (
                         <ArrowUp className="w-4 h-4 ml-1" />
                       ) : (
@@ -669,15 +1048,15 @@ export default function UpdatedKpiTable() {
                     {sortConfig.key !== "KPIName" && (
                       <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
                     )} */}
-                    </div>
-                  </th>
-                  <th
-                    className="w-[120px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
-                    // onClick={() => handleSort("tag")}
-                  >
-                    <div className="flex items-center gap-1">
-                      Tag
-                      {/* {sortConfig.key === "tag" &&
+                      </div>
+                    </th>
+                    <th
+                      className="w-[120px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
+                      // onClick={() => handleSort("tag")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Tag
+                        {/* {sortConfig.key === "tag" &&
                       (sortConfig.direction === "asc" ? (
                         <ArrowUp className="w-4 h-4 ml-1" />
                       ) : (
@@ -686,388 +1065,416 @@ export default function UpdatedKpiTable() {
                     {sortConfig.key !== "tag" && (
                       <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
                     )} */}
-                    </div>
-                  </th>
-                  <th className="w-[100px] p-2 font-semibold text-white text-left h-[51px]">
-                    Goal
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {groupedKpiRows.map((group, idx) => (
-                  <React.Fragment
-                    key={(group.coreParameter.coreParameterId, idx)}
-                  >
-                    <tr className="sticky top-[50px] bg-blue-50 z-10 h-[39px]">
-                      <td
-                        colSpan={4}
-                        className="p-2 text-blue-800 border font-bold"
-                      >
-                        {group.coreParameter.coreParameterName}
-                      </td>
-                    </tr>
-                    {group.kpis.map(({ kpi }) => (
-                      <tr key={kpi.kpiId} className="border-b bg-gray-50 ">
-                        <td className="p-3  w-[75px] flex items-center justify-center  h-[55px]">
-                          <Avatar className="h-6 w-6">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <AvatarFallback
-                                    className={clsx(
-                                      "font-semibold",
-                                      getColorFromName(kpi?.employeeName),
-                                    )}
-                                  >
-                                    {(() => {
-                                      if (!kpi?.employeeName) return "";
-                                      const names = kpi.employeeName.split(" ");
-                                      const firstInitial = names[0]?.[0] ?? "";
-                                      const lastInitial =
-                                        names.length > 1
-                                          ? names[names.length - 1][0]
-                                          : "";
-                                      return (
-                                        firstInitial + lastInitial
-                                      ).toUpperCase();
-                                    })()}
-                                  </AvatarFallback>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {kpi?.employeeName}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </Avatar>
-                        </td>
-                        <td className="px-3 border w-[180px] text-left h-[59px] align-middle">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="line-clamp-2 break-words cursor-default">
-                                  {kpi?.kpiName}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <span>{kpi?.kpiLabel}</span>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </td>
-                        <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="line-clamp-2 break-words cursor-default">
-                                  {kpi?.tag}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <span>{kpi?.tag}</span>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </td>
-                        <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="line-clamp-2 break-words cursor-default">
-                                  {kpi.validationType === "YES_NO"
-                                    ? kpi.goalValue === 1
-                                      ? "Yes"
-                                      : "No" // Show Yes/No based on goalValue
-                                    : getFormattedValue(
-                                        kpi.validationType,
-                                        kpi?.value1,
-                                        kpi?.value2,
-                                        kpi?.unit,
-                                      )}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <span>
-                                  {kpi.validationType === "YES_NO"
-                                    ? kpi.goalValue === 1
-                                      ? `Yes ${formatToThreeDecimals(kpi.value1)}`
-                                      : `No ${formatToThreeDecimals(kpi.value1)}`
-                                    : kpi.validationType === "BETWEEN"
-                                      ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(kpi?.value2)}`
-                                      : formatToThreeDecimals(kpi?.value1)}
-                                </span>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </td>
-                      </tr>
-                    ))}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="overflow-x-auto border shadow-sm flex-1 bg-white">
-            <div ref={rightScrollRef} className="max-h-[78vh] overflow-y-auto">
-              <table className="min-w-max border-collapse text-sm table-fixed">
-                <thead className="sticky top-0 z-20 bg-white h-[51px]">
-                  <tr className="">
-                    {headers.map((header, idx) => {
-                      return (
-                        <th
-                          key={idx}
-                          className={clsx(
-                            "border p-2 min-w-[80px] font-semibold text-gray text-center h-[43px]",
-                            header.isSunday && "bg-gray-100",
-                          )}
-                        >
-                          <div className="flex flex-col items-center leading-tight">
-                            <span>{header.label}</span>
-                            {header.year && (
-                              <span className="text-xs text-muted-foreground">
-                                {header.year}
-                              </span>
-                            )}
-                          </div>
-                        </th>
-                      );
-                    })}
+                      </div>
+                    </th>
+                    <th className="w-[100px] p-2 font-semibold text-white text-left h-[51px]">
+                      Goal
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
-                  {groupedKpiRows.map((group, idx) => (
-                    <React.Fragment
-                      key={(group.coreParameter.coreParameterId, idx)}
-                    >
-                      <tr className="sticky h-[39px] top-[50px] bg-blue-50 z-10">
-                        <td
-                          colSpan={headers.length}
-                          className="p-2  border text-black font-bold"
+                <SortableContext
+                  items={[
+                    ...groupedKpiRows.map(
+                      (group) => `group:${group.coreParameter.coreParameterId}`,
+                    ),
+                    ...groupedKpiRows.flatMap((group) =>
+                      group.kpis.map(
+                        ({ kpi }) =>
+                          `kpi:${kpi.kpiId}:${group.coreParameter.coreParameterId}`,
+                      ),
+                    ),
+                  ]}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <tbody>
+                    {groupedKpiRows.map((group) => (
+                      <React.Fragment key={group.coreParameter.coreParameterId}>
+                        <SortableCoreParameterGroup
+                          id={`group:${group.coreParameter.coreParameterId}`}
+                          isDragging={isDragging}
+                          disabled={!userData.isSuperAdmin}
+                          showDragHandle={!!userData.isSuperAdmin}
                         >
-                          {/* {group.coreParameter.coreParameterName} */}
-                        </td>
-                      </tr>
-                      {group.kpis.map(({ kpi }) => {
-                        let dataRow: KpiDataCell[] | undefined = undefined;
-                        if (isKpiDataCellArrayArray(kpiData?.data)) {
-                          dataRow = (kpiData.data as KpiDataCell[][]).find(
-                            (cells) =>
-                              Array.isArray(cells) &&
-                              cells.length > 0 &&
-                              cells[0].kpiId === kpi.kpiId,
-                          );
-                        }
-                        return (
-                          <tr key={kpi.kpiId} className="h-[50px]">
-                            {headers.map((_, colIdx) => {
-                              const cell = dataRow?.[colIdx];
-                              const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
-                              const validationType = cell?.validationType;
-                              const value1 = cell?.value1;
-                              const value2 = cell?.value2;
-                              const inputVal =
-                                inputValues[key] ??
-                                cell?.data?.toString() ??
-                                "";
-                              const isVisualized = kpi?.isVisualized;
-                              const canAdd = permission?.Add && !cell?.data;
-                              const canEdit = permission?.Edit && !!cell?.data;
-                              const canInput =
-                                !isVisualized && (canAdd || canEdit);
+                          {group.coreParameter.coreParameterName}
+                        </SortableCoreParameterGroup>
+                        {group.kpis.map(({ kpi }) => (
+                          <SortableKpiRow
+                            key={kpi.kpiId}
+                            id={`kpi:${kpi.kpiId}:${group.coreParameter.coreParameterId}`}
+                            kpi={kpi}
+                            isDragging={isDragging}
+                            disabled={!userData.isSuperAdmin}
+                            showDragHandle={!!userData.isSuperAdmin}
+                            getFormattedValue={getFormattedValue}
+                          />
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </SortableContext>
+              </table>
+            </div>
 
-                              if (validationType == "YES_NO") {
-                                const selectOptions = [
-                                  { value: "1", label: "Yes" },
-                                  { value: "0", label: "No" },
-                                ];
-                                const isValid = inputVal === String(value1);
+            <div className="overflow-x-auto border shadow-sm flex-1 bg-white">
+              <div
+                ref={rightScrollRef}
+                className="max-h-[78vh] overflow-y-auto"
+              >
+                <table className="min-w-max border-collapse text-sm table-fixed">
+                  <thead className="sticky top-0 z-20 bg-white h-[51px]">
+                    <tr className="">
+                      {headers.map((header, idx) => {
+                        return (
+                          <th
+                            key={idx}
+                            className={clsx(
+                              "border p-2 min-w-[80px] font-semibold text-gray text-center h-[43px]",
+                              header.isSunday && "bg-gray-100",
+                            )}
+                          >
+                            <div className="flex flex-col items-center leading-tight">
+                              <span>{header.label}</span>
+                              {header.year && (
+                                <span className="text-xs text-muted-foreground">
+                                  {header.year}
+                                </span>
+                              )}
+                            </div>
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {groupedKpiRows.map((group, idx) => (
+                      <React.Fragment
+                        key={(group.coreParameter.coreParameterId, idx)}
+                      >
+                        <tr className="sticky h-[39px] top-[50px] bg-blue-50 z-10">
+                          <td
+                            colSpan={headers.length}
+                            className="p-2  border text-black font-bold"
+                          >
+                            {/* {group.coreParameter.coreParameterName} */}
+                          </td>
+                        </tr>
+                        {group.kpis.map(({ kpi }) => {
+                          let dataRow: KpiDataCell[] | undefined = undefined;
+                          if (isKpiDataCellArrayArray(kpiData?.data)) {
+                            dataRow = (kpiData.data as KpiDataCell[][]).find(
+                              (cells) =>
+                                Array.isArray(cells) &&
+                                cells.length > 0 &&
+                                cells[0].kpiId === kpi.kpiId,
+                            );
+                          }
+                          return (
+                            <tr key={kpi.kpiId} className="h-[50px]">
+                              {headers.map((_, colIdx) => {
+                                const cell = dataRow?.[colIdx];
+                                const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
+                                const validationType = cell?.validationType;
+                                const value1 = cell?.value1;
+                                const value2 = cell?.value2;
+                                const inputVal =
+                                  inputValues[key] ??
+                                  cell?.data?.toString() ??
+                                  "";
+                                const isVisualized = kpi?.isVisualized;
+                                const canAdd = permission?.Add && !cell?.data;
+                                const canEdit =
+                                  permission?.Edit && !!cell?.data;
+                                const canInput =
+                                  !isVisualized && (canAdd || canEdit);
+
+                                if (validationType == "YES_NO") {
+                                  const selectOptions = [
+                                    { value: "1", label: "Yes" },
+                                    { value: "0", label: "No" },
+                                  ];
+                                  const isValid = inputVal === String(value1);
+                                  return (
+                                    <td
+                                      key={colIdx}
+                                      className={clsx(
+                                        "p-2 border text-center w-[80px] h-[42px]",
+                                        headers[colIdx].isSunday &&
+                                          "bg-gray-100",
+                                        cell?.isSkipDay && "bg-gray-400",
+                                      )}
+                                    >
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <div
+                                              className={clsx(
+                                                "rounded-sm text-sm w-[80px] h-[42px]",
+                                                inputVal !== "" &&
+                                                  selectedPeriod !== "YEARLY" &&
+                                                  (isValid
+                                                    ? "bg-green-100 border border-green-500"
+                                                    : "bg-red-100 border border-red-500"),
+                                                isVisualized &&
+                                                  "opacity-60 border ",
+                                                cell?.isSkipDay &&
+                                                  "opacity-40 cursor-not-allowed bg-gray-100",
+                                              )}
+                                            >
+                                              {!isVisualized ? (
+                                                <FormSelect
+                                                  value={inputVal}
+                                                  onChange={
+                                                    canInput && !cell?.isSkipDay
+                                                      ? (val) => {
+                                                          setInputValues(
+                                                            (prev) => ({
+                                                              ...prev,
+                                                              [key]:
+                                                                Array.isArray(
+                                                                  val,
+                                                                )
+                                                                  ? val.join(
+                                                                      ", ",
+                                                                    )
+                                                                  : String(val),
+                                                            }),
+                                                          );
+                                                          setTempValues(
+                                                            (prev) => ({
+                                                              ...prev,
+                                                              [key]:
+                                                                Array.isArray(
+                                                                  val,
+                                                                )
+                                                                  ? val.join(
+                                                                      ", ",
+                                                                    )
+                                                                  : String(val),
+                                                            }),
+                                                          );
+                                                        }
+                                                      : () => {}
+                                                  }
+                                                  options={selectOptions}
+                                                  placeholder="Select"
+                                                  disabled={
+                                                    !canInput || cell?.isSkipDay
+                                                  }
+                                                  triggerClassName="text-sm px-1 text-center justify-center"
+                                                />
+                                              ) : (
+                                                <div className="flex flex-col items-center  justify-center h-full w-full cursor-not-allowed">
+                                                  <span className="text-black">
+                                                    {
+                                                      inputFocused[key]
+                                                        ? inputVal // Show raw value when focused
+                                                        : formatCompactNumber(
+                                                            inputVal,
+                                                          ) // Show formatted value when blurred
+                                                    }
+                                                  </span>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </TooltipTrigger>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    </td>
+                                  );
+                                }
                                 return (
                                   <td
                                     key={colIdx}
                                     className={clsx(
-                                      "p-2 border text-center w-[80px] h-[42px]",
+                                      "p-2 border text-center w-[80px] h-[42px] relative",
                                       headers[colIdx].isSunday && "bg-gray-100",
-                                      cell?.isSkipDay && "bg-gray-400",
+                                      cell?.isSkipDay && "bg-gray-200",
                                     )}
                                   >
                                     <TooltipProvider>
                                       <Tooltip>
                                         <TooltipTrigger asChild>
-                                          <div
+                                          <input
+                                            type="text"
+                                            inputMode="decimal"
+                                            value={
+                                              inputFocused[key]
+                                                ? inputVal // Show raw value when focused
+                                                : formatCompactNumber(inputVal) // Show formatted value when blurred
+                                            }
+                                            onFocus={
+                                              canInput
+                                                ? (e) => handleFocus(e, key)
+                                                : undefined
+                                            }
+                                            onBlur={
+                                              canInput
+                                                ? () => handleBlur(key)
+                                                : undefined
+                                            }
+                                            onChange={
+                                              canInput
+                                                ? (e) => handleChange(e, key)
+                                                : undefined
+                                            }
+                                            onKeyPress={handleKeyPress}
+                                            onPaste={handlePaste}
                                             className={clsx(
-                                              "rounded-sm text-sm w-[80px] h-[42px]",
+                                              "border p-2 rounded-sm text-center text-sm w-full h-[42px] transition-all",
+                                              "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
                                               inputVal !== "" &&
+                                                validationType &&
                                                 selectedPeriod !== "YEARLY" &&
-                                                (isValid
-                                                  ? "bg-green-100 border border-green-500"
-                                                  : "bg-red-100 border border-red-500"),
-                                              isVisualized &&
-                                                "opacity-60 border ",
-                                              cell?.isSkipDay &&
-                                                "opacity-40 cursor-not-allowed bg-gray-100",
+                                                (isValidInput(
+                                                  validationType,
+                                                  inputVal,
+                                                  value1 ?? null,
+                                                  value2 ?? null,
+                                                )
+                                                  ? "bg-green-100 border-green-500"
+                                                  : "bg-red-100 border-red-500"),
+                                              (!canInput ||
+                                                isVisualized ||
+                                                cell?.isSkipDay) &&
+                                                "opacity-60 cursor-not-allowed bg-gray-50",
                                             )}
-                                          >
-                                            {!isVisualized ? (
-                                              <FormSelect
-                                                value={inputVal}
-                                                onChange={
-                                                  canInput && !cell?.isSkipDay
-                                                    ? (val) => {
-                                                        setInputValues(
-                                                          (prev) => ({
-                                                            ...prev,
-                                                            [key]:
-                                                              Array.isArray(val)
-                                                                ? val.join(", ")
-                                                                : String(val),
-                                                          }),
-                                                        );
-                                                        setTempValues(
-                                                          (prev) => ({
-                                                            ...prev,
-                                                            [key]:
-                                                              Array.isArray(val)
-                                                                ? val.join(", ")
-                                                                : String(val),
-                                                          }),
-                                                        );
-                                                      }
-                                                    : () => {}
-                                                }
-                                                options={selectOptions}
-                                                placeholder="Select"
-                                                disabled={
-                                                  !canInput || cell?.isSkipDay
-                                                }
-                                                triggerClassName="text-sm px-1 text-center justify-center"
-                                              />
-                                            ) : (
-                                              <div className="flex flex-col items-center  justify-center h-full w-full cursor-not-allowed">
-                                                <span className="text-black">
-                                                  {
-                                                    inputFocused[key]
-                                                      ? inputVal // Show raw value when focused
-                                                      : formatCompactNumber(
-                                                          inputVal,
-                                                        ) // Show formatted value when blurred
-                                                  }
-                                                </span>
-                                              </div>
-                                            )}
-                                          </div>
+                                            placeholder="0"
+                                            disabled={
+                                              !canInput || cell?.isSkipDay
+                                            }
+                                            readOnly={
+                                              !canInput || cell?.isSkipDay
+                                            }
+                                          />
                                         </TooltipTrigger>
+                                        {inputVal !== "" &&
+                                          inputVal !== "0" &&
+                                          !isNaN(Number(inputVal)) && (
+                                            <TooltipContent>
+                                              <span>
+                                                {parseFloat(inputVal)
+                                                  .toFixed(4)
+                                                  .replace(/\.?0+$/, "")}
+                                              </span>
+                                            </TooltipContent>
+                                          )}
                                       </Tooltip>
                                     </TooltipProvider>
                                   </td>
                                 );
-                              }
-                              return (
-                                <td
-                                  key={colIdx}
-                                  className={clsx(
-                                    "p-2 border text-center w-[80px] h-[42px] relative",
-                                    headers[colIdx].isSunday && "bg-gray-100",
-                                    cell?.isSkipDay && "bg-gray-200",
-                                  )}
-                                >
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <input
-                                          type="text"
-                                          inputMode="decimal"
-                                          value={
-                                            inputFocused[key]
-                                              ? inputVal // Show raw value when focused
-                                              : formatCompactNumber(inputVal) // Show formatted value when blurred
-                                          }
-                                          onFocus={
-                                            canInput
-                                              ? (e) => handleFocus(e, key)
-                                              : undefined
-                                          }
-                                          onBlur={
-                                            canInput
-                                              ? () => handleBlur(key)
-                                              : undefined
-                                          }
-                                          onChange={
-                                            canInput
-                                              ? (e) => handleChange(e, key)
-                                              : undefined
-                                          }
-                                          onKeyPress={handleKeyPress}
-                                          onPaste={handlePaste}
-                                          className={clsx(
-                                            "border p-2 rounded-sm text-center text-sm w-full h-[42px] transition-all",
-                                            "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                                            inputVal !== "" &&
-                                              validationType &&
-                                              selectedPeriod !== "YEARLY" &&
-                                              (isValidInput(
-                                                validationType,
-                                                inputVal,
-                                                value1 ?? null,
-                                                value2 ?? null,
-                                              )
-                                                ? "bg-green-100 border-green-500"
-                                                : "bg-red-100 border-red-500"),
-                                            (!canInput ||
-                                              isVisualized ||
-                                              cell?.isSkipDay) &&
-                                              "opacity-60 cursor-not-allowed bg-gray-50",
-                                          )}
-                                          placeholder="0"
-                                          disabled={
-                                            !canInput || cell?.isSkipDay
-                                          }
-                                          readOnly={
-                                            !canInput || cell?.isSkipDay
-                                          }
-                                        />
-                                      </TooltipTrigger>
-                                      {inputVal !== "" &&
-                                        inputVal !== "0" &&
-                                        !isNaN(Number(inputVal)) && (
-                                          <TooltipContent>
-                                            <span>
-                                              {parseFloat(inputVal)
-                                                .toFixed(4)
-                                                .replace(/\.?0+$/, "")}
-                                            </span>
-                                          </TooltipContent>
-                                        )}
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        );
-                      })}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
+                              })}
+                            </tr>
+                          );
+                        })}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
+
+          <DragOverlay>
+            {userData.isSuperAdmin &&
+              activeItem?.type === "group" &&
+              activeItem.data && (
+                <div
+                  className="bg-blue-50 border border-gray-300 rounded shadow-lg"
+                  style={{ width: "500px" }}
+                >
+                  <table className="w-full table-fixed border-collapse text-sm bg-white">
+                    <tbody>
+                      <tr className="sticky top-[50px] bg-blue-50 z-10 h-[39px]">
+                        <td
+                          colSpan={4}
+                          className="p-2 text-blue-800 border font-bold"
+                        >
+                          <div className="flex items-center gap-2">
+                            <GripVertical className="w-4 h-4 text-gray-400" />
+                            {activeItem.data.coreParameter.coreParameterName}
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            {userData.isSuperAdmin &&
+              activeItem?.type === "kpi" &&
+              activeItem.data && (
+                <div
+                  className="bg-white border border-gray-300 rounded shadow-lg"
+                  style={{ width: "500px" }}
+                >
+                  <table className="w-full table-fixed border-collapse text-sm bg-white">
+                    <tbody>
+                      <tr className="group/row border-b bg-gray-50">
+                        <td className="p-3  w-[75px] h-[55px]">
+                          <div className="flex items-center gap-2">
+                            <GripVertical className="w-4 h-4 text-gray-400" />
+                            <Avatar className="h-6 w-6">
+                              <AvatarFallback
+                                className={clsx(
+                                  "font-semibold",
+                                  getColorFromName(
+                                    activeItem.data?.employeeName,
+                                  ),
+                                )}
+                              >
+                                {(() => {
+                                  if (!activeItem.data?.employeeName) return "";
+                                  const names =
+                                    activeItem.data.employeeName.split(" ");
+                                  const firstInitial = names[0]?.[0] ?? "";
+                                  const lastInitial =
+                                    names.length > 1
+                                      ? names[names.length - 1][0]
+                                      : "";
+                                  return (
+                                    firstInitial + lastInitial
+                                  ).toUpperCase();
+                                })()}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                        </td>
+                        <td className="px-3 border w-[180px] text-left h-[59px] align-middle">
+                          <span className="line-clamp-2 break-words cursor-default">
+                            {activeItem.data.kpiName}
+                          </span>
+                        </td>
+                        <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
+                          <span className="line-clamp-2 break-words cursor-default">
+                            {activeItem.data.tag}
+                          </span>
+                        </td>
+                        <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
+                          <span className="line-clamp-2 break-words cursor-default">
+                            {activeItem.data.validationType === "YES_NO"
+                              ? activeItem.data.goalValue === 1
+                                ? "Yes"
+                                : "No"
+                              : getFormattedValue(
+                                  activeItem.data.validationType,
+                                  activeItem.data?.value1,
+                                  activeItem.data?.value2,
+                                  activeItem.data?.unit,
+                                )}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+          </DragOverlay>
+        </DndContext>
       )}
       <WarningDialog
         open={showWarning}
         onSubmit={handleWarningSubmit}
         onDiscard={handleWarningDiscard}
         onClose={handleWarningClose}
-      />
-      <KPISideBar
-        open={open}
-        onClose={() => setOpen(false)}
-        selectedType={selectedPeriod}
-        data={groupedKpiRows.map((row) => ({
-          coreParameterId: row.coreParameter.coreParameterId,
-          coreParameterName: row.coreParameter.coreParameterName,
-          kpis: row.kpis.map((k) => k.kpi),
-        }))}
       />
     </FormProvider>
   );

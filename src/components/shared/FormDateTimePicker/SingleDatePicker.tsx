@@ -84,7 +84,9 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <ChevronDown
-          className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`h-4 w-4 text-gray-400 transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
         />
       </button>
 
@@ -125,12 +127,19 @@ interface CalendarDay {
   isPrevMonth: boolean;
 }
 
+// Event interface
+interface CalendarEvent {
+  date: Date;
+  label: string;
+}
+
 // Custom Calendar Component
 interface CustomCalendarProps {
   selected: Date | undefined;
   onSelect: (date: Date) => void;
   currentMonth: Date;
   onMonthChange: (date: Date) => void;
+  events?: CalendarEvent[];
 }
 
 const CustomCalendar: React.FC<CustomCalendarProps> = ({
@@ -138,18 +147,17 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   onSelect,
   currentMonth,
   onMonthChange,
+  events,
 }) => {
   const today = new Date();
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
 
-  // Get first day of month and days in month
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const daysInMonth = lastDay.getDate();
   const startingDayOfWeek = firstDay.getDay();
 
-  // Generate calendar days
   const days: CalendarDay[] = [];
 
   // Previous month days
@@ -172,7 +180,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     });
   }
 
-  // Next month days to fill the grid
+  // Next month days
   const totalCells = Math.ceil(days.length / 7) * 7;
   let nextMonthDate = 1;
   for (let i = days.length; i < totalCells; i++) {
@@ -185,7 +193,6 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
 
   const handleDateClick = (day: CalendarDay): void => {
     if (!day.isCurrentMonth) return;
-
     const newDate = new Date(year, month, day.date);
     onSelect(newDate);
   };
@@ -202,6 +209,12 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     return dayDate.toDateString() === today.toDateString();
   };
 
+  const hasEvent = (day: CalendarDay): boolean => {
+    if (!events || !day.isCurrentMonth) return false;
+    const dayDate = new Date(year, month, day.date);
+    return events.some((e) => e.date.toDateString() === dayDate.toDateString());
+  };
+
   const monthOptions: SelectOption[] = months.map((monthName, index) => ({
     value: index,
     label: monthName,
@@ -214,7 +227,6 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
 
   return (
     <div className="w-80">
-      {/* Header with custom selects */}
       <div className="flex gap-2 mb-4">
         <div className="flex-1">
           <CustomSelect
@@ -238,7 +250,6 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         </div>
       </div>
 
-      {/* Days of week header */}
       <div className="grid grid-cols-7 gap-1 mb-2">
         {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
           <div
@@ -250,26 +261,30 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         ))}
       </div>
 
-      {/* Calendar grid */}
       <div className="grid grid-cols-7 gap-1">
         {days.map((day, index) => (
-          <button
-            key={index}
-            type="button"
-            className={`h-8 w-8 rounded-full text-sm font-medium transition-colors ${
-              !day.isCurrentMonth
-                ? "text-gray-300 cursor-not-allowed"
-                : isSelected(day)
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : isTodayDate(day)
-                    ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                    : "text-gray-700 hover:bg-gray-100"
-            }`}
-            onClick={() => handleDateClick(day)}
-            disabled={!day.isCurrentMonth}
-          >
-            {day.date}
-          </button>
+          <div key={index} className="flex flex-col items-center">
+            <button
+              type="button"
+              className={`h-8 w-8 rounded-full text-sm font-medium transition-colors ${
+                !day.isCurrentMonth
+                  ? "text-gray-300 cursor-not-allowed"
+                  : isSelected(day)
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : isTodayDate(day)
+                      ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                      : "text-gray-700 hover:bg-gray-100"
+              }`}
+              onClick={() => handleDateClick(day)}
+              disabled={!day.isCurrentMonth}
+            >
+              {day.date}
+            </button>
+
+            {hasEvent(day) && (
+              <span className="h-1 w-1 mt-1 rounded-full bg-red-500"></span>
+            )}
+          </div>
         ))}
       </div>
     </div>
@@ -281,18 +296,16 @@ interface SingleDatePickerProps {
   className?: string;
   value?: Date;
   onChange?: (date: Date | undefined) => void;
-  isClear?: boolean;
-  handleClear?: () => void;
   defaultDate?: Date;
+  events?: CalendarEvent[];
 }
 
 const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
   className,
   value,
   onChange,
-  // isClear = true,
-  // handleClear,
   defaultDate,
+  events,
 }) => {
   const [date, setDate] = React.useState<Date | undefined>(
     value ?? defaultDate,
@@ -313,13 +326,6 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
     onChange?.(selected);
     setIsOpen(false);
   };
-
-  // const onClear = (): void => {
-  //   setDate(undefined);
-  //   onChange?.(undefined);
-  //   handleClear?.();
-  //   setIsOpen(false);
-  // };
 
   return (
     <div className={`relative ${className || ""}`}>
@@ -352,26 +358,8 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
               onSelect={handleSelect}
               currentMonth={currentMonth}
               onMonthChange={setCurrentMonth}
+              events={events}
             />
-
-            {/* <div className="flex justify-between gap-2 mt-4 pt-3 border-t border-gray-200">
-              {isClear && (
-                <button
-                  type="button"
-                  className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
-                  onClick={onClear}
-                >
-                  Clear
-                </button>
-              )}
-              <button
-                type="button"
-                className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                Close
-              </button>
-            </div> */}
           </div>
         </>
       )}
