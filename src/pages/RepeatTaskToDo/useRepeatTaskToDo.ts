@@ -258,5 +258,6 @@ export function useRepeatTaskToDo() {
     userid,
     setSelectedDate,
     selectedDate,
+    today,
   };
 }

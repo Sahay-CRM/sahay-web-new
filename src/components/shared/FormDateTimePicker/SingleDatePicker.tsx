@@ -290,8 +290,8 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
   className,
   value,
   onChange,
-  isClear = true,
-  handleClear,
+  // isClear = true,
+  // handleClear,
   defaultDate,
 }) => {
   const [date, setDate] = React.useState<Date | undefined>(
@@ -314,12 +314,12 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
     setIsOpen(false);
   };
 
-  const onClear = (): void => {
-    setDate(undefined);
-    onChange?.(undefined);
-    handleClear?.();
-    setIsOpen(false);
-  };
+  // const onClear = (): void => {
+  //   setDate(undefined);
+  //   onChange?.(undefined);
+  //   handleClear?.();
+  //   setIsOpen(false);
+  // };
 
   return (
     <div className={`relative ${className || ""}`}>
@@ -331,12 +331,12 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
         <Calendar className="mr-2 h-4 w-4 text-gray-500" />
         {date ? (
           isToday(date) ? (
-            <span className="text-gray-900">Today</span>
+            <span className="text-gray-900 text-sm">Today</span>
           ) : (
-            <span className="text-gray-900">{formatDate(date)}</span>
+            <span className="text-gray-900 text-sm">{formatDate(date)}</span>
           )
         ) : (
-          <span className="text-gray-500">Pick a date</span>
+          <span className="text-gray-500 text-sm">Pick a date</span>
         )}
       </button>
 
@@ -354,7 +354,7 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
               onMonthChange={setCurrentMonth}
             />
 
-            <div className="flex justify-between gap-2 mt-4 pt-3 border-t border-gray-200">
+            {/* <div className="flex justify-between gap-2 mt-4 pt-3 border-t border-gray-200">
               {isClear && (
                 <button
                   type="button"
@@ -371,7 +371,7 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
               >
                 Close
               </button>
-            </div>
+            </div> */}
           </div>
         </>
       )}

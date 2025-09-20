@@ -17,6 +17,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import SingleDatePicker from "@/components/shared/FormDateTimePicker/SingleDatePicker";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useEffect } from "react";
+import ProgressBar from "@/components/shared/ProgressBar/progressBar";
 
 function getDayDiff(deadline?: string | Date | null): number {
   if (!deadline) return Infinity;
@@ -37,6 +40,12 @@ function getDayDiff(deadline?: string | Date | null): number {
 }
 
 export default function RepeatTaskToDo() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Repeat Task List", href: "" }]);
+  }, [setBreadcrumbs]);
+
   const {
     companyTaskData,
     toggleComplete,
@@ -63,6 +72,7 @@ export default function RepeatTaskToDo() {
     userid,
     setSelectedDate,
     selectedDate,
+    today,
   } = useRepeatTaskToDo();
 
   // console.log(isPastDate);
@@ -77,17 +87,23 @@ export default function RepeatTaskToDo() {
     .filter((t) => t.isCompleted)
     .sort((a, b) => getDayDiff(a.taskDeadline) - getDayDiff(b.taskDeadline));
 
+  const totalTasks = tasks.length;
+  const completedTasks = doneTasks.length;
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex flex-col w-full py-4 px-4 h-full">
         <div className="flex justify-between items-center mb-4 w-full">
-          <div className="w-52">
-            <h1 className="text-lg font-bold text-gray-800">
+          <div className="w-full">
+            {/* <h1 className="text-lg font-bold text-gray-800">
               Repeat Task List
-            </h1>
+            </h1> */}
+            {totalTasks > 0 && (
+              <ProgressBar total={totalTasks} completed={completedTasks} />
+            )}
           </div>
           {permission.Add || permission.Edit ? (
-            <div className="z-15 relative flex items-center gap-2 w-full justify-end">
+            <div className="z-15 relative flex items-center gap-2 w-[400px] justify-end">
               <div>
                 <SearchDropdown
                   options={employeeOption}
@@ -157,7 +173,7 @@ export default function RepeatTaskToDo() {
               <>
                 {activeTasks.length === 0 ? (
                   <p className="text-muted-foreground text-sm italic text-center py-4">
-                    No active tasks. You're all caught up!
+                    No Pending tasks. You're all caught up!
                   </p>
                 ) : (
                   <div className="flex-1 overflow-hidden flex flex-col mb-4">
@@ -173,30 +189,35 @@ export default function RepeatTaskToDo() {
                             <div className="flex gap-3 flex-1 items-center overflow-hidden min-w-0">
                               <RadioGroup
                                 value={task.isCompleted ? "done" : "todo"}
-                                onValueChange={() =>
-                                  task.taskId &&
-                                  toggleComplete(task.taskId, !task.isCompleted)
-                                }
-                                className="px-1 cursor-pointer flex-shrink-0"
+                                onValueChange={() => {
+                                  if (task.taskId && selectedDate === today) {
+                                    toggleComplete(
+                                      task.taskId,
+                                      !task.isCompleted,
+                                    );
+                                  }
+                                }}
+                                className={`px-1 cursor-pointer flex-shrink-0 ${selectedDate === today ? "cursor-not-allowed" : "cursor-not-allowed"}`}
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <RadioGroupItem
                                   value="done"
                                   id={`task-${task.taskId}`}
-                                  className="w-4 h-4 cursor-pointer rounded-full border border-gray-400 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                  className={`w-4 h-4 cursor-pointer rounded-full border border-gray-400 data-[state=checked]:bg-primary data-[state=checked]:border-primary ${selectedDate === today ? "" : "cursor-not-allowed"}`}
                                 />
                               </RadioGroup>
 
                               <div className="w-full flex gap-2 group">
                                 <div
                                   className="flex flex-col flex-1 min-w-0 cursor-pointer py-1.5 w-full"
-                                  onClick={() =>
-                                    task.taskId &&
-                                    toggleComplete(
-                                      task.taskId,
-                                      !task.isCompleted,
-                                    )
-                                  }
+                                  onClick={() => {
+                                    if (task.taskId && selectedDate === today) {
+                                      toggleComplete(
+                                        task.taskId,
+                                        !task.isCompleted,
+                                      );
+                                    }
+                                  }}
                                   // onClick={() => handleViewTask(task)}
                                 >
                                   <Label
@@ -304,11 +325,11 @@ export default function RepeatTaskToDo() {
                         <FormCheckbox
                           checked={task.isCompleted}
                           onChange={() => {
-                            if (task.taskId) {
+                            if (task.taskId && selectedDate === today) {
                               toggleComplete(task.taskId, !task.isCompleted);
                             }
                           }}
-                          className="w-4 h-4 cursor-pointer rounded-full border border-gray-400 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          className={`w-4 h-4 cursor-pointer rounded-full border border-gray-400 data-[state=checked]:bg-primary data-[state=checked]:border-primary ${selectedDate === today ? "" : "cursor-not-allowed"}`}
                           containerClass="rounded-full overflow-hidden mt-0"
                           onClick={(e) => e.stopPropagation()}
                         />
