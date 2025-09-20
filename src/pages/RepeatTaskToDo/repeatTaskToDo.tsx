@@ -58,10 +58,11 @@ export default function RepeatTaskToDo() {
     isViewModalOpen,
     handleDeleteTask,
     isLoading,
-    isPastDate,
+    // isPastDate,
+    userid,
   } = useRepeatTaskToDo();
 
-  console.log(isPastDate);
+  // console.log(isPastDate);
 
   const tasks = companyTaskData?.data || [];
 
@@ -95,6 +96,7 @@ export default function RepeatTaskToDo() {
                   isMandatory
                   onSearchChange={setIsEmpSearch}
                   dropdownClass="min-w-60"
+                  isCrossShow={isEmployeeId !== userid}
                 />
               </div>
               <DateRangePicker
@@ -146,7 +148,7 @@ export default function RepeatTaskToDo() {
                   </p>
                 ) : (
                   <div className="flex-1 overflow-hidden flex flex-col mb-4">
-                    <h2 className="text-sm font-medium mb-2">ACTIVE TASKS</h2>
+                    <h2 className="text-sm font-medium mb-2">PENDING TASKS</h2>
 
                     <div className="flex-1 overflow-y-auto pr-2">
                       {activeTasks.map((task) => (

@@ -410,7 +410,7 @@ export const useAgenda = ({
     });
 
     return () => {
-      unsubscribe(); // Clean up the listener
+      unsubscribe();
     };
   }, [db, meetingId]);
 
@@ -887,16 +887,14 @@ export const useAgenda = ({
 
   useEffect(() => {
     const fetchAndMarkAttendance = async () => {
-      if (hasMarkedAttendance) return; // prevent duplicate calls
+      if (hasMarkedAttendance) return;
 
-      // ✅ find current user in joiners
       const currentUser = joiners?.find((item) => item.employeeId === userId);
 
-      // ✅ check conditions
       if (
         userId &&
         currentUser &&
-        !currentUser.attendanceMark && // only if false
+        !currentUser.attendanceMark &&
         meetingStatus !== "NOT_STARTED" &&
         meetingStatus !== "ENDED"
       ) {

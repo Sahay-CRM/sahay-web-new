@@ -20,19 +20,47 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
     setActiveIndex((prevIndex) => (prevIndex === index ? -1 : index));
   };
 
-  const filteredMenuItems = data?.filter((item) => {
-    // If item has children, check if any child has permission
-    if (item.items) {
-      return item.items.some((child) => permissions?.[child.moduleKey]?.View);
-    }
-    // For items without children, check the item's own permission
-    const moduleKeys = Array.isArray(item.moduleKey)
-      ? item.moduleKey.filter((k): k is string => !!k)
-      : item.moduleKey
-        ? [item.moduleKey]
-        : [];
-    return moduleKeys.some((key) => permissions?.[key]?.View);
-  });
+  // 🔥 Flatten logic added here
+  const filteredMenuItems = data
+    ?.map((item) => {
+      // If item has children
+      if (item.items) {
+        // Keep only children with permission
+        const allowedChildren = item.items.filter(
+          (child) => permissions?.[child.moduleKey]?.View,
+        );
+
+        if (allowedChildren.length === 0) return null;
+
+        // If only one child, flatten it to behave like a single menu item
+        if (allowedChildren.length === 1) {
+          return {
+            ...allowedChildren[0],
+            icon: item.icon, // Inherit parent icon for consistency
+          };
+        }
+
+        // Otherwise keep the parent with filtered children
+        return {
+          ...item,
+          items: allowedChildren,
+        };
+      }
+
+      // For items without children, check permission
+      const moduleKeys = Array.isArray(item.moduleKey)
+        ? item.moduleKey.filter((k): k is string => !!k)
+        : item.moduleKey
+          ? [item.moduleKey]
+          : [];
+
+      if (moduleKeys.some((key) => permissions?.[key]?.View)) {
+        return item;
+      }
+
+      return null;
+    })
+    .filter((i): i is NonNullable<typeof i> => i !== null);
 
   return (
     <div className="flex flex-col w-[260px] h-screen bg-white border-r">
@@ -64,6 +92,7 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
           );
         })}
       </nav>
+
       <div className="flex justify-center mb-4 cursor-pointer">
         <img src={logoImg} alt="logo" className="w-[60%]" />
       </div>
