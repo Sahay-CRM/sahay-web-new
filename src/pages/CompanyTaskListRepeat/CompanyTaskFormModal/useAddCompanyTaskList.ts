@@ -12,9 +12,10 @@ import { useGetCompanyMeeting } from "@/features/api/companyMeeting";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import useGetRepeatCompanyTaskById from "@/features/api/companyTask/useGetRepeatCompanyTaskById";
+import { getRepeatTypeOrCustom } from "@/components/shared/RepeatOption/repeatOption";
+// import { getRepeatTypeOrCustom } from "@/pages/ToDoList/repeatOption";
 
 interface FormValues {
-  // taskId?: string;
   repetitiveTaskId?: string;
   project?: CompanyProjectDataProps | string | null;
   taskName: string;
@@ -28,10 +29,14 @@ interface FormValues {
   meeting?: CompanyMeetingDataProps | string | null;
   assignUser: EmployeeDetails[];
   comment?: string;
+  customObj?: CustomObj;
 }
 
 // Renamed hook
-export const useAddCompanyTask = (taskDeadline?: string | Date) => {
+export const useAddCompanyTask = () => {
+  const [isTypeSearch, setIsTypeSearch] = useState("");
+  const [CustomRepeatData, setCustomRepeatData] = useState<CustomObj>();
+  const [selectedRepeat, setSelectedRepeat] = useState<string>("");
   const { mutate: addUpdateTask, isPending } =
     addUpdateRepeatCompanyTaskMutation();
   const { id: repetitiveTaskId } = useParams();
@@ -44,7 +49,6 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
   const [isModalOpen, setModalOpen] = useState(false);
   const methods = useForm<FormValues>({
     defaultValues: {
-      // taskId: "",
       repetitiveTaskId: "",
       project: "",
       taskName: "",
@@ -62,7 +66,13 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
     mode: "onChange",
   });
   const { reset, trigger, getValues } = methods;
-  const { data: taskTypeData, isLoading: typeLoading } = useDdTaskType();
+  const { data: taskTypeData, isLoading: typeLoading } = useDdTaskType({
+    filter: {
+      search: isTypeSearch.length >= 3 ? isTypeSearch : undefined,
+    },
+    enable: isTypeSearch.length >= 3,
+  });
+
   const [paginationFilterEmployee, setPaginationFilterEmployee] =
     useState<PaginationFilter>({
       currentPage: 1,
@@ -103,17 +113,17 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
       meetingData &&
       employeedata
     ) {
-      // Safely parse the taskDeadline string into a Date object
       const deadlineString = taskDataById.data.taskDeadline;
       const taskDeadlineDate = deadlineString ? new Date(deadlineString) : null;
 
-      // Check if the date is valid before setting it
       const validTaskDeadline =
         taskDeadlineDate && !isNaN(taskDeadlineDate.getTime())
           ? taskDeadlineDate
           : null;
+
       const employeeIds = taskDataById?.data?.employeeIds ?? [];
-      reset({
+
+      const formValues = {
         repetitiveTaskId: taskDataById.data.repetitiveTaskId || "",
         project:
           projectListdata?.data?.find(
@@ -129,16 +139,23 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
           ? new Date(taskDataById.data.taskStartDate)
           : null,
 
-        // Use the validated date here
         taskDeadline: validTaskDeadline,
 
         repeatType: taskDataById.data.repeatType || "",
         isActive: taskDataById.data.isActive ? "active" : "inactive",
         taskTypeId: taskDataById.data.taskTypeId || "",
+        customObj: taskDataById.data.customObj,
         assignUser:
           employeedata?.data?.filter((emp) =>
             employeeIds.includes(emp.employeeId),
           ) ?? [],
+      };
+
+      reset(formValues);
+      setSelectedRepeat(getRepeatTypeOrCustom(taskDataById.data));
+    } else {
+      reset({
+        isActive: "active",
       });
     }
   }, [
@@ -152,16 +169,6 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
 
   const [step, setStep] = useState(1);
 
-  // const { data: taskStatus, isLoading: statusLoading } = useGetAllTaskStatus({
-  //   filter: {},
-  // });
-
-  // const taskStatusOptions = taskStatus
-  //   ? taskStatus.data.map((status) => ({
-  //       label: status.taskStatus,
-  //       value: status.taskStatusId,
-  //     }))
-  //   : [];
   const taskStatusOptions = [
     { label: "Active", value: "active" },
     { label: "Inactive", value: "inactive" },
@@ -169,135 +176,13 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
 
   const taskTypeOptions = taskTypeData
     ? taskTypeData.data.map((status) => ({
-        label: status.taskTypeName,
-        value: status.taskTypeId,
+        label: status.taskTypeName || "Unnamed",
+        value: status.taskTypeId || "", // Fallback to empty string
       }))
     : [];
 
-  const getDayName = (date: Date) =>
-    date.toLocaleDateString("en-US", { weekday: "long" });
-  function getOrdinalWeekday(date: Date) {
-    const day = date.getDay();
-    const dateOfMonth = date.getDate();
-    const lastDateOfMonth = new Date(
-      date.getFullYear(),
-      date.getMonth() + 1,
-      0,
-    ).getDate();
-
-    const weekdayNames = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-    const ordinals = ["first", "second", "third", "fourth", "fifth"];
-
-    // Calculate week number in month (1-based)
-    const weekNumber = Math.ceil(dateOfMonth / 7);
-
-    // Check if date is in the last week of the month
-    const daysLeftInMonth = lastDateOfMonth - dateOfMonth;
-    const isLastWeek = daysLeftInMonth < 7;
-
-    const ordinalLabel = isLastWeek ? "last" : ordinals[weekNumber - 1];
-
-    return `${ordinalLabel} ${weekdayNames[day]}`;
-  }
-
-  // Format options dynamically based on taskDeadline
-  let repetitionOptions = [{}];
-
-  if (taskDeadline) {
-    try {
-      const dateObj = new Date(taskDeadline);
-      const dayName = getDayName(dateObj);
-      const ordinalWeekday = getOrdinalWeekday(dateObj);
-      const lastDateOfMonth = new Date(
-        dateObj.getFullYear(),
-        dateObj.getMonth() + 1,
-        0,
-      ).getDate();
-
-      const dateOfMonth = dateObj.getDate();
-      const daysLeftInMonth = lastDateOfMonth - dateOfMonth;
-      const isLastWeek = daysLeftInMonth < 7;
-      const monthName = dateObj.toLocaleDateString("en-US", { month: "long" }); // e.g., "March"
-      const isLastDayOfMonth = dateOfMonth === lastDateOfMonth;
-
-      repetitionOptions = [
-        { value: "DAILY", label: "Daily" },
-        { value: "DAILYALTERNATE", label: "Daily (Every Other Day)" },
-        { value: "WEEKLY", label: `Weekly on ${dayName}` },
-        // Conditionally include only one of these two:
-        ...(isLastWeek
-          ? [
-              {
-                value: "MONTHLYLASTWEEKDAY",
-                label: `Monthly on the last ${dayName}`,
-              },
-            ]
-          : [
-              {
-                value: "MONTHLYNWEEKDAY",
-                label: `Monthly on the ${ordinalWeekday}`,
-              },
-            ]),
-        {
-          value: "MONTHLYDATE",
-          label: `Monthly on the ${getOrdinalDate(dateOfMonth)} date `,
-        },
-        ...(isLastDayOfMonth
-          ? [
-              {
-                value: "MONTHLYEOM",
-                label: `Monthly on the last day (${getOrdinalDate(lastDateOfMonth)})`,
-              },
-            ]
-          : []),
-
-        {
-          value: "YEARLYXMONTHDATE",
-          label: `Yearly on ${monthName} ${getOrdinalDate(dateOfMonth)}`, // Yearly - Date (e.g., March 14th)
-        },
-        ...(!isLastDayOfMonth
-          ? [
-              {
-                value: "YEARLYXMONTHNWEEKDAY",
-                label: `Yearly on the ${ordinalWeekday} of ${monthName}  `,
-              },
-            ]
-          : []),
-        ...(isLastDayOfMonth
-          ? [
-              {
-                value: "YEARLYXMONTHLASTWEEKDAY",
-                label: `Yearly on the last ${dayName} of ${monthName}  `,
-              },
-            ]
-          : []),
-      ];
-    } catch {
-      // fallback if invalid date
-      repetitionOptions = [];
-    }
-  } else {
-    repetitionOptions = [];
-  }
-
-  // Helper to get ordinal string for day (1st, 2nd, 3rd...)
-  function getOrdinalDate(n: number) {
-    const s = ["th", "st", "nd", "rd"];
-    const v = n % 100;
-    return n + (s[(v - 20) % 10] || s[v] || s[0]);
-  }
-
   const steps = ["Project", "Meeting", "Basic Info", "Assign User"];
 
-  // Define required and optional fields for each step
   const stepFieldConfig: Record<
     number,
     { required: (keyof FormValues)[]; optional: (keyof FormValues)[] }
@@ -378,12 +263,21 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
       typeof data?.isActive === "string"
         ? data.isActive === "active"
         : !!data.isActive;
-
     const assigneeIds =
       (data.assignUser as unknown as { employeeId: string }[])?.map(
         (user) => user.employeeId,
       ) ?? [];
-
+    const now = new Date();
+    const defaultDeadline = new Date(
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        18, // 6 PM UTC
+        0,
+        0,
+      ),
+    );
     const payload = data.repetitiveTaskId
       ? {
           repetitiveTaskId: repetitiveTaskId,
@@ -406,7 +300,11 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
             (data.meeting as unknown as { meetingId: string })?.meetingId ??
             null,
 
-          repeatType: data.repeatType.toUpperCase(),
+          repeatType:
+            data.repeatType === "CUSTOMTYPE"
+              ? ""
+              : data.repeatType.toUpperCase(),
+          customObj: data.customObj,
         }
       : {
           taskName: data.taskName,
@@ -414,7 +312,9 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
           taskStartDate: data.taskStartDate
             ? new Date(data.taskStartDate)
             : null,
-          taskDeadline: data.taskDeadline ? new Date(data.taskDeadline) : null,
+          taskDeadline: data.taskDeadline
+            ? new Date(data.taskDeadline)
+            : defaultDeadline,
           taskStatusId: data?.taskStatusId,
           isActive: isActiveValue,
 
@@ -427,7 +327,12 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
           meetingId:
             (data.meeting as unknown as { meetingId: string })?.meetingId ??
             null,
-          repeatType: data.repeatType.toUpperCase(),
+          repeatType:
+            data.repeatType === "CUSTOMTYPE"
+              ? ""
+              : data.repeatType.toUpperCase(),
+          // repeatType: data.repeatType.toUpperCase(),
+          customObj: data.customObj,
         };
 
     addUpdateTask(payload, {
@@ -437,6 +342,10 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
     });
   };
   const handleClose = () => setModalOpen(false);
+
+  const handleSaveCustomRepeatData = useCallback((customData: CustomObj) => {
+    setCustomRepeatData(customData);
+  }, []);
   return {
     step,
     steps,
@@ -444,7 +353,7 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
     prevStep,
     onSubmit,
     methods,
-    repetitionOptions,
+    // repetitionOptions,
     employeedata,
     projectListdata,
     setPaginationFilterEmployee,
@@ -469,5 +378,10 @@ export const useAddCompanyTask = (taskDeadline?: string | Date) => {
     isModalOpen,
     handleClose,
     taskpreviewData: getValues(),
+    setIsTypeSearch,
+    saveCustomRepeatData: handleSaveCustomRepeatData,
+    CustomRepeatData,
+    setSelectedRepeat,
+    selectedRepeat,
   };
 };

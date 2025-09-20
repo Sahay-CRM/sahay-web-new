@@ -155,3 +155,33 @@ export function handleIndianNumberInput(
     input.setSelectionRange(selectionStart + diff, selectionStart + diff);
   });
 }
+
+export function convertToLocalTime(deadline: string | Date | null): string {
+  if (!deadline) return ""; // handle null early
+
+  const date = typeof deadline === "string" ? new Date(deadline) : deadline;
+  const now = new Date();
+
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const deadlineDay = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+  );
+
+  const diffInDays = Math.round(
+    (deadlineDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
+  if (diffInDays === 0) {
+    return "Today";
+  } else if (diffInDays === 1) {
+    return "Tomorrow";
+  } else {
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }
+}

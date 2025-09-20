@@ -158,6 +158,8 @@ const Urls = {
 
   getUserFireNotification: () =>
     `${baseUrl}/company/employee/logs/notification-get`,
+  updateNotificationAsReadAll: () =>
+    `${baseUrl}/company/employee/logs/notification-update-all`,
 
   updateFireNotificationAsRead: () =>
     `${baseUrl}/company/employee/logs/notification-update`,
@@ -300,6 +302,41 @@ const Urls = {
   addTODOnotes: () => `${baseUrl}/company/to-do/note/create`,
   getTODOnotes: (id: string) => `${baseUrl}/company/to-do/note/get/${id}`,
   deleteTODOnote: (id: string) => `${baseUrl}/company/to-do/note/delete/${id}`,
+
+  // Request
+  createRequest: () => `${baseUrl}/company/change-request/register`,
+  modifyRequest: (id: string) =>
+    `${baseUrl}/company/change-request/modify/${id}`,
+  getRequest: () => `${baseUrl}/company/change-request/get`,
+  deleteRequest: (id: string) =>
+    `${baseUrl}/company/change-request/delete/${id}`,
+
+  addGroup: () => `${baseUrl}/company/group/create`,
+  getGroupList: () => `${baseUrl}/company/group/get-all`,
+  updateGroup: (id: string) => `${baseUrl}/company/group/update/${id}`,
+  deleteGroup: (id: string) => `${baseUrl}/company/group/delete/${id}`,
+  removeProjectFromGroup: () => `${baseUrl}/company/project/remove-from-group`,
+  addProjectToGroup: () => `${baseUrl}/company/project/add-to-group`,
+  updateGroupSequence: () => `${baseUrl}/company/group/rearrange`,
+
+  getProjectComments: (id: string) =>
+    `${baseUrl}/company/project/comment/get/${id}`,
+  addProjectComment: () => `${baseUrl}/company/project/comment/add`,
+  updateProjectComment: (id: string) =>
+    `${baseUrl}/company/project/comment/update/${id}`,
+  deleteProjectComment: (id: string) =>
+    `${baseUrl}/company/project/comment/delete/${id}`,
+
+  addTaskComment: () => `${baseUrl}/company/task/comment/add`,
+  getTaskComments: (id: string) => `${baseUrl}/company/task/comment/get/${id}`,
+  updateTaskComment: (id: string) =>
+    `${baseUrl}/company/task/comment/update/${id}`,
+  deleteTaskComment: (id: string) =>
+    `${baseUrl}/company/task/comment/delete/${id}`,
+
+  getRepeatTaskListDropdown: () => `${baseUrl}/company/task/repeat/get-all`,
+  updateRepeatTaskList: (id: string) =>
+    `${baseUrl}/company/task/repeat/update/${id}`,
 };
 
 export default Urls;

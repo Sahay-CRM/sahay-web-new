@@ -84,7 +84,10 @@ export default function useAdminUser() {
     },
   });
 
-  const { data: meetingStatus, isLoading } = useDdMeetingStatus();
+  const { data: meetingStatus, isLoading } = useDdMeetingStatus({
+    filter: {},
+    enable: true,
+  });
   const { mutate: deleteMeetingById } = useDeleteCompanyMeeting();
   const { mutate: updateMeetingStatus } = useAddUpdateCompanyMeetingStatus();
 

@@ -18,6 +18,8 @@ export default function useDeleteDesignation() {
     onSuccess: (response) => {
       toast.success(response?.message);
       queryClient.resetQueries({ queryKey: ["get-designation-list"] });
+      queryClient.resetQueries({ queryKey: ["get-department-dropdown"] });
+      queryClient.resetQueries({ queryKey: ["get-designation-dropdown"] });
     },
   });
 

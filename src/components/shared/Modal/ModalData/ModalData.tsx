@@ -18,6 +18,7 @@ const ModalData: React.FC<ModalProps> = ({
   modalClose,
   // isCloseButton = true,
   containerClass,
+  childclass,
   modalTitle,
 }) => {
   return (
@@ -40,7 +41,11 @@ const ModalData: React.FC<ModalProps> = ({
           )} */}
         </DialogHeader>
 
-        <div className="px-6 py-4 flex-1 overflow-y-auto">{children}</div>
+        <div
+          className={twMerge("px-6 py-4 flex-1 overflow-y-auto", childclass)}
+        >
+          {children}
+        </div>
 
         {buttons && buttons.length > 0 && (
           <DialogFooter className="flex justify-end gap-2 border-t p-4">

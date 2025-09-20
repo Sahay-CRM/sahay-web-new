@@ -3,7 +3,7 @@ import {
   useAddUpdateDatapoint,
   useGetDatapointById,
 } from "@/features/api/companyDatapoint";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import { useDdNonSelectAllKpiList } from "@/features/api/KpiList";
 
@@ -16,15 +16,25 @@ export default function useEditDatapointFormModal({
   modalClose,
   kpiId,
 }: UseEditDatapointFormModalProps) {
+  const [isKpiSearch, setIsKpiSearch] = useState("");
+  const [isEmployeeSearch, setIsEmployeeSearch] = useState("");
+
   const { mutate: addDatapoint, isPending } = useAddUpdateDatapoint();
 
   const { data: datapointApiData } = useGetDatapointById(kpiId);
   const { data: employeeData } = useGetEmployeeDd({
-    filter: { isDeactivated: false },
+    filter: {
+      isDeactivated: false,
+      search: isEmployeeSearch.length >= 3 ? isEmployeeSearch : undefined,
+      pageSize: 25,
+    },
+    enable: isEmployeeSearch.length >= 3,
   });
   const { data: datpointData } = useDdNonSelectAllKpiList({
-    filter: {},
-    enable: true,
+    filter: {
+      search: isKpiSearch.length >= 3 ? isKpiSearch : undefined,
+    },
+    enable: isKpiSearch.length >= 3,
   });
 
   const {
@@ -35,12 +45,21 @@ export default function useEditDatapointFormModal({
     control,
     watch,
     setValue,
-    getValues,
   } = useForm();
-  console.log(getValues());
 
   useEffect(() => {
     if (datapointApiData) {
+      const rawSkipDays = datapointApiData.skipDays as
+        | string
+        | string[]
+        | undefined;
+
+      const skipDaysValue = Array.isArray(rawSkipDays)
+        ? rawSkipDays
+        : rawSkipDays
+          ? rawSkipDays.split(",")
+          : [];
+
       setValue("KPIMasterId", datapointApiData.KPIMasterId);
 
       setValue("kpiId", datapointApiData.kpiId);
@@ -58,6 +77,8 @@ export default function useEditDatapointFormModal({
       setValue("value1", datapointApiData.value1);
       setValue("value2", datapointApiData.value2);
       setValue("tag", datapointApiData.tag);
+
+      setValue("skipDays", skipDaysValue);
       if (
         datapointApiData.validationType === "YES_NO" &&
         datapointApiData.employeeId
@@ -105,6 +126,7 @@ export default function useEditDatapointFormModal({
       frequencyType: data.frequencyType,
       visualFrequencyTypes: visualFrequencyTypesStr,
       visualFrequencyAggregate: data.visualFrequencyAggregate,
+      skipDays: data.skipDays,
     };
     addDatapoint(payload, {
       onSuccess: () => {
@@ -195,6 +217,15 @@ export default function useEditDatapointFormModal({
     { label: "Yes", value: "1" },
     { label: "No", value: "0" },
   ];
+  const skipDaysOption = [
+    { label: "Sun", value: "0" },
+    { label: "Mon", value: "1" },
+    { label: "Tue", value: "2" },
+    { label: "Wed", value: "3" },
+    { label: "Thu", value: "4" },
+    { label: "Fri", value: "5" },
+    { label: "Sat", value: "6" },
+  ];
 
   const getEmployeeName = (emp: DataPointEmployee) => {
     if (emp?.employeeName) return emp.employeeName;
@@ -203,6 +234,26 @@ export default function useEditDatapointFormModal({
     );
     return found?.employeeName || emp.employeeId || "";
   };
+
+  useEffect(() => {
+    if (!selectedFrequency) return;
+
+    // Allowed options after selectedFrequency
+    const validOptions = getFilteredVisualFrequencyOptions().map(
+      (opt) => opt.value,
+    );
+
+    // Remove invalid visualFrequencyTypes
+    if (Array.isArray(visualFrequencyTypes)) {
+      const filtered = visualFrequencyTypes.filter((val) =>
+        validOptions.includes(val),
+      );
+      if (filtered.length !== visualFrequencyTypes.length) {
+        setValue("visualFrequencyTypes", filtered, { shouldValidate: true });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFrequency]);
 
   return {
     register,
@@ -231,5 +282,8 @@ export default function useEditDatapointFormModal({
     showYesNo,
     showBoth,
     yesnoOptions,
+    setIsKpiSearch,
+    setIsEmployeeSearch,
+    skipDaysOption,
   };
 }

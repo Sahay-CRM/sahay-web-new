@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react"; // Added useState, useRef, ChangeEvent
+import { useEffect, useState } from "react"; // Added useState, useRef, ChangeEvent
 import { FormProvider, useFormContext, Controller } from "react-hook-form"; // Added useFormContext, Controller
 
 import { Button } from "@/components/ui/button";
@@ -17,14 +17,9 @@ import useAddDetailMeeting from "./useAddDetailMeeting"; // Renamed import
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { getEmployee } from "@/features/api/companyEmployee";
 import { getMeetingType } from "@/features/api/meetingType";
-import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import PageNotAccess from "@/pages/PageNoAccess";
-
-interface MeetingInfoProps {
-  isUpdateMeeting: boolean;
-}
 
 const MeetingType = () => {
   const { control } = useFormContext();
@@ -112,43 +107,12 @@ const MeetingType = () => {
   );
 };
 
-const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
+const MeetingInfo = () => {
   const {
     register,
     formState: { errors },
     control,
-    watch,
-    setValue,
   } = useFormContext();
-
-  const meetingType = watch("meetingTypeId");
-
-  const { data: meetingStatusData } = useDdMeetingStatus();
-
-  const meetingStatusOptions = useMemo(() => {
-    return (
-      meetingStatusData?.map((status) => ({
-        label: status.meetingStatus,
-        value: status.meetingStatusId,
-        order: status.meetingStatusOrder,
-      })) || []
-    );
-  }, [meetingStatusData]);
-
-  const shouldHideStatus =
-    !isUpdateMeeting && meetingType?.parentType === "DETAIL";
-
-  useEffect(() => {
-    if (shouldHideStatus && meetingStatusOptions.length > 0) {
-      const defaultStatus = meetingStatusOptions.find((s) => s.order === 1);
-      if (defaultStatus) {
-        setValue("meetingStatusId", defaultStatus.value, {
-          shouldValidate: true,
-          shouldDirty: true,
-        });
-      }
-    }
-  }, [shouldHideStatus, meetingStatusOptions, setValue]);
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -503,7 +467,7 @@ const AddDetailMeeting = () => {
 
   const steps = [
     <MeetingType key="meetingType" />,
-    <MeetingInfo isUpdateMeeting={companyMeetingId ? true : false} />,
+    <MeetingInfo />,
     <Joiners key="joiners" />,
   ];
 

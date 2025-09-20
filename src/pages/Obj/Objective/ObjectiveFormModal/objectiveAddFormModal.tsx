@@ -15,7 +15,6 @@ export default function ObjectiveFormModal({
       modalClose,
       modalData,
     });
-  // console.log(modalData);
 
   return (
     <FormProvider {...methods}>

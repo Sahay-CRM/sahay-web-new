@@ -22,6 +22,8 @@ export default function HealthScoreList() {
     permission,
     companyLevel,
     levelId,
+    setIsCoreParaSearch,
+    setIsCompanyLevelSearch,
   } = useHealthScore();
 
   const { control, setValue } = formMethods;
@@ -104,6 +106,7 @@ export default function HealthScoreList() {
                     field.onChange(value.value);
                     setValue("coreParameterId", value.value);
                   }}
+                  onSearchChange={setIsCoreParaSearch}
                 />
               )}
             />
@@ -149,6 +152,7 @@ export default function HealthScoreList() {
                       field.onChange(value.value);
                       setValue("level", value.value);
                     }}
+                    onSearchChange={setIsCompanyLevelSearch}
                   />
                 )}
               />

@@ -18,6 +18,9 @@ interface Score {
   score: number;
 }
 export default function useHealthScore() {
+  const [isCoreParaSearch, setIsCoreParaSearch] = useState("");
+  const [isCompanyLevelSearch, setIsCompanyLevelSearch] = useState("");
+
   const formMethods = useForm();
   const { control } = formMethods;
   const coreParameterId = useWatch({ control, name: "coreParameterId" });
@@ -25,9 +28,22 @@ export default function useHealthScore() {
 
   const [isEditing, setIsEditing] = useState(false);
   const { mutate: updateHealthScore } = updateHealthScoreMutation();
-  const { data: coreParams } = useGetCoreParameterDropdown();
 
-  const { data: companyLevel } = useGetCompanyLevel(coreParameterId);
+  const { data: coreParams } = useGetCoreParameterDropdown({
+    filter: {
+      search: isCoreParaSearch.length >= 3 ? isCoreParaSearch : undefined,
+    },
+    enable: isCoreParaSearch.length >= 3,
+  });
+
+  const { data: companyLevel } = useGetCompanyLevel({
+    filter: {
+      search:
+        isCompanyLevelSearch.length >= 3 ? isCompanyLevelSearch : undefined,
+      coreParameterId: coreParameterId,
+    },
+    enable: isCompanyLevelSearch.length >= 3 && !!coreParameterId,
+  });
 
   const permission = useSelector(getUserPermission).HEALTH_SCORE;
   const navigate = useNavigate();
@@ -109,5 +125,7 @@ export default function useHealthScore() {
     permission,
     companyLevel,
     levelId,
+    setIsCoreParaSearch,
+    setIsCompanyLevelSearch,
   };
 }

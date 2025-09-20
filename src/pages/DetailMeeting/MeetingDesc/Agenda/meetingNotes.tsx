@@ -23,10 +23,11 @@ import {
   deleteCompanyMeetingMutation,
   useGetMeetingNotes,
 } from "@/features/api/detailMeeting";
-import { get, getDatabase, ref, update } from "firebase/database";
+import { get, ref, update } from "firebase/database";
 import { queryClient } from "@/queryClient";
 import { useSelector } from "react-redux";
 import { getUserId } from "@/features/selectors/auth.selector";
+import { database } from "@/firebaseConfig";
 
 interface MeetingNotesProps {
   joiners: Joiners[];
@@ -66,7 +67,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingNoteText, setEditingNoteText] = useState("");
 
-  const db = getDatabase();
+  const db = database;
 
   const meetingRef = ref(db, `meetings/${meetingId}`);
 
@@ -140,20 +141,28 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
     };
     addNote(payload, {
       onSuccess: async () => {
-        const meetingSnapshot = await get(meetingRef);
-        if (!meetingSnapshot.exists()) {
+        if (meetingStatus === "NOT_STARTED" || meetingStatus === "ENDED") {
           queryClient.invalidateQueries({
             queryKey: ["get-meeting-notes"],
           });
           refetchMeetingNotes();
           setDropdownOpen(null);
-          return;
         } else {
-          update(ref(db, `meetings/${meetingId}/state`), {
-            updatedAt: Date.now(),
-          });
-          refetchMeetingNotes();
-          setDropdownOpen(null);
+          const meetingSnapshot = await get(meetingRef);
+          if (!meetingSnapshot.exists()) {
+            queryClient.invalidateQueries({
+              queryKey: ["get-meeting-notes"],
+            });
+            refetchMeetingNotes();
+            setDropdownOpen(null);
+            return;
+          } else {
+            update(ref(db, `meetings/${meetingId}/state`), {
+              updatedAt: Date.now(),
+            });
+            refetchMeetingNotes();
+            setDropdownOpen(null);
+          }
         }
       },
     });
@@ -177,22 +186,31 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
 
     addNote(payload, {
       onSuccess: async () => {
-        const meetingSnapshot = await get(meetingRef);
-        if (!meetingSnapshot.exists()) {
+        if (meetingStatus === "NOT_STARTED" || meetingStatus === "ENDED") {
           queryClient.invalidateQueries({
             queryKey: ["get-meeting-notes"],
           });
           refetchMeetingNotes();
           setEditingNoteId(null);
           setEditingNoteText("");
-          return;
         } else {
-          update(ref(db, `meetings/${meetingId}/state`), {
-            updatedAt: Date.now(),
-          });
-          refetchMeetingNotes();
-          setEditingNoteId(null);
-          setEditingNoteText("");
+          const meetingSnapshot = await get(meetingRef);
+          if (!meetingSnapshot.exists()) {
+            queryClient.invalidateQueries({
+              queryKey: ["get-meeting-notes"],
+            });
+            refetchMeetingNotes();
+            setEditingNoteId(null);
+            setEditingNoteText("");
+            return;
+          } else {
+            update(ref(db, `meetings/${meetingId}/state`), {
+              updatedAt: Date.now(),
+            });
+            refetchMeetingNotes();
+            setEditingNoteId(null);
+            setEditingNoteText("");
+          }
         }
       },
     });
@@ -218,8 +236,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
 
     addNote(payload, {
       onSuccess: async () => {
-        const meetingSnapshot = await get(meetingRef);
-        if (!meetingSnapshot.exists()) {
+        if (meetingStatus === "NOT_STARTED" || meetingStatus === "ENDED") {
           queryClient.invalidateQueries({
             queryKey: ["get-meeting-notes"],
           });
@@ -227,15 +244,26 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
           setTitleInput("");
           setNoteInput("");
           setIsAddingNote(false);
-          return;
         } else {
-          update(ref(db, `meetings/${meetingId}/state`), {
-            updatedAt: Date.now(),
-          });
-          refetchMeetingNotes();
-          setTitleInput("");
-          setNoteInput("");
-          setIsAddingNote(false);
+          const meetingSnapshot = await get(meetingRef);
+          if (!meetingSnapshot.exists()) {
+            queryClient.invalidateQueries({
+              queryKey: ["get-meeting-notes"],
+            });
+            refetchMeetingNotes();
+            setTitleInput("");
+            setNoteInput("");
+            setIsAddingNote(false);
+            return;
+          } else {
+            update(ref(db, `meetings/${meetingId}/state`), {
+              updatedAt: Date.now(),
+            });
+            refetchMeetingNotes();
+            setTitleInput("");
+            setNoteInput("");
+            setIsAddingNote(false);
+          }
         }
       },
     });
@@ -289,7 +317,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
               <div className="flex justify-end items-center mt-2">
                 <button
                   onClick={handleAddNote}
-                  className="text-sm text-gray-600 cursor-pointer flex flex-col z-50"
+                  className="text-sm text-gray-600 cursor-pointer flex flex-col"
                 >
                   Done
                 </button>

@@ -338,5 +338,6 @@ export default function useCompanyTaskList() {
     viewModalData,
     isLoading,
     taskStatus,
+    appliedDateRange,
   };
 }

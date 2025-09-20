@@ -32,7 +32,6 @@ export default function useAddUpdateDataPoint() {
       queryClient.resetQueries({ queryKey: ["get-kpi-by-id"] });
 
       queryClient.resetQueries({ queryKey: ["get-datapoint-list"] });
-      window.location.reload();
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

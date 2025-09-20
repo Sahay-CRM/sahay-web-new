@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
-import { getDatabase, off, onValue, ref } from "firebase/database";
+import { off, onValue, ref } from "firebase/database";
 import { useParams } from "react-router-dom";
+import { database } from "@/firebaseConfig";
 
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
@@ -85,7 +86,7 @@ export default function Tasks({
   };
 
   useEffect(() => {
-    const db = getDatabase();
+    const db = database;
     const meetingRef = ref(
       db,
       `meetings/${meetingId}/timers/objectives/${selectedIssueId}/tasks`,
@@ -138,6 +139,7 @@ export default function Tasks({
     };
     updateCompanyTask(payload, {
       onSuccess: () => {
+        // setDrawerOpen(drawerOpen);
         queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
         tasksFireBase();
       },

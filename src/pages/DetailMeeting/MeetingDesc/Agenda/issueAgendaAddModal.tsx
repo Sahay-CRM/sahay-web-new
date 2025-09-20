@@ -2,7 +2,7 @@ import ModalData from "@/components/shared/Modal/ModalData";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CornerDownLeft } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Define types for the data structures being used
 interface DetailMeetingObjectives {
@@ -20,7 +20,6 @@ interface IssueAgendaAddModalProps {
   setIssueInput: (value: string) => void;
   setSelectedIoType: (value: string) => void;
   setDropdownVisible: (visible: boolean) => void;
-  handleAddIssue: () => void;
   dropdownVisible: boolean;
   filteredIssues: DetailMeetingObjectives[];
   searchOptions: DetailMeetingObjectives[];
@@ -35,7 +34,6 @@ export default function IssueAgendaAddModal({
   issueInput,
   setIssueInput,
   setDropdownVisible,
-  handleAddIssue,
   dropdownVisible,
   filteredIssues,
   searchOptions,
@@ -47,30 +45,37 @@ export default function IssueAgendaAddModal({
 
   const handleSubmit = () => {
     if (!onSubmit) return;
-    onSubmit({
-      type: selectedType,
-      value: issueInput,
-    });
+    if (issueInput.trim() !== "") {
+      onSubmit({
+        type: selectedType,
+        value: issueInput,
+      });
+    }
   };
+
+  useEffect(() => {
+    if (!isModalOpen) {
+      setIssueInput("");
+      setDropdownVisible(false);
+      setSelectedType("ISSUE");
+    }
+  }, [isModalOpen, setIssueInput, setDropdownVisible]);
 
   const handleListItemSelect = (item: DetailMeetingObjectives) => {
     handleUpdateSelectedObjective(item);
     setDropdownVisible(false);
-    // Optionally trigger add immediately after selection
-    // setTimeout(() => handleAddIssue(), 0);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleAddIssue();
-    }
+  const handleClose = () => {
+    modalClose();
+    setIssueInput("");
   };
 
   return (
     <ModalData
       isModalOpen={isModalOpen}
       modalTitle="Add or Create Issue Objective"
-      modalClose={modalClose}
+      modalClose={handleClose}
       containerClass="h-[350px]"
       buttons={[
         {
@@ -117,7 +122,6 @@ export default function IssueAgendaAddModal({
             placeholder="Add or Create Agenda (Issue or Objective)"
             onFocus={() => setDropdownVisible(true)}
             onBlur={() => setTimeout(() => setDropdownVisible(false), 150)}
-            onKeyDown={handleKeyDown}
             className="w-full h-[45px] sm:h-[50px] border-0 border-b-2 border-gray-300 rounded-none pr-10 text-sm sm:text-base focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[0px] "
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">

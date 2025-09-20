@@ -1,5 +1,5 @@
-// Replace the below config with your Firebase project config from the Firebase Console
 import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 import {
   getMessaging,
   getToken,
@@ -9,6 +9,7 @@ import {
 import { addNotification } from "./features/reducers/notification.reducer";
 import store from "./features/store";
 import { getDatabase } from "firebase/database";
+import { queryClient } from "./queryClient";
 
 const firebaseConfig = {
   apiKey: "AIzaSyApKwRS0eZK2Dkjwb7gTpbuLvQ5Yf2EzT4",
@@ -21,8 +22,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
-// Check for browser support before initializing messaging
+export const auth = getAuth(app);
 export const isMessagingSupported = () =>
   "serviceWorker" in navigator &&
   "PushManager" in window &&
@@ -62,6 +62,7 @@ export const onFirebaseMessageListener = () => {
       toast.success(title || "You have a new notification!", {
         description: body,
       });
+      queryClient.resetQueries({ queryKey: ["userNotifications"] });
     });
   });
 };

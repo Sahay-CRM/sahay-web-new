@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 type EmployeeRes = BaseResponse<EmployeeDetails>;
 
-export default function useGetEmployee({ filter }: FilterDataProps) {
+export default function useGetEmployee({ filter, enable }: FilterDataProps) {
   return useQuery({
     queryKey: ["get-employee-list", filter],
     queryFn: async () => {
@@ -14,6 +14,6 @@ export default function useGetEmployee({ filter }: FilterDataProps) {
       });
       return data;
     },
-    enabled: !!filter,
+    enabled: !!enable || !!filter,
   });
 }

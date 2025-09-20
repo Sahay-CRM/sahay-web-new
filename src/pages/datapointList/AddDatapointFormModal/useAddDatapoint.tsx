@@ -26,11 +26,11 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { formatIndianNumber } from "@/features/utils/app.utils";
-// import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 // import { useGetProduct } from "@/features/api/Product";
 
 export default function useAddDataPoint() {
-  // const [isModalOpen, setModalOpen] = useState(false);
+  const [isModalOpen, setModalOpen] = useState(false);
 
   const { mutate: addDatapoint, isPending } = useAddUpdateDatapoint();
   const navigate = useNavigate();
@@ -95,6 +95,7 @@ export default function useAddDataPoint() {
       frequencyType: data.frequencyType,
       visualFrequencyTypes: visualFrequencyTypesStr,
       visualFrequencyAggregate: data.visualFrequencyAggregate,
+      skipDays: data.skipDays,
     };
     addDatapoint(simplePayload, {
       onSuccess: () => {
@@ -104,11 +105,11 @@ export default function useAddDataPoint() {
     navigate("/dashboard/kpi");
   });
 
-  // const handleRequestModalOpen = () => {
-  //   setModalOpen(true);
-  // };
+  const handleRequestModalOpen = () => {
+    setModalOpen(true);
+  };
 
-  // const handleClose = () => setModalOpen(false);
+  const handleClose = () => setModalOpen(false);
 
   const handleModalClose = () => {
     reset();
@@ -176,9 +177,9 @@ export default function useAddDataPoint() {
 
           {/* Column Toggle Icon */}
           <div className="flex items-center">
-            {/* <Button className="py-2 w-fit" onClick={handleRequestModalOpen}>
+            <Button className="py-2 w-fit" onClick={handleRequestModalOpen}>
               Request KPI
-            </Button> */}
+            </Button>
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>
@@ -378,8 +379,15 @@ export default function useAddDataPoint() {
   // };
 
   const Details = () => {
+    const [isEmployeeSearch, setIsEmployeeSearch] = useState("");
+
     const { data: employeeData } = useGetEmployeeDd({
-      filter: { isDeactivated: false },
+      filter: {
+        isDeactivated: false,
+        search: isEmployeeSearch.length >= 3 ? isEmployeeSearch : undefined,
+        pageSize: 25,
+      },
+      enable: isEmployeeSearch.length >= 3,
     });
 
     const frequenceOptions = [
@@ -479,6 +487,16 @@ export default function useAddDataPoint() {
     const yesnoOptions = [
       { label: "Yes", value: "1" },
       { label: "No", value: "0" },
+    ];
+
+    const skipDaysOption = [
+      { label: "Sun", value: "0" },
+      { label: "Mon", value: "1" },
+      { label: "Tue", value: "2" },
+      { label: "Wed", value: "3" },
+      { label: "Thu", value: "4" },
+      { label: "Fri", value: "5" },
+      { label: "Sat", value: "6" },
     ];
 
     return (
@@ -608,6 +626,7 @@ export default function useAddDataPoint() {
                   label="Assign User"
                   error={errors.employeeId}
                   isMandatory
+                  onSearchChange={setIsEmployeeSearch}
                 />
               )}
             />
@@ -722,6 +741,22 @@ export default function useAddDataPoint() {
             </div>
           )}
         </div>
+        <Controller
+          control={control}
+          name="skipDays"
+          render={({ field }) => (
+            <FormSelect
+              label="Skip Days"
+              value={field.value}
+              onChange={field.onChange}
+              options={skipDaysOption}
+              error={errors.skipDays}
+              className="rounded-md"
+              triggerClassName="py-4"
+              isMulti
+            />
+          )}
+        />
       </div>
     );
   };
@@ -869,7 +904,7 @@ export default function useAddDataPoint() {
     isPending,
     permission,
     selectedKpi,
-    // isModalOpen,
-    // handleClose,
+    isModalOpen,
+    handleClose,
   };
 }

@@ -79,7 +79,10 @@ export default function useDetailMeeting() {
     },
   });
 
-  const { data: meetingStatus, isLoading } = useDdMeetingStatus();
+  const { data: meetingStatus, isLoading } = useDdMeetingStatus({
+    filter: {},
+    enable: true,
+  });
   const { mutate: deleteMeetingById } = useDeleteCompanyMeeting();
   const { mutate: updateMeetingStatus } = useAddUpdateCompanyMeetingStatus();
   const { mutate: duplicateMeeting } = duplicateDetailMeetingMutation();

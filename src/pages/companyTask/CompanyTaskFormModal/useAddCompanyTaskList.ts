@@ -36,6 +36,9 @@ export const useAddCompanyTask = () => {
   const permission = useSelector(getUserPermission);
   const navigate = useNavigate();
 
+  const [isTypeSearch, setIsTypeSearch] = useState("");
+  const [isStatusSearch, setIsStatusSearch] = useState("");
+
   const methods = useForm<FormValues>({
     defaultValues: {
       taskId: "",
@@ -77,7 +80,6 @@ export const useAddCompanyTask = () => {
       });
     }
   }, [taskId, taskDataById, reset]);
-  // console.log(getValues());
   const [step, setStep] = useState(1);
 
   const [paginationFilterEmployee, setPaginationFilterEmployee] =
@@ -100,9 +102,19 @@ export const useAddCompanyTask = () => {
     });
 
   const { data: taskStatus, isLoading: statusLoading } = useGetAllTaskStatus({
-    filter: {},
+    filter: {
+      search: isStatusSearch.length >= 3 ? isStatusSearch : undefined,
+      pageSize: 25,
+    },
+    enable: isStatusSearch.length >= 3,
   });
-  const { data: taskTypeData, isLoading: typeLoading } = useDdTaskType();
+
+  const { data: taskTypeData, isLoading: typeLoading } = useDdTaskType({
+    filter: {
+      search: isTypeSearch,
+    },
+    enable: isTypeSearch.length >= 3,
+  });
 
   const { data: employeedata, isLoading: employeeLoading } = getEmployee({
     filter: { ...paginationFilterEmployee, isDeactivated: false },
@@ -117,7 +129,6 @@ export const useAddCompanyTask = () => {
       filter: paginationFilterMeeting,
     },
   );
-
 
   const taskStatusOptions = taskStatus
     ? taskStatus.data.map((status) => ({
@@ -285,5 +296,7 @@ export const useAddCompanyTask = () => {
     employeeLoading,
     meetingLoading,
     taskPermission: permission.TASK,
+    setIsTypeSearch,
+    setIsStatusSearch,
   };
 };

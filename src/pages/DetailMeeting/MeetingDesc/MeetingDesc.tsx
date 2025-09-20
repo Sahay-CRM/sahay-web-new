@@ -72,6 +72,7 @@ export default function MeetingDesc() {
     handleDelete,
     handleAddEmp,
     handleDeleteEmp,
+    meetingData,
   } = useMeetingDesc();
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -98,6 +99,10 @@ export default function MeetingDesc() {
         .length,
     [meetingTiming?.joiners],
   );
+
+  if (meetingData?.status === 401) {
+    return <div>You are Not Authorized</div>;
+  }
 
   return (
     <div className="flex w-full h-full bg-gray-200 overflow-hidden">
@@ -184,7 +189,7 @@ export default function MeetingDesc() {
                               className="flex items-center gap-3 cursor-pointer w-full"
                               onClick={() => {
                                 if (
-                                  meetingStatus !== "NOT_STARTED" &&
+                                  meetingStatus === "NOT_STARTED" ||
                                   meetingStatus !== "ENDED"
                                 ) {
                                   toggleOpen();
@@ -324,7 +329,9 @@ export default function MeetingDesc() {
                                         )}
                                     </>
                                   )}
-                                {follow !== item.employeeId &&
+                                {meetingStatus !== "NOT_STARTED" &&
+                                  meetingStatus !== "ENDED" &&
+                                  follow !== item.employeeId &&
                                   follow !== userId && (
                                     <button
                                       onClick={() =>

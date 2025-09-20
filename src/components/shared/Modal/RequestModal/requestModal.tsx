@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 import ModalData from "@/components/shared/Modal/ModalData";
+import { useAddUpdateRequestMutation } from "@/features/api/Request";
+import FormInputField from "../../Form/FormInput/FormInputField";
+import { useEffect } from "react";
 
 interface RequestModalProps {
   type: string;
   isModalOpen: boolean;
   modalClose: () => void;
   modalTitle: string;
+  defaultData?: CreateRequest | null;
 }
 
 export default function RequestModal({
@@ -13,12 +17,48 @@ export default function RequestModal({
   isModalOpen,
   modalClose,
   modalTitle,
+  defaultData,
 }: RequestModalProps) {
-  const [notes, setNotes] = useState("");
+  const { mutate: addRequest } = useAddUpdateRequestMutation();
 
-  const handleSubmit = () => {
-    console.log("Type:", type);
-    console.log("Notes:", notes);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<RequestFormValues>({
+    defaultValues: {
+      requestName: "",
+      notes: "",
+    },
+  });
+
+  useEffect(() => {
+    if (defaultData) {
+      reset({
+        requestName: defaultData.requestTitle ?? "",
+        notes: defaultData.requesterNote ?? "",
+      });
+    } else {
+      reset({
+        requestName: "",
+        notes: "",
+      });
+    }
+  }, [defaultData, isModalOpen, reset]);
+
+  const onSubmit = (data: RequestFormValues) => {
+    const payload = {
+      requestType: type.toLowerCase(),
+      requesterNote: data.notes,
+      requestTitle: data.requestName,
+    };
+
+    addRequest(payload, {
+      onSuccess: () => {
+        modalClose();
+      },
+    });
   };
 
   return (
@@ -36,7 +76,7 @@ export default function RequestModal({
           {
             btnText: "Submit",
             buttonCss: "py-1.5 px-5",
-            btnClick: handleSubmit,
+            btnClick: handleSubmit(onSubmit), // use RHF submit
           },
         ]}
       >
@@ -47,14 +87,30 @@ export default function RequestModal({
           </div>
 
           <div>
+            <FormInputField
+              label="Request Name"
+              placeholder="Enter Request Name"
+              isMandatory
+              {...register("requestName", {
+                required: "Request Name is required",
+              })}
+              error={errors.requestName}
+            />
+          </div>
+
+          <div>
             <label className="block mb-1 font-medium">Notes</label>
             <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              {...register("notes")}
               placeholder="Enter your notes..."
               className="w-full border rounded-md p-2 focus:outline-none focus:ring focus:ring-blue-300"
               rows={4}
             />
+            {errors.notes && (
+              <span className="text-red-500 text-sm">
+                {errors.notes.message}
+              </span>
+            )}
           </div>
         </div>
       </ModalData>

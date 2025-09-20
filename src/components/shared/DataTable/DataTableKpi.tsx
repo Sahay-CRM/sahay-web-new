@@ -244,8 +244,6 @@ const TableDataKpi = <T extends Record<string, unknown>>({
     return activeToggleKey ? item[activeToggleKey] : undefined;
   };
 
-  // console.log(permission, isEditDeleteShow);
-
   return (
     <Card className="p-0 gap-0">
       <div className="flex h-[calc(100vh-350px)] flex-col overflow-auto">

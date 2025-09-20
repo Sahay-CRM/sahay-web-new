@@ -13,7 +13,7 @@ const Profile = lazy(() => import("../pages/profile/Profile"));
 const companydesignation = lazy(
   () => import("../pages/companyDesignation/companyDesignation"),
 );
-const companyemployee = lazy(
+const companyEmployee = lazy(
   () => import("../pages/companyEmployee/companyEmployee"),
 );
 const CompanyImportantDates = lazy(
@@ -21,11 +21,11 @@ const CompanyImportantDates = lazy(
 );
 const CompanyMeeting = lazy(() => import("../pages/Meeting/MeetingList"));
 const CompanyTask = lazy(() => import("../pages/companyTask/CompanyTaskList"));
-const CompanyProjects = lazy(
-  () => import("../pages/companyProjects/CompanyProjects"),
-);
+// const CompanyProjects = lazy(
+//   () => import("../pages/companyProjects/CompanyProjects")
+// );
 const CompanyProjectView = lazy(
-  () => import("../pages/companyProjects/ViewProject/ViewProject"),
+  () => import("../pages/CompanyProjectsTab/ViewProject"),
 );
 const DatapointList = lazy(
   () => import("../pages/datapointList/DatapointList"),
@@ -44,7 +44,7 @@ const CompanyLevelAssign = lazy(() => import("../pages/CompanyLevel"));
 const CompanyTaskView = lazy(() => import("../pages/companyTask/ViewProject"));
 
 const AddCompanyProjectList = lazy(
-  () => import("../pages/companyProjects/AddProject"),
+  () => import("../pages/CompanyProjectsTab/AddProject"),
 );
 
 const AddCompanyDatapoint = lazy(
@@ -86,6 +86,10 @@ const Issues = lazy(() => import("../pages/Obj/Issues"));
 const Objective = lazy(() => import("../pages/Obj/Objective"));
 const GroupKpis = lazy(() => import("../pages/datapointList/GroupKpis"));
 
+const RepeatTaskToDoList = lazy(() => import("../pages/RepeatTaskToDo"));
+
+const Request = lazy(() => import("../pages/Request"));
+
 const AddCompanyTaskListRepeat = lazy(
   () =>
     import(
@@ -96,7 +100,8 @@ const CompanyTaskRe = lazy(
   () => import("../pages/CompanyTaskListRepeat/CompanyTaskListRe"),
 );
 
-const CompanyTaskNew = lazy(() => import("../pages/ToDoList"));
+// const CompanyTaskNew = lazy(() => import("../pages/ToDoList"));
+const CompanyProjectTab = lazy(() => import("../pages/CompanyProjectsTab"));
 
 export default function EmployeeRoutes() {
   return (
@@ -110,7 +115,7 @@ export default function EmployeeRoutes() {
         <Route path="profile" Component={Profile} />
         <Route path="settings" Component={Theme} />
         <Route path="company-designation" Component={companydesignation} />
-        <Route path="company-employee" Component={companyemployee} />
+        <Route path="company-employee" Component={companyEmployee} />
         <Route path="employees/add" element={<AddCompanyEmployee />} />
         <Route path="employees/edit/:id" element={<AddCompanyEmployee />} />
         <Route path="calendar" Component={CompanyImportantDates} />
@@ -123,6 +128,9 @@ export default function EmployeeRoutes() {
         <Route path="meeting/detail" Component={DetailMeeting} />
         <Route path="meeting/detail/add" Component={AddDetailMeeting} />
         <Route path="meeting/detail/update/:id" Component={AddDetailMeeting} />
+
+        <Route path="requests" Component={Request} />
+        <Route path="repeat-task-list" Component={RepeatTaskToDoList} />
 
         <Route path="repeat-meeting/">
           <Route index Component={RepeatDetailMeeting} />
@@ -147,7 +155,7 @@ export default function EmployeeRoutes() {
         <Route path="tasksrepeat/add" element={<AddCompanyTaskListRepeat />} />
         <Route path="tasksrepeat" element={<CompanyTaskRe />} />
 
-        <Route path="projects" Component={CompanyProjects} />
+        <Route path="projects" Component={CompanyProjectTab} />
         <Route path="projects/add" element={<AddCompanyProjectList />} />
         <Route path="projects/edit/:id" element={<AddCompanyProjectList />} />
         <Route path="projects/view/:id" Component={CompanyProjectView} />
@@ -165,7 +173,7 @@ export default function EmployeeRoutes() {
 
         <Route path="healthscore-achieve" Component={Healthscore} />
 
-        <Route path="todo-list" element={<CompanyTaskNew />} />
+        {/* <Route path="todo-list" element={<CompanyTaskNew />} /> */}
 
         <Route path="business">
           <Route path="health-weightage" Component={HealthWeightage} />

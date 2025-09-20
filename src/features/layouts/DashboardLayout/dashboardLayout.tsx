@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Bell, LogOut, User2Icon } from "lucide-react";
@@ -50,14 +50,17 @@ import {
   clearNotifications,
   markNotificationRead,
   setNotifications,
-  selectNotificationTotalCount,
 } from "@/features/reducers/notification.reducer";
 import { fireTokenMutation } from "@/features/api";
 import useGetUserNotification from "./useGetUserNotification";
-import { updateNotiMutation } from "@/features/api/Notification";
+import {
+  updateNotiMutation,
+  updateReadNotificationMutation,
+} from "@/features/api/Notification";
 import SidebarControlContext from "./SidebarControlContext";
 import ModalData from "@/components/shared/Modal/ModalData";
 import { ExclamationRoundIcon } from "@/components/shared/Icons";
+import { loginToFirebase } from "@/pages/auth/login/loginToFirebase";
 
 interface FailureReasonType {
   response?: {
@@ -86,12 +89,13 @@ const DashboardLayout = () => {
 
   const [isCompanyModalOpen, setCompanyModalOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   // const { setToken } = useAuth();
 
   const user = useSelector(getUserDetail);
   const userId = useSelector(getUserId);
   const notifications = useSelector(selectNotifications);
-  const unreadCount = useSelector(selectNotificationTotalCount);
+  // const unreadCount = useSelector(selectNotificationTotalCount);
   const isLoggedIn = useSelector(getIsLoading);
 
   const { mutate: foreToken } = fireTokenMutation();
@@ -101,6 +105,7 @@ const DashboardLayout = () => {
   const { data: permission } = useGetUserPermission();
   const { data: userData, failureReason } = useGetEmployeeById(userId);
   const { data: notificationData } = useGetUserNotification();
+  const { mutate: readAllNoti } = updateReadNotificationMutation();
 
   const dataFetchingErr =
     typeof failureReason === "object" &&
@@ -125,14 +130,35 @@ const DashboardLayout = () => {
 
   useEffect(() => {
     if (notificationData && Array.isArray(notificationData.data)) {
+      const unreadCount = notificationData.data.filter(
+        (notification) => notification.isRead === false,
+      ).length;
+
       dispatch(
         setNotifications({
           data: notificationData.data,
-          totalCount: notificationData.totalCount,
+          totalCount: unreadCount,
         }),
       );
     }
   }, [dispatch, notificationData]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsNotificationOpen(false);
+      }
+    }
+    if (isNotificationOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isNotificationOpen]);
 
   useEffect(() => {
     if (userData && userData.data) {
@@ -187,17 +213,20 @@ const DashboardLayout = () => {
     };
 
     companyVerifyOtp(verifyCompanyData, {
-      onSuccess: (response) => {
+      onSuccess: async (response) => {
         if (response?.status) {
-          // setToken(response?.data?.token ?? "", response?.data);
+          await loginToFirebase(response.data.fbToken!);
+
           dispatch(
             setAuth({
               userId: response.data.employeeId,
               token: response.data.token ?? null,
               isLoading: false,
               isAuthenticated: true,
+              fbToken: response.data.fbToken,
             }),
           );
+
           requestFirebaseNotificationPermission().then((firebaseToken) => {
             if (firebaseToken && typeof firebaseToken === "string") {
               dispatch(setFireBaseToken(firebaseToken));
@@ -226,6 +255,10 @@ const DashboardLayout = () => {
         }
       },
     });
+  };
+
+  const handleAllRead = () => {
+    readAllNoti();
   };
 
   const { breadcrumbs } = useBreadcrumbs();
@@ -291,21 +324,30 @@ const DashboardLayout = () => {
                       }}
                     >
                       <Bell />
-                      {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
-                          {unreadCount}
-                        </span>
-                      )}
+                      {notificationData &&
+                        notificationData.data.filter(
+                          (notification) => notification.isRead === false,
+                        ).length > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                            {
+                              notificationData.data.filter(
+                                (notification) => notification.isRead === false,
+                              ).length
+                            }
+                          </span>
+                        )}
                     </Button>
                   </div>
                   {isNotificationOpen && (
                     <div>
                       <div
-                        className="fixed inset-0"
+                        className="fixed inset-0 z-40"
                         onClick={() => setIsNotificationOpen(false)}
-                        style={{ background: "transparent" }}
                       />
-                      <div className="absolute right-0 top-12 bg-white shadow-2xl border rounded-lg p-4 w-[400px] z-50">
+                      <div
+                        ref={dropdownRef}
+                        className="absolute right-0 top-12 bg-white shadow-2xl border rounded-lg p-4 w-[400px] z-50"
+                      >
                         {notifications.length > 0 ? (
                           <>
                             <ul className="h-80 overflow-scroll">
@@ -349,7 +391,7 @@ const DashboardLayout = () => {
                                   </li>
                                 ))}
                             </ul>
-                            <div className="text-center mt-2 border-t">
+                            <div className="flex justify-between w-full mt-2 border-t">
                               <Button
                                 variant="link"
                                 onClick={() => {
@@ -358,6 +400,12 @@ const DashboardLayout = () => {
                                 }}
                               >
                                 View All Notifications
+                              </Button>
+                              <Button
+                                variant="link"
+                                onClick={() => handleAllRead()}
+                              >
+                                Mark all as Read
                               </Button>
                             </div>
                           </>

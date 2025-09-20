@@ -40,7 +40,10 @@ export default function useCompanyLevel() {
     Record<string, string[]>
   >({});
 
-  const { data: corePara } = useGetCoreParameterDropdown();
+  const { data: corePara } = useGetCoreParameterDropdown({
+    filter: {},
+    enable: true,
+  });
   const { data: companyLevelAssign } = useGetCompanyLevelAssign();
   const { data: allLevel } = useDdAllLevel();
   const { mutate: companyLevelMutation } = levelAssignMutation();

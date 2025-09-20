@@ -22,18 +22,6 @@ interface FileItem {
   url?: string;
 }
 
-interface CustomObj {
-  day?: number;
-  baseFrequency: string;
-  toDoId?: string;
-  dateOrWeekly?: string;
-  date: number | null;
-  nWeek: number | "";
-  day: number | null;
-  qMonth: number | null | "";
-  hMonth: HalfType | number | null | "";
-  month: number | null;
-}
 interface TaskSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -69,18 +57,29 @@ interface ToDoList {
 interface CustomModalFileProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (data: repeatTyped) => void;
+  onSave: (data: CustomObj) => void;
   defaultValues?: CustomObj;
 }
 
-interface repeatTyped {
-  baseFrequency: string;
-  toDoId?: string;
-  dateOrWeekly?: string;
-  date: number | null;
-  nWeek: number | "";
-  day: number | null;
-  qMonth: number | null | "";
-  hMonth: HalfType | number | null | "";
-  month: number | null;
+interface WeeklyPattern {
+  week: number | null;
+  daysOfWeek: number[];
+}
+
+interface WeekDaysMapping {
+  week: number;
+  daysOfWeek: number[];
+}
+
+interface RepeatPattern {
+  months: number[];
+  weekDaysMapping: WeekDaysMapping[];
+  dates: number[];
+  multiSelect: boolean;
+  daysOfWeek: number[];
+}
+
+interface CustomObj {
+  baseFrequency: FrequencyType;
+  repeatPattern: RepeatPattern;
 }

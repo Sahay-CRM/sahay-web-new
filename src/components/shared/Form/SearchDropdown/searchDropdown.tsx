@@ -25,6 +25,9 @@ interface SearchDropdownProps {
   labelClass?: string;
   isMandatory?: boolean;
   error?: { message?: string };
+  onSearchChange: (value: string) => void;
+  dropdownClass?: string;
+  isCrossShow?: boolean;
 }
 
 const SearchDropdown = ({
@@ -37,6 +40,9 @@ const SearchDropdown = ({
   labelClass,
   isMandatory,
   error,
+  onSearchChange,
+  dropdownClass,
+  isCrossShow = true,
 }: SearchDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -80,7 +86,7 @@ const SearchDropdown = ({
               {selectedOption ? selectedOption.label : placeholder}
             </span>
 
-            {selectedOption ? (
+            {selectedOption && isCrossShow ? (
               <span
                 className="absolute right-8 h-4 w-4 text-gray-500 hover:text-red-500 cursor-pointer z-10"
                 onClick={(e) => {
@@ -100,13 +106,16 @@ const SearchDropdown = ({
 
         <PopoverContent
           align="start"
-          className="w-[var(--radix-popover-trigger-width)] p-0 pointer-events-auto"
+          className={twMerge(`p-0 pointer-events-auto ${dropdownClass}`)}
         >
           <div className="p-2">
             <Input
               ref={inputRef}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                if (onSearchChange) onSearchChange(e.target.value);
+              }}
               placeholder="Search..."
               className="h-9"
             />

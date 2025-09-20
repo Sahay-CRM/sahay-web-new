@@ -30,6 +30,8 @@ export default function useAddOrUpdateDesignation() {
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["get-designation-list"] });
+      queryClient.resetQueries({ queryKey: ["get-department-dropdown"] });
+      queryClient.resetQueries({ queryKey: ["get-designation-dropdown"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

@@ -1,5 +1,6 @@
 interface User extends Partial<EmployeeDetailsById> {
   token?: string;
+  fbToken?: string;
   key?: string;
   employeeId: string;
   employeeName?: string;

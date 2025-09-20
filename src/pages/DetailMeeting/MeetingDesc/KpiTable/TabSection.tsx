@@ -1,8 +1,9 @@
 "use client";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ref, update, onValue, getDatabase } from "firebase/database";
+import { ref, update, onValue } from "firebase/database";
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { database } from "@/firebaseConfig";
 
 export default function TabsSection({
   selectedPeriod,
@@ -16,7 +17,7 @@ export default function TabsSection({
   isDisabled?: boolean;
 }) {
   const { id: meetingId } = useParams();
-  const db = getDatabase();
+  const db = database;
 
   // 🔹 Listen to changes from Firebase in real-time
   useEffect(() => {

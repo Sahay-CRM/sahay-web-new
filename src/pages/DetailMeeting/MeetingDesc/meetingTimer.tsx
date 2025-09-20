@@ -72,7 +72,7 @@ export default function MeetingTimer({
   meetingStatus,
   isUpdating = false, // New prop for loading state
 }: TimerProps) {
-  const [editMode, setEditMode] = useState(isEditMode);
+  const [editMode, setEditMode] = useState(false);
   const [hoursInput, setHoursInput] = useState("");
   const [minutesInput, setMinutesInput] = useState("");
   const [currentTime, setCurrentTime] = useState(initialPlannedTime);
@@ -128,7 +128,7 @@ export default function MeetingTimer({
   );
 
   const handleEditClick = () => {
-    if (!meetingStart && isEditMode) {
+    if (meetingStatus === "NOT_STARTED" || meetingStatus === "ENDED") {
       const time = Math.floor(currentTime);
       setHoursInput(String(Math.floor(time / 3600)));
       setMinutesInput(String(Math.floor((time % 3600) / 60)));

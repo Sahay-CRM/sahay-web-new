@@ -16,16 +16,17 @@ function DesignationAddFormModal({
   modalClose,
   modalData,
 }: DesignationAddFormProps) {
-  // Use form with default values from modalData, and add isParentDesignation
   const methods = useForm<DesignationData & { isParentDesignation?: boolean }>({
     defaultValues: {
       ...modalData,
       isParentDesignation: Boolean(modalData?.parentId),
     },
   });
-  const { DepartmentOptions } = useDesignationFormModalOptions();
+  const { DepartmentOptions, setIsDepartmentSearch } =
+    useDesignationFormModalOptions();
   const departmentId = methods.watch("departmentId");
-  const { designationOptions } = useDesignationDropdownOptions(departmentId);
+  const { designationOptions, setIsParentDesSearch } =
+    useDesignationDropdownOptions(departmentId);
 
   // Get handleSubmit and loading state
   const { handleSubmit: submitHandler, isLoading } = useDesignationFormSubmit(
@@ -80,6 +81,7 @@ function DesignationAddFormModal({
                 placeholder="Select an Department..."
                 error={fieldState.error}
                 isMandatory={true}
+                onSearchChange={setIsDepartmentSearch}
               />
             )}
           />
@@ -161,6 +163,7 @@ function DesignationAddFormModal({
                       field.onChange(value.value);
                     }}
                     placeholder="Select an Parent Designation..."
+                    onSearchChange={setIsParentDesSearch}
                   />
                 )}
               />

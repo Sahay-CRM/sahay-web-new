@@ -182,17 +182,16 @@ interface MeetingData {
   joiners?: Employee[];
   [key: string]: string | string[] | number | undefined;
 }
-///kk
+
 interface IProjectFormData {
   projectId?: string;
   projectName: string;
   projectDescription: string;
   projectDeadline: string;
-  projectStatusId: string;
+  projectStatus: string;
+  projectStatusId?: string;
   employeeIds: string[];
-  projectStatus?: {
-    projectStatus: string;
-  };
+
   subParameterIds: string[];
   createdBy?: {
     employeeId: string;
@@ -220,6 +219,7 @@ interface IProjectFormData {
   detailMeetingProjectId?: string;
   objectiveProjectId?: string;
   issueProjectId?: string;
+  color?: string;
 }
 
 //
@@ -229,7 +229,7 @@ interface RolePermission {
   employeeEmail: string;
   employeeMobile: string;
   companyId: string;
-  employeeType: string; // You can restrict this more based on allowed values
+  employeeType: string;
   departmentId: string;
   designationId: string;
   isSuperAdmin: boolean;
@@ -271,33 +271,6 @@ interface ImportantDatesDataProps {
   color?: string;
   textColor?: string;
   eventType?: string;
-}
-
-interface CompanyMeetingDataProps {
-  meetingId?: string;
-  meetingName?: string;
-  meetingDescription?: string;
-  meetingDateTime?: string;
-  meetingTypeId?: string;
-  parentType?: string;
-  meetingStatusId?: string;
-  companyMeetingId?: string;
-  joiners?: string[] | Joiners[];
-  meetingStatus?: CompanyMeetingStatusDataProps;
-  meetingType?: CompanyMeetingTypeDataProps;
-  files?: [
-    {
-      fileId: string;
-      fileName: string;
-    },
-  ];
-  teamLeaders?: string[];
-  employeeId?: string;
-  attendanceMark?: boolean;
-  detailMeetingStatus?: string;
-  isDetailMeeting?: boolean;
-  meetingTimePlanned?: string;
-  selectDate?: Date | string;
 }
 
 interface Joiners {
@@ -364,7 +337,32 @@ interface CompanyProjectDataProps {
   detailMeetingProjectId?: string;
   meetingNoteId?: string;
   ioType?: string;
+  color?: string;
 }
+
+// interface CompanyMeetingDataProps {
+//   meetingId?: string;
+//   meetingName?: string;
+//   meetingDescription?: string;
+//   meetingDateTime?: string;
+//   meetingTypeId?: string;
+//   parentType?: string;
+//   meetingStatusId?: string;
+//   companyMeetingId?: string;
+//   joiners?: string[] | Joiners[];
+//   meetingStatus?: CompanyMeetingStatusDataProps;
+//   meetingType?: CompanyMeetingTypeDataProps;
+//   files?: [
+//     {
+//       fileId: string;
+//       fileName: string;
+//     },
+//   ];
+//   teamLeaders?: string[];
+//   employeeId?: string;
+//   attendanceMark?: boolean;
+//   detailMeetingStatus?: string;
+// }
 
 interface CompanyMeetingDataProps {
   meetingId?: string;
@@ -388,6 +386,9 @@ interface CompanyMeetingDataProps {
   employeeId?: string;
   attendanceMark?: boolean;
   detailMeetingStatus?: string;
+  isDetailMeeting?: boolean;
+  meetingTimePlanned?: string;
+  selectDate?: Date | string;
 }
 
 interface ProjectParameters {
@@ -617,6 +618,7 @@ interface AddUpdateTask {
   issueId?: string;
   repetitiveTaskId?: string;
   ioType?: string;
+  commentId?: string;
 }
 
 interface TaskGetPaging {
@@ -658,6 +660,22 @@ interface TaskGetPaging {
   isActive?: boolean;
 }
 
+interface RepeatTaskAllRes {
+  taskId: string;
+  repetitiveTaskId?: string;
+  taskName?: string;
+  isCompleted?: boolean;
+  taskStatus?: string;
+  winLostTask?: number;
+  taskStatusId?: string;
+  taskTypeName?: string;
+  taskDescription?: string;
+  taskDeadline?: string | Date | null;
+  taskTypeId?: string;
+  TaskEmployeeJunction?: Employee[];
+  employeeIds?: string[];
+}
+
 interface TaskProject {
   projectId: string;
   CompanyProjectMaster: {
@@ -683,16 +701,6 @@ interface Employee {
     companyId: string;
   };
   reportingManager: string;
-}
-
-interface TaskComment {
-  comment: string;
-  commentDate: string;
-  employeeId: string;
-  Employee: {
-    employeeName: string;
-    employeeId: string;
-  };
 }
 
 interface TaskEmployee {
@@ -744,6 +752,7 @@ interface Task {
   repetitiveTaskId?: string;
   employeeIds?: string | string[];
   isActive?: boolean;
+  customObj?: CustomObj;
 }
 
 interface ProjectTask {
@@ -784,7 +793,7 @@ interface Meeting {
 }
 
 interface TaskComment {
-  commentId: string;
+  commentId?: string;
   comment: string;
   commentDate: string;
   employeeId: string;
@@ -902,6 +911,7 @@ interface KPIFormData {
   employeeName?: string;
   visualFrequencyAggregate: string | null;
   ioKPIId?: string;
+  skipDays?: string[];
 }
 
 interface KPIFormDataProp {
@@ -1001,6 +1011,7 @@ interface Kpi {
   detailMeetingKPIId?: string;
   goalValue?: number;
   sequence?: number;
+  isSkipDay?: boolean;
 }
 
 interface CoreParameterGroup {
@@ -1057,6 +1068,7 @@ interface KpiDataCell {
   value2?: string | number | null;
   avg?: string | number | null;
   isSunday?: boolean;
+  isSkipDay?: boolean;
 }
 
 interface UserLogDetails {
@@ -1333,4 +1345,47 @@ interface RepeatMeetingNotesRes {
   createdAt?: string;
   noteType?: string;
   employeeName?: string;
+}
+
+interface GroupData {
+  srNo?: number;
+  groupId: string;
+  groupName: string;
+  sequence: number;
+  groupType: string;
+  selectedIds?: string[];
+}
+interface GroupInput {
+  groupId?: string;
+  groupName: string;
+  groupType: string;
+}
+
+interface TabItem {
+  id: string;
+  label: string;
+  color?: string;
+}
+
+interface ProjectComment {
+  projectCommentId: string;
+  projectId: string;
+  employeeId: string;
+  employeeName: string;
+  comment: string;
+  createdAt: string;
+}
+
+interface CommentResponse {
+  data: ProjectComment[];
+  projectId: string;
+  message: string;
+}
+
+interface TaskCommentData {
+  taskCommentId: string;
+  taskId: string;
+  employeeName: string;
+  comment: string;
+  createdDatetime: string;
 }

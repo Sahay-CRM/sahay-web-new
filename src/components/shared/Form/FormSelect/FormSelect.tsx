@@ -37,6 +37,7 @@ interface FormSelectProps {
   isMandatory?: boolean;
   isSearchable?: boolean;
   triggerClassName?: string;
+  placeclassName?: string;
   labelClass?: string;
 }
 
@@ -54,6 +55,7 @@ export default function FormSelect({
   isMandatory = false,
   isSearchable = false,
   triggerClassName = "",
+  placeclassName = "",
   labelClass,
 }: FormSelectProps) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -142,7 +144,7 @@ export default function FormSelect({
             <button
               type="button"
               disabled={disabled}
-              className="w-full border rounded-md px-3 text-left text-sm py-2"
+              className={`w-full border rounded-md px-3 text-left text-sm py-2 ${placeclassName}`}
             >
               {displayValue()}
             </button>

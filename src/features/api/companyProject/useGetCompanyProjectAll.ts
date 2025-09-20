@@ -1,19 +1,25 @@
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
+type DatePaging = BaseResponse<CompanyProjectDataProps>;
 
-export default function useGetCompanyProjectAll() {
+export default function useGetCompanyProjectAll({
+  filter,
+  enable,
+}: FilterDataProps) {
   const query = useQuery({
-    queryKey: ["get-all-project-dropdown"],
+    queryKey: ["get-project-list-dropdown", filter],
     queryFn: async () => {
-      const { data: resData } = await Api.post<{
-        data: CompanyProjectDataProps;
-      }>({
+      const { data: resData } = await Api.post<DatePaging>({
         url: Urls.getAllCompanyProjectDropdown(),
+        data: {
+          ...filter,
+        },
       });
 
       return resData;
     },
+    enabled: !!enable,
   });
   return query;
 }

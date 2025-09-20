@@ -91,9 +91,6 @@ export default function UseUserLog() {
         })
     : [];
 
-  // console.log("Original employeeLog from API:", employeeLog);
-  // console.log("Processed sortedEmployeeLog:", sortedEmployeeLog);
-
   const employeeOptions =
     employee?.map((emp) => ({
       value: emp.employeeId,

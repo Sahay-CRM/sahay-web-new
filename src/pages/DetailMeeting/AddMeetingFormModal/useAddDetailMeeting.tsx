@@ -19,7 +19,9 @@ export default function useAddDetailMeeting() {
   const { mutate: addDetailMeeting, isPending } =
     addUpdateDetailMeetingMutation();
   const navigate = useNavigate();
-  const { data: meetingApiData } = useGetMeetingTiming(companyMeetingId || "");
+  const { data: meetingData } = useGetMeetingTiming(companyMeetingId || "");
+
+  const meetingApiData = meetingData?.data as CompanyMeetingDataProps;
 
   const methods = useForm({
     mode: "onChange",

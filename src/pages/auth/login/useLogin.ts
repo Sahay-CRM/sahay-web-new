@@ -13,6 +13,7 @@ import {
   requestFirebaseNotificationPermission,
 } from "@/firebaseConfig";
 import { fireTokenMutation } from "@/features/api";
+import { loginToFirebase } from "./loginToFirebase";
 
 const useLogin = () => {
   const dispatch = useDispatch();
@@ -56,16 +57,14 @@ const useLogin = () => {
     companyVerifyOtp(verifyCompanyData, {
       onSuccess: (response) => {
         if (response?.status) {
-          // if (response?.data?.token) {
-          //   setToken(response.data.token, response.data);
-          // }
-
+          loginToFirebase(response.data.fbToken!);
           dispatch(
             setAuth({
               token: response.data.token ?? null,
               isLoading: false,
               isAuthenticated: true,
               userId: response.data.employeeId,
+              fbToken: response.data.fbToken,
             }),
           );
           requestFirebaseNotificationPermission().then((firebaseToken) => {
@@ -126,12 +125,14 @@ const useLogin = () => {
                 setCompanyModalOpen(true);
               } else if (!Array.isArray(dataRes)) {
                 const token = dataRes.token;
+                loginToFirebase(response.data.fbToken!);
                 dispatch(
                   setAuth({
                     token: token ?? null,
                     isLoading: false,
                     isAuthenticated: true,
                     userId: dataRes.employeeId,
+                    fbToken: response.data.fbToken,
                   }),
                 );
                 requestFirebaseNotificationPermission().then(

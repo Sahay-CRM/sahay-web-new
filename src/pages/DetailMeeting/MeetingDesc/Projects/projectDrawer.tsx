@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 
@@ -14,6 +14,7 @@ import {
 } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import { addMeetingNotesMutation } from "@/features/api/detailMeeting";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 
 type ProjectFormData = {
   projectId: string;
@@ -44,8 +45,15 @@ export default function ProjectDrawer({
 }: ProjectDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
-  const { mutate: addProject } = useAddUpdateCompanyProject();
-  const { data: projectStatusData } = useGetAllProjectStatus();
+  const [isStatusSearch, setIsStatusSearch] = useState("");
+
+  const { mutate: addProject, isPending } = useAddUpdateCompanyProject();
+  const { data: projectStatusData } = useGetAllProjectStatus({
+    filter: {
+      search: isStatusSearch.length >= 3 ? isStatusSearch : undefined,
+    },
+    enable: isStatusSearch.length >= 3,
+  });
   const { data: employeeData } = useGetEmployeeDd({
     filter: { isDeactivated: false },
   });
@@ -182,7 +190,7 @@ export default function ProjectDrawer({
   }, [onClose, open]);
 
   const onSubmit = (data: ProjectFormData) => {
-    if (meetingId && issueId) {
+    if (meetingId) {
       const { employeeId, projectDeadline, ...rest } = data;
       const payload = {
         ...rest,
@@ -286,16 +294,30 @@ export default function ProjectDrawer({
               }}
             />
             <Controller
-              control={control}
               name="projectStatusId"
+              control={control}
+              rules={{
+                required: {
+                  value: true,
+                  message: "Please select a project status",
+                },
+              }}
               render={({ field }) => (
-                <FormSelect
+                <SearchDropdown
+                  placeholder="Select Project Status..."
                   label="Project Status"
-                  value={field.value}
-                  onChange={field.onChange}
-                  options={projectStatusOption}
                   error={errors.projectStatusId}
-                  placeholder="Select status"
+                  isMandatory
+                  {...field}
+                  labelClass=""
+                  className=""
+                  options={projectStatusOption}
+                  selectedValues={field.value ? [field.value] : []} // Ensure it's an array
+                  onSelect={(value) => {
+                    field.onChange(value.value);
+                    setValue("projectStatusId", value.value);
+                  }}
+                  onSearchChange={setIsStatusSearch}
                 />
               )}
             />
@@ -345,7 +367,8 @@ export default function ProjectDrawer({
             />
             <button
               type="submit"
-              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80"
+              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80 disabled:cursor-not-allowed"
+              disabled={isPending}
             >
               Submit
             </button>
