@@ -8,8 +8,9 @@ import {
   getUserId,
   getUserPermission,
 } from "@/features/selectors/auth.selector";
+import { format } from "date-fns";
 import { useState, useEffect, useMemo } from "react";
-import { DateRange } from "react-day-picker";
+// import { DateRange } from "react-day-picker";
 import { useSelector } from "react-redux";
 
 export function useRepeatTaskToDo() {
@@ -23,13 +24,13 @@ export function useRepeatTaskToDo() {
   const after14 = new Date(today);
   after14.setDate(today.getDate() + 14);
 
-  const toLocalISOString = (date: Date | undefined) => {
-    if (!date) return undefined;
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+  // const toLocalISOString = (date: Date | undefined) => {
+  //   if (!date) return undefined;
+  //   const year = date.getFullYear();
+  //   const month = String(date.getMonth() + 1).padStart(2, "0");
+  //   const day = String(date.getDate()).padStart(2, "0");
+  //   return `${year}-${month}-${day}`;
+  // };
 
   const loadSavedDateRange = () => {
     const saved = localStorage.getItem("taskDateRange");
@@ -49,13 +50,15 @@ export function useRepeatTaskToDo() {
 
   const [isEmployeeId, setIsEmployeeId] = useState("");
   const [isEmpSearch, setIsEmpSearch] = useState("");
-  const [isDateRange, setIsDateRange] = useState<{
-    startDate: Date | undefined;
-    deadline: Date | undefined;
-  }>(loadSavedDateRange());
+  // const [isDateRange, setIsDateRange] = useState<{
+  //   startDate: Date | undefined;
+  //   deadline: Date | undefined;
+  // }>(loadSavedDateRange());
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState<RepeatTaskAllRes | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(today);
 
   const [isPastDate, setIsPastDate] = useState(false);
 
@@ -74,7 +77,7 @@ export function useRepeatTaskToDo() {
     );
   }, [isAppliedDateRange]);
 
-  const todayStr = toLocalISOString(today);
+  // const todayStr = toLocalISOString(today);
   const shouldUseSelectedRange = permission.Add || permission.Edit;
 
   const { mutate: updateRepeatTask } = updateRepeatTaskIdMutation();
@@ -135,69 +138,71 @@ export function useRepeatTaskToDo() {
   const { data: companyTaskData, isLoading } = useGetRepeatAllTask({
     filter: {
       employeeId: shouldUseSelectedRange ? isEmployeeId : userid,
-      startDate: shouldUseSelectedRange
-        ? toLocalISOString(isAppliedDateRange.startDate)
-        : todayStr,
-      endDate: shouldUseSelectedRange
-        ? toLocalISOString(isAppliedDateRange.deadline)
-        : todayStr,
+      startDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : undefined,
+      endDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : undefined,
+      // startDate: shouldUseSelectedRange
+      //   ? toLocalISOString(isAppliedDateRange.startDate)
+      //   : todayStr,
+      // endDate: shouldUseSelectedRange
+      //   ? toLocalISOString(isAppliedDateRange.deadline)
+      //   : todayStr,
     },
-    enable: !!isEmployeeId || !!isAppliedDateRange,
+    enable: !!isEmployeeId || !!selectedDate,
   });
 
   const toggleComplete = (taskId: string, isCompleted: boolean) => {
     updateRepeatTask({ taskId, isCompleted });
   };
 
-  const handleDateRangeChange = (range: DateRange | undefined) => {
-    if (range?.from && !range?.to) {
-      setIsDateRange({ startDate: range.from, deadline: range.from });
-    } else if (range?.from && range?.to) {
-      setIsDateRange({ startDate: range.from, deadline: range.to });
-    } else {
-      setIsDateRange({ startDate: undefined, deadline: undefined });
-    }
-  };
+  // const handleDateRangeChange = (range: DateRange | undefined) => {
+  //   if (range?.from && !range?.to) {
+  //     setIsDateRange({ startDate: range.from, deadline: range.from });
+  //   } else if (range?.from && range?.to) {
+  //     setIsDateRange({ startDate: range.from, deadline: range.to });
+  //   } else {
+  //     setIsDateRange({ startDate: undefined, deadline: undefined });
+  //   }
+  // };
 
-  const handleDateRangeApply = (range: DateRange | undefined) => {
-    if (range?.from && !range?.to) {
-      const newRange = { startDate: range.from, deadline: range.from };
-      setIsDateRange(newRange);
-      setIsAppliedDateRange(newRange);
-    } else if (range?.from && range?.to) {
-      const newRange = { startDate: range.from, deadline: range.to };
-      setIsDateRange(newRange);
-      setIsAppliedDateRange(newRange);
-    } else {
-      const newRange = { startDate: undefined, deadline: undefined };
-      setIsDateRange(newRange);
-      setIsAppliedDateRange(newRange);
-    }
-  };
+  // const handleDateRangeApply = (range: DateRange | undefined) => {
+  //   if (range?.from && !range?.to) {
+  //     const newRange = { startDate: range.from, deadline: range.from };
+  //     setIsDateRange(newRange);
+  //     setIsAppliedDateRange(newRange);
+  //   } else if (range?.from && range?.to) {
+  //     const newRange = { startDate: range.from, deadline: range.to };
+  //     setIsDateRange(newRange);
+  //     setIsAppliedDateRange(newRange);
+  //   } else {
+  //     const newRange = { startDate: undefined, deadline: undefined };
+  //     setIsDateRange(newRange);
+  //     setIsAppliedDateRange(newRange);
+  //   }
+  // };
 
-  const handleDateRangeSaveApply = (range: DateRange | undefined) => {
-    if (range) {
-      const newTaskDateRange = {
-        startDate: range.from,
-        deadline: range.to,
-      };
-      localStorage.setItem("taskDateRange", JSON.stringify(newTaskDateRange));
-      setIsDateRange(newTaskDateRange);
-      setIsAppliedDateRange(newTaskDateRange);
-    }
-  };
+  // const handleDateRangeSaveApply = (range: DateRange | undefined) => {
+  //   if (range) {
+  //     const newTaskDateRange = {
+  //       startDate: range.from,
+  //       deadline: range.to,
+  //     };
+  //     localStorage.setItem("taskDateRange", JSON.stringify(newTaskDateRange));
+  //     setIsDateRange(newTaskDateRange);
+  //     setIsAppliedDateRange(newTaskDateRange);
+  //   }
+  // };
 
-  const handleClear = () => {
-    localStorage.removeItem("taskDateRange");
+  // const handleClear = () => {
+  //   localStorage.removeItem("taskDateRange");
 
-    const defaultRange = {
-      startDate: before14,
-      deadline: after14,
-    };
+  //   const defaultRange = {
+  //     startDate: before14,
+  //     deadline: after14,
+  //   };
 
-    setIsDateRange(defaultRange);
-    setIsAppliedDateRange(defaultRange);
-  };
+  //   setIsDateRange(defaultRange);
+  //   setIsAppliedDateRange(defaultRange);
+  // };
 
   const employeeOption = employeeList?.data
     ? employeeList.data.map((status) => ({
@@ -230,12 +235,12 @@ export function useRepeatTaskToDo() {
   return {
     companyTaskData,
     toggleComplete,
-    isDateRange,
-    isAppliedDateRange,
-    handleDateRangeChange,
-    handleDateRangeApply,
-    handleDateRangeSaveApply,
-    handleClear,
+    // isDateRange,
+    // isAppliedDateRange,
+    // handleDateRangeChange,
+    // handleDateRangeApply,
+    // handleDateRangeSaveApply,
+    // handleClear,
     setIsEmployeeId,
     employeeOption,
     isEmployeeId,
@@ -251,5 +256,7 @@ export function useRepeatTaskToDo() {
     isLoading,
     isPastDate,
     userid,
+    setSelectedDate,
+    selectedDate,
   };
 }

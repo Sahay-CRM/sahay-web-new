@@ -1,7 +1,7 @@
 import { useRepeatTaskToDo } from "./useRepeatTaskToDo";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import DateRangePicker from "@/components/shared/DateRange";
+// import DateRangePicker from "@/components/shared/DateRange";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import RoutineTaskDrawer from "./routineTaskDrawer";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import SingleDatePicker from "@/components/shared/FormDateTimePicker/SingleDatePicker";
 
 function getDayDiff(deadline?: string | Date | null): number {
   if (!deadline) return Infinity;
@@ -39,12 +40,12 @@ export default function RepeatTaskToDo() {
   const {
     companyTaskData,
     toggleComplete,
-    isDateRange,
-    handleDateRangeChange,
-    handleDateRangeApply,
-    handleDateRangeSaveApply,
-    handleClear,
-    isAppliedDateRange,
+    // isDateRange,
+    // handleDateRangeChange,
+    // handleDateRangeApply,
+    // handleDateRangeSaveApply,
+    // handleClear,
+    // isAppliedDateRange,
     setIsEmployeeId,
     employeeOption,
     isEmployeeId,
@@ -60,6 +61,8 @@ export default function RepeatTaskToDo() {
     isLoading,
     // isPastDate,
     userid,
+    setSelectedDate,
+    selectedDate,
   } = useRepeatTaskToDo();
 
   // console.log(isPastDate);
@@ -99,7 +102,7 @@ export default function RepeatTaskToDo() {
                   isCrossShow={isEmployeeId !== userid}
                 />
               </div>
-              <DateRangePicker
+              {/* <DateRangePicker
                 value={{
                   from: isDateRange.startDate,
                   to: isDateRange.deadline,
@@ -110,11 +113,21 @@ export default function RepeatTaskToDo() {
                 isClear={true}
                 handleClear={handleClear}
                 defaultDate={isAppliedDateRange}
+              /> */}
+              <SingleDatePicker
+                value={selectedDate}
+                onChange={(date) => setSelectedDate(date)}
+                isClear
               />
             </div>
           ) : (
             <div>
-              <DateRangePicker
+              <SingleDatePicker
+                value={selectedDate}
+                onChange={(date) => setSelectedDate(date)}
+                isClear
+              />
+              {/* <DateRangePicker
                 value={{
                   from: isDateRange.startDate,
                   to: isDateRange.deadline,
@@ -125,7 +138,7 @@ export default function RepeatTaskToDo() {
                 isClear={true}
                 handleClear={handleClear}
                 defaultDate={isAppliedDateRange}
-              />
+              /> */}
             </div>
           )}
         </div>
