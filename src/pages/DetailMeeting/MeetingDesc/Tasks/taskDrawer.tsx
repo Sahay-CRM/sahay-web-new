@@ -149,38 +149,38 @@ export default function TaskDrawer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, taskData]);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as HTMLElement;
-      if (drawerRef.current && drawerRef.current.contains(target)) {
-        return;
-      }
-      if (
-        target.closest('[data-slot="select-content"]') ||
-        target.closest('[data-slot="popover-content"]') ||
-        target.closest("[data-radix-popper-content-wrapper]")
-      ) {
-        return;
-      }
-      if (
-        target.closest(".react-datepicker") ||
-        target.closest(".react-datepicker-popper")
-      ) {
-        return;
-      }
-      onClose();
-    }
+  // useEffect(() => {
+  //   function handleClickOutside(event: MouseEvent) {
+  //     const target = event.target as HTMLElement;
+  //     if (drawerRef.current && drawerRef.current.contains(target)) {
+  //       return;
+  //     }
+  //     if (
+  //       target.closest('[data-slot="select-content"]') ||
+  //       target.closest('[data-slot="popover-content"]') ||
+  //       target.closest("[data-radix-popper-content-wrapper]")
+  //     ) {
+  //       return;
+  //     }
+  //     if (
+  //       target.closest(".react-datepicker") ||
+  //       target.closest(".react-datepicker-popper")
+  //     ) {
+  //       return;
+  //     }
+  //     onClose();
+  //   }
 
-    if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
+  //   if (open) {
+  //     document.addEventListener("mousedown", handleClickOutside);
+  //   } else {
+  //     document.removeEventListener("mousedown", handleClickOutside);
+  //   }
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [onClose, open]);
+  //   return () => {
+  //     document.removeEventListener("mousedown", handleClickOutside);
+  //   };
+  // }, [onClose, open]);
 
   const onSubmit = (data: TaskFormData) => {
     if (meetingId) {
@@ -237,7 +237,9 @@ export default function TaskDrawer({
       >
         <div className="h-[calc(100vh-30px)] overflow-scroll">
           <div className="flex justify-between items-center p-4 border-b">
-            <h2 className="text-lg font-semibold">{taskData?.taskName}</h2>
+            <h2 className="text-lg font-semibold">
+              {taskData?.taskName ? taskData?.taskName : "Add New Task"}
+            </h2>
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700"

@@ -74,31 +74,31 @@ export default function useMeetingDesc() {
     };
   }, [db, handleUpdatedRefresh, meetingId]);
 
-  // useEffect(() => {
-  //   if (!meetingId || !meetingResponse) return;
+  useEffect(() => {
+    if (!meetingId || !meetingResponse) return;
 
-  //   const meetingRef = ref(db, `meetings/${meetingId}/state/activeTab`);
+    const meetingRef = ref(db, `meetings/${meetingId}/state/activeTab`);
 
-  //   const unsubscribe = onValue(meetingRef, (snapshot) => {
-  //     if (snapshot.exists()) {
-  //       const activeTab = snapshot.val();
+    const unsubscribe = onValue(meetingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const activeTab = snapshot.val();
 
-  //       handleUpdatedRefresh();
-  //       if (activeTab === "CONCLUSION") {
-  //         queryClient.resetQueries({
-  //           queryKey: ["get-meeting-conclusion-res"],
-  //         });
-  //         queryClient.resetQueries({
-  //           queryKey: ["get-meeting-conclusion-time-by-meetingId"],
-  //         });
-  //       } else if (activeTab === "ENDED") {
-  //         handleUpdatedRefresh();
-  //       }
-  //     }
-  //   });
+        handleUpdatedRefresh();
+        if (activeTab === "CONCLUSION") {
+          queryClient.resetQueries({
+            queryKey: ["get-meeting-conclusion-res"],
+          });
+          queryClient.resetQueries({
+            queryKey: ["get-meeting-conclusion-time-by-meetingId"],
+          });
+        } else if (activeTab === "ENDED") {
+          handleUpdatedRefresh();
+        }
+      }
+    });
 
-  //   return () => unsubscribe();
-  // }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
+    return () => unsubscribe();
+  }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
 
   useEffect(() => {
     if (!meetingId) return;
@@ -470,7 +470,7 @@ export default function useMeetingDesc() {
     return () => {
       off(meetingRef);
     };
-  }, [handleUpdatedRefresh, meetingId]);
+  }, [meetingId]);
 
   return {
     meetingStatus: meetingTiming?.detailMeetingStatus,
