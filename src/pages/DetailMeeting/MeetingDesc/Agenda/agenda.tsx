@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 
 import {
   ArrowUp,
@@ -28,9 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import MeetingTimer from "../meetingTimer";
 import { cn } from "@/lib/utils";
 import { useAgenda } from "./useAgenda";
-import Tasks from "../Tasks";
-import Projects from "../Projects";
-import KPITable from "../KpiTable";
+
 import Timer from "../Timer";
 import { SpinnerIcon } from "@/components/shared/Icons";
 import { formatDate, getInitials } from "@/features/utils/app.utils";
@@ -45,6 +43,10 @@ import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import IssueAgendaAddModal from "./issueAgendaAddModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const Tasks = React.lazy(() => import("../Tasks"));
+const Projects = React.lazy(() => import("../Projects"));
+const KPITable = React.lazy(() => import("../KpiTable"));
 
 function IssueModal({
   open,
@@ -1238,65 +1240,67 @@ export default function Agenda({
             ) : meetingStatus === "DISCUSSION" ? (
               detailAgendaData && (
                 <div className="max-h-full h-[calc(100vh-200px)] overflow-scroll mt-5 px-2 w-full">
-                  {activeTab === "tasks" && (
-                    <Tasks
-                      tasksFireBase={tasksFireBase}
-                      issueId={
-                        ioType === "ISSUE"
-                          ? agendaList.find(
-                              (Item) =>
-                                Item.issueObjectiveId === isSelectedAgenda,
-                            )?.issueId
-                          : agendaList.find(
-                              (obj) =>
-                                obj.issueObjectiveId === isSelectedAgenda,
-                            )?.objectiveId
-                      }
-                      ioType={ioType}
-                      selectedIssueId={isSelectedAgenda}
-                      isTeamLeader={isTeamLeader}
-                    />
-                  )}
-                  {activeTab === "projects" && (
-                    <Projects
-                      projectsFireBase={projectsFireBase}
-                      issueId={
-                        ioType === "ISSUE"
-                          ? agendaList.find(
-                              (Item) =>
-                                Item.issueObjectiveId === isSelectedAgenda,
-                            )?.issueId
-                          : agendaList.find(
-                              (obj) =>
-                                obj.issueObjectiveId === isSelectedAgenda,
-                            )?.objectiveId
-                      }
-                      ioType={ioType}
-                      selectedIssueId={isSelectedAgenda}
-                      isTeamLeader={isTeamLeader}
-                    />
-                  )}
-                  {activeTab === "kpis" && (
-                    <KPITable
-                      meetingId={meetingId}
-                      kpisFireBase={kpisFireBase}
-                      ioId={
-                        ioType === "ISSUE"
-                          ? agendaList.find(
-                              (Item) =>
-                                Item.issueObjectiveId === isSelectedAgenda,
-                            )?.issueId
-                          : agendaList.find(
-                              (obj) =>
-                                obj.issueObjectiveId === isSelectedAgenda,
-                            )?.objectiveId
-                      }
-                      ioType={ioType}
-                      selectedIssueId={isSelectedAgenda}
-                      isTeamLeader={isTeamLeader}
-                      follow={follow}
-                    />
-                  )}
+                  <Suspense fallback={<div>Loading...</div>}>
+                    {activeTab === "tasks" && (
+                      <Tasks
+                        tasksFireBase={tasksFireBase}
+                        issueId={
+                          ioType === "ISSUE"
+                            ? agendaList.find(
+                                (Item) =>
+                                  Item.issueObjectiveId === isSelectedAgenda,
+                              )?.issueId
+                            : agendaList.find(
+                                (obj) =>
+                                  obj.issueObjectiveId === isSelectedAgenda,
+                              )?.objectiveId
+                        }
+                        ioType={ioType}
+                        selectedIssueId={isSelectedAgenda}
+                        isTeamLeader={isTeamLeader}
+                      />
+                    )}
+                    {activeTab === "projects" && (
+                      <Projects
+                        projectsFireBase={projectsFireBase}
+                        issueId={
+                          ioType === "ISSUE"
+                            ? agendaList.find(
+                                (Item) =>
+                                  Item.issueObjectiveId === isSelectedAgenda,
+                              )?.issueId
+                            : agendaList.find(
+                                (obj) =>
+                                  obj.issueObjectiveId === isSelectedAgenda,
+                              )?.objectiveId
+                        }
+                        ioType={ioType}
+                        selectedIssueId={isSelectedAgenda}
+                        isTeamLeader={isTeamLeader}
+                      />
+                    )}
+                    {activeTab === "kpis" && (
+                      <KPITable
+                        meetingId={meetingId}
+                        kpisFireBase={kpisFireBase}
+                        ioId={
+                          ioType === "ISSUE"
+                            ? agendaList.find(
+                                (Item) =>
+                                  Item.issueObjectiveId === isSelectedAgenda,
+                              )?.issueId
+                            : agendaList.find(
+                                (obj) =>
+                                  obj.issueObjectiveId === isSelectedAgenda,
+                              )?.objectiveId
+                        }
+                        ioType={ioType}
+                        selectedIssueId={isSelectedAgenda}
+                        isTeamLeader={isTeamLeader}
+                        follow={follow}
+                      />
+                    )}
+                  </Suspense>
                 </div>
               )
             ) : conclusionLoading ? (
@@ -1596,7 +1600,6 @@ export default function Agenda({
                                         &nbsp; DISCUSSION
                                       </h4>
 
-                                      {/* ✅ only show old/new values if there is a change */}
                                       {hasChange && (
                                         <div className="mt-2 grid grid-cols-2 gap-4 px-4">
                                           {/* Old Values */}

@@ -16,11 +16,11 @@ import {
 
 import useMeetingDesc from "./useMeetingDesc";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-// import Agenda from "./Agenda";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-// import MeetingNotes from "./Agenda/meetingNotes";
+
 import { getUserId } from "@/features/selectors/auth.selector";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -39,7 +39,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 import { SpinnerIcon } from "@/components/shared/Icons";
-// import EmployeeSearchDropdown from "./EmployeeSearchDropdown";
 
 const Agenda = React.lazy(() => import("./Agenda"));
 const MeetingNotes = React.lazy(() => import("./Agenda/meetingNotes"));

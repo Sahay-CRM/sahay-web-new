@@ -1,7 +1,7 @@
 export const companyNavigationData = [
   {
     id: 14,
-    icon: "GitPullRequestArrow",
+    icon: "CalendarRange",
     label: "My Day",
     link: "/dashboard/repeat-task-list",
     permission: "View",
@@ -220,7 +220,7 @@ export const companyNavigationData = [
   // },
   {
     id: 13,
-    icon: "GitPullRequestArrow",
+    icon: "Ticket",
     label: "My Ticket",
     link: "/dashboard/requests",
     permission: "View",

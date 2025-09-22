@@ -19,7 +19,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
   return (
     <div className="w-full">
       <div
-        className="relative w-full bg-gray-200 rounded-full overflow-hidden"
+        className="relative w-full bg-gray-200 mt-4 rounded-full overflow-hidden"
         style={{ height: `${height}px` }}
       >
         {/* Gradient Fill */}

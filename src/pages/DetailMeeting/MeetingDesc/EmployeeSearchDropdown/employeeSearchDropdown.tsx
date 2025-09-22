@@ -68,7 +68,7 @@ const EmployeeSearchDropdown: React.FC<EmployeeSearchDropdownProps> = ({
   };
 
   return (
-    <div className="relative w-full z-50" ref={inputRef}>
+    <div className="relative w-full z-30" ref={inputRef}>
       <div className="relative h-10 w-full max-w-sm">
         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4">
           <SearchIcon />
