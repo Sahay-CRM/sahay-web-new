@@ -554,11 +554,27 @@ export default function AddCompanyTask() {
     ]);
   }, [setBreadcrumbs, taskDataById?.data.taskName, repetitiveTaskId]);
 
+  // const effectiveStep = (() => {
+  //   let adjustedStep = step;
+
+  //   if (projectId) adjustedStep += 1;
+  //   if (meetingId) adjustedStep += 1;
+
+  //   return adjustedStep;
+  // })();
+
   const effectiveStep = (() => {
     let adjustedStep = step;
 
-    if (projectId) adjustedStep += 1;
-    if (meetingId) adjustedStep += 1;
+    // Only skip project step if projectId already exists
+    if (step === 1 && projectId) {
+      adjustedStep = 2;
+    }
+
+    // Only skip meeting step if meetingId already exists
+    if (step === 2 && meetingId) {
+      adjustedStep = 3;
+    }
 
     return adjustedStep;
   })();

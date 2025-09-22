@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { get, off, onValue, ref, update } from "firebase/database";
 import { database } from "@/firebaseConfig";
@@ -71,8 +71,8 @@ export const useAgenda = ({
   const [modalIssue, setModalIssue] = useState("");
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [agendaList, setAgendaList] = useState<MeetingAgenda[]>([]);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  // const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  // const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [isSelectedAgenda, setIsSelectedAgenda] = useState<string>();
   const [isSideBar, setIsSideBar] = useState(false);
   // const [elapsed, setElapsed] = useState(0);
@@ -83,7 +83,7 @@ export const useAgenda = ({
   );
   const [addIssueModal, setAddIssueModal] = useState(false);
   const [debouncedInput, setDebouncedInput] = useState(issueInput);
-  const [isMeetingStart, setIsMeetingStart] = useState(false);
+  // const [isMeetingStart, setIsMeetingStart] = useState(false);
   const [resolutionFilter, setResolutionFilter] = useState<string>("UNSOLVED");
   const [selectedIoType, setSelectedIoType] = useState("ISSUE");
 
@@ -224,29 +224,29 @@ export const useAgenda = ({
     }
   }, [meetingStatus]);
 
-  useEffect(() => {
-    if (meetingResponse?.state.lastSwitchTimestamp) {
-      const interval = setInterval(() => {
-        // const now = Date.now();
-        // setElapsed(now - Number(meetingResponse.state.lastSwitchTimestamp));
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [meetingResponse?.state.lastSwitchTimestamp]);
+  // useEffect(() => {
+  //   if (meetingResponse?.state.lastSwitchTimestamp) {
+  //     const interval = setInterval(() => {
+  //       // const now = Date.now();
+  //       // setElapsed(now - Number(meetingResponse.state.lastSwitchTimestamp));
+  //     }, 1000);
+  //     return () => clearInterval(interval);
+  //   }
+  // }, [meetingResponse?.state.lastSwitchTimestamp]);
 
-  const handleCheckMeetingExist = useCallback(() => {
-    const meetingRef = ref(db, `meetings/${meetingId}/state/updatedAt`);
+  // const handleCheckMeetingExist = useCallback(() => {
+  //   const meetingRef = ref(db, `meetings/${meetingId}/state/updatedAt`);
 
-    const unsubscribe = onValue(meetingRef, (snapshot) => {
-      if (snapshot.exists()) {
-        setIsMeetingStart(true);
-      } else {
-        setIsMeetingStart(false);
-      }
-    });
+  //   const unsubscribe = onValue(meetingRef, (snapshot) => {
+  //     if (snapshot.exists()) {
+  //       setIsMeetingStart(true);
+  //     } else {
+  //       setIsMeetingStart(false);
+  //     }
+  //   });
 
-    return () => unsubscribe();
-  }, [db, meetingId]);
+  //   return () => unsubscribe();
+  // }, [db, meetingId]);
 
   const startEdit = (
     type: "ISSUE" | "OBJECTIVE",
@@ -289,50 +289,6 @@ export const useAgenda = ({
     });
   };
 
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
-    setHoverIndex(null);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLLIElement>, index: number) => {
-    e.preventDefault();
-    if (draggedIndex !== null && draggedIndex !== index) {
-      setHoverIndex(index);
-    }
-  };
-
-  const handleDragLeave = () => {
-    setHoverIndex(null);
-  };
-
-  const handleDrop = (index: number) => {
-    if (draggedIndex === null || draggedIndex === index) return;
-
-    const updatedList = [...agendaList];
-    const [removed] = updatedList.splice(draggedIndex, 1);
-    updatedList.splice(index, 0, removed);
-
-    setAgendaList(updatedList);
-    setDraggedIndex(null);
-    setHoverIndex(null);
-
-    const payload = {
-      issueObjectiveId: removed.issueObjectiveId,
-      meetingId: meetingId,
-      sequence: index + 1,
-    };
-    addIssueAgenda(payload, {
-      onSuccess: () => {
-        handleCheckMeetingExist();
-        if (isMeetingStart) {
-          update(meetStateRef, {
-            updatedAt: Date.now(),
-          });
-        }
-      },
-    });
-  };
-
   const handleAddIssue = () => {
     setModalIssue(issueInput);
     setModalOpen(true);
@@ -350,9 +306,11 @@ export const useAgenda = ({
           issueName: editing.value,
         },
         {
-          onSuccess: () => {
-            handleCheckMeetingExist();
-            if (isMeetingStart) {
+          onSuccess: async () => {
+            const meetingRef = ref(db, `meetings/${meetingId}`);
+            const meetingSnapshot = await get(meetingRef);
+
+            if (meetingSnapshot.exists()) {
               update(meetStateRef, {
                 updatedAt: Date.now(),
               });
@@ -372,9 +330,11 @@ export const useAgenda = ({
           objectiveName: editing.value,
         },
         {
-          onSuccess: () => {
-            handleCheckMeetingExist();
-            if (isMeetingStart) {
+          onSuccess: async () => {
+            const meetingRef = ref(db, `meetings/${meetingId}`);
+            const meetingSnapshot = await get(meetingRef);
+
+            if (meetingSnapshot.exists()) {
               update(meetStateRef, {
                 updatedAt: Date.now(),
               });
@@ -400,7 +360,7 @@ export const useAgenda = ({
         const data = snapshot.val();
 
         if (data.updatedAt && data.updatedAt !== previousUpdatedAt) {
-          queryClient.resetQueries({
+          queryClient.invalidateQueries({
             queryKey: ["get-detail-meeting-agenda-issue-obj"],
           });
           cancelEdit();
@@ -422,9 +382,11 @@ export const useAgenda = ({
       };
 
       deleteObjective(payload, {
-        onSuccess: () => {
-          handleCheckMeetingExist();
-          if (isMeetingStart) {
+        onSuccess: async () => {
+          const meetingRef = ref(db, `meetings/${meetingId}`);
+          const meetingSnapshot = await get(meetingRef);
+
+          if (meetingSnapshot.exists()) {
             update(meetStateRef, {
               updatedAt: Date.now(),
             });
@@ -727,13 +689,15 @@ export const useAgenda = ({
     }
   }, [isSelectedAgenda, meetingResponse]);
 
-  const handleTabChange = (tab: ActiveTab) => {
+  const handleTabChange = async (tab: ActiveTab) => {
     const meetTimersRef = ref(
       db,
       `meetings/${meetingId}/timers/objectives/${isSelectedAgenda}`,
     );
-    handleCheckMeetingExist();
-    if (isMeetingStart) {
+    const meetingRef = ref(db, `meetings/${meetingId}`);
+    const meetingSnapshot = await get(meetingRef);
+
+    if (meetingSnapshot.exists()) {
       update(meetTimersRef, {
         activeTab: tab,
       });
@@ -1032,9 +996,7 @@ export const useAgenda = ({
       const meetingRef = ref(db, `meetings/${meetingId}`);
       const meetingSnapshot = await get(meetingRef);
 
-      if (!meetingSnapshot.exists()) {
-        return;
-      } else {
+      if (meetingSnapshot.exists()) {
         await update(ref(db, `meetings/${meetingId}/state`), {
           agendaActiveTab: data,
           updatedAt: Date.now(),
@@ -1050,14 +1012,47 @@ export const useAgenda = ({
     onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        setResolutionFilter(data);
+        if (data !== resolutionFilter) {
+          setResolutionFilter(data);
+        }
       }
     });
 
     return () => {
       off(meetingRef);
     };
-  }, [meetingId]);
+  }, [meetingId, resolutionFilter]);
+
+  useEffect(() => {
+    if (!meetingId || !isSelectedAgenda) return;
+
+    const db = database;
+    const objectiveRef = ref(
+      db,
+      `meetings/${meetingId}/timers/objectives/${isSelectedAgenda}`,
+    );
+
+    onValue(objectiveRef, (snapshot) => {
+      if (!snapshot.exists()) return;
+
+      const data = snapshot.val();
+
+      // Check if updatedAt in any child changed
+      const projectsUpdatedAt = data?.projects?.updatedAt;
+      const tasksUpdatedAt = data?.tasks?.updatedAt;
+      const kpisUpdatedAt = data?.kpis?.updatedAt;
+
+      if (projectsUpdatedAt || tasksUpdatedAt || kpisUpdatedAt) {
+        queryClient.invalidateQueries({
+          queryKey: ["get-detailMeetingAgendaIssue"],
+        });
+      }
+    });
+
+    return () => {
+      off(objectiveRef);
+    };
+  }, [meetingId, isSelectedAgenda]);
 
   return {
     issueInput,
@@ -1066,8 +1061,8 @@ export const useAgenda = ({
     modalIssue,
     dropdownVisible,
     agendaList,
-    draggedIndex,
-    hoverIndex,
+    // draggedIndex,
+    // hoverIndex,
     isSelectedAgenda,
     isSideBar,
     filteredIssues,
@@ -1082,10 +1077,10 @@ export const useAgenda = ({
     cancelEdit,
     updateEdit,
     handleDelete,
-    handleDragStart,
-    handleDragOver,
-    handleDragLeave,
-    handleDrop,
+    // handleDragStart,
+    // handleDragOver,
+    // handleDragLeave,
+    // handleDrop,
     handleUpdateSelectedObjective,
     handleModalSubmit,
     handleTimeUpdate,

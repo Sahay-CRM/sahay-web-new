@@ -172,13 +172,13 @@ export default function RepeatTaskToDo() {
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="overflow-scroll">
             {activeTasks.length === 0 ? (
               <p className="text-muted-foreground text-sm italic text-center py-4">
                 No Pending tasks. You're all caught up!
               </p>
             ) : (
-              <div className="flex-1 overflow-hidden flex flex-col mb-4">
+              <div className="flex-1 overflow-scroll flex flex-col mb-4 max-h-1/2">
                 <h2 className="text-sm font-medium mb-2">PENDING TASKS</h2>
 
                 <div className="flex-1 overflow-y-auto pr-2">

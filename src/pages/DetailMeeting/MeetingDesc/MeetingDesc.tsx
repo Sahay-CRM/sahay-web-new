@@ -365,7 +365,7 @@ export default function MeetingDesc() {
                 {meetingId && (meetingTiming?.joiners as Joiners[]) && (
                   <Suspense
                     fallback={
-                      <div className="animate-spin">
+                      <div className="animate-spin flex w-fit h-fit">
                         <SpinnerIcon />
                       </div>
                     }

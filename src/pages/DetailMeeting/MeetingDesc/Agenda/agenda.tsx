@@ -139,7 +139,7 @@ export default function Agenda({
     dropdownVisible,
     agendaList,
     // draggedIndex,
-    hoverIndex,
+    // hoverIndex,
     isSelectedAgenda,
     isSideBar,
     filteredIssues,
@@ -812,12 +812,6 @@ export default function Agenda({
                         }
                       }}
                       style={{
-                        border:
-                          hoverIndex === idx &&
-                          (meetingStatus === "STARTED" ||
-                            meetingStatus === "NOT_STARTED")
-                            ? "2px dashed #3b82f6"
-                            : "1px solid #eee",
                         alignItems: "center",
                         justifyContent: "space-between",
                         transition: "border 0.2s ease",
