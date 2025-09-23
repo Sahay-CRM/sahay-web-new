@@ -28,7 +28,6 @@ export default function AgendaList({
   isSelectedAgenda,
   follow,
   editing,
-  canEdit,
   setEditingValue,
   updateEdit,
   cancelEdit,
@@ -48,6 +47,8 @@ export default function AgendaList({
     transition,
     isDragging,
   } = useSortable({ id: item?.issueObjectiveId || "" });
+
+  const canEdit = true;
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -163,11 +164,18 @@ export default function AgendaList({
           </div>
         )}
       </div>
+      {item?.departmentName && (
+        <div className="absolute -top-3 left-0 w-fit h-fit">
+          <Badge variant="outline" className="text-black bg-gray-200/80">
+            {item?.departmentName}
+          </Badge>
+        </div>
+      )}
 
       <div className="flex items-center gap-2 relative">
         {!canEdit && (
           <div className="text-xs text-center w-20 text-gray-500 absolute top-0 right-0">
-            <Badge variant="secondary" className="mb-1.5">
+            <Badge variant="secondary" className="mb-0">
               {item?.ioType}
             </Badge>
           </div>

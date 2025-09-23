@@ -1220,6 +1220,8 @@ interface IssuesProps {
   issueName: string;
   isResolved?: boolean;
   sequence?: number;
+  departmentId?: string;
+  departmentName?: string;
 }
 
 interface UseIssuesFormModalProps {
@@ -1239,6 +1241,8 @@ interface ObjectiveProps {
   isResolved?: boolean;
   detailMeetingId?: string;
   sequence?: number;
+  departmentId?: string;
+  departmentName?: string;
 }
 
 interface DetailMeetingObjectives {
@@ -1262,6 +1266,8 @@ interface MeetingAgenda {
   issueId?: string;
   objectiveId?: string;
   sequence?: number;
+  departmentId?: string;
+  departmentName?: string;
 }
 
 interface DetailMeetingAgendaIssue {
@@ -1400,7 +1406,6 @@ interface AgendaListProps {
   isSelectedAgenda?: string;
   follow?: boolean;
   editing?: EditingProps;
-  canEdit?: boolean;
   setEditingValue: (value: string) => void;
   updateEdit: () => void;
   cancelEdit?: () => void;

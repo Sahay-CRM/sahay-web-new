@@ -1013,6 +1013,10 @@ export const useAgenda = ({
             await update(ref(db, `meetings/${meetingId}/state`), {
               updatedAt: Date.now(),
             });
+          } else {
+            queryClient.invalidateQueries({
+              queryKey: ["get-detail-meeting-agenda-issue-obj"],
+            });
           }
         },
       });

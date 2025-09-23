@@ -47,6 +47,7 @@ export default function Issues() {
     { key: "srNo", label: "Sr No", visible: true },
     { key: "issueName", label: "Issues Name", visible: true },
     { key: "isResolved", label: "isResolved", visible: true },
+    { key: "departmentName", label: "Department Name", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -54,14 +55,14 @@ export default function Issues() {
       if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, string>
+    {} as Record<string, string>,
   );
 
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
   // Check if the number of columns is more than 3
@@ -128,7 +129,7 @@ export default function Issues() {
                 ...item,
                 srNo:
                   (issueList.currentPage - 1) * issueList.pageSize + index + 1,
-              })
+              }),
             )}
             columns={visibleColumns}
             primaryKey="issueId"

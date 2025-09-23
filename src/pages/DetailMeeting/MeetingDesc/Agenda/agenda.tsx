@@ -214,8 +214,6 @@ export default function Agenda({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSideBar]);
 
-  const canEdit = true;
-
   // const formatAgendaTime = (totalSeconds: number) => {
   //   if (!totalSeconds || isNaN(totalSeconds)) {
   //     return "00:00";
@@ -773,7 +771,6 @@ export default function Agenda({
                           isSelectedAgenda={isSelectedAgenda}
                           follow={follow}
                           editing={editing}
-                          canEdit={canEdit}
                           setEditingValue={setEditingValue}
                           updateEdit={updateEdit}
                           cancelEdit={cancelEdit}
