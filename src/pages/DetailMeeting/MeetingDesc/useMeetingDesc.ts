@@ -464,6 +464,9 @@ export default function useMeetingDesc() {
         queryClient.invalidateQueries({
           queryKey: ["get-detail-meeting-obj-issue"],
         });
+        queryClient.invalidateQueries({
+          queryKey: ["get-detail-meeting-agenda-issue-obj"],
+        });
       }
     });
 

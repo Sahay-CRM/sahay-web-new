@@ -337,6 +337,9 @@ const Urls = {
   getRepeatTaskListDropdown: () => `${baseUrl}/company/task/repeat/get-all`,
   updateRepeatTaskList: (id: string) =>
     `${baseUrl}/company/task/repeat/update/${id}`,
+
+  updateIoSequence: () =>
+    `${baseUrl}/company/detail-meeting/agenda/io/rearrange`,
 };
 
 export default Urls;

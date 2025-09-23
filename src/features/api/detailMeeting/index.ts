@@ -32,3 +32,5 @@ export { default as useGetDetailMeetingAgenda } from "./useGetDetailMeetingAgend
 export { default as useGetDetailMeetingAgendaIssue } from "./useGetDetailMeetingAgendaIssue";
 export { default as useGetMeetingConclusionTime } from "./useGetMeetingConclusionTime";
 export { default as useGetDetailMeeting } from "./useGetDetailMeeting";
+
+export { default as updateIoSequenceMutation } from "./useUpdateMeetingIoSequence";

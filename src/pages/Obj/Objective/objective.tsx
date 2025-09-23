@@ -47,6 +47,7 @@ export default function Objective() {
     { key: "srNo", label: "Sr No", visible: true },
     { key: "objectiveName", label: "Objective Name", visible: true },
     { key: "isResolved", label: "isResolved", visible: true },
+    { key: "departmentName", label: "Department Name", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -74,7 +75,7 @@ export default function Objective() {
 
   return (
     <FormProvider {...methods}>
-     <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-5 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             Objective List

@@ -1,12 +1,22 @@
 import { useForm } from "react-hook-form";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { addUpdateObjective } from "@/features/api/Objective";
+import { getALLDepartmentList } from "@/features/api/department";
 
 export default function useObjectiveFormModal({
   modalClose,
   modalData,
 }: UseObjectiveFormModalProps) {
+  const [isDepartmentSearch, setIsDepartmentSearch] = useState("");
+
   const { mutate: addObjective, isPending } = addUpdateObjective();
+
+  const { data: departmentData } = getALLDepartmentList({
+    filter: {
+      search: isDepartmentSearch.length >= 3 ? isDepartmentSearch : undefined,
+    },
+    enable: isDepartmentSearch.length >= 3,
+  });
 
   const {
     register,
@@ -23,9 +33,11 @@ export default function useObjectiveFormModal({
       ? {
           objectiveId: modalData.objectiveId,
           objectiveName: data.objectiveName,
+          departmentId: data.departmentId,
         }
       : {
           objectiveName: data.objectiveName,
+          departmentId: data.departmentId,
         };
 
     addObjective(payload, {
@@ -45,6 +57,18 @@ export default function useObjectiveFormModal({
     reset(modalData);
   }, [modalData, reset]);
 
+  const departmentOptions = [
+    ...(
+      (departmentData?.data ?? []) as Array<{
+        departmentName: string;
+        departmentId: string;
+      }>
+    ).map((item) => ({
+      label: item.departmentName,
+      value: item.departmentId,
+    })),
+  ];
+
   return {
     register,
     errors,
@@ -52,5 +76,7 @@ export default function useObjectiveFormModal({
     control,
     handleModalClose,
     isPending,
+    departmentOptions,
+    setIsDepartmentSearch,
   };
 }

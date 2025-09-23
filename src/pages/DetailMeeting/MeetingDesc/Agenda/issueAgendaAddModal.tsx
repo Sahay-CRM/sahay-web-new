@@ -42,14 +42,24 @@ export default function IssueAgendaAddModal({
 }: IssueAgendaAddModalProps) {
   // Set default value to "issue"
   const [selectedType, setSelectedType] = useState("ISSUE");
+  const [selectedItem, setSelectedItem] =
+    useState<DetailMeetingObjectives | null>(null);
 
   const handleSubmit = () => {
     if (!onSubmit) return;
-    if (issueInput.trim() !== "") {
+
+    if (selectedItem) {
+      // User selected from dropdown → add it
+      handleUpdateSelectedObjective(selectedItem);
+      setSelectedItem(null);
+      setIssueInput("");
+    } else if (issueInput.trim() !== "") {
+      // User typed a new agenda → submit it
       onSubmit({
         type: selectedType,
         value: issueInput,
       });
+      setIssueInput("");
     }
   };
 
@@ -58,17 +68,20 @@ export default function IssueAgendaAddModal({
       setIssueInput("");
       setDropdownVisible(false);
       setSelectedType("ISSUE");
+      setSelectedItem(null);
     }
   }, [isModalOpen, setIssueInput, setDropdownVisible]);
 
   const handleListItemSelect = (item: DetailMeetingObjectives) => {
-    handleUpdateSelectedObjective(item);
+    setIssueInput(item.name); // just display in input
+    setSelectedItem(item); // store selection
     setDropdownVisible(false);
   };
 
   const handleClose = () => {
     modalClose();
     setIssueInput("");
+    setSelectedItem(null);
   };
 
   return (
@@ -117,6 +130,7 @@ export default function IssueAgendaAddModal({
             value={issueInput}
             onChange={(e) => {
               setIssueInput(e.target.value);
+              setSelectedItem(null); // reset selection if typing
               setDropdownVisible(true);
             }}
             placeholder="Add or Create Agenda (Issue or Objective)"
