@@ -5,6 +5,7 @@ import {
   groupMutation,
   groupSequenceMutation,
   useGetCompanyProject,
+  useGetAllProjectStatus,
 } from "@/features/api/companyProject";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useSelector } from "react-redux";
@@ -41,6 +42,13 @@ export default function useProjectTabs() {
     selected: string;
   }
   const [filters, setFilters] = useState<Filters>({ selected: "" });
+  const [SelectedStatus, setSelectedStatus] = useState<{ selected?: string[] }>(
+    {},
+  );
+  const [SelectedOrder, setSelectedOrder] = useState<string>("asc");
+  const [SelectedSortOrder, setSelectedSortOrder] =
+    useState<string>("projectName");
+  const [orderBy, setOrderBy] = useState<string>("asc");
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [currentTabForProject, setCurrentTabForProject] =
@@ -70,13 +78,36 @@ export default function useProjectTabs() {
     setIsViewModalOpen(true);
   };
   const {
-    data: projectlistdata,
+    data: projectListData,
     isPending: isLoadingProject,
     refetch,
   } = useGetCompanyProject({
-    filter: { groupId: filters.selected, ...paginationFilter },
+    filter: {
+      groupId: filters.selected,
+      statusArray: SelectedStatus.selected,
+      sortBy: SelectedSortOrder || "projectName",
+      sortOrder: SelectedOrder,
+      ...paginationFilter,
+    },
     enable: true,
   });
+  const { data: projectStatusList } = useGetAllProjectStatus({
+    filter: {},
+  });
+
+  const statusOptions = Array.isArray(projectStatusList?.data)
+    ? projectStatusList.data.map((item: ProjectStatusRes) => ({
+        label: item.projectStatus,
+        value: item.projectStatusId,
+        color: item.color || "#2e3195",
+      }))
+    : [];
+
+  const sortOrder = [
+    { label: "Sort by A-Z", value: "asc" },
+    { label: "Sort by Z-A", value: "desc" },
+    { label: "Sort by Deadline", value: "projectDeadline" },
+  ];
 
   const deleteTab = async (id: string) => {
     if (id === "all") return;
@@ -122,7 +153,7 @@ export default function useProjectTabs() {
   };
 
   const projects =
-    projectlistdata?.data?.map((project: CompanyProjectDataProps) => ({
+    projectListData?.data?.map((project: CompanyProjectDataProps) => ({
       projectId: project.projectId || "",
       projectName: project.projectName || "",
       projectDescription: project.projectDescription || "",
@@ -200,6 +231,27 @@ export default function useProjectTabs() {
     setIsDrawerOpen(false);
     refetch();
   };
+
+  const handleFilterChange = (selected: string[]) => {
+    setSelectedStatus({
+      selected,
+    });
+  };
+
+  const handleOrderChange = (selected: string) => {
+    if (selected === "projectDeadline") {
+      setSelectedSortOrder("projectDeadline");
+      setSelectedOrder("desc");
+    } else if (selected === "asc" || selected === "desc") {
+      setSelectedOrder(selected);
+      setSelectedSortOrder("projectName");
+    } else {
+      setSelectedSortOrder(selected);
+    }
+
+    setOrderBy(selected);
+  };
+
   return {
     tabs,
     activeTab,
@@ -235,6 +287,13 @@ export default function useProjectTabs() {
     permission,
     handleCardClick,
     setIsViewModalOpen,
-    projectlistdata,
+    projectListData,
+    statusOptions,
+    handleFilterChange,
+    SelectedStatus,
+    sortOrder,
+    SelectedOrder,
+    handleOrderChange,
+    orderBy,
   };
 }

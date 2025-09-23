@@ -23,6 +23,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
+import FormSelect from "@/components/shared/Form/FormSelect";
 
 export default function CompanyProjectTabList() {
   const {
@@ -60,7 +62,13 @@ export default function CompanyProjectTabList() {
     permission,
     handleCardClick,
     setIsViewModalOpen,
-    projectlistdata,
+    projectListData,
+    statusOptions,
+    handleFilterChange,
+    SelectedStatus,
+    sortOrder,
+    handleOrderChange,
+    orderBy,
   } = useProjectTabs();
 
   const isLoading = isPending || isLoadingProject;
@@ -71,12 +79,33 @@ export default function CompanyProjectTabList() {
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex-shrink-0">
             {projects.length !== 0 && (
-              <SearchInput
-                className="w-60"
-                placeholder="Search..."
-                searchValue={paginationFilter?.search || ""}
-                setPaginationFilter={setPaginationFilter}
-              />
+              <div className="flex items-center gap-2">
+                <SearchInput
+                  className="w-60"
+                  placeholder="Search..."
+                  searchValue={paginationFilter?.search || ""}
+                  setPaginationFilter={setPaginationFilter}
+                />
+                <DropdownSearchMenu
+                  label="Status"
+                  options={statusOptions}
+                  selected={SelectedStatus?.selected}
+                  onChange={(selected) => {
+                    handleFilterChange(selected);
+                  }}
+                  multiSelect
+                />
+                <FormSelect
+                  placeholder="Order By"
+                  options={sortOrder}
+                  value={orderBy}
+                  onChange={(selected) => {
+                    handleOrderChange(selected as string);
+                  }}
+                  className="h-10"
+                  triggerClassName="py-0"
+                />
+              </div>
             )}
           </div>
 
@@ -243,10 +272,10 @@ export default function CompanyProjectTabList() {
       )}
 
       {/* Sticky Pagination */}
-      {projectlistdata && projectlistdata.data?.length > 0 && (
+      {projectListData && projectListData.data?.length > 0 && (
         <div className="sticky bottom-0 bg-white z-10  py-1">
           <Pagination
-            paginationDetails={projectlistdata as PaginationFilter}
+            paginationDetails={projectListData as PaginationFilter}
             setPaginationFilter={setPaginationFilter}
           />
         </div>

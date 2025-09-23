@@ -322,7 +322,6 @@ export default function Agenda({
         defaultType=""
         onSubmit={handleModalSubmit}
       />
-      {/* meeting status is not a NOT_STARTED or started then plus icon click to open modal */}
       <IssueAgendaAddModal
         isModalOpen={addIssueModal}
         modalClose={() => setAddIssueModal(false)}
@@ -645,7 +644,6 @@ export default function Agenda({
       <div className="flex gap-3">
         <div
           className={cn(
-            // "ease-out duration-1000",
             isSideBar
               ? "w-[370px] min-w-[370px] ease-out duration-1000"
               : "w-[65%]",
@@ -765,42 +763,6 @@ export default function Agenda({
                 ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : ""}
                 mb-2 rounded-md shadow
                 ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "cursor-default" : "cursor-pointer"}`}
-                      // draggable={
-                      //   meetingStatus === "STARTED" ||
-                      //   meetingStatus === "NOT_STARTED"
-                      // }
-                      // onDragStart={() => {
-                      //   if (
-                      //     meetingStatus === "STARTED" ||
-                      //     meetingStatus === "NOT_STARTED"
-                      //   ) {
-                      //     handleDragStart(idx);
-                      //   }
-                      // }}
-                      // onDragOver={(e) => {
-                      //   if (
-                      //     meetingStatus === "STARTED" ||
-                      //     meetingStatus === "NOT_STARTED"
-                      //   ) {
-                      //     handleDragOver(e, idx);
-                      //   }
-                      // }}
-                      // onDragLeave={() => {
-                      //   if (
-                      //     meetingStatus === "STARTED" ||
-                      //     meetingStatus === "NOT_STARTED"
-                      //   ) {
-                      //     handleDragLeave();
-                      //   }
-                      // }}
-                      // onDrop={() => {
-                      //   if (
-                      //     meetingStatus === "STARTED" ||
-                      //     meetingStatus === "NOT_STARTED"
-                      //   ) {
-                      //     handleDrop(idx);
-                      //   }
-                      // }}
                       onClick={() => {
                         if (
                           (meetingStatus !== "NOT_STARTED" &&
@@ -818,19 +780,16 @@ export default function Agenda({
                         position: "relative",
                       }}
                     >
-                      <div className="flex items-center w-full">
-                        {/* {(meetingStatus === "STARTED" ||
-                          meetingStatus === "NOT_STARTED") && (
-                          <span
-                            style={{ cursor: "grab" }}
-                            className="w-5 flex-shrink-0"
-                          >
-                            ⋮⋮
-                          </span>
-                        )} */}
+                      <div className="flex items-center w-full h-full">
+                        {/* <span
+                          style={{ cursor: "grab" }}
+                          className="w-5 text-2xl mr-2 h-full flex flex-col items-center justify-center"
+                        >
+                          ⋮⋮
+                        </span> */}
 
                         <span
-                          className={`w-10 mr-3 text-4xl text-primary text-center ${
+                          className={`w-fit mr-3 text-4xl text-primary text-center ${
                             meetingStatus !== "STARTED" &&
                             meetingStatus !== "NOT_STARTED" &&
                             isSelectedAgenda === item.issueObjectiveId
@@ -867,7 +826,7 @@ export default function Agenda({
                               size="sm"
                               onClick={cancelEdit}
                             >
-                              <CircleX />
+                              <CircleX className="text-black" />
                             </Button>
                           </div>
                         ) : (
@@ -982,7 +941,6 @@ export default function Agenda({
                           )}
 
                         <div className="relative group flex items-center">
-                          {/* Existing content */}
                           {meetingStatus !== "STARTED" &&
                             meetingStatus !== "NOT_STARTED" &&
                             item.issueObjectiveId && (
@@ -1048,38 +1006,101 @@ export default function Agenda({
                               </div>
                             )}
 
-                          {isTeamLeader && !canEdit && (
+                          {isTeamLeader && (
                             <div
-                              className={`absolute -right-[2px] rounded-md w-24 flex flex-col justify-center items-end opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-10" : "h-[75px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
+                              className={`absolute -right-[2px] rounded-md w-fit flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-10" : "h-[75px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
                             >
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      onClick={() => handleMarkAsSolved(item)}
-                                      className=" cursor-pointer bg-transparent hover:bg-transparent"
-                                    >
-                                      {item.isResolved ? (
-                                        <CopyX
-                                          className={`w-7 h-7 ${isSelectedAgenda === item.issueObjectiveId ? "text-white" : "text-red-600"}`}
-                                        />
-                                      ) : (
-                                        <CopyCheck
-                                          className={`w-10 block h-10 ${isSelectedAgenda === item.issueObjectiveId ? "text-white" : "text-green-600"}`}
-                                        />
-                                      )}
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>
-                                      {item.isResolved
-                                        ? "Mark As Unresolved"
-                                        : "Mark As Resolved"}
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <div className="">
+                                {!(
+                                  editing.issueObjectiveId ===
+                                  item.issueObjectiveId
+                                ) && (
+                                  <div className="flex gap-1">
+                                    {isTeamLeader && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              onClick={() =>
+                                                handleMarkAsSolved(item)
+                                              }
+                                              className="w-fit cursor-pointer hover:bg-transparent"
+                                            >
+                                              {item.isResolved ? (
+                                                <CopyX className="w-7 h-7 text-red-600" />
+                                              ) : (
+                                                <CopyCheck className="w-7 h-7 text-green-600" />
+                                              )}
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>
+                                              {item.isResolved
+                                                ? "Mark As Unresolved"
+                                                : "Mark As Resolved"}
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              startEdit(
+                                                item.ioType === "OBJECTIVE"
+                                                  ? "OBJECTIVE"
+                                                  : "ISSUE",
+                                                item.issueId || null,
+                                                item.objectiveId || null,
+                                                item.name,
+                                                item.plannedTime || "0",
+                                                item.issueObjectiveId,
+                                              );
+                                            }}
+                                            className="w-5 hover:bg-transparent"
+                                          >
+                                            <SquarePen
+                                              className={`h-4 w-4 ${
+                                                isSelectedAgenda ===
+                                                item.issueObjectiveId
+                                                  ? "text-white"
+                                                  : "text-primary"
+                                              }`}
+                                            />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Edit Issue Objective</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDelete(item);
+                                            }}
+                                            className="w-5 hover:bg-transparent"
+                                          >
+                                            <Unlink className="h-4 w-4 text-red-500" />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Unlink from this Meeting</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
                         </div>
