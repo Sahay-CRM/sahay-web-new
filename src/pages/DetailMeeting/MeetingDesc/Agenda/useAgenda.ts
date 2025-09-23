@@ -18,13 +18,14 @@ import {
   editAgendaTimingMeetingMutation,
   endMeetingMutation,
   updateDetailMeetingMutation,
+  updateIoSequenceMutation,
   useGetDetailMeetingAgenda,
   useGetDetailMeetingAgendaIssue,
   useGetDetailMeetingObj,
   useGetMeetingConclusionTime,
 } from "@/features/api/detailMeeting";
 import { getUserId } from "@/features/selectors/auth.selector";
-// import { getUserId } from "@/features/selectors/auth.selector";
+import { DragEndEvent } from "@dnd-kit/core";
 
 interface UseAgendaProps {
   meetingId: string;
@@ -50,15 +51,7 @@ export const useAgenda = ({
   const userId = useSelector(getUserId);
 
   const [issueInput, setIssueInput] = useState("");
-  const [editing, setEditing] = useState<{
-    type: "ISSUE" | "OBJECTIVE" | null;
-    issueId: string | null;
-    objectiveId: string | null;
-    value: string;
-    plannedMinutes: string;
-    plannedSeconds: string;
-    issueObjectiveId: string;
-  }>({
+  const [editing, setEditing] = useState<EditingProps>({
     type: null,
     issueId: null,
     objectiveId: null,
@@ -71,19 +64,14 @@ export const useAgenda = ({
   const [modalIssue, setModalIssue] = useState("");
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [agendaList, setAgendaList] = useState<MeetingAgenda[]>([]);
-  // const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  // const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [isSelectedAgenda, setIsSelectedAgenda] = useState<string>();
   const [isSideBar, setIsSideBar] = useState(false);
-  // const [elapsed, setElapsed] = useState(0);
   const [activeTab, setActiveTab] = useState<ActiveTab>();
-  // const [meetingConclusionTime, setMeetingConclusionTime] = useState<number>();
   const [selectedItem, setSelectedItem] = useState<AgendaResConclusion | null>(
     null,
   );
   const [addIssueModal, setAddIssueModal] = useState(false);
   const [debouncedInput, setDebouncedInput] = useState(issueInput);
-  // const [isMeetingStart, setIsMeetingStart] = useState(false);
   const [resolutionFilter, setResolutionFilter] = useState<string>("UNSOLVED");
   const [selectedIoType, setSelectedIoType] = useState("ISSUE");
 
@@ -190,14 +178,13 @@ export const useAgenda = ({
     endMeetingMutation();
   const { mutate: updateTime } = addMeetingTimeMutation();
   const { mutate: ioCreate } = createIoMutation();
+  const { mutate: UpdateIoSeq } = updateIoSequenceMutation();
 
   const handleStartMeeting = () => {
     if (meetingId) {
       createMeet(meetingId, {
         onSuccess: () => {
           handleStartMeetingWithSidebar();
-          // const startTime = Date.now();
-          // setMeetingStartTime(startTime);
         },
       });
     }
@@ -223,30 +210,6 @@ export const useAgenda = ({
       setIsSideBar(true);
     }
   }, [meetingStatus]);
-
-  // useEffect(() => {
-  //   if (meetingResponse?.state.lastSwitchTimestamp) {
-  //     const interval = setInterval(() => {
-  //       // const now = Date.now();
-  //       // setElapsed(now - Number(meetingResponse.state.lastSwitchTimestamp));
-  //     }, 1000);
-  //     return () => clearInterval(interval);
-  //   }
-  // }, [meetingResponse?.state.lastSwitchTimestamp]);
-
-  // const handleCheckMeetingExist = useCallback(() => {
-  //   const meetingRef = ref(db, `meetings/${meetingId}/state/updatedAt`);
-
-  //   const unsubscribe = onValue(meetingRef, (snapshot) => {
-  //     if (snapshot.exists()) {
-  //       setIsMeetingStart(true);
-  //     } else {
-  //       setIsMeetingStart(false);
-  //     }
-  //   });
-
-  //   return () => unsubscribe();
-  // }, [db, meetingId]);
 
   const startEdit = (
     type: "ISSUE" | "OBJECTIVE",
@@ -527,24 +490,7 @@ export const useAgenda = ({
     // }
   };
   const [isUpdatingTime, setIsUpdatingTime] = useState(false);
-  // const handleTimeUpdate = (newTime: number) => {
-  //   if (meetingId) {
-  //     updateDetailMeeting(
-  //       {
-  //         meetingId: meetingId,
-  //         meetingId: meetingId,
-  //         meetingTimePlanned: String(newTime),
-  //       },
-  //       {
-  //         onSuccess: () => {
-  //           queryClient.resetQueries({
-  //             queryKey: ["get-meeting-details-timing"],
-  //           });
-  //         },
-  //       }
-  //     );
-  //   }
-  // };
+
   const handleTimeUpdate = async (newTime: number) => {
     if (!meetingId) return;
 
@@ -811,17 +757,6 @@ export const useAgenda = ({
     }
   };
 
-  // useEffect(() => {
-  //   if (meetingStatus === "CONCLUSION" && meetingResponse === null) {
-  //     handleCheckMeetingExist();
-  //     if (isMeetingStart) {
-  //       queryClient.resetQueries({
-  //         queryKey: ["get-meeting-details-timing"],
-  //       });
-  //     }
-  //   }
-  // }, [handleCheckMeetingExist, isMeetingStart, meetingResponse, meetingStatus]);
-
   const handleCloseMeetingWithLog = () => {
     if (meetingId && meetingId) {
       endMeet(meetingId);
@@ -991,8 +926,6 @@ export const useAgenda = ({
     if (meetingStatus === "NOT_STARTED" || meetingStatus === "ENDED") {
       setResolutionFilter(data);
     } else {
-      const db = database;
-
       const meetingRef = ref(db, `meetings/${meetingId}`);
       const meetingSnapshot = await get(meetingRef);
 
@@ -1054,6 +987,38 @@ export const useAgenda = ({
     };
   }, [meetingId, isSelectedAgenda]);
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const draggedId = String(active.id);
+      const dropIndex = Number(over?.data?.current?.sortable?.index) + 1;
+
+      const ioType = agendaList.find(
+        (item) => item.issueObjectiveId === draggedId,
+      )?.ioType;
+
+      const payload = {
+        issueObjectiveId: draggedId,
+        sequence: dropIndex,
+        ioType: ioType!,
+        meetingId: meetingId,
+      };
+
+      UpdateIoSeq(payload, {
+        onSuccess: async () => {
+          const meetingRef = ref(db, `meetings/${meetingId}`);
+          const meetingSnapshot = await get(meetingRef);
+
+          if (meetingSnapshot.exists()) {
+            await update(ref(db, `meetings/${meetingId}/state`), {
+              updatedAt: Date.now(),
+            });
+          }
+        },
+      });
+    }
+  };
+
   return {
     issueInput,
     editing,
@@ -1061,8 +1026,6 @@ export const useAgenda = ({
     modalIssue,
     dropdownVisible,
     agendaList,
-    // draggedIndex,
-    // hoverIndex,
     isSelectedAgenda,
     isSideBar,
     filteredIssues,
@@ -1077,10 +1040,6 @@ export const useAgenda = ({
     cancelEdit,
     updateEdit,
     handleDelete,
-    // handleDragStart,
-    // handleDragOver,
-    // handleDragLeave,
-    // handleDrop,
     handleUpdateSelectedObjective,
     handleModalSubmit,
     handleTimeUpdate,
@@ -1113,6 +1072,6 @@ export const useAgenda = ({
     handleMarkAsSolved,
     handleAgendaTabFilter,
     resolutionFilter,
-    // handleJoinMeeting,
+    handleDragEnd,
   };
 };

@@ -278,16 +278,12 @@ export default function DetailMeetingList() {
                       >
                         {row.detailMeetingStatus === "ENDED"
                           ? "Meeting Details"
-                          : row.detailMeetingStatus === "DISCUSSION"
-                            ? "Started Join Meeting"
-                            : row.detailMeetingStatus
+                          : isTeamLeader &&
+                              row.detailMeetingStatus === "NOT_STARTED"
+                            ? "Start Meeting"
+                            : isTeamLeader
                               ? "Join Meeting"
-                              : isTeamLeader &&
-                                  row.detailMeetingStatus === "NOT_STARTED"
-                                ? "Start Meeting"
-                                : isTeamLeader
-                                  ? "Join Meeting"
-                                  : "Not Started"}
+                              : "Not Started"}
                       </Button>
                     </>
                   )}

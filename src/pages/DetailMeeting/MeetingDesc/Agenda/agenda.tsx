@@ -5,18 +5,13 @@ import {
   BarChart2,
   Calendar,
   CheckSquare,
-  CircleX,
   Clock,
-  CopyCheck,
-  CopyX,
   CornerDownLeft,
   Crown,
   FileText,
   List,
   Plus,
-  SquarePen,
   Target,
-  Unlink,
   User,
 } from "lucide-react";
 
@@ -24,12 +19,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-import { Badge } from "@/components/ui/badge";
 import MeetingTimer from "../meetingTimer";
 import { cn } from "@/lib/utils";
 import { useAgenda } from "./useAgenda";
 
-import Timer from "../Timer";
 import { SpinnerIcon } from "@/components/shared/Icons";
 import { formatDate, getInitials } from "@/features/utils/app.utils";
 
@@ -43,6 +36,19 @@ import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import IssueAgendaAddModal from "./issueAgendaAddModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  closestCenter,
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+
+import AgendaList from "./agendaList";
 
 const Tasks = React.lazy(() => import("../Tasks"));
 const Projects = React.lazy(() => import("../Projects"));
@@ -116,7 +122,6 @@ interface AgendaProps {
   joiners: Joiners[];
   meetingTime?: string;
   isTeamLeader: boolean | undefined;
-  // isCheckIn?: boolean;
   follow?: boolean;
 }
 
@@ -127,7 +132,6 @@ export default function Agenda({
   meetingResponse,
   meetingTime,
   isTeamLeader,
-  // isCheckIn,
   follow,
   joiners,
 }: AgendaProps) {
@@ -138,8 +142,6 @@ export default function Agenda({
     modalIssue,
     dropdownVisible,
     agendaList,
-    // draggedIndex,
-    // hoverIndex,
     isSelectedAgenda,
     isSideBar,
     filteredIssues,
@@ -153,10 +155,6 @@ export default function Agenda({
     cancelEdit,
     updateEdit,
     handleDelete,
-    // handleDragStart,
-    // handleDragOver,
-    // handleDragLeave,
-    // handleDrop,
     handleUpdateSelectedObjective,
     handleModalSubmit,
     handleTimeUpdate,
@@ -187,6 +185,7 @@ export default function Agenda({
     setSelectedIoType,
     handleMarkAsSolved,
     resolutionFilter,
+    handleDragEnd,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -195,6 +194,7 @@ export default function Agenda({
     joiners,
   });
   const [contentWidth, setContentWidth] = useState("90%");
+  const sensors = useSensors(useSensor(PointerSensor));
 
   const SIDEBAR_WIDTH = 600;
 
@@ -216,18 +216,18 @@ export default function Agenda({
 
   const canEdit = true;
 
-  const formatAgendaTime = (totalSeconds: number) => {
-    if (!totalSeconds || isNaN(totalSeconds)) {
-      return "00:00";
-    }
+  // const formatAgendaTime = (totalSeconds: number) => {
+  //   if (!totalSeconds || isNaN(totalSeconds)) {
+  //     return "00:00";
+  //   }
 
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = Math.floor(totalSeconds % 60);
+  //   const minutes = Math.floor(totalSeconds / 60);
+  //   const seconds = Math.floor(totalSeconds % 60);
 
-    return `${minutes.toString().padStart(2, "0")}:${seconds
-      .toString()
-      .padStart(2, "0")}`;
-  };
+  //   return `${minutes.toString().padStart(2, "0")}:${seconds
+  //     .toString()
+  //     .padStart(2, "0")}`;
+  // };
 
   function formatTime(seconds: number): string {
     const totalSeconds = Math.round(Number(seconds)); // round first
@@ -754,360 +754,41 @@ export default function Agenda({
               </div>
 
               {agendaList && agendaList.length > 0 ? (
-                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                  {agendaList.map((item, idx) => (
-                    <li
-                      key={item.issueObjectiveId}
-                      className={`group px-2 flex w-full 
-                ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-14 bg-white text-black" : "h-20"}
-                ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : ""}
-                mb-2 rounded-md shadow
-                ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "cursor-default" : "cursor-pointer"}`}
-                      onClick={() => {
-                        if (
-                          (meetingStatus !== "NOT_STARTED" &&
-                            meetingStatus !== "STARTED" &&
-                            follow) ||
-                          meetingStatus === "ENDED"
-                        ) {
-                          handleListClick(item.issueObjectiveId ?? "");
-                        }
-                      }}
-                      style={{
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        transition: "border 0.2s ease",
-                        position: "relative",
-                      }}
-                    >
-                      <div className="flex items-center w-full h-full">
-                        {/* <span
-                          style={{ cursor: "grab" }}
-                          className="w-5 text-2xl mr-2 h-full flex flex-col items-center justify-center"
-                        >
-                          ⋮⋮
-                        </span> */}
-
-                        <span
-                          className={`w-fit mr-3 text-4xl text-primary text-center ${
-                            meetingStatus !== "STARTED" &&
-                            meetingStatus !== "NOT_STARTED" &&
-                            isSelectedAgenda === item.issueObjectiveId
-                              ? "bg-primary text-white"
-                              : "text-primary"
-                          }`}
-                        >
-                          {idx + 1}
-                        </span>
-
-                        {editing.issueObjectiveId === item.issueObjectiveId &&
-                        canEdit ? (
-                          <div className="w-full flex items-center gap-1">
-                            <div className="relative w-full flex gap-2 items-center">
-                              <Input
-                                value={editing.value}
-                                onChange={(e) =>
-                                  setEditingValue(e.target.value)
-                                }
-                                className="mr-2"
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") {
-                                    updateEdit();
-                                  }
-                                }}
-                              />
-                              <span className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
-                                <CornerDownLeft className="text-gray-400 w-4" />
-                              </span>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={cancelEdit}
-                            >
-                              <CircleX className="text-black" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="w-full flex items-center">
-                            <div
-                              className={`text-sm ${
-                                meetingStatus === "STARTED" ||
-                                meetingStatus === "NOT_STARTED"
-                                  ? "w-full pr-8 h-14 flex items-center"
-                                  : "w-full min-w-52"
-                              } overflow-hidden line-clamp-3 ${
-                                meetingStatus !== "STARTED" &&
-                                meetingStatus !== "NOT_STARTED" &&
-                                isSelectedAgenda === item.issueObjectiveId
-                                  ? "text-white"
-                                  : "text-black"
-                              }`}
-                            >
-                              {item.name}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2 relative">
-                        {!canEdit && (
-                          <div className="text-xs text-center w-20 text-gray-500 absolute top-0 right-0">
-                            <Badge variant="secondary" className="mb-1.5">
-                              {item.ioType}
-                            </Badge>
-                          </div>
-                        )}
-
-                        {(meetingStatus === "STARTED" ||
-                          meetingStatus === "NOT_STARTED") &&
-                          canEdit && (
-                            <div className="flex-shrink-0 opacity-0 z-30 pl-5 bg-white w-fit text-left group-hover:opacity-100 transition-opacity">
-                              {!(
-                                editing.issueObjectiveId ===
-                                item.issueObjectiveId
-                              ) && (
-                                <div className="flex gap-1">
-                                  {isTeamLeader && (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            onClick={() =>
-                                              handleMarkAsSolved(item)
-                                            }
-                                            className="w-fit cursor-pointer"
-                                          >
-                                            {item.isResolved ? (
-                                              <CopyX className="w-7 h-7 text-red-600" />
-                                            ) : (
-                                              <CopyCheck className="w-7 h-7 text-green-600" />
-                                            )}
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>
-                                            {item.isResolved
-                                              ? "Mark As Unresolved"
-                                              : "Mark As Resolved"}
-                                          </p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  )}
-                                  <Button
-                                    variant="ghost"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      startEdit(
-                                        item.ioType === "OBJECTIVE"
-                                          ? "OBJECTIVE"
-                                          : "ISSUE",
-                                        item.issueId || null,
-                                        item.objectiveId || null,
-                                        item.name,
-                                        item.plannedTime || "0",
-                                        item.issueObjectiveId,
-                                      );
-                                    }}
-                                    className="w-5"
-                                  >
-                                    <SquarePen className="h-4 w-4 text-primary" />
-                                  </Button>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDelete(item);
-                                          }}
-                                          className="w-5"
-                                        >
-                                          <Unlink className="h-4 w-4 text-red-500" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Unlink from this Meeting</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                        <div className="relative group flex items-center">
-                          {meetingStatus !== "STARTED" &&
-                            meetingStatus !== "NOT_STARTED" &&
-                            item.issueObjectiveId && (
-                              <div className="text-sm text-center ml-2 font-medium text-primary">
-                                <div className="text-xs text-center w-20 text-gray-500">
-                                  <Badge variant="secondary" className="mb-1.5">
-                                    {item.ioType}
-                                  </Badge>
-                                </div>
-                                {meetingStatus === "DISCUSSION" ? (
-                                  <Timer
-                                    actualTime={Number(
-                                      meetingResponse &&
-                                        meetingResponse?.timers.objectives?.[
-                                          item.issueObjectiveId
-                                        ]?.actualTime,
-                                    )}
-                                    defaultTime={Number(
-                                      meetingResponse &&
-                                        meetingResponse?.timers.objectives?.[
-                                          item.issueObjectiveId
-                                        ]?.actualTime,
-                                    )}
-                                    lastSwitchTimestamp={
-                                      isSelectedAgenda === item.issueObjectiveId
-                                        ? Number(
-                                            meetingResponse?.state
-                                              .lastSwitchTimestamp ||
-                                              Date.now(),
-                                          )
-                                        : 0
-                                    }
-                                    isActive={
-                                      isSelectedAgenda === item.issueObjectiveId
-                                    }
-                                    className={`text-xl ${
-                                      isSelectedAgenda === item.issueObjectiveId
-                                        ? "text-white"
-                                        : ""
-                                    }`}
-                                  />
-                                ) : (
-                                  <div
-                                    className={`text-xl ${
-                                      isSelectedAgenda === item.issueObjectiveId
-                                        ? "text-white"
-                                        : ""
-                                    }`}
-                                  >
-                                    {formatAgendaTime(
-                                      Number(
-                                        conclusionTime
-                                          ? conclusionTime?.agenda?.find(
-                                              (con) =>
-                                                con.issueObjectiveId ===
-                                                item.issueObjectiveId,
-                                            )?.actualTime
-                                          : 0,
-                                      ),
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                          {isTeamLeader && (
-                            <div
-                              className={`absolute -right-[2px] rounded-md w-fit flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-10" : "h-[75px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
-                            >
-                              <div className="">
-                                {!(
-                                  editing.issueObjectiveId ===
-                                  item.issueObjectiveId
-                                ) && (
-                                  <div className="flex gap-1">
-                                    {isTeamLeader && (
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button
-                                              variant="ghost"
-                                              onClick={() =>
-                                                handleMarkAsSolved(item)
-                                              }
-                                              className="w-fit cursor-pointer hover:bg-transparent"
-                                            >
-                                              {item.isResolved ? (
-                                                <CopyX className="w-7 h-7 text-red-600" />
-                                              ) : (
-                                                <CopyCheck className="w-7 h-7 text-green-600" />
-                                              )}
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>
-                                              {item.isResolved
-                                                ? "Mark As Unresolved"
-                                                : "Mark As Resolved"}
-                                            </p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    )}
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              startEdit(
-                                                item.ioType === "OBJECTIVE"
-                                                  ? "OBJECTIVE"
-                                                  : "ISSUE",
-                                                item.issueId || null,
-                                                item.objectiveId || null,
-                                                item.name,
-                                                item.plannedTime || "0",
-                                                item.issueObjectiveId,
-                                              );
-                                            }}
-                                            className="w-5 hover:bg-transparent"
-                                          >
-                                            <SquarePen
-                                              className={`h-4 w-4 ${
-                                                isSelectedAgenda ===
-                                                item.issueObjectiveId
-                                                  ? "text-white"
-                                                  : "text-primary"
-                                              }`}
-                                            />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Edit Issue Objective</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleDelete(item);
-                                            }}
-                                            className="w-5 hover:bg-transparent"
-                                          >
-                                            <Unlink className="h-4 w-4 text-red-500" />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Unlink from this Meeting</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={agendaList.map((i) => i.issueObjectiveId)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                      {agendaList.map((item, idx) => (
+                        <AgendaList
+                          key={item.issueObjectiveId}
+                          item={item}
+                          idx={idx}
+                          meetingStatus={meetingStatus}
+                          isSelectedAgenda={isSelectedAgenda}
+                          follow={follow}
+                          editing={editing}
+                          canEdit={canEdit}
+                          setEditingValue={setEditingValue}
+                          updateEdit={updateEdit}
+                          cancelEdit={cancelEdit}
+                          handleListClick={handleListClick}
+                          handleMarkAsSolved={handleMarkAsSolved}
+                          startEdit={startEdit}
+                          handleDelete={handleDelete}
+                          meetingResponse={meetingResponse}
+                          conclusionTime={conclusionTime}
+                          isTeamLeader={isTeamLeader}
+                        />
+                      ))}
+                    </ul>
+                  </SortableContext>
+                </DndContext>
               ) : (
                 <p className="text-gray-500 text-sm">No issues added</p>
               )}

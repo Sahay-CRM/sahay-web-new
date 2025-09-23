@@ -1219,6 +1219,7 @@ interface IssuesProps {
   issueId?: string;
   issueName: string;
   isResolved?: boolean;
+  sequence?: number;
 }
 
 interface UseIssuesFormModalProps {
@@ -1237,6 +1238,7 @@ interface ObjectiveProps {
   objectiveName: string;
   isResolved?: boolean;
   detailMeetingId?: string;
+  sequence?: number;
 }
 
 interface DetailMeetingObjectives {
@@ -1259,6 +1261,7 @@ interface MeetingAgenda {
   isResolved?: boolean;
   issueId?: string;
   objectiveId?: string;
+  sequence?: number;
 }
 
 interface DetailMeetingAgendaIssue {
@@ -1388,4 +1391,48 @@ interface TaskCommentData {
   employeeName: string;
   comment: string;
   createdDatetime: string;
+}
+
+interface AgendaListProps {
+  item?: MeetingAgenda;
+  idx?: number;
+  meetingStatus?: string;
+  isSelectedAgenda?: string;
+  follow?: boolean;
+  editing?: EditingProps;
+  canEdit?: boolean;
+  setEditingValue: (value: string) => void;
+  updateEdit: () => void;
+  cancelEdit?: () => void;
+  handleListClick?: (id: string) => void;
+  handleMarkAsSolved: (data: MeetingAgenda) => void;
+  startEdit: (
+    type: "ISSUE" | "OBJECTIVE",
+    issueId: string | null,
+    objectiveId: string | null,
+    value: string,
+    plannedTime: string | number | null | undefined,
+    issueObjectiveId: string,
+  ) => void;
+  handleDelete: (data: MeetingAgenda) => void;
+  meetingResponse?: MeetingResFire | null;
+  conclusionTime?: MeetingConclusionData;
+  isTeamLeader?: boolean;
+}
+
+interface EditingProps {
+  type: string | null;
+  issueId: string | null;
+  objectiveId: string | null;
+  value: string;
+  plannedMinutes: string;
+  plannedSeconds: string;
+  issueObjectiveId: string;
+}
+
+interface IOUpdateSequence {
+  issueObjectiveId: string;
+  sequence: number;
+  ioType: string;
+  meetingId: string;
 }
