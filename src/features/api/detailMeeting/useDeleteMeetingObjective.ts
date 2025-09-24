@@ -7,6 +7,7 @@ import { queryClient } from "@/queryClient";
 interface DeleteProps {
   ioType: string;
   issueObjectiveId?: string;
+  meetingId?: string;
 }
 
 export default function useDeleteMeetingObjective() {
@@ -18,9 +19,7 @@ export default function useDeleteMeetingObjective() {
       }
       const { data: resData } = await Api.post({
         url: Urls.deleteMeetingAgendaObjective(data.issueObjectiveId),
-        data: {
-          ioType: data.ioType,
-        },
+        data: data,
       });
       return resData;
     },

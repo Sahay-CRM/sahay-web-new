@@ -342,6 +342,7 @@ export const useAgenda = ({
       const payload = {
         ioType: item.ioType,
         issueObjectiveId: item.issueObjectiveId,
+        meetingId: meetingId!,
       };
 
       deleteObjective(payload, {
@@ -881,6 +882,7 @@ export const useAgenda = ({
           issueId: data.issueId,
           issueName: data.name,
           isResolved: !data.isResolved,
+          meetingId: meetingId,
         },
         {
           onSuccess: () => {
@@ -903,6 +905,7 @@ export const useAgenda = ({
           objectiveId: data.objectiveId,
           objectiveName: data.name,
           isResolved: !data.isResolved,
+          meetingId: meetingId,
         },
         {
           onSuccess: () => {
