@@ -1222,6 +1222,7 @@ interface IssuesProps {
   sequence?: number;
   departmentId?: string;
   departmentName?: string;
+  meetingId?: string;
 }
 
 interface UseIssuesFormModalProps {
@@ -1243,6 +1244,7 @@ interface ObjectiveProps {
   sequence?: number;
   departmentId?: string;
   departmentName?: string;
+  meetingId?: string;
 }
 
 interface DetailMeetingObjectives {

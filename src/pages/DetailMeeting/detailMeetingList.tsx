@@ -337,20 +337,22 @@ export default function DetailMeetingList() {
           modalData={viewModalData}
           modalClose={() => setIsViewModalOpen(false)}
         />
-        <DuplicateMeetingModal
-          isOpen={isDuplicateModalOpen}
-          onClose={() => setIsDuplicateModalOpen(false)}
-          meetingId={selectedMeeting?.meetingId}
-          meetingName={selectedMeeting?.meetingName}
-          selectDate={selectedMeeting?.selectDate}
-          onConfirm={(id, newName, date) =>
-            handleDuplicateMeeting({
-              meetingId: id,
-              meetingName: newName,
-              selectDate: date,
-            })
-          }
-        />
+        {isDuplicateModalOpen && (
+          <DuplicateMeetingModal
+            isOpen={isDuplicateModalOpen}
+            onClose={() => setIsDuplicateModalOpen(false)}
+            meetingId={selectedMeeting?.meetingId}
+            meetingName={selectedMeeting?.meetingName}
+            selectDate={selectedMeeting?.meetingDateTime}
+            onConfirm={(id, newName, date) =>
+              handleDuplicateMeeting({
+                meetingId: id,
+                meetingName: newName,
+                selectDate: date,
+              })
+            }
+          />
+        )}
       </div>
     </FormProvider>
   );

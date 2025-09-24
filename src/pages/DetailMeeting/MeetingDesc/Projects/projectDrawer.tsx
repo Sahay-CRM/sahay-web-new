@@ -245,7 +245,7 @@ export default function ProjectDrawer({
             <h2 className="text-lg font-semibold">Project Drawer</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 text-2xl hover:text-gray-700"
             >
               &times;
             </button>

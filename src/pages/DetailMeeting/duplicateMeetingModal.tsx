@@ -3,6 +3,7 @@ import ModalData from "@/components/shared/Modal/ModalData";
 import { Button } from "@/components/ui/button";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { FormLabel } from "@/components/ui/form";
+// import { addUpdateDetailMeetingMutation } from "@/features/api/detailMeeting";
 
 interface DuplicateMeetingModalProps {
   isOpen: boolean;
@@ -10,7 +11,7 @@ interface DuplicateMeetingModalProps {
   onConfirm: (meetingId: string, newName: string, dateTime: string) => void;
   meetingId?: string;
   meetingName?: string;
-  selectDate?: string | Date; // optional initial value
+  selectDate?: string | Date;
 }
 
 function formatDateTimeLocal(date: Date | null): string {
@@ -30,6 +31,35 @@ function parseDateTimeLocal(value: string): Date | null {
   return value ? new Date(value) : null;
 }
 
+function generateMeetingName(baseName: string, date: Date) {
+  const cleanedName = baseName
+    .replace(/\s*\(\d{4}-\d{2}-\d{2}\)$/, "")
+    .replace(/\s*\(\d{2}\/\d{2}\)$/, "")
+    .replace(/\s*\(\d{2} \d{2} \d{4}\)$/, "");
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  const datePart = `${day} ${month} ${year}`;
+  return `${cleanedName.trim()} (${datePart})`;
+}
+
+function parseCustomDate(dateStr: string): Date | null {
+  const match = dateStr.match(
+    /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}) (AM|PM)$/i,
+  );
+  if (!match) return null;
+
+  const [, dd, mm, yyyy, hh, min, period] = match;
+
+  let hours = parseInt(hh, 10);
+  if (period.toUpperCase() === "PM" && hours !== 12) hours += 12;
+  if (period.toUpperCase() === "AM" && hours === 12) hours = 0;
+
+  return new Date(Number(yyyy), Number(mm) - 1, Number(dd), hours, Number(min));
+}
+
 const DuplicateMeetingModal: React.FC<DuplicateMeetingModalProps> = ({
   isOpen,
   onClose,
@@ -39,10 +69,10 @@ const DuplicateMeetingModal: React.FC<DuplicateMeetingModalProps> = ({
   selectDate,
 }) => {
   const [name, setName] = useState(meetingName);
-  const [dateTime, setDateTime] = useState<Date | null>(
-    selectDate ? new Date(selectDate) : null,
-  );
+  const [dateTime, setDateTime] = useState<Date | null>(null);
+
   const [loading, setLoading] = useState(false);
+  // const { mutate: addDetailMeeting } = addUpdateDetailMeetingMutation();
 
   // error states
   const [errors, setErrors] = useState<{ name?: string; dateTime?: string }>(
@@ -51,12 +81,25 @@ const DuplicateMeetingModal: React.FC<DuplicateMeetingModalProps> = ({
 
   useEffect(() => {
     setName(meetingName);
-    setDateTime(selectDate ? new Date(selectDate) : null);
+
+    if (selectDate instanceof Date) {
+      setDateTime(selectDate);
+    } else if (typeof selectDate === "string") {
+      const parsed =
+        parseCustomDate(selectDate) ||
+        (selectDate ? new Date(selectDate) : null);
+      setDateTime(parsed);
+
+      setDateTime(parsed);
+    } else {
+      setDateTime(null);
+    }
+
     setErrors({});
   }, [meetingName, selectDate, isOpen]);
 
   const handleSave = async () => {
-    if (!meetingId) return;
+    if (!meetingId || !dateTime) return;
 
     const newErrors: { name?: string; dateTime?: string } = {};
     if (!name.trim()) newErrors.name = "Meeting name is required";
@@ -69,12 +112,41 @@ const DuplicateMeetingModal: React.FC<DuplicateMeetingModalProps> = ({
 
     try {
       setLoading(true);
-      await onConfirm(meetingId, name, dateTime?.toISOString() ?? "");
+
+      let finalName = name;
+      if (meetingName && name.trim() === meetingName.trim()) {
+        finalName = generateMeetingName(name, dateTime);
+      }
+
+      onConfirm(meetingId, finalName, dateTime.toISOString());
       onClose();
     } finally {
       setLoading(false);
     }
   };
+
+  // const handleNow = () => {
+  //   if (!meetingId) return;
+
+  //   const now = new Date();
+  //   let finalName = name;
+
+  //   if (meetingName && name.trim() === meetingName.trim()) {
+  //     finalName = generateMeetingName(name, now);
+  //   }
+
+  //   const payload = {
+  //     meetingDateTime: now.toISOString(),
+  //     meetingId: meetingId,
+  //     meetingName: finalName,
+  //   };
+
+  //   addDetailMeeting(payload, {
+  //     onSuccess: () => {
+  //       onClose();
+  //     },
+  //   });
+  // };
 
   return (
     <ModalData
@@ -82,6 +154,11 @@ const DuplicateMeetingModal: React.FC<DuplicateMeetingModalProps> = ({
       modalClose={onClose}
       modalTitle="Duplicate Meeting"
       buttons={[
+        // {
+        //   btnText: "Now",
+        //   btnClick: handleNow,
+        //   buttonCss: "bg-gray-100 text-black hover:bg-gray-200",
+        // },
         {
           btnText: "Cancel",
           btnClick: onClose,

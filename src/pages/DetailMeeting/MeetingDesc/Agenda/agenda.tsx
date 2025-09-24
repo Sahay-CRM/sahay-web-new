@@ -713,44 +713,43 @@ export default function Agenda({
               </div>
             )}
           </div>
-          <div className="relative">
-            <div className="mt-2 h-[calc(100vh-250px)] pr-1 w-full overflow-auto">
-              <div className="mb-3">
-                <Tabs
-                  defaultValue="UNSOLVED"
-                  onValueChange={(value) => {
-                    if (follow) {
-                      handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
-                    } else if (
-                      meetingStatus === "NOT_STARTED" ||
-                      meetingStatus === "ENDED"
-                    ) {
-                      handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
-                    }
-                  }}
-                  value={resolutionFilter}
-                  className="w-full"
-                >
-                  <TabsList className="grid w-64 grid-cols-2">
-                    <TabsTrigger
-                      value="UNSOLVED"
-                      className="data-[state=active]:bg-primary data-[state=active]:text-white"
-                    >
-                      Unresolved
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="SOLVED"
-                      className="data-[state=active]:bg-primary data-[state=active]:text-white"
-                    >
-                      Resolved
-                    </TabsTrigger>
-                  </TabsList>
+          <div className="relative h-full">
+            <div className="mb-3">
+              <Tabs
+                defaultValue="UNSOLVED"
+                onValueChange={(value) => {
+                  if (follow) {
+                    handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
+                  } else if (
+                    meetingStatus === "NOT_STARTED" ||
+                    meetingStatus === "ENDED"
+                  ) {
+                    handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
+                  }
+                }}
+                value={resolutionFilter}
+                className="w-full"
+              >
+                <TabsList className="grid w-64 grid-cols-2">
+                  <TabsTrigger
+                    value="UNSOLVED"
+                    className="data-[state=active]:bg-primary data-[state=active]:text-white"
+                  >
+                    Unresolved
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="SOLVED"
+                    className="data-[state=active]:bg-primary data-[state=active]:text-white"
+                  >
+                    Resolved
+                  </TabsTrigger>
+                </TabsList>
 
-                  <TabsContent value="UNSOLVED" className="mt-0"></TabsContent>
-                  <TabsContent value="SOLVED" className="mt-0"></TabsContent>
-                </Tabs>
-              </div>
-
+                <TabsContent value="UNSOLVED" className="mt-0"></TabsContent>
+                <TabsContent value="SOLVED" className="mt-0"></TabsContent>
+              </Tabs>
+            </div>
+            <div className="mt-2 h-[calc(100vh-280px)] pr-1 w-full overflow-auto">
               {agendaList && agendaList.length > 0 ? (
                 <DndContext
                   sensors={sensors}

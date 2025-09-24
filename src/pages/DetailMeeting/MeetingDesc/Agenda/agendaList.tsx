@@ -73,7 +73,7 @@ export default function AgendaList({
     <li
       key={item?.issueObjectiveId}
       ref={setNodeRef}
-      className={`group px-2 flex w-full 
+      className={`group px-2 flex border w-full 
                 ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-14 bg-white text-black" : "h-20"}
                 ${isSelectedAgenda === item?.issueObjectiveId ? "bg-primary text-white" : ""}
                 mb-2 rounded-md shadow
@@ -165,21 +165,21 @@ export default function AgendaList({
         )}
       </div>
       {item?.departmentName && (
-        <div className="absolute -top-3 left-0 w-fit h-fit">
-          <Badge variant="outline" className="text-black bg-gray-200/80">
+        <div className="absolute -top-1.5 left-6 w-fit h-fit">
+          <div className="text-black text-[10px] bg-gray-200/80 py-0.5 px-3 rounded-full">
             {item?.departmentName}
-          </Badge>
+          </div>
         </div>
       )}
 
       <div className="flex items-center gap-2 relative">
-        {!canEdit && (
-          <div className="text-xs text-center w-20 text-gray-500 absolute top-0 right-0">
-            <Badge variant="secondary" className="mb-0">
-              {item?.ioType}
-            </Badge>
-          </div>
-        )}
+        {/* {!canEdit && ( */}
+        <div className="text-xs text-center w-20 text-gray-500 absolute top-0 right-0">
+          <Badge variant="secondary" className="mb-0">
+            {item?.ioType}
+          </Badge>
+        </div>
+        {/* )} */}
 
         <div className="relative group flex items-center">
           {meetingStatus !== "STARTED" &&
