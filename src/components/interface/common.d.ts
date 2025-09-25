@@ -1254,7 +1254,6 @@ interface DetailMeetingObjectives {
 }
 
 interface MeetingAgenda {
-  detailMeetingAgendaIssueId?: string;
   issueObjectiveId: string;
   ioType: string;
   name: string;

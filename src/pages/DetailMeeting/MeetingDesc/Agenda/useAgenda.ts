@@ -33,6 +33,8 @@ interface UseAgendaProps {
   meetingResponse?: MeetingResFire | null;
   canEdit: boolean;
   joiners: Joiners[];
+  isTeamLeader: boolean | undefined;
+  follow?: boolean;
 }
 
 type ActiveTab = "tasks" | "projects" | "kpis";
@@ -43,6 +45,8 @@ export const useAgenda = ({
   meetingResponse,
   canEdit,
   joiners,
+  isTeamLeader,
+  follow,
 }: UseAgendaProps) => {
   const dispatch = useDispatch();
   const db = database;
@@ -85,7 +89,7 @@ export const useAgenda = ({
   const { data: selectedAgenda } = useGetDetailMeetingAgenda({
     filter: {
       meetingId: meetingId,
-      isResolved: resolutionFilter === "SOLVED" ? true : false,
+      // isResolved: resolutionFilter === "SOLVED" ? true : false,
     },
     enable: !!meetingId,
   });
@@ -196,12 +200,29 @@ export const useAgenda = ({
     }
   };
 
+  // useEffect(() => {
+  //   setAgendaList(selectedAgenda || []);
+  //   if (selectedAgenda) {
+  //     dispatch(setMeeting(selectedAgenda));
+  //   }
+  // }, [dispatch, selectedAgenda]);
+
   useEffect(() => {
-    setAgendaList(selectedAgenda || []);
-    if (selectedAgenda) {
+    if (selectedAgenda && selectedAgenda) {
+      let filteredData = selectedAgenda;
+
+      if (resolutionFilter === "SOLVED") {
+        filteredData = filteredData.filter((item) => item.isResolved === true);
+      } else if (resolutionFilter === "UNSOLVED") {
+        filteredData = filteredData.filter((item) => item.isResolved === false);
+      }
+
+      setAgendaList(filteredData);
       dispatch(setMeeting(selectedAgenda));
+    } else {
+      setAgendaList([]);
     }
-  }, [dispatch, selectedAgenda]);
+  }, [dispatch, selectedAgenda, resolutionFilter]);
 
   useEffect(() => {
     if (meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED") {
@@ -417,7 +438,7 @@ export const useAgenda = ({
         } else {
           const db = database;
           const meetRef = ref(db, `meetings/${meetingId}/state`);
-          update(meetRef, { updatedAt: new Date() });
+          update(meetRef, { updatedAt: Date.now() });
           setModalOpen(false);
           setAddIssueModal(false);
           // queryClient.resetQueries({
@@ -926,7 +947,12 @@ export const useAgenda = ({
   };
 
   const handleAgendaTabFilter = async (data: string) => {
-    if (meetingStatus === "NOT_STARTED" || meetingStatus === "ENDED") {
+    if (
+      meetingStatus === "NOT_STARTED" ||
+      meetingStatus === "ENDED" ||
+      (!isTeamLeader && !follow)
+      // userId === "4b096369-dedc-4616-a3aa-51cb398f566a"
+    ) {
       setResolutionFilter(data);
     } else {
       const meetingRef = ref(db, `meetings/${meetingId}`);
@@ -942,6 +968,7 @@ export const useAgenda = ({
   };
 
   useEffect(() => {
+    if (userId === "4b096369-dedc-4616-a3aa-51cb398f566a") return;
     const db = database;
     const meetingRef = ref(db, `meetings/${meetingId}/state/agendaActiveTab`);
 
@@ -957,7 +984,7 @@ export const useAgenda = ({
     return () => {
       off(meetingRef);
     };
-  }, [meetingId, resolutionFilter]);
+  }, [meetingId, resolutionFilter, userId]);
 
   useEffect(() => {
     if (!meetingId || !isSelectedAgenda) return;

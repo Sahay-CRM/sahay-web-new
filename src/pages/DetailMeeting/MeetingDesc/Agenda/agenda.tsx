@@ -192,6 +192,8 @@ export default function Agenda({
     meetingResponse,
     canEdit: true,
     joiners,
+    isTeamLeader,
+    follow,
   });
   const [contentWidth, setContentWidth] = useState("90%");
   const sensors = useSensors(useSensor(PointerSensor));
@@ -309,6 +311,8 @@ export default function Agenda({
       description: "Allow a few minutes at the at Conclusion and Wrap Up",
     },
   ];
+
+  // console.log(detailAgendaData);
 
   return (
     <div>
@@ -722,7 +726,8 @@ export default function Agenda({
                     handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
                   } else if (
                     meetingStatus === "NOT_STARTED" ||
-                    meetingStatus === "ENDED"
+                    meetingStatus === "ENDED" ||
+                    (!isTeamLeader && !follow)
                   ) {
                     handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
                   }
