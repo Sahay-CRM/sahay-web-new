@@ -72,7 +72,6 @@ const DuplicateMeetingModal: React.FC<DuplicateMeetingModalProps> = ({
   const [dateTime, setDateTime] = useState<Date | null>(null);
 
   const [loading, setLoading] = useState(false);
-  // const { mutate: addDetailMeeting } = addUpdateDetailMeetingMutation();
 
   // error states
   const [errors, setErrors] = useState<{ name?: string; dateTime?: string }>(

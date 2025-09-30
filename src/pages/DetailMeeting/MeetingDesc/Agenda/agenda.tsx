@@ -186,6 +186,7 @@ export default function Agenda({
     handleMarkAsSolved,
     resolutionFilter,
     handleDragEnd,
+    userId,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -197,6 +198,8 @@ export default function Agenda({
   });
   const [contentWidth, setContentWidth] = useState("90%");
   const sensors = useSensors(useSensor(PointerSensor));
+
+  const unFollowByUser = meetingResponse?.state.unfollow?.[userId] ?? false;
 
   const SIDEBAR_WIDTH = 600;
 
@@ -312,8 +315,6 @@ export default function Agenda({
     },
   ];
 
-  // console.log(detailAgendaData);
-
   return (
     <div>
       {/* radio button modal */}
@@ -372,7 +373,7 @@ export default function Agenda({
                       : { marginBottom: "1px", color: "gray" }
                   }
                   onClick={() => {
-                    if (follow) {
+                    if (follow || unFollowByUser) {
                       handleTabChange("tasks");
                     }
                   }}
@@ -392,7 +393,7 @@ export default function Agenda({
                       : { marginBottom: "1px", color: "gray" }
                   }
                   onClick={() => {
-                    if (follow) {
+                    if (follow || unFollowByUser) {
                       handleTabChange("projects");
                     }
                   }}
@@ -412,7 +413,7 @@ export default function Agenda({
                       : { marginBottom: "1px", color: "gray" }
                   }
                   onClick={() => {
-                    if (follow) {
+                    if (follow || unFollowByUser) {
                       handleTabChange("kpis");
                     }
                   }}
@@ -785,6 +786,7 @@ export default function Agenda({
                           meetingResponse={meetingResponse}
                           conclusionTime={conclusionTime}
                           isTeamLeader={isTeamLeader}
+                          isUnFollow={unFollowByUser}
                         />
                       ))}
                     </ul>

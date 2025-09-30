@@ -185,3 +185,42 @@ export function convertToLocalTime(deadline: string | Date | null): string {
     });
   }
 }
+
+// utils/dateFormatter.js
+export const formatToLocalDateTime = (dateString: string) => {
+  if (!dateString) return "";
+
+  const date = new Date(dateString);
+
+  // Format date as dd mm yyyy
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+
+  // Format time as hh:mm am/pm
+  let hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const ampm = hours >= 12 ? "pm" : "am";
+
+  hours = hours % 12;
+  hours = hours ? hours : 12; // the hour '0' should be '12'
+  const formattedHours = hours.toString().padStart(2, "0");
+
+  return `${day}/${month}/${year} ${formattedHours}:${minutes} ${ampm}`;
+};
+
+// Alternative: Using Intl.DateTimeFormat (more reliable)
+export const formatToLocalDateTimeIntl = (dateString: string) => {
+  if (!dateString) return "";
+
+  const date = new Date(dateString);
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
+};

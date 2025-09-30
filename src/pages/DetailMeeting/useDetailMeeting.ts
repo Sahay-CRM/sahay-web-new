@@ -64,8 +64,6 @@ export default function useDetailMeeting() {
     {} as MeetingData,
   );
 
-  // const [filters, setFilters] = useState<{ selected?: string[] }>({});
-
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 25,
@@ -168,12 +166,6 @@ export default function useDetailMeeting() {
     color: item.color || "#2e3195",
   }));
 
-  // const handleFilterChange = (selected: string[]) => {
-  //   setFilters({
-  //     selected,
-  //   });
-  // };
-
   const handleRowsModalOpen = (data: MeetingData) => {
     setViewModalData(data);
     setIsViewModalOpen(true);
@@ -273,8 +265,6 @@ export default function useDetailMeeting() {
     isChildData,
     permission,
     statusOptions,
-    // filters,
-    // handleFilterChange,
     handleRowsModalOpen,
     isViewModalOpen,
     setIsViewModalOpen,

@@ -52,7 +52,7 @@ export default function ProjectDrawer({
     filter: {
       search: isStatusSearch.length >= 3 ? isStatusSearch : undefined,
     },
-    enable: isStatusSearch.length >= 3,
+    enable: isStatusSearch.length >= 3 || isStatusSearch.length === 0,
   });
   const { data: employeeData } = useGetEmployeeDd({
     filter: { isDeactivated: false },
@@ -152,42 +152,42 @@ export default function ProjectDrawer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, projectData]);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as HTMLElement;
+  // useEffect(() => {
+  //   function handleClickOutside(event: MouseEvent) {
+  //     const target = event.target as HTMLElement;
 
-      if (drawerRef.current && drawerRef.current.contains(target)) {
-        return;
-      }
+  //     if (drawerRef.current && drawerRef.current.contains(target)) {
+  //       return;
+  //     }
 
-      if (
-        target.closest('[data-slot="select-content"]') ||
-        target.closest('[data-slot="popover-content"]') ||
-        target.closest("[data-radix-popper-content-wrapper]")
-      ) {
-        return;
-      }
+  //     if (
+  //       target.closest('[data-slot="select-content"]') ||
+  //       target.closest('[data-slot="popover-content"]') ||
+  //       target.closest("[data-radix-popper-content-wrapper]")
+  //     ) {
+  //       return;
+  //     }
 
-      if (
-        target.closest(".react-datepicker") ||
-        target.closest(".react-datepicker-popper")
-      ) {
-        return;
-      }
+  //     if (
+  //       target.closest(".react-datepicker") ||
+  //       target.closest(".react-datepicker-popper")
+  //     ) {
+  //       return;
+  //     }
 
-      onClose();
-    }
+  //     onClose();
+  //   }
 
-    if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
+  //   if (open) {
+  //     document.addEventListener("mousedown", handleClickOutside);
+  //   } else {
+  //     document.removeEventListener("mousedown", handleClickOutside);
+  //   }
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [onClose, open]);
+  //   return () => {
+  //     document.removeEventListener("mousedown", handleClickOutside);
+  //   };
+  // }, [onClose, open]);
 
   const onSubmit = (data: ProjectFormData) => {
     if (meetingId) {

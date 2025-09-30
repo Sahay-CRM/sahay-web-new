@@ -38,6 +38,7 @@ export default function AgendaList({
   meetingResponse,
   conclusionTime,
   isTeamLeader,
+  isUnFollow,
 }: AgendaListProps) {
   const {
     attributes,
@@ -83,10 +84,10 @@ export default function AgendaList({
           (meetingStatus !== "NOT_STARTED" &&
             meetingStatus !== "STARTED" &&
             follow) ||
-          meetingStatus === "ENDED"
+          isUnFollow
         ) {
           if (handleListClick && item) {
-            handleListClick(item.issueObjectiveId ?? "");
+            handleListClick(item.issueObjectiveId, !!isUnFollow!);
           }
         }
       }}
