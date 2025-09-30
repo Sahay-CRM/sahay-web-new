@@ -38,6 +38,7 @@ export default function AgendaList({
   meetingResponse,
   conclusionTime,
   isTeamLeader,
+  isUnFollow,
 }: AgendaListProps) {
   const {
     attributes,
@@ -83,10 +84,10 @@ export default function AgendaList({
           (meetingStatus !== "NOT_STARTED" &&
             meetingStatus !== "STARTED" &&
             follow) ||
-          meetingStatus === "ENDED"
+          isUnFollow
         ) {
           if (handleListClick && item) {
-            handleListClick(item.issueObjectiveId ?? "");
+            handleListClick(item.issueObjectiveId, !!isUnFollow!);
           }
         }
       }}
@@ -98,6 +99,13 @@ export default function AgendaList({
         ...style,
       }}
     >
+      {item?.departmentName && (
+        <div className="absolute -top-2 left-2 w-fit h-fit">
+          <div className="text-black text-[12px] bg-gray-200/80 pt-2 pb-0.5 px-3 rounded-full">
+            {item?.departmentName}
+          </div>
+        </div>
+      )}
       <div className="flex items-center w-full h-full">
         {isTeamLeader && (
           <span
@@ -164,17 +172,10 @@ export default function AgendaList({
           </div>
         )}
       </div>
-      {item?.departmentName && (
-        <div className="absolute -top-1.5 left-6 w-fit h-fit">
-          <div className="text-black text-[10px] bg-gray-200/80 py-0.5 px-3 rounded-full">
-            {item?.departmentName}
-          </div>
-        </div>
-      )}
 
       <div className="flex items-center gap-2 relative">
         {/* {!canEdit && ( */}
-        <div className="text-xs text-center w-20 text-gray-500 absolute top-0 right-0">
+        <div className="text-sm text-center w-20 text-gray-500 absolute top-0 right-0">
           <Badge variant="secondary" className="mb-0">
             {item?.ioType}
           </Badge>

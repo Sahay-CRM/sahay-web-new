@@ -64,7 +64,7 @@ export default function TaskDrawer({
     filter: {
       search: isProjectSearch.length >= 3 ? isProjectSearch : undefined,
     },
-    enable: isProjectSearch.length >= 3,
+    enable: isProjectSearch.length >= 3 || isProjectSearch.length === 0,
   });
   const { mutate: addNote } = addMeetingNotesMutation();
 

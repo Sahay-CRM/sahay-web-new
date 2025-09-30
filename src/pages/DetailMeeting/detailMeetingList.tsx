@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import { CopyPlus } from "lucide-react";
+
 import TableData from "@/components/shared/DataTable/DataTable";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useDetailMeeting from "./useDetailMeeting";
@@ -17,14 +20,13 @@ import {
 
 import ViewMeetingModal from "./ViewMeetingModal";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
-import { format } from "date-fns";
 import DateRangePicker from "@/components/shared/DateRange";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
-import { useSelector } from "react-redux";
 import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
 import DuplicateMeetingModal from "./duplicateMeetingModal";
-import { CopyPlus } from "lucide-react";
+import { formatToLocalDateTime } from "@/features/utils/app.utils";
+import { getMeetingButtonConfig } from "./getMeetingButtonConfig";
 
 export default function DetailMeetingList() {
   const {
@@ -178,10 +180,7 @@ export default function DetailMeetingList() {
                 (meetingData.currentPage - 1) * meetingData.pageSize +
                 index +
                 1,
-              meetingDateTime: format(
-                new Date(item.meetingDateTime ?? 0),
-                "dd/MM/yyyy hh:mm a",
-              ),
+              meetingDateTime: formatToLocalDateTime(item.meetingDateTime!),
               joinerNames:
                 item.joiners
                   ?.map((emp) =>
@@ -205,35 +204,10 @@ export default function DetailMeetingList() {
                 : undefined
             }
             customActions={(row) => {
-              const isTeamLeader = Array.isArray(row.joiners)
-                ? row.joiners.some(
-                    (emp) =>
-                      emp &&
-                      typeof emp === "object" &&
-                      emp.employeeId === userId &&
-                      emp.isTeamLeader === true,
-                  )
-                : false;
-
-              // Define color styles by status
-              const getButtonColor = (status: string) => {
-                switch (status) {
-                  case "NOT_STARTED":
-                    return "bg-primary hover:bg-primary text-white";
-                  case "STARTED":
-                    return "bg-green-500 hover:bg-green-600 text-white";
-                  case "ENDED":
-                    return "bg-red-500 hover:bg-red-600 text-white";
-                  default:
-                    return "bg-gray-500 hover:bg-gray-600 text-white";
-                }
-              };
-
-              const meetingDate = new Date(row.meetingDateTime);
-              const today = new Date();
-              const isPastAndNotStarted =
-                meetingDate < today &&
-                row.detailMeetingStatus === "NOT_STARTED";
+              const { buttonText, buttonColor } = getMeetingButtonConfig({
+                meeting: row,
+                userId: userId,
+              });
 
               return (
                 <>
@@ -251,42 +225,16 @@ export default function DetailMeetingList() {
                       <CopyPlus className="block !w-5 !h-5" />
                     </Button>
                   )}
-                  {isPastAndNotStarted ? (
-                    <Button
-                      size="sm"
-                      className="py-1 w-[150px] px-3 cursor-pointer bg-red-800 hover:bg-red-700 text-white"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/dashboard/meeting/detail/${row.meetingId}`);
-                      }}
-                    >
-                      Past Meeting
-                    </Button>
-                  ) : (
-                    <>
-                      <Button
-                        size="sm"
-                        className={`py-1 w-[150px] px-3 cursor-pointer ${getButtonColor(
-                          row.detailMeetingStatus!,
-                        )}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(
-                            `/dashboard/meeting/detail/${row.meetingId}`,
-                          );
-                        }}
-                      >
-                        {row.detailMeetingStatus === "ENDED"
-                          ? "Meeting Details"
-                          : isTeamLeader &&
-                              row.detailMeetingStatus === "NOT_STARTED"
-                            ? "Start Meeting"
-                            : isTeamLeader
-                              ? "Join Meeting"
-                              : "Not Started"}
-                      </Button>
-                    </>
-                  )}
+                  <Button
+                    size="sm"
+                    className={`py-1 w-[150px] px-3 cursor-pointer ${buttonColor}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/dashboard/meeting/detail/${row.meetingId}`);
+                    }}
+                  >
+                    {buttonText}
+                  </Button>
                 </>
               );
             }}

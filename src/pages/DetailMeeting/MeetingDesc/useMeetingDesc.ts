@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { get, off, onValue, ref, update } from "firebase/database";
+import { get, off, onValue, ref, remove, update } from "firebase/database";
 import { database } from "@/firebaseConfig";
 
 // import { useAddUpdateCompanyMeeting } from "@/features/api/companyMeeting";
@@ -310,6 +310,25 @@ export default function useMeetingDesc() {
     }
   };
 
+  const handleUnFollow = (employeeId: string) => {
+    if (meetingId) {
+      const meetRef = ref(db, `meetings/${meetingId}/state/unfollow`);
+      update(meetRef, {
+        [employeeId]: true,
+      });
+    }
+  };
+
+  const handleFollowBack = (employeeId: string) => {
+    if (meetingId) {
+      const employeeRef = ref(
+        db,
+        `meetings/${meetingId}/state/unfollow/${employeeId}`,
+      );
+      remove(employeeRef);
+    }
+  };
+
   const handleCheckIn = (employeeId: string, attendanceMark: boolean) => {
     if (meetingId) {
       addDetailMeeting(
@@ -503,5 +522,7 @@ export default function useMeetingDesc() {
     handleAddEmp,
     handleDeleteEmp,
     meetingData,
+    handleUnFollow,
+    handleFollowBack,
   };
 }

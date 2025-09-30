@@ -1123,6 +1123,9 @@ interface MeetingResFire {
     meetingTimestamp?: number;
     updatedAt: number | string;
     conclusionTimestamp: number;
+    unfollow?: {
+      [employeeId: string]: boolean;
+    };
   };
   timers: {
     agenda?: TimerEntry;
@@ -1254,7 +1257,6 @@ interface DetailMeetingObjectives {
 }
 
 interface MeetingAgenda {
-  detailMeetingAgendaIssueId?: string;
   issueObjectiveId: string;
   ioType: string;
   name: string;
@@ -1411,7 +1413,7 @@ interface AgendaListProps {
   setEditingValue: (value: string) => void;
   updateEdit: () => void;
   cancelEdit?: () => void;
-  handleListClick?: (id: string) => void;
+  handleListClick?: (id: string, item: boolean) => void;
   handleMarkAsSolved: (data: MeetingAgenda) => void;
   startEdit: (
     type: "ISSUE" | "OBJECTIVE",
@@ -1425,6 +1427,7 @@ interface AgendaListProps {
   meetingResponse?: MeetingResFire | null;
   conclusionTime?: MeetingConclusionData;
   isTeamLeader?: boolean;
+  isUnFollow?: boolean;
 }
 
 interface EditingProps {

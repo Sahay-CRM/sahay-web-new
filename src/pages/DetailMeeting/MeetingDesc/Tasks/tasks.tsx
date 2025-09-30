@@ -48,7 +48,6 @@ export default function Tasks({
     filter: {},
   });
   const { mutate: updateCompanyTask } = useAddUpdateCompanyTask();
-
   const { mutate: addMeetingTask } = addMeetingTaskDataMutation();
   const { mutate: deleteTaskById } = deleteMeetingTaskMutation();
 
