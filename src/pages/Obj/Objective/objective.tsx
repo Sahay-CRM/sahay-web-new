@@ -19,6 +19,24 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import useObjective from "./useObjective";
 import PageNotAccess from "@/pages/PageNoAccess";
 import ObjectiveFormModal from "./ObjectiveFormModal/objectiveAddFormModal";
+import ObjDeleteModal from "./objDeleteModal";
+import { RotateCcw } from "lucide-react";
+import FormSelect from "@/components/shared/Form/FormSelect";
+
+const dataFilterOption = [
+  {
+    label: "All",
+    value: "all",
+  },
+  {
+    label: "Active",
+    value: "false",
+  },
+  {
+    label: "Inactive",
+    value: "true",
+  },
+];
 
 export default function Objective() {
   const {
@@ -36,6 +54,11 @@ export default function Objective() {
     paginationFilter,
     setPaginationFilter,
     closeDeleteModal,
+    conformForceDelete,
+    isDataFilter,
+    setIsDataFilter,
+    handleRestoreObj,
+    isDeleteOpen,
   } = useObjective();
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -81,6 +104,15 @@ export default function Objective() {
             Objective List
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
+            <FormSelect
+              value={isDataFilter}
+              options={dataFilterOption}
+              onChange={(ele) => {
+                setIsDataFilter(ele as string);
+              }}
+              triggerClassName="mb-0"
+            />
+
             {permission.Add && (
               <Link to="">
                 <Button className="py-2 w-fit" onClick={handleAdd}>
@@ -145,7 +177,47 @@ export default function Objective() {
             isLoading={isLoading}
             permissionKey="users"
             moduleKey="DESIGNATION"
-            actionColumnWidth="w-[100px] overflow-hidden "
+            actionColumnWidth="w-[130px] overflow-hidden "
+            customActions={(row) => {
+              return (
+                <>
+                  {isDataFilter === "true" && (
+                    <div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-red-600"
+                            onClick={() => handleRestoreObj(row)}
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  )}
+                  {isDataFilter === "all" && row.isDelete && (
+                    <div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-red-600"
+                            onClick={() => handleRestoreObj(row)}
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  )}
+                </>
+              );
+            }}
             // sortableColumns={[
             //   "designationName",
             //   "departmentName",
@@ -162,14 +234,23 @@ export default function Objective() {
         )}
 
         {isDeleteModalOpen && (
-          <ConfirmationDeleteModal
-            title={"Delete Objective"}
-            label={"Objective :"}
-            modalData={`${modalData?.objectiveName}`}
+          <ObjDeleteModal
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}
+            onForceSubmit={conformForceDelete}
+            modalData={modalData}
             isChildData={isChildData}
+          />
+        )}
+        {isDeleteOpen && (
+          <ConfirmationDeleteModal
+            title={"are you sure to Delete this Objective"}
+            label={"Objective Name :"}
+            modalData={`${modalData?.objectiveName}`}
+            isModalOpen={isDeleteOpen}
+            modalClose={closeDeleteModal}
+            onSubmit={conformForceDelete}
           />
         )}
       </div>

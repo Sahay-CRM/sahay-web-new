@@ -27,6 +27,15 @@ import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
 import DuplicateMeetingModal from "./duplicateMeetingModal";
 import { formatToLocalDateTime } from "@/features/utils/app.utils";
 import { getMeetingButtonConfig } from "./getMeetingButtonConfig";
+import FormSelect from "@/components/shared/Form/FormSelect";
+
+const detailMeetingOpt = [
+  { label: "All", value: "ALL" },
+  { label: "Not Started", value: "NOT_STARTED" },
+  { label: "Join Meeting", value: "JOIN" },
+  { label: "Ended", value: "ENDED" },
+  { label: "Past Meeting", value: "PAST_MEETING" },
+];
 
 export default function DetailMeetingList() {
   const {
@@ -57,6 +66,8 @@ export default function DetailMeetingList() {
     setSelectedMeeting,
     isDuplicateModalOpen,
     selectedMeeting,
+    setIsDataFilter,
+    isDataFilter,
   } = useDetailMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -76,7 +87,7 @@ export default function DetailMeetingList() {
       label: "Meeting Description",
       visible: true,
     },
-    { key: "meetingDate", label: "Meeting Time", visible: true },
+    { key: "meetingDateTime", label: "Meeting Time", visible: true },
     { key: "joinerNames", label: "Joiners", visible: true },
   ]);
 
@@ -128,6 +139,16 @@ export default function DetailMeetingList() {
             />
           </div>
           <div className="flex gap-4 flex-wrap">
+            <div>
+              <FormSelect
+                value={isDataFilter}
+                options={detailMeetingOpt}
+                onChange={(ele) => {
+                  setIsDataFilter(ele as string);
+                }}
+                triggerClassName="mb-0"
+              />
+            </div>
             <div className="relative flex items-center gap-2 ">
               <DateRangePicker
                 value={{
@@ -180,7 +201,7 @@ export default function DetailMeetingList() {
                 (meetingData.currentPage - 1) * meetingData.pageSize +
                 index +
                 1,
-              meetingDate: formatToLocalDateTime(item.meetingDateTime!),
+              meetingDateTime: formatToLocalDateTime(item.meetingDateTime!),
               joinerNames:
                 item.joiners
                   ?.map((emp) =>
@@ -205,7 +226,10 @@ export default function DetailMeetingList() {
             }
             customActions={(row) => {
               const { buttonText, buttonColor } = getMeetingButtonConfig({
-                meeting: row,
+                meeting:
+                  meetingData?.data.find(
+                    (item) => item.meetingId === row.meetingId,
+                  ) ?? {},
                 userId: userId,
               });
 

@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
 
 import TableData from "@/components/shared/DataTable/DataTable";
-import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,25 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import useIssues from "./useIssues";
 import PageNotAccess from "@/pages/PageNoAccess";
 import IssueFormModal from "./IssuesFormModal/issuesAddFormModal";
+import IssueDeleteModal from "./issueDeleteModal";
+import FormSelect from "@/components/shared/Form/FormSelect";
+import { RotateCcw } from "lucide-react";
+import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
+
+const dataFilterOption = [
+  {
+    label: "All",
+    value: "all",
+  },
+  {
+    label: "Active",
+    value: "false",
+  },
+  {
+    label: "Inactive",
+    value: "true",
+  },
+];
 
 export default function Issues() {
   const {
@@ -36,6 +54,11 @@ export default function Issues() {
     paginationFilter,
     setPaginationFilter,
     closeDeleteModal,
+    conformForceDelete,
+    isDataFilter,
+    setIsDataFilter,
+    handleRestoreIssue,
+    isDeleteOpen,
   } = useIssues();
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -81,6 +104,14 @@ export default function Issues() {
             Issues List
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
+            <FormSelect
+              value={isDataFilter}
+              options={dataFilterOption}
+              onChange={(ele) => {
+                setIsDataFilter(ele as string);
+              }}
+              triggerClassName="mb-0"
+            />
             {permission.Add && (
               <Link to="">
                 <Button className="py-2 w-fit" onClick={handleAdd}>
@@ -143,7 +174,47 @@ export default function Issues() {
             isLoading={isLoading}
             permissionKey="users"
             moduleKey="DESIGNATION"
-            actionColumnWidth="w-[100px] overflow-hidden "
+            actionColumnWidth="w-[130px] overflow-hidden "
+            customActions={(row) => {
+              return (
+                <>
+                  {isDataFilter === "true" && (
+                    <div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-red-600"
+                            onClick={() => handleRestoreIssue(row)}
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  )}
+                  {isDataFilter === "all" && row.isDelete && (
+                    <div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-red-600"
+                            onClick={() => handleRestoreIssue(row)}
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  )}
+                </>
+              );
+            }}
           />
         </div>
         {addModal && (
@@ -155,14 +226,23 @@ export default function Issues() {
         )}
 
         {isDeleteModalOpen && (
-          <ConfirmationDeleteModal
-            title={"Delete Issue Name"}
-            label={"Issue Name :"}
-            modalData={`${modalData?.issueName}`}
+          <IssueDeleteModal
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}
+            onForceSubmit={conformForceDelete}
+            modalData={modalData}
             isChildData={isChildData}
+          />
+        )}
+        {isDeleteOpen && (
+          <ConfirmationDeleteModal
+            title={"are you sure to Delete this Issue"}
+            label={"Issue Name :"}
+            modalData={`${modalData?.issueName}`}
+            isModalOpen={isDeleteOpen}
+            modalClose={closeDeleteModal}
+            onSubmit={conformForceDelete}
           />
         )}
       </div>
