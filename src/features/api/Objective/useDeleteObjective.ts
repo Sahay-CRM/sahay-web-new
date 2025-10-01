@@ -7,15 +7,21 @@ import { AxiosError } from "axios";
 
 type DatePaging = BaseResponse<ObjectiveProps>;
 
+interface ObjDeleteProps {
+  objectiveId?: string;
+  isForce?: boolean;
+}
+
 export default function useDeleteObjective() {
   const deleteObjectiveMutation = useMutation({
     mutationKey: ["delete-company-objective"],
-    mutationFn: async (objectiveId: string) => {
-      if (!objectiveId) {
+    mutationFn: async (data: ObjDeleteProps) => {
+      if (!data.objectiveId) {
         throw new Error("Something Went Wrong");
       }
-      const { data: resData } = await Api.delete<DatePaging>({
-        url: Urls.deleteObjective(objectiveId),
+      const { data: resData } = await Api.post<DatePaging>({
+        url: Urls.deleteObjective(data.objectiveId),
+        data: data,
       });
       return resData;
     },

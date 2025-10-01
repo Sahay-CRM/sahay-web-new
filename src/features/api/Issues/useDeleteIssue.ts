@@ -5,17 +5,23 @@ import Urls from "@/features/utils/urls.utils";
 import { queryClient } from "@/queryClient";
 import { AxiosError } from "axios";
 
+interface IssuesDeleteProps {
+  issueId?: string;
+  isForce?: boolean;
+}
+
 type DatePaging = BaseResponse<IssuesProps>;
 
 export default function useDeleteIssue() {
   const deleteIssueMutation = useMutation({
     mutationKey: ["delete-company-issue"],
-    mutationFn: async (issueId: string) => {
-      if (!issueId) {
+    mutationFn: async (data: IssuesDeleteProps) => {
+      if (!data.issueId) {
         throw new Error("Something Went Wrong");
       }
-      const { data: resData } = await Api.delete<DatePaging>({
-        url: Urls.deleteIssues(issueId),
+      const { data: resData } = await Api.post<DatePaging>({
+        url: Urls.deleteIssues(data.issueId),
+        data: data,
       });
       return resData;
     },

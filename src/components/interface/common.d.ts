@@ -1226,6 +1226,8 @@ interface IssuesProps {
   departmentId?: string;
   departmentName?: string;
   meetingId?: string;
+  isForce?: boolean;
+  isDelete?: boolean;
 }
 
 interface UseIssuesFormModalProps {
@@ -1248,6 +1250,8 @@ interface ObjectiveProps {
   departmentId?: string;
   departmentName?: string;
   meetingId?: string;
+  isForce?: boolean;
+  isDelete?: boolean;
 }
 
 interface DetailMeetingObjectives {

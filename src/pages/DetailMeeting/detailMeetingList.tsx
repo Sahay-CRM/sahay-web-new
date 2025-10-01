@@ -76,7 +76,7 @@ export default function DetailMeetingList() {
       label: "Meeting Description",
       visible: true,
     },
-    { key: "meetingDate", label: "Meeting Time", visible: true },
+    { key: "meetingDateTime", label: "Meeting Time", visible: true },
     { key: "joinerNames", label: "Joiners", visible: true },
   ]);
 
@@ -180,7 +180,7 @@ export default function DetailMeetingList() {
                 (meetingData.currentPage - 1) * meetingData.pageSize +
                 index +
                 1,
-              meetingDate: formatToLocalDateTime(item.meetingDateTime!),
+              meetingDateTime: formatToLocalDateTime(item.meetingDateTime!),
               joinerNames:
                 item.joiners
                   ?.map((emp) =>
@@ -205,7 +205,10 @@ export default function DetailMeetingList() {
             }
             customActions={(row) => {
               const { buttonText, buttonColor } = getMeetingButtonConfig({
-                meeting: row,
+                meeting:
+                  meetingData?.data.find(
+                    (item) => item.meetingId === row.meetingId,
+                  ) ?? {},
                 userId: userId,
               });
 
