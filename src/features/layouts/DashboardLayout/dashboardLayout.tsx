@@ -419,15 +419,17 @@ const DashboardLayout = () => {
                   )}
                 </div>
 
-                <div className="w-fit">
-                  <Button
-                    variant="outline"
-                    className=""
-                    onClick={() => setCompanyModalOpen(true)}
-                  >
-                    Switch Company
-                  </Button>
-                </div>
+                {(companies?.length ?? 0) > 0 && (
+                  <div className="w-fit">
+                    <Button
+                      variant="outline"
+                      className=""
+                      onClick={() => setCompanyModalOpen(true)}
+                    >
+                      Switch Company
+                    </Button>
+                  </div>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <div className="flex items-center px-4 py-4-sm mt-auto cursor-pointer mb-1">

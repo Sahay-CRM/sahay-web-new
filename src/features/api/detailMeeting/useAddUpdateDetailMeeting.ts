@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-type DatePaging = BaseResponse<CompanyMeetingDataProps>;
+type DatePaging = CommonResponse<CompanyMeetingDataProps>;
 
 export default function useAddUpdateDetailMeeting() {
   const addUpdateDetailMeetingMutation = useMutation({
@@ -28,6 +28,9 @@ export default function useAddUpdateDetailMeeting() {
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["get-detail-meeting-list"] });
+      queryClient.resetQueries({
+        queryKey: ["get-meeting-details-timing", res.data.meetingId],
+      });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);
