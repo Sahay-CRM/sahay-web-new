@@ -76,7 +76,7 @@ export default function DetailMeetingList() {
       label: "Meeting Description",
       visible: true,
     },
-    { key: "meetingDateTime", label: "Meeting Time", visible: true },
+    { key: "meetingDate", label: "Meeting Time", visible: true },
     { key: "joinerNames", label: "Joiners", visible: true },
   ]);
 
@@ -180,7 +180,7 @@ export default function DetailMeetingList() {
                 (meetingData.currentPage - 1) * meetingData.pageSize +
                 index +
                 1,
-              meetingDateTime: formatToLocalDateTime(item.meetingDateTime!),
+              meetingDate: formatToLocalDateTime(item.meetingDateTime!),
               joinerNames:
                 item.joiners
                   ?.map((emp) =>

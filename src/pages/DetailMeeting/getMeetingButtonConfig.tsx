@@ -17,26 +17,20 @@ export const getMeetingButtonConfig = ({
     };
   }
 
-  const parseCustomDate = (dateString: string): Date => {
-    const [datePart, timePart] = dateString.split(" ");
-    const [day, month, year] = datePart.split("/").map(Number);
-    const [time, period] = timePart.split(" ");
-    const [hours, minutes] = time.split(":").map(Number);
+  // Convert UTC string into local Date
+  const meetingDate = new Date(meeting.meetingDateTime);
+  const now = new Date();
 
-    // Convert to 24-hour format
-    let hours24 = hours;
-    if (period === "pm" && hours !== 12) {
-      hours24 += 12;
-    } else if (period === "am" && hours === 12) {
-      hours24 = 0;
-    }
-    return new Date(year, month - 1, day, hours24, minutes);
-  };
+  // Check if meeting date and time is in the past
+  const isPast = meetingDate < now;
 
-  const meetingDate = parseCustomDate(meeting.meetingDateTime);
-  const currentDate = new Date();
-  const isPast = meetingDate < currentDate;
+  // Check if meeting is on the same day as today
+  const isSameDay =
+    meetingDate.getFullYear() === now.getFullYear() &&
+    meetingDate.getMonth() === now.getMonth() &&
+    meetingDate.getDate() === now.getDate();
 
+  // Check if current user is a team leader in this meeting
   const isTeamLeader = Array.isArray(meeting.joiners)
     ? meeting.joiners.some(
         (emp) =>
@@ -50,28 +44,36 @@ export const getMeetingButtonConfig = ({
   let buttonText = "View Meeting";
   let buttonColor = "bg-blue-500 hover:bg-blue-600 text-white";
 
+  // Logic for button text and color
   if (isPast && meeting.detailMeetingStatus === "NOT_STARTED") {
     buttonText = "Past Meeting";
     buttonColor = "bg-red-900";
-  } else if (isPast) {
-    buttonText = "Meeting Details";
-    buttonColor = "bg-green-700";
   } else if (meeting.detailMeetingStatus === "ENDED") {
     buttonText = "Meeting Details";
     buttonColor = "bg-green-700";
   } else if (isTeamLeader && meeting.detailMeetingStatus === "NOT_STARTED") {
     buttonText = "Start Meeting";
-    buttonColor = "";
+    buttonColor = "bg-blue-600 hover:bg-blue-700 text-white";
   } else if (isTeamLeader && meeting.detailMeetingStatus === "STARTED") {
     buttonText = "Join Meeting";
-    buttonColor = "bg-gray-700";
+    buttonColor = "bg-gray-700 text-white";
   } else if (meeting.detailMeetingStatus === "NOT_STARTED") {
-    buttonText = "Not Started";
-    buttonColor = "";
+    // Meeting is today but time not passed yet
+    buttonText = isSameDay && !isPast ? "Not Started" : "Not Started";
+    buttonColor = "bg-yellow-500 text-white";
+  } else if (
+    meeting.detailMeetingStatus !== "NOT_STARTED" &&
+    meeting.detailMeetingStatus !== "ENDED"
+  ) {
+    buttonText = "Join Meeting";
+    buttonColor = "bg-blue-500 text-white";
   }
 
   return {
     buttonText,
     buttonColor,
+    isPast,
+    isSameDay,
+    isTeamLeader,
   };
 };
