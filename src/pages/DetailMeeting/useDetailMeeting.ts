@@ -36,6 +36,7 @@ export default function useDetailMeeting() {
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [selectedMeeting, setSelectedMeeting] =
     useState<CompanyMeetingDataProps>();
+  const [isDataFilter, setIsDataFilter] = useState("NOT_STARTED");
 
   const today = new Date();
   const before14 = new Date(today);
@@ -74,6 +75,7 @@ export default function useDetailMeeting() {
       ...paginationFilter,
       startDate: toLocalISOString(appliedDateRange.taskStartDate),
       endDate: toLocalISOString(appliedDateRange.taskDeadline),
+      detailMeetingStatus: isDataFilter,
     },
   });
 
@@ -279,5 +281,7 @@ export default function useDetailMeeting() {
     setSelectedMeeting,
     isDuplicateModalOpen,
     selectedMeeting,
+    setIsDataFilter,
+    isDataFilter,
   };
 }
