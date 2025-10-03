@@ -1,5 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  Suspense,
+  lazy,
+  memo,
+} from "react";
+import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Bell, LogOut, User2Icon } from "lucide-react";
 
@@ -33,10 +41,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { ImageBaseURL } from "@/features/utils/urls.utils";
-import CompanyModal from "@/pages/auth/login/CompanyModal";
 import { useGetCompanyList } from "@/features/api/SelectCompany";
 import { verifyCompanyOtpMutation } from "@/features/api/login";
-// import { useAuth } from "@/features/auth/useAuth";
 import { queryClient } from "@/queryClient";
 import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
@@ -62,6 +68,14 @@ import ModalData from "@/components/shared/Modal/ModalData";
 import { ExclamationRoundIcon } from "@/components/shared/Icons";
 import { loginToFirebase } from "@/pages/auth/login/loginToFirebase";
 
+// ✅ Lazy-loaded components
+const CompanyModal = lazy(() => import("@/pages/auth/login/CompanyModal"));
+const NotificationDropdown = lazy(() => import("./notificationDropdown"));
+
+/** Memoized components to reduce re-renders */
+const MemoSidebar = memo(VerticalNavBar);
+const MemoBreadcrumbs = memo(Breadcrumbs);
+
 interface FailureReasonType {
   response?: {
     data?: {
@@ -75,53 +89,35 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Collapse sidebar by default on MeetingDesc page
   const isMeetingDesc = /\/dashboard\/meeting\/detail\//.test(
     location.pathname,
   );
-
-  const [open, setOpen] = useState(!isMeetingDesc ? true : false);
-
-  const toggleDrawer = useCallback((e: { preventDefault: () => void }) => {
-    e?.preventDefault();
-    setOpen((prev) => !prev);
-  }, []);
+  const [open, setOpen] = useState(!isMeetingDesc);
 
   const [isCompanyModalOpen, setCompanyModalOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  // const { setToken } = useAuth();
 
-  const user = useSelector(getUserDetail);
+  // ✅ shallowEqual prevents unnecessary re-renders
+  const user = useSelector(getUserDetail, shallowEqual);
   const userId = useSelector(getUserId);
-  const notifications = useSelector(selectNotifications);
-  // const unreadCount = useSelector(selectNotificationTotalCount);
+  const notifications = useSelector(selectNotifications, shallowEqual);
   const isLoggedIn = useSelector(getIsLoading);
 
   const { mutate: foreToken } = fireTokenMutation();
   const { mutate: updateNotification } = updateNotiMutation();
   const { mutate: companyVerifyOtp } = verifyCompanyOtpMutation();
+  const { mutate: readAllNoti } = updateReadNotificationMutation();
 
   const { data: permission } = useGetUserPermission();
   const { data: userData, failureReason } = useGetEmployeeById(userId);
+
   const { data: notificationData } = useGetUserNotification();
-  const { mutate: readAllNoti } = updateReadNotificationMutation();
 
-  const dataFetchingErr =
-    typeof failureReason === "object" &&
-    failureReason !== null &&
-    "response" in failureReason &&
-    (failureReason as FailureReasonType).response?.data?.message
-      ? (failureReason as FailureReasonType).response?.data?.message
-      : undefined;
   const { data: companies } = useGetCompanyList();
-
-  const handleToggleDrawer = useCallback(() => {
-    setOpen((prev) => !prev);
-  }, []);
-
   const { bgColor } = useSidebarTheme();
 
+  // --- Effects ---
   useEffect(() => {
     if (permission) {
       dispatch(setUserPermission(permission));
@@ -129,11 +125,10 @@ const DashboardLayout = () => {
   }, [dispatch, permission]);
 
   useEffect(() => {
-    if (notificationData && Array.isArray(notificationData.data)) {
+    if (notificationData?.data) {
       const unreadCount = notificationData.data.filter(
-        (notification) => notification.isRead === false,
+        (n) => n.isRead === false,
       ).length;
-
       dispatch(
         setNotifications({
           data: notificationData.data,
@@ -144,24 +139,7 @@ const DashboardLayout = () => {
   }, [dispatch, notificationData]);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsNotificationOpen(false);
-      }
-    }
-    if (isNotificationOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isNotificationOpen]);
-
-  useEffect(() => {
-    if (userData && userData.data) {
+    if (userData?.data) {
       const empData = userData.data;
       const updatedEmpData = {
         ...empData,
@@ -175,9 +153,27 @@ const DashboardLayout = () => {
       dispatch(setUser(updatedEmpData));
     }
   }, [dispatch, userData]);
+
+  useEffect(() => {
+    if (isNotificationOpen) {
+      const handleClickOutside = (e: MouseEvent) => {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(e.target as Node)
+        ) {
+          setIsNotificationOpen(false);
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isNotificationOpen]);
+
+  // --- Handlers ---
+  const toggleDrawer = useCallback(() => setOpen((prev) => !prev), []);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
-  const openLogoutModal = () => setLogoutModalOpen(true);
-  const closeLogoutModal = () => setLogoutModalOpen(false);
+
   const handleConfirmLogout = async () => {
     await deleteFirebaseToken();
     dispatch(logout());
@@ -185,257 +181,176 @@ const DashboardLayout = () => {
   };
 
   const handleMarkAsRead = (notification: AppNotification) => {
-    const updateData = {
-      title: notification.title,
-      notificationId: notification.notificationId,
-      notifiedTime: notification.data?.notifiedTime ?? "",
-      employeeId: userId,
-    };
-    updateNotification(updateData, {
-      onSuccess: () => {
-        const index = notifications.findIndex(
-          (n) => n.notificationId === notification.notificationId,
-        );
-
-        if (index !== -1) {
-          dispatch(markNotificationRead(index));
-        }
-
-        handleView(notification.data?.type, notification.data?.typeId);
+    updateNotification(
+      {
+        title: notification.title,
+        notificationId: notification.notificationId,
+        notifiedTime: notification.data?.notifiedTime ?? "",
+        employeeId: userId,
       },
-    });
-  };
-
-  const handleLogin = async (data: Company) => {
-    const verifyCompanyData = {
-      selectedCompanyId: data.companyId,
-      mobile: user?.employeeMobile ?? "",
-    };
-
-    companyVerifyOtp(verifyCompanyData, {
-      onSuccess: async (response) => {
-        if (response?.status) {
-          await loginToFirebase(response.data.fbToken!);
-
-          dispatch(
-            setAuth({
-              userId: response.data.employeeId,
-              token: response.data.token ?? null,
-              isLoading: false,
-              isAuthenticated: true,
-              fbToken: response.data.fbToken,
-            }),
+      {
+        onSuccess: () => {
+          const index = notifications.findIndex(
+            (n) => n.notificationId === notification.notificationId,
           );
-
-          requestFirebaseNotificationPermission().then((firebaseToken) => {
-            if (firebaseToken && typeof firebaseToken === "string") {
-              dispatch(setFireBaseToken(firebaseToken));
-            } else if (firebaseToken) {
-              dispatch(setFireBaseToken(String(firebaseToken)));
-            }
-            foreToken(
-              {
-                webToken: firebaseToken,
-                employeeId: response.data.employeeId,
-              },
-              {
-                onSuccess: () => {
-                  queryClient.resetQueries({ queryKey: ["get-company-list"] });
-                  queryClient.resetQueries({ queryKey: ["userPermission"] });
-                  queryClient.resetQueries({
-                    queryKey: ["get-employee-by-id", userId],
-                  });
-                  window.location.reload();
-                  setCompanyModalOpen(false);
-                },
-              },
-            );
-          });
-          return;
-        }
+          if (index !== -1) dispatch(markNotificationRead(index));
+          handleView(notification.data?.type, notification.data?.typeId);
+        },
       },
-    });
+    );
   };
 
-  const handleAllRead = () => {
-    readAllNoti();
+  const handleLogin = (company: Company) => {
+    companyVerifyOtp(
+      {
+        selectedCompanyId: company.companyId,
+        mobile: user?.employeeMobile ?? "",
+      },
+      {
+        onSuccess: async (response) => {
+          if (response?.status) {
+            await loginToFirebase(response.data.fbToken!);
+
+            dispatch(
+              setAuth({
+                userId: response.data.employeeId,
+                token: response.data.token ?? null,
+                isLoading: false,
+                isAuthenticated: true,
+                fbToken: response.data.fbToken,
+              }),
+            );
+
+            // ✅ Run Firebase token sync in background
+            requestFirebaseNotificationPermission().then((firebaseToken) => {
+              if (firebaseToken) {
+                dispatch(setFireBaseToken(String(firebaseToken)));
+                foreToken(
+                  {
+                    webToken: firebaseToken,
+                    employeeId: response.data.employeeId,
+                  },
+                  {
+                    onSuccess: () => {
+                      queryClient.invalidateQueries({
+                        queryKey: ["get-company-list"],
+                      });
+                      queryClient.invalidateQueries({
+                        queryKey: ["userPermission"],
+                      });
+                      queryClient.invalidateQueries({
+                        queryKey: ["get-employee-by-id", userId],
+                      });
+                      setCompanyModalOpen(false);
+                    },
+                  },
+                );
+              }
+            });
+          }
+        },
+      },
+    );
   };
 
+  const handleAllRead = () => readAllNoti();
   const { breadcrumbs } = useBreadcrumbs();
-  if (isLoggedIn) return <Navigate to="/login" />;
 
+  // --- Redirects ---
+  const dataFetchingErr = (failureReason as FailureReasonType)?.response?.data
+    ?.message;
+
+  if (isLoggedIn) return <Navigate to="/login" />;
   if (dataFetchingErr === "Invalid jwt token") {
     dispatch(logout());
     return <Navigate to="/login" />;
   }
 
   const handleView = (type?: string, typeId?: string) => {
-    if (type === "TASK" && typeId) {
-      navigate(`/dashboard/tasks/view/${typeId}`);
-    } else if (type === "PROJECT" && typeId) {
-      navigate(`/dashboard/projects/view/${typeId}`);
-    } else if (type === "MEETING" && typeId) {
-      navigate(`/dashboard/meeting/detail/${typeId}`);
+    if (type && typeId) {
+      navigate(`/dashboard/${type.toLowerCase()}s/view/${typeId}`);
     }
     setIsNotificationOpen(false);
   };
 
+  // --- UI ---
   return (
     <>
       <SidebarControlContext.Provider value={{ open, setOpen }}>
         <div className="flex h-screen bg-gray-200 gap-x-4">
           <div
-            className={`${
-              open ? "w-[260px]" : "hidden sm:block sm:w-16"
-            } bg-white rounded-tr-2xl transition-all duration-300`}
+            className={`${open ? "w-[260px]" : "hidden sm:block sm:w-16"} bg-white rounded-tr-2xl transition-all duration-300`}
           >
-            <VerticalNavBar
+            <MemoSidebar
               isExpanded={open}
               data={companyNavigationData}
-              onToggleDrawer={handleToggleDrawer}
+              onToggleDrawer={toggleDrawer}
             />
           </div>
+
           <div className="flex flex-col flex-1 overflow-hidden gap-y-4">
             <div
-              style={{
-                backgroundColor: bgColor,
-              }}
+              style={{ backgroundColor: bgColor }}
               className="h-16 flex items-center justify-between px-6 rounded-2xl mt-2 mx-4 sm:ml-0"
             >
               <div className="text-xl font-semibold flex items-center gap-x-2">
-                {" "}
                 <div
                   onClick={toggleDrawer}
                   className="w-6 flex items-center justify-center mr-3 cursor-pointer"
                 >
                   <LucideIcon name="Menu" size={24} />
                 </div>
-                <Breadcrumbs items={breadcrumbs} />
+                <MemoBreadcrumbs items={breadcrumbs} />
               </div>
+
               <div className="flex items-center justify-end gap-x-4 pt-1 relative">
-                {/* notification */}
+                {/* Notifications */}
                 <div className="relative">
-                  <div>
-                    <Button
-                      variant="ghost"
-                      className="p-2 border relative"
-                      onClick={() => {
-                        setIsNotificationOpen((prev) => !prev);
-                      }}
-                    >
-                      <Bell />
-                      {notificationData &&
-                        notificationData.data.filter(
-                          (notification) => notification.isRead === false,
-                        ).length > 0 && (
-                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
-                            {
-                              notificationData.data.filter(
-                                (notification) => notification.isRead === false,
-                              ).length
-                            }
-                          </span>
-                        )}
-                    </Button>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    className="p-2 border relative"
+                    onClick={() => setIsNotificationOpen((prev) => !prev)}
+                  >
+                    <Bell />
+                    {notifications.some((n) => !n.isRead) && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                        {notifications.filter((n) => !n.isRead).length}
+                      </span>
+                    )}
+                  </Button>
+
                   {isNotificationOpen && (
-                    <div>
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setIsNotificationOpen(false)}
+                    <Suspense>
+                      <NotificationDropdown
+                        dropdownRef={dropdownRef}
+                        notifications={notifications}
+                        onMarkAsRead={handleMarkAsRead}
+                        onAllRead={handleAllRead}
+                        onViewAll={() => {
+                          navigate("/dashboard/notifications");
+                          setIsNotificationOpen(false);
+                        }}
                       />
-                      <div
-                        ref={dropdownRef}
-                        className="absolute right-0 top-12 bg-white shadow-2xl border rounded-lg p-4 w-[400px] z-50"
-                      >
-                        {notifications.length > 0 ? (
-                          <>
-                            <ul className="h-80 overflow-scroll">
-                              {notifications
-                                .slice(0, 5)
-                                .map((notification: AppNotification, index) => (
-                                  <li
-                                    key={index}
-                                    className={`border py-1 mb-1 last:mb-0 rounded-md px-2 ${
-                                      notification?.isRead
-                                        ? "bg-gray-200"
-                                        : "bg-white"
-                                    } cursor-pointer hover:bg-gray-300 transition`}
-                                    onClick={() => {
-                                      handleMarkAsRead(notification);
-                                    }}
-                                  >
-                                    <div className="flex items-start justify-between">
-                                      <div className="flex-grow">
-                                        <div>
-                                          <span className="font-semibold text-sm">
-                                            {notification?.title}
-                                          </span>
-                                        </div>
-                                        <p className="text-[13px] mt-1 text-gray-600">
-                                          {(() => {
-                                            const words =
-                                              notification?.body?.split(" ") ||
-                                              [];
-                                            if (words.length > 8) {
-                                              return (
-                                                words.slice(0, 8).join(" ") +
-                                                " [...]"
-                                              );
-                                            }
-                                            return notification?.body;
-                                          })()}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </li>
-                                ))}
-                            </ul>
-                            <div className="flex justify-between w-full mt-2 border-t">
-                              <Button
-                                variant="link"
-                                onClick={() => {
-                                  navigate("/dashboard/notifications");
-                                  setIsNotificationOpen(false);
-                                }}
-                              >
-                                View All Notifications
-                              </Button>
-                              <Button
-                                variant="link"
-                                onClick={() => handleAllRead()}
-                              >
-                                Mark all as Read
-                              </Button>
-                            </div>
-                          </>
-                        ) : (
-                          <p className="text-sm text-gray-600">
-                            No new notifications
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                    </Suspense>
                   )}
                 </div>
 
                 {(companies?.length ?? 0) > 0 && (
-                  <div className="w-fit">
-                    <Button
-                      variant="outline"
-                      className=""
-                      onClick={() => setCompanyModalOpen(true)}
-                    >
-                      Switch Company
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setCompanyModalOpen(true)}
+                  >
+                    Switch Company
+                  </Button>
                 )}
+
+                {/* Profile dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <div className="flex items-center px-4 py-4-sm mt-auto cursor-pointer mb-1">
                       <div className="flex w-[50px] h-[50px]">
                         <img
-                          src={user?.photo ? user?.photo : logoImg}
+                          src={user?.photo || logoImg}
                           alt="profile"
                           className="w-full rounded-full object-contain bg-black"
                         />
@@ -447,9 +362,8 @@ const DashboardLayout = () => {
                       </div>
                     </div>
                   </DropdownMenuTrigger>
-
                   <DropdownMenuContent
-                    className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg bg-white p-2 border"
+                    className="min-w-56 rounded-lg bg-white p-2 border"
                     side="bottom"
                     align="end"
                     sideOffset={4}
@@ -458,29 +372,29 @@ const DashboardLayout = () => {
                       <DropdownMenuItem
                         onClick={() => navigate("/dashboard/profile")}
                       >
-                        <User2Icon />
-                        User Profile
+                        <User2Icon /> User Profile
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={openLogoutModal}>
-                      <LogOut />
-                      Log out
+                    <DropdownMenuItem onClick={() => setLogoutModalOpen(true)}>
+                      <LogOut /> Log out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
+
               {isCompanyModalOpen && (companies?.length ?? 0) > 0 && (
-                <CompanyModal
-                  companies={companies ?? []}
-                  isModalOpen={isCompanyModalOpen}
-                  onSelect={(company) => {
-                    handleLogin(company);
-                  }}
-                  modalClose={() => setCompanyModalOpen(false)}
-                />
+                <Suspense fallback={<div>Loading...</div>}>
+                  <CompanyModal
+                    companies={companies ?? []}
+                    isModalOpen={isCompanyModalOpen}
+                    onSelect={handleLogin}
+                    modalClose={() => setCompanyModalOpen(false)}
+                  />
+                </Suspense>
               )}
             </div>
+
             <main className="flex-1 overflow-auto bg-white mr-4">
               <Outlet />
             </main>
@@ -488,15 +402,16 @@ const DashboardLayout = () => {
         </div>
       </SidebarControlContext.Provider>
 
+      {/* Logout Modal */}
       <ModalData
         isModalOpen={logoutModalOpen}
         modalTitle="Confirm Logout"
-        modalClose={closeLogoutModal}
+        modalClose={() => setLogoutModalOpen(false)}
         buttons={[
           {
             btnText: "Cancel",
             buttonCss: "py-1.5 px-5",
-            btnClick: closeLogoutModal,
+            btnClick: () => setLogoutModalOpen(false),
           },
           {
             btnText: "Confirm",
