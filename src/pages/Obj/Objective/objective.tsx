@@ -123,7 +123,7 @@ export default function Objective() {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center">
           <div>
             <SearchInput
               placeholder="Search..."

@@ -1,3 +1,7 @@
+import { useEffect, useMemo, useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { dateFnsLocalizer } from "react-big-calendar";
+import { Calendar as BigCalendar } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 
 import useCalendar from "./useCompanyImportantDates";
@@ -5,11 +9,7 @@ import useCalendar from "./useCompanyImportantDates";
 import { enUS } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Button } from "@/components/ui/button";
-import { useEffect, useMemo, useState } from "react";
-import { dateFnsLocalizer } from "react-big-calendar";
-import { Calendar as BigCalendar } from "react-big-calendar";
 import FormSelect from "@/components/shared/Form/FormSelect";
-import { FormProvider, useForm } from "react-hook-form";
 import CalenderFormModal from "./calenderFormModal/CalenderFormModal";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import ConfirmationTaskModal from "./confirmationTaskModal";
@@ -94,8 +94,8 @@ function Calendar() {
 
   return (
     <FormProvider {...methods}>
-      <div className="px-2 h-[calc(100vh-140px)] min-h-[500px] overflow-y-auto  overflow-x-auto sm:px-4 py-6">
-        <div className="mb-4 flex justify-between gap-5">
+      <div className="px-2 h-[calc(100vh-120px)] min-h-[500px] sm:px-4 py-6">
+        <div className="flex justify-between gap-5">
           {permission.IMPORTANT_DATE.Add && (
             <div>
               <Button onClick={() => handleAddModal()}>
