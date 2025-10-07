@@ -46,6 +46,8 @@ const KpisSearchDropdown = lazy(() => import("./KpiSearchDropdown"));
 const KpiDrawer = lazy(() => import("./KpiDrawer"));
 
 import { format } from "date-fns";
+import { useSelector } from "react-redux";
+import { getUserId } from "@/features/selectors/auth.selector";
 
 // Loading components for Suspense fallbacks
 const TabsSectionFallback = () => (
@@ -96,6 +98,7 @@ interface KpisProps {
   selectedIssueId?: string;
   isTeamLeader?: boolean | undefined;
   follow?: boolean;
+  meetingRes: MeetingResFire | null;
 }
 
 interface SortConfig {
@@ -111,7 +114,9 @@ export default function KPITable({
   selectedIssueId,
   isTeamLeader,
   follow,
+  meetingRes,
 }: KpisProps) {
+  const userId = useSelector(getUserId);
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const urlSelectedPeriod = searchParams.get("selectedType");
@@ -159,6 +164,9 @@ export default function KPITable({
     () => (Array.isArray(selectedKpis) ? selectedKpis : []),
     [selectedKpis],
   );
+
+  const unfollowed = Object.keys(meetingRes?.state?.unfollow || {});
+  const isUnfollow = unfollowed.includes(userId);
 
   // Tabs data
   const kpiStructure = useMemo(
@@ -631,7 +639,8 @@ export default function KPITable({
                     selectedPeriod={selectedPeriod}
                     onSelectPeriod={handlePeriodChange}
                     kpiStructure={kpiStructure}
-                    isDisabled={!follow}
+                    isDisabled={!follow && !isUnfollow}
+                    isUnfollow={isUnfollow}
                   />
                 </Suspense>
               </div>

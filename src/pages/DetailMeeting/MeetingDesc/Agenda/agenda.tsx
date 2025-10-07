@@ -997,6 +997,7 @@ export default function Agenda({
                         selectedIssueId={isSelectedAgenda}
                         isTeamLeader={isTeamLeader}
                         follow={follow}
+                        meetingRes={meetingResponse!}
                       />
                     )}
                   </Suspense>

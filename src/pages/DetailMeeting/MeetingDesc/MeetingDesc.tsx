@@ -181,10 +181,6 @@ export default function MeetingDesc() {
                         meetingResponse?.state?.unfollow || {},
                       );
 
-                      // const teamLeaderCount = (
-                      //   meetingTiming?.joiners as Joiners[]
-                      // ).filter((emp) => emp.isTeamLeader).length;
-
                       return (
                         <div
                           key={index + item.employeeId}
@@ -377,16 +373,17 @@ export default function MeetingDesc() {
                                       )}
                                   </div>
                                 </>
-                                {unfollowed.includes(item.employeeId) && (
-                                  <button
-                                    onClick={() =>
-                                      handleFollowBack(item.employeeId)
-                                    }
-                                    className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                  >
-                                    Follow Back
-                                  </button>
-                                )}
+                                {unfollowed.includes(item.employeeId) &&
+                                  userId === item.employeeId && (
+                                    <button
+                                      onClick={() =>
+                                        handleFollowBack(item.employeeId)
+                                      }
+                                      className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                    >
+                                      Follow Back to {}
+                                    </button>
+                                  )}
                               </div>
                             )}
                           {/* {isOpen && isTeamLeader && (
