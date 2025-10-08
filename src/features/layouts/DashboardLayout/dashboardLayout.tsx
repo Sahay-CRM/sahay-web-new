@@ -9,7 +9,7 @@ import {
 } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Bell, LogOut, User2Icon } from "lucide-react";
+import { Bell, LaptopMinimal, LogOut, User2Icon } from "lucide-react";
 
 import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
 import VerticalNavBar from "@/components/shared/VerticalNavBar/VerticalNavBar";
@@ -68,11 +68,9 @@ import ModalData from "@/components/shared/Modal/ModalData";
 import { ExclamationRoundIcon } from "@/components/shared/Icons";
 import { loginToFirebase } from "@/pages/auth/login/loginToFirebase";
 
-// ✅ Lazy-loaded components
 const CompanyModal = lazy(() => import("@/pages/auth/login/CompanyModal"));
 const NotificationDropdown = lazy(() => import("./notificationDropdown"));
 
-/** Memoized components to reduce re-renders */
 const MemoSidebar = memo(VerticalNavBar);
 const MemoBreadcrumbs = memo(Breadcrumbs);
 
@@ -98,7 +96,6 @@ const DashboardLayout = () => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // ✅ shallowEqual prevents unnecessary re-renders
   const user = useSelector(getUserDetail, shallowEqual);
   const userId = useSelector(getUserId);
   const notifications = useSelector(selectNotifications, shallowEqual);
@@ -117,7 +114,6 @@ const DashboardLayout = () => {
   const { data: companies } = useGetCompanyList();
   const { bgColor } = useSidebarTheme();
 
-  // --- Effects ---
   useEffect(() => {
     if (permission) {
       dispatch(setUserPermission(permission));
@@ -170,7 +166,6 @@ const DashboardLayout = () => {
     }
   }, [isNotificationOpen]);
 
-  // --- Handlers ---
   const toggleDrawer = useCallback(() => setOpen((prev) => !prev), []);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
@@ -221,7 +216,6 @@ const DashboardLayout = () => {
               }),
             );
 
-            // ✅ Run Firebase token sync in background
             requestFirebaseNotificationPermission().then((firebaseToken) => {
               if (firebaseToken) {
                 dispatch(setFireBaseToken(String(firebaseToken)));
@@ -247,6 +241,8 @@ const DashboardLayout = () => {
                 );
               }
             });
+            navigate("/");
+            window.location.reload();
           }
         },
       },
@@ -256,7 +252,6 @@ const DashboardLayout = () => {
   const handleAllRead = () => readAllNoti();
   const { breadcrumbs } = useBreadcrumbs();
 
-  // --- Redirects ---
   const dataFetchingErr = (failureReason as FailureReasonType)?.response?.data
     ?.message;
 
@@ -272,6 +267,9 @@ const DashboardLayout = () => {
     }
     setIsNotificationOpen(false);
   };
+
+  const isCompanyView =
+    user.employeeType === "CONSULTANT" || user.isSuperAdmin === true;
 
   // --- UI ---
   return (
@@ -376,6 +374,21 @@ const DashboardLayout = () => {
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
+                    {isCompanyView && (
+                      <>
+                        <DropdownMenuGroup>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              navigate("/dashboard/company-profile")
+                            }
+                          >
+                            <LaptopMinimal /> Company Profile
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+
                     <DropdownMenuItem onClick={() => setLogoutModalOpen(true)}>
                       <LogOut /> Log out
                     </DropdownMenuItem>
@@ -384,7 +397,7 @@ const DashboardLayout = () => {
               </div>
 
               {isCompanyModalOpen && (companies?.length ?? 0) > 0 && (
-                <Suspense fallback={<div>Loading...</div>}>
+                <Suspense>
                   <CompanyModal
                     companies={companies ?? []}
                     isModalOpen={isCompanyModalOpen}

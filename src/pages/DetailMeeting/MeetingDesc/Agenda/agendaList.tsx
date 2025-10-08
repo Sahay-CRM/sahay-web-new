@@ -47,7 +47,7 @@ export default function AgendaList({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: item?.issueObjectiveId || "" });
+  } = useSortable({ id: item?.issueObjectiveId || `agenda-${idx}` });
 
   const canEdit = true;
 
@@ -70,13 +70,76 @@ export default function AgendaList({
       .padStart(2, "0")}`;
   };
 
+  // Early return if item is undefined
+  if (!item) {
+    return null;
+  }
+
+  // Get the appropriate timer data - SAME FOR ALL USERS
+  const getTimerData = () => {
+    if (!meetingResponse?.timers?.objectives?.[item.issueObjectiveId]) {
+      return {
+        actualTime: 0,
+        lastSwitchTimestamp: 0,
+        isActive: false,
+      };
+    }
+
+    const objectiveTimer =
+      meetingResponse.timers.objectives[item.issueObjectiveId];
+
+    // ALWAYS use the same logic regardless of follow status
+    const isActiveForMeeting =
+      meetingResponse.state.currentAgendaItemId === item.issueObjectiveId;
+
+    return {
+      actualTime: objectiveTimer.actualTime,
+      lastSwitchTimestamp: isActiveForMeeting
+        ? Number(meetingResponse?.state.lastSwitchTimestamp || Date.now())
+        : 0,
+      isActive: isActiveForMeeting,
+    };
+  };
+
+  const timerData = getTimerData();
+
+  // Handle mark as solved/unsolved with event prevention
+  const handleMarkAsSolvedClick = (
+    e: React.MouseEvent,
+    item: MeetingAgenda,
+  ) => {
+    e.stopPropagation(); // Prevent event from bubbling to li
+    handleMarkAsSolved(item);
+  };
+
+  // Handle edit button click with event prevention
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event from bubbling to li
+    if (item) {
+      startEdit(
+        item.ioType === "OBJECTIVE" ? "OBJECTIVE" : "ISSUE",
+        item.issueId || null,
+        item.objectiveId || null,
+        item.name,
+        item.plannedTime || "0",
+        item.issueObjectiveId,
+      );
+    }
+  };
+
+  // Handle delete button click with event prevention
+  const handleDeleteClick = (e: React.MouseEvent, item: MeetingAgenda) => {
+    e.stopPropagation(); // Prevent event from bubbling to li
+    handleDelete(item);
+  };
+
   return (
     <li
-      key={item?.issueObjectiveId}
+      key={item.issueObjectiveId}
       ref={setNodeRef}
       className={`group px-2 flex border w-full 
                 ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-14 bg-white text-black" : "h-20"}
-                ${isSelectedAgenda === item?.issueObjectiveId ? "bg-primary text-white" : ""}
+                ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : ""}
                 mb-2 rounded-md shadow
                 ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "cursor-default" : "cursor-pointer"}`}
       onClick={() => {
@@ -86,23 +149,23 @@ export default function AgendaList({
             follow) ||
           isUnFollow
         ) {
-          if (handleListClick && item) {
-            handleListClick(item.issueObjectiveId, !!isUnFollow!);
+          // Allow all users to click, regardless of follow status
+          if (handleListClick) {
+            handleListClick(item.issueObjectiveId, !!isUnFollow);
           }
         }
       }}
       style={{
         alignItems: "center",
         justifyContent: "space-between",
-        // transition: "border 0.2s ease",
         position: "relative",
         ...style,
       }}
     >
-      {item?.departmentName && (
+      {item.departmentName && (
         <div className="absolute -top-2 left-2 w-fit h-fit">
           <div className="text-black text-[12px] bg-gray-200/80 pt-2 pb-0.5 px-3 rounded-full">
-            {item?.departmentName}
+            {item.departmentName}
           </div>
         </div>
       )}
@@ -122,19 +185,19 @@ export default function AgendaList({
           className={`w-fit mr-3 text-4xl text-primary text-center ${
             meetingStatus !== "STARTED" &&
             meetingStatus !== "NOT_STARTED" &&
-            isSelectedAgenda === item?.issueObjectiveId
+            isSelectedAgenda === item.issueObjectiveId
               ? "bg-primary text-white"
               : "text-primary"
           }`}
         >
-          {idx! + 1}
+          {(idx || 0) + 1}
         </span>
 
-        {editing?.issueObjectiveId === item?.issueObjectiveId && canEdit ? (
+        {editing?.issueObjectiveId === item.issueObjectiveId && canEdit ? (
           <div className="w-full flex items-center gap-1">
             <div className="relative w-full flex gap-2 items-center">
               <Input
-                value={editing?.value}
+                value={editing?.value || ""}
                 onChange={(e) => setEditingValue(e.target.value)}
                 className="mr-2"
                 autoFocus
@@ -162,59 +225,40 @@ export default function AgendaList({
               } overflow-hidden line-clamp-3 ${
                 meetingStatus !== "STARTED" &&
                 meetingStatus !== "NOT_STARTED" &&
-                isSelectedAgenda === item?.issueObjectiveId
+                isSelectedAgenda === item.issueObjectiveId
                   ? "text-white"
                   : "text-black"
               }`}
             >
-              {item?.name}
+              {item.name}
             </div>
           </div>
         )}
       </div>
 
       <div className="flex items-center gap-2 relative">
-        {/* {!canEdit && ( */}
         <div className="text-sm text-center w-20 text-gray-500 absolute top-0 right-0">
           <Badge variant="secondary" className="mb-0">
-            {item?.ioType}
+            {item.ioType}
           </Badge>
         </div>
-        {/* )} */}
 
         <div className="relative group flex items-center">
           {meetingStatus !== "STARTED" &&
             meetingStatus !== "NOT_STARTED" &&
-            item?.issueObjectiveId && (
+            item.issueObjectiveId && (
               <div className="text-sm text-center ml-2 font-medium text-primary">
                 <div className="text-xs text-center w-20 text-gray-500">
                   <Badge variant="secondary" className="mb-1.5">
-                    {item?.ioType}
+                    {item.ioType}
                   </Badge>
                 </div>
                 {meetingStatus === "DISCUSSION" ? (
                   <Timer
-                    actualTime={Number(
-                      meetingResponse &&
-                        meetingResponse?.timers.objectives?.[
-                          item.issueObjectiveId
-                        ]?.actualTime,
-                    )}
-                    defaultTime={Number(
-                      meetingResponse &&
-                        meetingResponse?.timers.objectives?.[
-                          item.issueObjectiveId
-                        ]?.actualTime,
-                    )}
-                    lastSwitchTimestamp={
-                      isSelectedAgenda === item.issueObjectiveId
-                        ? Number(
-                            meetingResponse?.state.lastSwitchTimestamp ||
-                              Date.now(),
-                          )
-                        : 0
-                    }
-                    isActive={isSelectedAgenda === item.issueObjectiveId}
+                    actualTime={Number(timerData.actualTime)}
+                    defaultTime={Number(timerData.actualTime)}
+                    lastSwitchTimestamp={timerData.lastSwitchTimestamp}
+                    isActive={timerData.isActive}
                     className={`text-xl ${
                       isSelectedAgenda === item.issueObjectiveId
                         ? "text-white"
@@ -246,20 +290,20 @@ export default function AgendaList({
 
           {isTeamLeader && (
             <div
-              className={`absolute -right-[2px] rounded-md w-fit flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-10" : "h-[75px]"} content-center ${isSelectedAgenda === item?.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
+              className={`absolute -right-[2px] rounded-md w-fit flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-10" : "h-[75px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
             >
               <div className="">
-                {editing?.issueObjectiveId !== item?.issueObjectiveId && (
+                {editing?.issueObjectiveId !== item.issueObjectiveId && (
                   <div className="flex gap-1">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
-                            onClick={() => handleMarkAsSolved(item!)}
+                            onClick={(e) => handleMarkAsSolvedClick(e, item)} // Use the new handler
                             className="w-fit cursor-pointer hover:bg-transparent"
                           >
-                            {item?.isResolved ? (
+                            {item.isResolved ? (
                               <CopyX className="w-7 h-7 text-red-600" />
                             ) : (
                               <CopyCheck className="w-7 h-7 text-green-600" />
@@ -268,7 +312,7 @@ export default function AgendaList({
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>
-                            {item?.isResolved
+                            {item.isResolved
                               ? "Mark As Unresolved"
                               : "Mark As Resolved"}
                           </p>
@@ -281,26 +325,12 @@ export default function AgendaList({
                         <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (item) {
-                                startEdit(
-                                  item.ioType === "OBJECTIVE"
-                                    ? "OBJECTIVE"
-                                    : "ISSUE",
-                                  item.issueId || null,
-                                  item.objectiveId || null,
-                                  item.name,
-                                  item.plannedTime || "0",
-                                  item.issueObjectiveId,
-                                );
-                              }
-                            }}
+                            onClick={handleEditClick} // Use the new handler
                             className="w-5 hover:bg-transparent"
                           >
                             <SquarePen
                               className={`h-4 w-4 ${
-                                isSelectedAgenda === item?.issueObjectiveId
+                                isSelectedAgenda === item.issueObjectiveId
                                   ? "text-white"
                                   : "text-primary"
                               }`}
@@ -318,10 +348,7 @@ export default function AgendaList({
                         <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(item!);
-                            }}
+                            onClick={(e) => handleDeleteClick(e, item)} // Use the new handler
                             className="w-5 hover:bg-transparent"
                           >
                             <Unlink className="h-4 w-4 text-red-500" />

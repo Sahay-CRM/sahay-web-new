@@ -347,6 +347,13 @@ const Urls = {
   addNotesGroup: () => `${baseUrl}/company/detail-meeting/note/add-to-group`,
   updateNotesGroup: (id: string) =>
     `${baseUrl}/company/repetitive-meeting/note/update/${id}`,
+
+  getCompanyDataById: (id: string) => `${baseUrl}/company-master/get/${id}`,
+  dropdownIndustry: () => `${baseUrl}/industry/get-all`,
+  dropdownCountry: () => `${baseUrl}/geography/country/get-all`,
+  dropdownCity: () => `${baseUrl}/geography/city/get-all`,
+  dropdownState: () => `${baseUrl}/geography/state/get-all`,
+  updateCompany: (id: string) => `${baseUrl}/company-master/update/${id}`,
 };
 
 export default Urls;

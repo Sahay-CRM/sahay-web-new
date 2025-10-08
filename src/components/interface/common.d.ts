@@ -1460,3 +1460,64 @@ interface NotesGroupProps {
   groupName?: string;
   groupType: string;
 }
+
+interface SimpleCompanyDetails {
+  companyId: string;
+  companyName: string;
+  logo?: string;
+  pancard?: string | null;
+  gstCertificate?: string;
+  annualTurnOver: number;
+  businessStartDate?: string;
+  companyAddress?: string;
+  companyAdminEmail?: string;
+  companyAdminName: string;
+  companyAdminMobile: string;
+  companyBillingName?: string;
+  companyGst?: string;
+  companyMobile: string | null;
+  companyWebsite?: string;
+  accountPOC?: string;
+  accountsPocEmail?: string;
+  pancardNumber?: string;
+  Industry?: {
+    industryId: string;
+    industryName: string;
+  };
+  cityId?: string;
+  cityName?: string;
+  stateId?: string;
+  stateName?: string;
+  countryId?: string;
+  countryName?: string;
+  consultants?: string[];
+  sahayTeamMates?: string[];
+  superAdmin?: string;
+  engagementTypeId?: string;
+  industryId?: string;
+  accountPocMobile?: string;
+  pan?: string;
+}
+
+interface IndustryOption {
+  industryName: string;
+  industryId: string;
+}
+
+interface Country {
+  countryName: string;
+  countryId: string;
+}
+interface CityData {
+  cityId: string;
+  cityName: string;
+  stateId: string;
+  stateName?: string;
+  countryId: string;
+  countryName?: string;
+}
+interface StateData {
+  stateName: string;
+  stateId: string;
+  countryId?: string;
+}

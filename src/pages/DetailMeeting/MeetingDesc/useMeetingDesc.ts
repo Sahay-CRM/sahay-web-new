@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { get, off, onValue, ref, remove, update } from "firebase/database";
 import { database } from "@/firebaseConfig";
 
-// import { useAddUpdateCompanyMeeting } from "@/features/api/companyMeeting";
 import { queryClient } from "@/queryClient";
 import {
   addMeetingNotesMutation,
@@ -13,9 +12,11 @@ import {
   useGetMeetingNotes,
   useGetMeetingTiming,
 } from "@/features/api/detailMeeting";
+import SidebarControlContext from "@/features/layouts/DashboardLayout/SidebarControlContext";
 
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();
+  const sidebarControl = useContext(SidebarControlContext);
 
   const [meetingResponse, setMeetingResponse] = useState<MeetingResFire | null>(
     null,
@@ -64,6 +65,11 @@ export default function useMeetingDesc() {
       if (snapshot.exists()) {
         const data = snapshot.val();
         setMeetingResponse(data);
+        setIsCardVisible(true);
+        setActiveTab("documents");
+        if (sidebarControl?.setOpen) {
+          sidebarControl.setOpen(false);
+        }
       } else {
         setMeetingResponse(null);
       }
@@ -72,7 +78,7 @@ export default function useMeetingDesc() {
     return () => {
       off(meetingRef);
     };
-  }, [db, handleUpdatedRefresh, meetingId]);
+  }, [db, handleUpdatedRefresh, meetingId, sidebarControl]);
 
   useEffect(() => {
     if (!meetingId || !meetingResponse) return;

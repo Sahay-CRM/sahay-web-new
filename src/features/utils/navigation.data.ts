@@ -78,7 +78,7 @@ export const companyNavigationData = [
       },
       {
         id: 2,
-        label: "Objective",
+        label: "Objectives",
         link: "/dashboard/objective",
         permission: "View",
         moduleKey: "OBJECTIVE",

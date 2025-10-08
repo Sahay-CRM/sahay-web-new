@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { get, off, onValue, ref, update } from "firebase/database";
 import { database } from "@/firebaseConfig";
@@ -8,7 +8,7 @@ import { addUpdateObjective } from "@/features/api/Objective";
 import { queryClient } from "@/queryClient";
 import { setMeeting } from "@/features/reducers/common.reducer";
 import useGetMeetingConclusion from "@/features/api/detailMeeting/useGetMeetingConclusion";
-import SidebarControlContext from "@/features/layouts/DashboardLayout/SidebarControlContext";
+// import SidebarControlContext from "@/features/layouts/DashboardLayout/SidebarControlContext";
 import {
   addMeetingAgendaMutation,
   addMeetingTimeMutation,
@@ -45,13 +45,11 @@ export const useAgenda = ({
   meetingResponse,
   canEdit,
   joiners,
-  isTeamLeader,
-  follow,
 }: UseAgendaProps) => {
   const dispatch = useDispatch();
   const db = database;
   const meetStateRef = ref(db, `meetings/${meetingId}/state`);
-  const sidebarControl = useContext(SidebarControlContext);
+  // const sidebarControl = useContext(SidebarControlContext);
   const userId = useSelector(getUserId);
 
   const [issueInput, setIssueInput] = useState("");
@@ -99,6 +97,20 @@ export const useAgenda = ({
     enable: !!meetingId,
   });
 
+  useEffect(() => {
+    if (!unFollowByUser) {
+      const io = selectedAgenda?.find(
+        (item) =>
+          item.issueObjectiveId === meetingResponse?.state.currentAgendaItemId,
+      )?.ioType;
+      setIoType(io!);
+    }
+  }, [
+    meetingResponse?.state.currentAgendaItemId,
+    selectedAgenda,
+    unFollowByUser,
+  ]);
+
   // const ioType =
   //   meetingStatus !== "ENDED"
   //     ? selectedAgenda?.find(
@@ -129,6 +141,8 @@ export const useAgenda = ({
   //   selectedAgenda,
   //   unFollowByUser,
   // ]);
+
+  // const unFollowByUser = meetingResponse?.state.unfollow?.[userId] ?? false;
 
   const { data: detailAgendaData } = useGetDetailMeetingAgendaIssue({
     filter: {
@@ -212,28 +226,15 @@ export const useAgenda = ({
 
   const handleStartMeeting = () => {
     if (meetingId) {
-      createMeet(meetingId, {
-        onSuccess: () => {
-          handleStartMeetingWithSidebar();
-        },
-      });
+      createMeet(meetingId);
     }
   };
 
-  const handleStartMeetingWithSidebar = () => {
-    if (sidebarControl?.setOpen) {
-      sidebarControl.setOpen(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!ioType) {
-      const io = selectedAgenda?.find(
-        (item) => item.issueObjectiveId === isSelectedAgenda,
-      )?.ioType;
-      setIoType(io!);
-    }
-  }, [ioType, isSelectedAgenda, selectedAgenda]);
+  // const handleStartMeetingWithSidebar = () => {
+  //   if (sidebarControl?.setOpen) {
+  //     sidebarControl.setOpen(false);
+  //   }
+  // };
 
   useEffect(() => {
     if (selectedAgenda && selectedAgenda) {
@@ -679,11 +680,11 @@ export const useAgenda = ({
 
   useEffect(() => {
     const objectives = meetingResponse?.timers?.objectives;
-    if (objectives && isSelectedAgenda) {
+    if (objectives && isSelectedAgenda && !unFollowByUser) {
       const actTab = objectives[isSelectedAgenda];
       setActiveTab(actTab?.activeTab as ActiveTab);
     }
-  }, [isSelectedAgenda, meetingResponse]);
+  }, [isSelectedAgenda, meetingResponse, unFollowByUser]);
 
   const handleTabChange = async (tab: ActiveTab) => {
     if (unFollowByUser) {
@@ -715,14 +716,16 @@ export const useAgenda = ({
     onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        setActiveTab(data.activeTab);
+        if (!unFollowByUser) {
+          setActiveTab(data.activeTab);
+        }
       }
     });
 
     return () => {
       off(meetingRef);
     };
-  }, [isSelectedAgenda, meetingId]);
+  }, [isSelectedAgenda, meetingId, unFollowByUser]);
 
   const handleListClick = async (
     issueObjectiveId: string,
@@ -750,18 +753,6 @@ export const useAgenda = ({
 
       const meetingRef = ref(db, `meetings/${meetingId}`);
       const meetingSnapshot = await get(meetingRef);
-
-      const io =
-        meetingStatus !== "ENDED"
-          ? selectedAgenda?.find(
-              (item) =>
-                item.issueObjectiveId ===
-                meetingResponse?.state.currentAgendaItemId,
-            )?.ioType
-          : selectedAgenda?.find(
-              (age) => age.issueObjectiveId === isSelectedAgenda,
-            )?.ioType;
-      setIoType(io!);
 
       if (
         ioId &&
@@ -793,6 +784,18 @@ export const useAgenda = ({
           setIsSelectedAgenda(issueObjectiveId);
         }
       }
+
+      // const io =
+      //   meetingStatus !== "ENDED"
+      //     ? selectedAgenda?.find(
+      //         (item) =>
+      //           item.issueObjectiveId ===
+      //           meetingResponse?.state.currentAgendaItemId
+      //       )?.ioType
+      //     : selectedAgenda?.find(
+      //         (age) => age.issueObjectiveId === isSelectedAgenda
+      //       )?.ioType;
+      // setIoType(io!);
     }
   };
 
@@ -1006,8 +1009,7 @@ export const useAgenda = ({
     if (
       meetingStatus === "NOT_STARTED" ||
       meetingStatus === "ENDED" ||
-      (!isTeamLeader && !follow)
-      // userId === "4b096369-dedc-4616-a3aa-51cb398f566a"
+      unFollowByUser
     ) {
       setResolutionFilter(data);
     } else {
@@ -1031,6 +1033,7 @@ export const useAgenda = ({
     onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
+        if (unFollowByUser) return;
         if (data !== resolutionFilter) {
           setResolutionFilter(data);
         }
@@ -1040,7 +1043,7 @@ export const useAgenda = ({
     return () => {
       off(meetingRef);
     };
-  }, [meetingId, resolutionFilter, userId]);
+  }, [meetingId, resolutionFilter, unFollowByUser, userId]);
 
   useEffect(() => {
     if (!meetingId || !isSelectedAgenda) return;
@@ -1163,6 +1166,6 @@ export const useAgenda = ({
     handleAgendaTabFilter,
     resolutionFilter,
     handleDragEnd,
-    userId,
+    unFollowByUser,
   };
 };

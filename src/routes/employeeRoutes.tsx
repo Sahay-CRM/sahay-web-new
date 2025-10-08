@@ -56,6 +56,8 @@ const AddGraph = lazy(() => import("../pages/homePage"));
 const Brand = lazy(() => import("../pages/Brand"));
 const Product = lazy(() => import("../pages/Product"));
 
+const CompanyProfile = lazy(() => import("../pages/CompanyProfile"));
+
 const KPIDashboard = lazy(() => import("../pages/kpiDashboard/KpiDashboard"));
 // const KPIVisualize = lazy(
 //   () => import("../pages/kpiDashboard/KpiVisualizePage"),
@@ -113,6 +115,7 @@ export default function EmployeeRoutes() {
         <Route path="notifications" Component={AllNotifications} />
 
         <Route path="profile" Component={Profile} />
+        <Route path="company-profile" Component={CompanyProfile} />
         <Route path="settings" Component={Theme} />
         <Route path="company-designation" Component={companydesignation} />
         <Route path="company-employee" Component={companyEmployee} />

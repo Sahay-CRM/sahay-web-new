@@ -8,7 +8,6 @@ import {
   Edit,
   Share2,
   Check,
-  Group,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -29,8 +28,6 @@ import { queryClient } from "@/queryClient";
 import { useSelector } from "react-redux";
 import { getUserId } from "@/features/selectors/auth.selector";
 import { database } from "@/firebaseConfig";
-import NotesGroupModal from "./notesGroupModal";
-// import MoveDeleteGroupModal from "./moveDeleteGroupModal";
 
 interface MeetingNotesProps {
   joiners: Joiners[];
@@ -58,11 +55,11 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerProj, setDrawerProj] = useState(false);
-  const [isGroupModal, setIsGroupModal] = useState(false);
+  // const [isGroupModal, setIsGroupModal] = useState(false);
   // const [isGroupMoveModal, setIsGroupMoveModal] = useState(false);
-  const [GroupModalData, setGroupModalData] = useState<MeetingNotesRes | null>(
-    null,
-  );
+  // const [GroupModalData, setGroupModalData] = useState<MeetingNotesRes | null>(
+  //   null,
+  // );
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskGetPaging | TaskData>();
   const [selectedProject, setSelectedProject] = useState<
@@ -285,14 +282,14 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
     [joiners, userId],
   );
 
-  const handleNoteGroup = (data: MeetingNotesRes) => {
-    setIsGroupModal(true);
-    setGroupModalData(data);
-  };
-  const handleMoveDeleteGroup = (data: MeetingNotesRes) => {
-    // setIsGroupMoveModal(true);
-    setGroupModalData(data);
-  };
+  // const handleNoteGroup = (data: MeetingNotesRes) => {
+  //   setIsGroupModal(true);
+  //   setGroupModalData(data);
+  // };
+  // const handleMoveDeleteGroup = (data: MeetingNotesRes) => {
+  //   // setIsGroupMoveModal(true);
+  //   setGroupModalData(data);
+  // };
   return (
     <div className={cn("px-2", className)}>
       {meetingStatus !== "ENDED" && (
@@ -379,11 +376,11 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                       <span className="font-medium text-xs text-gray-600">
                         {author?.employeeName || "Unknown"}
                       </span>
-                      {note.groupName && (
+                      {/* {note.groupName && (
                         <span className="text-[12px] text-gray-600 ml-2 bg-gray-200 py-1 px-1 rounded-full -mt-2">
                           {note.groupName}
                         </span>
-                      )}
+                      )} */}
                     </div>
                     <div>
                       {note.noteType && (
@@ -526,7 +523,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                   Delete
                                 </DropdownMenuItem>
 
-                                {!note.groupId ? (
+                                {/* {!note.groupId ? (
                                   <DropdownMenuItem
                                     onClick={() => handleNoteGroup(note)}
                                     className="text-primary focus:text-primary px-2 py-1.5"
@@ -562,7 +559,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                       UnGroup
                                     </DropdownMenuItem>
                                   </>
-                                )}
+                                )} */}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -598,13 +595,13 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
         />
       )}
 
-      {isGroupModal && (
+      {/* {isGroupModal && (
         <NotesGroupModal
           isModalOpen={isGroupModal}
           modalClose={() => setIsGroupModal(false)}
           meetingNoteData={GroupModalData!}
         />
-      )}
+      )} */}
 
       {/* {isGroupMoveModal && (
         <MoveDeleteGroupModal
