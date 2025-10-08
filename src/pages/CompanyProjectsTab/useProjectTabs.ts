@@ -15,7 +15,9 @@ export default function useProjectTabs() {
   const [tabs, setTabs] = useState<TabItem[]>([{ id: "all", label: "All" }]);
 
   const { mutate: updateGroupSequence } = groupSequenceMutation();
-  const { data: groupListRes, isPending } = useGetAllGroup();
+  const { data: groupListRes, isPending } = useGetAllGroup({
+    filter: {},
+  });
 
   useEffect(() => {
     if (groupListRes?.data) {

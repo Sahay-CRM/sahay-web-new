@@ -10,11 +10,13 @@ export default function TabsSection({
   onSelectPeriod,
   kpiStructure,
   isDisabled = false,
+  isUnfollow = false,
 }: {
   selectedPeriod: string;
   onSelectPeriod: (selectedPeriod: string) => void;
   kpiStructure?: BaseResponse<FrequencyData> | null;
   isDisabled?: boolean;
+  isUnfollow?: boolean;
 }) {
   const { id: meetingId } = useParams();
   const db = database;
@@ -22,22 +24,26 @@ export default function TabsSection({
   // 🔹 Listen to changes from Firebase in real-time
   useEffect(() => {
     if (!meetingId) return;
-    const stateRef = ref(db, `meetings/${meetingId}/state/kpiActiveTab`);
-    const unsubscribe = onValue(stateRef, (snapshot) => {
-      const tabValue = snapshot.val();
-      if (tabValue && tabValue !== selectedPeriod) {
-        onSelectPeriod(tabValue); // update UI when Firebase changes
-      }
-    });
+    if (!isUnfollow) {
+      const stateRef = ref(db, `meetings/${meetingId}/state/kpiActiveTab`);
+      const unsubscribe = onValue(stateRef, (snapshot) => {
+        const tabValue = snapshot.val();
+        if (tabValue && tabValue !== selectedPeriod) {
+          onSelectPeriod(tabValue); // update UI when Firebase changes
+        }
+      });
 
-    return () => unsubscribe();
-  }, [db, meetingId, onSelectPeriod, selectedPeriod]);
+      return () => unsubscribe();
+    }
+  }, [db, isUnfollow, meetingId, onSelectPeriod, selectedPeriod]);
 
   // 🔹 Update Firebase when user changes tab
   const handleTabChange = (newTab: string) => {
     if (isDisabled) return;
 
     onSelectPeriod(newTab);
+
+    if (isUnfollow) return;
 
     update(ref(db, `meetings/${meetingId}/state`), {
       kpiActiveTab: newTab,

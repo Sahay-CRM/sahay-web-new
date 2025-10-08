@@ -53,9 +53,14 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   const [noteInput, setNoteInput] = useState("");
   const [titleInput, setTitleInput] = useState("");
   const [isAddingNote, setIsAddingNote] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerProj, setDrawerProj] = useState(false);
+  // const [isGroupModal, setIsGroupModal] = useState(false);
+  // const [isGroupMoveModal, setIsGroupMoveModal] = useState(false);
+  // const [GroupModalData, setGroupModalData] = useState<MeetingNotesRes | null>(
+  //   null,
+  // );
+  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskGetPaging | TaskData>();
   const [selectedProject, setSelectedProject] = useState<
     CompanyProjectDataProps | TaskData
@@ -276,6 +281,15 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       ),
     [joiners, userId],
   );
+
+  // const handleNoteGroup = (data: MeetingNotesRes) => {
+  //   setIsGroupModal(true);
+  //   setGroupModalData(data);
+  // };
+  // const handleMoveDeleteGroup = (data: MeetingNotesRes) => {
+  //   // setIsGroupMoveModal(true);
+  //   setGroupModalData(data);
+  // };
   return (
     <div className={cn("px-2", className)}>
       {meetingStatus !== "ENDED" && (
@@ -309,6 +323,10 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
+                    if (noteInput.trim() === "") {
+                      return;
+                    }
+
                     handleAddNote();
                   }
                 }}
@@ -316,7 +334,12 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
 
               <div className="flex justify-end items-center mt-2">
                 <button
-                  onClick={handleAddNote}
+                  onClick={() => {
+                    if (noteInput.trim() === "") {
+                      return;
+                    }
+                    handleAddNote();
+                  }}
                   className="text-sm text-gray-600 cursor-pointer flex flex-col"
                 >
                   Done
@@ -334,7 +357,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       )}
 
       <div
-        className={`px-2 space-y-2 h-[calc(100vh-230px)] overflow-auto pb-2 overflow-y-auto ${className}`}
+        className={`px-2 space-y-2 h-[calc(100vh-230px)] overflow-y-scroll pb-2 ${className}`}
       >
         {Array.isArray(meetingNotes?.data) &&
           meetingNotes.data.map((note: MeetingNotesRes, idx: number) => {
@@ -349,9 +372,16 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
               >
                 <div className="flex-1 text-sm text-black">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-medium text-xs text-gray-600">
-                      {author?.employeeName || "Unknown"}
-                    </span>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-medium text-xs text-gray-600">
+                        {author?.employeeName || "Unknown"}
+                      </span>
+                      {/* {note.groupName && (
+                        <span className="text-[12px] text-gray-600 ml-2 bg-gray-200 py-1 px-1 rounded-full -mt-2">
+                          {note.groupName}
+                        </span>
+                      )} */}
+                    </div>
                     <div>
                       {note.noteType && (
                         <span className="text-xs text-gray-600 mr-2 bg-gray-200/80 p-0.5 rounded-full px-2">
@@ -446,6 +476,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                   <Edit className="h-4 w-4 mr-2" />
                                   Update Notes
                                 </DropdownMenuItem>
+
                                 {!note.noteType && (
                                   <>
                                     <DropdownMenuItem
@@ -491,6 +522,44 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                   <Unlink className="h-4 w-4 mr-2" />
                                   Delete
                                 </DropdownMenuItem>
+
+                                {/* {!note.groupId ? (
+                                  <DropdownMenuItem
+                                    onClick={() => handleNoteGroup(note)}
+                                    className="text-primary focus:text-primary px-2 py-1.5"
+                                  >
+                                    <Group className="h-4 w-4 mr-2" />
+                                    Add To Group
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <>
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleMoveDeleteGroup(note)
+                                      }
+                                      className="px-2 py-1.5"
+                                    >
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Update Group
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleNoteGroup(note)}
+                                      className="px-2 py-1.5"
+                                    >
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Move Group
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleMoveDeleteGroup(note)
+                                      }
+                                      className="px-2 py-1.5"
+                                    >
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      UnGroup
+                                    </DropdownMenuItem>
+                                  </>
+                                )} */}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -525,6 +594,22 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
           }}
         />
       )}
+
+      {/* {isGroupModal && (
+        <NotesGroupModal
+          isModalOpen={isGroupModal}
+          modalClose={() => setIsGroupModal(false)}
+          meetingNoteData={GroupModalData!}
+        />
+      )} */}
+
+      {/* {isGroupMoveModal && (
+        <MoveDeleteGroupModal
+          isModalOpen={isGroupMoveModal}
+          modalClose={() => setIsGroupMoveModal(false)}
+          meetingNoteData={GroupModalData}
+        />
+      )} */}
     </div>
   );
 };

@@ -4,14 +4,16 @@ import { useQuery } from "@tanstack/react-query";
 
 type GroupRes = BaseResponse<GroupData>;
 
-export default function useGetAllGroup() {
+export default function useGetAllGroup({ filter, enable }: FilterDataProps) {
   return useQuery({
-    queryKey: ["get-group-list"],
+    queryKey: ["get-group-list", filter],
     queryFn: async () => {
       const { data } = await Api.post<GroupRes>({
         url: Urls.getGroupList(),
+        data: filter,
       });
       return data;
     },
+    enabled: !!enable || !!filter,
   });
 }

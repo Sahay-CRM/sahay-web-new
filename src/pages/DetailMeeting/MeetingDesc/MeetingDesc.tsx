@@ -1,6 +1,5 @@
 import React, { Suspense, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
-
 import {
   CircleCheckBig,
   Crown,
@@ -180,10 +179,6 @@ export default function MeetingDesc() {
                       const unfollowed = Object.keys(
                         meetingResponse?.state?.unfollow || {},
                       );
-
-                      // const teamLeaderCount = (
-                      //   meetingTiming?.joiners as Joiners[]
-                      // ).filter((emp) => emp.isTeamLeader).length;
 
                       return (
                         <div
@@ -377,16 +372,23 @@ export default function MeetingDesc() {
                                       )}
                                   </div>
                                 </>
-                                {unfollowed.includes(item.employeeId) && (
-                                  <button
-                                    onClick={() =>
-                                      handleFollowBack(item.employeeId)
-                                    }
-                                    className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
-                                  >
-                                    Follow Back
-                                  </button>
-                                )}
+                                {unfollowed.includes(item.employeeId) &&
+                                  userId === item.employeeId && (
+                                    <button
+                                      onClick={() =>
+                                        handleFollowBack(item.employeeId)
+                                      }
+                                      className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
+                                    >
+                                      Follow Back to{" "}
+                                      {meetingTiming.joiners?.find(
+                                        (joiner): joiner is Joiners =>
+                                          typeof joiner !== "string" &&
+                                          joiner.employeeId ===
+                                            meetingResponse?.state.follow,
+                                      )?.employeeName || "Unknown"}
+                                    </button>
+                                  )}
                               </div>
                             )}
                           {/* {isOpen && isTeamLeader && (

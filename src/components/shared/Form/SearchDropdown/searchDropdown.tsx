@@ -28,6 +28,7 @@ interface SearchDropdownProps {
   onSearchChange: (value: string) => void;
   dropdownClass?: string;
   isCrossShow?: boolean;
+  disabled?: boolean;
 }
 
 const SearchDropdown = ({
@@ -43,6 +44,7 @@ const SearchDropdown = ({
   onSearchChange,
   dropdownClass,
   isCrossShow = true,
+  disabled = false,
 }: SearchDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -76,6 +78,7 @@ const SearchDropdown = ({
               "w-full font-extralight hover:bg-white justify-between text-left text-black overflow-hidden whitespace-nowrap text-ellipsis relative",
               className,
             )}
+            disabled={disabled}
           >
             <span
               className={twMerge(

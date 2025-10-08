@@ -186,7 +186,7 @@ export default function Agenda({
     handleMarkAsSolved,
     resolutionFilter,
     handleDragEnd,
-    userId,
+    unFollowByUser,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -198,8 +198,6 @@ export default function Agenda({
   });
   const [contentWidth, setContentWidth] = useState("90%");
   const sensors = useSensors(useSensor(PointerSensor));
-
-  const unFollowByUser = meetingResponse?.state.unfollow?.[userId] ?? false;
 
   const SIDEBAR_WIDTH = 600;
 
@@ -723,12 +721,12 @@ export default function Agenda({
               <Tabs
                 defaultValue="UNSOLVED"
                 onValueChange={(value) => {
-                  if (follow) {
-                    handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
-                  } else if (
-                    meetingStatus === "NOT_STARTED" ||
-                    meetingStatus === "ENDED" ||
-                    (!isTeamLeader && !follow)
+                  // if (follow) {
+                  //   handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
+                  // } else
+                  if (
+                    meetingStatus !== "NOT_STARTED" &&
+                    meetingStatus !== "ENDED"
                   ) {
                     handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
                   }
@@ -812,7 +810,7 @@ export default function Agenda({
           className={`${meetingStatus !== "DISCUSSION" && "mt-6"}`}
         >
           <div
-            className={`flex justify-center w-full relative border-primary ${meetingStatus !== "DISCUSSION" ? "p-4" : "border-l-1 border-r-1 border-b-1 rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"} ${(meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") && "border "}`}
+            className={`flex justify-center w-full h-full relative border-primary ${meetingStatus !== "DISCUSSION" ? "p-4" : "border-l-1 border-r-1 border-b-1 rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"} ${(meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") && "border "}`}
           >
             {meetingStatus === "DISCUSSION" && (
               <div className="absolute top-0 left-0 right-1 h-0.5 flex">
@@ -875,7 +873,7 @@ export default function Agenda({
               </div>
             ) : meetingStatus === "STARTED" ? (
               <div>
-                <div className="grid grid-cols-4 gap-8 text-center mt-40">
+                <div className="flex flex-wrap gap-8 text-center  justify-center h-full">
                   {joiners &&
                     joiners.map((item) => {
                       return (
@@ -997,6 +995,7 @@ export default function Agenda({
                         selectedIssueId={isSelectedAgenda}
                         isTeamLeader={isTeamLeader}
                         follow={follow}
+                        meetingRes={meetingResponse!}
                       />
                     )}
                   </Suspense>

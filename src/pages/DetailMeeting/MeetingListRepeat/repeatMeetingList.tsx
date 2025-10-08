@@ -63,6 +63,7 @@ export default function RepeatMeetingList() {
     { key: "meetingDateTime", label: "Next Meeting Time", visible: true },
     { key: "joinerNames", label: "Joiners", visible: true },
     { key: "teamLeaderName", label: "Team Leaders", visible: true },
+    { key: "repeatType", label: "Repeat", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(

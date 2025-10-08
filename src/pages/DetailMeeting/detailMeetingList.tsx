@@ -27,7 +27,6 @@ import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
 import DuplicateMeetingModal from "./duplicateMeetingModal";
 import { formatToLocalDateTime } from "@/features/utils/app.utils";
 import { getMeetingButtonConfig } from "./getMeetingButtonConfig";
-import FormSelect from "@/components/shared/Form/FormSelect";
 
 const detailMeetingOpt = [
   { label: "All", value: "ALL" },
@@ -139,16 +138,22 @@ export default function DetailMeetingList() {
             />
           </div>
           <div className="flex gap-4 flex-wrap">
-            <div>
-              <FormSelect
-                value={isDataFilter}
-                options={detailMeetingOpt}
-                onChange={(ele) => {
-                  setIsDataFilter(ele as string);
-                }}
-                triggerClassName="mb-0"
-              />
+            <div className="flex gap-2">
+              {detailMeetingOpt.map((option) => (
+                <Button
+                  key={option.value}
+                  size="sm"
+                  variant={
+                    isDataFilter === option.value ? "default" : "outline"
+                  }
+                  onClick={() => setIsDataFilter(option.value)}
+                  className="capitalize w-28"
+                >
+                  {option.label}
+                </Button>
+              ))}
             </div>
+
             <div className="relative flex items-center gap-2 ">
               <DateRangePicker
                 value={{

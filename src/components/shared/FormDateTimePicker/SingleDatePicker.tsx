@@ -331,7 +331,7 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
     <div className={`relative ${className || ""}`}>
       <button
         type="button"
-        className="flex items-center justify-start w-auto min-w-0 px-4 py-2 text-left font-normal bg-white border border-gray-200 rounded-lg hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+        className="flex items-center justify-start w-auto min-w-40 px-4 py-2 text-left font-normal bg-white border border-gray-200 rounded-lg hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
         onClick={() => setIsOpen(!isOpen)}
       >
         <Calendar className="mr-2 h-4 w-4 text-gray-500" />

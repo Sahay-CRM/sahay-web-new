@@ -21,7 +21,14 @@ export default function useUpdateGroupSequence() {
       return resData;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["get-group-list"] });
+      queryClient.invalidateQueries({
+        queryKey: ["get-project-list-meeting"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["get-project-list"],
+      });
+
       toast.success("Group sequence updated successfully!");
     },
     onError: (error: AxiosError<{ message?: string }>) => {

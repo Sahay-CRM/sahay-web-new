@@ -76,6 +76,7 @@ const CalenderFormModal: React.FC<ImportantModalProps> = ({
               btnClick: onSubmit,
             },
           ]}
+          childclass="py-0"
         >
           <div>
             <FormInputField
@@ -90,37 +91,39 @@ const CalenderFormModal: React.FC<ImportantModalProps> = ({
               className="text-lg"
               isMandatory={true}
             />
-            <div className="mt-0 tb:mt-0 mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Important Date <span className="text-red-500">*</span>
-              </label>
-              <DatePicker
-                selected={selectedDate ? new Date(selectedDate) : null}
-                onChange={(date) =>
-                  setValue(
-                    "importantDate",
-                    date ? date.toISOString().split("T")[0] : "",
-                  )
-                }
-                dateFormat="yyyy-MM-dd"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                placeholderText="Select important date"
+            <div className="mt-0 tb:mt-0 mb-4 w-full flex gap-4">
+              <div className="w-1/2">
+                <label className="block text-md font-medium text-black mb-2">
+                  Important Date <span className="text-red-500">*</span>
+                </label>
+                <DatePicker
+                  selected={selectedDate ? new Date(selectedDate) : null}
+                  onChange={(date) =>
+                    setValue(
+                      "importantDate",
+                      date ? date.toISOString().split("T")[0] : "",
+                    )
+                  }
+                  dateFormat="yyyy-MM-dd"
+                  className="w-full px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                  placeholderText="Select important date"
+                />
+                {errors.importantDate && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.importantDate.message}
+                  </p>
+                )}
+              </div>
+              <FormInputField
+                id="importantDateRemarks"
+                {...register("importantDateRemarks")}
+                error={errors.importantDateRemarks}
+                label="Important Date Remarks"
+                placeholder={"Enter important date remarks"}
+                containerClass="w-1/2"
+                className="text-lg mt-0"
               />
-              {errors.importantDate && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.importantDate.message}
-                </p>
-              )}
             </div>
-            <FormInputField
-              id="importantDateRemarks"
-              {...register("importantDateRemarks")}
-              error={errors.importantDateRemarks}
-              label="Important Date Remarks"
-              placeholder={"Enter important date remarks"}
-              containerClass="mt-4"
-              className="text-lg"
-            />
             <div className="mt-4">
               <label className="block mb-1 font-medium">
                 Color <span className="text-red-500">*</span>
