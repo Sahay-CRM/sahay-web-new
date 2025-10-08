@@ -381,7 +381,13 @@ export default function MeetingDesc() {
                                       }
                                       className="text-sm text-left px-3 py-1 border rounded hover:bg-gray-100"
                                     >
-                                      Follow Back to {}
+                                      Follow Back to{" "}
+                                      {meetingTiming.joiners?.find(
+                                        (joiner): joiner is Joiners =>
+                                          typeof joiner !== "string" &&
+                                          joiner.employeeId ===
+                                            meetingResponse?.state.follow,
+                                      )?.employeeName || "Unknown"}
                                     </button>
                                   )}
                               </div>

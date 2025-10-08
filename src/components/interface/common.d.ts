@@ -1216,6 +1216,8 @@ interface MeetingNotesRes {
   meetingNoteId: string;
   createdAt: string;
   noteType?: string;
+  groupId?: string;
+  groupName?: string;
 }
 
 interface IssuesProps {
@@ -1368,7 +1370,7 @@ interface GroupData {
   srNo?: number;
   groupId: string;
   groupName: string;
-  sequence: number;
+  sequence?: number;
   groupType: string;
   selectedIds?: string[];
 }
@@ -1449,4 +1451,12 @@ interface IOUpdateSequence {
   sequence: number;
   ioType: string;
   meetingId: string;
+}
+
+interface NotesGroupProps {
+  groupId?: string;
+  meetingId: string;
+  meetingNoteId: string;
+  groupName?: string;
+  groupType: string;
 }

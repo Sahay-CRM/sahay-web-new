@@ -341,6 +341,12 @@ const Urls = {
 
   updateIoSequence: () =>
     `${baseUrl}/company/detail-meeting/agenda/io/rearrange`,
+
+  getAllNotesGroup: (id: string) =>
+    `${baseUrl}/company/repetitive-meeting/note/get/${id}`,
+  addNotesGroup: () => `${baseUrl}/company/detail-meeting/note/add-to-group`,
+  updateNotesGroup: (id: string) =>
+    `${baseUrl}/company/repetitive-meeting/note/update/${id}`,
 };
 
 export default Urls;
