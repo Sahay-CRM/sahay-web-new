@@ -65,8 +65,10 @@ export default function useMeetingDesc() {
       if (snapshot.exists()) {
         const data = snapshot.val();
         setMeetingResponse(data);
-        setIsCardVisible(true);
-        setActiveTab("documents");
+        if (data.state.status === "IN_PROGRESS") {
+          setIsCardVisible(true);
+          setActiveTab("documents");
+        }
         if (sidebarControl?.setOpen) {
           sidebarControl.setOpen(false);
         }
