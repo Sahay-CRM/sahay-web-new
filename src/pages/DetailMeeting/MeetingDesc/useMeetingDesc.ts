@@ -483,7 +483,7 @@ export default function useMeetingDesc() {
     const db = database;
     const meetingRef = ref(db, `meetings/${meetingId}/state/updatedAt`);
 
-    onValue(meetingRef, (snapshot) => {
+    const unsubscribe = onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
         queryClient.invalidateQueries({
           queryKey: ["get-meeting-details-timing"],
@@ -501,7 +501,7 @@ export default function useMeetingDesc() {
     });
 
     return () => {
-      off(meetingRef);
+      unsubscribe();
     };
   }, [meetingId]);
 

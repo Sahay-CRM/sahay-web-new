@@ -70,12 +70,10 @@ export default function AgendaList({
       .padStart(2, "0")}`;
   };
 
-  // Early return if item is undefined
   if (!item) {
     return null;
   }
 
-  // Get the appropriate timer data - SAME FOR ALL USERS
   const getTimerData = () => {
     if (!meetingResponse?.timers?.objectives?.[item.issueObjectiveId]) {
       return {
@@ -133,12 +131,18 @@ export default function AgendaList({
     handleDelete(item);
   };
 
+  const handleCancelEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    cancelEdit();
+  };
+
   return (
     <li
       key={item.issueObjectiveId}
       ref={setNodeRef}
       className={`group px-2 flex border w-full 
-                ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-14 bg-white text-black" : "h-20"}
+        ${item.departmentName && "pt-2"} 
+                ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-16 bg-white text-black" : "h-20"}
                 ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : ""}
                 mb-2 rounded-md shadow
                 ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "cursor-default" : "cursor-pointer"}`}
@@ -163,8 +167,8 @@ export default function AgendaList({
       }}
     >
       {item.departmentName && (
-        <div className="absolute -top-2 left-2 w-fit h-fit">
-          <div className="text-black text-[12px] bg-gray-200/80 pt-2 pb-0.5 px-3 rounded-full">
+        <div className="w-fit h-fit absolute top-0 right-2 z-10">
+          <div className="text-black text-[10px] bg-gray-200 shadow-md shadow-primary/10 py-0 px-5 rounded-b-lg">
             {item.departmentName}
           </div>
         </div>
@@ -175,14 +179,14 @@ export default function AgendaList({
             {...listeners}
             {...attributes}
             style={{ cursor: "grab" }}
-            className="w-5 text-2xl mr-2 h-full flex flex-col items-center justify-center"
+            className="w-5 text-2xl mr-2 pt-1 h-full flex flex-col items-center justify-center"
           >
             ⋮⋮
           </span>
         )}
 
         <span
-          className={`w-fit mr-3 text-4xl text-primary text-center ${
+          className={`w-fit mr-3 pt-2 text-4xl text-primary text-center ${
             meetingStatus !== "STARTED" &&
             meetingStatus !== "NOT_STARTED" &&
             isSelectedAgenda === item.issueObjectiveId
@@ -194,12 +198,12 @@ export default function AgendaList({
         </span>
 
         {editing?.issueObjectiveId === item.issueObjectiveId && canEdit ? (
-          <div className="w-full flex items-center gap-1">
-            <div className="relative w-full flex gap-2 items-center">
+          <div className="w-full flex items-center gap-1 relative">
+            <div className="relative w-[92%] flex gap-2 items-center">
               <Input
                 value={editing?.value || ""}
                 onChange={(e) => setEditingValue(e.target.value)}
-                className="mr-2"
+                className="mr-2 pr-8"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -207,11 +211,11 @@ export default function AgendaList({
                   }
                 }}
               />
-              <span className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
+              <span className="absolute right-5 top-1/2 -translate-y-1/2 z-10 text-muted-foreground pointer-events-none text-sm">
                 <CornerDownLeft className="text-gray-400 w-4" />
               </span>
             </div>
-            <Button variant="outline" size="sm" onClick={cancelEdit}>
+            <Button variant="outline" size="sm" onClick={handleCancelEditClick}>
               <CircleX className="text-black" />
             </Button>
           </div>
@@ -237,60 +241,69 @@ export default function AgendaList({
       </div>
 
       <div className="flex items-center gap-2 relative">
-        <div className="text-sm text-center w-20 text-gray-500 absolute top-0 right-0">
+        {/* <div className="text-sm text-center w-20 text-gray-500 absolute top-0 right-0">
           <Badge variant="secondary" className="mb-0">
             {item.ioType}
           </Badge>
-        </div>
+        </div> */}
 
         <div className="relative group flex items-center">
-          {meetingStatus !== "STARTED" &&
-            meetingStatus !== "NOT_STARTED" &&
+          {
+            // meetingStatus !== "STARTED" &&
+            //   meetingStatus !== "NOT_STARTED" &&
             item.issueObjectiveId && (
               <div className="text-sm text-center ml-2 font-medium text-primary">
                 <div className="text-xs text-center w-20 text-gray-500">
-                  <Badge variant="secondary" className="mb-1.5">
+                  <Badge variant="secondary" className="mb-1 mt-1">
                     {item.ioType}
                   </Badge>
                 </div>
-                {meetingStatus === "DISCUSSION" ? (
-                  <Timer
-                    actualTime={Number(timerData.actualTime)}
-                    defaultTime={Number(timerData.actualTime)}
-                    lastSwitchTimestamp={timerData.lastSwitchTimestamp}
-                    isActive={timerData.isActive}
-                    className={`text-xl ${
-                      isSelectedAgenda === item.issueObjectiveId
-                        ? "text-white"
-                        : ""
-                    }`}
-                  />
-                ) : (
-                  <div
-                    className={`text-xl ${
-                      isSelectedAgenda === item.issueObjectiveId
-                        ? "text-white"
-                        : ""
-                    }`}
-                  >
-                    {formatAgendaTime(
-                      Number(
-                        conclusionTime
-                          ? conclusionTime?.agenda?.find(
-                              (con) =>
-                                con.issueObjectiveId === item.issueObjectiveId,
-                            )?.actualTime
-                          : 0,
-                      ),
-                    )}
-                  </div>
-                )}
+
+                {meetingStatus !== "STARTED" &&
+                  meetingStatus !== "NOT_STARTED" && (
+                    <>
+                      {meetingStatus === "DISCUSSION" ? (
+                        <Timer
+                          actualTime={Number(timerData.actualTime)}
+                          defaultTime={Number(timerData.actualTime)}
+                          lastSwitchTimestamp={timerData.lastSwitchTimestamp}
+                          isActive={timerData.isActive}
+                          className={`text-xl ${
+                            isSelectedAgenda === item.issueObjectiveId
+                              ? "text-white"
+                              : ""
+                          }`}
+                        />
+                      ) : (
+                        <div
+                          className={`text-xl ${
+                            isSelectedAgenda === item.issueObjectiveId
+                              ? "text-white"
+                              : ""
+                          }`}
+                        >
+                          {formatAgendaTime(
+                            Number(
+                              conclusionTime
+                                ? conclusionTime?.agenda?.find(
+                                    (con) =>
+                                      con.issueObjectiveId ===
+                                      item.issueObjectiveId,
+                                  )?.actualTime
+                                : 0,
+                            ),
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
               </div>
-            )}
+            )
+          }
 
           {isTeamLeader && (
             <div
-              className={`absolute -right-[2px] rounded-md w-fit flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-10" : "h-[75px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
+              className={`absolute -right-[2px] rounded-md w-fit flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-0" : "h-[75px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
             >
               <div className="">
                 {editing?.issueObjectiveId !== item.issueObjectiveId && (

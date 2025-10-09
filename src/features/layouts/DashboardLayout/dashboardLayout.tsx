@@ -268,8 +268,8 @@ const DashboardLayout = () => {
     setIsNotificationOpen(false);
   };
 
-  const isCompanyView =
-    user.employeeType === "CONSULTANT" || user.isSuperAdmin === true;
+  // const isCompanyView =
+  //   user.employeeType === "CONSULTANT" || user.isSuperAdmin === true;
 
   // --- UI ---
   return (
@@ -374,20 +374,18 @@ const DashboardLayout = () => {
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
-                    {isCompanyView && (
-                      <>
-                        <DropdownMenuGroup>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              navigate("/dashboard/company-profile")
-                            }
-                          >
-                            <LaptopMinimal /> Company Profile
-                          </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
-                      </>
-                    )}
+                    {/* {isCompanyView && ( */}
+                    <>
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem
+                          onClick={() => navigate("/dashboard/company-profile")}
+                        >
+                          <LaptopMinimal /> Company Profile
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                      <DropdownMenuSeparator />
+                    </>
+                    {/* )} */}
 
                     <DropdownMenuItem onClick={() => setLogoutModalOpen(true)}>
                       <LogOut /> Log out

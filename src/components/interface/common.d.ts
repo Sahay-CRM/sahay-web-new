@@ -1418,7 +1418,7 @@ interface AgendaListProps {
   editing?: EditingProps;
   setEditingValue: (value: string) => void;
   updateEdit: () => void;
-  cancelEdit?: () => void;
+  cancelEdit: () => void;
   handleListClick?: (id: string, item: boolean) => void;
   handleMarkAsSolved: (data: MeetingAgenda) => void;
   startEdit: (
