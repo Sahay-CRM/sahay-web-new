@@ -375,17 +375,20 @@ const DashboardLayout = () => {
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
                     {/* {isCompanyView && ( */}
-                    <>
-                      <DropdownMenuGroup>
-                        <DropdownMenuItem
-                          onClick={() => navigate("/dashboard/company-profile")}
-                        >
-                          <LaptopMinimal /> Company Profile
-                        </DropdownMenuItem>
-                      </DropdownMenuGroup>
-                      <DropdownMenuSeparator />
-                    </>
-                    {/* )} */}
+                    {permission && permission.COMPANY_PROFILE.View && (
+                      <>
+                        <DropdownMenuGroup>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              navigate("/dashboard/company-profile")
+                            }
+                          >
+                            <LaptopMinimal /> Company Profile
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
 
                     <DropdownMenuItem onClick={() => setLogoutModalOpen(true)}>
                       <LogOut /> Log out

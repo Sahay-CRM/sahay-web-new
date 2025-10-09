@@ -6,6 +6,7 @@ import { Controller } from "react-hook-form";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import { formatIndianNumber } from "@/features/utils/app.utils";
 import FormImage from "@/components/shared/Form/FormImage/FormImage";
+import PageNotAccess from "../PageNoAccess";
 
 export default function CompanyProfile() {
   const {
@@ -32,6 +33,7 @@ export default function CompanyProfile() {
     cityOptions,
     watchedCountryId,
     watchedStateId,
+    permission,
   } = useCompany();
 
   if (!companyData) {
@@ -43,6 +45,10 @@ export default function CompanyProfile() {
         </div>
       </div>
     );
+  }
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
   }
 
   return (
@@ -99,32 +105,35 @@ export default function CompanyProfile() {
               </div>
             </div>
 
-            {/* Edit Button */}
-            {!isEditing ? (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-              >
-                <Edit2 className="w-4 h-4" />
-                <span>Edit Profile</span>
-              </button>
-            ) : (
-              <div className="flex space-x-3">
-                <Button
-                  onClick={handleCancel}
-                  className="flex items-center bg-gray-500 text-white px-4 py-2.5 rounded-lg hover:bg-gray-600 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                  <span>Cancel</span>
-                </Button>
-                <Button
-                  onClick={handleSubmit(onSubmit)}
-                  className="flex items-center bg-primary text-white rounded-lg hover:bg-primary transition-colors"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>Save Changes</span>
-                </Button>
-              </div>
+            {permission.Edit && (
+              <>
+                {!isEditing ? (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    <span>Edit Profile</span>
+                  </button>
+                ) : (
+                  <div className="flex space-x-3">
+                    <Button
+                      onClick={handleCancel}
+                      className="flex items-center bg-gray-500 text-white px-4 py-2.5 rounded-lg hover:bg-gray-600 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                      <span>Cancel</span>
+                    </Button>
+                    <Button
+                      onClick={handleSubmit(onSubmit)}
+                      className="flex items-center bg-primary text-white rounded-lg hover:bg-primary transition-colors"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>Save Changes</span>
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

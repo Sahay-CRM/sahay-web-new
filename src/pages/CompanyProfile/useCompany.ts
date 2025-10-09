@@ -9,13 +9,18 @@ import {
   useGetIndustryDropdown,
   useGetStateDropdown,
 } from "@/features/api/CompanyProfile";
-import { getUserDetail } from "@/features/selectors/auth.selector";
+import {
+  getUserDetail,
+  getUserPermission,
+} from "@/features/selectors/auth.selector";
 import { useForm } from "react-hook-form";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import { imageUploadMutation } from "@/features/api/file";
 
 export default function useCompany() {
   const companyId = useSelector(getUserDetail).companyId;
+
+  const permission = useSelector(getUserPermission).COMPANY_PROFILE;
 
   const [isIndSearch, setIsIndSearch] = useState("");
   const [isCountrySearch, setIsCountrySearch] = useState("");
@@ -252,5 +257,6 @@ export default function useCompany() {
     cityOptions,
     watchedCountryId,
     watchedStateId,
+    permission,
   };
 }

@@ -1257,9 +1257,7 @@ export default function UpdatedKpiTable() {
                                                   }
                                                   options={selectOptions}
                                                   placeholder="Select"
-                                                  disabled={
-                                                    !canInput || cell?.isSkipDay
-                                                  }
+                                                  disabled={!canInput}
                                                   triggerClassName="text-sm px-1 text-center justify-center"
                                                 />
                                               ) : (
@@ -1336,15 +1334,11 @@ export default function UpdatedKpiTable() {
                                               (!canInput ||
                                                 isVisualized ||
                                                 cell?.isSkipDay) &&
-                                                "opacity-60 cursor-not-allowed bg-gray-50",
+                                                "opacity-60 bg-gray-50",
                                             )}
                                             placeholder="0"
-                                            disabled={
-                                              !canInput || cell?.isSkipDay
-                                            }
-                                            readOnly={
-                                              !canInput || cell?.isSkipDay
-                                            }
+                                            disabled={!canInput}
+                                            readOnly={!canInput}
                                           />
                                         </TooltipTrigger>
                                         {inputVal !== "" &&
