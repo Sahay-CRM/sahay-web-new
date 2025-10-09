@@ -26,6 +26,7 @@ export default function useAddUpdateGroup() {
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["get-group-list"] });
+      queryClient.resetQueries({ queryKey: ["get-meeting-notes"] });
       queryClient.resetQueries({ queryKey: ["get-group-dropdown"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {

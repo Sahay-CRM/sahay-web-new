@@ -26,6 +26,9 @@ export default function useMeetingDesc() {
   const [isCardVisible, setIsCardVisible] = useState(false);
   const [openEmployeeId, setOpenEmployeeId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+  const [selectedGroupFilter, setSelectedGroupFilter] = useState<
+    boolean | null
+  >(null);
 
   const { data: meetingData } = useGetMeetingTiming(meetingId ?? "");
 
@@ -532,5 +535,7 @@ export default function useMeetingDesc() {
     meetingData,
     handleUnFollow,
     handleFollowBack,
+    selectedGroupFilter,
+    setSelectedGroupFilter,
   };
 }

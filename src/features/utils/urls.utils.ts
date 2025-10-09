@@ -347,6 +347,8 @@ const Urls = {
   addNotesGroup: () => `${baseUrl}/company/detail-meeting/note/add-to-group`,
   updateNotesGroup: (id: string) =>
     `${baseUrl}/company/repetitive-meeting/note/update/${id}`,
+  removeNotesGroup: () =>
+    `${baseUrl}/company/detail-meeting/note/remove-from-group`,
 
   getCompanyDataById: (id: string) => `${baseUrl}/company-master/get/${id}`,
   dropdownIndustry: () => `${baseUrl}/industry/get-all`,

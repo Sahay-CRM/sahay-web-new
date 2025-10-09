@@ -172,7 +172,7 @@ export default function CompanyProjectTabList() {
                     </button>
                     <button
                       className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                      onClick={() => deleteTab(tab.id)}
+                      onClick={() => deleteTab(tab)}
                     >
                       Delete
                     </button>
