@@ -911,7 +911,7 @@ interface KPIFormData {
   employeeName?: string;
   visualFrequencyAggregate: string | null;
   ioKPIId?: string;
-  skipDays?: string[];
+  // skipDays?: string[];
 }
 
 interface KPIFormDataProp {
@@ -1497,6 +1497,7 @@ interface SimpleCompanyDetails {
   industryId?: string;
   accountPocMobile?: string;
   pan?: string;
+  kpiSkipDays?: string[];
 }
 
 interface IndustryOption {

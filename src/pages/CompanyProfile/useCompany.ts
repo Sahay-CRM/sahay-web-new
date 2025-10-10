@@ -59,6 +59,17 @@ export default function useCompany() {
 
   useEffect(() => {
     if (companyData) {
+      const rawSkipDays = companyData.kpiSkipDays as
+        | string
+        | string[]
+        | undefined;
+
+      const skipDaysValue = Array.isArray(rawSkipDays)
+        ? rawSkipDays
+        : rawSkipDays
+          ? rawSkipDays.split(",")
+          : [];
+
       reset({
         companyId: companyData.companyId,
         companyName: companyData.companyName,
@@ -91,6 +102,7 @@ export default function useCompany() {
         pan: companyData?.pancard
           ? `${ImageBaseURL}/share/company/pancard/${companyData.pancard}`
           : "",
+        kpiSkipDays: skipDaysValue,
       });
     }
   }, [companyData, reset]);
@@ -131,6 +143,16 @@ export default function useCompany() {
     label: item.cityName,
     value: item.cityId,
   }));
+
+  const skipDaysOption = [
+    { label: "Sun", value: "0" },
+    { label: "Mon", value: "1" },
+    { label: "Tue", value: "2" },
+    { label: "Wed", value: "3" },
+    { label: "Thu", value: "4" },
+    { label: "Fri", value: "5" },
+    { label: "Sat", value: "6" },
+  ];
 
   // Handle logo upload
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -185,6 +207,7 @@ export default function useCompany() {
       sahayTeamMates: data?.sahayTeamMates,
       consultants: data?.consultants,
       superAdmin: data?.superAdmin,
+      kpiSkipDays: data.kpiSkipDays,
     };
 
     addCompany(payload, {
@@ -280,5 +303,6 @@ export default function useCompany() {
     watchedStateId,
     permission,
     isLogoCropOpen,
+    skipDaysOption,
   };
 }

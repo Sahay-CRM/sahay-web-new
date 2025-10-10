@@ -9,6 +9,7 @@ import FormImage from "@/components/shared/Form/FormImage/FormImage";
 import PageNotAccess from "../PageNoAccess";
 import ImageCropModal from "@/components/shared/Modal/ImageCropModal";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
+import FormSelect from "@/components/shared/Form/FormSelect";
 
 export default function CompanyProfile() {
   const {
@@ -39,6 +40,7 @@ export default function CompanyProfile() {
     watchedStateId,
     permission,
     isLogoCropOpen,
+    skipDaysOption,
   } = useCompany();
 
   if (!companyData) {
@@ -64,7 +66,7 @@ export default function CompanyProfile() {
             <div className="flex items-center space-x-4">
               {/* Logo Section */}
               <div className="relative">
-                <div className="w-20 h-20 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg overflow-hidden">
+                <div className="w-20 h-20 rounded-full text-white font-bold text-2xl shadow-lg">
                   {logoPreview ? (
                     <img
                       src={logoPreview}
@@ -111,13 +113,13 @@ export default function CompanyProfile() {
             {permission.Edit && (
               <>
                 {!isEditing ? (
-                  <button
+                  <Button
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                    className="flex items-center bg-primary text-white rounded-lg hover:bg-primary transition-colors"
                   >
                     <Edit2 className="w-4 h-4" />
                     <span>Edit Profile</span>
-                  </button>
+                  </Button>
                 ) : (
                   <div className="flex space-x-3">
                     <Button
@@ -254,35 +256,70 @@ export default function CompanyProfile() {
                     )}
                   </div>
                 </div>
-                <div>
-                  {isEditing ? (
-                    <Controller
-                      name="annualTurnOver"
-                      control={control}
-                      rules={{ required: "Please enter turnover" }}
-                      render={({ field }) => (
-                        <FormInputField
-                          type="text"
-                          label="Annual Turnover"
-                          value={formatIndianNumber(field.value)}
-                          onChange={(e) => {
-                            const rawValue = e.target.value.replace(/,/g, "");
-                            field.onChange(rawValue);
-                          }}
-                          error={errors.annualTurnOver}
-                        />
-                      )}
-                    />
-                  ) : (
-                    <>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Annual Turnover
-                      </label>
-                      <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                        {formatIndianNumber(companyData.annualTurnOver)}
-                      </p>
-                    </>
-                  )}
+                <div className="flex gap-4">
+                  <div className="w-1/2">
+                    {isEditing ? (
+                      <Controller
+                        name="annualTurnOver"
+                        control={control}
+                        rules={{ required: "Please enter turnover" }}
+                        render={({ field }) => (
+                          <FormInputField
+                            type="text"
+                            label="Annual Turnover"
+                            value={formatIndianNumber(field.value)}
+                            onChange={(e) => {
+                              const rawValue = e.target.value.replace(/,/g, "");
+                              field.onChange(rawValue);
+                            }}
+                            error={errors.annualTurnOver}
+                          />
+                        )}
+                      />
+                    ) : (
+                      <>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Annual Turnover
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                          {formatIndianNumber(companyData.annualTurnOver)}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <div className="w-1/2">
+                    {isEditing ? (
+                      <Controller
+                        control={control}
+                        name="kpiSkipDays"
+                        render={({ field }) => (
+                          <FormSelect
+                            label="Skip Days"
+                            value={field.value}
+                            onChange={field.onChange}
+                            options={skipDaysOption}
+                            error={errors.kpiSkipDays}
+                            className="rounded-md"
+                            triggerClassName="py-4"
+                            isMulti
+                          />
+                        )}
+                      />
+                    ) : (
+                      <div>
+                        {companyData.kpiSkipDays && (
+                          <>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Kpi Skip Days
+                            </label>
+                            <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                              {companyData.kpiSkipDays}
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
