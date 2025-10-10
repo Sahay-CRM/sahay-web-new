@@ -355,7 +355,7 @@ const Urls = {
   dropdownCountry: () => `${baseUrl}/geography/country/get-all`,
   dropdownCity: () => `${baseUrl}/geography/city/get-all`,
   dropdownState: () => `${baseUrl}/geography/state/get-all`,
-  updateCompany: (id: string) => `${baseUrl}/company-master/update/${id}`,
+  updateCompany: () => `${baseUrl}/company/profile/update`,
 };
 
 export default Urls;

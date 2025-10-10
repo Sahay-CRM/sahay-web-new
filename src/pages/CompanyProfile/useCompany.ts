@@ -45,6 +45,7 @@ export default function useCompany() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [isLogoCropOpen, setIsLogoCropOpen] = useState(false);
 
   const {
     register,
@@ -143,6 +144,19 @@ export default function useCompany() {
     }
   };
 
+  const openLogoCrop = () => {
+    setIsLogoCropOpen(true);
+  };
+
+  const closeLogoCrop = () => {
+    setIsLogoCropOpen(false);
+  };
+
+  const applyCroppedLogo = (dataUrl: string) => {
+    setLogoPreview(dataUrl);
+    setValue("logo", dataUrl);
+  };
+
   // Handle form submission
   const onSubmit = (data: SimpleCompanyDetails) => {
     const payload = {
@@ -214,7 +228,11 @@ export default function useCompany() {
             } else {
               formData.append("file", file as File);
             }
-            uploadImage(formData);
+            uploadImage(formData, {
+              onSuccess: () => {
+                window.location.reload();
+              },
+            });
           }
         };
 
@@ -241,6 +259,9 @@ export default function useCompany() {
     handleSubmit,
     register,
     handleLogoUpload,
+    openLogoCrop,
+    closeLogoCrop,
+    applyCroppedLogo,
     onSubmit,
     control,
     setValue,
@@ -258,5 +279,6 @@ export default function useCompany() {
     watchedCountryId,
     watchedStateId,
     permission,
+    isLogoCropOpen,
   };
 }

@@ -7,6 +7,8 @@ import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import { formatIndianNumber } from "@/features/utils/app.utils";
 import FormImage from "@/components/shared/Form/FormImage/FormImage";
 import PageNotAccess from "../PageNoAccess";
+import ImageCropModal from "@/components/shared/Modal/ImageCropModal";
+import { ImageBaseURL } from "@/features/utils/urls.utils";
 
 export default function CompanyProfile() {
   const {
@@ -16,7 +18,9 @@ export default function CompanyProfile() {
     errors,
     handleSubmit,
     register,
-    handleLogoUpload,
+    openLogoCrop,
+    closeLogoCrop,
+    applyCroppedLogo,
     onSubmit,
     setValue,
     control,
@@ -34,6 +38,7 @@ export default function CompanyProfile() {
     watchedCountryId,
     watchedStateId,
     permission,
+    isLogoCropOpen,
   } = useCompany();
 
   if (!companyData) {
@@ -59,18 +64,18 @@ export default function CompanyProfile() {
             <div className="flex items-center space-x-4">
               {/* Logo Section */}
               <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                <div className="w-20 h-20 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg overflow-hidden">
                   {logoPreview ? (
                     <img
                       src={logoPreview}
                       alt="Company Logo"
-                      className="w-full h-full rounded-2xl object-cover"
+                      className="w-full h-full object-cover"
                     />
                   ) : companyData.logo ? (
                     <img
-                      src={companyData.logo}
+                      src={`${ImageBaseURL}/share/company/logo/${companyData.logo}`}
                       alt="Company Logo"
-                      className="w-full h-full rounded-2xl object-cover"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <Building className="w-8 h-8" />
@@ -78,15 +83,13 @@ export default function CompanyProfile() {
                 </div>
 
                 {isEditing && (
-                  <label className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-1.5 rounded-full cursor-pointer shadow-lg hover:bg-blue-700 transition-colors">
+                  <button
+                    type="button"
+                    onClick={openLogoCrop}
+                    className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-1.5 rounded-full cursor-pointer shadow-lg hover:bg-blue-700 transition-colors"
+                  >
                     <Upload className="w-4 h-4" />
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleLogoUpload}
-                    />
-                  </label>
+                  </button>
                 )}
               </div>
 
@@ -140,7 +143,7 @@ export default function CompanyProfile() {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                 Company Information
               </h2>
@@ -284,7 +287,7 @@ export default function CompanyProfile() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                 Contact Information
               </h2>
@@ -499,7 +502,7 @@ export default function CompanyProfile() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2 md:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8 md:col-span-2">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                 Legal Information
               </h2>
@@ -603,6 +606,12 @@ export default function CompanyProfile() {
             </div>
           </div>
         </form>
+        <ImageCropModal
+          isOpen={isLogoCropOpen}
+          onClose={closeLogoCrop}
+          onApply={applyCroppedLogo}
+          title="Upload & Crop Logo"
+        />
       </div>
     </div>
   );

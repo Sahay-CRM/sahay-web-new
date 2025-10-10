@@ -13,8 +13,8 @@ export default function useAddCompany() {
   const addCompanyMutation = useMutation({
     mutationKey: ["add-or-update-company"],
     mutationFn: async (data: SimpleCompanyDetails) => {
-      const { data: resData } = await Api.put<ConRes>({
-        url: Urls.updateCompany(data.companyId!),
+      const { data: resData } = await Api.post<ConRes>({
+        url: Urls.updateCompany(),
         data: data,
       });
 
