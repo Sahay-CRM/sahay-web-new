@@ -306,6 +306,7 @@ export default function DetailMeetingList() {
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}
             isChildData={isChildData}
+            isForceDelete={true}
           />
         )}
         {/* View Meeting Modal */}

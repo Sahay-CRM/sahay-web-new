@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import ModalData from "../ModalData";
@@ -13,7 +12,8 @@ interface DeleteModalProps {
   onSubmit: (isGroupDelete?: boolean) => void;
   isChildData?: string;
   onForceSubmit?: () => void;
-  showDeleteOptions?: boolean; // ✅ New prop
+  showDeleteOptions?: boolean;
+  isForceDelete?: boolean;
 }
 
 const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
@@ -25,7 +25,8 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
   onSubmit,
   isChildData,
   onForceSubmit,
-  showDeleteOptions = false, // ✅ Default to false
+  showDeleteOptions = false,
+  isForceDelete = false,
 }) => {
   const userData = useSelector(getUserDetail);
   const [deleteOption, setDeleteOption] = useState<"single" | "group">(
@@ -49,7 +50,7 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
             btnClick: () => onSubmit(deleteOption === "group"),
           },
 
-          ...(isChildData && userData.isSuperAdmin
+          ...(isChildData && !isForceDelete && userData.isSuperAdmin
             ? [
                 {
                   btnText: "Force delete",
@@ -76,7 +77,6 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
             </div>
           )}
 
-          {/* ✅ Conditionally render Delete Options */}
           {showDeleteOptions && (
             <div className="mt-4 space-y-2">
               <label className="font-medium">Delete Options</label>

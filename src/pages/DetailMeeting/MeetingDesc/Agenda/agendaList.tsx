@@ -153,10 +153,11 @@ export default function AgendaList({
             follow) ||
           isUnFollow
         ) {
-          // Allow all users to click, regardless of follow status
           if (handleListClick) {
             handleListClick(item.issueObjectiveId, !!isUnFollow);
           }
+        } else if (meetingStatus === "ENDED" && handleListClick) {
+          handleListClick(item.issueObjectiveId, !!isUnFollow);
         }
       }}
       style={{
@@ -303,7 +304,7 @@ export default function AgendaList({
 
           {isTeamLeader && (
             <div
-              className={`absolute -right-[2px] rounded-md w-fit flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-0" : "h-[75px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
+              className={`absolute -right-[2px] rounded-md w-fit flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-0" : "h-[70px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
             >
               <div className="">
                 {editing?.issueObjectiveId !== item.issueObjectiveId && (

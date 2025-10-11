@@ -141,8 +141,7 @@ const TableData = <T extends Record<string, unknown>>({
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   // Only show checkboxes if explicitly enabled with multiSelect OR if both selectedValue and handleChange are provided
-  const showCheckboxes =
-    multiSelect || (!!selectedValue && !!handleChange && !!onCheckbox);
+  const showCheckboxes = multiSelect || !!onCheckbox;
 
   const permission = useSelector(getUserPermission)?.[moduleKey];
 
@@ -471,7 +470,9 @@ const TableData = <T extends Record<string, unknown>>({
                     >
                       <div className="flex gap-1 justify-end items-end">
                         {customActions?.(item)}
-                        {additionalButton ? (
+                        {additionalButton &&
+                        permission &&
+                        (permission.Add || permission.Edit) ? (
                           <div>
                             {isPermissionIcon?.(item) && (
                               <Tooltip>

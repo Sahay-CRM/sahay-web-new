@@ -221,7 +221,7 @@ const Designation = () => {
     watch,
     formState: { errors: formErrors },
   } = useFormContext();
-  const departmentId = watch("department")?.departmentId.trim();
+  const departmentId = watch("department")?.departmentId;
 
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
@@ -340,14 +340,14 @@ const Designation = () => {
               isActionButton={() => false}
               columns={visibleColumns}
               primaryKey="designationId"
-              paginationDetails={designationData as PaginationFilter} // Cast might be needed
+              paginationDetails={designationData as PaginationFilter}
               setPaginationFilter={setPaginationFilter}
-              onCheckbox={() => true}
-              multiSelect={false}
               selectedValue={field.value}
               handleChange={field.onChange}
               isLoading={isLoading}
               showActionsColumn={false}
+              onCheckbox={() => true}
+              multiSelect={false}
             />
           </>
         )}

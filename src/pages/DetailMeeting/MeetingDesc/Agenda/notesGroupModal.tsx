@@ -69,18 +69,20 @@ export default function NotesGroupModal({
   const handleSubmit = () => {
     if (isUpdateName) {
       handleRenameGroup();
-    } else if (selectedGroup) {
-      handleAddToExistingGroup(selectedGroup);
-    } else if (groupInput.trim()) {
-      const matchingGroup = notesData?.data?.find(
-        (group) =>
-          group.groupName.toLowerCase() === groupInput.trim().toLowerCase(),
-      );
+    } else {
+      if (selectedGroup) {
+        handleAddToExistingGroup(selectedGroup);
+      } else if (groupInput.trim()) {
+        const matchingGroup = notesData?.data?.find(
+          (group) =>
+            group.groupName.toLowerCase() === groupInput.trim().toLowerCase(),
+        );
 
-      if (matchingGroup) {
-        handleAddToExistingGroup(matchingGroup);
-      } else {
-        handleAddGroup();
+        if (matchingGroup) {
+          handleAddToExistingGroup(matchingGroup);
+        } else {
+          handleAddGroup();
+        }
       }
     }
 
@@ -137,9 +139,14 @@ export default function NotesGroupModal({
     }
   };
 
-  // 🆕 Handle rename
   const handleRenameGroup = () => {
     if (!selectedGroup || !groupInput.trim()) return;
+
+    // Don't proceed if the name hasn't changed
+    if (groupInput.trim() === selectedGroup.groupName) {
+      setCreationMessage("Group name is the same");
+      return;
+    }
 
     const payload = {
       groupId: selectedGroup.groupId,
@@ -169,9 +176,15 @@ export default function NotesGroupModal({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setGroupInput(e.target.value);
-    setIsGroupSearch(e.target.value);
+    const newValue = e.target.value;
+    setGroupInput(newValue);
+    setIsGroupSearch(newValue);
     setCreationMessage("");
+
+    // Clear selected group if user manually types something different
+    if (selectedGroup && newValue !== selectedGroup.groupName) {
+      setSelectedGroup(null);
+    }
   };
 
   const handleInputClick = () => setDropdownVisible(true);
@@ -232,7 +245,7 @@ export default function NotesGroupModal({
   return (
     <ModalData
       isModalOpen={isModalOpen}
-      modalTitle="Meeting Note Group Modal"
+      modalTitle="Meeting Note Group"
       modalClose={modalClose}
       containerClass="!w-[450px] !min-w-0 !max-w-[450px] h-[300px]"
       buttons={
@@ -271,7 +284,12 @@ export default function NotesGroupModal({
               disabled={isCheckingDelete}
               placeholder="Add / Create / Rename Notes Group"
               className="w-full h-[45px] sm:h-[40px] border-0 border-b-2 p-0 border-gray-300 rounded-none text-sm sm:text-base focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[0px]"
+              maxLength={10}
             />
+
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
+              {groupInput.length}/10
+            </div>
 
             {creationMessage && (
               <p className="text-sm text-gray-500 mt-1">{creationMessage}</p>
