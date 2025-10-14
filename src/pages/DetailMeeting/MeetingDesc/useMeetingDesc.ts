@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { get, off, onValue, ref, remove, update } from "firebase/database";
 import { database } from "@/firebaseConfig";
@@ -12,11 +12,9 @@ import {
   useGetMeetingNotes,
   useGetMeetingTiming,
 } from "@/features/api/detailMeeting";
-import SidebarControlContext from "@/features/layouts/DashboardLayout/SidebarControlContext";
 
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();
-  const sidebarControl = useContext(SidebarControlContext);
 
   const [meetingResponse, setMeetingResponse] = useState<MeetingResFire | null>(
     null,
@@ -26,6 +24,9 @@ export default function useMeetingDesc() {
   const [isCardVisible, setIsCardVisible] = useState(false);
   const [openEmployeeId, setOpenEmployeeId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+  const [selectedGroupFilter, setSelectedGroupFilter] = useState<
+    boolean | null
+  >(null);
 
   const { data: meetingData } = useGetMeetingTiming(meetingId ?? "");
 
@@ -65,10 +66,9 @@ export default function useMeetingDesc() {
       if (snapshot.exists()) {
         const data = snapshot.val();
         setMeetingResponse(data);
-        setIsCardVisible(true);
-        setActiveTab("documents");
-        if (sidebarControl?.setOpen) {
-          sidebarControl.setOpen(false);
+        if (data.state.status === "IN_PROGRESS") {
+          setIsCardVisible(true);
+          setActiveTab("documents");
         }
       } else {
         setMeetingResponse(null);
@@ -78,14 +78,123 @@ export default function useMeetingDesc() {
     return () => {
       off(meetingRef);
     };
-  }, [db, handleUpdatedRefresh, meetingId, sidebarControl]);
+  }, [db, handleUpdatedRefresh, meetingId]);
+
+  // useEffect(() => {
+  //   if (!meetingId || !meetingResponse) return;
+
+  //   const meetingRef = ref(db, `meetings/${meetingId}/state/activeTab`);
+
+  //   const unsubscribe = onValue(meetingRef, (snapshot) => {
+  //     if (snapshot.exists()) {
+  //       const activeTab = snapshot.val();
+
+  //       handleUpdatedRefresh();
+  //       if (activeTab === "CONCLUSION") {
+  //         queryClient.resetQueries({
+  //           queryKey: ["get-meeting-conclusion-res"],
+  //         });
+  //         queryClient.resetQueries({
+  //           queryKey: ["get-meeting-conclusion-time-by-meetingId"],
+  //         });
+  //       } else if (activeTab === "ENDED") {
+  //         handleUpdatedRefresh();
+  //       }
+  //     }
+  //   });
+
+  //   return () => unsubscribe();
+  // }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
+
+  // useEffect(() => {
+  //   if (!meetingId) return;
+
+  //   const meetingRef = ref(db, `meetings/${meetingId}/state/activeTab`);
+
+  //   const filter = {
+  //     meetingId: meetingId,
+  //   };
+
+  //   const unsubscribe = onValue(meetingRef, (snapshot) => {
+  //     if (snapshot.exists()) {
+  //       const activeTab = snapshot.val();
+
+  //       handleUpdatedRefresh();
+
+  //       const timer = setTimeout(() => {
+  //         if (activeTab === "CONCLUSION") {
+  //           queryClient.resetQueries({
+  //             queryKey: ["get-meeting-conclusion-res"],
+  //           });
+  //           queryClient.resetQueries({
+  //             queryKey: ["get-meeting-conclusion-time-by-meetingId", filter],
+  //           });
+  //         } else if (activeTab === "ENDED") {
+  //           handleUpdatedRefresh();
+  //         }
+  //       }, 2000);
+
+  //       return () => clearTimeout(timer);
+  //     } else {
+  //       const timer = setTimeout(() => {
+  //         handleUpdatedRefresh();
+  //         queryClient.resetQueries({
+  //           queryKey: ["get-meeting-conclusion-res"],
+  //         });
+  //       }, 1000);
+
+  //       return () => clearTimeout(timer);
+  //     }
+  //   });
+
+  //   return () => unsubscribe();
+  // }, [db, handleUpdatedRefresh, meetingId]);
+
+  // useEffect(() => {
+  //   if (!meetingId) return;
+
+  //   const meetingRef = ref(db, `meetings/${meetingId}/state/status`);
+
+  //   const filter = {
+  //     meetingId: meetingId,
+  //   };
+
+  //   const unsubscribe = onValue(meetingRef, (snapshot) => {
+  //     if (snapshot.exists()) {
+  //       const activeTab = snapshot.val();
+  //       handleUpdatedRefresh();
+
+  //       if (activeTab === "IN_PROGRESS") {
+  //         queryClient.resetQueries({
+  //           queryKey: ["get-meeting-conclusion-res"],
+  //         });
+  //         queryClient.resetQueries({
+  //           queryKey: ["get-meeting-conclusion-time-by-meetingId", filter],
+  //         });
+  //       } else if (activeTab === "ENDED") {
+  //         handleUpdatedRefresh();
+  //       }
+  //     } else {
+  //       handleUpdatedRefresh();
+  //       queryClient.resetQueries({
+  //         queryKey: ["get-meeting-conclusion-res"],
+  //       });
+  //     }
+  //   });
+
+  //   return () => unsubscribe();
+  // }, [db, handleUpdatedRefresh, meetingId]);
 
   useEffect(() => {
-    if (!meetingId || !meetingResponse) return;
+    if (!meetingId || !db) return;
 
-    const meetingRef = ref(db, `meetings/${meetingId}/state/activeTab`);
+    const activeTabRef = ref(db, `meetings/${meetingId}/state/activeTab`);
+    const statusRef = ref(db, `meetings/${meetingId}/state/status`);
 
-    const unsubscribe = onValue(meetingRef, (snapshot) => {
+    const filter = { meetingId };
+
+    const unsubActiveTabImmediate = onValue(activeTabRef, (snapshot) => {
+      if (!meetingResponse) return;
       if (snapshot.exists()) {
         const activeTab = snapshot.val();
 
@@ -103,25 +212,13 @@ export default function useMeetingDesc() {
       }
     });
 
-    return () => unsubscribe();
-  }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
+    const unsubActiveTabDelayed = onValue(activeTabRef, (snapshot) => {
+      let timer: NodeJS.Timeout;
 
-  useEffect(() => {
-    if (!meetingId) return;
-
-    const meetingRef = ref(db, `meetings/${meetingId}/state/activeTab`);
-
-    const filter = {
-      meetingId: meetingId,
-    };
-
-    const unsubscribe = onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
         const activeTab = snapshot.val();
 
-        handleUpdatedRefresh();
-
-        const timer = setTimeout(() => {
+        timer = setTimeout(() => {
           if (activeTab === "CONCLUSION") {
             queryClient.resetQueries({
               queryKey: ["get-meeting-conclusion-res"],
@@ -133,41 +230,22 @@ export default function useMeetingDesc() {
             handleUpdatedRefresh();
           }
         }, 2000);
-
-        return () => clearTimeout(timer);
       } else {
-        const timer = setTimeout(() => {
+        timer = setTimeout(() => {
           handleUpdatedRefresh();
           queryClient.resetQueries({
             queryKey: ["get-meeting-conclusion-res"],
           });
         }, 1000);
-
-        return () => clearTimeout(timer);
       }
+
+      return () => clearTimeout(timer);
     });
 
-    return () => unsubscribe();
-  }, [db, handleUpdatedRefresh, meetingId]);
-
-  useEffect(() => {
-    if (!meetingId) return;
-
-    const meetingRef = ref(db, `meetings/${meetingId}/state/status`);
-
-    const filter = {
-      meetingId: meetingId,
-    };
-
-    const unsubscribe = onValue(meetingRef, (snapshot) => {
+    const unsubStatus = onValue(statusRef, (snapshot) => {
       if (snapshot.exists()) {
         const activeTab = snapshot.val();
-        handleUpdatedRefresh();
-
         if (activeTab === "IN_PROGRESS") {
-          queryClient.resetQueries({
-            queryKey: ["get-meeting-conclusion-res"],
-          });
           queryClient.resetQueries({
             queryKey: ["get-meeting-conclusion-time-by-meetingId", filter],
           });
@@ -176,14 +254,16 @@ export default function useMeetingDesc() {
         }
       } else {
         handleUpdatedRefresh();
-        queryClient.resetQueries({
-          queryKey: ["get-meeting-conclusion-res"],
-        });
       }
+      queryClient.resetQueries({ queryKey: ["get-meeting-conclusion-res"] });
     });
 
-    return () => unsubscribe();
-  }, [db, handleUpdatedRefresh, meetingId]);
+    return () => {
+      unsubActiveTabImmediate();
+      unsubActiveTabDelayed();
+      unsubStatus();
+    };
+  }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
 
   const handleTabChange = useCallback((tab: string) => {
     setActiveTab((prevTab) => {
@@ -478,7 +558,7 @@ export default function useMeetingDesc() {
     const db = database;
     const meetingRef = ref(db, `meetings/${meetingId}/state/updatedAt`);
 
-    onValue(meetingRef, (snapshot) => {
+    const unsubscribe = onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
         queryClient.invalidateQueries({
           queryKey: ["get-meeting-details-timing"],
@@ -496,7 +576,7 @@ export default function useMeetingDesc() {
     });
 
     return () => {
-      off(meetingRef);
+      unsubscribe();
     };
   }, [meetingId]);
 
@@ -530,5 +610,7 @@ export default function useMeetingDesc() {
     meetingData,
     handleUnFollow,
     handleFollowBack,
+    selectedGroupFilter,
+    setSelectedGroupFilter,
   };
 }

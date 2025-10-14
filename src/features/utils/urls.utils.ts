@@ -347,13 +347,20 @@ const Urls = {
   addNotesGroup: () => `${baseUrl}/company/detail-meeting/note/add-to-group`,
   updateNotesGroup: (id: string) =>
     `${baseUrl}/company/repetitive-meeting/note/update/${id}`,
+  removeNotesGroup: () =>
+    `${baseUrl}/company/detail-meeting/note/remove-from-group`,
 
   getCompanyDataById: (id: string) => `${baseUrl}/company-master/get/${id}`,
   dropdownIndustry: () => `${baseUrl}/industry/get-all`,
   dropdownCountry: () => `${baseUrl}/geography/country/get-all`,
   dropdownCity: () => `${baseUrl}/geography/city/get-all`,
   dropdownState: () => `${baseUrl}/geography/state/get-all`,
-  updateCompany: (id: string) => `${baseUrl}/company-master/update/${id}`,
+  updateCompany: () => `${baseUrl}/company/profile/update`,
+
+  addHoliday: () => `${baseUrl}/company/holiday/add`,
+  getHoliday: () => `${baseUrl}/company/holiday/get`,
+  updateHoliday: (id: string) => `${baseUrl}/company/holiday/update/${id}`,
+  deleteHoliday: (id: string) => `${baseUrl}/company/holiday/delete/${id}`,
 };
 
 export default Urls;

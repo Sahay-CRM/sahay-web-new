@@ -50,7 +50,7 @@ export default function EditDatapointAddFormModal({
     allKpi,
     setIsKpiSearch,
     setIsEmployeeSearch,
-    skipDaysOption,
+    // skipDaysOption,
   } = useEditDatapointFormModal({ modalClose, kpiId });
 
   return (
@@ -342,7 +342,7 @@ export default function EditDatapointAddFormModal({
             </div>
           )}
 
-          <Controller
+          {/* <Controller
             control={control}
             name="skipDays"
             render={({ field }) => (
@@ -357,7 +357,7 @@ export default function EditDatapointAddFormModal({
                 isMulti
               />
             )}
-          />
+          /> */}
         </div>
       </ModalData>
     </FormProvider>

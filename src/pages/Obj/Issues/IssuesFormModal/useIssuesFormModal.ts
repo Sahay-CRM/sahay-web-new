@@ -33,11 +33,11 @@ export default function useIssueFormModal({
       ? {
           issueId: modalData.issueId,
           issueName: data.issueName,
-          departmentId: data.departmentId,
+          ...(data.departmentId && { departmentId: data.departmentId }),
         }
       : {
           issueName: data.issueName,
-          departmentId: data.departmentId,
+          ...(data.departmentId && { departmentId: data.departmentId }),
         };
 
     addIssue(payload, {

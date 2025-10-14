@@ -11,14 +11,22 @@ import store from "./features/store";
 import { getDatabase } from "firebase/database";
 import { queryClient } from "./queryClient";
 
+// const firebaseConfig = {
+//   apiKey: "AIzaSyApKwRS0eZK2Dkjwb7gTpbuLvQ5Yf2EzT4",
+//   authDomain: "sahay-dev-4c5ba.firebaseapp.com",
+//   projectId: "sahay-dev-4c5ba",
+//   storageBucket: "sahay-dev-4c5ba.firebasestorage.app",
+//   messagingSenderId: "186510074634",
+//   appId: "1:186510074634:web:f1000c0ed66bbce33dd0f3",
+// };
+
 const firebaseConfig = {
-  apiKey: "AIzaSyApKwRS0eZK2Dkjwb7gTpbuLvQ5Yf2EzT4",
-  authDomain: "sahay-dev-4c5ba.firebaseapp.com",
-  projectId: "sahay-dev-4c5ba",
-  storageBucket: "sahay-dev-4c5ba.firebasestorage.app",
-  messagingSenderId: "186510074634",
-  appId: "1:186510074634:web:f1000c0ed66bbce33dd0f3",
-  // measurementId:
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);

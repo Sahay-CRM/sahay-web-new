@@ -146,9 +146,10 @@ export const useAgenda = ({
 
   const { data: detailAgendaData } = useGetDetailMeetingAgendaIssue({
     filter: {
-      issueObjectiveId: !unFollowByUser
-        ? meetingResponse?.state.currentAgendaItemId
-        : isSelectedAgenda,
+      issueObjectiveId:
+        meetingStatus !== "ENDED"
+          ? !unFollowByUser && meetingResponse?.state.currentAgendaItemId
+          : isSelectedAgenda,
       ...(ioType === "ISSUE"
         ? {
             issueId: selectedAgenda?.find(
@@ -163,9 +164,8 @@ export const useAgenda = ({
       ioType: ioType,
     },
     enable:
-      !!meetingResponse?.state.currentAgendaItemId &&
-      !!ioType &&
-      !!isSelectedAgenda,
+      !!meetingResponse?.state.currentAgendaItemId ||
+      (!!ioType && !!isSelectedAgenda),
   });
 
   useEffect(() => {
@@ -738,6 +738,17 @@ export const useAgenda = ({
             (item) => item.issueObjectiveId === issueObjectiveId,
           )?.ioType) ||
         "";
+
+      setIsSelectedAgenda(issueObjectiveId);
+      setIoType(io);
+      queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
+      queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
+      queryClient.resetQueries({ queryKey: ["get-detailMeeting-kpis-res"] });
+    } else if (meetingStatus === "ENDED") {
+      const io =
+        selectedAgenda?.find(
+          (item) => item.issueObjectiveId === issueObjectiveId,
+        )?.ioType || "";
 
       setIsSelectedAgenda(issueObjectiveId);
       setIoType(io);

@@ -1,5 +1,6 @@
 import { useDdCompanyMeeting } from "@/features/api/companyMeeting";
 import { useAllCompanyTask } from "@/features/api/companyTask";
+import useGetHoliday from "@/features/api/Holiday/useGetHoliday";
 import { useGetImportantDates } from "@/features/api/importantDates";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { isColorDark } from "@/features/utils/color.utils";
@@ -25,6 +26,12 @@ export default function useCalendar() {
   const { data: importantDatesList } = useGetImportantDates();
   const { data: companyTask } = useAllCompanyTask();
   const { data: meetingData } = useDdCompanyMeeting();
+  const { data: holidayData } = useGetHoliday({
+    filter: {
+      monthFlag: 0,
+    },
+    enable: true,
+  });
 
   const transformTaskDataToEvents = (data: TaskGetPaging[]): EventData[] =>
     data.map((item) => {
@@ -196,5 +203,6 @@ export default function useCalendar() {
     meetingModalData,
     taskModalData,
     closeModal,
+    holidayData,
   };
 }

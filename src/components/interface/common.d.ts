@@ -535,9 +535,9 @@ interface EmployeeDetailsById {
   companyId: string;
   employeeType: string;
   departmentId: string | null;
-  department: string | null;
+  department: DepartmentData;
   designationId: string | null;
-  designation: string | null;
+  designation: Designation;
   reportingManagerId: string | null;
   company: EmployeeCompany;
   reportingManager: EmployeeDetails;
@@ -545,6 +545,30 @@ interface EmployeeDetailsById {
   photo?: string;
   isSuperAdmin: boolean;
   isDeactivated?: boolean;
+  employee?: {
+    employeeEmail: string;
+    employeeId: string;
+    employeeName: string;
+  };
+}
+
+interface AddEmployeeDetailsById {
+  employeeId?: string;
+  employeeName?: string;
+  employeeEmail?: string;
+  employeeMobile?: string;
+  employeeType: string;
+  departmentId?: string;
+  designationId?: string;
+  reportingManagerId?: string;
+  department?: DepartmentData;
+  designation?: Designation;
+  employee?: {
+    employeeEmail: string;
+    employeeId: string;
+    employeeName: string;
+  };
+  photo: string;
 }
 
 interface Designation {
@@ -911,7 +935,7 @@ interface KPIFormData {
   employeeName?: string;
   visualFrequencyAggregate: string | null;
   ioKPIId?: string;
-  skipDays?: string[];
+  // skipDays?: string[];
 }
 
 interface KPIFormDataProp {
@@ -976,6 +1000,19 @@ interface ProductFormModalProps {
   isModalOpen: boolean;
   modalClose: () => void;
   modalData?: ProductData;
+}
+
+interface AddHolidaysFormModalProps {
+  isModalOpen: boolean;
+  modalClose: () => void;
+  modalData?: HolidaysDataProps;
+}
+
+interface HolidaysDataProps {
+  holidayId?: string;
+  holidayName?: string;
+  holidayDate?: string;
+  holidayDescription?: string;
 }
 
 interface HandleDateRangeChange {
@@ -1069,6 +1106,8 @@ interface KpiDataCell {
   avg?: string | number | null;
   isSunday?: boolean;
   isSkipDay?: boolean;
+  note?: string | null;
+  isHoliday?: boolean;
 }
 
 interface UserLogDetails {
@@ -1418,7 +1457,7 @@ interface AgendaListProps {
   editing?: EditingProps;
   setEditingValue: (value: string) => void;
   updateEdit: () => void;
-  cancelEdit?: () => void;
+  cancelEdit: () => void;
   handleListClick?: (id: string, item: boolean) => void;
   handleMarkAsSolved: (data: MeetingAgenda) => void;
   startEdit: (
@@ -1497,6 +1536,8 @@ interface SimpleCompanyDetails {
   industryId?: string;
   accountPocMobile?: string;
   pan?: string;
+  kpiSkipDays?: string[] | string;
+  unit?: string;
 }
 
 interface IndustryOption {

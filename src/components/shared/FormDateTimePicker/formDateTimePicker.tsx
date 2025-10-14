@@ -14,6 +14,7 @@ interface Props {
   disableDaysFromToday?: number;
   disablePastDates?: boolean;
   labelClass?: string;
+  hideTime?: boolean;
 }
 
 export default function FormDateTimePicker({
@@ -25,6 +26,7 @@ export default function FormDateTimePicker({
   disableDaysFromToday = 0,
   disablePastDates = false,
   labelClass,
+  hideTime = false,
 }: Props) {
   const dateValue = typeof value === "string" ? new Date(value) : value;
 
@@ -55,12 +57,23 @@ export default function FormDateTimePicker({
       return;
     }
 
-    const pickedDate = new Date(date);
-    if (pickedDate.getHours() === 0 && pickedDate.getMinutes() === 0) {
-      pickedDate.setHours(18, 0, 0, 0); // 6:00 PM
+    if (!hideTime) {
+      const pickedDate = new Date(date);
+      if (pickedDate.getHours() === 0 && pickedDate.getMinutes() === 0) {
+        pickedDate.setHours(18, 0, 0, 0); // 6:00 PM
+      }
+      onChange(pickedDate);
+    } else {
+      // When time is hidden, just pass the date as is
+      onChange(date);
     }
 
-    onChange(pickedDate);
+    // const pickedDate = new Date(date);
+    // if (pickedDate.getHours() === 0 && pickedDate.getMinutes() === 0) {
+    //   pickedDate.setHours(18, 0, 0, 0); // 6:00 PM
+    // }
+
+    // onChange(pickedDate);
   };
 
   return (
@@ -75,9 +88,10 @@ export default function FormDateTimePicker({
         <DatePicker
           selected={dateValue}
           onChange={handleChange}
-          showTimeSelect
-          dateFormat="dd/MM/yyyy h:mm aa"
-          placeholderText="Select date and time"
+          showTimeSelect={!hideTime}
+          timeFormat={hideTime ? undefined : "h:mm aa"}
+          dateFormat={hideTime ? "dd/MM/yyyy" : "dd/MM/yyyy h:mm aa"}
+          placeholderText={hideTime ? "Select date" : "Select date and time"}
           className="border px-10 py-1.5 rounded-md w-full text-sm sm:text-base"
           portalId="root"
           popperClassName="responsive-datepicker-popper"

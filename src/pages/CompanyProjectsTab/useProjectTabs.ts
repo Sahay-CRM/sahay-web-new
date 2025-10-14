@@ -111,10 +111,11 @@ export default function useProjectTabs() {
     { label: "Sort by Deadline", value: "projectDeadline" },
   ];
 
-  const deleteTab = async (id: string) => {
-    if (id === "all") return;
-    deleteGroup(id);
+  const deleteTab = async (tab: TabItem) => {
+    if (tab.id === "all") return;
+    deleteGroup({ groupId: tab.id });
   };
+
   const startPress = (tab: TabItem) => {
     if (tab.id === "all") return;
     timerRef.current = setTimeout(() => setLongPressTab(tab), 800);

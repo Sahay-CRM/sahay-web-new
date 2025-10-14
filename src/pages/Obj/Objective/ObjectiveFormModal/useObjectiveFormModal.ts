@@ -33,11 +33,11 @@ export default function useObjectiveFormModal({
       ? {
           objectiveId: modalData.objectiveId,
           objectiveName: data.objectiveName,
-          departmentId: data.departmentId,
+          ...(data.departmentId && { departmentId: data.departmentId }),
         }
       : {
           objectiveName: data.objectiveName,
-          departmentId: data.departmentId,
+          ...(data.departmentId && { departmentId: data.departmentId }),
         };
 
     addObjective(payload, {

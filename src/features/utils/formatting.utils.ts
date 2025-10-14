@@ -13,6 +13,8 @@ export function formatToDateOnly(date?: string | Date | null): string {
 interface KpiDataEntry {
   startDate: string;
   endDate: string;
+  isHoliday?: boolean;
+  isSkipDay?: boolean;
 }
 
 interface KpiHeader {
@@ -20,6 +22,8 @@ interface KpiHeader {
   year: string;
   data: object;
   isSunday?: boolean;
+  isHoliday?: boolean;
+  isSkipDay?: boolean;
 }
 
 export function getKpiHeadersFromData(
@@ -70,6 +74,8 @@ export function getKpiHeadersFromData(
           year,
           data: entry,
           isSunday: getDay(start) === 0,
+          isHoliday: entry.isHoliday,
+          isSkipDay: entry.isSkipDay,
         };
       default:
         return {
@@ -121,6 +127,31 @@ export function formatCompactNumber(input: string | number | null | undefined) {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(num);
+}
+
+export function formatIndianSystem(
+  input: string | number | null | undefined,
+): string {
+  if (input === null || input === undefined || input === "") return "";
+  const num = Number(input);
+  if (isNaN(num)) return input.toString();
+
+  if (num === 0) return "0";
+
+  const absNum = Math.abs(num);
+  const sign = num < 0 ? "-" : "";
+
+  if (absNum >= 1e7) {
+    // 1 Crore
+    return sign + (absNum / 1e7).toFixed(1).replace(/\.0$/, "") + "Cr";
+  } else if (absNum >= 1e5) {
+    // 1 Lakh
+    return sign + (absNum / 1e5).toFixed(1).replace(/\.0$/, "") + "L";
+  } else if (absNum >= 1e3) {
+    return sign + (absNum / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
+  } else {
+    return num.toString();
+  }
 }
 
 const colors = [
@@ -186,14 +217,17 @@ export function getColorFromName(name?: string) {
   return colors[index];
 }
 
-export function formatTempValuesToPayload(tempValues: Record<string, string>) {
-  return Object.entries(tempValues).map(([key, value]) => {
+export function formatTempValuesToPayload(
+  tempValues: Record<string, { value: string; comment?: string }>,
+) {
+  return Object.entries(tempValues).map(([key, obj]) => {
     const [kpiId, startDate, endDate] = key.split("/");
     return {
       kpiId,
       startDate,
       endDate,
-      data: value,
+      data: obj.value,
+      note: obj.comment || "",
     };
   });
 }

@@ -6,6 +6,10 @@ import { Controller } from "react-hook-form";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import { formatIndianNumber } from "@/features/utils/app.utils";
 import FormImage from "@/components/shared/Form/FormImage/FormImage";
+import PageNotAccess from "../PageNoAccess";
+import ImageCropModal from "@/components/shared/Modal/ImageCropModal";
+import { ImageBaseURL } from "@/features/utils/urls.utils";
+import FormSelect from "@/components/shared/Form/FormSelect";
 
 export default function CompanyProfile() {
   const {
@@ -15,7 +19,9 @@ export default function CompanyProfile() {
     errors,
     handleSubmit,
     register,
-    handleLogoUpload,
+    openLogoCrop,
+    closeLogoCrop,
+    applyCroppedLogo,
     onSubmit,
     setValue,
     control,
@@ -32,6 +38,10 @@ export default function CompanyProfile() {
     cityOptions,
     watchedCountryId,
     watchedStateId,
+    permission,
+    isLogoCropOpen,
+    skipDaysOption,
+    // formatOptions,
   } = useCompany();
 
   if (!companyData) {
@@ -45,26 +55,29 @@ export default function CompanyProfile() {
     );
   }
 
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
+
   return (
     <div className="bg-gray-50 py-4">
       <div className="mx-auto px-4">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              {/* Logo Section */}
               <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                <div className="w-20 h-20 rounded-full text-white font-bold text-2xl shadow-lg">
                   {logoPreview ? (
                     <img
                       src={logoPreview}
                       alt="Company Logo"
-                      className="w-full h-full rounded-2xl object-cover"
+                      className="w-full h-full object-cover"
                     />
                   ) : companyData.logo ? (
                     <img
-                      src={companyData.logo}
+                      src={`${ImageBaseURL}/share/company/logo/${companyData.logo}`}
                       alt="Company Logo"
-                      className="w-full h-full rounded-2xl object-cover"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <Building className="w-8 h-8" />
@@ -72,15 +85,13 @@ export default function CompanyProfile() {
                 </div>
 
                 {isEditing && (
-                  <label className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-1.5 rounded-full cursor-pointer shadow-lg hover:bg-blue-700 transition-colors">
+                  <button
+                    type="button"
+                    onClick={openLogoCrop}
+                    className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-1.5 rounded-full cursor-pointer shadow-lg hover:bg-blue-700 transition-colors"
+                  >
                     <Upload className="w-4 h-4" />
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleLogoUpload}
-                    />
-                  </label>
+                  </button>
                 )}
               </div>
 
@@ -99,39 +110,42 @@ export default function CompanyProfile() {
               </div>
             </div>
 
-            {/* Edit Button */}
-            {!isEditing ? (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-              >
-                <Edit2 className="w-4 h-4" />
-                <span>Edit Profile</span>
-              </button>
-            ) : (
-              <div className="flex space-x-3">
-                <Button
-                  onClick={handleCancel}
-                  className="flex items-center bg-gray-500 text-white px-4 py-2.5 rounded-lg hover:bg-gray-600 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                  <span>Cancel</span>
-                </Button>
-                <Button
-                  onClick={handleSubmit(onSubmit)}
-                  className="flex items-center bg-primary text-white rounded-lg hover:bg-primary transition-colors"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>Save Changes</span>
-                </Button>
-              </div>
+            {permission.Edit && (
+              <>
+                {!isEditing ? (
+                  <Button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center bg-primary text-white rounded-lg hover:bg-primary transition-colors"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    <span>Edit Profile</span>
+                  </Button>
+                ) : (
+                  <div className="flex space-x-3">
+                    <Button
+                      onClick={handleCancel}
+                      className="flex items-center bg-gray-500 text-white px-4 py-2.5 rounded-lg hover:bg-gray-600 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                      <span>Cancel</span>
+                    </Button>
+                    <Button
+                      onClick={handleSubmit(onSubmit)}
+                      className="flex items-center bg-primary text-white rounded-lg hover:bg-primary transition-colors"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>Save Changes</span>
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                 Company Information
               </h2>
@@ -242,40 +256,133 @@ export default function CompanyProfile() {
                     )}
                   </div>
                 </div>
-                <div>
+                <div className="flex gap-4">
+                  <div className="w-1/2">
+                    {isEditing ? (
+                      <Controller
+                        name="annualTurnOver"
+                        control={control}
+                        rules={{ required: "Please enter turnover" }}
+                        render={({ field }) => (
+                          <FormInputField
+                            type="text"
+                            label="Annual Turnover"
+                            value={formatIndianNumber(field.value)}
+                            onChange={(e) => {
+                              const rawValue = e.target.value.replace(/,/g, "");
+                              field.onChange(rawValue);
+                            }}
+                            error={errors.annualTurnOver}
+                          />
+                        )}
+                      />
+                    ) : (
+                      <>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Annual Turnover
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                          {formatIndianNumber(companyData.annualTurnOver)}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <div className="w-1/2">
+                    {isEditing ? (
+                      <Controller
+                        control={control}
+                        name="kpiSkipDays"
+                        render={({ field }) => (
+                          <FormSelect
+                            label="Skip Days"
+                            value={field.value}
+                            onChange={field.onChange}
+                            options={skipDaysOption}
+                            error={errors.kpiSkipDays}
+                            className="rounded-md"
+                            triggerClassName="py-4"
+                            isMulti
+                          />
+                        )}
+                      />
+                    ) : (
+                      <div>
+                        {companyData.kpiSkipDays && (
+                          <>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Kpi Skip Days
+                            </label>
+                            <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                              {(typeof companyData.kpiSkipDays === "string"
+                                ? companyData.kpiSkipDays.split(",")
+                                : companyData.kpiSkipDays
+                              )
+                                .map(
+                                  (dayValue: string) =>
+                                    skipDaysOption.find(
+                                      (opt) => opt.value === dayValue,
+                                    )?.label,
+                                )
+                                .filter((label): label is string =>
+                                  Boolean(label),
+                                )
+                                .join(", ")}
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* <div className="w-1/2">
                   {isEditing ? (
                     <Controller
-                      name="annualTurnOver"
                       control={control}
-                      rules={{ required: "Please enter turnover" }}
+                      name="unit"
                       render={({ field }) => (
-                        <FormInputField
-                          type="text"
-                          label="Annual Turnover"
-                          value={formatIndianNumber(field.value)}
-                          onChange={(e) => {
-                            const rawValue = e.target.value.replace(/,/g, "");
-                            field.onChange(rawValue);
-                          }}
-                          error={errors.annualTurnOver}
+                        <FormSelect
+                          label="Unit"
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={formatOptions}
+                          error={errors.unit}
+                          className="rounded-md"
+                          triggerClassName="py-4"
                         />
                       )}
                     />
                   ) : (
-                    <>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Annual Turnover
-                      </label>
-                      <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                        {formatIndianNumber(companyData.annualTurnOver)}
-                      </p>
-                    </>
+                    <div>
+                      {companyData.kpiSkipDays && (
+                        <>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Unit
+                          </label>
+                          <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                            {(typeof companyData.kpiSkipDays === "string"
+                              ? companyData.kpiSkipDays.split(",")
+                              : companyData.kpiSkipDays
+                            )
+                              .map(
+                                (dayValue: string) =>
+                                  skipDaysOption.find(
+                                    (opt) => opt.value === dayValue
+                                  )?.label
+                              )
+                              .filter((label): label is string =>
+                                Boolean(label)
+                              )
+                              .join(", ")}
+                          </p>
+                        </>
+                      )}
+                    </div>
                   )}
-                </div>
+                </div> */}
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                 Contact Information
               </h2>
@@ -490,7 +597,7 @@ export default function CompanyProfile() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2 md:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8 md:col-span-2">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                 Legal Information
               </h2>
@@ -594,6 +701,12 @@ export default function CompanyProfile() {
             </div>
           </div>
         </form>
+        <ImageCropModal
+          isOpen={isLogoCropOpen}
+          onClose={closeLogoCrop}
+          onApply={applyCroppedLogo}
+          title="Upload & Crop Logo"
+        />
       </div>
     </div>
   );

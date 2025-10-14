@@ -24,7 +24,10 @@ import { SpinnerIcon } from "@/components/shared/Icons";
 import WarningDialog from "../kpiDashboard/WarningModal";
 import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
-import { getUserPermission } from "@/features/selectors/auth.selector";
+import {
+  getUserDetail,
+  getUserPermission,
+} from "@/features/selectors/auth.selector";
 import { getRouteByLabel } from "@/features/utils/navigation.data";
 import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 
@@ -46,6 +49,7 @@ interface PermissionTableProps {
   onChange?: (
     permissions: Array<{ moduleId: string; permissionId: string }>,
   ) => void;
+  isReadOnly?: boolean; // New prop to make table read-only
 }
 
 interface PermissionState {
@@ -54,6 +58,7 @@ interface PermissionState {
       checked: boolean;
       moduleId: string;
       permissionId: string;
+      originalChecked: boolean;
     };
   };
 }
@@ -72,7 +77,11 @@ interface ModuleWithChildren extends ModuleDetails {
   children?: ModuleWithChildren[];
 }
 
-function PermissionTableInner({ data, onChange }: PermissionTableProps) {
+function PermissionTableInner({
+  data,
+  onChange,
+  isReadOnly = false,
+}: PermissionTableProps) {
   const { data: moduleData, isLoading: moduleLoading } = useGetAllModule();
   const { data: permissionData, isLoading: permissionLoading } =
     useGetAllPermission();
@@ -85,6 +94,15 @@ function PermissionTableInner({ data, onChange }: PermissionTableProps) {
   const [expandedModules, setExpandedModules] = useState<Set<string>>(
     new Set(),
   );
+
+  const userData = useSelector(getUserDetail);
+
+  // Get current user's permissions
+  const currentUserPermissions = useSelector(getUserPermission);
+  const canAddPermission =
+    currentUserPermissions?.ROLES_PERMISSION?.Add || false;
+  const canEditPermission =
+    currentUserPermissions?.ROLES_PERMISSION?.Edit || false;
 
   // Organize modules into a tree structure
   const organizeModules = (modules: ModuleDetails[]): ModuleWithChildren[] => {
@@ -128,6 +146,7 @@ function PermissionTableInner({ data, onChange }: PermissionTableProps) {
             checked: isChecked,
             moduleId: module.moduleId,
             permissionId: permission.permissionId,
+            originalChecked: isChecked,
           };
         });
       });
@@ -151,15 +170,47 @@ function PermissionTableInner({ data, onChange }: PermissionTableProps) {
     onChange?.(selected);
   };
 
-  const togglePermission = (moduleName: string, permType: string) => {
+  const togglePermission = (
+    moduleName: string,
+    permType: string,
+    isDelete: boolean,
+  ) => {
+    if (isReadOnly && isDelete) return; // Prevent changes in read-only mode
+
     setPermissions((prev) => {
+      const currentPermission = prev[moduleName]?.[permType];
+      if (!currentPermission) return prev;
+
+      const isCurrentlyChecked = currentPermission.checked;
+      const wasOriginallyChecked = currentPermission.originalChecked;
+
+      // Permission logic based on user's capabilities
+      if (canAddPermission && canEditPermission) {
+        // User can both add and edit - allow all changes
+      } else if (canAddPermission && !canEditPermission) {
+        // User can only add permissions, not remove them
+        if (wasOriginallyChecked && !isCurrentlyChecked) {
+          // Prevent unchecking originally checked permissions
+          return prev;
+        }
+      } else if (canEditPermission && !canAddPermission) {
+        // User can only edit (uncheck) permissions, not add new ones
+        if (!wasOriginallyChecked && isCurrentlyChecked) {
+          // Prevent checking originally unchecked permissions
+          return prev;
+        }
+      } else {
+        // User has neither Add nor Edit permission - no changes allowed
+        return prev;
+      }
+
       const updated = {
         ...prev,
         [moduleName]: {
           ...prev[moduleName],
           [permType]: {
-            ...prev[moduleName][permType],
-            checked: !prev[moduleName]?.[permType].checked,
+            ...currentPermission,
+            checked: !isCurrentlyChecked,
           },
         },
       };
@@ -168,40 +219,108 @@ function PermissionTableInner({ data, onChange }: PermissionTableProps) {
     });
   };
 
-  const toggleColumn = (permType: string) => {
+  const toggleColumn = (permType: string, isDelete: boolean) => {
+    if (isReadOnly && isDelete) return; // Prevent changes in read-only mode
+
     const allChecked = Object.values(permissions).every(
       (perm) => perm[permType]?.checked === true,
     );
+
     setPermissions((prev) => {
       const updated = { ...prev };
+      let hasValidChange = false;
+
       Object.keys(updated).forEach((moduleName) => {
+        const currentPermission = updated[moduleName][permType];
+        const wasOriginallyChecked = currentPermission.originalChecked;
+        const newCheckedState = !allChecked;
+
+        // Check if this change is allowed based on permissions
+        if (canAddPermission && canEditPermission) {
+          // Allow all changes
+          hasValidChange = true;
+        } else if (canAddPermission && !canEditPermission) {
+          // Only allow checking (adding) permissions, not unchecking
+          if (wasOriginallyChecked && !newCheckedState) {
+            return; // Skip this change
+          }
+          hasValidChange = true;
+        } else if (canEditPermission && !canAddPermission) {
+          // Only allow unchecking (removing) permissions, not adding
+          if (!wasOriginallyChecked && newCheckedState) {
+            return; // Skip this change
+          }
+          hasValidChange = true;
+        } else {
+          // No changes allowed
+          return;
+        }
+
         updated[moduleName][permType] = {
-          ...updated[moduleName][permType],
-          checked: !allChecked,
+          ...currentPermission,
+          checked: newCheckedState,
         };
       });
-      updateSelectedPermissions(updated);
-      return updated;
+
+      if (hasValidChange) {
+        updateSelectedPermissions(updated);
+        return updated;
+      }
+      return prev;
     });
   };
 
   const toggleRow = (moduleName: string) => {
+    if (isReadOnly) return; // Prevent changes in read-only mode
+
     const allChecked = Object.values(permissions[moduleName] || {}).every(
       (perm) => perm.checked,
     );
+
     setPermissions((prev) => {
       const updated = {
         ...prev,
         [moduleName]: { ...prev[moduleName] },
       };
-      Object.keys(updated[moduleName]).forEach((perm) => {
-        updated[moduleName][perm] = {
-          ...updated[moduleName][perm],
-          checked: !allChecked,
+      let hasValidChange = false;
+
+      Object.keys(updated[moduleName]).forEach((permType) => {
+        const currentPermission = updated[moduleName][permType];
+        const wasOriginallyChecked = currentPermission.originalChecked;
+        const newCheckedState = !allChecked;
+
+        // Check if this change is allowed based on permissions
+        if (canAddPermission && canEditPermission) {
+          // Allow all changes
+          hasValidChange = true;
+        } else if (canAddPermission && !canEditPermission) {
+          // Only allow checking (adding) permissions, not unchecking
+          if (wasOriginallyChecked && !newCheckedState) {
+            return; // Skip this change
+          }
+          hasValidChange = true;
+        } else if (canEditPermission && !canAddPermission) {
+          // Only allow unchecking (removing) permissions, not adding
+          if (!wasOriginallyChecked && newCheckedState) {
+            return; // Skip this change
+          }
+          hasValidChange = true;
+        } else {
+          // No changes allowed
+          return;
+        }
+
+        updated[moduleName][permType] = {
+          ...currentPermission,
+          checked: newCheckedState,
         };
       });
-      updateSelectedPermissions(updated);
-      return updated;
+
+      if (hasValidChange) {
+        updateSelectedPermissions(updated);
+        return updated;
+      }
+      return prev;
     });
   };
 
@@ -223,12 +342,40 @@ function PermissionTableInner({ data, onChange }: PermissionTableProps) {
   const isRowChecked = (moduleName: string) =>
     Object.values(permissions[moduleName] || {}).every((perm) => perm.checked);
 
+  // Check if a checkbox should be disabled
+  const isCheckboxDisabled = (moduleName: string, permType: string) => {
+    if (isReadOnly) return true;
+
+    const currentPermission = permissions[moduleName]?.[permType];
+    if (!currentPermission) return true;
+
+    const isCurrentlyChecked = currentPermission.checked;
+    const wasOriginallyChecked = currentPermission.originalChecked;
+
+    if (canAddPermission && canEditPermission) {
+      return false; // All changes allowed
+    } else if (canAddPermission && !canEditPermission) {
+      return wasOriginallyChecked && !isCurrentlyChecked;
+    } else if (canEditPermission && !canAddPermission) {
+      return !wasOriginallyChecked && isCurrentlyChecked;
+    } else {
+      return true; // No changes allowed
+    }
+  };
+
   const renderModuleRow = (
     module: ModuleWithChildren,
     level: number = 0,
   ): React.ReactElement => {
     const isExpanded = expandedModules.has(module.moduleId);
     const hasChildren = module.children && module.children.length > 0;
+
+    const isRowToggleDisabled =
+      isReadOnly ||
+      Object.keys(permissions[module.moduleName] || {}).some((permType) =>
+        isCheckboxDisabled(module.moduleName, permType),
+      );
+
     return (
       <React.Fragment key={module.moduleId}>
         <TableRow>
@@ -249,6 +396,7 @@ function PermissionTableInner({ data, onChange }: PermissionTableProps) {
               <FormCheckbox
                 checked={isRowChecked(module.moduleName)}
                 onChange={() => toggleRow(module.moduleName)}
+                disabled={isRowToggleDisabled}
               />
             </div>
           </TableCell>
@@ -258,23 +406,44 @@ function PermissionTableInner({ data, onChange }: PermissionTableProps) {
           >
             {module.moduleName}
           </TableCell>
-          {permissionData?.data.map((permission) => (
-            <TableCell
-              key={`${module.moduleId}-${permission.permissionId}`}
-              className="text-center"
-            >
-              <FormCheckbox
-                checked={
-                  permissions[module.moduleName]?.[permission.permissionName]
-                    ?.checked ?? false
-                }
-                onChange={() =>
-                  togglePermission(module.moduleName, permission.permissionName)
-                }
-                className="mx-auto"
-              />
-            </TableCell>
-          ))}
+          {permissionData?.data
+            // 👇 Only include "Delete" if employeeType is CONSULTANT
+            .filter(
+              (permission) =>
+                userData.employeeType === "CONSULTANT"
+                  ? true // show all, including Delete
+                  : permission.permissionDisplayName !== "Delete", // hide Delete for others
+            )
+            .map((permission) => {
+              const isDelete = permission.permissionDisplayName === "Delete";
+
+              return (
+                <TableCell
+                  key={`${module.moduleId}-${permission.permissionId}`}
+                  className="text-center"
+                >
+                  <FormCheckbox
+                    checked={
+                      permissions[module.moduleName]?.[
+                        permission.permissionName
+                      ]?.checked ?? false
+                    }
+                    onChange={() =>
+                      togglePermission(
+                        module.moduleName,
+                        permission.permissionName,
+                        isDelete,
+                      )
+                    }
+                    disabled={isCheckboxDisabled(
+                      module.moduleName,
+                      permission.permissionName,
+                    )}
+                    className="mx-auto"
+                  />
+                </TableCell>
+              );
+            })}
         </TableRow>
         {isExpanded &&
           hasChildren &&
@@ -306,20 +475,38 @@ function PermissionTableInner({ data, onChange }: PermissionTableProps) {
             <TableHead className="w-[250px] font-bold uppercase">
               Module
             </TableHead>
-            {permissionData.data.map((permission) => (
-              <TableHead
-                key={permission.permissionId}
-                className="text-center font-bold uppercase"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <FormCheckbox
-                    checked={isColumnChecked(permission.permissionName)}
-                    onChange={() => toggleColumn(permission.permissionName)}
-                  />
-                  {permission.permissionDisplayName}
-                </div>
-              </TableHead>
-            ))}
+            {permissionData?.data
+              // 👇 Only show "Delete" if employeeType is CONSULTANT
+              .filter(
+                (permission) =>
+                  userData.employeeType === "CONSULTANT"
+                    ? true // show all
+                    : permission.permissionDisplayName !== "Delete", // hide Delete for others
+              )
+              .map((permission) => {
+                const isDelete = permission.permissionDisplayName === "Delete";
+
+                return (
+                  <TableHead
+                    key={permission.permissionId}
+                    className="text-center font-bold uppercase"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <FormCheckbox
+                        checked={isColumnChecked(permission.permissionName)}
+                        onChange={() =>
+                          toggleColumn(permission.permissionName, isDelete)
+                        }
+                        disabled={
+                          isReadOnly ||
+                          (!canAddPermission && !canEditPermission)
+                        }
+                      />
+                      {permission.permissionDisplayName}
+                    </div>
+                  </TableHead>
+                );
+              })}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -347,6 +534,11 @@ export default function UserPermissionTableMerged() {
   const [showWarning, setShowWarning] = useState(false);
 
   const permission = useSelector(getUserPermission).ROLES_PERMISSION;
+
+  // Determine if user has only view permission
+  const hasOnlyViewPermission =
+    permission?.View && !permission?.Add && !permission?.Edit;
+  const hasModifyPermission = permission?.Add || permission?.Edit;
 
   useEffect(() => {
     setBreadcrumbs([
@@ -393,34 +585,34 @@ export default function UserPermissionTableMerged() {
   }, [userPerm]);
 
   const handlePermissionChange = (newPermissions: Permission[]) => {
+    if (hasOnlyViewPermission) return; // Prevent changes if view only
+
     setPermissions(newPermissions);
     setHasChange(true);
   };
 
   const handleSavePermissions = () => {
-    if (!employeeId) {
-      return;
-    }
-    updatePermission.mutate(
-      {
-        employeeId,
-        permissions,
-      },
-      {
-        onSuccess: () => {
-          setHasChange(false);
+    if (hasOnlyViewPermission) return; // Prevent save if view only
+
+    if (employeeId) {
+      updatePermission.mutate(
+        {
+          employeeId,
+          permissions,
         },
-      },
-    );
+        {
+          onSuccess: () => {
+            setHasChange(false);
+          },
+        },
+      );
+    }
   };
 
   const handleWarningSubmit = () => {
     handleSavePermissions();
     setShowWarning(false);
     setPendingNavigation(null);
-    // if (pendingNavigation) {
-    //   window.location.href = pendingNavigation;
-    // }
   };
 
   const handleWarningDiscard = () => {
@@ -437,6 +629,8 @@ export default function UserPermissionTableMerged() {
   };
 
   useEffect(() => {
+    if (hasOnlyViewPermission) return; // No need to set up navigation guards for view-only users
+
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
 
@@ -499,11 +693,13 @@ export default function UserPermissionTableMerged() {
       history.replaceState = originalReplaceState;
       document.removeEventListener("click", handleClick, true);
     };
-  }, [hasChange, location.pathname]);
+  }, [hasChange, location.pathname, hasOnlyViewPermission]);
 
-  if (permission && permission.View === false) {
+  // Check if user has at least View permission
+  if (permission && !permission.View) {
     return <PageNotAccess />;
   }
+
   if (employeeApiData?.data.isSuperAdmin) {
     return (
       <div className="h-full w-full text-3xl text-primary font-semibold uppercase flex flex-col items-center justify-center">
@@ -517,33 +713,60 @@ export default function UserPermissionTableMerged() {
       <div className="flex justify-between items-center mb-4">
         <div>
           <h2 className="text-xl">
-            Editing permissions for :{" "}
+            {hasOnlyViewPermission ? "Viewing" : "Editing"} permissions for :{" "}
             {userName ? (
               <span className="font-bold text-[#2e3090]">{userName}</span>
             ) : (
               "User"
             )}
           </h2>
+          <div className="text-sm text-gray-600 mt-1">
+            {hasOnlyViewPermission &&
+              "You have view-only access. You cannot modify any permissions."}
+            {hasModifyPermission &&
+              permission.Add &&
+              !permission.Edit &&
+              "You can only add new permissions (cannot remove existing ones)"}
+            {hasModifyPermission &&
+              permission.Edit &&
+              !permission.Add &&
+              "You can only remove existing permissions (cannot add new ones)"}
+            {hasModifyPermission &&
+              permission.Add &&
+              permission.Edit &&
+              "You can add and remove permissions"}
+          </div>
         </div>
-        <Button
-          onClick={handleSavePermissions}
-          disabled={updatePermission.isPending || !hasChange}
-        >
-          {updatePermission.isPending ? "Saving..." : "Save Permissions"}
-        </Button>
+
+        {/* Only show Save button if user has modify permissions */}
+        {hasModifyPermission && (
+          <Button
+            onClick={handleSavePermissions}
+            disabled={
+              updatePermission.isPending || !hasChange || hasOnlyViewPermission
+            }
+          >
+            {updatePermission.isPending ? "Saving..." : "Save Permissions"}
+          </Button>
+        )}
       </div>
+
       <div className="mt-8">
         <PermissionTableInner
           data={employeeId}
           onChange={handlePermissionChange}
+          isReadOnly={hasOnlyViewPermission}
         />
       </div>
-      <WarningDialog
-        open={showWarning}
-        onSubmit={handleWarningSubmit}
-        onDiscard={handleWarningDiscard}
-        onClose={handleWarningClose}
-      />
+
+      {hasModifyPermission && (
+        <WarningDialog
+          open={showWarning}
+          onSubmit={handleWarningSubmit}
+          onDiscard={handleWarningDiscard}
+          onClose={handleWarningClose}
+        />
+      )}
     </div>
   );
 }

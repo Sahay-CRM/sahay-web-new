@@ -47,6 +47,7 @@ function Calendar() {
     meetingModalData,
     taskModalData,
     closeModal,
+    holidayData,
   } = useCalendar();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -150,7 +151,7 @@ function Calendar() {
                 importantDateRemarks:
                   event.importantDateRemarks || event.description || "",
                 importantDateId: event.importantDateId || event.eventId,
-                bgColor: event.bgColor,
+                color: event.bgColor,
                 textColor: event.textColor,
                 eventType: event.eventType,
               });
@@ -169,13 +170,33 @@ function Calendar() {
           }}
           eventPropGetter={(event) => ({
             style: {
-              minHeight: 28,
+              minHeight: 26,
               backgroundColor: event.bgColor,
               color: event.textColor,
             },
           })}
+          dayPropGetter={(date) => {
+            const dateStr = date.toDateString();
+            const holiday = (holidayData || []).find(
+              (h) => new Date(h.holidayDate!).toDateString() === dateStr,
+            );
+
+            if (holiday) {
+              return {
+                style: {
+                  backgroundColor: "#d6d6d6",
+                  cursor: "pointer",
+                },
+                "data-tooltip-id": "holiday-tooltip",
+                "data-tooltip-content": holiday.holidayName,
+              }; // type workaround for extra attributes
+            }
+
+            return {};
+          }}
         />
       </div>
+
       <div>
         {isTaskModalOpen && (
           <ConfirmationTaskModal

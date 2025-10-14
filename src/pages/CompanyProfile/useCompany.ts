@@ -9,13 +9,18 @@ import {
   useGetIndustryDropdown,
   useGetStateDropdown,
 } from "@/features/api/CompanyProfile";
-import { getUserDetail } from "@/features/selectors/auth.selector";
+import {
+  getUserDetail,
+  getUserPermission,
+} from "@/features/selectors/auth.selector";
 import { useForm } from "react-hook-form";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import { imageUploadMutation } from "@/features/api/file";
 
 export default function useCompany() {
   const companyId = useSelector(getUserDetail).companyId;
+
+  const permission = useSelector(getUserPermission).COMPANY_PROFILE;
 
   const [isIndSearch, setIsIndSearch] = useState("");
   const [isCountrySearch, setIsCountrySearch] = useState("");
@@ -40,6 +45,7 @@ export default function useCompany() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [isLogoCropOpen, setIsLogoCropOpen] = useState(false);
 
   const {
     register,
@@ -53,6 +59,17 @@ export default function useCompany() {
 
   useEffect(() => {
     if (companyData) {
+      const rawSkipDays = companyData.kpiSkipDays as
+        | string
+        | string[]
+        | undefined;
+
+      const skipDaysValue = Array.isArray(rawSkipDays)
+        ? rawSkipDays
+        : rawSkipDays
+          ? rawSkipDays.split(",")
+          : [];
+
       reset({
         companyId: companyData.companyId,
         companyName: companyData.companyName,
@@ -85,6 +102,7 @@ export default function useCompany() {
         pan: companyData?.pancard
           ? `${ImageBaseURL}/share/company/pancard/${companyData.pancard}`
           : "",
+        kpiSkipDays: skipDaysValue,
       });
     }
   }, [companyData, reset]);
@@ -126,6 +144,21 @@ export default function useCompany() {
     value: item.cityId,
   }));
 
+  const skipDaysOption = [
+    { label: "Sun", value: "0" },
+    { label: "Mon", value: "1" },
+    { label: "Tue", value: "2" },
+    { label: "Wed", value: "3" },
+    { label: "Thu", value: "4" },
+    { label: "Fri", value: "5" },
+    { label: "Sat", value: "6" },
+  ];
+
+  // const formatOptions = [
+  //   { value: "compact", label: "International (1K, 1M)" },
+  //   { value: "indian", label: "Indian System (1L, 1Cr)" },
+  // ];
+
   // Handle logo upload
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -136,6 +169,19 @@ export default function useCompany() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const openLogoCrop = () => {
+    setIsLogoCropOpen(true);
+  };
+
+  const closeLogoCrop = () => {
+    setIsLogoCropOpen(false);
+  };
+
+  const applyCroppedLogo = (dataUrl: string) => {
+    setLogoPreview(dataUrl);
+    setValue("logo", dataUrl);
   };
 
   // Handle form submission
@@ -166,6 +212,7 @@ export default function useCompany() {
       sahayTeamMates: data?.sahayTeamMates,
       consultants: data?.consultants,
       superAdmin: data?.superAdmin,
+      kpiSkipDays: data.kpiSkipDays,
     };
 
     addCompany(payload, {
@@ -209,7 +256,11 @@ export default function useCompany() {
             } else {
               formData.append("file", file as File);
             }
-            uploadImage(formData);
+            uploadImage(formData, {
+              onSuccess: () => {
+                window.location.reload();
+              },
+            });
           }
         };
 
@@ -236,6 +287,9 @@ export default function useCompany() {
     handleSubmit,
     register,
     handleLogoUpload,
+    openLogoCrop,
+    closeLogoCrop,
+    applyCroppedLogo,
     onSubmit,
     control,
     setValue,
@@ -252,5 +306,9 @@ export default function useCompany() {
     cityOptions,
     watchedCountryId,
     watchedStateId,
+    permission,
+    isLogoCropOpen,
+    skipDaysOption,
+    // formatOptions,
   };
 }

@@ -4,11 +4,11 @@ import { DateRange } from "react-day-picker";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-import { useDeleteCompanyMeeting } from "@/features/api/companyMeeting";
 import { useAddUpdateCompanyMeetingStatus } from "@/features/api/companyMeeting/useAddUpdateCompanyMeetingStatus";
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import {
+  deleteDetailMeetingMutation,
   duplicateDetailMeetingMutation,
   useGetDetailMeeting,
 } from "@/features/api/detailMeeting";
@@ -83,7 +83,7 @@ export default function useDetailMeeting() {
     filter: {},
     enable: true,
   });
-  const { mutate: deleteMeetingById } = useDeleteCompanyMeeting();
+  const { mutate: deleteMeetingById } = deleteDetailMeetingMutation();
   const { mutate: updateMeetingStatus } = useAddUpdateCompanyMeetingStatus();
   const { mutate: duplicateMeeting } = duplicateDetailMeetingMutation();
 

@@ -724,12 +724,12 @@ export default function Agenda({
                   // if (follow) {
                   //   handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
                   // } else
-                  if (
-                    meetingStatus !== "NOT_STARTED" &&
-                    meetingStatus !== "ENDED"
-                  ) {
-                    handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
-                  }
+                  // if (
+                  //   meetingStatus !== "NOT_STARTED" &&
+                  //   meetingStatus !== "ENDED"
+                  // ) {
+                  // }
+                  handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
                 }}
                 value={resolutionFilter}
                 className="w-full"
@@ -1032,15 +1032,21 @@ export default function Agenda({
                               <p>Task Name</p>
                             </div>
                             <div className="my-2">
-                              {selectedItem?.discussion.taskUpdate.map(
-                                (task, idx) => {
+                              {selectedItem?.discussion.taskUpdate
+                                ?.filter(
+                                  (item) =>
+                                    item && item.oldValues && item.newValues,
+                                )
+                                .map((task, idx) => {
                                   // Get all possible keys from both old and new values
                                   const allKeys = [
                                     ...new Set([
                                       ...Object.keys(task.oldValues),
                                       ...Object.keys(task.newValues),
                                     ]),
-                                  ] as Array<keyof typeof task.oldValues>;
+                                  ].filter(
+                                    (data) => data !== "taskId",
+                                  ) as Array<keyof typeof task.oldValues>;
 
                                   return (
                                     <div
@@ -1111,8 +1117,7 @@ export default function Agenda({
                                       </div>
                                     </div>
                                   );
-                                },
-                              )}
+                                })}
                             </div>
                           </div>
                         )}
@@ -1124,14 +1129,20 @@ export default function Agenda({
                               <p>Project Name</p>
                             </div>
                             <div className="my-2">
-                              {selectedItem?.discussion.projectUpdate.map(
-                                (project, idx) => {
+                              {selectedItem?.discussion.projectUpdate
+                                ?.filter(
+                                  (item) =>
+                                    item && item.oldValues && item.newValues,
+                                )
+                                .map((project, idx) => {
                                   const allKeys = [
                                     ...new Set([
                                       ...Object.keys(project.oldValues),
                                       ...Object.keys(project.newValues),
                                     ]),
-                                  ] as Array<keyof typeof project.oldValues>;
+                                  ].filter(
+                                    (data) => data !== "projectId",
+                                  ) as Array<keyof typeof project.oldValues>;
 
                                   return (
                                     <div
@@ -1243,8 +1254,7 @@ export default function Agenda({
                                       </div>
                                     </div>
                                   );
-                                },
-                              )}
+                                })}
                             </div>
                           </div>
                         )}
@@ -1256,8 +1266,12 @@ export default function Agenda({
                               <p>KPIs Name</p>
                             </div>
                             <div className="my-2">
-                              {selectedItem?.discussion.kpiUpdate.map(
-                                (kpi: KpiUpdate, idx: number) => {
+                              {selectedItem?.discussion.kpiUpdate
+                                ?.filter(
+                                  (kpi) =>
+                                    kpi && kpi.oldValues && kpi.newValues,
+                                )
+                                .map((kpi: KpiUpdate, idx: number) => {
                                   const allKeys = [
                                     ...new Set([
                                       ...Object.keys(kpi.oldValues),
@@ -1385,8 +1399,7 @@ export default function Agenda({
                                       )}
                                     </div>
                                   );
-                                },
-                              )}
+                                })}
                             </div>
                           </div>
                         )}

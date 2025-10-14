@@ -30,6 +30,7 @@ export default function useCalenderFormModal({
   const {
     handleSubmit,
     register,
+    control,
     formState: { errors },
     reset,
     watch,
@@ -95,5 +96,6 @@ export default function useCalenderFormModal({
     handleModalClose,
     watch,
     setValue,
+    control,
   };
 }
