@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { get, off, onValue, ref, remove, update } from "firebase/database";
 import { database } from "@/firebaseConfig";
@@ -12,11 +12,9 @@ import {
   useGetMeetingNotes,
   useGetMeetingTiming,
 } from "@/features/api/detailMeeting";
-import SidebarControlContext from "@/features/layouts/DashboardLayout/SidebarControlContext";
 
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();
-  const sidebarControl = useContext(SidebarControlContext);
 
   const [meetingResponse, setMeetingResponse] = useState<MeetingResFire | null>(
     null,
@@ -72,9 +70,6 @@ export default function useMeetingDesc() {
           setIsCardVisible(true);
           setActiveTab("documents");
         }
-        if (sidebarControl?.setOpen) {
-          sidebarControl.setOpen(false);
-        }
       } else {
         setMeetingResponse(null);
       }
@@ -83,7 +78,7 @@ export default function useMeetingDesc() {
     return () => {
       off(meetingRef);
     };
-  }, [db, handleUpdatedRefresh, meetingId, sidebarControl]);
+  }, [db, handleUpdatedRefresh, meetingId]);
 
   // useEffect(() => {
   //   if (!meetingId || !meetingResponse) return;

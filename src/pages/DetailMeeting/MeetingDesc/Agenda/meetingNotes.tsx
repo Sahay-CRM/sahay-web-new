@@ -8,7 +8,6 @@ import {
   Edit,
   Share2,
   Check,
-  Group,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -29,9 +28,9 @@ import { queryClient } from "@/queryClient";
 import { useSelector } from "react-redux";
 import { getUserId } from "@/features/selectors/auth.selector";
 import { database } from "@/firebaseConfig";
-import NotesGroupModal from "./notesGroupModal";
-import ConfirmUnGroupModal from "./confirmUnGroupModal";
-import { removeGroupMutation } from "@/features/api/detailMeeting/NoteGroup";
+// import NotesGroupModal from "./notesGroupModal";
+// import ConfirmUnGroupModal from "./confirmUnGroupModal";
+// import { removeGroupMutation } from "@/features/api/detailMeeting/NoteGroup";
 // import MoveDeleteGroupModal from "./moveDeleteGroupModal";
 
 interface MeetingNotesProps {
@@ -62,14 +61,14 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerProj, setDrawerProj] = useState(false);
-  const [isGroupModal, setIsGroupModal] = useState(false);
-  const [isUpdateName, setIsUpdateName] = useState(false);
-  const [GroupModalData, setGroupModalData] = useState<MeetingNotesRes | null>(
-    null,
-  );
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [selectedUnGroupNote, setSelectedUnGroupNote] =
-    useState<MeetingNotesRes | null>(null);
+  // const [isGroupModal, setIsGroupModal] = useState(false);
+  // const [isUpdateName, setIsUpdateName] = useState(false);
+  // const [GroupModalData, setGroupModalData] = useState<MeetingNotesRes | null>(
+  //   null,
+  // );
+  // const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  // const [selectedUnGroupNote, setSelectedUnGroupNote] =
+  //   useState<MeetingNotesRes | null>(null);
 
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskGetPaging | TaskData>();
@@ -96,7 +95,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       enable: !!meetingId,
     });
   const { mutate: addNote } = addMeetingNotesMutation();
-  const { mutate: removeGroupFromNote } = removeGroupMutation();
+  // const { mutate: removeGroupFromNote } = removeGroupMutation();
   const deleteNoteMutation = deleteCompanyMeetingMutation();
 
   // Toggle dropdown function
@@ -294,37 +293,37 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
       ),
     [joiners, userId],
   );
-  const handleConfirmUnGroup = () => {
-    if (!selectedUnGroupNote?.groupId) return;
+  // const handleConfirmUnGroup = () => {
+  //   if (!selectedUnGroupNote?.groupId) return;
 
-    const payload = {
-      groupId: selectedUnGroupNote.groupId,
-      meetingNoteId: selectedUnGroupNote.meetingNoteId,
-    };
+  //   const payload = {
+  //     groupId: selectedUnGroupNote.groupId,
+  //     meetingNoteId: selectedUnGroupNote.meetingNoteId,
+  //   };
 
-    removeGroupFromNote(payload, {
-      onSuccess: () => {
-        setIsConfirmModalOpen(false);
-        refetchMeetingNotes();
-      },
-    });
-  };
+  //   removeGroupFromNote(payload, {
+  //     onSuccess: () => {
+  //       setIsConfirmModalOpen(false);
+  //       refetchMeetingNotes();
+  //     },
+  //   });
+  // };
 
-  const handleNoteGroup = (data: MeetingNotesRes) => {
-    setIsGroupModal(true);
-    setIsUpdateName(false);
-    setGroupModalData(data);
-  };
-  const handleUpdateGroup = (data: MeetingNotesRes) => {
-    setIsGroupModal(true);
-    setIsUpdateName(true);
-    setGroupModalData(data);
-  };
+  // const handleNoteGroup = (data: MeetingNotesRes) => {
+  //   setIsGroupModal(true);
+  //   setIsUpdateName(false);
+  //   setGroupModalData(data);
+  // };
+  // const handleUpdateGroup = (data: MeetingNotesRes) => {
+  //   setIsGroupModal(true);
+  //   setIsUpdateName(true);
+  //   setGroupModalData(data);
+  // };
 
-  const handleUnGroupGroup = (note: MeetingNotesRes) => {
-    setSelectedUnGroupNote(note);
-    setIsConfirmModalOpen(true);
-  };
+  // const handleUnGroupGroup = (note: MeetingNotesRes) => {
+  //   setSelectedUnGroupNote(note);
+  //   setIsConfirmModalOpen(true);
+  // };
 
   return (
     <div className={cn("px-2", className)}>
@@ -559,7 +558,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                   Delete
                                 </DropdownMenuItem>
 
-                                {!note.groupId ? (
+                                {/* {!note.groupId ? (
                                   <DropdownMenuItem
                                     onClick={() => handleNoteGroup(note)}
                                     className="text-primary focus:text-primary px-2 py-1.5"
@@ -591,7 +590,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                       UnGroup
                                     </DropdownMenuItem>
                                   </>
-                                )}
+                                )} */}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -628,16 +627,16 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
         />
       )}
 
-      {isGroupModal && (
+      {/* {isGroupModal && (
         <NotesGroupModal
           isModalOpen={isGroupModal}
           modalClose={() => setIsGroupModal(false)}
           meetingNoteData={GroupModalData!}
           isUpdateName={isUpdateName}
         />
-      )}
+      )} */}
 
-      <ConfirmUnGroupModal
+      {/* <ConfirmUnGroupModal
         isOpen={isConfirmModalOpen}
         modalClose={() => setIsConfirmModalOpen(false)}
         title="Ungroup Note"
@@ -645,7 +644,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
         onConfirm={handleConfirmUnGroup}
         confirmText="Yes, Ungroup"
         cancelText="Cancel"
-      />
+      /> */}
     </div>
   );
 };

@@ -154,6 +154,11 @@ export default function useCompany() {
     { label: "Sat", value: "6" },
   ];
 
+  // const formatOptions = [
+  //   { value: "compact", label: "International (1K, 1M)" },
+  //   { value: "indian", label: "Indian System (1L, 1Cr)" },
+  // ];
+
   // Handle logo upload
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -304,5 +309,6 @@ export default function useCompany() {
     permission,
     isLogoCropOpen,
     skipDaysOption,
+    // formatOptions,
   };
 }

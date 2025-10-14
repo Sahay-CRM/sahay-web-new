@@ -41,6 +41,7 @@ export default function CompanyProfile() {
     permission,
     isLogoCropOpen,
     skipDaysOption,
+    // formatOptions,
   } = useCompany();
 
   if (!companyData) {
@@ -64,7 +65,6 @@ export default function CompanyProfile() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              {/* Logo Section */}
               <div className="relative">
                 <div className="w-20 h-20 rounded-full text-white font-bold text-2xl shadow-lg">
                   {logoPreview ? (
@@ -313,7 +313,20 @@ export default function CompanyProfile() {
                               Kpi Skip Days
                             </label>
                             <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                              {companyData.kpiSkipDays}
+                              {(typeof companyData.kpiSkipDays === "string"
+                                ? companyData.kpiSkipDays.split(",")
+                                : companyData.kpiSkipDays
+                              )
+                                .map(
+                                  (dayValue: string) =>
+                                    skipDaysOption.find(
+                                      (opt) => opt.value === dayValue,
+                                    )?.label,
+                                )
+                                .filter((label): label is string =>
+                                  Boolean(label),
+                                )
+                                .join(", ")}
                             </p>
                           </>
                         )}
@@ -321,6 +334,51 @@ export default function CompanyProfile() {
                     )}
                   </div>
                 </div>
+                {/* <div className="w-1/2">
+                  {isEditing ? (
+                    <Controller
+                      control={control}
+                      name="unit"
+                      render={({ field }) => (
+                        <FormSelect
+                          label="Unit"
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={formatOptions}
+                          error={errors.unit}
+                          className="rounded-md"
+                          triggerClassName="py-4"
+                        />
+                      )}
+                    />
+                  ) : (
+                    <div>
+                      {companyData.kpiSkipDays && (
+                        <>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Unit
+                          </label>
+                          <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                            {(typeof companyData.kpiSkipDays === "string"
+                              ? companyData.kpiSkipDays.split(",")
+                              : companyData.kpiSkipDays
+                            )
+                              .map(
+                                (dayValue: string) =>
+                                  skipDaysOption.find(
+                                    (opt) => opt.value === dayValue
+                                  )?.label
+                              )
+                              .filter((label): label is string =>
+                                Boolean(label)
+                              )
+                              .join(", ")}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div> */}
               </div>
             </div>
 

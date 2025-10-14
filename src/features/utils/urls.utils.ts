@@ -356,6 +356,11 @@ const Urls = {
   dropdownCity: () => `${baseUrl}/geography/city/get-all`,
   dropdownState: () => `${baseUrl}/geography/state/get-all`,
   updateCompany: () => `${baseUrl}/company/profile/update`,
+
+  addHoliday: () => `${baseUrl}/company/holiday/add`,
+  getHoliday: () => `${baseUrl}/company/holiday/get`,
+  updateHoliday: (id: string) => `${baseUrl}/company/holiday/update/${id}`,
+  deleteHoliday: (id: string) => `${baseUrl}/company/holiday/delete/${id}`,
 };
 
 export default Urls;

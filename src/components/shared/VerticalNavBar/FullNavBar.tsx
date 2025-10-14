@@ -78,7 +78,7 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
       </Link>
 
       {/* Menu Items */}
-      <nav className="flex-1 overflow-y-auto px-2 space-y-1 py-4 scrollbar-none">
+      <nav className="flex-1 overflow-y-auto px-2 space-y-1 pb-4 scrollbar-none">
         {filteredMenuItems?.map((item, index) => {
           return (
             <DrawerAccordion

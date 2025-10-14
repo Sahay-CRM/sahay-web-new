@@ -2,7 +2,7 @@ import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import DashboardLayout from "@/features/layouts/DashboardLayout/dashboardLayout";
-import AddCompanyEmployee from "@/pages/companyEmployee/AddEmployeeFormModal/addEmployee";
+import AddCompanyEmployee from "@/pages/companyEmployee/AddEmployeeFromModal";
 import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
 import AddCompanyMeeting from "@/pages/Meeting/AddMeetingFormModal/addMeeting";
 import GroupKpisCreate from "@/pages/datapointList/GroupKpis/groupKpisCreateGroup";
@@ -105,6 +105,8 @@ const CompanyTaskRe = lazy(
 // const CompanyTaskNew = lazy(() => import("../pages/ToDoList"));
 const CompanyProjectTab = lazy(() => import("../pages/CompanyProjectsTab"));
 
+const CompanyHoliDays = lazy(() => import("../pages/CompanyHoliday"));
+
 export default function EmployeeRoutes() {
   return (
     <Routes>
@@ -116,6 +118,8 @@ export default function EmployeeRoutes() {
 
         <Route path="profile" Component={Profile} />
         <Route path="company-profile" Component={CompanyProfile} />
+        <Route path="holidays" Component={CompanyHoliDays} />
+
         <Route path="settings" Component={Theme} />
         <Route path="company-designation" Component={companydesignation} />
         <Route path="company-employee" Component={companyEmployee} />

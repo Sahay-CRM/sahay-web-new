@@ -88,6 +88,14 @@ export default function RepeatTaskToDo() {
   const totalTasks = tasks.length;
   const completedTasks = doneTasks.length;
 
+  const isSameDate = (date1: Date, date2: Date): boolean => {
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex flex-col w-full py-4 px-4 h-full">
@@ -153,7 +161,7 @@ export default function RepeatTaskToDo() {
                       <div
                         key={task.taskId}
                         className={`group overflow-hidden flex h-12 justify-between px-2 rounded-sm border bg-card hover:bg-accent transition ${
-                          selectedDate !== today &&
+                          !isSameDate(selectedDate!, today) &&
                           "bg-gray-300 hover:bg-gray-200"
                         }`}
                       >
@@ -162,7 +170,10 @@ export default function RepeatTaskToDo() {
                             <RadioGroup
                               value={task.isCompleted ? "done" : "todo"}
                               onValueChange={() => {
-                                if (task.taskId && selectedDate === today) {
+                                if (
+                                  task.taskId &&
+                                  isSameDate(selectedDate!, today)
+                                ) {
                                   toggleComplete(
                                     task.taskId,
                                     !task.isCompleted,
@@ -170,7 +181,7 @@ export default function RepeatTaskToDo() {
                                 }
                               }}
                               className={`px-1 flex-shrink-0 ${
-                                selectedDate === today
+                                isSameDate(selectedDate!, today)
                                   ? "cursor-pointer"
                                   : "cursor-not-allowed"
                               }`}
@@ -180,7 +191,7 @@ export default function RepeatTaskToDo() {
                                 value="done"
                                 id={`task-${task.taskId}`}
                                 className={`w-4 h-4 rounded-full border border-gray-400 data-[state=checked]:bg-primary data-[state=checked]:border-primary ${
-                                  selectedDate === today
+                                  isSameDate(selectedDate!, today)
                                     ? "cursor-pointer"
                                     : "cursor-not-allowed"
                                 }`}
@@ -191,7 +202,10 @@ export default function RepeatTaskToDo() {
                               <div
                                 className="flex flex-col flex-1 min-w-0 cursor-pointer py-1.5 w-full"
                                 onClick={() => {
-                                  if (task.taskId && selectedDate === today) {
+                                  if (
+                                    task.taskId &&
+                                    isSameDate(selectedDate!, today)
+                                  ) {
                                     toggleComplete(
                                       task.taskId,
                                       !task.isCompleted,
@@ -313,19 +327,24 @@ export default function RepeatTaskToDo() {
                     <div
                       key={task.taskId}
                       className={`flex h-12 justify-between border p-2 rounded-md bg-gray-100 hover:bg-gray-200 transition items-center ${
-                        selectedDate === today ? "" : "bg-gray-200"
+                        isSameDate(selectedDate!, today) ? "" : "bg-gray-200"
                       }`}
                     >
                       <div className="flex gap-3 flex-1 items-center">
                         <FormCheckbox
                           checked={task.isCompleted}
                           onChange={() => {
-                            if (task.taskId && selectedDate === today) {
+                            if (
+                              task.taskId &&
+                              isSameDate(selectedDate!, today)
+                            ) {
                               toggleComplete(task.taskId, !task.isCompleted);
                             }
                           }}
                           className={`w-4 h-4 rounded-full border border-gray-400 data-[state=checked]:bg-primary data-[state=checked]:border-primary ${
-                            selectedDate === today ? "" : "cursor-not-allowed"
+                            isSameDate(selectedDate!, today)
+                              ? ""
+                              : "cursor-not-allowed"
                           }`}
                           containerClass="rounded-full overflow-hidden mt-0"
                           onClick={(e) => e.stopPropagation()}
@@ -334,7 +353,10 @@ export default function RepeatTaskToDo() {
                           <div
                             className="flex flex-col flex-1 min-w-0 cursor-pointer py-1.5 w-full"
                             onClick={() => {
-                              if (task.taskId && selectedDate === today) {
+                              if (
+                                task.taskId &&
+                                isSameDate(selectedDate!, today)
+                              ) {
                                 toggleComplete(task.taskId, !task.isCompleted);
                               }
                             }}

@@ -19,26 +19,33 @@ const CalenderFormModal: React.FC<ImportantModalProps> = ({
   modalData,
 }) => {
   const methods = useForm();
-  const { register, errors, onSubmit, handleModalClose, watch, setValue } =
-    useCalenderFormModal({
-      modalClose,
-      modalData,
-    });
+  const {
+    register,
+    errors,
+    control,
+    onSubmit,
+    handleModalClose,
+    watch,
+    setValue,
+  } = useCalenderFormModal({
+    modalClose,
+    modalData,
+  });
 
   const selectedDate = watch("importantDate");
   const [showColorPicker, setShowColorPicker] = useState(false);
   // New: Local state to stage color before saving
   const [stagedColor, setStagedColor] = useState<string>(
-    modalData?.color || "#aabbcc",
+    modalData?.color || "",
   );
   const pickerRef = useRef<HTMLDivElement>(null);
 
-  // Sync stagedColor with form value when modal opens or color changes externally
   useEffect(() => {
-    // If stagedColor is undefined or empty, use #aabbcc
-    setValue("color", stagedColor || "#aabbcc");
-    setStagedColor(stagedColor || "#aabbcc");
-  }, [setValue, stagedColor]);
+    if (!stagedColor && modalData.color) {
+      setValue("color", modalData.color);
+      setStagedColor(modalData.color);
+    }
+  }, [modalData.color, setValue, stagedColor]);
 
   // Close picker on outside click
   useEffect(() => {
@@ -130,7 +137,7 @@ const CalenderFormModal: React.FC<ImportantModalProps> = ({
               </label>
               <Controller
                 name="color"
-                control={methods.control}
+                control={control}
                 rules={{ required: "Select a color" }}
                 render={({ field }) => (
                   <div className="relative">
@@ -139,7 +146,7 @@ const CalenderFormModal: React.FC<ImportantModalProps> = ({
                       className="flex items-center px-3 py-1 border rounded bg-white"
                       onClick={() => {
                         setShowColorPicker((v) => !v);
-                        setStagedColor(field.value || "#aabbcc"); // Reset staged color to current value or default
+                        setStagedColor(field.value || "#aabbcc");
                       }}
                     >
                       <span
@@ -179,20 +186,23 @@ const CalenderFormModal: React.FC<ImportantModalProps> = ({
                           <HexColorPicker
                             color={stagedColor || "#aabbcc"}
                             onChange={setStagedColor}
+                            className="w-full"
                           />
                           <div className="mt-2 flex items-center justify-between">
                             <span
                               style={{
                                 display: "inline-block",
-                                width: 24,
-                                height: 24,
+                                width: 20,
+                                height: 20,
                                 background: stagedColor,
                                 border: "1px solid #ccc",
                                 borderRadius: 4,
                                 verticalAlign: "middle",
                               }}
                             />
-                            <span className="ml-2 text-sm">{stagedColor}</span>
+                            <span className="ml-2 text-sm w-16">
+                              {stagedColor}
+                            </span>
                             <div className="ml-4 flex gap-2">
                               <button
                                 type="button"
