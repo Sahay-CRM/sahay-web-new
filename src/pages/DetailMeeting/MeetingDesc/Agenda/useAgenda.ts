@@ -163,8 +163,8 @@ export const useAgenda = ({
   const { data: detailAgendaData } = useGetDetailMeetingAgendaIssue({
     filter: {
       issueObjectiveId:
-        meetingStatus !== "ENDED"
-          ? !unFollowByUser && meetingResponse?.state.currentAgendaItemId
+        meetingStatus !== "ENDED" && !unFollowByUser
+          ? meetingResponse?.state.currentAgendaItemId
           : isSelectedAgenda,
       ...(ioType === "ISSUE"
         ? {
@@ -180,10 +180,8 @@ export const useAgenda = ({
       ioType: ioType,
     },
     enable:
-      isSameIo &&
-      !!meetingResponse?.state.currentAgendaItemId &&
-      !!ioType &&
-      !!isSelectedAgenda,
+      (isSameIo && !!meetingResponse?.state.currentAgendaItemId) ||
+      (unFollowByUser && !!ioType && !!isSelectedAgenda),
   });
 
   useEffect(() => {
