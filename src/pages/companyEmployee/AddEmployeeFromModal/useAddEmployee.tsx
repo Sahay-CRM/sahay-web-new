@@ -33,7 +33,13 @@ export default function useAddEmployee() {
     photo: "",
   });
 
-  const { data: employeeData } = useGetEmployeeById(companyEmployeeId!);
+  const { data: employeeData } = useGetEmployeeById({
+    filter: {
+      employeeId: companyEmployeeId,
+      editFlag: true,
+    },
+    enable: !!companyEmployeeId,
+  });
   const { mutate: addEmployee, isPending } = useAddOrUpdateEmployee();
   const { mutate: uploadImage } = imageUploadMutation();
 

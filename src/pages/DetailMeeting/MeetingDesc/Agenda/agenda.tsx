@@ -314,8 +314,6 @@ export default function Agenda({
     },
   ];
 
-  console.log(createIssueLoading);
-
   return (
     <div>
       {/* radio button modal */}

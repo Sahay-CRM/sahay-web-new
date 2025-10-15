@@ -521,7 +521,12 @@ export default function UserPermissionTableMerged() {
   const { id: employeeId } = useParams();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const updatePermission = useUpdateUserPermission();
-  const { data: employeeApiData } = useGetEmployeeById(employeeId || "");
+  const { data: employeeApiData } = useGetEmployeeById({
+    filter: {
+      employeeId: employeeId,
+    },
+    enable: !!employeeId,
+  });
   const { data: userPerm } = useGetUserPerById(employeeId || "");
   const { setBreadcrumbs } = useBreadcrumbs();
   const location = useLocation();

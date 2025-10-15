@@ -4,17 +4,22 @@ import { useQuery } from "@tanstack/react-query";
 
 // type EmployeeRes = BaseResponse<EmployeeDetailsById>;
 
-export default function useGetEmployeeById(id: string) {
+export default function useGetEmployeeById({
+  filter,
+  enable,
+}: FilterDataProps) {
   return useQuery({
-    queryKey: ["get-employee-by-id", id],
+    queryKey: ["get-employee-by-id", filter],
     queryFn: async () => {
-      if (!id) {
+      if (!filter.employeeId) {
         throw new Error("Employee ID is required");
       }
       const { data } = await Api.post<{ data: EmployeeDetailsById }>({
-        url: Urls.getEmployeeById(id),
+        url: Urls.getEmployeeById(filter.employeeId),
+        data: filter,
       });
       return data;
     },
+    enabled: !!enable || !!filter,
   });
 }
