@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 import { SpinnerIcon } from "@/components/shared/Icons";
-import FormSelect from "@/components/shared/Form/FormSelect";
+// import FormSelect from "@/components/shared/Form/FormSelect";
 
 const Agenda = React.lazy(() => import("./Agenda"));
 const MeetingNotes = React.lazy(() => import("./Agenda/meetingNotes"));
@@ -74,8 +74,8 @@ export default function MeetingDesc() {
     meetingData,
     handleUnFollow,
     handleFollowBack,
-    selectedGroupFilter,
-    setSelectedGroupFilter,
+    // selectedGroupFilter,
+    // setSelectedGroupFilter,
   } = useMeetingDesc();
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -434,7 +434,7 @@ export default function MeetingDesc() {
             <div>
               <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
                 <h3 className="p-0 text-base pl-4">Meeting Notes</h3>
-                <div>
+                {/* <div>
                   <FormSelect
                     placeholder="Group Filter"
                     options={[
@@ -462,7 +462,7 @@ export default function MeetingDesc() {
                     className="h-10"
                     triggerClassName="py-0"
                   />
-                </div>
+                </div> */}
                 <div>
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
@@ -487,7 +487,7 @@ export default function MeetingDesc() {
                       className="mt-2"
                       meetingName={meetingTiming?.meetingName}
                       meetingStatus={meetingStatus}
-                      groupFlag={selectedGroupFilter}
+                      // groupFlag={selectedGroupFilter}
                     />
                   </Suspense>
                 )}

@@ -239,7 +239,8 @@ export const useAgenda = ({
   const { mutate: endMeet, isPending: endMeetingLoading } =
     endMeetingMutation();
   const { mutate: updateTime } = addMeetingTimeMutation();
-  const { mutate: ioCreate } = createIoMutation();
+  const { mutate: ioCreate, isPending: createIssueLoading } =
+    createIoMutation();
   const { mutate: UpdateIoSeq } = updateIoSequenceMutation();
 
   const handleStartMeeting = () => {
@@ -1221,5 +1222,6 @@ export const useAgenda = ({
     resolutionFilter,
     handleDragEnd,
     unFollowByUser,
+    createIssueLoading,
   };
 };

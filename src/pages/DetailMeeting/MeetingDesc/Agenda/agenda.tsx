@@ -187,6 +187,7 @@ export default function Agenda({
     resolutionFilter,
     handleDragEnd,
     unFollowByUser,
+    createIssueLoading,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -313,6 +314,8 @@ export default function Agenda({
     },
   ];
 
+  console.log(createIssueLoading);
+
   return (
     <div>
       {/* radio button modal */}
@@ -327,7 +330,7 @@ export default function Agenda({
         isModalOpen={addIssueModal}
         modalClose={() => setAddIssueModal(false)}
         onSubmit={handleModalSubmit}
-        isLoading={isPending}
+        isLoading={createIssueLoading}
         issueInput={issueInput}
         setIssueInput={setIssueInput}
         setDropdownVisible={setDropdownVisible}

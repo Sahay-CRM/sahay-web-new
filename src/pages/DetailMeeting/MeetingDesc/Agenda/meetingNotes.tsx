@@ -28,6 +28,7 @@ import { queryClient } from "@/queryClient";
 import { useSelector } from "react-redux";
 import { getUserId } from "@/features/selectors/auth.selector";
 import { database } from "@/firebaseConfig";
+import { formatUTCDateToLocal } from "@/features/utils/app.utils";
 // import NotesGroupModal from "./notesGroupModal";
 // import ConfirmUnGroupModal from "./confirmUnGroupModal";
 // import { removeGroupMutation } from "@/features/api/detailMeeting/NoteGroup";
@@ -40,7 +41,7 @@ interface MeetingNotesProps {
   className?: string;
   meetingName?: string;
   meetingStatus?: string;
-  groupFlag?: boolean | null;
+  // groupFlag?: boolean | null;
 }
 
 interface TaskData {
@@ -54,7 +55,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   className,
   meetingName,
   meetingStatus,
-  groupFlag,
+  // groupFlag,
 }) => {
   const [noteInput, setNoteInput] = useState("");
   const [titleInput, setTitleInput] = useState("");
@@ -90,7 +91,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
     useGetMeetingNotes({
       filter: {
         meetingId: meetingId,
-        groupFlag,
+        // groupFlag,
       },
       enable: !!meetingId,
     });
@@ -424,6 +425,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                         </span>
                       )}
                       <span className="text-xs text-gray-400">
+                        {formatUTCDateToLocal(note.createdAt)} {""}
                         {note?.createdAt
                           ? new Date(note.createdAt).toLocaleTimeString([], {
                               hour: "2-digit",
