@@ -307,29 +307,26 @@ export default function CompanyProfile() {
                       />
                     ) : (
                       <div>
-                        {companyData.kpiSkipDays && (
-                          <>
-                            <label className="block text-sm font-medium text-gray-700">
-                              Kpi Skip Days
-                            </label>
-                            <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                              {(typeof companyData.kpiSkipDays === "string"
-                                ? companyData.kpiSkipDays.split(",")
-                                : companyData.kpiSkipDays
+                        <label className="block text-sm font-medium text-gray-700">
+                          Kpi Skip Days
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                          {companyData.kpiSkipDays &&
+                            (typeof companyData.kpiSkipDays === "string"
+                              ? companyData.kpiSkipDays.split(",")
+                              : companyData.kpiSkipDays
+                            )
+                              .map(
+                                (dayValue: string) =>
+                                  skipDaysOption.find(
+                                    (opt) => opt.value === dayValue,
+                                  )?.label,
                               )
-                                .map(
-                                  (dayValue: string) =>
-                                    skipDaysOption.find(
-                                      (opt) => opt.value === dayValue,
-                                    )?.label,
-                                )
-                                .filter((label): label is string =>
-                                  Boolean(label),
-                                )
-                                .join(", ")}
-                            </p>
-                          </>
-                        )}
+                              .filter((label): label is string =>
+                                Boolean(label),
+                              )
+                              .join(", ")}
+                        </p>
                       </div>
                     )}
                   </div>

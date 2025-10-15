@@ -95,7 +95,7 @@ function Calendar() {
 
   return (
     <FormProvider {...methods}>
-      <div className="px-2 h-[calc(100vh-120px)] min-h-[500px] sm:px-4 py-6">
+      <div className="px-2 h-[calc(100vh-120px)] min-h-[500px] sm:px-4 py-4">
         <div className="flex justify-between gap-5">
           {permission.IMPORTANT_DATE.Add && (
             <div>
@@ -114,7 +114,8 @@ function Calendar() {
                   handleOptionChange(item as string | string[])
                 }
                 options={selectOptions}
-                className="h-9"
+                triggerClassName="mb-0 py-4"
+                // className="h-9"
               />
             </div>
           )}

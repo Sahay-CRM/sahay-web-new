@@ -47,7 +47,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { ImageBaseURL } from "@/features/utils/urls.utils";
-import { useGetCompanyList } from "@/features/api/SelectCompany";
 import { verifyCompanyOtpMutation } from "@/features/api/login";
 import { queryClient } from "@/queryClient";
 import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
@@ -73,6 +72,7 @@ import SidebarControlContext from "./SidebarControlContext";
 import ModalData from "@/components/shared/Modal/ModalData";
 import { ExclamationRoundIcon } from "@/components/shared/Icons";
 import { loginToFirebase } from "@/pages/auth/login/loginToFirebase";
+import { useGetCompanyList } from "@/features/api/SelectCompany";
 
 const CompanyModal = lazy(() => import("@/pages/auth/login/CompanyModal"));
 const NotificationDropdown = lazy(() => import("./notificationDropdown"));
@@ -113,7 +113,12 @@ const DashboardLayout = () => {
   const { mutate: readAllNoti } = updateReadNotificationMutation();
 
   const { data: permission } = useGetUserPermission();
-  const { data: userData, failureReason } = useGetEmployeeById(userId);
+  const { data: userData, failureReason } = useGetEmployeeById({
+    filter: {
+      employeeId: userId,
+    },
+    enable: !!userId,
+  });
 
   const { data: notificationData } = useGetUserNotification();
 
