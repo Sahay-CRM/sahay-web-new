@@ -440,26 +440,26 @@ export const useAgenda = ({
     ioType: item.ioType,
   }));
 
-  const handleUpdateSelectedObjective = async (
-    data: DetailMeetingObjectives,
-  ) => {
-    const meetingRef = ref(db, `meetings/${meetingId}`);
-    const meetingSnapshot = await get(meetingRef);
+  const handleUpdateSelectedObjective = (data: DetailMeetingObjectives) => {
     const payload = {
       meetingId: meetingId,
       id: data.id,
       ioType: data.ioType,
     };
     addIssueAgenda(payload, {
-      onSuccess: () => {
+      onSuccess: async () => {
+        const meetingRef = ref(db, `meetings/${meetingId}`);
+        const meetingSnapshot = await get(meetingRef);
         if (meetingSnapshot.exists()) {
           update(meetStateRef, {
             updatedAt: Date.now(),
           });
+          setIssueInput("");
+          setAddIssueModal(false);
+        } else {
+          setIssueInput("");
+          setAddIssueModal(false);
         }
-
-        setIssueInput("");
-        setAddIssueModal(false);
       },
     });
   };
