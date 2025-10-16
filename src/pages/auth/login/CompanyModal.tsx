@@ -45,9 +45,10 @@ const CompanyModal: React.FC<CompanyModalProps> = ({
   };
 
   const filteredCompanies = useMemo(() => {
-    if (!searchTerm) {
-      return companies;
+    if (searchTerm.trim().length < 3) {
+      return [];
     }
+
     return companies.filter(
       (company) =>
         company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -87,7 +88,11 @@ const CompanyModal: React.FC<CompanyModalProps> = ({
                 value={field.value}
                 onValueChange={field.onChange}
               >
-                {filteredCompanies.length > 0 ? (
+                {searchTerm.trim().length < 3 ? (
+                  <p className="text-center text-gray-500 py-4">
+                    Type something to find companies.
+                  </p>
+                ) : filteredCompanies.length > 0 ? (
                   filteredCompanies.map((c, index) => (
                     <label
                       key={c.companyId + index}

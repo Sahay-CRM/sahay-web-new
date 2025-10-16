@@ -21,7 +21,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import Loader from "@/components/shared/Loader/Loader";
 import { FormDatePicker } from "@/components/shared/Form/FormDatePicker/FormDatePicker";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, GripVertical } from "lucide-react";
+import { RefreshCcw, GripVertical, Plus } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -56,6 +56,7 @@ import {
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 // import CommentModal from "./KpiCommentModal";
 import { twMerge } from "tailwind-merge";
+import CommentModal from "./KpiCommentModal";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -339,7 +340,7 @@ export default function UpdatedKpiTable() {
 
   const userData = useSelector(getUserDetail);
   const [isDataFilter, setIsDataFilter] = useState("default");
-  // const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const [commentModalOpen, setCommentModalOpen] = useState(false);
 
   // const [sortConfig, setSortConfig] = useState<SortConfig>({
   //   key: "sequence",
@@ -389,8 +390,8 @@ export default function UpdatedKpiTable() {
   }, [kpiStructure, isKpiStructureLoading, searchParams]);
 
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
-  // const [currentCellKey, setCurrentCellKey] = useState<string>("");
-  // const [commentModalInput, setCommentModalInput] = useState("");
+  const [currentCellKey, setCurrentCellKey] = useState<string>("");
+  const [commentModalInput, setCommentModalInput] = useState("");
 
   const [tempValues, setTempValues] = useState<{
     [key: string]: { value: string; comment?: string };
@@ -1190,8 +1191,8 @@ export default function UpdatedKpiTable() {
                                   inputValues[key] ??
                                   cell?.data?.toString() ??
                                   "";
-                                // const inputnote =
-                                //   tempValues[key]?.comment ?? cell?.note ?? "";
+                                const inputnote =
+                                  tempValues[key]?.comment ?? cell?.note ?? "";
 
                                 const isVisualized = kpi?.isVisualized;
                                 const canAdd = permission?.Add && !cell?.data;
@@ -1303,7 +1304,7 @@ export default function UpdatedKpiTable() {
                                                 </div>
                                               )}
 
-                                              {/* <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <Tooltip>
                                                   <TooltipTrigger asChild>
                                                     {inputnote &&
@@ -1323,7 +1324,8 @@ export default function UpdatedKpiTable() {
                                                                   inputVal,
                                                                   value1 ??
                                                                     null,
-                                                                  value2 ?? null
+                                                                  value2 ??
+                                                                    null,
                                                                 )
                                                                 ? "linear-gradient(to bottom left, #5b8f65 45%, white 55%)"
                                                                 : "linear-gradient(to bottom left, #fca5a5 45%, white 55%)"
@@ -1334,13 +1336,13 @@ export default function UpdatedKpiTable() {
                                                         onClick={(e) => {
                                                           e.stopPropagation();
                                                           setCurrentCellKey(
-                                                            key
+                                                            key,
                                                           );
                                                           setCommentModalInput(
-                                                            inputnote
+                                                            inputnote,
                                                           );
                                                           setCommentModalOpen(
-                                                            true
+                                                            true,
                                                           );
                                                         }}
                                                       ></span>
@@ -1350,13 +1352,13 @@ export default function UpdatedKpiTable() {
                                                         onClick={(e) => {
                                                           e.stopPropagation();
                                                           setCurrentCellKey(
-                                                            key
+                                                            key,
                                                           );
                                                           setCommentModalInput(
-                                                            ""
+                                                            "",
                                                           );
                                                           setCommentModalOpen(
-                                                            true
+                                                            true,
                                                           );
                                                         }}
                                                       >
@@ -1374,7 +1376,7 @@ export default function UpdatedKpiTable() {
                                                     </span>
                                                   </TooltipContent>
                                                 </Tooltip>
-                                              </div> */}
+                                              </div>
                                             </div>
                                           </TooltipTrigger>
                                         </Tooltip>
@@ -1452,7 +1454,7 @@ export default function UpdatedKpiTable() {
                                               disabled={!canInput}
                                               readOnly={!canInput}
                                             />
-                                            {/* <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                               {canInput && (
                                                 <Tooltip>
                                                   <TooltipTrigger asChild>
@@ -1472,7 +1474,8 @@ export default function UpdatedKpiTable() {
                                                                   inputVal,
                                                                   value1 ??
                                                                     null,
-                                                                  value2 ?? null
+                                                                  value2 ??
+                                                                    null,
                                                                 )
                                                                 ? "linear-gradient(to bottom left, #5b8f65 45%, white 55%)" // valid → greenish
                                                                 : "linear-gradient(to bottom left, #fca5a5 45%, white 55%)" // invalid → reddish
@@ -1483,13 +1486,13 @@ export default function UpdatedKpiTable() {
                                                         onClick={(e) => {
                                                           e.stopPropagation();
                                                           setCurrentCellKey(
-                                                            key
+                                                            key,
                                                           );
                                                           setCommentModalInput(
-                                                            inputnote
+                                                            inputnote,
                                                           );
                                                           setCommentModalOpen(
-                                                            true
+                                                            true,
                                                           );
                                                         }}
                                                       ></span>
@@ -1499,13 +1502,13 @@ export default function UpdatedKpiTable() {
                                                         onClick={(e) => {
                                                           e.stopPropagation();
                                                           setCurrentCellKey(
-                                                            key
+                                                            key,
                                                           );
                                                           setCommentModalInput(
-                                                            ""
+                                                            "",
                                                           );
                                                           setCommentModalOpen(
-                                                            true
+                                                            true,
                                                           );
                                                         }}
                                                       >
@@ -1524,7 +1527,7 @@ export default function UpdatedKpiTable() {
                                                   </TooltipContent>
                                                 </Tooltip>
                                               )}
-                                            </div> */}
+                                            </div>
                                           </div>
                                         </TooltipTrigger>
                                         {inputVal !== "" &&
@@ -1656,7 +1659,7 @@ export default function UpdatedKpiTable() {
         onDiscard={handleWarningDiscard}
         onClose={handleWarningClose}
       />
-      {/* <CommentModal
+      <CommentModal
         isModalOpen={commentModalOpen}
         modalClose={() => setCommentModalOpen(false)}
         initialComment={commentModalInput ?? ""} // prefill existing note
@@ -1668,8 +1671,9 @@ export default function UpdatedKpiTable() {
               comment: comment,
             },
           }));
+          // handleSubmit();
         }}
-      /> */}
+      />
     </FormProvider>
   );
 }

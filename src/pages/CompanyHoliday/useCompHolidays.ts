@@ -1,13 +1,18 @@
 import { deleteHolidayMutation } from "@/features/api/Holiday";
 import useGetHoliday from "@/features/api/Holiday/useGetHoliday";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
 export default function useCompHolidays() {
   const permission = useSelector(getUserPermission).COMPANY_PROFILE;
   const [isSearch, setIsSearch] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState<string>("12");
+  const { setBreadcrumbs } = useBreadcrumbs();
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Company Holiday", href: "" }]);
+  }, [setBreadcrumbs]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState<HolidaysDataProps | null>(null);
