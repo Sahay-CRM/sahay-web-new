@@ -1049,6 +1049,10 @@ export default function Agenda({
                                     (data) => data !== "taskId",
                                   ) as Array<keyof typeof task.oldValues>;
 
+                                  const isNewValueEmpty =
+                                    !task.newValues ||
+                                    Object.keys(task.newValues).length === 0;
+
                                   return (
                                     <div
                                       key={idx}
@@ -1069,7 +1073,8 @@ export default function Agenda({
                                           ) : (
                                             task.newValues.taskName
                                           )}{" "}
-                                          &nbsp; DISCUSSION
+                                          &nbsp; DISCUSSION &nbsp;
+                                          {isNewValueEmpty && "Removed"}
                                         </h4>
                                       </div>
                                       <div className="w-2/3">
@@ -1145,6 +1150,10 @@ export default function Agenda({
                                     (data) => data !== "projectId",
                                   ) as Array<keyof typeof project.oldValues>;
 
+                                  const isNewValueEmpty =
+                                    !project.newValues ||
+                                    Object.keys(project.newValues).length === 0;
+
                                   return (
                                     <div
                                       key={idx}
@@ -1165,6 +1174,8 @@ export default function Agenda({
                                           ) : (
                                             project.newValues.projectName
                                           )}
+                                          &nbsp; DISCUSSION &nbsp;
+                                          {isNewValueEmpty && "Removed"}
                                         </h4>
                                       </div>
                                       <div className="w-2/3">
@@ -1290,6 +1301,10 @@ export default function Agenda({
                                     (kpi.oldData?.length || 0) > 0 ||
                                     (kpi.newData?.length || 0) > 0;
 
+                                  const isNewValueEmpty =
+                                    !kpi.newValues ||
+                                    Object.keys(kpi.newValues).length === 0;
+
                                   return (
                                     <div
                                       key={idx}
@@ -1309,8 +1324,9 @@ export default function Agenda({
                                           </>
                                         ) : (
                                           kpi.newValues.kpiName
-                                        )}{" "}
-                                        &nbsp; DISCUSSION
+                                        )}
+                                        &nbsp; DISCUSSION &nbsp;
+                                        {isNewValueEmpty && "Removed"}
                                       </h4>
 
                                       {hasChange && (
