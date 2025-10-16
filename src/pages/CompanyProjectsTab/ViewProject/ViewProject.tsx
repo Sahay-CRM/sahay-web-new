@@ -1,4 +1,4 @@
-import { Controller, FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { EditIcon, TrashIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -161,17 +161,12 @@ const ProjectView = () => {
                   <p className="text-sm font-medium text-gray-500">
                     Project Status
                   </p>
-                  <Controller
-                    name="projectStatus"
-                    control={methods.control}
-                    render={({ field, fieldState }) => (
-                      <FormSelect
-                        {...field}
-                        options={statusOptions}
-                        error={fieldState.error}
-                        onChange={(val) => handleStatusChange(val as string)}
-                      />
-                    )}
+                  <FormSelect
+                    value={project.projectStatusId}
+                    onChange={(val) => handleStatusChange(val as string)}
+                    options={statusOptions}
+                    triggerClassName="mb-0 py-4"
+                    // className="h-9"
                   />
                   <div>
                     <p className="text-sm font-medium text-gray-500 mb-1">

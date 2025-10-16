@@ -398,15 +398,14 @@ const DashboardLayout = () => {
                           </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => navigate("/dashboard/holidays")}
+                        >
+                          <CalendarDays /> Holidays
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                       </>
                     )}
-
-                    <DropdownMenuItem
-                      onClick={() => navigate("/dashboard/holidays")}
-                    >
-                      <CalendarDays /> Holidays
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
 
                     <DropdownMenuItem onClick={() => setLogoutModalOpen(true)}>
                       <LogOut /> Log out
