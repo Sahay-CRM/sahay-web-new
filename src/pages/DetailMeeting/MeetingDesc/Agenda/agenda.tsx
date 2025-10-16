@@ -358,27 +358,24 @@ export default function Agenda({
             <nav className="z-20 flex">
               <div className="mr-5 flex gap-3 items-center rounded-2xl px-1">
                 <Button
-                  className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white cursor-pointer flex items-center ${
-                    activeTab === "tasks"
-                      ? "bg-white h-[50px] shadow-none border-t-4 border-l-1 border-r-1 border-primary z-10"
+                  className={`w-32 mx-auto border border-b-0 rounded-b-none hover:bg-white  cursor-pointer flex items-center ${
+                    activeTab === "kpis"
+                      ? "bg-white h-[50px] border-t-4 border-l-1 border-r-1 border-primary z-10"
                       : "bg-gray-100 h-12"
                   }`}
                   style={
-                    activeTab === "tasks"
-                      ? {
-                          marginBottom: "-2px",
-                          color: "#2f318e",
-                        }
+                    activeTab === "kpis"
+                      ? { marginBottom: "-2px", color: "#2f318e" }
                       : { marginBottom: "1px", color: "gray" }
                   }
                   onClick={() => {
                     if (follow || unFollowByUser) {
-                      handleTabChange("tasks");
+                      handleTabChange("kpis");
                     }
                   }}
                 >
-                  <List className="h-5 w-5" />
-                  <span>Tasks ({detailAgendaData?.noOfTasks})</span>
+                  <BarChart2 className="h-5 w-5" />
+                  <span>KPIs ({detailAgendaData?.noOfKPIs})</span>
                 </Button>
                 <Button
                   className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white  cursor-pointer flex items-center ${
@@ -401,24 +398,27 @@ export default function Agenda({
                   <span>Projects ({detailAgendaData?.noOfProjects})</span>
                 </Button>
                 <Button
-                  className={`w-32 mx-auto border border-b-0 rounded-b-none hover:bg-white  cursor-pointer flex items-center ${
-                    activeTab === "kpis"
-                      ? "bg-white h-[50px] border-t-4 border-l-1 border-r-1 border-primary z-10"
+                  className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white cursor-pointer flex items-center ${
+                    activeTab === "tasks"
+                      ? "bg-white h-[50px] shadow-none border-t-4 border-l-1 border-r-1 border-primary z-10"
                       : "bg-gray-100 h-12"
                   }`}
                   style={
-                    activeTab === "kpis"
-                      ? { marginBottom: "-2px", color: "#2f318e" }
+                    activeTab === "tasks"
+                      ? {
+                          marginBottom: "-2px",
+                          color: "#2f318e",
+                        }
                       : { marginBottom: "1px", color: "gray" }
                   }
                   onClick={() => {
                     if (follow || unFollowByUser) {
-                      handleTabChange("kpis");
+                      handleTabChange("tasks");
                     }
                   }}
                 >
-                  <BarChart2 className="h-5 w-5" />
-                  <span>KPIs ({detailAgendaData?.noOfKPIs})</span>
+                  <List className="h-5 w-5" />
+                  <span>Tasks ({detailAgendaData?.noOfTasks})</span>
                 </Button>
               </div>
             </nav>

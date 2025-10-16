@@ -37,7 +37,7 @@ interface UseAgendaProps {
   follow?: boolean;
 }
 
-type ActiveTab = "tasks" | "projects" | "kpis";
+type ActiveTab = "kpis" | "projects" | "tasks";
 
 export const useAgenda = ({
   meetingId,
