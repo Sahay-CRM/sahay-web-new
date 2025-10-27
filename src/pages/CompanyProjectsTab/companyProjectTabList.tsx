@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/tooltip";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import FormSelect from "@/components/shared/Form/FormSelect";
+import PageNotAccess from "../PageNoAccess";
 
 export default function CompanyProjectTabList() {
   const {
@@ -73,6 +74,10 @@ export default function CompanyProjectTabList() {
 
   const isLoading = isPending || isLoadingProject;
 
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
+
   return (
     <div className="w-full  h-[calc(100vh-90px)] flex flex-col">
       <div className="bg-white sticky top-0 z-30 p-4 space-y-3">
@@ -110,21 +115,23 @@ export default function CompanyProjectTabList() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 flex-1 justify-end">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={openDialogForAdd}
-                    className="p-0.5 bg-transparent border border-primary hover:bg-primary hover:text-white text-primary rounded-full flex items-center"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs text-white">Add New Group</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {permission.Add && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={openDialogForAdd}
+                      className="p-0.5 bg-transparent border border-primary hover:bg-primary hover:text-white text-primary rounded-full flex items-center"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs text-white">Add New Group</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             {tabs.map((tab) => (
               <div
                 key={tab.id}

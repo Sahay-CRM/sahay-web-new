@@ -220,7 +220,8 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  className=" focus-visible:border-none h-8 min-w-[140px] justify-between"
+                  className="focus-visible:border-none h-8 min-w-[140px] justify-between"
+                  disabled={permission.Edit === false}
                   style={{
                     backgroundColor:
                       statusOptions.find(
@@ -241,7 +242,7 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
                   {statusOptions.find(
                     (option) => option.value === modalData?.projectStatusId,
                   )?.label || "Select"}
-                  <ChevronDown className="w-4 h-4 ml-2" />
+                  {permission.Edit && <ChevronDown className="w-4 h-4 ml-2" />}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">

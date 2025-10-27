@@ -7,6 +7,8 @@ import {
 import { TableTooltip } from "@/components/shared/DataTable/tableTooltip";
 import { getInitials } from "@/features/utils/app.utils";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 interface ProjectCardProps {
   projectId: string;
   name: string;
@@ -29,6 +31,7 @@ export default function ProjectCard({
   color,
 }: ProjectCardProps) {
   const navigate = useNavigate();
+  const permission = useSelector(getUserPermission).PROJECT_LIST;
   const handleEdit = () => {
     navigate(`/dashboard/projects/edit/${projectId}`);
   };
@@ -46,25 +49,28 @@ export default function ProjectCard({
           </h3>
 
           <div className="flex ">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEdit();
-              }}
-              className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
-            >
-              <Edit className="h-4 w-4" />
-            </button>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleView();
-              }}
-              className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
-            >
-              <Eye className="h-4 w-4" />
-            </button>
+            {permission.Edit && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit();
+                }}
+                className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
+              >
+                <Edit className="h-4 w-4" />
+              </button>
+            )}
+            {permission.View && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleView();
+                }}
+                className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
+              >
+                <Eye className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
 

@@ -350,15 +350,17 @@ export default function ProjectTaskList() {
               setPaginationFilter={setPaginationFilter}
               className="w-80 h-9"
             />
-            <Button
-              onClick={() => {
-                setEditingTaskId(null); // not editing
-                setIsAddTaskOpen(true); // force open form
-                reset(defaultvalue);
-              }}
-            >
-              Add Task
-            </Button>
+            {taskPermission.Add && (
+              <Button
+                onClick={() => {
+                  setEditingTaskId(null); // not editing
+                  setIsAddTaskOpen(true); // force open form
+                  reset(defaultvalue);
+                }}
+              >
+                Add Task
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -393,17 +395,21 @@ export default function ProjectTaskList() {
                       >
                         {task.taskStatus}
                       </span>
-                      <span
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsAddTaskOpen(false);
-                          setEditingTaskId(
-                            editingTaskId === task.taskId ? null : task.taskId,
-                          );
-                        }}
-                      >
-                        <Edit className="w-4 h-4 text-primary cursor-pointer" />
-                      </span>
+                      {taskPermission.Edit && (
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsAddTaskOpen(false);
+                            setEditingTaskId(
+                              editingTaskId === task.taskId
+                                ? null
+                                : task.taskId,
+                            );
+                          }}
+                        >
+                          <Edit className="w-4 h-4 text-primary cursor-pointer" />
+                        </span>
+                      )}
                     </div>
                   </div>
 

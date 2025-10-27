@@ -195,7 +195,7 @@ export default function CompanyTaskListRe() {
             //     </div>
             //   );
             // }}
-            isEditDeleteShow={true}
+            // isEditDeleteShow={true}
             paginationDetails={mapPaginationDetails(companyTaskData)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
@@ -207,12 +207,14 @@ export default function CompanyTaskListRe() {
             customActions={(row) => {
               return (
                 <>
-                  <Button
-                    className={`w-fit ${row.isActive && "bg-red-500 text-white hover:bg-red-400"}`}
-                    onClick={() => handleStopRepeat(row)}
-                  >
-                    {row.isActive ? "Stop Repeat" : "Start Repeat"}
-                  </Button>
+                  {permission.Edit && (
+                    <Button
+                      className={`w-fit ${row.isActive && "bg-red-500 text-white hover:bg-red-400"}`}
+                      onClick={() => handleStopRepeat(row)}
+                    >
+                      {row.isActive ? "Stop Repeat" : "Start Repeat"}
+                    </Button>
+                  )}
                 </>
               );
             }}
