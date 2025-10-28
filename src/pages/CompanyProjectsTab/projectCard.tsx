@@ -1,4 +1,4 @@
-import { Calendar, Edit, Eye } from "lucide-react";
+import { Calendar, Edit, Eye, Image } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -16,6 +16,15 @@ interface ProjectCardProps {
   endDate: string;
   priority: string;
   color: string;
+  coreParameterName?: string;
+  projectDocuments?: {
+    fileId: string;
+    fileName: string;
+  }[];
+  onViewDocuments?: (
+    projectDocuments: { fileId: string; fileName: string }[],
+    projectId: string,
+  ) => void;
 }
 
 export default function ProjectCard({
@@ -27,6 +36,9 @@ export default function ProjectCard({
   endDate,
   priority,
   color,
+  coreParameterName,
+  projectDocuments,
+  onViewDocuments,
 }: ProjectCardProps) {
   const navigate = useNavigate();
   const handleEdit = () => {
@@ -38,7 +50,7 @@ export default function ProjectCard({
   };
 
   return (
-    <div className="bg-white border shadow-lg rounded-xl p-5 relative hover:shadow-md transition flex flex-col w-full h-full">
+    <div className="bg-white border shadow-md rounded-xl p-4 relative hover:shadow-md transition flex flex-col w-full h-full">
       <div>
         <div className="flex items-start justify-between mb-1">
           <h3 className="text-md font-semibold text-gray-800 flex-1 pr-2 break-words">
@@ -65,6 +77,17 @@ export default function ProjectCard({
             >
               <Eye className="h-4 w-4" />
             </button>
+            {projectDocuments && projectDocuments.length > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewDocuments?.(projectDocuments, projectId);
+                }}
+                className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
+              >
+                <Image className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -72,15 +95,15 @@ export default function ProjectCard({
           <TableTooltip text={description} />
         </div> */}
         <p
-          className="text-gray-500 text-sm mb-2 line-clamp-2"
+          className="text-gray-500 text-sm mb-1.5 line-clamp-2"
           title={description}
         >
           {description}
         </p>
         {/* <p className="text-gray-500 text-sm mb-2">{description}</p> */}
 
-        <div className="mb-3 text-sm text-gray-600 flex flex-wrap items-center gap-1">
-          <span className="font-semibold mr-2">Assignees:</span>
+        <div className="mb-1.5 text-sm text-gray-600 flex flex-wrap items-center gap-1">
+          <span className="font-semibold ">Assignees :</span>
 
           {assignees.slice(0, 7).map((name, idx) => (
             <span key={idx} className="inline-flex items-center gap-1">
@@ -102,6 +125,14 @@ export default function ProjectCard({
             </span>
           )}
         </div>
+        <div className="mb-2 text-sm text-gray-600 flex items-center gap-1">
+          <span className="font-semibold  whitespace-nowrap">
+            Business Function :
+          </span>
+          <span className="truncate max-w-[300px]" title={coreParameterName}>
+            {coreParameterName}
+          </span>
+        </div>
       </div>
 
       {/* Bottom section */}
@@ -120,7 +151,7 @@ export default function ProjectCard({
         {priority && (
           <div className="absolute  mt-1 right-0 pt-1">
             <div
-              className="max-w-[200px] py-2 pl-6 pr-3 rounded-l-full text-sm font-semibold cursor-pointer"
+              className="max-w-[200px] py-1.5 pl-6 pr-3 rounded-l-full text-sm font-semibold cursor-pointer"
               style={{
                 color: color,
                 borderRight: `2px solid ${color}`,

@@ -4,7 +4,7 @@ import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import useAddProject from "./useAddProject";
 import AddProjectModal from "./addProjectModal";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 import { Card } from "@/components/ui/card";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
@@ -23,6 +23,7 @@ import PageNotAccess from "@/pages/PageNoAccess";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import { Button } from "@/components/ui/button";
 import RequestModal from "@/components/shared/Modal/RequestModal";
+import { ImageBaseURL } from "@/features/utils/urls.utils";
 
 interface SubParameterProps {
   setIsReqModalOpen: (value: boolean) => void;
@@ -602,7 +603,147 @@ const Employees = () => {
     </div>
   );
 };
+const UploadDoc = () => {
+  const { watch, setValue } = useFormContext();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Local state for UI representation of files, synced with form state
+  const [displayFiles, setDisplayFiles] = useState<FileType[]>([]);
+
+  // Watch form state for initial files and updates
+  const formFiles = watch("projectDocuments");
+
+  useEffect(() => {
+    // Sync local displayFiles with formFiles when formFiles changes (e.g., on reset)
+    if (formFiles) {
+      setDisplayFiles(formFiles);
+    }
+  }, [formFiles]);
+
+  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+
+    const currentFormFiles = watch("projectDocuments") || [];
+    const newFormFiles = [...currentFormFiles, ...files];
+    setValue("projectDocuments", newFormFiles);
+    setDisplayFiles(newFormFiles); // Update local display
+
+    if (e.target) e.target.value = ""; // Reset file input
+  };
+
+  const handleRemoveFile = (indexToRemove: number) => {
+    const fileToRemove = displayFiles[indexToRemove];
+
+    const currentRemovedIds = watch("removedFileIdsArray") || [];
+    const updatedRemovedIds = [...currentRemovedIds];
+
+    if (
+      typeof fileToRemove === "object" &&
+      "fileId" in fileToRemove &&
+      !(fileToRemove instanceof File)
+    ) {
+      // This is an existing file, add its ID to removedFileIdsArray if not already there
+      if (!updatedRemovedIds.includes(fileToRemove.fileId)) {
+        updatedRemovedIds.push(fileToRemove.fileId);
+      }
+    }
+    setValue("removedFileIdsArray", updatedRemovedIds);
+
+    const newDisplayFiles = displayFiles.filter(
+      (_, idx) => idx !== indexToRemove,
+    );
+    setDisplayFiles(newDisplayFiles);
+    setValue("projectDocuments", newDisplayFiles);
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <label className="font-semibold mb-2">
+        Upload Documents (Image, Doc, Video, etc.)
+      </label>
+      <button
+        type="button"
+        className="w-fit px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          fileInputRef.current?.click();
+        }}
+      >
+        Choose Files
+      </button>
+      <input
+        type="file"
+        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.avi,.mov,.mkv"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        className="hidden"
+        multiple
+        style={{ display: "none" }}
+      />
+      {displayFiles.length > 0 && (
+        <div className="mt-3 flex flex-col gap-2">
+          <p className="text-sm text-gray-600 mb-2">
+            {displayFiles.length} file(s) selected
+          </p>
+          {displayFiles.map((file, idx) => (
+            <div
+              key={idx} // Using index as key is okay if list order doesn't change unpredictably or items don't have stable IDs
+              className="flex items-center justify-between p-2 bg-gray-50 rounded"
+            >
+              <span className="font-medium truncate">
+                {("fileName" in file && file.fileName) ||
+                  ("name" in file && file.name)}
+              </span>
+              <div>
+                <button
+                  type="button"
+                  className="ml-2 px-2 py-1 bg-primary text-white rounded text-xs hover:bg-red-600 transition"
+                  onClick={() => {
+                    // Check if the file is a new File object (locally selected)
+                    if (file instanceof File) {
+                      // Create a temporary URL and trigger download
+                      const fileUrl = URL.createObjectURL(file);
+                      const link = document.createElement("a");
+                      link.href = fileUrl;
+                      link.download = file.name; // Use the original file name
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      URL.revokeObjectURL(fileUrl); // Clean up the temporary URL
+                    } else {
+                      window.open(
+                        `${ImageBaseURL}/share/pDocs/${file.fileName}`,
+                        "_blank",
+                      );
+                    }
+                  }}
+                >
+                  Download
+                </button>
+                <button
+                  type="button"
+                  className="ml-2 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleRemoveFile(idx);
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {displayFiles.length === 0 && (
+        <p className="text-sm text-gray-500 italic">No files selected</p>
+      )}
+    </div>
+  );
+};
 export default function AddProject() {
   const {
     onFinish,
@@ -661,6 +802,7 @@ export default function AddProject() {
         ]
       : []),
     <Employees key="employees" />,
+    <UploadDoc key="uploadDoc" />,
   ];
 
   const {
@@ -679,6 +821,7 @@ export default function AddProject() {
     // "Business Function",
     ...(isCoreParameterSelected ? ["Key Result Area"] : []),
     "Assignees",
+    "Upload Document",
   ];
 
   if (permission && permission.Add === false) {

@@ -508,17 +508,15 @@ const UploadDoc = () => {
                   type="button"
                   className="ml-2 px-2 py-1 bg-primary text-white rounded text-xs hover:bg-red-600 transition"
                   onClick={() => {
-                    // Check if the file is a new File object (locally selected)
                     if (file instanceof File) {
-                      // Create a temporary URL and trigger download
                       const fileUrl = URL.createObjectURL(file);
                       const link = document.createElement("a");
                       link.href = fileUrl;
-                      link.download = file.name; // Use the original file name
+                      link.download = file.name;
                       document.body.appendChild(link);
                       link.click();
                       document.body.removeChild(link);
-                      URL.revokeObjectURL(fileUrl); // Clean up the temporary URL
+                      URL.revokeObjectURL(fileUrl);
                     } else {
                       window.open(
                         `${ImageBaseURL}/share/mDocs/${file.fileName}`,
