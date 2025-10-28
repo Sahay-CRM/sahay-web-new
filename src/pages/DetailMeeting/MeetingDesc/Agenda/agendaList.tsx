@@ -175,7 +175,7 @@ export default function AgendaList({
         </div>
       )}
       <div className="flex items-center w-full h-full">
-        {isTeamLeader && (
+        {isTeamLeader && meetingStatus !== "ENDED" && (
           <span
             {...listeners}
             {...attributes}

@@ -1,5 +1,5 @@
 import { Controller, FormProvider, useForm } from "react-hook-form";
-import DatePicker from "react-datepicker";
+// import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ModalData from "@/components/shared/Modal/ModalData";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
@@ -25,14 +25,14 @@ const CalenderFormModal: React.FC<ImportantModalProps> = ({
     control,
     onSubmit,
     handleModalClose,
-    watch,
+    // watch,
     setValue,
   } = useCalenderFormModal({
     modalClose,
     modalData,
   });
 
-  const selectedDate = watch("importantDate");
+  // const selectedDate = watch("importantDate");
   const [showColorPicker, setShowColorPicker] = useState(false);
   // New: Local state to stage color before saving
   const [stagedColor, setStagedColor] = useState<string>(
@@ -98,28 +98,49 @@ const CalenderFormModal: React.FC<ImportantModalProps> = ({
               className="text-lg"
               isMandatory={true}
             />
-            <div className="mt-0 tb:mt-0 mb-4 w-full flex gap-4">
+            <div className="mt-0 tb:mt-0 mb-4 w-full flex gap-4 items-start">
               <div className="w-1/2">
                 <label className="block text-md font-medium text-black mb-2">
                   Important Date <span className="text-red-500">*</span>
                 </label>
-                <DatePicker
-                  selected={selectedDate ? new Date(selectedDate) : null}
-                  onChange={(date) =>
-                    setValue(
-                      "importantDate",
-                      date ? date.toISOString().split("T")[0] : "",
-                    )
-                  }
-                  dateFormat="yyyy-MM-dd"
-                  className="w-full px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                  placeholderText="Select important date"
+
+                <Controller
+                  name="importantDate"
+                  control={control}
+                  rules={{ required: "Select Important Date" }}
+                  render={({ field }) => (
+                    <>
+                      <input
+                        type="date"
+                        id="importantDate"
+                        value={
+                          field.value
+                            ? new Date(field.value).toISOString().split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            const [year, month, day] = e.target.value
+                              .split("-")
+                              .map(Number);
+                            const utcDate = new Date(
+                              Date.UTC(year, month - 1, day),
+                            );
+                            field.onChange(utcDate.toISOString());
+                          } else {
+                            field.onChange("");
+                          }
+                        }}
+                        className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-md"
+                      />
+                      {errors.importantDate && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.importantDate.message}
+                        </p>
+                      )}
+                    </>
+                  )}
                 />
-                {errors.importantDate && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.importantDate.message}
-                  </p>
-                )}
               </div>
               <FormInputField
                 id="importantDateRemarks"
@@ -201,7 +222,16 @@ const CalenderFormModal: React.FC<ImportantModalProps> = ({
                               }}
                             />
                             <span className="ml-2 text-sm w-16">
-                              {stagedColor}
+                              <input
+                                type="text"
+                                value={stagedColor}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setStagedColor(val);
+                                }}
+                                className="px-2 w-17 py-1 border rounded text-xs"
+                                placeholder="#aabbcc"
+                              />
                             </span>
                             <div className="ml-4 flex gap-2">
                               <button

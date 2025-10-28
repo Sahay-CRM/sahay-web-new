@@ -21,6 +21,7 @@ export default function HoliDays() {
     monthOptions,
     selectedMonth,
     setSelectedMonth,
+    handleDelete,
   } = useHolidays();
 
   const sortedHolidays = holidayData?.sort((a, b) => {
@@ -86,7 +87,10 @@ export default function HoliDays() {
                   >
                     <Edit className="h-4 w-4" />
                   </button>
-                  <button className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition">
+                  <button
+                    className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
+                    onClick={() => handleDelete(item.holidayId!)}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>

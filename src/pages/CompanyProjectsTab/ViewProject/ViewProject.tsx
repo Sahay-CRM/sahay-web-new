@@ -1,4 +1,4 @@
-import { Controller, FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { EditIcon, TrashIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -161,17 +161,13 @@ const ProjectView = () => {
                   <p className="text-sm font-medium text-gray-500">
                     Project Status
                   </p>
-                  <Controller
-                    name="projectStatus"
-                    control={methods.control}
-                    render={({ field, fieldState }) => (
-                      <FormSelect
-                        {...field}
-                        options={statusOptions}
-                        error={fieldState.error}
-                        onChange={(val) => handleStatusChange(val as string)}
-                      />
-                    )}
+                  <FormSelect
+                    value={project.projectStatusId}
+                    onChange={(val) => handleStatusChange(val as string)}
+                    options={statusOptions}
+                    triggerClassName="mb-0 py-4"
+                    // className="h-9"
+                    disabled={permission.Edit === false}
                   />
                   <div>
                     <p className="text-sm font-medium text-gray-500 mb-1">
@@ -213,9 +209,11 @@ const ProjectView = () => {
           <div className="bg-white p-5 h-[calc(100vh-480px)]  rounded-xl shadow-md flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Updates</h2>
-              <Button onClick={() => setShowCommentInput((v) => !v)}>
-                {showCommentInput ? "Cancel" : "Add Updates"}
-              </Button>
+              {permission.Edit && (
+                <Button onClick={() => setShowCommentInput((v) => !v)}>
+                  {showCommentInput ? "Cancel" : "Add Updates"}
+                </Button>
+              )}
             </div>
 
             {showCommentInput && (

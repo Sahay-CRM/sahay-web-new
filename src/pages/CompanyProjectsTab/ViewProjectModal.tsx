@@ -8,17 +8,37 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   useAddUpdateCompanyProject,
+  useDeleteCompanyProject,
   useGetAllProjectStatus,
 } from "@/features/api/companyProject";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { isColorDark } from "@/features/utils/color.utils";
+import { ImageBaseURL } from "@/features/utils/urls.utils";
+import { queryClient } from "@/queryClient";
+import { AxiosError } from "axios";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+
+interface projectDetailModal {
+  projectId?: string;
+  projectName?: string;
+  projectDescription: string;
+  projectDeadline?: string;
+  ProjectEmployees?: { employeeName: string }[];
+  employeeIds?: string[];
+  projectStatusId?: string | number;
+  coreParameterName?: string;
+  projectDocuments?: {
+    fileId: string;
+    fileName: string;
+  }[];
+}
 
 interface ViewMeetingModalProps {
-  modalData: IProjectFormData;
+  modalData: projectDetailModal;
   isModalOpen: boolean;
   modalClose: () => void;
 }
@@ -42,11 +62,6 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
     }
   };
   const { mutate: addProject } = useAddUpdateCompanyProject();
-
-  const projectParameters = modalData?.ProjectSubParameterJunction?.map(
-    (item) =>
-      `${item.subPara?.coreParameter?.coreParameterName} | ${item.subPara?.subParameterName}`,
-  ).join(", ");
 
   // Prepare comma-separated employees
   const projectEmployees = modalData?.ProjectEmployees
@@ -77,6 +92,7 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
   const MAX_DESC_LENGTH = 105;
 
   const [showFullDesc, setShowFullDesc] = useState(false);
+  const [isChildData, setIsChildData] = useState<string | null>(null);
 
   const isLongDesc =
     modalData?.projectDescription &&
@@ -87,6 +103,34 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
       ? modalData?.projectDescription
       : modalData?.projectDescription.substring(0, MAX_DESC_LENGTH) + "...";
 
+  const { mutate: deleteProjectById } = useDeleteCompanyProject();
+
+  const handleDelete = async () => {
+    if (modalData && modalData.projectId) {
+      deleteProjectById(modalData.projectId, {
+        onSuccess: async () => {
+          queryClient.resetQueries({
+            queryKey: ["get-project-list-meeting"],
+          });
+          modalClose();
+        },
+        onError: (error: Error) => {
+          const axiosError = error as AxiosError<{
+            message?: string;
+            status: number;
+          }>;
+
+          if (axiosError.response?.data?.status === 417) {
+            setIsChildData(axiosError.response?.data?.message || "");
+          } else if (axiosError.response?.data.status !== 417) {
+            toast.error(
+              `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+            );
+          }
+        },
+      });
+    }
+  };
   return (
     <ModalData
       isModalOpen={isModalOpen}
@@ -112,6 +156,15 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
           buttonCss: "py-1.5 px-5",
           btnClick: handleView,
         },
+        ...(permission.Delete
+          ? [
+              {
+                btnText: "Delete",
+                buttonCss: "py-1.5 px-5 bg-red-500 text-white hover:bg-re-500",
+                btnClick: handleDelete,
+              },
+            ]
+          : []),
       ]}
     >
       <div className="space-y-4 text-sm text-gray-700">
@@ -127,7 +180,7 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
         {modalData?.projectDescription && (
           <div>
             <span className="font-medium text-primary">
-              Project Description:{" "}
+              Project Description :{" "}
             </span>
             <span className="text-gray-700">
               {displayedDesc}{" "}
@@ -163,14 +216,44 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
         )}
 
         {/* Project Parameters */}
-        {projectParameters && (
+        {(modalData?.coreParameterName as string) && (
           <div>
             <span className="font-medium text-primary">
-              Project Parameters:{" "}
+              Business Function :{" "}
             </span>
-            {projectParameters}
+            {modalData.coreParameterName}
           </div>
         )}
+
+        {modalData?.projectDocuments &&
+          modalData.projectDocuments.length > 0 && (
+            <div>
+              <span className="font-medium text-primary">
+                Project Documents :{" "}
+              </span>
+              <div className="inline-flex flex-wrap gap-x-1 gap-y-1">
+                {modalData.projectDocuments.map((file, index) => (
+                  <span key={file.fileId} className="inline-flex items-center">
+                    <button
+                      onClick={() =>
+                        window.open(
+                          `${ImageBaseURL}/share/pDocs/${file.fileName}`,
+                          "_blank",
+                        )
+                      }
+                      className="text-blue-600 hover:underline text-sm"
+                    >
+                      {file.fileName}
+                    </button>{" "}
+                    {index < (modalData.projectDocuments?.length ?? 0) - 1 && (
+                      <span className="ml-0.5"> ,</span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
         {/* Project Status */}
         {statusOptions.length > 0 && (
           <div className="flex items-center">
@@ -217,6 +300,11 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+          </div>
+        )}
+        {isChildData && (
+          <div className="mt-4 text-red-600 font-medium border-t pt-2">
+            {isChildData}
           </div>
         )}
       </div>

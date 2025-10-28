@@ -95,7 +95,7 @@ function Calendar() {
 
   return (
     <FormProvider {...methods}>
-      <div className="px-2 h-[calc(100vh-120px)] min-h-[500px] sm:px-4 py-6">
+      <div className="px-2 h-[calc(100vh-120px)] min-h-[500px] sm:px-4 py-4">
         <div className="flex justify-between gap-5">
           {permission.IMPORTANT_DATE.Add && (
             <div>
@@ -114,7 +114,8 @@ function Calendar() {
                   handleOptionChange(item as string | string[])
                 }
                 options={selectOptions}
-                className="h-9"
+                triggerClassName="mb-0 py-4"
+                // className="h-9"
               />
             </div>
           )}
@@ -176,20 +177,33 @@ function Calendar() {
             },
           })}
           dayPropGetter={(date) => {
-            const dateStr = date.toDateString();
-            const holiday = (holidayData || []).find(
-              (h) => new Date(h.holidayDate!).toDateString() === dateStr,
-            );
+            // Normalize both dates to start of day in local timezone for comparison
+            const currentDate = new Date(date);
+            currentDate.setHours(0, 0, 0, 0);
+
+            const holiday = (holidayData || []).find((h) => {
+              if (!h.holidayDate) return false;
+
+              // Convert holidayDate to local timezone and set to start of day
+              const holidayDate = new Date(h.holidayDate);
+              const localHolidayDate = new Date(
+                holidayDate.getTime() + holidayDate.getTimezoneOffset() * 60000,
+              );
+              localHolidayDate.setHours(0, 0, 0, 0);
+
+              return currentDate.getTime() === localHolidayDate.getTime();
+            });
 
             if (holiday) {
               return {
                 style: {
-                  backgroundColor: "#d6d6d6",
+                  backgroundColor: "#dfdfdf",
+                  border: "2px solid #FF9800",
                   cursor: "pointer",
                 },
                 "data-tooltip-id": "holiday-tooltip",
                 "data-tooltip-content": holiday.holidayName,
-              }; // type workaround for extra attributes
+              };
             }
 
             return {};

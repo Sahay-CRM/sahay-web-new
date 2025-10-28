@@ -187,6 +187,7 @@ export default function Agenda({
     resolutionFilter,
     handleDragEnd,
     unFollowByUser,
+    createIssueLoading,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -327,7 +328,7 @@ export default function Agenda({
         isModalOpen={addIssueModal}
         modalClose={() => setAddIssueModal(false)}
         onSubmit={handleModalSubmit}
-        isLoading={isPending}
+        isLoading={createIssueLoading}
         issueInput={issueInput}
         setIssueInput={setIssueInput}
         setDropdownVisible={setDropdownVisible}
@@ -357,27 +358,24 @@ export default function Agenda({
             <nav className="z-20 flex">
               <div className="mr-5 flex gap-3 items-center rounded-2xl px-1">
                 <Button
-                  className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white cursor-pointer flex items-center ${
-                    activeTab === "tasks"
-                      ? "bg-white h-[50px] shadow-none border-t-4 border-l-1 border-r-1 border-primary z-10"
+                  className={`w-32 mx-auto border border-b-0 rounded-b-none hover:bg-white  cursor-pointer flex items-center ${
+                    activeTab === "kpis"
+                      ? "bg-white h-[50px] border-t-4 border-l-1 border-r-1 border-primary z-10"
                       : "bg-gray-100 h-12"
                   }`}
                   style={
-                    activeTab === "tasks"
-                      ? {
-                          marginBottom: "-2px",
-                          color: "#2f318e",
-                        }
+                    activeTab === "kpis"
+                      ? { marginBottom: "-2px", color: "#2f318e" }
                       : { marginBottom: "1px", color: "gray" }
                   }
                   onClick={() => {
                     if (follow || unFollowByUser) {
-                      handleTabChange("tasks");
+                      handleTabChange("kpis");
                     }
                   }}
                 >
-                  <List className="h-5 w-5" />
-                  <span>Tasks ({detailAgendaData?.noOfTasks})</span>
+                  <BarChart2 className="h-5 w-5" />
+                  <span>KPIs ({detailAgendaData?.noOfKPIs})</span>
                 </Button>
                 <Button
                   className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white  cursor-pointer flex items-center ${
@@ -400,24 +398,27 @@ export default function Agenda({
                   <span>Projects ({detailAgendaData?.noOfProjects})</span>
                 </Button>
                 <Button
-                  className={`w-32 mx-auto border border-b-0 rounded-b-none hover:bg-white  cursor-pointer flex items-center ${
-                    activeTab === "kpis"
-                      ? "bg-white h-[50px] border-t-4 border-l-1 border-r-1 border-primary z-10"
+                  className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white cursor-pointer flex items-center ${
+                    activeTab === "tasks"
+                      ? "bg-white h-[50px] shadow-none border-t-4 border-l-1 border-r-1 border-primary z-10"
                       : "bg-gray-100 h-12"
                   }`}
                   style={
-                    activeTab === "kpis"
-                      ? { marginBottom: "-2px", color: "#2f318e" }
+                    activeTab === "tasks"
+                      ? {
+                          marginBottom: "-2px",
+                          color: "#2f318e",
+                        }
                       : { marginBottom: "1px", color: "gray" }
                   }
                   onClick={() => {
                     if (follow || unFollowByUser) {
-                      handleTabChange("kpis");
+                      handleTabChange("tasks");
                     }
                   }}
                 >
-                  <BarChart2 className="h-5 w-5" />
-                  <span>KPIs ({detailAgendaData?.noOfKPIs})</span>
+                  <List className="h-5 w-5" />
+                  <span>Tasks ({detailAgendaData?.noOfTasks})</span>
                 </Button>
               </div>
             </nav>
@@ -1048,6 +1049,10 @@ export default function Agenda({
                                     (data) => data !== "taskId",
                                   ) as Array<keyof typeof task.oldValues>;
 
+                                  const isNewValueEmpty =
+                                    !task.newValues ||
+                                    Object.keys(task.newValues).length === 0;
+
                                   return (
                                     <div
                                       key={idx}
@@ -1068,7 +1073,8 @@ export default function Agenda({
                                           ) : (
                                             task.newValues.taskName
                                           )}{" "}
-                                          &nbsp; DISCUSSION
+                                          &nbsp; DISCUSSION &nbsp;
+                                          {isNewValueEmpty && "Removed"}
                                         </h4>
                                       </div>
                                       <div className="w-2/3">
@@ -1144,6 +1150,10 @@ export default function Agenda({
                                     (data) => data !== "projectId",
                                   ) as Array<keyof typeof project.oldValues>;
 
+                                  const isNewValueEmpty =
+                                    !project.newValues ||
+                                    Object.keys(project.newValues).length === 0;
+
                                   return (
                                     <div
                                       key={idx}
@@ -1164,6 +1174,8 @@ export default function Agenda({
                                           ) : (
                                             project.newValues.projectName
                                           )}
+                                          &nbsp; DISCUSSION &nbsp;
+                                          {isNewValueEmpty && "Removed"}
                                         </h4>
                                       </div>
                                       <div className="w-2/3">
@@ -1289,6 +1301,10 @@ export default function Agenda({
                                     (kpi.oldData?.length || 0) > 0 ||
                                     (kpi.newData?.length || 0) > 0;
 
+                                  const isNewValueEmpty =
+                                    !kpi.newValues ||
+                                    Object.keys(kpi.newValues).length === 0;
+
                                   return (
                                     <div
                                       key={idx}
@@ -1308,8 +1324,9 @@ export default function Agenda({
                                           </>
                                         ) : (
                                           kpi.newValues.kpiName
-                                        )}{" "}
-                                        &nbsp; DISCUSSION
+                                        )}
+                                        &nbsp; DISCUSSION &nbsp;
+                                        {isNewValueEmpty && "Removed"}
                                       </h4>
 
                                       {hasChange && (

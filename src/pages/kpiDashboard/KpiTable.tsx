@@ -21,7 +21,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import Loader from "@/components/shared/Loader/Loader";
 import { FormDatePicker } from "@/components/shared/Form/FormDatePicker/FormDatePicker";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, GripVertical } from "lucide-react";
+import { RefreshCcw, GripVertical, Plus } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -56,6 +56,7 @@ import {
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 // import CommentModal from "./KpiCommentModal";
 import { twMerge } from "tailwind-merge";
+import CommentModal from "./KpiCommentModal";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -245,29 +246,54 @@ function SortableKpiRow({
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="line-clamp-2 break-words cursor-default">
-                {kpi.validationType === "YES_NO"
-                  ? kpi.goalValue === 1
-                    ? "Yes"
-                    : "No"
-                  : getFormattedValue(
-                      kpi.validationType,
-                      kpi?.value1,
-                      kpi?.value2,
-                      kpi?.unit,
-                    )}
+                {kpi.validationType === "YES_NO" ? (
+                  <>
+                    {formatToThreeDecimals(kpi.value1)}
+                    {" - "}
+                    {kpi.goalValue === 1 ? "Yes" : "No"}
+                  </>
+                ) : (
+                  getFormattedValue(
+                    kpi.validationType,
+                    kpi?.value1,
+                    kpi?.value2,
+                    kpi?.unit,
+                  )
+                )}
               </span>
             </TooltipTrigger>
-            <TooltipContent>
-              <span>
-                {kpi.validationType === "YES_NO"
-                  ? kpi.goalValue === 1
-                    ? `Yes ${formatToThreeDecimals(kpi.value1)}`
-                    : `No ${formatToThreeDecimals(kpi.value1)}`
-                  : kpi.validationType === "BETWEEN"
-                    ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(kpi?.value2)}`
-                    : formatToThreeDecimals(kpi?.value1)}
-              </span>
-            </TooltipContent>
+
+            {/* ✅ Show tooltip only if formatted value looks different */}
+            {(() => {
+              const rawValue = String(kpi.value1 ?? "");
+              const formattedNormal = formatToThreeDecimals(kpi.value1); // e.g. 11,111,111
+              const formattedCompact = formatCompactNumber(kpi.value1); // e.g. 11.1M
+
+              // ✅ Tooltip should show if compact value is different from normal (like M, K)
+              const shouldShowTooltip =
+                formattedCompact !== formattedNormal &&
+                formattedCompact !== rawValue &&
+                formattedCompact !== "" &&
+                formattedNormal !== "";
+
+              return (
+                shouldShowTooltip && (
+                  <TooltipContent>
+                    <span>
+                      {kpi.validationType === "YES_NO"
+                        ? kpi.goalValue === 1
+                          ? `Yes ${formattedNormal}`
+                          : `No ${formattedNormal}`
+                        : kpi.validationType === "BETWEEN"
+                          ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(
+                              kpi?.value2,
+                            )}`
+                          : formattedNormal}
+                    </span>
+                  </TooltipContent>
+                )
+              );
+            })()}
           </Tooltip>
         </TooltipProvider>
       </td>
@@ -339,7 +365,7 @@ export default function UpdatedKpiTable() {
 
   const userData = useSelector(getUserDetail);
   const [isDataFilter, setIsDataFilter] = useState("default");
-  // const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const [commentModalOpen, setCommentModalOpen] = useState(false);
 
   // const [sortConfig, setSortConfig] = useState<SortConfig>({
   //   key: "sequence",
@@ -357,6 +383,7 @@ export default function UpdatedKpiTable() {
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const urlSelectedPeriod = searchParams.get("selectedType");
+
   const [selectedPeriod, setSelectedPeriod] = useState(urlSelectedPeriod || "");
   const [showWarning, setShowWarning] = useState(false);
   const [pendingPeriod, setPendingPeriod] = useState<string | null>(null);
@@ -365,6 +392,7 @@ export default function UpdatedKpiTable() {
   );
 
   const permission = useSelector(getUserPermission).DATAPOINT_TABLE;
+  const permissionSequence = useSelector(getUserPermission).KPI_SEQ;
   const navigate = useNavigate();
   const location = useLocation();
   const leftScrollRef = React.useRef<HTMLDivElement>(null);
@@ -389,8 +417,10 @@ export default function UpdatedKpiTable() {
   }, [kpiStructure, isKpiStructureLoading, searchParams]);
 
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
-  // const [currentCellKey, setCurrentCellKey] = useState<string>("");
-  // const [commentModalInput, setCommentModalInput] = useState("");
+  const [currentCellKey, setCurrentCellKey] = useState<string>("");
+  const [commentModalInput, setCommentModalInput] = useState("");
+
+  const canDrag = userData?.isSuperAdmin || permissionSequence?.Edit;
 
   const [tempValues, setTempValues] = useState<{
     [key: string]: { value: string; comment?: string };
@@ -955,6 +985,7 @@ export default function UpdatedKpiTable() {
               selectedPeriod={selectedPeriod}
               onSelectPeriod={handlePeriodChange}
               kpiStructure={kpiStructure}
+              isDataFilter={isDataFilter}
             />
           </div>
           <div className="flex gap-4 items-center justify-end">
@@ -1001,12 +1032,13 @@ export default function UpdatedKpiTable() {
           </div>
         </div>
       </div>
+
       {groupedKpiRows && groupedKpiRows.length > 0 && (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
-          onDragStart={userData.isSuperAdmin ? handleDragStart : undefined}
-          onDragEnd={userData.isSuperAdmin ? handleDragEnd : undefined}
+          onDragStart={canDrag ? handleDragStart : undefined}
+          onDragEnd={canDrag ? handleDragEnd : undefined}
         >
           <div className="flex w-full gap-0 p-2">
             {/* LEFT TABLE */}
@@ -1094,8 +1126,8 @@ export default function UpdatedKpiTable() {
                         <SortableCoreParameterGroup
                           id={`group:${group.coreParameter.coreParameterId}`}
                           isDragging={isDragging}
-                          disabled={!userData.isSuperAdmin}
-                          showDragHandle={!!userData.isSuperAdmin}
+                          disabled={!canDrag}
+                          showDragHandle={!!canDrag}
                         >
                           {group.coreParameter.coreParameterName}
                         </SortableCoreParameterGroup>
@@ -1105,8 +1137,8 @@ export default function UpdatedKpiTable() {
                             id={`kpi:${kpi.kpiId}:${group.coreParameter.coreParameterId}`}
                             kpi={kpi}
                             isDragging={isDragging}
-                            disabled={!userData.isSuperAdmin}
-                            showDragHandle={!!userData.isSuperAdmin}
+                            disabled={!canDrag}
+                            showDragHandle={!!canDrag}
                             getFormattedValue={getFormattedValue}
                           />
                         ))}
@@ -1190,8 +1222,8 @@ export default function UpdatedKpiTable() {
                                   inputValues[key] ??
                                   cell?.data?.toString() ??
                                   "";
-                                // const inputnote =
-                                //   tempValues[key]?.comment ?? cell?.note ?? "";
+                                const inputnote =
+                                  tempValues[key]?.comment ?? cell?.note ?? "";
 
                                 const isVisualized = kpi?.isVisualized;
                                 const canAdd = permission?.Add && !cell?.data;
@@ -1292,89 +1324,98 @@ export default function UpdatedKpiTable() {
                                               ) : (
                                                 <div className="flex flex-col items-center  justify-center h-full w-full cursor-not-allowed">
                                                   <span className="text-black">
-                                                    {
-                                                      inputFocused[key]
-                                                        ? inputVal // Show raw value when focused
-                                                        : formatCompactNumber(
-                                                            inputVal,
-                                                          ) // Show formatted value when blurred
-                                                    }
+                                                    {inputFocused[key]
+                                                      ? inputVal // Show raw value when focused
+                                                      : formatCompactNumber(
+                                                          inputVal,
+                                                        )}
                                                   </span>
                                                 </div>
                                               )}
-
-                                              {/* <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Tooltip>
-                                                  <TooltipTrigger asChild>
-                                                    {inputnote &&
+                                              <div
+                                                className={clsx(
+                                                  "transition-opacity",
+                                                  inputnote &&
                                                     inputnote.trim() !== "" &&
-                                                    inputnote !== "0" ? (
-                                                      // 🔹 Existing note → folded-corner style
-                                                      <span
-                                                        className="absolute top-0 right-0 w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
-                                                        style={{
-                                                          background:
-                                                            inputVal !== "" &&
-                                                            validationType &&
-                                                            selectedPeriod !==
-                                                              "YEARLY"
-                                                              ? isValidInput(
-                                                                  validationType,
-                                                                  inputVal,
-                                                                  value1 ??
-                                                                    null,
-                                                                  value2 ?? null
-                                                                )
-                                                                ? "linear-gradient(to bottom left, #5b8f65 45%, white 55%)"
-                                                                : "linear-gradient(to bottom left, #fca5a5 45%, white 55%)"
-                                                              : "linear-gradient(to bottom left, white 45%, #2e3090 55%)",
-                                                          borderBottomLeftRadius:
-                                                            "5px",
-                                                        }}
-                                                        onClick={(e) => {
-                                                          e.stopPropagation();
-                                                          setCurrentCellKey(
-                                                            key
-                                                          );
-                                                          setCommentModalInput(
-                                                            inputnote
-                                                          );
-                                                          setCommentModalOpen(
-                                                            true
-                                                          );
-                                                        }}
-                                                      ></span>
-                                                    ) : (
-                                                      <span
-                                                        className="absolute border-l border-b border-gray-300 top-0 right-0 w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
-                                                        onClick={(e) => {
-                                                          e.stopPropagation();
-                                                          setCurrentCellKey(
-                                                            key
-                                                          );
-                                                          setCommentModalInput(
-                                                            ""
-                                                          );
-                                                          setCommentModalOpen(
-                                                            true
-                                                          );
-                                                        }}
-                                                      >
-                                                        <Plus className="w-3 h-3 text-gray-700" />
-                                                      </span>
-                                                    )}
-                                                  </TooltipTrigger>{" "}
-                                                  <TooltipContent>
-                                                    <span>
+                                                    inputnote !== "0"
+                                                    ? "opacity-100"
+                                                    : "opacity-0 group-hover:opacity-100",
+                                                )}
+                                              >
+                                                {canInput && !isVisualized && (
+                                                  <Tooltip>
+                                                    <TooltipTrigger asChild>
                                                       {inputnote &&
                                                       inputnote.trim() !== "" &&
-                                                      inputnote !== "0"
-                                                        ? "View note"
-                                                        : "Add note"}
-                                                    </span>
-                                                  </TooltipContent>
-                                                </Tooltip>
-                                              </div> */}
+                                                      inputnote !== "0" ? (
+                                                        <span
+                                                          className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
+                                                          style={{
+                                                            background:
+                                                              inputVal !== "" &&
+                                                              validationType &&
+                                                              selectedPeriod !==
+                                                                "YEARLY"
+                                                                ? isValidInput(
+                                                                    validationType,
+                                                                    inputVal,
+                                                                    value1 ??
+                                                                      null,
+                                                                    value2 ??
+                                                                      null,
+                                                                  )
+                                                                  ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)" // valid → greenish
+                                                                  : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)" // invalid → reddish
+                                                                : "linear-gradient(to bottom left, #2e3090 50%, white 55%)",
+                                                            borderBottomLeftRadius:
+                                                              "5px",
+                                                          }}
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setCurrentCellKey(
+                                                              key,
+                                                            );
+                                                            setCommentModalInput(
+                                                              inputnote,
+                                                            );
+                                                            setCommentModalOpen(
+                                                              true,
+                                                            );
+                                                          }}
+                                                        ></span>
+                                                      ) : (
+                                                        <span
+                                                          className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setCurrentCellKey(
+                                                              key,
+                                                            );
+                                                            setCommentModalInput(
+                                                              "",
+                                                            );
+                                                            setCommentModalOpen(
+                                                              true,
+                                                            );
+                                                          }}
+                                                        >
+                                                          <Plus className="w-3 h-3 text-gray-700" />
+                                                        </span>
+                                                      )}
+                                                    </TooltipTrigger>{" "}
+                                                    <TooltipContent>
+                                                      <span>
+                                                        {inputnote &&
+                                                        inputnote.trim() !==
+                                                          "" &&
+                                                        inputnote !== "0"
+                                                          ? "View note"
+                                                          : "Add note"}
+                                                      </span>
+                                                    </TooltipContent>
+                                                  </Tooltip>
+                                                )}
+                                              </div>
                                             </div>
                                           </TooltipTrigger>
                                         </Tooltip>
@@ -1452,7 +1493,16 @@ export default function UpdatedKpiTable() {
                                               disabled={!canInput}
                                               readOnly={!canInput}
                                             />
-                                            {/* <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div
+                                              className={clsx(
+                                                "transition-opacity",
+                                                inputnote &&
+                                                  inputnote.trim() !== "" &&
+                                                  inputnote !== "0"
+                                                  ? "opacity-100" // always visible when note exists
+                                                  : "opacity-0 group-hover:opacity-100", // only on hover when no note
+                                              )}
+                                            >
                                               {canInput && (
                                                 <Tooltip>
                                                   <TooltipTrigger asChild>
@@ -1460,7 +1510,7 @@ export default function UpdatedKpiTable() {
                                                     inputnote.trim() !== "" &&
                                                     inputnote !== "0" ? (
                                                       <span
-                                                        className="absolute top-0 right-0 w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
+                                                        className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
                                                         style={{
                                                           background:
                                                             inputVal !== "" &&
@@ -1472,40 +1522,41 @@ export default function UpdatedKpiTable() {
                                                                   inputVal,
                                                                   value1 ??
                                                                     null,
-                                                                  value2 ?? null
+                                                                  value2 ??
+                                                                    null,
                                                                 )
-                                                                ? "linear-gradient(to bottom left, #5b8f65 45%, white 55%)" // valid → greenish
-                                                                : "linear-gradient(to bottom left, #fca5a5 45%, white 55%)" // invalid → reddish
-                                                              : "linear-gradient(to bottom left, white 45%, #2e3090 55%)", // default
+                                                                ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)" // valid → greenish
+                                                                : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)" // invalid → reddish
+                                                              : "linear-gradient(to bottom left, #2e3090 50%, white 55%)", // default
                                                           borderBottomLeftRadius:
                                                             "5px",
                                                         }}
                                                         onClick={(e) => {
                                                           e.stopPropagation();
                                                           setCurrentCellKey(
-                                                            key
+                                                            key,
                                                           );
                                                           setCommentModalInput(
-                                                            inputnote
+                                                            inputnote,
                                                           );
                                                           setCommentModalOpen(
-                                                            true
+                                                            true,
                                                           );
                                                         }}
                                                       ></span>
                                                     ) : (
                                                       <span
-                                                        className="absolute border-l border-b border-gray-300 top-0 right-0 w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
+                                                        className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
                                                         onClick={(e) => {
                                                           e.stopPropagation();
                                                           setCurrentCellKey(
-                                                            key
+                                                            key,
                                                           );
                                                           setCommentModalInput(
-                                                            ""
+                                                            "",
                                                           );
                                                           setCommentModalOpen(
-                                                            true
+                                                            true,
                                                           );
                                                         }}
                                                       >
@@ -1524,7 +1575,7 @@ export default function UpdatedKpiTable() {
                                                   </TooltipContent>
                                                 </Tooltip>
                                               )}
-                                            </div> */}
+                                            </div>
                                           </div>
                                         </TooltipTrigger>
                                         {inputVal !== "" &&
@@ -1656,20 +1707,24 @@ export default function UpdatedKpiTable() {
         onDiscard={handleWarningDiscard}
         onClose={handleWarningClose}
       />
-      {/* <CommentModal
+      <CommentModal
         isModalOpen={commentModalOpen}
         modalClose={() => setCommentModalOpen(false)}
-        initialComment={commentModalInput ?? ""} // prefill existing note
+        initialComment={commentModalInput ?? ""}
         onSave={(comment) => {
-          setTempValues((prev) => ({
-            ...prev,
-            [currentCellKey]: {
-              ...prev[currentCellKey],
-              comment: comment,
-            },
-          }));
+          setTempValues((prev) => {
+            const updated = {
+              ...prev,
+              [currentCellKey]: {
+                ...prev[currentCellKey],
+                comment: comment,
+              },
+            };
+            addUpdateKpiData(formatTempValuesToPayload(updated));
+            return updated;
+          });
         }}
-      /> */}
+      />
     </FormProvider>
   );
 }

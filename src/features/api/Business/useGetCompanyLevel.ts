@@ -15,7 +15,7 @@ export default function useGetCompanyLevel({
       });
       return resData;
     },
-    enabled: !!enable || !!filter,
+    enabled: !!enable,
   });
   return query;
 }

@@ -9,6 +9,9 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useGetCoreParameterDropdown } from "@/features/api/Business";
+// import { queryClient } from "@/queryClient";
+import { docUploadMutation } from "@/features/api/file";
+import { queryClient } from "@/queryClient";
 
 export default function useAddProject() {
   const { id: companyProjectId } = useParams();
@@ -20,7 +23,7 @@ export default function useAddProject() {
 
   const [isStatusSearch, setIsStatusSearch] = useState("");
   const [isBusFuncSearch, setIsBusFuncSearch] = useState("");
-
+  const { mutate: docUpload } = docUploadMutation();
   const permission = useSelector(getUserPermission).PROJECT_LIST;
 
   /** Dropdown options */
@@ -85,6 +88,15 @@ export default function useAddProject() {
           projectApiData.data.ProjectEmployees?.map(
             (item) => item.employeeId,
           ) || [],
+        projectDocuments: Array.isArray(projectApiData.data.files)
+          ? projectApiData.data.files.map(
+              (f: { fileId: string; fileName: string }) => ({
+                fileId: f.fileId,
+                fileName: f.fileName,
+              }),
+            )
+          : [],
+        removedFileIdsArray: [],
       });
 
       setTimeout(() => {
@@ -170,6 +182,13 @@ export default function useAddProject() {
     addProject(payload, {
       onSuccess: (response) => {
         const projectId = response.data.projectId;
+        if (typeof projectId === "string" && projectId) {
+          handleFileOperations(
+            projectId,
+            data.projectDocuments || [],
+            data.removedFileIdsArray || [],
+          );
+        }
         handleModalClose();
         if (searchParams.get("from") === "task") {
           navigate(`/dashboard/tasks/add?projectId=${projectId}`);
@@ -179,6 +198,59 @@ export default function useAddProject() {
       },
     });
   });
+
+  const handleFileOperations = async (
+    projectId: string,
+    currentFiles: (File | string | { fileId: string; fileName: string })[],
+    removedIds: string[],
+  ) => {
+    const uploadProjectFile = (
+      file: File | string,
+      fileType: string = "2070",
+    ) => {
+      const formData = new FormData();
+      formData.append("refId", projectId);
+      formData.append("imageType", "PROJECT");
+      formData.append("isMaster", "0");
+      formData.append("fileType", fileType);
+      if (file instanceof File || typeof file === "string") {
+        formData.append("files", file);
+        docUpload(formData, {
+          onSuccess: () => {
+            queryClient.resetQueries({
+              queryKey: ["get-project-by-id", projectId],
+            });
+            queryClient.resetQueries({
+              queryKey: ["get-project-list-meeting"],
+            });
+          },
+        });
+      }
+    };
+
+    const newFilesToUpload = currentFiles.filter(
+      (file) => file instanceof File || typeof file === "string",
+    ) as (File | string)[];
+
+    newFilesToUpload.forEach((file) => {
+      uploadProjectFile(file);
+    });
+
+    if (removedIds.length > 0) {
+      const formData = new FormData();
+      formData.append("refId", projectId);
+      formData.append("imageType", "PROJECT");
+      formData.append("isMaster", "0");
+      formData.append("removedFiles", removedIds.join(",")); // Send as comma-separated string
+      docUpload(formData, {
+        onSuccess: () => {
+          queryClient.resetQueries({
+            queryKey: ["get-project-by-id", projectId],
+          });
+        },
+      });
+    }
+  };
 
   const handleModalClose = () => {
     reset();

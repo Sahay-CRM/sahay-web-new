@@ -150,6 +150,7 @@ export default function Tasks({
       if (data && ioType) {
         const payload = {
           taskId: data.taskId,
+          meetingId: meetingId,
           ioType: ioType,
           ...(ioType === "ISSUE"
             ? {
@@ -179,7 +180,7 @@ export default function Tasks({
         });
       }
     },
-    [deleteTaskById, ioType, tasksFireBase],
+    [deleteTaskById, ioType, meetingId, tasksFireBase],
   );
 
   const handleAddTask = () => {

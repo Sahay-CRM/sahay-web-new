@@ -16,6 +16,7 @@ import {
 import { useForm } from "react-hook-form";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import { imageUploadMutation } from "@/features/api/file";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function useCompany() {
   const companyId = useSelector(getUserDetail).companyId;
@@ -26,6 +27,11 @@ export default function useCompany() {
   const [isCountrySearch, setIsCountrySearch] = useState("");
   const [isStateSearch, setIsStateSearch] = useState("");
   const [isCitySearch, setIsCitySearch] = useState("");
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Company Profile", href: "" }]);
+  }, [setBreadcrumbs]);
 
   const { mutate: addCompany } = addCompanyMutation();
   const { mutate: uploadImage } = imageUploadMutation();

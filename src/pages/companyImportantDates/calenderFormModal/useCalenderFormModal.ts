@@ -17,12 +17,6 @@ const isoToDisplayDate = (isoDate: string | null | undefined): string => {
   return new Date(isoDate).toISOString().split("T")[0];
 };
 
-// Helper function to convert YYYY-MM-DD to ISO format
-const displayDateToIso = (displayDate: string): string => {
-  if (!displayDate) return "";
-  return new Date(displayDate + "T00:00:00.000Z").toISOString();
-};
-
 export default function useCalenderFormModal({
   modalClose,
   modalData,
@@ -63,7 +57,7 @@ export default function useCalenderFormModal({
     // Convert display date back to ISO format before sending to API
     const submitData = {
       ...data,
-      importantDate: displayDateToIso(data.importantDate),
+      // importantDate: displayDateToIso(data.importantDate),
     };
 
     addImportantDate(submitData, {

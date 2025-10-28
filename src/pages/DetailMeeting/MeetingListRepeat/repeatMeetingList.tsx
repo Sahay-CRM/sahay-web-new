@@ -191,26 +191,31 @@ export default function RepeatMeetingList() {
             customActions={(row) => {
               return (
                 <>
-                  <Button
-                    className={`w-fit mr-1`}
-                    onClick={() => {
-                      navigate(
-                        `/dashboard/repeat-meeting/detail/${row.repetitiveMeetingId}?meetingName=${encodeURIComponent(row.meetingName || "")}`,
-                      );
-                    }}
-                  >
-                    Details
-                  </Button>
-                  <Button
-                    className={`w-fit ${row.isActive && "bg-red-500 text-white hover:bg-red-400"}`}
-                    onClick={() => handleStopRepeat(row)}
-                  >
-                    {row.isActive ? "Stop Repeat" : "Start Repeat"}
-                  </Button>
+                  {permission.Add && (
+                    <Button
+                      className={`w-fit mr-1`}
+                      onClick={() => {
+                        navigate(
+                          `/dashboard/repeat-meeting/detail/${row.repetitiveMeetingId}?meetingName=${encodeURIComponent(row.meetingName || "")}`,
+                        );
+                      }}
+                    >
+                      Details
+                    </Button>
+                  )}
+
+                  {permission.Edit && (
+                    <Button
+                      className={`w-fit ${row.isActive && "bg-red-500 text-white hover:bg-red-400"}`}
+                      onClick={() => handleStopRepeat(row)}
+                    >
+                      {row.isActive ? "Stop Repeat" : "Start Repeat"}
+                    </Button>
+                  )}
                 </>
               );
             }}
-            isEditDeleteShow={true}
+            // isEditDeleteShow={true}
             paginationDetails={mapPaginationDetails(repeatMeetingData)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}

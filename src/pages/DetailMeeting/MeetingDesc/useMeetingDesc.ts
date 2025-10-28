@@ -12,9 +12,14 @@ import {
   useGetMeetingNotes,
   useGetMeetingTiming,
 } from "@/features/api/detailMeeting";
+// import SidebarControlContext from "@/features/layouts/DashboardLayout/SidebarControlContext";
+// import { useSelector } from "react-redux";
+// import { getUserDetail } from "@/features/selectors/auth.selector";
 
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();
+  // const sidebarControl = useContext(SidebarControlContext);
+  // const userData = useSelector(getUserDetail);
 
   const [meetingResponse, setMeetingResponse] = useState<MeetingResFire | null>(
     null,
@@ -24,9 +29,9 @@ export default function useMeetingDesc() {
   const [isCardVisible, setIsCardVisible] = useState(false);
   const [openEmployeeId, setOpenEmployeeId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
-  const [selectedGroupFilter, setSelectedGroupFilter] = useState<
-    boolean | null
-  >(null);
+  // const [selectedGroupFilter, setSelectedGroupFilter] = useState<
+  //   boolean | null
+  // >(null);
 
   const { data: meetingData } = useGetMeetingTiming(meetingId ?? "");
 
@@ -70,6 +75,9 @@ export default function useMeetingDesc() {
           setIsCardVisible(true);
           setActiveTab("documents");
         }
+        // if (userData.employeeType !== "CONSULTANT" && sidebarControl?.setOpen) {
+        //   sidebarControl.setOpen(false);
+        // }
       } else {
         setMeetingResponse(null);
       }
@@ -610,7 +618,7 @@ export default function useMeetingDesc() {
     meetingData,
     handleUnFollow,
     handleFollowBack,
-    selectedGroupFilter,
-    setSelectedGroupFilter,
+    // selectedGroupFilter,
+    // setSelectedGroupFilter,
   };
 }

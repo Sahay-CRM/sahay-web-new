@@ -510,7 +510,14 @@ export default function KPITable({
   const handleSubmit = () => {
     if (ioId && ioType) {
       addUpdateKpiData(
-        formatTempValuesMeetingToPayload(tempValues, ioId, ioType, ioKPIId),
+        formatTempValuesMeetingToPayload(
+          tempValues,
+          ioId,
+          ioType,
+          ioKPIId,
+          meetingId,
+          selectedIssueId!,
+        ),
         {
           onSuccess: () => {
             // queryClient.resetQueries({ queryKey: ["get-kpi-dashboard-data"] });
