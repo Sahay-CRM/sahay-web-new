@@ -420,11 +420,7 @@ export default function UpdatedKpiTable() {
   const [currentCellKey, setCurrentCellKey] = useState<string>("");
   const [commentModalInput, setCommentModalInput] = useState("");
 
-  const canDrag =
-    // userData?.isSuperAdmin ||
-    permissionSequence?.Edit ||
-    permissionSequence?.View ||
-    permissionSequence?.Add;
+  const canDrag = userData?.isSuperAdmin || permissionSequence?.Edit;
 
   const [tempValues, setTempValues] = useState<{
     [key: string]: { value: string; comment?: string };

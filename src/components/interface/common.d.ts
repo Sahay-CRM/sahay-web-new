@@ -220,6 +220,10 @@ interface IProjectFormData {
   objectiveProjectId?: string;
   issueProjectId?: string;
   color?: string;
+  projectDocuments: {
+    fileId: string;
+    fileName: string;
+  }[];
 }
 
 //
@@ -338,6 +342,12 @@ interface CompanyProjectDataProps {
   meetingNoteId?: string;
   ioType?: string;
   color?: string;
+  files?: [
+    {
+      fileId: string;
+      fileName: string;
+    },
+  ];
 }
 
 // interface CompanyMeetingDataProps {

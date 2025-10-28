@@ -11,7 +11,7 @@ import {
 import useProjectTabs from "./useProjectTabs";
 import { Button } from "@/components/ui/button";
 import AddProjectDrawer from "./AssignProject/AddProjectDrawer";
-import ViewMeetingModal from "./ViewProjectModal";
+import ViewProjectModal from "./ViewProjectModal";
 import RearrangeTabsSheet from "./RearrangeTabsSheet";
 import SearchInput from "@/components/shared/SearchInput";
 import { Link } from "react-router-dom";
@@ -25,7 +25,8 @@ import {
 } from "@/components/ui/tooltip";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import FormSelect from "@/components/shared/Form/FormSelect";
-import PageNotAccess from "../PageNoAccess";
+import { useState } from "react";
+import { ViewProjectDocsModal } from "./ViewProjectModalee";
 
 export default function CompanyProjectTabList() {
   const {
@@ -65,73 +66,97 @@ export default function CompanyProjectTabList() {
     setIsViewModalOpen,
     projectListData,
     statusOptions,
+    bussinessFunctOptions,
     handleFilterChange,
+    handleFilterChangeBF,
     SelectedStatus,
+    SelectedBussinessFunc,
     sortOrder,
     handleOrderChange,
     orderBy,
   } = useProjectTabs();
+  const [isViewDocsModalOpen, setIsViewDocsModalOpen] = useState(false);
+  const [viewDocsModalData, setViewDocsModalData] = useState<IProjectFormData>(
+    {} as IProjectFormData,
+  );
+
+  const handleViewDocuments = (
+    projectDocuments: { fileId: string; fileName: string }[],
+    projectId: string,
+  ) => {
+    setViewDocsModalData((prev) => ({
+      ...prev,
+      projectDocuments,
+      projectId,
+    }));
+    setIsViewDocsModalOpen(true);
+  };
 
   const isLoading = isPending || isLoadingProject;
-
-  if (permission && permission.View === false) {
-    return <PageNotAccess />;
-  }
 
   return (
     <div className="w-full  h-[calc(100vh-90px)] flex flex-col">
       <div className="bg-white sticky top-0 z-30 p-4 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex-shrink-0">
-            {projects.length !== 0 && (
-              <div className="flex items-center gap-2">
-                <SearchInput
-                  className="w-60"
-                  placeholder="Search..."
-                  searchValue={paginationFilter?.search || ""}
-                  setPaginationFilter={setPaginationFilter}
-                />
-                <DropdownSearchMenu
-                  label="Status"
-                  options={statusOptions}
-                  selected={SelectedStatus?.selected}
-                  onChange={(selected) => {
-                    handleFilterChange(selected);
-                  }}
-                  multiSelect
-                />
-                <FormSelect
-                  placeholder="Order By"
-                  options={sortOrder}
-                  value={orderBy}
-                  onChange={(selected) => {
-                    handleOrderChange(selected as string);
-                  }}
-                  className="h-10"
-                  triggerClassName="py-0"
-                />
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <SearchInput
+                className="w-60"
+                placeholder="Search..."
+                searchValue={paginationFilter?.search || ""}
+                setPaginationFilter={setPaginationFilter}
+              />
+              {projects.length !== 0 && (
+                <>
+                  <DropdownSearchMenu
+                    label="Status"
+                    options={statusOptions}
+                    selected={SelectedStatus?.selected}
+                    onChange={(selected) => {
+                      handleFilterChange(selected);
+                    }}
+                    multiSelect
+                  />
+                  <DropdownSearchMenu
+                    label="Business Function"
+                    options={bussinessFunctOptions}
+                    selected={SelectedBussinessFunc?.selected}
+                    onChange={(selected) => {
+                      handleFilterChangeBF(selected);
+                    }}
+                    multiSelect
+                  />
+                  <FormSelect
+                    placeholder="Order By"
+                    options={sortOrder}
+                    value={orderBy}
+                    onChange={(selected) => {
+                      handleOrderChange(selected as string);
+                    }}
+                    className="h-10"
+                    triggerClassName="py-0"
+                  />
+                </>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 flex-1 justify-end">
-            {permission.Add && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={openDialogForAdd}
-                      className="p-0.5 bg-transparent border border-primary hover:bg-primary hover:text-white text-primary rounded-full flex items-center"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs text-white">Add New Group</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={openDialogForAdd}
+                    className="p-0.5 bg-transparent border border-primary hover:bg-primary hover:text-white text-primary rounded-full flex items-center"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs text-white">Add New Group</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             {tabs.map((tab) => (
               <div
                 key={tab.id}
@@ -270,6 +295,9 @@ export default function CompanyProjectTabList() {
                     endDate={project.projectDeadline}
                     priority={project.projectStatus}
                     color={project.color}
+                    coreParameterName={project.coreParameterName}
+                    projectDocuments={project.projectDocuments}
+                    onViewDocuments={handleViewDocuments}
                   />
                 </div>
               ))}
@@ -287,10 +315,15 @@ export default function CompanyProjectTabList() {
           />
         </div>
       )}
-      <ViewMeetingModal
+      <ViewProjectModal
         isModalOpen={isViewModalOpen}
         modalData={viewModalData}
         modalClose={() => setIsViewModalOpen(false)}
+      />
+      <ViewProjectDocsModal
+        isModalOpen={isViewDocsModalOpen}
+        modalData={viewDocsModalData}
+        modalClose={() => setIsViewDocsModalOpen(false)}
       />
       <AddProjectDrawer
         isOpen={isDrawerOpen}

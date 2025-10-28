@@ -10,6 +10,7 @@ import {
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { useGetCoreParameterDropdown } from "@/features/api/Business";
 
 export default function useProjectTabs() {
   const [tabs, setTabs] = useState<TabItem[]>([{ id: "all", label: "All" }]);
@@ -47,6 +48,9 @@ export default function useProjectTabs() {
   const [SelectedStatus, setSelectedStatus] = useState<{ selected?: string[] }>(
     {},
   );
+  const [SelectedBussinessFunc, setSelectedBusinessFunc] = useState<{
+    selected?: string[];
+  }>({});
   const [SelectedOrder, setSelectedOrder] = useState<string>("asc");
   const [SelectedSortOrder, setSelectedSortOrder] =
     useState<string>("projectName");
@@ -87,6 +91,7 @@ export default function useProjectTabs() {
     filter: {
       groupId: filters.selected,
       statusArray: SelectedStatus.selected,
+      businessFunctionIds: SelectedBussinessFunc.selected,
       sortBy: SelectedSortOrder || "projectName",
       sortOrder: SelectedOrder,
       ...paginationFilter,
@@ -94,6 +99,9 @@ export default function useProjectTabs() {
     enable: true,
   });
   const { data: projectStatusList } = useGetAllProjectStatus({
+    filter: {},
+  });
+  const { data: coreParams } = useGetCoreParameterDropdown({
     filter: {},
   });
 
@@ -104,7 +112,16 @@ export default function useProjectTabs() {
         color: item.color || "#2e3195",
       }))
     : [];
-
+  const bussinessFunctOptions = Array.isArray(coreParams?.data)
+    ? coreParams.data.map((item: CoreParameterDataProps) => ({
+        label: item.coreParameterName,
+        value: item.coreParameterId,
+      }))
+    : [];
+  // const bussinessFunctOptions = (coreParams?.data || []).map((status) => ({
+  //   value: status.coreParameterId,
+  //   label: status.coreParameterName,
+  // }));
   const sortOrder = [
     { label: "Sort by A-Z", value: "asc" },
     { label: "Sort by Z-A", value: "desc" },
@@ -170,6 +187,13 @@ export default function useProjectTabs() {
       projectStatus: project.projectStatus ? String(project.projectStatus) : "",
       projectStatusId: project.projectStatusId,
       color: project.color || "#000000",
+      coreParameterName: project.coreParameter?.coreParameterName,
+      projectDocuments: Array.isArray(project.files)
+        ? project.files.map((f: { fileId: string; fileName: string }) => ({
+            fileId: f.fileId,
+            fileName: f.fileName,
+          }))
+        : [],
     })) || [];
 
   const openDialogForAdd = () => {
@@ -240,6 +264,11 @@ export default function useProjectTabs() {
       selected,
     });
   };
+  const handleFilterChangeBF = (selected: string[]) => {
+    setSelectedBusinessFunc({
+      selected,
+    });
+  };
 
   const handleOrderChange = (selected: string) => {
     if (selected === "projectDeadline") {
@@ -293,10 +322,13 @@ export default function useProjectTabs() {
     projectListData,
     statusOptions,
     handleFilterChange,
+    handleFilterChangeBF,
     SelectedStatus,
+    SelectedBussinessFunc,
     sortOrder,
     SelectedOrder,
     handleOrderChange,
     orderBy,
+    bussinessFunctOptions,
   };
 }
