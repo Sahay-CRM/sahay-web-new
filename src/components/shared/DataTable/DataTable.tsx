@@ -472,7 +472,9 @@ const TableData = <T extends Record<string, unknown>>({
                         {customActions?.(item)}
                         {additionalButton &&
                         permission &&
-                        (permission.Add || permission.Edit) ? (
+                        (permission.Add ||
+                          permission.Edit ||
+                          permission.View) ? (
                           <div>
                             {isPermissionIcon?.(item) && (
                               <Tooltip>

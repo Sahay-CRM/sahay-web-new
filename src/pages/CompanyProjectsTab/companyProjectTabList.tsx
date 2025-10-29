@@ -106,38 +106,35 @@ export default function CompanyProjectTabList() {
                 searchValue={paginationFilter?.search || ""}
                 setPaginationFilter={setPaginationFilter}
               />
-              {projects.length !== 0 && (
-                <>
-                  <DropdownSearchMenu
-                    label="Status"
-                    options={statusOptions}
-                    selected={SelectedStatus?.selected}
-                    onChange={(selected) => {
-                      handleFilterChange(selected);
-                    }}
-                    multiSelect
-                  />
-                  <DropdownSearchMenu
-                    label="Business Function"
-                    options={bussinessFunctOptions}
-                    selected={SelectedBussinessFunc?.selected}
-                    onChange={(selected) => {
-                      handleFilterChangeBF(selected);
-                    }}
-                    multiSelect
-                  />
-                  <FormSelect
-                    placeholder="Order By"
-                    options={sortOrder}
-                    value={orderBy}
-                    onChange={(selected) => {
-                      handleOrderChange(selected as string);
-                    }}
-                    className="h-10"
-                    triggerClassName="py-0"
-                  />
-                </>
-              )}
+
+              <DropdownSearchMenu
+                label="Status"
+                options={statusOptions}
+                selected={SelectedStatus?.selected}
+                onChange={(selected) => {
+                  handleFilterChange(selected);
+                }}
+                multiSelect
+              />
+              <DropdownSearchMenu
+                label="Business Function"
+                options={bussinessFunctOptions}
+                selected={SelectedBussinessFunc?.selected}
+                onChange={(selected) => {
+                  handleFilterChangeBF(selected);
+                }}
+                multiSelect
+              />
+              <FormSelect
+                placeholder="Order By"
+                options={sortOrder}
+                value={orderBy}
+                onChange={(selected) => {
+                  handleOrderChange(selected as string);
+                }}
+                className="h-10"
+                triggerClassName="py-0"
+              />
             </div>
           </div>
 
@@ -263,8 +260,12 @@ export default function CompanyProjectTabList() {
           <SpinnerIcon />
         </div>
       ) : (
-        <div className="flex-1  p-4">
-          {projects.length === 0 ? (
+        <div className="flex-1  px-4 py-2">
+          {activeTab === "all" && projects.length === 0 ? (
+            <div className="h-[calc(100vh-200px)] w-full text-2xl flex items-center justify-center">
+              No Data Available
+            </div>
+          ) : activeTab !== "all" && projects.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div
                 onClick={() => {
@@ -276,7 +277,9 @@ export default function CompanyProjectTabList() {
                 className="w-full max-w-[360px] border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center p-10 cursor-pointer hover:border-blue-400 hover:text-primary transition"
               >
                 <span className="text-4xl font-bold">+</span>
-                <span className="mt-2 text-sm text-gray-500">Add Project</span>
+                <span className="mt-2 text-sm text-gray-500">
+                  Add Project to this Group
+                </span>
               </div>
             </div>
           ) : (

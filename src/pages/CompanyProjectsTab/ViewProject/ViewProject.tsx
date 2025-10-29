@@ -167,6 +167,7 @@ const ProjectView = () => {
                     options={statusOptions}
                     triggerClassName="mb-0 py-4"
                     // className="h-9"
+                    disabled={permission.Edit === false}
                   />
                   <div>
                     <p className="text-sm font-medium text-gray-500 mb-1">
@@ -208,9 +209,11 @@ const ProjectView = () => {
           <div className="bg-white p-5 h-[calc(100vh-480px)]  rounded-xl shadow-md flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Updates</h2>
-              <Button onClick={() => setShowCommentInput((v) => !v)}>
-                {showCommentInput ? "Cancel" : "Add Updates"}
-              </Button>
+              {permission.Edit && (
+                <Button onClick={() => setShowCommentInput((v) => !v)}>
+                  {showCommentInput ? "Cancel" : "Add Updates"}
+                </Button>
+              )}
             </div>
 
             {showCommentInput && (

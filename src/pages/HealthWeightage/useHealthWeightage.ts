@@ -31,7 +31,7 @@ export default function useHealthWeightage() {
         isCompanyLevelSearch.length >= 3 ? isCompanyLevelSearch : undefined,
       coreParameterId: coreParameterId,
     },
-    enable: isCompanyLevelSearch.length >= 3 && !!coreParameterId,
+    enable: isCompanyLevelSearch.length >= 3 || !!coreParameterId,
   });
 
   const [isEditable, setIsEditable] = useState(false);

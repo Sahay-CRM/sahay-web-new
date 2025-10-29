@@ -42,7 +42,7 @@ export default function useHealthScore() {
         isCompanyLevelSearch.length >= 3 ? isCompanyLevelSearch : undefined,
       coreParameterId: coreParameterId,
     },
-    enable: isCompanyLevelSearch.length >= 3 && !!coreParameterId,
+    enable: isCompanyLevelSearch.length >= 3 || !!coreParameterId,
   });
 
   const permission = useSelector(getUserPermission).HEALTH_SCORE;

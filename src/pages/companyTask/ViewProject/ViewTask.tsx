@@ -104,6 +104,7 @@ export default function CompanyTaskView() {
                             handleStatusChange(ele);
                           }
                         }}
+                        disabled={permission.Edit === false}
                       />
                     )}
                   />
@@ -177,9 +178,11 @@ export default function CompanyTaskView() {
           <div className=" p-5 bg-white border rounded-xl shadow-sm flex flex-col max-h-[calc(100vh-150px)] overflow-auto ">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Comments</h2>
-              <Button onClick={() => setShowCommentInput((v) => !v)}>
-                {showCommentInput ? "Cancel" : "Add Comment"}
-              </Button>
+              {permission.Edit && (
+                <Button onClick={() => setShowCommentInput((v) => !v)}>
+                  {showCommentInput ? "Cancel" : "Add Comment"}
+                </Button>
+              )}
             </div>
 
             {showCommentInput && (

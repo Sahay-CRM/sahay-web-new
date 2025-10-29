@@ -224,6 +224,10 @@ interface IProjectFormData {
   objectiveProjectId?: string;
   issueProjectId?: string;
   color?: string;
+  projectDocuments: {
+    fileId: string;
+    fileName: string;
+  }[];
 }
 
 //

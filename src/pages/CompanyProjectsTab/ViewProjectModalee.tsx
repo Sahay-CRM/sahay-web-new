@@ -22,7 +22,7 @@ export const ViewProjectDocsModal: React.FC<ViewProjectDocsModalProps> = ({
   modalData,
   modalClose,
 }) => {
-  const { mutate: docUpload } = docUploadMutation(); // ✅ docUpload API
+  const { mutate: docUpload } = docUploadMutation();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [docs, setDocs] = useState(modalData?.projectDocuments || []);
 

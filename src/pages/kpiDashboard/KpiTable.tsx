@@ -420,11 +420,7 @@ export default function UpdatedKpiTable() {
   const [currentCellKey, setCurrentCellKey] = useState<string>("");
   const [commentModalInput, setCommentModalInput] = useState("");
 
-  const canDrag =
-    // userData?.isSuperAdmin ||
-    permissionSequence?.Edit ||
-    permissionSequence?.View ||
-    permissionSequence?.Add;
+  const canDrag = userData?.isSuperAdmin || permissionSequence?.Edit;
 
   const [tempValues, setTempValues] = useState<{
     [key: string]: { value: string; comment?: string };
@@ -1353,7 +1349,7 @@ export default function UpdatedKpiTable() {
                                                       inputnote.trim() !== "" &&
                                                       inputnote !== "0" ? (
                                                         <span
-                                                          className="absolute top-0 right-0 w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
+                                                          className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
                                                           style={{
                                                             background:
                                                               inputVal !== "" &&
@@ -1389,7 +1385,7 @@ export default function UpdatedKpiTable() {
                                                         ></span>
                                                       ) : (
                                                         <span
-                                                          className="absolute border-l border-b border-gray-300 top-0 right-0 w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
+                                                          className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
                                                           onClick={(e) => {
                                                             e.stopPropagation();
                                                             setCurrentCellKey(
@@ -1514,7 +1510,7 @@ export default function UpdatedKpiTable() {
                                                     inputnote.trim() !== "" &&
                                                     inputnote !== "0" ? (
                                                       <span
-                                                        className="absolute top-0 right-0 w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
+                                                        className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
                                                         style={{
                                                           background:
                                                             inputVal !== "" &&
@@ -1550,7 +1546,7 @@ export default function UpdatedKpiTable() {
                                                       ></span>
                                                     ) : (
                                                       <span
-                                                        className="absolute border-l border-b border-gray-300 top-0 right-0 w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
+                                                        className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
                                                         onClick={(e) => {
                                                           e.stopPropagation();
                                                           setCurrentCellKey(
