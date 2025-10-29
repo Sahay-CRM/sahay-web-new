@@ -17,7 +17,9 @@ export default function useProjectTabs() {
 
   const { mutate: updateGroupSequence } = groupSequenceMutation();
   const { data: groupListRes, isPending } = useGetAllGroup({
-    filter: {},
+    filter: {
+      groupType: "PROJECT",
+    },
   });
 
   useEffect(() => {

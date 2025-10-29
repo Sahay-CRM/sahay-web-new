@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Columns3, PlusCircle } from "lucide-react";
+import clsx from "clsx";
 
 interface DropdownSearchMenuProps {
   columns?: ColumnToggleOption[];
@@ -20,6 +21,7 @@ interface DropdownSearchMenuProps {
   showCount?: boolean;
   columnIcon?: boolean;
 }
+
 interface ColumnToggleOption {
   label: string;
   key: string;
@@ -36,7 +38,6 @@ const DropdownSearchMenu = ({
   showCount,
   columnIcon,
 }: DropdownSearchMenuProps) => {
-  // Handler for filter option selection
   const handleOptionToggle = (value: string) => {
     if (!onChange) return;
     if (selected.includes(value)) {
@@ -46,20 +47,43 @@ const DropdownSearchMenu = ({
     }
   };
 
+  const hasSelection = selected.length > 0;
+
+  // Determine display text based on selection count
+  let displayLabel = label;
+  if (selected.length === 1) {
+    const selectedOption = options?.find((opt) => opt.value === selected[0]);
+    displayLabel = selectedOption ? selectedOption.label : "Filtered";
+  } else if (selected.length > 1) {
+    displayLabel = `Filtered (${selected.length})`;
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="px-4">
-          {label}
+        <Button
+          variant={hasSelection ? "default" : "outline"}
+          className={clsx(
+            "px-4 flex items-center",
+            hasSelection &&
+              "border-blue-500 text-blue-600 bg-blue-50 hover:bg-blue-100",
+          )}
+        >
+          {displayLabel}
+
           {columnIcon ? (
-            <Columns3 className="h-4 w-4 ml-2" />
+            <Columns3
+              className={clsx("h-4 w-4 ml-2", hasSelection && "text-blue-500")}
+            />
           ) : (
-            <PlusCircle className="h-4 w-4 ml-2" />
+            <PlusCircle
+              className={clsx("h-4 w-4 ml-2", hasSelection && "text-blue-500")}
+            />
           )}
         </Button>
       </DropdownMenuTrigger>
+
       <DropdownMenuContent className="w-56">
-        {/* Render filter options if provided */}
         {options && options.length > 0
           ? options.map((opt, idx) => (
               <DropdownMenuCheckboxItem
@@ -75,8 +99,7 @@ const DropdownSearchMenu = ({
                 )}
               </DropdownMenuCheckboxItem>
             ))
-          : // Otherwise, render columns for toggling
-            columns?.map((col, idx) => (
+          : columns?.map((col, idx) => (
               <DropdownMenuCheckboxItem
                 key={`${col.key}-${idx}`}
                 checked={col.visible}
