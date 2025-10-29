@@ -1121,6 +1121,7 @@ interface KpiDataCell {
   isSunday?: boolean;
   isSkipDay?: boolean;
   note?: string | null;
+  noteId?: string;
   isHoliday?: boolean;
 }
 

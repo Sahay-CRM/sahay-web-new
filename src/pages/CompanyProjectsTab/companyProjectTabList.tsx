@@ -26,7 +26,7 @@ import {
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { useState } from "react";
-import { ViewProjectDocsModal } from "./ViewProjectModalee";
+import { ViewProjectDocsModal } from "./ViewProjectDocumentModal";
 
 export default function CompanyProjectTabList() {
   const {

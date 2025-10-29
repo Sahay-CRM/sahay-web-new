@@ -30,6 +30,12 @@ export default function TabsSection({
             0,
           );
 
+          const isDailyTab = tab.frequencyType === "DAILY";
+          const showCanEdit =
+            !isDailyTab &&
+            isDataFilter === "default" &&
+            selectedPeriod !== "DAILY";
+
           return (
             <TabsTrigger
               key={tab.frequencyType}
@@ -39,10 +45,7 @@ export default function TabsSection({
               {formatFrequencyType(tab.frequencyType)}{" "}
               <span className="ml-1 text-xs text-gray-500">
                 ({tab.count}
-                {isDataFilter === "default" && canEdit > 0
-                  ? ` / ${canEdit}`
-                  : ""}
-                )
+                {showCanEdit && canEdit > 0 ? ` / ${canEdit}` : ""})
               </span>
             </TabsTrigger>
           );

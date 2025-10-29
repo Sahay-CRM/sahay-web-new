@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import ModalData from "@/components/shared/Modal/ModalData";
+import { deleteKpiNoteMutation } from "@/features/api/kpiDashboard";
 
 interface CommentModalProps {
   isModalOpen: boolean;
   modalClose: () => void;
   onSave: (comment: string) => void;
-  modalTitle?: string;
   initialComment?: string;
+  noteId?: string;
 }
 
 const CommentModal: React.FC<CommentModalProps> = ({
@@ -14,29 +15,27 @@ const CommentModal: React.FC<CommentModalProps> = ({
   modalClose,
   onSave,
   initialComment = "",
+  noteId,
 }) => {
   const [comment, setComment] = useState(initialComment);
   const [isEditable, setIsEditable] = useState(false);
-
-  // Dynamic modal title
-  const modalTitleText = initialComment ? "Edit Note" : "Add Note";
+  const deleteNoteMutation = deleteKpiNoteMutation();
 
   useEffect(() => {
     if (isModalOpen) {
       setComment(initialComment);
-      setIsEditable(initialComment === ""); // enable only if new note
+      setIsEditable(initialComment === "");
     }
   }, [isModalOpen, initialComment]);
 
   const handleSave = () => {
     if (comment.trim() === "") return;
     onSave(comment);
-    setComment("");
     modalClose();
   };
 
-  const handleCancel = () => {
-    setComment("");
+  const handleDelete = () => {
+    deleteNoteMutation.mutate(noteId || "");
     modalClose();
   };
 
@@ -46,24 +45,28 @@ const CommentModal: React.FC<CommentModalProps> = ({
     <ModalData
       isModalOpen={isModalOpen}
       modalClose={modalClose}
-      modalTitle={modalTitleText}
-      childclass={"px-3 py-0"}
+      modalTitle={initialComment ? "Edit Note" : "Add Note"}
+      childclass="px-3 py-0"
       buttons={[
-        {
-          btnText: "Cancel",
-          buttonCss: "py-1.5 px-5",
-          btnClick: handleCancel,
-        },
-        // 👇 Show Save button only when something is typed
+        ...(initialComment
+          ? [
+              {
+                btnText: "Delete",
+                buttonCss: "py-1.5 px-5 bg-red-600 text-white hover:bg-red-700",
+                btnClick: handleDelete,
+              },
+            ]
+          : []),
         ...(isCommentChanged
           ? [
               {
                 btnText: "Save",
-                buttonCss: "py-1.5 px-5 ",
+                buttonCss: "py-1.5 px-5",
                 btnClick: handleSave,
               },
             ]
           : []),
+        { btnText: "Cancel", buttonCss: "py-1.5 px-5", btnClick: modalClose },
       ]}
     >
       <div className="flex flex-col gap-2">
@@ -71,13 +74,13 @@ const CommentModal: React.FC<CommentModalProps> = ({
         <textarea
           rows={4}
           className={`w-full border rounded p-2 text-sm resize-none transition-all duration-200 ${
-            !isEditable ? "text-gray-600 bg-gray-50 cursor-pointer" : "bg-white"
+            isEditable ? "bg-white" : "text-gray-600 bg-gray-50 cursor-pointer"
           }`}
           value={comment}
           onClick={() => setIsEditable(true)}
-          onChange={(e) => isEditable && setComment(e.target.value)}
+          onChange={(e) => setComment(e.target.value)}
           readOnly={!isEditable}
-          placeholder="Write your Note here..."
+          placeholder="Write your note here..."
         />
       </div>
     </ModalData>

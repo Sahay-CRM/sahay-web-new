@@ -2,3 +2,4 @@ export { default as useGetKpiDashboardStructure } from "./useGetKpiDashboardStru
 export { default as useGetKpiDashboardData } from "./useGetKpiDashboardData";
 // export { default as useGetKpiVisualizeData } from "./useGetKpiVisualizeData";
 export { default as addUpdateKpi } from "./useAddUpdateKpi";
+export { default as deleteKpiNoteMutation } from "./kpiNoteDelete";

@@ -361,6 +361,9 @@ const Urls = {
   getHoliday: () => `${baseUrl}/company/holiday/get`,
   updateHoliday: (id: string) => `${baseUrl}/company/holiday/update/${id}`,
   deleteHoliday: (id: string) => `${baseUrl}/company/holiday/delete/${id}`,
+
+  deleteKpiNote: (id: string) =>
+    `${baseUrl}/company/kpi-data/note-delete/${id}`,
 };
 
 export default Urls;

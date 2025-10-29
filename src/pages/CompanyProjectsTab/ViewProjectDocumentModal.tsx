@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ModalData from "@/components/shared/Modal/ModalData";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, Save, Trash2 } from "lucide-react";
 import { docUploadMutation } from "@/features/api/file";
 import { queryClient } from "@/queryClient";
 
@@ -63,13 +63,14 @@ export const ViewProjectDocsModal: React.FC<ViewProjectDocsModalProps> = ({
       isModalOpen={isModalOpen}
       modalClose={modalClose}
       modalTitle="Project Documents"
-      containerClass="max-w-[600px]"
+      containerClass="max-h-[500px] min-w-[35%] "
+      childclass="px-6 py-0 pb-4 "
     >
       {docs.length > 0 ? (
         <div className=" flex flex-col gap-2">
-          <p className="text-sm text-gray-600 mb-2">
+          {/* <p className="text-sm text-gray-600 mb-2">
             {docs.length} file(s) available
-          </p>
+          </p> */}
 
           {docs.map((file) => (
             <div
@@ -78,7 +79,7 @@ export const ViewProjectDocsModal: React.FC<ViewProjectDocsModalProps> = ({
             >
               <div className="flex items-center gap-2 truncate">
                 <FileText className="w-4 h-4 text-gray-500 shrink-0" />
-                <span className="font-medium truncate text-sm text-gray-800 max-w-[300px]">
+                <span className="font-medium truncate text-sm text-gray-800 max-w-[500px]">
                   {file.fileName}
                 </span>
               </div>
@@ -86,24 +87,27 @@ export const ViewProjectDocsModal: React.FC<ViewProjectDocsModalProps> = ({
               <div className="flex items-center">
                 <button
                   type="button"
-                  className="ml-2 px-2 py-1 bg-primary text-white rounded text-xs hover:bg-primary/80 transition"
+                  className=" px-2 py-1  text-white rounded text-xs hover:bg-gray-200 cursor-pointer
+                   transition"
                   onClick={() => handleDownload(file.fileName)}
+                  title="Dewnload"
                 >
-                  Download
+                  <Save className="w-4 h-4 text-primary" />
                 </button>
 
                 <button
                   type="button"
                   disabled={loadingId === file.fileId}
-                  className="ml-2 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition flex items-center gap-1"
+                  className=" px-2 py-1   rounded text-xs cursor-pointer hover:bg-gray-200 transition flex items-center gap-1"
                   onClick={() => handleRemoveFile(file.fileId)}
+                  title="Remove"
                 >
                   {loadingId === file.fileId ? (
                     <>
-                      <Loader2 className="w-3 h-3 animate-spin" /> Removing...
+                      <Loader2 className="w-3 h-3 animate-spin" />
                     </>
                   ) : (
-                    "Remove"
+                    <Trash2 className="w-4 h-4 text-red-500" />
                   )}
                 </button>
               </div>
