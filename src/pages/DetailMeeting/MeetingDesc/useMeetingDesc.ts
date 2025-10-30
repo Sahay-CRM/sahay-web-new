@@ -35,14 +35,24 @@ export default function useMeetingDesc() {
 
   const { data: meetingData } = useGetMeetingTiming(meetingId ?? "");
 
-  const meetingTiming = meetingData?.data as CompanyMeetingDataProps;
+  const meetingTiming = meetingData?.data as
+    | CompanyMeetingDataProps
+    | undefined;
 
   const { data: meetingNotes } = useGetMeetingNotes({
     filter: {
       meetingId: meetingTiming?.meetingId,
-      noteType: activeTab === "updates" ? "UPDATES" : "APPRECIATION",
+      ...(activeTab !== "JOINERS" && {
+        noteType: activeTab,
+      }),
+      ...(meetingTiming?.repetitiveMeetingId && {
+        repetitiveMeetingId: meetingTiming.repetitiveMeetingId,
+      }),
     },
-    enable: !!meetingTiming?.meetingId,
+    enable:
+      !!meetingTiming?.meetingId &&
+      !!activeTab &&
+      !!meetingTiming.repetitiveMeetingId,
   });
 
   const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();

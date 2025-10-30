@@ -171,9 +171,10 @@ function Calendar() {
           }}
           eventPropGetter={(event) => ({
             style: {
-              minHeight: 26,
+              minHeight: 22,
               backgroundColor: event.bgColor,
               color: event.textColor,
+              fontSize: "12px",
             },
           })}
           dayPropGetter={(date) => {

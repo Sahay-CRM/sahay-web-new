@@ -9,7 +9,7 @@ import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import TableData from "@/components/shared/DataTable/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
+// import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 
 import AddMeetingModal from "./addRepeatMeetingModal";
 import useAddRepeatMeetingForm from "./useAddRepeatMeetingForm"; // Renamed import
@@ -33,6 +33,7 @@ import { Repeat } from "lucide-react";
 import CustomModalFile from "@/components/shared/CustomModal";
 import { buildRepetitionOptions } from "@/components/shared/RepeatOption/repeatOption";
 import { FormLabel } from "@/components/ui/form";
+import { FormTimePicker } from "@/components/shared/FormDateTimePicker/formTimePicker";
 
 // interface MeetingInfoProps {
 //   isUpdateMeeting: boolean;
@@ -309,45 +310,6 @@ const MeetingInfo = () => {
           error={errors.meetingDescription}
           isMandatory
         />
-        <Controller
-          control={control}
-          name="meetingDateTime"
-          rules={{ required: "Date & Time is required" }}
-          render={({ field }) => {
-            const localDate = field.value ? new Date(field.value) : null;
-
-            return (
-              <FormDateTimePicker
-                label="Meeting Date & Time "
-                value={localDate}
-                onChange={(date) => {
-                  field.onChange(date?.toISOString());
-                }}
-                disablePastDates={true}
-                error={errors.meetingDateTime}
-                // disableDaysFromToday={5}
-              />
-            );
-          }}
-        />
-        {/* <Controller
-          control={control}
-          name="repeatType"
-          rules={{ required: "Please select Repetition Type" }}
-          render={({ field }) => (
-            <FormSelect
-              label="Repetition"
-              options={repetitionOptions}
-              placeholder="Select Repetition"
-              {...field}
-              // value={field.value || ""}
-              // onChange={field.onChange}
-              error={errors.repeatType}
-              isMandatory={true}
-              disabled={!meetingDateTime}
-            />
-          )}
-        /> */}
 
         <Controller
           control={control}
@@ -361,7 +323,7 @@ const MeetingInfo = () => {
             return (
               <>
                 <div className="flex flex-col space-y-1">
-                  <FormLabel className="mb-4 flex items-center">
+                  <FormLabel className="flex items-center">
                     Repetition
                     <span className="text-red-500 ml-1">*</span>
                   </FormLabel>
@@ -430,6 +392,60 @@ const MeetingInfo = () => {
             );
           }}
         />
+
+        <Controller
+          control={control}
+          name="meetingTimePlanned"
+          rules={{ required: "Time is required" }}
+          render={({ field }) => (
+            <FormTimePicker
+              label="Meeting Time"
+              value={field.value ? new Date(field.value) : null}
+              onChange={(time) => field.onChange(time)}
+              error={errors.meetingTimePlanned}
+            />
+          )}
+        />
+
+        {/* <Controller
+          control={control}
+          name="meetingDateTime"
+          rules={{ required: "Date & Time is required" }}
+          render={({ field }) => {
+            const localDate = field.value ? new Date(field.value) : null;
+
+            return (
+              <FormDateTimePicker
+                label="Meeting Date & Time "
+                value={localDate}
+                onChange={(date) => {
+                  field.onChange(date?.toISOString());
+                }}
+                disablePastDates={true}
+                error={errors.meetingDateTime}
+                // disableDaysFromToday={5}
+              />
+            );
+          }}
+        /> */}
+        {/* <Controller
+          control={control}
+          name="repeatType"
+          rules={{ required: "Please select Repetition Type" }}
+          render={({ field }) => (
+            <FormSelect
+              label="Repetition"
+              options={repetitionOptions}
+              placeholder="Select Repetition"
+              {...field}
+              // value={field.value || ""}
+              // onChange={field.onChange}
+              error={errors.repeatType}
+              isMandatory={true}
+              disabled={!meetingDateTime}
+            />
+          )}
+        /> */}
 
         {/* <Controller
           control={control}
