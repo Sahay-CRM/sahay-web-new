@@ -1391,6 +1391,7 @@ interface RepeatMeeting {
     meetingTypeName: string;
   };
   isDetailMeeting?: boolean;
+  customObj?: CustomObj;
   // meetingStatusId?: string;
 }
 

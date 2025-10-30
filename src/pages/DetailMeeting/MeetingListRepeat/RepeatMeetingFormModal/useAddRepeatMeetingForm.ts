@@ -15,7 +15,7 @@ import { queryClient } from "@/queryClient";
 export default function useAddRepeatMeetingForm() {
   const { id: repetitiveMeetingId } = useParams();
   const permission = useSelector(getUserPermission).LIVE_MEETING_TEMPLATES;
-
+  const [CustomRepeatData, setCustomRepeatData] = useState<CustomObj>();
   const [isModalOpen, setModalOpen] = useState(false);
 
   const { mutate: addDetailMeeting, isPending } =
@@ -45,6 +45,7 @@ export default function useAddRepeatMeetingForm() {
           : null,
         employeeId: data.joiners,
         repeatType: data.repeatType,
+        customObj: data.customObj,
       });
     }
   }, [meetingApiData, reset, repetitiveMeetingId, setValue]);
@@ -79,6 +80,7 @@ export default function useAddRepeatMeetingForm() {
             : [],
           isDetailMeeting: true,
           repeatType: data.repeatType,
+          customObj: data.customObj,
         }
       : {
           meetingName: data?.meetingName,
@@ -98,6 +100,7 @@ export default function useAddRepeatMeetingForm() {
             : [],
           isDetailMeeting: true,
           repeatType: data.repeatType,
+          customObj: data.customObj,
         };
 
     addDetailMeeting(payload, {
@@ -114,6 +117,9 @@ export default function useAddRepeatMeetingForm() {
     setModalOpen(false);
   };
 
+  const handleSaveCustomRepeatData = useCallback((customData: CustomObj) => {
+    setCustomRepeatData(customData);
+  }, []);
   return {
     isModalOpen,
     handleClose,
@@ -125,6 +131,8 @@ export default function useAddRepeatMeetingForm() {
     repetitiveMeetingId,
     isPending,
     meetingApiData,
+    saveCustomRepeatData: handleSaveCustomRepeatData,
+    CustomRepeatData,
     permission,
   };
 }
