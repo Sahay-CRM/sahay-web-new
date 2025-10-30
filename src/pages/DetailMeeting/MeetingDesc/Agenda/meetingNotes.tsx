@@ -1,14 +1,6 @@
 import React, { useMemo, useState } from "react";
 
-import {
-  Unlink,
-  Plus,
-  EllipsisVertical,
-  X,
-  Edit,
-  Share2,
-  Check,
-} from "lucide-react";
+import { Plus, EllipsisVertical, X, Edit, Share2, Check } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +12,7 @@ import TaskDrawer from "../Tasks/taskDrawer";
 import ProjectDrawer from "../Projects/projectDrawer";
 import {
   addMeetingNotesMutation,
-  deleteCompanyMeetingMutation,
+  // deleteCompanyMeetingMutation,
   useGetMeetingNotes,
 } from "@/features/api/detailMeeting";
 import { get, ref, update } from "firebase/database";
@@ -97,31 +89,31 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
     });
   const { mutate: addNote } = addMeetingNotesMutation();
   // const { mutate: removeGroupFromNote } = removeGroupMutation();
-  const deleteNoteMutation = deleteCompanyMeetingMutation();
+  // const deleteNoteMutation = deleteCompanyMeetingMutation();
 
   // Toggle dropdown function
   const toggleDropdown = (noteId: string) => {
     setDropdownOpen(dropdownOpen === noteId ? null : noteId);
   };
 
-  const handleDelete = (id: string) => {
-    deleteNoteMutation.mutate(id, {
-      onSuccess: async () => {
-        const meetingSnapshot = await get(meetingRef);
-        if (!meetingSnapshot.exists()) {
-          queryClient.invalidateQueries({
-            queryKey: ["get-meeting-notes"],
-          });
-          return;
-        } else {
-          update(ref(db, `meetings/${meetingId}/state`), {
-            updatedAt: Date.now(),
-          });
-        }
-      },
-    });
-    setDropdownOpen(null); // Close dropdown after action
-  };
+  // const handleDelete = (id: string) => {
+  //   deleteNoteMutation.mutate(id, {
+  //     onSuccess: async () => {
+  //       const meetingSnapshot = await get(meetingRef);
+  //       if (!meetingSnapshot.exists()) {
+  //         queryClient.invalidateQueries({
+  //           queryKey: ["get-meeting-notes"],
+  //         });
+  //         return;
+  //       } else {
+  //         update(ref(db, `meetings/${meetingId}/state`), {
+  //           updatedAt: Date.now(),
+  //         });
+  //       }
+  //     },
+  //   });
+  //   setDropdownOpen(null); // Close dropdown after action
+  // };
 
   const handleAddTask = (data: MeetingNotesRes) => {
     const deadline = new Date();
@@ -412,11 +404,11 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                       <span className="font-medium text-xs text-gray-600">
                         {author?.employeeName || "Unknown"}
                       </span>
-                      {note.groupName && (
+                      {/* {note.groupName && (
                         <span className="text-[12px] text-gray-600 ml-2 bg-gray-200 py-1 px-1 rounded-full -mt-2">
                           {note.groupName}
                         </span>
-                      )}
+                      )} */}
                     </div>
                     <div>
                       {note.noteType && (
@@ -550,7 +542,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                     </DropdownMenuItem>
                                   </>
                                 )}
-                                <DropdownMenuItem
+                                {/* <DropdownMenuItem
                                   onClick={() =>
                                     handleDelete(note.meetingNoteId)
                                   }
@@ -558,7 +550,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                 >
                                   <Unlink className="h-4 w-4 mr-2" />
                                   Delete
-                                </DropdownMenuItem>
+                                </DropdownMenuItem> */}
 
                                 {/* {!note.groupId ? (
                                   <DropdownMenuItem

@@ -403,6 +403,7 @@ interface CompanyMeetingDataProps {
   isDetailMeeting?: boolean;
   meetingTimePlanned?: string;
   selectDate?: Date | string;
+  repetitiveMeetingId?: string;
 }
 
 interface ProjectParameters {
@@ -1272,6 +1273,7 @@ interface MeetingNotesRes {
   noteType?: string;
   groupId?: string;
   groupName?: string;
+  meetingId?: string;
 }
 
 interface IssuesProps {
@@ -1391,6 +1393,7 @@ interface RepeatMeeting {
     meetingTypeName: string;
   };
   isDetailMeeting?: boolean;
+  customObj?: CustomObj;
   // meetingStatusId?: string;
 }
 

@@ -9,7 +9,7 @@ import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import TableData from "@/components/shared/DataTable/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
+// import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 
 import AddMeetingModal from "./addRepeatMeetingModal";
 import useAddRepeatMeetingForm from "./useAddRepeatMeetingForm"; // Renamed import
@@ -18,11 +18,22 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { getEmployee } from "@/features/api/companyEmployee";
 import { getMeetingType } from "@/features/api/meetingType";
 // import { useDdMeetingStatus } from "@/features/api/meetingStatus";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
-import FormSelect from "@/components/shared/Form/FormSelect";
+// import FormSelect from "@/components/shared/Form/FormSelect";
 // import DatePicker from "react-datepicker";
 import PageNotAccess from "@/pages/PageNoAccess";
+import { Repeat } from "lucide-react";
+import CustomModalFile from "@/components/shared/CustomModal";
+import { buildRepetitionOptions } from "@/components/shared/RepeatOption/repeatOption";
+import { FormLabel } from "@/components/ui/form";
+import { FormTimePicker } from "@/components/shared/FormDateTimePicker/formTimePicker";
 
 // interface MeetingInfoProps {
 //   isUpdateMeeting: boolean;
@@ -129,129 +140,130 @@ const MeetingInfo = () => {
     formState: { errors },
     control,
     watch,
-    // setValue,
+    setValue,
   } = useFormContext();
 
-  // const meetingType = watch("meetingTypeId");
+  const { meetingApiData, saveCustomRepeatData } = useAddRepeatMeetingForm();
   const meetingDateTime = watch("meetingDateTime");
 
-  let repetitionOptions = [{}];
-  const getDayName = (date: Date) =>
-    date.toLocaleDateString("en-US", { weekday: "long" });
-  function getOrdinalWeekday(date: Date) {
-    const day = date.getDay();
-    const dateOfMonth = date.getDate();
-    const lastDateOfMonth = new Date(
-      date.getFullYear(),
-      date.getMonth() + 1,
-      0,
-    ).getDate();
+  // const meetingType = watch("meetingTypeId");
+  // let repetitionOptions = [{}];
+  // const getDayName = (date: Date) =>
+  //   date.toLocaleDateString("en-US", { weekday: "long" });
+  // function getOrdinalWeekday(date: Date) {
+  //   const day = date.getDay();
+  //   const dateOfMonth = date.getDate();
+  //   const lastDateOfMonth = new Date(
+  //     date.getFullYear(),
+  //     date.getMonth() + 1,
+  //     0
+  //   ).getDate();
 
-    const weekdayNames = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-    const ordinals = ["first", "second", "third", "fourth", "fifth"];
+  //   const weekdayNames = [
+  //     "Sunday",
+  //     "Monday",
+  //     "Tuesday",
+  //     "Wednesday",
+  //     "Thursday",
+  //     "Friday",
+  //     "Saturday",
+  //   ];
+  //   const ordinals = ["first", "second", "third", "fourth", "fifth"];
 
-    // Calculate week number in month (1-based)
-    const weekNumber = Math.ceil(dateOfMonth / 7);
+  //   // Calculate week number in month (1-based)
+  //   const weekNumber = Math.ceil(dateOfMonth / 7);
 
-    // Check if date is in the last week of the month
-    const daysLeftInMonth = lastDateOfMonth - dateOfMonth;
-    const isLastWeek = daysLeftInMonth < 7;
+  //   // Check if date is in the last week of the month
+  //   const daysLeftInMonth = lastDateOfMonth - dateOfMonth;
+  //   const isLastWeek = daysLeftInMonth < 7;
 
-    const ordinalLabel = isLastWeek ? "last" : ordinals[weekNumber - 1];
+  //   const ordinalLabel = isLastWeek ? "last" : ordinals[weekNumber - 1];
 
-    return `${ordinalLabel} ${weekdayNames[day]}`;
-  }
+  //   return `${ordinalLabel} ${weekdayNames[day]}`;
+  // }
 
-  if (meetingDateTime) {
-    try {
-      const dateObj = new Date(meetingDateTime);
-      const dayName = getDayName(dateObj);
-      const ordinalWeekday = getOrdinalWeekday(dateObj);
-      const lastDateOfMonth = new Date(
-        dateObj.getFullYear(),
-        dateObj.getMonth() + 1,
-        0,
-      ).getDate();
+  // if (meetingDateTime) {
+  //   try {
+  //     const dateObj = new Date(meetingDateTime);
+  //     const dayName = getDayName(dateObj);
+  //     const ordinalWeekday = getOrdinalWeekday(dateObj);
+  //     const lastDateOfMonth = new Date(
+  //       dateObj.getFullYear(),
+  //       dateObj.getMonth() + 1,
+  //       0
+  //     ).getDate();
 
-      const dateOfMonth = dateObj.getDate();
-      const daysLeftInMonth = lastDateOfMonth - dateOfMonth;
-      const isLastWeek = daysLeftInMonth < 7;
-      const monthName = dateObj.toLocaleDateString("en-US", { month: "long" }); // e.g., "March"
-      const isLastDayOfMonth = dateOfMonth === lastDateOfMonth;
+  //     const dateOfMonth = dateObj.getDate();
+  //     const daysLeftInMonth = lastDateOfMonth - dateOfMonth;
+  //     const isLastWeek = daysLeftInMonth < 7;
+  //     const monthName = dateObj.toLocaleDateString("en-US", { month: "long" }); // e.g., "March"
+  //     const isLastDayOfMonth = dateOfMonth === lastDateOfMonth;
 
-      repetitionOptions = [
-        { value: "DAILY", label: "Daily" },
-        { value: "DAILYALTERNATE", label: "Daily (Every Other Day)" },
-        { value: "WEEKLY", label: `Weekly on ${dayName}` },
-        // Conditionally include only one of these two:
-        ...(isLastWeek
-          ? [
-              {
-                value: "MONTHLYLASTWEEKDAY",
-                label: `Monthly on the last ${dayName}`,
-              },
-            ]
-          : [
-              {
-                value: "MONTHLYNWEEKDAY",
-                label: `Monthly on the ${ordinalWeekday}`,
-              },
-            ]),
-        {
-          value: "MONTHLYDATE",
-          label: `Monthly on the ${getOrdinalDate(dateOfMonth)} date `,
-        },
-        ...(isLastDayOfMonth
-          ? [
-              {
-                value: "MONTHLYEOM",
-                label: `Monthly on the last day (${getOrdinalDate(lastDateOfMonth)})`,
-              },
-            ]
-          : []),
+  //     repetitionOptions = [
+  //       { value: "DAILY", label: "Daily" },
+  //       { value: "DAILYALTERNATE", label: "Daily (Every Other Day)" },
+  //       { value: "WEEKLY", label: `Weekly on ${dayName}` },
+  //       // Conditionally include only one of these two:
+  //       ...(isLastWeek
+  //         ? [
+  //             {
+  //               value: "MONTHLYLASTWEEKDAY",
+  //               label: `Monthly on the last ${dayName}`,
+  //             },
+  //           ]
+  //         : [
+  //             {
+  //               value: "MONTHLYNWEEKDAY",
+  //               label: `Monthly on the ${ordinalWeekday}`,
+  //             },
+  //           ]),
+  //       {
+  //         value: "MONTHLYDATE",
+  //         label: `Monthly on the ${getOrdinalDate(dateOfMonth)} date `,
+  //       },
+  //       ...(isLastDayOfMonth
+  //         ? [
+  //             {
+  //               value: "MONTHLYEOM",
+  //               label: `Monthly on the last day (${getOrdinalDate(lastDateOfMonth)})`,
+  //             },
+  //           ]
+  //         : []),
 
-        {
-          value: "YEARLYXMONTHDATE",
-          label: `Yearly on ${monthName} ${getOrdinalDate(dateOfMonth)}`, // Yearly - Date (e.g., March 14th)
-        },
-        ...(!isLastDayOfMonth
-          ? [
-              {
-                value: "YEARLYXMONTHNWEEKDAY",
-                label: `Yearly on the ${ordinalWeekday} of ${monthName}  `,
-              },
-            ]
-          : []),
-        ...(isLastDayOfMonth
-          ? [
-              {
-                value: "YEARLYXMONTHLASTWEEKDAY",
-                label: `Yearly on the last ${dayName} of ${monthName}  `,
-              },
-            ]
-          : []),
-      ];
-    } catch {
-      // fallback if invalid date
-      repetitionOptions = [];
-    }
-  } else {
-    repetitionOptions = [];
-  }
+  //       {
+  //         value: "YEARLYXMONTHDATE",
+  //         label: `Yearly on ${monthName} ${getOrdinalDate(dateOfMonth)}`, // Yearly - Date (e.g., March 14th)
+  //       },
+  //       ...(!isLastDayOfMonth
+  //         ? [
+  //             {
+  //               value: "YEARLYXMONTHNWEEKDAY",
+  //               label: `Yearly on the ${ordinalWeekday} of ${monthName}  `,
+  //             },
+  //           ]
+  //         : []),
+  //       ...(isLastDayOfMonth
+  //         ? [
+  //             {
+  //               value: "YEARLYXMONTHLASTWEEKDAY",
+  //               label: `Yearly on the last ${dayName} of ${monthName}  `,
+  //             },
+  //           ]
+  //         : []),
+  //     ];
+  //   } catch {
+  //     // fallback if invalid date
+  //     repetitionOptions = [];
+  //   }
+  // } else {
+  //   repetitionOptions = [];
+  // }
 
-  function getOrdinalDate(n: number) {
-    const s = ["th", "st", "nd", "rd"];
-    const v = n % 100;
-    return n + (s[(v - 20) % 10] || s[v] || s[0]);
-  }
+  // function getOrdinalDate(n: number) {
+  //   const s = ["th", "st", "nd", "rd"];
+  //   const v = n % 100;
+  //   return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  // }
 
   // const { data: meetingStatusData } = useDdMeetingStatus();
 
@@ -279,7 +291,8 @@ const MeetingInfo = () => {
   //     }
   //   }
   // }, [shouldHideStatus, meetingStatusOptions, setValue]);
-
+  const repeatOptions = buildRepetitionOptions(new Date());
+  const [openCustomModal, setOpenCustomModal] = useState(false);
   return (
     <div className="grid grid-cols-2 gap-4">
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
@@ -297,7 +310,104 @@ const MeetingInfo = () => {
           error={errors.meetingDescription}
           isMandatory
         />
+
         <Controller
+          control={control}
+          name="repeatType"
+          rules={{ required: "Please select Repetition Type" }}
+          render={({ field }) => {
+            const selectedRepeatLabel =
+              repeatOptions.find((item) => item.value === field.value)?.label ||
+              (field.value === "CUSTOMTYPE" ? "Custom" : "Repeat");
+
+            return (
+              <>
+                <div className="flex flex-col space-y-1">
+                  <FormLabel className="flex items-center">
+                    Repetition
+                    <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <div
+                        className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer border rounded-md ${
+                          !meetingDateTime
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:bg-accent"
+                        }`}
+                        onClick={(e) => {
+                          if (!meetingDateTime) e.preventDefault();
+                        }}
+                      >
+                        <Repeat className="w-4 h-4" />
+                        <span>{selectedRepeatLabel}</span>
+                      </div>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent align="start" className="w-fit">
+                      {repeatOptions.map((item) => {
+                        const isSelected = item.value === field.value;
+                        return (
+                          <DropdownMenuItem
+                            key={item.value}
+                            onClick={() => {
+                              if (item.value === "CUSTOMTYPE") {
+                                setOpenCustomModal(true);
+                              } else {
+                                field.onChange(item.value);
+                              }
+                            }}
+                            className={`flex items-center justify-between ${
+                              isSelected
+                                ? "bg-accent text-accent-foreground"
+                                : ""
+                            }`}
+                          >
+                            <span>{item.label}</span>
+                            {isSelected && <span className="ml-2">✔</span>}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  {errors.repeatType && (
+                    <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                      {String(errors.repeatType.message)}
+                    </span>
+                  )}
+
+                  <CustomModalFile
+                    open={openCustomModal}
+                    defaultValues={meetingApiData?.customObj ?? undefined}
+                    onOpenChange={setOpenCustomModal}
+                    onSave={(data) => {
+                      field.onChange("CUSTOMTYPE");
+                      setValue("customObj", data);
+                      saveCustomRepeatData(data);
+                    }}
+                  />
+                </div>
+              </>
+            );
+          }}
+        />
+
+        <Controller
+          control={control}
+          name="meetingTimePlanned"
+          rules={{ required: "Time is required" }}
+          render={({ field }) => (
+            <FormTimePicker
+              label="Meeting Time"
+              value={field.value ? new Date(field.value) : null}
+              onChange={(time) => field.onChange(time)}
+              error={errors.meetingTimePlanned}
+            />
+          )}
+        />
+
+        {/* <Controller
           control={control}
           name="meetingDateTime"
           rules={{ required: "Date & Time is required" }}
@@ -306,7 +416,7 @@ const MeetingInfo = () => {
 
             return (
               <FormDateTimePicker
-                label="Meeting Date & Time"
+                label="Meeting Date & Time "
                 value={localDate}
                 onChange={(date) => {
                   field.onChange(date?.toISOString());
@@ -317,8 +427,8 @@ const MeetingInfo = () => {
               />
             );
           }}
-        />
-        <Controller
+        /> */}
+        {/* <Controller
           control={control}
           name="repeatType"
           rules={{ required: "Please select Repetition Type" }}
@@ -335,7 +445,8 @@ const MeetingInfo = () => {
               disabled={!meetingDateTime}
             />
           )}
-        />
+        /> */}
+
         {/* <Controller
           control={control}
           name="meetingTimePlanned"
