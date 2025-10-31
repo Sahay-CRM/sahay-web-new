@@ -384,8 +384,8 @@ export default function CompanyProfile() {
                 Contact Information
               </h2>
               <div className="space-y-2">
-                <div className="flex gap-4">
-                  <div className="w-1/3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <div className="">
                     {isEditing ? (
                       <FormInputField
                         label="Account's POC Name"
@@ -406,7 +406,7 @@ export default function CompanyProfile() {
                       </>
                     )}
                   </div>
-                  <div className="w-1/3">
+                  <div className="">
                     {isEditing ? (
                       <FormInputField
                         label="Account's POC Mobile"
@@ -436,7 +436,7 @@ export default function CompanyProfile() {
                       </>
                     )}
                   </div>
-                  <div className="w-1/3">
+                  <div className="">
                     {isEditing ? (
                       <FormInputField
                         label="Account's POC Email"

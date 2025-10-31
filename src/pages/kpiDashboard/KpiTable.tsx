@@ -57,6 +57,7 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 // import CommentModal from "./KpiCommentModal";
 import { twMerge } from "tailwind-merge";
 import CommentModal from "./KpiCommentModal";
+import SearchInput from "@/components/shared/SearchInput";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -431,6 +432,13 @@ export default function UpdatedKpiTable() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kpiStructure, isKpiStructureLoading, searchParams]);
+  // const [searchTerm, setSearchTerm] = useState({
+  //   search: "",
+  //   currentPage: 1,
+  // });
+  const [searchTerm, setSearchTerm] = useState<PaginationFilter>({
+    search: "",
+  });
 
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
   const [currentCellKey, setCurrentCellKey] = useState<string>("");
@@ -720,8 +728,33 @@ export default function UpdatedKpiTable() {
     selectedPeriod,
   );
 
+  // const groupedKpiRows = useMemo(() => {
+  //   if (!filteredData.length || !filteredData[0].kpis) return [];
+
+  //   const groups: {
+  //     coreParameter: { coreParameterId: string; coreParameterName: string };
+  //     kpis: { kpi: Kpi }[];
+  //   }[] = [];
+
+  //   (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
+  //     if (coreParam.kpis && Array.isArray(coreParam.kpis)) {
+  //       const kpiRows = coreParam.kpis.map((kpi: Kpi) => ({ kpi }));
+  //       groups.push({
+  //         coreParameter: {
+  //           coreParameterId: coreParam.coreParameterId,
+  //           coreParameterName: coreParam.coreParameterName,
+  //         },
+  //         kpis: kpiRows,
+  //       });
+  //     }
+  //   });
+
+  //   return groups;
+  // }, [filteredData]);
+
   const groupedKpiRows = useMemo(() => {
     if (!filteredData.length || !filteredData[0].kpis) return [];
+    const search = String(searchTerm.search ?? "").toLowerCase();
 
     const groups: {
       coreParameter: { coreParameterId: string; coreParameterName: string };
@@ -730,19 +763,32 @@ export default function UpdatedKpiTable() {
 
     (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
       if (coreParam.kpis && Array.isArray(coreParam.kpis)) {
-        const kpiRows = coreParam.kpis.map((kpi: Kpi) => ({ kpi }));
-        groups.push({
-          coreParameter: {
-            coreParameterId: coreParam.coreParameterId,
-            coreParameterName: coreParam.coreParameterName,
-          },
-          kpis: kpiRows,
+        const filteredKpis = coreParam.kpis.filter((kpi: Kpi) => {
+          const coreName = coreParam.coreParameterName?.toLowerCase() || "";
+          const tag = kpi.tag?.toLowerCase() || "";
+          const name = kpi.kpiName?.toLowerCase() || "";
+
+          const match =
+            coreName.includes(search) ||
+            tag.includes(search) ||
+            name.includes(search);
+
+          return match;
         });
+
+        if (filteredKpis.length > 0) {
+          groups.push({
+            coreParameter: {
+              coreParameterId: coreParam.coreParameterId,
+              coreParameterName: coreParam.coreParameterName,
+            },
+            kpis: filteredKpis.map((kpi) => ({ kpi })),
+          });
+        }
       }
     });
-
     return groups;
-  }, [filteredData]);
+  }, [filteredData, searchTerm]);
 
   useEffect(() => {
     const syncScroll = (e: Event) => {
@@ -1050,6 +1096,20 @@ export default function UpdatedKpiTable() {
                 />
               </div>
             )}
+            <SearchInput
+              placeholder="Search..."
+              searchValue={searchTerm?.search || ""}
+              setPaginationFilter={setSearchTerm}
+              className="w-80"
+            />
+            {/* <SearchInput
+              placeholder="Search..."
+              searchValue={searchTerm.search}
+              setPaginationFilter={(value: string) =>
+                setSearchTerm((prev) => ({ ...prev, search: value }))
+              }
+              className="w-80"
+            /> */}
 
             <FormDatePicker
               value={selectedDate}
