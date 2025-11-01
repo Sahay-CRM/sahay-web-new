@@ -29,6 +29,9 @@ interface DatapointModalProps {
   modalClose: () => void;
   onSubmit: () => void;
   isLoading?: boolean;
+  isChildData?: string | undefined;
+  onKeepAll?: () => void;
+  onDeleteAll?: () => void;
 }
 
 const AddDatapointModal: React.FC<DatapointModalProps> = ({
@@ -37,6 +40,9 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
   modalClose,
   onSubmit,
   isLoading,
+  isChildData,
+  onKeepAll,
+  onDeleteAll,
 }) => {
   return (
     <ModalData
@@ -53,12 +59,34 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
           buttonCss: "py-1.5 px-5",
           btnClick: modalClose,
         },
-        {
-          btnText: "Submit",
-          buttonCss: "py-1.5 px-5",
-          btnClick: onSubmit,
-          isLoading: isLoading,
-        },
+        ...(isChildData
+          ? [
+              {
+                btnText: "Keep All",
+                buttonCss: "py-1.5 px-5",
+                btnClick: onKeepAll ?? (() => {}),
+              },
+              {
+                btnText: "Delete All",
+                buttonCss: "py-1.5 px-5",
+                btnClick: onDeleteAll ?? (() => {}),
+              },
+            ]
+          : [
+              {
+                btnText: "Submit",
+                buttonCss: "py-1.5 px-5",
+                btnClick: onSubmit,
+                isLoading: isLoading,
+              },
+            ]),
+
+        // {
+        //   btnText: "Submit",
+        //   buttonCss: "py-1.5 px-5",
+        //   btnClick: onSubmit,
+        //   isLoading: isLoading,
+        // },
       ]}
     >
       <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-700">
@@ -133,6 +161,13 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
             {modalData.comment}
           </div>
         ) : null}
+      </div>
+      <div>
+        {isChildData && (
+          <div className="border-t mt-2 pt-2">
+            <span className="font-bold text-black">{isChildData}</span>
+          </div>
+        )}
       </div>
     </ModalData>
   );

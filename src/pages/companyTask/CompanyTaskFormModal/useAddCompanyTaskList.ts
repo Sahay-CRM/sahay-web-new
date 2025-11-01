@@ -134,6 +134,7 @@ export const useAddCompanyTask = () => {
     ? taskStatus.data.map((status) => ({
         label: status.taskStatus,
         value: status.taskStatusId,
+        color: status.color,
       }))
     : [];
 

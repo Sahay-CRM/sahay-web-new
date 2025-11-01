@@ -13,6 +13,8 @@ import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import useGetRepeatCompanyTaskById from "@/features/api/companyTask/useGetRepeatCompanyTaskById";
 import { getRepeatTypeOrCustom } from "@/components/shared/RepeatOption/repeatOption";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 // import { getRepeatTypeOrCustom } from "@/pages/ToDoList/repeatOption";
 
 interface FormValues {
@@ -44,6 +46,8 @@ export const useAddCompanyTask = () => {
     repetitiveTaskId || "",
   );
 
+  const [isChildData, setIsChildData] = useState<string | undefined>("");
+
   const permission = useSelector(getUserPermission);
   const navigate = useNavigate();
   const [isModalOpen, setModalOpen] = useState(false);
@@ -65,7 +69,7 @@ export const useAddCompanyTask = () => {
 
     mode: "onChange",
   });
-  const { reset, trigger, getValues } = methods;
+  const { reset, trigger, getValues, handleSubmit } = methods;
   const { data: taskTypeData, isLoading: typeLoading } = useDdTaskType({
     filter: {
       search: isTypeSearch.length >= 3 ? isTypeSearch : undefined,
@@ -258,7 +262,7 @@ export const useAddCompanyTask = () => {
     }
   }, [trigger]);
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: FormValues, key?: string) => {
     const isActiveValue =
       typeof data?.isActive === "string"
         ? data.isActive === "active"
@@ -305,6 +309,7 @@ export const useAddCompanyTask = () => {
               ? ""
               : data.repeatType.toUpperCase(),
           customObj: data.customObj,
+          ...(key ? { isChildDataKey: key } : {}),
         }
       : {
           taskName: data.taskName,
@@ -339,13 +344,32 @@ export const useAddCompanyTask = () => {
       onSuccess: () => {
         navigate("/dashboard/tasksrepeat");
       },
+      onError: (error: Error) => {
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+
+        if (axiosError.response?.data?.status === 417) {
+          setIsChildData(axiosError.response?.data?.message);
+        } else if (axiosError.response?.data.status !== 417) {
+          toast.error(
+            `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+          );
+        }
+      },
     });
   };
+
   const handleClose = () => setModalOpen(false);
 
   const handleSaveCustomRepeatData = useCallback((customData: CustomObj) => {
     setCustomRepeatData(customData);
   }, []);
+
+  const handleKeepAll = handleSubmit((data) => onSubmit(data, "KEEP_ALL"));
+  const handleDeleteAll = handleSubmit((data) => onSubmit(data, "DELETE_ALL"));
+
   return {
     step,
     steps,
@@ -383,5 +407,8 @@ export const useAddCompanyTask = () => {
     CustomRepeatData,
     setSelectedRepeat,
     selectedRepeat,
+    isChildData,
+    handleKeepAll,
+    handleDeleteAll,
   };
 };

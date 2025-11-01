@@ -496,7 +496,6 @@ const AssignUserStep = () => {
 
 // Renamed main component
 export default function AddCompanyTask() {
-  const hookProps = useAddCompanyTask();
   const {
     step,
     nextStep,
@@ -506,12 +505,15 @@ export default function AddCompanyTask() {
     isModalOpen,
     handleClose,
     taskpreviewData,
-    steps: stepNamesArray, // Renamed to avoid conflict with step components
+    steps: stepNamesArray,
     methods,
     repetitiveTaskId,
     taskDataById,
     isPending,
-  } = hookProps;
+    isChildData,
+    handleKeepAll,
+    handleDeleteAll,
+  } = useAddCompanyTask();
 
   const [searchParams] = useSearchParams();
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -622,8 +624,11 @@ export default function AddCompanyTask() {
             modalData={taskpreviewData as any}
             isModalOpen={isModalOpen}
             modalClose={handleClose}
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit((data) => onSubmit(data))}
             isLoading={isPending}
+            isChildData={isChildData}
+            onKeepAll={handleKeepAll}
+            onDeleteAll={handleDeleteAll}
           />
         )}
       </div>

@@ -149,6 +149,7 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
         label: status.meetingStatus,
         value: status.meetingStatusId,
         order: status.meetingStatusOrder,
+        color: status.color,
       })) || []
     );
   }, [meetingStatusData]);

@@ -253,7 +253,7 @@ function SortableKpiRow({
                   <>
                     {selectedPeriod === "DAILY" ? (
                       // ✅ Daily → only Yes/No
-                      kpi.goalValue === 1 ? (
+                      Number(kpi.goalValue) === 1 ? (
                         "Yes"
                       ) : (
                         "No"
@@ -262,7 +262,7 @@ function SortableKpiRow({
                       // ✅ Other periods → show value + Yes/No
                       <>
                         {formatToThreeDecimals(kpi.value1)} {" - "}
-                        {kpi.goalValue === 1 ? "Yes" : "No"}
+                        {Number(kpi.goalValue) === 1 ? "Yes" : "No"}
                       </>
                     )}
                   </>
@@ -295,10 +295,10 @@ function SortableKpiRow({
                     <span>
                       {kpi.validationType === "YES_NO"
                         ? selectedPeriod === "Daily"
-                          ? kpi.goalValue === 1
+                          ? Number(kpi.goalValue) === 1
                             ? "Yes"
                             : "No"
-                          : kpi.goalValue === 1
+                          : Number(kpi.goalValue) === 1
                             ? `Yes ${formattedNormal}`
                             : `No ${formattedNormal}`
                         : kpi.validationType === "BETWEEN"
@@ -448,6 +448,9 @@ export default function UpdatedKpiTable() {
   }>({
     note: "",
     noteId: "",
+  });
+  const [searchTerm, setSearchTerm] = useState<PaginationFilter>({
+    search: "",
   });
 
   const canDrag = userData?.isSuperAdmin || permissionSequence?.Edit;
@@ -754,6 +757,8 @@ export default function UpdatedKpiTable() {
 
   const groupedKpiRows = useMemo(() => {
     if (!filteredData.length || !filteredData[0].kpis) return [];
+    const search = String(searchTerm.search ?? "").toLowerCase();
+
     const search = String(searchTerm.search ?? "").toLowerCase();
 
     const groups: {
@@ -1111,6 +1116,13 @@ export default function UpdatedKpiTable() {
               className="w-80"
             /> */}
 
+            <SearchInput
+              placeholder="Search..."
+              searchValue={searchTerm?.search || ""}
+              setPaginationFilter={setSearchTerm}
+              className="w-80"
+            />
+
             <FormDatePicker
               value={selectedDate}
               onSubmit={(date) => {
@@ -1342,7 +1354,7 @@ export default function UpdatedKpiTable() {
                                 if (validationType == "YES_NO") {
                                   const selectOptions = [
                                     { value: "1", label: "Yes" },
-                                    { value: "0", label: "No" },
+                                    { value: "2", label: "No" },
                                   ];
                                   const isValid = inputVal === String(value1);
 
@@ -1374,6 +1386,16 @@ export default function UpdatedKpiTable() {
                                                   (isValid
                                                     ? "bg-green-100 border-green-500"
                                                     : "bg-red-100 border-red-500"),
+                                                isVisualized &&
+                                                  cell?.validationPercentage !=
+                                                    null &&
+                                                  (cell.validationPercentage <
+                                                  80
+                                                    ? "bg-red-200"
+                                                    : cell.validationPercentage <
+                                                        100
+                                                      ? "bg-yellow-200"
+                                                      : "bg-green-200"),
                                                 isVisualized &&
                                                   "opacity-60 cursor-not-allowed",
                                                 cell?.isSkipDay &&
@@ -1417,7 +1439,7 @@ export default function UpdatedKpiTable() {
                                                                   prev[key]
                                                                     ?.comment ??
                                                                   cell?.note ??
-                                                                  "", // preserve existing comment
+                                                                  "",
                                                               },
                                                             }),
                                                           );
@@ -1433,9 +1455,9 @@ export default function UpdatedKpiTable() {
                                                 <div className="flex flex-col items-center  justify-center h-full w-full cursor-not-allowed">
                                                   <span className="text-black">
                                                     {inputFocused[key]
-                                                      ? inputVal // Show raw value when focused
+                                                      ? inputVal
                                                       : formatCompactNumber(
-                                                          inputVal,
+                                                          cell?.matchCount,
                                                         )}
                                                   </span>
                                                 </div>
