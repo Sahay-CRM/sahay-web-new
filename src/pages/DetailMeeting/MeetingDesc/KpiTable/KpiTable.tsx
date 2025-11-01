@@ -943,7 +943,7 @@ export default function KPITable({
                                 if (validationType == "YES_NO") {
                                   const selectOptions = [
                                     { value: "1", label: "Yes" },
-                                    { value: "0", label: "No" },
+                                    { value: "2", label: "No" },
                                   ];
                                   const isValid = inputVal === String(value1);
                                   return (

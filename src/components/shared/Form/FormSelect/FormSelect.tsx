@@ -113,6 +113,20 @@ export default function FormSelect({
             <SelectTrigger
               className={`w-full mb-1 py-5 custom-select-trigger text-black ${triggerClassName}`}
               id={id}
+              style={{
+                ...(options.find((opt) => String(opt.value) === String(value))
+                  ?.color
+                  ? {
+                      background: options.find(
+                        (opt) => String(opt.value) === String(value),
+                      )?.color,
+                      color: "#fff",
+                      borderColor: options.find(
+                        (opt) => String(opt.value) === String(value),
+                      )?.color,
+                    }
+                  : {}),
+              }}
             >
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>

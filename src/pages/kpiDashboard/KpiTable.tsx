@@ -57,6 +57,7 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 // import CommentModal from "./KpiCommentModal";
 import { twMerge } from "tailwind-merge";
 import CommentModal from "./KpiCommentModal";
+import SearchInput from "@/components/shared/SearchInput";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -252,7 +253,7 @@ function SortableKpiRow({
                   <>
                     {selectedPeriod === "DAILY" ? (
                       // ✅ Daily → only Yes/No
-                      kpi.goalValue === 1 ? (
+                      Number(kpi.goalValue) === 1 ? (
                         "Yes"
                       ) : (
                         "No"
@@ -261,7 +262,7 @@ function SortableKpiRow({
                       // ✅ Other periods → show value + Yes/No
                       <>
                         {formatToThreeDecimals(kpi.value1)} {" - "}
-                        {kpi.goalValue === 1 ? "Yes" : "No"}
+                        {Number(kpi.goalValue) === 1 ? "Yes" : "No"}
                       </>
                     )}
                   </>
@@ -294,10 +295,10 @@ function SortableKpiRow({
                     <span>
                       {kpi.validationType === "YES_NO"
                         ? selectedPeriod === "Daily"
-                          ? kpi.goalValue === 1
+                          ? Number(kpi.goalValue) === 1
                             ? "Yes"
                             : "No"
-                          : kpi.goalValue === 1
+                          : Number(kpi.goalValue) === 1
                             ? `Yes ${formattedNormal}`
                             : `No ${formattedNormal}`
                         : kpi.validationType === "BETWEEN"
@@ -440,6 +441,9 @@ export default function UpdatedKpiTable() {
   }>({
     note: "",
     noteId: "",
+  });
+  const [searchTerm, setSearchTerm] = useState<PaginationFilter>({
+    search: "",
   });
 
   const canDrag = userData?.isSuperAdmin || permissionSequence?.Edit;
@@ -723,6 +727,8 @@ export default function UpdatedKpiTable() {
   const groupedKpiRows = useMemo(() => {
     if (!filteredData.length || !filteredData[0].kpis) return [];
 
+    const search = String(searchTerm.search ?? "").toLowerCase();
+
     const groups: {
       coreParameter: { coreParameterId: string; coreParameterName: string };
       kpis: { kpi: Kpi }[];
@@ -730,19 +736,33 @@ export default function UpdatedKpiTable() {
 
     (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
       if (coreParam.kpis && Array.isArray(coreParam.kpis)) {
-        const kpiRows = coreParam.kpis.map((kpi: Kpi) => ({ kpi }));
-        groups.push({
-          coreParameter: {
-            coreParameterId: coreParam.coreParameterId,
-            coreParameterName: coreParam.coreParameterName,
-          },
-          kpis: kpiRows,
+        const filteredKpis = coreParam.kpis.filter((kpi: Kpi) => {
+          const coreName = coreParam.coreParameterName?.toLowerCase() || "";
+          const tag = kpi.tag?.toLowerCase() || "";
+          const name = kpi.kpiName?.toLowerCase() || "";
+
+          const match =
+            coreName.includes(search) ||
+            tag.includes(search) ||
+            name.includes(search);
+
+          return match;
         });
+
+        if (filteredKpis.length > 0) {
+          groups.push({
+            coreParameter: {
+              coreParameterId: coreParam.coreParameterId,
+              coreParameterName: coreParam.coreParameterName,
+            },
+            kpis: filteredKpis.map((kpi) => ({ kpi })),
+          });
+        }
       }
     });
 
     return groups;
-  }, [filteredData]);
+  }, [filteredData, searchTerm]);
 
   useEffect(() => {
     const syncScroll = (e: Event) => {
@@ -1051,6 +1071,13 @@ export default function UpdatedKpiTable() {
               </div>
             )}
 
+            <SearchInput
+              placeholder="Search..."
+              searchValue={searchTerm?.search || ""}
+              setPaginationFilter={setSearchTerm}
+              className="w-80"
+            />
+
             <FormDatePicker
               value={selectedDate}
               onSubmit={(date) => {
@@ -1282,7 +1309,7 @@ export default function UpdatedKpiTable() {
                                 if (validationType == "YES_NO") {
                                   const selectOptions = [
                                     { value: "1", label: "Yes" },
-                                    { value: "0", label: "No" },
+                                    { value: "2", label: "No" },
                                   ];
                                   const isValid = inputVal === String(value1);
 
@@ -1314,6 +1341,16 @@ export default function UpdatedKpiTable() {
                                                   (isValid
                                                     ? "bg-green-100 border-green-500"
                                                     : "bg-red-100 border-red-500"),
+                                                isVisualized &&
+                                                  cell?.validationPercentage !=
+                                                    null &&
+                                                  (cell.validationPercentage <
+                                                  80
+                                                    ? "bg-red-200"
+                                                    : cell.validationPercentage <
+                                                        100
+                                                      ? "bg-yellow-200"
+                                                      : "bg-green-200"),
                                                 isVisualized &&
                                                   "opacity-60 cursor-not-allowed",
                                                 cell?.isSkipDay &&
@@ -1357,7 +1394,7 @@ export default function UpdatedKpiTable() {
                                                                   prev[key]
                                                                     ?.comment ??
                                                                   cell?.note ??
-                                                                  "", // preserve existing comment
+                                                                  "",
                                                               },
                                                             }),
                                                           );
@@ -1373,9 +1410,9 @@ export default function UpdatedKpiTable() {
                                                 <div className="flex flex-col items-center  justify-center h-full w-full cursor-not-allowed">
                                                   <span className="text-black">
                                                     {inputFocused[key]
-                                                      ? inputVal // Show raw value when focused
+                                                      ? inputVal
                                                       : formatCompactNumber(
-                                                          inputVal,
+                                                          cell?.matchCount,
                                                         )}
                                                   </span>
                                                 </div>

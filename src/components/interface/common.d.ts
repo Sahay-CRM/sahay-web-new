@@ -1124,6 +1124,8 @@ interface KpiDataCell {
   note?: string | null;
   noteId?: string;
   isHoliday?: boolean;
+  matchCount?: number;
+  validationPercentage?: number;
 }
 
 interface UserLogDetails {

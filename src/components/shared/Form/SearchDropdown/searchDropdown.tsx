@@ -13,6 +13,7 @@ import { ChevronDown, Check, X } from "lucide-react";
 type Option = {
   value: string;
   label: string;
+  color?: string;
 };
 
 interface SearchDropdownProps {
@@ -78,6 +79,15 @@ const SearchDropdown = ({
               "w-full font-extralight hover:bg-white justify-between text-left text-black overflow-hidden whitespace-nowrap text-ellipsis relative",
               className,
             )}
+            style={
+              selectedOption?.color
+                ? {
+                    backgroundColor: selectedOption.color,
+                    color: "#fff",
+                    borderColor: selectedOption.color,
+                  }
+                : {}
+            }
             disabled={disabled}
           >
             <span
