@@ -103,8 +103,6 @@ export default function useAddRepeatMeetingForm() {
           customObj: data.customObj,
         };
 
-    console.log(payload);
-
     addDetailMeeting(payload, {
       onSuccess: () => {
         queryClient.resetQueries({ queryKey: ["get-detail-meeting-list"] });

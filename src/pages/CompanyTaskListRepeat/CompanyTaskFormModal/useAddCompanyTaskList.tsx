@@ -8,7 +8,6 @@ import TableData from "@/components/shared/DataTable/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Label } from "recharts";
 import { Repeat } from "lucide-react";
 import {
   DropdownMenu,
@@ -37,6 +36,7 @@ import {
   buildRepetitionOptions,
   getRepeatTypeOrCustom,
 } from "@/components/shared/RepeatOption/repeatOption";
+import { Label } from "@/components/ui/label";
 
 export default function useAddEmployee() {
   const { id: repetitiveTaskId } = useParams<{ id?: string }>();
@@ -457,7 +457,7 @@ export default function useAddEmployee() {
                 })}
               />
               {errors.taskDescription && (
-                <span className="text-red-600 text-sm">
+                <span className="text-red-600 text-sm before:content-['*']">
                   {errors.taskDescription?.message as string}
                 </span>
               )}
@@ -542,6 +542,11 @@ export default function useAddEmployee() {
                         handleSaveCustomRepeatData(data);
                       }}
                     />
+                    {errors.repeatType && (
+                      <p className="text-red-500 text-sm mt-1 before:content-['*']">
+                        {errors.repeatType.message as string}
+                      </p>
+                    )}
                   </>
                 );
               }}

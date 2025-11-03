@@ -81,9 +81,12 @@ export default function useMeetingDesc() {
       if (snapshot.exists()) {
         const data = snapshot.val();
         setMeetingResponse(data);
-        if (data.state.status === "IN_PROGRESS") {
+        if (
+          data.state.status === "IN_PROGRESS" ||
+          meetingTiming?.detailMeetingStatus === "STARTED"
+        ) {
+          setActiveTab("DOCUMENTS");
           setIsCardVisible(true);
-          setActiveTab("documents");
         }
         // if (userData.employeeType !== "CONSULTANT" && sidebarControl?.setOpen) {
         //   sidebarControl.setOpen(false);
@@ -96,7 +99,8 @@ export default function useMeetingDesc() {
     return () => {
       off(meetingRef);
     };
-  }, [db, handleUpdatedRefresh, meetingId]);
+  }, [db, handleUpdatedRefresh, meetingId, meetingTiming?.detailMeetingStatus]);
+  console.log(activeTab, "activeTabactiveTab");
 
   // useEffect(() => {
   //   if (!meetingId || !meetingResponse) return;

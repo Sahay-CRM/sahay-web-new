@@ -78,6 +78,7 @@ export default function TaskDrawer({
     ? taskStatus.data.map((status) => ({
         label: status.taskStatus,
         value: status.taskStatusId,
+        color: status.color,
       }))
     : [];
   const employeeOption = employeedata

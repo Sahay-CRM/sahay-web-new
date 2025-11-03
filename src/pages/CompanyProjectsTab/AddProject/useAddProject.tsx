@@ -43,6 +43,7 @@ export default function useAddProject() {
   const StatusOptions = (StatusOptionsData?.data || []).map((status) => ({
     value: status.projectStatusId,
     label: status.projectStatus,
+    color: status.color,
   }));
 
   const bussinessFunctOptions = (coreParams?.data || []).map((status) => ({

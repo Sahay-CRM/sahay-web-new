@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { CheckIcon } from "lucide-react";
 import { twMerge } from "tailwind-merge";
+import { isColorDark } from "@/features/utils/color.utils";
 
 interface Option {
   id?: string | number;
@@ -94,6 +95,12 @@ export default function FormSelect({
     }
   };
 
+  const selectedOption = options.find(
+    (opt) => String(opt.value) === String(value),
+  );
+  const bg = selectedOption?.color;
+  const textColor = bg ? (isColorDark(bg) ? "#fff" : "#000") : undefined;
+
   return (
     <div className={className}>
       {label && (
@@ -114,18 +121,9 @@ export default function FormSelect({
               className={`w-full mb-1 py-5 custom-select-trigger text-black ${triggerClassName}`}
               id={id}
               style={{
-                ...(options.find((opt) => String(opt.value) === String(value))
-                  ?.color
-                  ? {
-                      background: options.find(
-                        (opt) => String(opt.value) === String(value),
-                      )?.color,
-                      color: "#fff",
-                      borderColor: options.find(
-                        (opt) => String(opt.value) === String(value),
-                      )?.color,
-                    }
-                  : {}),
+                background: bg,
+                borderColor: bg,
+                color: textColor,
               }}
             >
               <SelectValue placeholder={placeholder} />
@@ -163,7 +161,6 @@ export default function FormSelect({
               {displayValue()}
             </button>
           </PopoverTrigger>
-          {/* <PopoverContent className="w-full p-2"> */}
           <PopoverContent
             className="p-2 text-sm"
             style={{ width: "var(--radix-popover-trigger-width)" }}

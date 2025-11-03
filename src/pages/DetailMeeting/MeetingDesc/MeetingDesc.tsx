@@ -144,7 +144,9 @@ export default function MeetingDesc() {
         className={cn(
           "h-full rounded-lg mx-3",
           // "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]",
-          isCardVisible ? "w-[350px] opacity-100" : "w-0 opacity-0",
+          meetingStatus === "STARTED" && activeTab !== "" && isCardVisible
+            ? "w-[350px] opacity-100"
+            : "w-0 opacity-0",
         )}
       >
         <Card className="h-full w-full p-0">
