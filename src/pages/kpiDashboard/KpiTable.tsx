@@ -449,9 +449,6 @@ export default function UpdatedKpiTable() {
     note: "",
     noteId: "",
   });
-  const [searchTerm, setSearchTerm] = useState<PaginationFilter>({
-    search: "",
-  });
 
   const canDrag = userData?.isSuperAdmin || permissionSequence?.Edit;
 
@@ -757,8 +754,6 @@ export default function UpdatedKpiTable() {
 
   const groupedKpiRows = useMemo(() => {
     if (!filteredData.length || !filteredData[0].kpis) return [];
-    const search = String(searchTerm.search ?? "").toLowerCase();
-
     const search = String(searchTerm.search ?? "").toLowerCase();
 
     const groups: {
@@ -1101,20 +1096,6 @@ export default function UpdatedKpiTable() {
                 />
               </div>
             )}
-            <SearchInput
-              placeholder="Search..."
-              searchValue={searchTerm?.search || ""}
-              setPaginationFilter={setSearchTerm}
-              className="w-80"
-            />
-            {/* <SearchInput
-              placeholder="Search..."
-              searchValue={searchTerm.search}
-              setPaginationFilter={(value: string) =>
-                setSearchTerm((prev) => ({ ...prev, search: value }))
-              }
-              className="w-80"
-            /> */}
 
             <SearchInput
               placeholder="Search..."

@@ -2,10 +2,7 @@ import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 
-export default function useGetRepeatCompanyTaskById({
-  filter,
-  enable,
-}: FilterDataProps) {
+export default function useGetRepeatCompanyTaskById({filter, enable}: FilterDataProps) {
   const query = useQuery({
     queryKey: ["get-repeattask-by-id", filter],
     queryFn: async () => {
@@ -18,7 +15,7 @@ export default function useGetRepeatCompanyTaskById({
 
       return resData;
     },
-    enabled: enable,
+    enabled: enable
   });
   return query;
 }
