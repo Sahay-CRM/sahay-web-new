@@ -246,14 +246,14 @@ const MeetingInfo = () => {
 
         <Controller
           control={control}
-          name="meetingTimePlanned"
+          name="meetingDateTime"
           rules={{ required: "Time is required" }}
           render={({ field }) => (
             <FormTimePicker
               label="Meeting Time"
               value={field.value ? new Date(field.value) : null}
               onChange={(time) => field.onChange(time)}
-              error={errors.meetingTimePlanned}
+              error={errors.meetingDateTime}
             />
           )}
         />
