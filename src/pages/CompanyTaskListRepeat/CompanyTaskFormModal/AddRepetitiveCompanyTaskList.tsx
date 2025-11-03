@@ -28,6 +28,9 @@ export default function AddRepetitiveTask() {
     projectListdata,
     meetingData,
     AssignUserStep,
+    isChildData,
+    handleKeepAll,
+    handleDeleteAll,
   } = useAddCompanyTaskList();
 
   const [searchParams] = useSearchParams();
@@ -137,6 +140,9 @@ export default function AddRepetitiveTask() {
           modalClose={handleClose}
           onSubmit={onSubmit}
           isLoading={isPending}
+          isChildData={isChildData}
+          onKeepAll={handleKeepAll}
+          onDeleteAll={handleDeleteAll}
         />
       )}
     </div>

@@ -252,24 +252,22 @@ function SortableKpiRow({
                 {kpi.validationType === "YES_NO" ? (
                   <>
                     {selectedPeriod === "DAILY" ? (
-                      // ✅ Daily → only Yes/No
-                      Number(kpi.goalValue) === 1 ? (
+                      Number(kpi.value1) === 1 ? (
                         "Yes"
                       ) : (
                         "No"
                       )
                     ) : (
-                      // ✅ Other periods → show value + Yes/No
                       <>
-                        {formatToThreeDecimals(kpi.value1)} {" - "}
-                        {Number(kpi.goalValue) === 1 ? "Yes" : "No"}
+                        {formatToThreeDecimals(kpi.goalValue)} {" - "}
+                        {Number(kpi.value1) === 1 ? "Yes" : "No"}
                       </>
                     )}
                   </>
                 ) : (
                   getFormattedValue(
                     kpi.validationType,
-                    kpi?.value1,
+                    String(kpi?.goalValue),
                     kpi?.value2,
                     kpi?.unit,
                   )
@@ -280,7 +278,7 @@ function SortableKpiRow({
             {/* ✅ Tooltip logic remains same */}
             {(() => {
               const rawValue = String(kpi.value1 ?? "");
-              const formattedNormal = formatToThreeDecimals(kpi.value1);
+              const formattedNormal = formatToThreeDecimals(kpi.goalValue);
               const formattedCompact = formatCompactNumber(kpi.value1);
 
               const shouldShowTooltip =
@@ -293,19 +291,11 @@ function SortableKpiRow({
                 shouldShowTooltip && (
                   <TooltipContent>
                     <span>
-                      {kpi.validationType === "YES_NO"
-                        ? selectedPeriod === "Daily"
-                          ? Number(kpi.goalValue) === 1
-                            ? "Yes"
-                            : "No"
-                          : Number(kpi.goalValue) === 1
-                            ? `Yes ${formattedNormal}`
-                            : `No ${formattedNormal}`
-                        : kpi.validationType === "BETWEEN"
-                          ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(
-                              kpi?.value2,
-                            )}`
-                          : formattedNormal}
+                      {kpi.validationType === "BETWEEN"
+                        ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(
+                            kpi?.value2,
+                          )}`
+                        : formattedNormal}
                     </span>
                   </TooltipContent>
                 )

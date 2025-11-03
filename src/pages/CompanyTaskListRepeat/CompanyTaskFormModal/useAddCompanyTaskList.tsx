@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
@@ -37,6 +36,8 @@ import {
   getRepeatTypeOrCustom,
 } from "@/components/shared/RepeatOption/repeatOption";
 import { Label } from "@/components/ui/label";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 export default function useAddEmployee() {
   const { id: repetitiveTaskId } = useParams<{ id?: string }>();
@@ -51,6 +52,8 @@ export default function useAddEmployee() {
 
   const { mutate: addUpdateTask, isPending } =
     addUpdateRepeatCompanyTaskMutation();
+
+  const [isChildData, setIsChildData] = useState<string | undefined>("");
 
   const {
     register,
@@ -114,13 +117,11 @@ export default function useAddEmployee() {
       setValue("repetitiveTaskId", t.repetitiveTaskId);
       setValue(
         "project",
-        projectListdata?.data?.find((p: any) => p.projectId === t.projectId) ||
-          null,
+        projectListdata?.data?.find((p) => p.projectId === t.projectId) || null,
       );
       setValue(
         "meeting",
-        meetingData?.data?.find((m: any) => m.meetingId === t.meetingId) ||
-          null,
+        meetingData?.data?.find((m) => m.meetingId === t.meetingId) || null,
       );
       setValue("taskName", t.taskName || "");
       setValue("taskDescription", t.taskDescription || "");
@@ -135,7 +136,7 @@ export default function useAddEmployee() {
       setValue("customObj", t.customObj || null);
       setValue(
         "assignUser",
-        employeedata?.data?.filter((emp: any) =>
+        employeedata?.data?.filter((emp) =>
           employeeIds.includes(emp.employeeId),
         ) ?? [],
       );
@@ -159,55 +160,96 @@ export default function useAddEmployee() {
       typeof data?.isActive === "string"
         ? data.isActive === "active"
         : !!data.isActive;
-
     const assigneeIds =
       (data.assignUser as unknown as { employeeId: string }[])?.map(
         (user) => user.employeeId,
       ) ?? [];
-
-    // default deadline fallback to 6pm UTC of today (like original)
     const now = new Date();
     const defaultDeadline = new Date(
       Date.UTC(
         now.getUTCFullYear(),
         now.getUTCMonth(),
         now.getUTCDate(),
-        18,
+        18, // 6 PM UTC
         0,
         0,
       ),
     );
-
-    const basePayload: any = {
-      taskName: data.taskName,
-      taskDescription: data.taskDescription,
-      taskStartDate: data.taskStartDate ? new Date(data.taskStartDate) : null,
-      taskDeadline: data.taskDeadline
-        ? new Date(data.taskDeadline)
-        : defaultDeadline,
-      taskStatusId: data?.taskStatusId,
-      isActive: isActiveValue,
-      taskTypeId: data?.taskTypeId,
-      comment: data.comment,
-      employeeIds: assigneeIds,
-      projectId:
-        (data.project as unknown as { projectId?: string })?.projectId ?? null,
-      meetingId:
-        (data.meeting as unknown as { meetingId?: string })?.meetingId ?? null,
-      repeatType:
-        data.repeatType === "CUSTOMTYPE"
-          ? ""
-          : (data.repeatType || "").toUpperCase(),
-      customObj: data.customObj,
-    };
-
     const payload = data.repetitiveTaskId
-      ? { ...basePayload, repetitiveTaskId: repetitiveTaskId }
-      : basePayload;
+      ? {
+          repetitiveTaskId: repetitiveTaskId,
+          taskName: data.taskName,
+          taskDescription: data.taskDescription,
+          taskStartDate: data.taskStartDate
+            ? new Date(data.taskStartDate)
+            : null,
+          taskDeadline: data.taskDeadline ? new Date(data.taskDeadline) : null,
+          taskStatusId: data?.taskStatusId,
+          isActive: isActiveValue,
+
+          taskTypeId: data?.taskTypeId,
+          comment: data.comment,
+          employeeIds: assigneeIds,
+          projectId:
+            (data.project as unknown as { projectId: string })?.projectId ??
+            null,
+          meetingId:
+            (data.meeting as unknown as { meetingId: string })?.meetingId ??
+            null,
+
+          repeatType:
+            data.repeatType === "CUSTOMTYPE"
+              ? ""
+              : data.repeatType.toUpperCase(),
+          customObj: data.customObj,
+          isChildDataKey: data.additionalKey,
+        }
+      : {
+          taskName: data.taskName,
+          taskDescription: data.taskDescription,
+          taskStartDate: data.taskStartDate
+            ? new Date(data.taskStartDate)
+            : null,
+          taskDeadline: data.taskDeadline
+            ? new Date(data.taskDeadline)
+            : defaultDeadline,
+          taskStatusId: data?.taskStatusId,
+          isActive: isActiveValue,
+
+          taskTypeId: data?.taskTypeId,
+          comment: data.comment,
+          employeeIds: assigneeIds,
+          projectId:
+            (data.project as unknown as { projectId: string })?.projectId ??
+            null,
+          meetingId:
+            (data.meeting as unknown as { meetingId: string })?.meetingId ??
+            null,
+          repeatType:
+            data.repeatType === "CUSTOMTYPE"
+              ? ""
+              : data.repeatType.toUpperCase(),
+          // repeatType: data.repeatType.toUpperCase(),
+          customObj: data.customObj,
+        };
 
     addUpdateTask(payload, {
       onSuccess: () => {
         navigate("/dashboard/tasksrepeat");
+      },
+      onError: (error: Error) => {
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+
+        if (axiosError.response?.data?.status === 417) {
+          setIsChildData(axiosError.response?.data?.message);
+        } else if (axiosError.response?.data.status !== 417) {
+          toast.error(
+            `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+          );
+        }
       },
     });
   });
@@ -271,16 +313,14 @@ export default function useAddEmployee() {
           render={({ field }) => (
             <TableData
               {...field}
-              tableData={localProjectList?.data?.map(
-                (item: any, index: number) => ({
-                  ...item,
-                  srNo:
-                    (localProjectList.currentPage - 1) *
-                      localProjectList.pageSize +
-                    index +
-                    1,
-                }),
-              )}
+              tableData={localProjectList?.data?.map((item, index: number) => ({
+                ...item,
+                srNo:
+                  (localProjectList.currentPage - 1) *
+                    localProjectList.pageSize +
+                  index +
+                  1,
+              }))}
               isActionButton={() => false}
               columns={{
                 srNo: "srNo",
@@ -290,13 +330,12 @@ export default function useAddEmployee() {
               primaryKey="projectId"
               multiSelect={false}
               selectedValue={
-                field.value?.projectId
-                  ? localProjectList?.data?.find(
-                      (item: any) => item.projectId === field.value.projectId,
-                    )
-                  : undefined
+                field.value?.projectId &&
+                localProjectList?.data?.find(
+                  (item) => item.projectId === field.value.projectId,
+                )
               }
-              handleChange={(val: any) => {
+              handleChange={(val) => {
                 if (!val || (Array.isArray(val) && val.length === 0)) {
                   field.onChange(undefined);
                 } else if (Array.isArray(val)) {
@@ -318,7 +357,7 @@ export default function useAddEmployee() {
 
   const MeetingSelectionStep = () => {
     const permission = useSelector(getUserPermission);
-    const projectId = watch("project") as any;
+    const projectId = watch("project");
 
     const [localPagination, setLocalPagination] = useState<PaginationFilter>({
       currentPage: 1,
@@ -365,16 +404,14 @@ export default function useAddEmployee() {
           render={({ field }) => (
             <TableData
               {...field}
-              tableData={localMeetingList?.data?.map(
-                (item: any, index: number) => ({
-                  ...item,
-                  srNo:
-                    (localMeetingList.currentPage - 1) *
-                      localMeetingList.pageSize +
-                    index +
-                    1,
-                }),
-              )}
+              tableData={localMeetingList?.data?.map((item, index: number) => ({
+                ...item,
+                srNo:
+                  (localMeetingList.currentPage - 1) *
+                    localMeetingList.pageSize +
+                  index +
+                  1,
+              }))}
               isActionButton={() => false}
               columns={{
                 srNo: "srNo",
@@ -383,13 +420,12 @@ export default function useAddEmployee() {
               primaryKey="meetingId"
               multiSelect={false}
               selectedValue={
-                field.value?.meetingId
-                  ? localMeetingList?.data?.find(
-                      (item: any) => item.meetingId === field.value.meetingId,
-                    )
-                  : undefined
+                field.value?.meetingId &&
+                localMeetingList?.data?.find(
+                  (item) => item.meetingId === field.value.meetingId,
+                )
               }
-              handleChange={(val: any) => {
+              handleChange={(val) => {
                 if (!val || (Array.isArray(val) && val.length === 0)) {
                   field.onChange(undefined);
                 } else if (Array.isArray(val)) {
@@ -424,7 +460,7 @@ export default function useAddEmployee() {
     });
 
     const taskTypeOptions = taskTypeData
-      ? taskTypeData.data.map((status: any) => ({
+      ? taskTypeData.data.map((status) => ({
           label: status.taskTypeName || "Unnamed",
           value: status.taskTypeId || "",
         }))
@@ -584,7 +620,7 @@ export default function useAddEmployee() {
                       options={taskTypeOptions}
                       className="mt-0.5"
                       selectedValues={field.value ? [field.value] : []}
-                      onSelect={(value: any) => {
+                      onSelect={(value) => {
                         field.onChange(value.value);
                         setValue("taskTypeId", value.value);
                       }}
@@ -644,7 +680,7 @@ export default function useAddEmployee() {
               <TableData
                 {...field}
                 tableData={localEmployeeList?.data?.map(
-                  (item: any, index: number) => ({
+                  (item, index: number) => ({
                     ...item,
                     srNo:
                       (localEmployeeList.currentPage - 1) *
@@ -661,7 +697,7 @@ export default function useAddEmployee() {
                 primaryKey="employeeId"
                 multiSelect={true}
                 selectedValue={field.value || []}
-                handleChange={(selected: any) => {
+                handleChange={(selected) => {
                   field.onChange(Array.isArray(selected) ? selected : []);
                 }}
                 onCheckbox={() => true}
@@ -679,6 +715,16 @@ export default function useAddEmployee() {
 
   // make the current form values available as employeePreview
   const employeePreview = getValues();
+
+  const handleKeepAll = () => {
+    setValue("additionalKey", "KEEP_ALL");
+    onSubmit();
+  };
+
+  const handleDeleteAll = () => {
+    setValue("additionalKey", "DELETE_ALL");
+    onSubmit();
+  };
 
   return {
     employeeData: employeedata, // original employee list (optional)
@@ -699,5 +745,8 @@ export default function useAddEmployee() {
     setValue,
     meetingData,
     projectListdata,
+    handleKeepAll,
+    handleDeleteAll,
+    isChildData,
   };
 }
