@@ -24,6 +24,7 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import PageNotAccess from "../../PageNoAccess";
 import DateRangePicker from "@/components/shared/DateRange";
+import AddRepeatMeetingModal from "./addRepeatMeetingModal";
 // import { Trash } from "lucide-react";
 
 export default function RepeatMeetingList() {
@@ -44,8 +45,11 @@ export default function RepeatMeetingList() {
     taskDateRange,
     handleDateRangeApply,
     handleDateRangeChange,
+    isChildDataActive,
+    isModalOpen,
+    istemData,
+    handleClose,
   } = useRepeatMeetingList();
-
   const { setBreadcrumbs } = useBreadcrumbs();
 
   useEffect(() => {
@@ -241,6 +245,17 @@ export default function RepeatMeetingList() {
             modalClose={closeDeleteModal}
             onSubmit={(isGroupDelete) => conformDelete(isGroupDelete ?? false)}
             isChildData={isChildData}
+          />
+        )}
+
+        {isModalOpen && (
+          <AddRepeatMeetingModal
+            // modalData={modalData as MeetingData}
+            isModalOpen={isModalOpen}
+            modalClose={handleClose}
+            isChildData={isChildDataActive}
+            onKeepAll={() => handleStopRepeat(istemData!, "KEEP_ALL")}
+            onDeleteAll={() => handleStopRepeat(istemData!, "DELETE_ALL")}
           />
         )}
       </div>

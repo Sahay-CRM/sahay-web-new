@@ -263,6 +263,8 @@ const Urls = {
   addRepeatMeetingList: () => `${baseUrl}/company/repetitive-meeting/create`,
   updateRepeatMeetingList: (id: string) =>
     `${baseUrl}/company/repetitive-meeting/update/${id}`,
+  updateRepeatMeetingStatusChange: (id: string) =>
+    `${baseUrl}/company/repetitive-meeting/update-status/${id}`,
   deleteRepeatMeetingList: (id: string) =>
     `${baseUrl}/company/repetitive-meeting/delete/${id}`,
 

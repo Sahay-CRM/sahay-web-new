@@ -10,6 +10,9 @@ import {
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { queryClient } from "@/queryClient";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
+import { getRepeatTypeOrCustom } from "@/components/shared/RepeatOption/repeatOption";
 
 // Renamed function
 export default function useAddRepeatMeetingForm() {
@@ -18,10 +21,12 @@ export default function useAddRepeatMeetingForm() {
   const [CustomRepeatData, setCustomRepeatData] = useState<CustomObj>();
   const [isModalOpen, setModalOpen] = useState(false);
 
+  const [selectedRepeat, setSelectedRepeat] = useState<string>("");
   const { mutate: addDetailMeeting, isPending } =
     addUpdateRepeatMeetingMutation();
   const navigate = useNavigate();
 
+  const [isChildData, setIsChildData] = useState<string | undefined>("");
   const { data: meetingApiData } = useGetRepeatMeetingById(
     repetitiveMeetingId || "",
   );
@@ -35,6 +40,7 @@ export default function useAddRepeatMeetingForm() {
   useEffect(() => {
     if (meetingApiData) {
       const data = meetingApiData;
+
       reset({
         repetitiveMeetingId: repetitiveMeetingId || "",
         meetingName: data.meetingName || "",
@@ -46,7 +52,11 @@ export default function useAddRepeatMeetingForm() {
         employeeId: data.joiners,
         repeatType: data.repeatType,
         customObj: data.customObj,
+        isActive: data.isActive,
       });
+      setSelectedRepeat(getRepeatTypeOrCustom(data));
+    } else {
+      setSelectedRepeat("");
     }
   }, [meetingApiData, reset, repetitiveMeetingId, setValue]);
 
@@ -81,6 +91,8 @@ export default function useAddRepeatMeetingForm() {
           isDetailMeeting: true,
           repeatType: data.repeatType,
           customObj: data.customObj,
+          isChildDataKey: data.additionalKey,
+          isActive: data.isActive,
         }
       : {
           meetingName: data?.meetingName,
@@ -101,6 +113,7 @@ export default function useAddRepeatMeetingForm() {
           isDetailMeeting: true,
           repeatType: data.repeatType,
           customObj: data.customObj,
+          isActive: true,
         };
 
     addDetailMeeting(payload, {
@@ -108,6 +121,20 @@ export default function useAddRepeatMeetingForm() {
         queryClient.resetQueries({ queryKey: ["get-detail-meeting-list"] });
         handleModalClose();
         navigate("/dashboard/repeat-meeting");
+      },
+      onError: (error: Error) => {
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+
+        if (axiosError.response?.data?.status === 417) {
+          setIsChildData(axiosError.response?.data?.message);
+        } else if (axiosError.response?.data.status !== 417) {
+          toast.error(
+            `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+          );
+        }
       },
     });
   });
@@ -120,6 +147,16 @@ export default function useAddRepeatMeetingForm() {
   const handleSaveCustomRepeatData = useCallback((customData: CustomObj) => {
     setCustomRepeatData(customData);
   }, []);
+
+  const handleKeepAll = () => {
+    setValue("additionalKey", "KEEP_ALL");
+    onSubmit();
+  };
+
+  const handleDeleteAll = () => {
+    setValue("additionalKey", "DELETE_ALL");
+    onSubmit();
+  };
   return {
     isModalOpen,
     handleClose,
@@ -134,5 +171,10 @@ export default function useAddRepeatMeetingForm() {
     saveCustomRepeatData: handleSaveCustomRepeatData,
     CustomRepeatData,
     permission,
+    isChildData,
+    handleKeepAll,
+    setSelectedRepeat,
+    selectedRepeat,
+    handleDeleteAll,
   };
 }

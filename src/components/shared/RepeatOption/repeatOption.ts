@@ -221,7 +221,9 @@ export function buildRepetitionOptions(taskDeadline?: string | Date | null) {
 //   }
 // }
 
-export function getRepeatTypeOrCustom(data: TodoItem | Task): string {
+export function getRepeatTypeOrCustom(
+  data: TodoItem | Task | RepeatMeeting,
+): string {
   if (!data?.repeatType) return "";
 
   const today = new Date();

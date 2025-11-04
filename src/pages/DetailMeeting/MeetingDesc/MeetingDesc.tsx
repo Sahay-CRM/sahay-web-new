@@ -91,7 +91,11 @@ export default function MeetingDesc() {
   useEffect(() => {
     setBreadcrumbs([
       { label: "Detail Meeting", href: "/dashboard/meeting/detail" },
-      { label: `${meetingTiming?.meetingName}`, href: "", isHighlight: true },
+      {
+        label: `${meetingTiming?.meetingName} `,
+        href: "",
+        isHighlight: true,
+      },
     ]);
   }, [meetingTiming?.meetingName, setBreadcrumbs]);
 
@@ -144,7 +148,7 @@ export default function MeetingDesc() {
         className={cn(
           "h-full rounded-lg mx-3",
           // "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]",
-          meetingStatus === "STARTED" && activeTab !== "" && isCardVisible
+          meetingStatus !== "ENDED" && activeTab !== "" && isCardVisible
             ? "w-[350px] opacity-100"
             : "w-0 opacity-0",
         )}

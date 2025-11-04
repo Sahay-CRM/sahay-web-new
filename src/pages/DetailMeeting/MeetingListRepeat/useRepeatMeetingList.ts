@@ -5,35 +5,44 @@ import { DateRange } from "react-day-picker";
 import { useGetAllTaskStatus } from "@/features/api/companyTask";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import {
-  addUpdateRepeatMeetingMutation,
+  addUpdateRepeatMeetingStatusMutation,
   deleteRepeatMeetingMutation,
   useGetRepeatMeeting,
 } from "@/features/api/RepeatMeetingApi";
 import { toLocalISOString } from "@/pages/Meeting/useMeeting";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 export default function useRepeatMeetingList() {
   const permission = useSelector(getUserPermission).LIVE_MEETING_TEMPLATES;
 
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isModalOpen, setModalOpen] = useState(false);
   const [modalData, setModalData] = useState<RepeatMeeting>(
     {} as RepeatMeeting,
   );
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
   const [isChildData, setIsChildData] = useState<string | undefined>();
+  const [isChildDataActive, setIsChildDataActive] = useState<
+    string | undefined
+  >();
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [istemData, setIstempData] = useState<RepeatMeeting | null>(null);
   const [viewModalData, setViewModalData] = useState<RepeatMeeting>(
     {} as RepeatMeeting,
   );
 
+  const handleClose = () => setModalOpen(false);
   const today = new Date();
   const before14 = new Date(today);
   before14.setDate(today.getDate() - 14);
   const after14 = new Date(today);
   after14.setDate(today.getDate() + 14);
 
-  const { mutate: updateRepeatMeeting } = addUpdateRepeatMeetingMutation();
+  const { mutate: updateRepeatMeeting } =
+    addUpdateRepeatMeetingStatusMutation();
   const { mutate: deleteRepeatMeeting } = deleteRepeatMeetingMutation();
 
   // Pagination Details and Filter
@@ -68,7 +77,6 @@ export default function useRepeatMeetingList() {
   const { data: taskStatus } = useGetAllTaskStatus({
     filter: {},
   });
-
   const handleAdd = () => {
     setModalData({
       meetingName: "",
@@ -132,12 +140,36 @@ export default function useRepeatMeetingList() {
     setIsViewModalOpen(true);
   };
 
-  const handleStopRepeat = (data: RepeatMeeting) => {
+  const handleStopRepeat = (data: RepeatMeeting, isaddtionalKey?: string) => {
     const payload = {
       isActive: !data.isActive,
       repetitiveMeetingId: data.repetitiveMeetingId,
+      isChildDataKey: isaddtionalKey,
+      customObj: data.customObj,
+      repeatType: data.repeatType,
+      meetingDateTime: data.meetingDateTime,
     };
-    updateRepeatMeeting(payload);
+    updateRepeatMeeting(payload, {
+      onSuccess: () => {
+        handleClose();
+      },
+      onError: (error: Error) => {
+        setIstempData(data);
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+
+        if (axiosError.response?.data?.status === 417) {
+          setIsChildDataActive(axiosError.response?.data?.message);
+          setModalOpen(true);
+        } else if (axiosError.response?.data.status !== 417) {
+          toast.error(
+            `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+          );
+        }
+      },
+    });
   };
 
   const handleDateRangeChange: HandleDateRangeChange = (range) => {
@@ -224,5 +256,11 @@ export default function useRepeatMeetingList() {
     taskDateRange,
     handleDateRangeApply,
     handleDateRangeChange,
+    setIsChildDataActive,
+    isChildDataActive,
+    isModalOpen,
+    setModalOpen,
+    istemData,
+    handleClose,
   };
 }

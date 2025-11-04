@@ -1582,3 +1582,24 @@ interface StateData {
   stateId: string;
   countryId?: string;
 }
+interface TaskPreviewData {
+  taskId?: string;
+  repetitiveTaskId?: string;
+  project?: {
+    projectId: string;
+    projectName: string;
+    // other fields
+  };
+  taskName?: string;
+  taskDescription?: string;
+  repeatType?: string;
+
+  meeting?: {
+    meetingName?: string;
+  } | null;
+  assignUser?: Employee[];
+  taskStatusId?: string;
+  taskTypeId?: string;
+  comment?: string;
+  taskDeadline: string;
+}

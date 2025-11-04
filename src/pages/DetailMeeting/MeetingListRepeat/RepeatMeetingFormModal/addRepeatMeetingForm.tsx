@@ -139,7 +139,12 @@ const MeetingInfo = () => {
     setValue,
   } = useFormContext();
 
-  const { meetingApiData, saveCustomRepeatData } = useAddRepeatMeetingForm();
+  const {
+    meetingApiData,
+    saveCustomRepeatData,
+    setSelectedRepeat,
+    selectedRepeat,
+  } = useAddRepeatMeetingForm();
   const meetingDateTime = watch("meetingDateTime");
 
   const repeatOptions = buildRepetitionOptions(new Date());
@@ -168,9 +173,9 @@ const MeetingInfo = () => {
           rules={{ required: "Please select Repetition Type" }}
           render={({ field }) => {
             const selectedRepeatLabel =
-              repeatOptions.find((item) => item.value === field.value)?.label ||
-              (field.value === "CUSTOMTYPE" ? "Custom" : "Repeat");
-
+              repeatOptions.find((item) => item.value === selectedRepeat)
+                ?.label ||
+              (selectedRepeat === "CUSTOMTYPE" ? "Custom" : "Repeat");
             return (
               <>
                 <div className="flex flex-col space-y-1">
@@ -198,7 +203,7 @@ const MeetingInfo = () => {
 
                     <DropdownMenuContent align="start" className="w-fit">
                       {repeatOptions.map((item) => {
-                        const isSelected = item.value === field.value;
+                        const isSelected = item.value === selectedRepeat;
                         return (
                           <DropdownMenuItem
                             key={item.value}
@@ -207,6 +212,7 @@ const MeetingInfo = () => {
                                 setOpenCustomModal(true);
                               } else {
                                 field.onChange(item.value);
+                                setSelectedRepeat(item.value);
                               }
                             }}
                             className={`flex items-center justify-between ${
@@ -234,6 +240,7 @@ const MeetingInfo = () => {
                     onOpenChange={setOpenCustomModal}
                     onSave={(data) => {
                       field.onChange("CUSTOMTYPE");
+                      setSelectedRepeat("CUSTOMTYPE");
                       setValue("customObj", data);
                       saveCustomRepeatData(data);
                     }}
@@ -425,6 +432,9 @@ const AddRepeatMeeting = () => {
     isPending,
     meetingApiData,
     permission,
+    isChildData,
+    handleKeepAll,
+    handleDeleteAll,
   } = useAddRepeatMeetingForm();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -499,6 +509,9 @@ const AddRepeatMeeting = () => {
             modalClose={handleClose}
             onSubmit={onSubmit}
             isLoading={isPending}
+            isChildData={isChildData}
+            onKeepAll={handleKeepAll}
+            onDeleteAll={handleDeleteAll}
           />
         )}
       </div>

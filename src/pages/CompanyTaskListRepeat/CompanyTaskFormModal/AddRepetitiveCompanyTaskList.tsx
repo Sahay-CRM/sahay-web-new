@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -42,7 +41,6 @@ export default function AddRepetitiveTask() {
   projectId = projectId.replace(/[?&]+$/, "");
   meetingId = meetingId.replace(/[?&]+$/, "");
 
-  /* ✅ Steps */
   const steps = showNextStep
     ? [
         <ProjectSelectionStep key="project" />,
@@ -55,30 +53,24 @@ export default function AddRepetitiveTask() {
   const { back, next, totalSteps, currentStep, isFirstStep, isLastStep, goTo } =
     useStepForm(steps, trigger);
 
-  // ✅ prevent multiple auto jumps
   const jumpedRef = useRef(false);
 
-  /* ✅ Auto-select project if URL has ?projectId */
   useEffect(() => {
     if (projectId && projectListdata?.data) {
       const projObj = projectListdata.data.find(
-        (p: any) => p.projectId === projectId,
+        (p) => p.projectId === projectId,
       );
       if (projObj) setValue("project", projObj, { shouldDirty: true });
     }
   }, [projectId, projectListdata?.data, setValue]);
 
-  /* ✅ Auto-select meeting if URL has ?meetingId */
   useEffect(() => {
     if (meetingId && meetingData?.data) {
-      const meetObj = meetingData.data.find(
-        (m: any) => m.meetingId === meetingId,
-      );
+      const meetObj = meetingData.data.find((m) => m.meetingId === meetingId);
       if (meetObj) setValue("meeting", meetObj, { shouldDirty: true });
     }
   }, [meetingId, meetingData?.data, setValue]);
 
-  /* ✅ Jump to Step 3 only after values are set */
   useEffect(() => {
     if (
       !jumpedRef.current &&
@@ -88,11 +80,10 @@ export default function AddRepetitiveTask() {
       meetingData?.data
     ) {
       jumpedRef.current = true;
-      setTimeout(() => goTo(2), 50); // 🎯 jump to Basic Info (0,1,2)
+      setTimeout(() => goTo(2), 50);
     }
   }, [projectId, meetingId, projectListdata?.data, meetingData?.data, goTo]);
 
-  /* ✅ Breadcrumbs */
   useEffect(() => {
     setBreadcrumbs([
       { label: "Company Repeat Tasks", href: "/dashboard/tasksrepeat" },
@@ -135,7 +126,7 @@ export default function AddRepetitiveTask() {
 
       {isModalOpen && (
         <AddRepetitiveTaskModal
-          modalData={employeePreview as any}
+          modalData={employeePreview as TaskPreviewData}
           isModalOpen={isModalOpen}
           modalClose={handleClose}
           onSubmit={onSubmit}

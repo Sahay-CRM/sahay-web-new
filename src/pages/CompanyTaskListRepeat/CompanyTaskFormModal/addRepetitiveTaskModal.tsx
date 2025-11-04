@@ -1,30 +1,8 @@
 import ModalData from "@/components/shared/Modal/ModalData";
 import { format } from "date-fns";
 
-interface CreateTaskPayload {
-  taskId?: string;
-  repetitiveTaskId?: string;
-  project?: {
-    projectId: string;
-    projectName: string;
-    // other fields
-  };
-  taskName?: string;
-  taskDescription?: string;
-  repeatType?: string;
-
-  meeting?: {
-    meetingName?: string;
-  } | null;
-  assignUser?: Employee[];
-  taskStatusId?: string;
-  taskTypeId?: string;
-  comment?: string;
-  taskDeadline: string;
-}
-
 interface DatapointModalProps {
-  modalData: CreateTaskPayload;
+  modalData: TaskPreviewData;
   isModalOpen: boolean;
   modalClose: () => void;
   onSubmit: () => void;

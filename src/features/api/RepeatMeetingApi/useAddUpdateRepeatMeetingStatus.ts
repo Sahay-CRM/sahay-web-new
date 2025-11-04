@@ -7,21 +7,14 @@ import { toast } from "sonner";
 
 type EmpRes = CommonResponse<RepeatMeeting>;
 
-export default function useAddUpdateRepeatMeeting() {
-  const addUpdateRepeatMeetingMutation = useMutation({
-    mutationKey: ["add-or-update-repeatMeeting"],
+export default function useAddUpdateRepeatMeetingStatus() {
+  const addUpdateRepeatMeetingStatusMutation = useMutation({
+    mutationKey: ["add-or-update-repeatMeeting-status"],
     mutationFn: async (data: RepeatMeeting) => {
-      const isUpdate = Boolean(data.repetitiveMeetingId);
-
-      const config = {
-        url: isUpdate
-          ? Urls.updateRepeatMeetingList(data.repetitiveMeetingId!)
-          : Urls.addRepeatMeetingList(),
+      const { data: resData } = await Api.post<EmpRes>({
+        url: Urls.updateRepeatMeetingStatusChange(data.repetitiveMeetingId!),
         data: data,
-      };
-      const { data: resData } = isUpdate
-        ? await Api.post<EmpRes>(config)
-        : await Api.post<EmpRes>(config);
+      });
 
       return resData;
     },
@@ -34,5 +27,5 @@ export default function useAddUpdateRepeatMeeting() {
       toast.error(error.response?.data?.message);
     },
   });
-  return addUpdateRepeatMeetingMutation;
+  return addUpdateRepeatMeetingStatusMutation;
 }
