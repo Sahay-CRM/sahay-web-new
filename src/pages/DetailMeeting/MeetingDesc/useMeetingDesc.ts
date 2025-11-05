@@ -100,7 +100,6 @@ export default function useMeetingDesc() {
       off(meetingRef);
     };
   }, [db, handleUpdatedRefresh, meetingId, meetingTiming?.detailMeetingStatus]);
-  console.log(activeTab, "activeTabactiveTab");
 
   // useEffect(() => {
   //   if (!meetingId || !meetingResponse) return;
