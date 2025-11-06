@@ -81,7 +81,7 @@ export default function useRepeatMeetingList() {
     setModalData({
       meetingName: "",
       meetingDescription: "",
-      meetingDateTime: "",
+      repeatTime: "",
       meetingTypeId: "",
       repetitiveMeetingId: "",
     });
@@ -97,7 +97,7 @@ export default function useRepeatMeetingList() {
     setModalData({
       meetingName: "",
       meetingDescription: "",
-      meetingDateTime: "",
+      repeatTime: "",
       meetingTypeId: "",
       repetitiveMeetingId: "",
     });
@@ -147,7 +147,7 @@ export default function useRepeatMeetingList() {
       isChildDataKey: isaddtionalKey,
       customObj: data.customObj,
       repeatType: data.repeatType,
-      meetingDateTime: data.meetingDateTime,
+      meetingDateTime: data.repeatTime,
     };
     updateRepeatMeeting(payload, {
       onSuccess: () => {

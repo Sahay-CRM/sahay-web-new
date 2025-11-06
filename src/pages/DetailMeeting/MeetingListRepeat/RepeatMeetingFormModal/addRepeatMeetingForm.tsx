@@ -30,7 +30,7 @@ import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 // import DatePicker from "react-datepicker";
 import PageNotAccess from "@/pages/PageNoAccess";
 import { Repeat } from "lucide-react";
-import CustomModalFile from "@/components/shared/CustomModal";
+import CustomModalFile from "@/components/shared/CustomModalRepeatMeeting";
 import { buildRepetitionOptions } from "@/components/shared/RepeatOption/repeatOption";
 import { FormLabel } from "@/components/ui/form";
 import { FormTimePicker } from "@/components/shared/FormDateTimePicker/formTimePicker";
@@ -145,7 +145,7 @@ const MeetingInfo = () => {
     setSelectedRepeat,
     selectedRepeat,
   } = useAddRepeatMeetingForm();
-  const meetingDateTime = watch("meetingDateTime");
+  const repeatTime = watch("repeatTime");
 
   const repeatOptions = buildRepetitionOptions(new Date());
   const [openCustomModal, setOpenCustomModal] = useState(false);
@@ -188,12 +188,12 @@ const MeetingInfo = () => {
                     <DropdownMenuTrigger asChild>
                       <div
                         className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer border rounded-md ${
-                          !meetingDateTime
+                          !repeatTime
                             ? "opacity-50 cursor-not-allowed"
                             : "hover:bg-accent"
                         }`}
                         onClick={(e) => {
-                          if (!meetingDateTime) e.preventDefault();
+                          if (!repeatTime) e.preventDefault();
                         }}
                       >
                         <Repeat className="w-4 h-4" />
@@ -237,6 +237,7 @@ const MeetingInfo = () => {
                   <CustomModalFile
                     open={openCustomModal}
                     defaultValues={meetingApiData?.customObj ?? undefined}
+                    multiSelectAllow={false}
                     onOpenChange={setOpenCustomModal}
                     onSave={(data) => {
                       field.onChange("CUSTOMTYPE");
@@ -250,19 +251,28 @@ const MeetingInfo = () => {
             );
           }}
         />
-
         <Controller
           control={control}
-          name="meetingDateTime"
+          name="repeatTime"
           rules={{ required: "Time is required" }}
-          render={({ field }) => (
-            <FormTimePicker
-              label="Meeting Time"
-              value={field.value ? new Date(field.value) : null}
-              onChange={(time) => field.onChange(time)}
-              error={errors.meetingDateTime}
-            />
-          )}
+          render={({ field, fieldState }) => {
+            // If field has no value yet, set it to current time (HH:mm)
+            if (!field.value) {
+              const now = new Date();
+              const currentTime = now.toTimeString().slice(0, 5); // "HH:mm" format (24hr)
+              field.onChange(currentTime);
+            }
+
+            return (
+              <FormTimePicker
+                label="Meeting Time"
+                value={field.value}
+                onChange={field.onChange}
+                error={fieldState.error}
+                isMandatory
+              />
+            );
+          }}
         />
       </Card>
     </div>

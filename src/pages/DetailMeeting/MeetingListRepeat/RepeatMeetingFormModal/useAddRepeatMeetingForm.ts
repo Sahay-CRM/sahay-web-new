@@ -12,13 +12,13 @@ import { getUserPermission } from "@/features/selectors/auth.selector";
 import { queryClient } from "@/queryClient";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
-import { getRepeatTypeOrCustom } from "@/components/shared/RepeatOption/repeatOption";
+import { getRepeatTypeOrCustomForRepeatMeeting } from "@/components/shared/RepeatOption/repeatOption";
 
 // Renamed function
 export default function useAddRepeatMeetingForm() {
   const { id: repetitiveMeetingId } = useParams();
   const permission = useSelector(getUserPermission).LIVE_MEETING_TEMPLATES;
-  const [CustomRepeatData, setCustomRepeatData] = useState<CustomObj>();
+  const [CustomRepeatData, setCustomRepeatData] = useState<CustomObjREPT>();
   const [isModalOpen, setModalOpen] = useState(false);
 
   const [selectedRepeat, setSelectedRepeat] = useState<string>("");
@@ -46,15 +46,13 @@ export default function useAddRepeatMeetingForm() {
         meetingName: data.meetingName || "",
         meetingDescription: data.meetingDescription || "",
         meetingTypeId: data.meetingType,
-        meetingDateTime: data.meetingDateTime
-          ? new Date(data.meetingDateTime).toISOString()
-          : null,
+        repeatTime: data.repeatTime,
         employeeId: data.joiners,
         repeatType: data.repeatType,
         customObj: data.customObj,
         isActive: data.isActive,
       });
-      setSelectedRepeat(getRepeatTypeOrCustom(data));
+      setSelectedRepeat(getRepeatTypeOrCustomForRepeatMeeting(data));
     } else {
       setSelectedRepeat("");
     }
@@ -75,10 +73,7 @@ export default function useAddRepeatMeetingForm() {
           repetitiveMeetingId: repetitiveMeetingId || "",
           meetingName: data?.meetingName,
           meetingDescription: data?.meetingDescription,
-          meetingDateTime:
-            data.meetingDateTime instanceof Date
-              ? data.meetingDateTime.toISOString()
-              : data.meetingDateTime,
+          repeatTime: data.repeatTime,
           meetingTypeId: data?.meetingTypeId?.meetingTypeId,
           joinerIds: data?.employeeId?.map(
             (ele: { employeeId: string }) => ele?.employeeId,
@@ -97,10 +92,7 @@ export default function useAddRepeatMeetingForm() {
       : {
           meetingName: data?.meetingName,
           meetingDescription: data?.meetingDescription,
-          meetingDateTime:
-            data.meetingDateTime instanceof Date
-              ? data.meetingDateTime.toISOString()
-              : data.meetingDateTime,
+          repeatTime: data.repeatTime,
           meetingTypeId: data?.meetingTypeId?.meetingTypeId,
           joinerIds: data?.employeeId?.map(
             (ele: { employeeId: string }) => ele?.employeeId,
@@ -115,7 +107,6 @@ export default function useAddRepeatMeetingForm() {
           customObj: data.customObj,
           isActive: true,
         };
-    // console.log(payload);
     // return;
     addDetailMeeting(payload, {
       onSuccess: () => {
@@ -145,9 +136,12 @@ export default function useAddRepeatMeetingForm() {
     setModalOpen(false);
   };
 
-  const handleSaveCustomRepeatData = useCallback((customData: CustomObj) => {
-    setCustomRepeatData(customData);
-  }, []);
+  const handleSaveCustomRepeatData = useCallback(
+    (customData: CustomObjREPT) => {
+      setCustomRepeatData(customData);
+    },
+    [],
+  );
 
   const handleKeepAll = () => {
     setValue("additionalKey", "KEEP_ALL");

@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 
-const daysarr: { key: number; label: string }[] = [
-  { key: 0, label: "Su" },
-  { key: 1, label: "Mo" },
-  { key: 2, label: "Tu" },
-  { key: 3, label: "We" },
-  { key: 4, label: "Th" },
-  { key: 5, label: "Fr" },
-  { key: 6, label: "Sa" },
+const daysarr: { key: number; label: string; api: string }[] = [
+  { key: 0, label: "Su", api: "SUN" },
+  { key: 1, label: "Mo", api: "MON" },
+  { key: 2, label: "Tu", api: "TUE" },
+  { key: 3, label: "We", api: "WED" },
+  { key: 4, label: "Th", api: "THU" },
+  { key: 5, label: "Fr", api: "FRI" },
+  { key: 6, label: "Sa", api: "SAT" },
 ];
 
 interface DaySelectorProps {

@@ -1389,13 +1389,14 @@ interface RepeatMeeting {
   updatedDatetime?: string;
   nextDate?: string;
   isActive?: boolean;
+  repeatTime?: string;
   meetingDateTime?: string;
   meetingType?: {
     meetingTypeId: string;
     meetingTypeName: string;
   };
   isDetailMeeting?: boolean;
-  customObj?: CustomObj;
+  customObj?: CustomObjREPT;
   // meetingStatusId?: string;
 }
 

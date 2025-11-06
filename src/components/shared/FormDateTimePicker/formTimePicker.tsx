@@ -1,26 +1,36 @@
 import { CalendarIcon } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { FormLabel } from "@/components/ui/form";
 import { twMerge } from "tailwind-merge";
+import { FormLabel } from "@/components/ui/form";
 
 interface FormTimePickerProps {
   label?: string;
   labelClass?: string;
   isMandatory?: boolean;
-  value?: Date | null;
-  onChange: (isoString: string) => void;
+  value?: string | null; // HH:mm format
+  onChange: (value: string) => void;
   error?: { message?: string };
 }
 
 export function FormTimePicker({
   label,
+  labelClass,
+  isMandatory,
   value,
   onChange,
   error,
-  isMandatory,
-  labelClass,
 }: FormTimePickerProps) {
+  // Convert "HH:mm" → Date for DatePicker display
+  const selectedDate = value
+    ? (() => {
+        const [hours, minutes] = value.split(":").map(Number);
+        const date = new Date();
+        date.setHours(hours, minutes, 0, 0);
+        return date;
+      })()
+    : null;
+
   return (
     <div className="flex flex-col gap-1">
       {label && (
@@ -32,13 +42,27 @@ export function FormTimePicker({
 
       <div className="relative border h-10 flex items-center px-2 rounded-md">
         <DatePicker
-          selected={value}
-          onChange={(date) => date && onChange(date.toISOString())}
+          selected={selectedDate}
+          onChange={(date) => {
+            if (date) {
+              const formattedTime = date
+                .toLocaleTimeString("en-GB", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                })
+                .trim();
+              onChange(formattedTime);
+            } else {
+              onChange("");
+            }
+          }}
           showTimeSelect
           showTimeSelectOnly
           timeIntervals={5}
           timeCaption="Time"
-          dateFormat="h:mm aa"
+          dateFormat="HH:mm"
+          timeFormat="HH:mm"
           placeholderText="Select time"
           popperClassName="z-50"
           popperPlacement="bottom-start"
