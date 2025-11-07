@@ -648,7 +648,7 @@ export default function useAddEmployee() {
                     {repeatResult && (
                       <div className="flex gap-2 text-sm text-gray-700">
                         <p>
-                          <strong>Creat First Task:</strong>{" "}
+                          <strong>Create First Task:</strong>{" "}
                           {formatToLocalDateTime(repeatResult.createDateUTC)}
                         </p>
                         <p>

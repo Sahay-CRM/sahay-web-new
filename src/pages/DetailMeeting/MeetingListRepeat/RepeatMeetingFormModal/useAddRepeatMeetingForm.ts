@@ -37,7 +37,8 @@ export default function useAddRepeatMeetingForm() {
     mode: "onChange",
   });
 
-  const { handleSubmit, trigger, reset, getValues, setValue } = methods;
+  const { handleSubmit, trigger, reset, getValues, setValue, watch } = methods;
+  const selectedRepeatlabel = watch("repeatType");
 
   useEffect(() => {
     if (meetingApiData) {
@@ -180,5 +181,6 @@ export default function useAddRepeatMeetingForm() {
     selectedRepeat,
     handleDeleteAll,
     setCustomRepeatData,
+    selectedRepeatlabel,
   };
 }

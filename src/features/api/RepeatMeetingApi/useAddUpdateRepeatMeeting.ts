@@ -28,7 +28,7 @@ export default function useAddUpdateRepeatMeeting() {
     onSuccess: (res) => {
       toast.success(res.message || "successful");
       queryClient.resetQueries({ queryKey: ["get-repeat-meeting-list"] });
-      // queryClient.resetQueries({ queryKey: ["repeatMeeting-by-id"] });
+      queryClient.resetQueries({ queryKey: ["repeatMeeting-by-id"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

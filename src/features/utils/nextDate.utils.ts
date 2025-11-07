@@ -1,4 +1,4 @@
-import moment from "moment-timezone";
+import moment, { Moment } from "moment-timezone";
 
 // Types
 export interface RepeatDatesResult {
@@ -21,96 +21,96 @@ export interface CustomRepeatConfig {
 export type RepeatType = string;
 
 // Main function for standard repeat types
-export function getNextRepeatDates(
-  repeatType: RepeatType,
-  timeOrNextDate: string,
-  timezone = "UTC",
-) {
-  if (!repeatType) throw new Error("repeatType is required");
-  if (!timeOrNextDate)
-    throw new Error("Either time or nextDate must be provided");
+// export function getNextRepeatDates(
+//   repeatType: RepeatType,
+//   timeOrNextDate: string,
+//   timezone = "UTC",
+// ) {
+//   if (!repeatType) throw new Error("repeatType is required");
+//   if (!timeOrNextDate)
+//     throw new Error("Either time or nextDate must be provided");
 
-  const isFullDate = timeOrNextDate.includes("T");
-  let baseMomentUTC;
+//   const isFullDate = timeOrNextDate.includes("T");
+//   let baseMomentUTC;
 
-  if (isFullDate) {
-    baseMomentUTC = moment.utc(timeOrNextDate);
-  } else {
-    const [hour, minute] = timeOrNextDate.split(":").map(Number);
-    const localNow = moment.tz(timezone);
-    const localBase = localNow
-      .clone()
-      .set({ hour, minute, second: 0, millisecond: 0 });
-    if (localBase.isBefore(localNow)) localBase.add(1, "day");
-    baseMomentUTC = localBase.clone().utc();
-  }
+//   if (isFullDate) {
+//     baseMomentUTC = moment.utc(timeOrNextDate);
+//   } else {
+//     const [hour, minute] = timeOrNextDate.split(":").map(Number);
+//     const localNow = moment.tz(timezone);
+//     const localBase = localNow
+//       .clone()
+//       .set({ hour, minute, second: 0, millisecond: 0 });
+//     if (localBase.isBefore(localNow)) localBase.add(1, "day");
+//     baseMomentUTC = localBase.clone().utc();
+//   }
 
-  // ✅ Use let instead of const
-  const createDateUTC = baseMomentUTC.clone();
-  let nextDateUTC = createDateUTC.clone();
+//   // ✅ Use let instead of const
+//   const createDateUTC = baseMomentUTC.clone();
+//   let nextDateUTC = createDateUTC.clone();
 
-  switch (repeatType) {
-    case "DAILY":
-      nextDateUTC.add(1, "day");
-      break;
-    case "DAILYALTERNATE":
-      nextDateUTC.add(2, "days");
-      break;
-    case "WEEKLY":
-      nextDateUTC.add(1, "week");
-      break;
-    case "MONTHLYDATE":
-      nextDateUTC.add(1, "month");
-      break;
-    case "YEARLY":
-      nextDateUTC.add(1, "year");
-      break;
+//   switch (repeatType) {
+//     case "DAILY":
+//       nextDateUTC.add(1, "day");
+//       break;
+//     case "DAILYALTERNATE":
+//       nextDateUTC.add(2, "days");
+//       break;
+//     case "WEEKLY":
+//       nextDateUTC.add(1, "week");
+//       break;
+//     case "MONTHLYDATE":
+//       nextDateUTC.add(1, "month");
+//       break;
+//     case "YEARLY":
+//       nextDateUTC.add(1, "year");
+//       break;
 
-    // 🆕 MONTHLYWEEKDAY
-    case "MONTHLYNWEEKDAY": {
-      const localBase = baseMomentUTC.clone().tz(timezone);
+//     // 🆕 MONTHLYWEEKDAY
+//     case "MONTHLYWEEKDAY": {
+//       const localBase = baseMomentUTC.clone().tz(timezone);
 
-      // Detect weekday (0=Sunday ... 6=Saturday)
-      const weekday = localBase.day();
+//       // Detect weekday (0=Sunday ... 6=Saturday)
+//       const weekday = localBase.day();
 
-      // Detect week number in month (1st, 2nd, 3rd, 4th, or last)
-      const dayOfMonth = localBase.date();
-      const weekNumber = Math.ceil(dayOfMonth / 7);
+//       // Detect week number in month (1st, 2nd, 3rd, 4th, or last)
+//       const dayOfMonth = localBase.date();
+//       const weekNumber = Math.ceil(dayOfMonth / 7);
 
-      // Move to next month and find same weekNumber + weekday
-      const nextMonth = localBase.clone().add(1, "month").startOf("month");
-      let target = nextMonth.clone().day(weekday);
+//       // Move to next month and find same weekNumber + weekday
+//       const nextMonth = localBase.clone().add(1, "month").startOf("month");
+//       let target = nextMonth.clone().day(weekday);
 
-      // If day() moves us back to previous month, push forward 1 week
-      if (target.month() !== nextMonth.month()) target.add(7, "days");
+//       // If day() moves us back to previous month, push forward 1 week
+//       if (target.month() !== nextMonth.month()) target.add(7, "days");
 
-      // Move to the same week number
-      target.add((weekNumber - 1) * 7, "days");
+//       // Move to the same week number
+//       target.add((weekNumber - 1) * 7, "days");
 
-      // If it goes beyond next month (e.g., 5th Friday that doesn't exist)
-      if (target.month() !== nextMonth.month()) {
-        // fallback to last occurrence of that weekday
-        target = nextMonth.clone().endOf("month").day(weekday);
-        if (target.month() !== nextMonth.month()) target.subtract(7, "days");
-      }
+//       // If it goes beyond next month (e.g., 5th Friday that doesn't exist)
+//       if (target.month() !== nextMonth.month()) {
+//         // fallback to last occurrence of that weekday
+//         target = nextMonth.clone().endOf("month").day(weekday);
+//         if (target.month() !== nextMonth.month()) target.subtract(7, "days");
+//       }
 
-      // Set time same as input
-      const [hour, minute] = timeOrNextDate.split(":").map(Number);
-      target.set({ hour, minute, second: 0, millisecond: 0 });
+//       // Set time same as input
+//       const [hour, minute] = timeOrNextDate.split(":").map(Number);
+//       target.set({ hour, minute, second: 0, millisecond: 0 });
 
-      nextDateUTC = target.clone().utc();
-      break;
-    }
+//       nextDateUTC = target.clone().utc();
+//       break;
+//     }
 
-    default:
-      throw new Error("Invalid or unsupported repeatType");
-  }
+//     default:
+//       throw new Error("Invalid or unsupported repeatType");
+//   }
 
-  return {
-    createDateUTC: createDateUTC.format("YYYY-MM-DDTHH:mm:ss[Z]"),
-    nextDateUTC: nextDateUTC.format("YYYY-MM-DDTHH:mm:ss[Z]"),
-  };
-}
+//   return {
+//     createDateUTC: createDateUTC.format("YYYY-MM-DDTHH:mm:ss[Z]"),
+//     nextDateUTC: nextDateUTC.format("YYYY-MM-DDTHH:mm:ss[Z]"),
+//   };
+// }
 
 export function getNextRepeatDatesCustom(
   repeatType: RepeatType,
@@ -325,4 +325,183 @@ export function getNextRepeatDatesCustom(
     createDateUTC: createDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
     nextDateUTC: nextDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
   };
+}
+
+function getWeekNumberOfMonth(momentObj: Moment) {
+  const firstOfMonth = momentObj.clone().startOf("month");
+  const weekday = momentObj.day();
+  const offset = (7 + weekday - firstOfMonth.day()) % 7;
+  const firstOccurrenceDate = 1 + offset; // date of the first 'weekday' in the month
+  return 1 + Math.floor((momentObj.date() - firstOccurrenceDate) / 7);
+}
+
+function getNthWeekdayOfMonth(momentObj: Moment, n: number, weekday: number) {
+  const first = momentObj.clone().startOf("month");
+  const offset = (7 + weekday - first.day()) % 7;
+  const date = 1 + offset + (n - 1) * 7;
+  return first.clone().date(date).set({
+    hour: momentObj.hour(),
+    minute: momentObj.minute(),
+    second: 0,
+    millisecond: 0,
+  });
+}
+
+interface RepeatOptions {
+  now?: string; // optional override for deterministic testing
+}
+
+export function getNextRepeatDates(
+  repeatType: RepeatType,
+  timeOrNextDate: string,
+  timezone = "UTC",
+  options: RepeatOptions = {},
+) {
+  if (!repeatType) throw new Error("repeatType is required");
+  if (!timeOrNextDate)
+    throw new Error("Either time or nextDate must be provided");
+
+  const isFullDate = timeOrNextDate.includes("T");
+  // allow deterministic demo 'now' override in options.now (ISO string or moment)
+  const localNow = options.now
+    ? moment.tz(options.now, timezone)
+    : moment.tz(timezone);
+
+  // --- Build initial local candidate for "today" at the requested time (or use full date) ---
+  let localCandidate: Moment;
+  if (isFullDate) {
+    localCandidate = moment.tz(timeOrNextDate, timezone).clone();
+  } else {
+    const [hour, minute] = timeOrNextDate.split(":").map(Number);
+    localCandidate = localNow
+      .clone()
+      .set({ hour, minute, second: 0, millisecond: 0 });
+  }
+
+  // Helper to set time on a moment (preserve hour/minute from localCandidate)
+  function setCandidateTime(mom: Moment) {
+    return mom.clone().set({
+      hour: localCandidate.hour(),
+      minute: localCandidate.minute(),
+      second: 0,
+      millisecond: 0,
+    });
+  }
+
+  let createLocal = localCandidate.clone();
+  let nextLocal = null;
+
+  // --- Compute createLocal as the next occurrence >= localNow and compute nextLocal accordingly ---
+  switch (repeatType) {
+    case "DAILY": {
+      if (createLocal.isBefore(localNow)) createLocal.add(1, "day");
+      nextLocal = createLocal.clone().add(1, "day");
+      break;
+    }
+
+    case "DAILYALTERNATE": {
+      // If today's time already passed, shift create to the next alternate occurrence (skip one repeat interval)
+      if (createLocal.isBefore(localNow)) createLocal.add(2, "days");
+      nextLocal = createLocal.clone().add(2, "days");
+      break;
+    }
+
+    case "WEEKLY": {
+      if (createLocal.isBefore(localNow)) createLocal.add(1, "week");
+      nextLocal = createLocal.clone().add(1, "week");
+      break;
+    }
+
+    case "MONTHLYDATE": {
+      // Use the current day-of-month as the monthly date
+      createLocal = setCandidateTime(localNow.clone().date(localNow.date()));
+      if (createLocal.isBefore(localNow)) createLocal.add(1, "month");
+      nextLocal = createLocal.clone().add(1, "month");
+      break;
+    }
+
+    case "MONTHLYEOM": {
+      // End of current month at given time, or next month if passed
+      let eom = localNow.clone().endOf("month");
+      eom = setCandidateTime(eom);
+      if (eom.isBefore(localNow)) {
+        eom = setCandidateTime(localNow.clone().add(1, "month").endOf("month"));
+      }
+      createLocal = eom;
+      nextLocal = setCandidateTime(
+        createLocal.clone().add(1, "month").endOf("month"),
+      );
+      break;
+    }
+
+    case "MONTHLYNWEEKDAY": {
+      // Use the same weekday and week-number as today (no extra options provided)
+      const weekday = localNow.day();
+      const n = getWeekNumberOfMonth(localNow); // which occurrence this week is
+      // candidate in this month
+      let candidate = getNthWeekdayOfMonth(localNow.clone(), n, weekday);
+      candidate = setCandidateTime(candidate);
+      if (candidate.isBefore(localNow)) {
+        // move to next month and compute the same n-th weekday
+        const nextMonth = localNow.clone().add(1, "month");
+        candidate = getNthWeekdayOfMonth(nextMonth, n, weekday);
+        candidate = setCandidateTime(candidate);
+      }
+      createLocal = candidate;
+      // next occurrence: same n-th weekday next month
+      const nextMonthBase = createLocal.clone().add(1, "month");
+      nextLocal = getNthWeekdayOfMonth(nextMonthBase, n, weekday);
+      nextLocal = setCandidateTime(nextLocal);
+      break;
+    }
+
+    case "YEARLY": {
+      // Same month and day as today, at provided time
+      createLocal = setCandidateTime(
+        localNow.clone().month(localNow.month()).date(localNow.date()),
+      );
+      if (createLocal.isBefore(localNow)) createLocal.add(1, "year");
+      nextLocal = createLocal.clone().add(1, "year");
+      break;
+    }
+
+    case "YEARLYXMONTHNWEEKDAY": {
+      // No extra options given — assume same month, same weekday and week-number as current date
+      const month = localNow.month(); // current month
+      const weekday = localNow.day();
+      const n = getWeekNumberOfMonth(localNow);
+      // candidate for this year
+      let candidateBase = localNow.clone().year(localNow.year()).month(month);
+      let candidate = getNthWeekdayOfMonth(candidateBase, n, weekday);
+      candidate = setCandidateTime(candidate);
+      if (candidate.isBefore(localNow)) {
+        // next year's same month/n/weekday
+        candidateBase = localNow
+          .clone()
+          .add(1, "year")
+          .year(localNow.year() + 1)
+          .month(month);
+        candidate = getNthWeekdayOfMonth(candidateBase, n, weekday);
+        candidate = setCandidateTime(candidate);
+      }
+      createLocal = candidate;
+      // next occurrence is same configuration +1 year
+      const nextYearBase = createLocal.clone().add(1, "year");
+      nextLocal = getNthWeekdayOfMonth(nextYearBase, n, weekday);
+      nextLocal = setCandidateTime(nextLocal);
+      break;
+    }
+
+    default:
+      throw new Error("Invalid or unsupported repeatType");
+  }
+
+  // --- Convert to UTC ---
+  const createDateUTC = createLocal
+    .clone()
+    .utc()
+    .format("YYYY-MM-DDTHH:mm:ss[Z]");
+  const nextDateUTC = nextLocal.clone().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
+
+  return { createDateUTC, nextDateUTC };
 }

@@ -147,8 +147,8 @@ const MeetingInfo = () => {
   const {
     meetingApiData,
     saveCustomRepeatData,
-    setSelectedRepeat,
-    selectedRepeat,
+    // setSelectedRepeat,
+    // selectedRepeat,
     CustomRepeatData,
     setCustomRepeatData,
   } = useAddRepeatMeetingForm();
@@ -163,6 +163,7 @@ const MeetingInfo = () => {
     nextDateUTC: string;
   } | null>(null);
 
+  const selectedRepeat = watch("repeatType");
   useEffect(() => {
     if (selectedRepeat === "CUSTOMTYPE" && CustomRepeatData) {
       const result = getNextRepeatDatesCustom(
@@ -246,7 +247,8 @@ const MeetingInfo = () => {
                                 setOpenCustomModal(true);
                               } else {
                                 field.onChange(item.value);
-                                setSelectedRepeat(item.value);
+                                // setSelectedRepeat(item.value);
+                                setValue("repeatType", item.value);
                                 // ✅ Clear previously saved custom repeat data
                                 setValue("customObj", undefined);
                                 setCustomRepeatData(undefined);
@@ -273,12 +275,18 @@ const MeetingInfo = () => {
 
                   <CustomModalFile
                     open={openCustomModal}
-                    defaultValues={meetingApiData?.customObj ?? undefined}
+                    defaultValues={
+                      watch("customObj") ||
+                      CustomRepeatData ||
+                      meetingApiData?.customObj
+                    }
+                    // defaultValues={meetingApiData?.customObj ?? undefined}
                     multiSelectAllow={false}
                     onOpenChange={setOpenCustomModal}
                     onSave={(data) => {
                       field.onChange("CUSTOMTYPE");
-                      setSelectedRepeat("CUSTOMTYPE");
+                      // setSelectedRepeat("CUSTOMTYPE");
+                      setValue("repeatType", "CUSTOMTYPE");
                       setValue("customObj", data);
                       saveCustomRepeatData(data);
                     }}
@@ -313,7 +321,7 @@ const MeetingInfo = () => {
         {repeatResult && (
           <div className="flex gap-2 text-sm text-gray-700">
             <p>
-              <strong>Creat First Meeting:</strong>{" "}
+              <strong>Create First Meeting:</strong>{" "}
               {formatToLocalDateTime(repeatResult.createDateUTC)}
             </p>
             <p>
