@@ -18,7 +18,9 @@ import { getRepeatTypeOrCustomForRepeatMeeting } from "@/components/shared/Repea
 export default function useAddRepeatMeetingForm() {
   const { id: repetitiveMeetingId } = useParams();
   const permission = useSelector(getUserPermission).LIVE_MEETING_TEMPLATES;
-  const [CustomRepeatData, setCustomRepeatData] = useState<CustomObjREPT>();
+  const [CustomRepeatData, setCustomRepeatData] = useState<
+    CustomObjREPT | undefined
+  >();
   const [isModalOpen, setModalOpen] = useState(false);
 
   const [selectedRepeat, setSelectedRepeat] = useState<string>("");
@@ -52,6 +54,9 @@ export default function useAddRepeatMeetingForm() {
         customObj: data.customObj,
         isActive: data.isActive,
       });
+      if (data.customObj) {
+        setCustomRepeatData(data.customObj);
+      }
       setSelectedRepeat(getRepeatTypeOrCustomForRepeatMeeting(data));
     } else {
       setSelectedRepeat("");
@@ -107,6 +112,9 @@ export default function useAddRepeatMeetingForm() {
           customObj: data.customObj,
           isActive: true,
         };
+
+    // console.log(payload,"payload");
+
     // return;
     addDetailMeeting(payload, {
       onSuccess: () => {
@@ -171,5 +179,6 @@ export default function useAddRepeatMeetingForm() {
     setSelectedRepeat,
     selectedRepeat,
     handleDeleteAll,
+    setCustomRepeatData,
   };
 }

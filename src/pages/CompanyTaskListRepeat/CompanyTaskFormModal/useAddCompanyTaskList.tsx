@@ -19,7 +19,6 @@ import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import FormSelect from "@/components/shared/Form/FormSelect";
-import CustomModalFile from "@/components/shared/CustomModal";
 
 import {
   addUpdateRepeatCompanyTaskMutation,
@@ -32,12 +31,19 @@ import { getEmployee } from "@/features/api/companyEmployee";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 
 import {
-  buildRepetitionOptions,
-  getRepeatTypeOrCustom,
+  buildRepetitionOptionsREPT,
+  getRepeatTypeOrCustomForRepeatMeeting,
 } from "@/components/shared/RepeatOption/repeatOption";
 import { Label } from "@/components/ui/label";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
+import CustomModalFile from "@/components/shared/CustomModalRepeatMeeting";
+import { FormTimePicker } from "@/components/shared/FormDateTimePicker/formTimePicker";
+import {
+  getNextRepeatDates,
+  getNextRepeatDatesCustom,
+} from "@/features/utils/nextDate.utils";
+import { formatToLocalDateTime } from "@/features/utils/app.utils";
 
 export default function useAddEmployee() {
   const { id: repetitiveTaskId } = useParams<{ id?: string }>();
@@ -70,7 +76,9 @@ export default function useAddEmployee() {
   const [isModalOpen, setModalOpen] = useState(false);
 
   const [selectedRepeat, setSelectedRepeat] = useState<string>("");
-
+  const [CustomRepeatData, setCustomRepeatData] = useState<
+    CustomObjREPT | undefined
+  >();
   const [projectPagination] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 25,
@@ -115,6 +123,7 @@ export default function useAddEmployee() {
       const employeeIds = t?.employeeIds ?? [];
 
       setValue("repetitiveTaskId", t.repetitiveTaskId);
+      setValue("repeatTime", t.repeatTime);
       setValue(
         "project",
         projectListdata?.data?.find((p) => p.projectId === t.projectId) || null,
@@ -140,8 +149,10 @@ export default function useAddEmployee() {
           employeeIds.includes(emp.employeeId),
         ) ?? [],
       );
-
-      setSelectedRepeat(getRepeatTypeOrCustom(t));
+      if (t.customObj) {
+        setCustomRepeatData(t.customObj);
+      }
+      setSelectedRepeat(getRepeatTypeOrCustomForRepeatMeeting(t));
     } else {
       setValue("isActive", "active");
       setSelectedRepeat("");
@@ -179,6 +190,7 @@ export default function useAddEmployee() {
       ? {
           repetitiveTaskId: repetitiveTaskId,
           taskName: data.taskName,
+          repeatTime: data.repeatTime,
           taskDescription: data.taskDescription,
           taskStartDate: data.taskStartDate
             ? new Date(data.taskStartDate)
@@ -197,15 +209,13 @@ export default function useAddEmployee() {
             (data.meeting as unknown as { meetingId: string })?.meetingId ??
             null,
 
-          repeatType:
-            data.repeatType === "CUSTOMTYPE"
-              ? ""
-              : data.repeatType.toUpperCase(),
+          repeatType: data.repeatType,
           customObj: data.customObj,
           isChildDataKey: data.additionalKey,
         }
       : {
           taskName: data.taskName,
+          repeatTime: data.repeatTime,
           taskDescription: data.taskDescription,
           taskStartDate: data.taskStartDate
             ? new Date(data.taskStartDate)
@@ -225,10 +235,7 @@ export default function useAddEmployee() {
           meetingId:
             (data.meeting as unknown as { meetingId: string })?.meetingId ??
             null,
-          repeatType:
-            data.repeatType === "CUSTOMTYPE"
-              ? ""
-              : data.repeatType.toUpperCase(),
+          repeatType: data.repeatType,
           // repeatType: data.repeatType.toUpperCase(),
           customObj: data.customObj,
         };
@@ -447,11 +454,11 @@ export default function useAddEmployee() {
   };
 
   const TaskDetailsStep = () => {
-    const repeatOptions = buildRepetitionOptions(new Date());
+    const repeatOptions = buildRepetitionOptionsREPT(new Date());
     const [openCustomModal, setOpenCustomModal] = useState(false);
     const [isTypeSearch, setIsTypeSearch] = useState("");
-    const [, setCustomRepeatData] = useState<CustomObj>();
 
+    const repeatTime = watch("repeatTime");
     const { data: taskTypeData } = useDdTaskType({
       filter: {
         search: isTypeSearch.length >= 3 ? isTypeSearch : undefined,
@@ -466,10 +473,37 @@ export default function useAddEmployee() {
         }))
       : [];
 
-    const handleSaveCustomRepeatData = useCallback((customData: CustomObj) => {
-      setCustomRepeatData(customData);
-    }, []);
+    const handleSaveCustomRepeatData = useCallback(
+      (customData: CustomObjREPT) => {
+        setCustomRepeatData(customData);
+      },
+      [],
+    );
+    const [repeatResult, setRepeatResult] = useState<{
+      createDateUTC: string;
+      nextDateUTC: string;
+    } | null>(null);
 
+    useEffect(() => {
+      if (selectedRepeat === "CUSTOMTYPE" && CustomRepeatData) {
+        const result = getNextRepeatDatesCustom(
+          "CUSTOMTYPE",
+          repeatTime,
+          CustomRepeatData as CustomRepeatConfig,
+        );
+        setRepeatResult(result);
+      }
+    }, [repeatTime]);
+
+    useEffect(() => {
+      if (selectedRepeat && selectedRepeat !== "CUSTOMTYPE") {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        const result = getNextRepeatDates(selectedRepeat, repeatTime, timezone);
+
+        setRepeatResult(result);
+      }
+    }, [repeatTime]);
     return (
       <div className="grid mb-10 grid-cols-2 gap-4">
         <Card className="col-span-2 mt-4 px-4 py-4 grid grid-cols-2 gap-4">
@@ -517,7 +551,28 @@ export default function useAddEmployee() {
                 />
               )}
             </div>
+            <Controller
+              control={control}
+              name="repeatTime"
+              rules={{ required: "Time is required" }}
+              render={({ field, fieldState }) => {
+                if (!field.value) {
+                  const now = new Date();
+                  const currentTime = now.toTimeString().slice(0, 5);
+                  field.onChange(currentTime);
+                }
 
+                return (
+                  <FormTimePicker
+                    label="Meeting Time"
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={fieldState.error}
+                    isMandatory
+                  />
+                );
+              }}
+            />
             <Controller
               control={control}
               name="repeatType"
@@ -551,6 +606,8 @@ export default function useAddEmployee() {
                                 } else {
                                   field.onChange(item.value);
                                   setSelectedRepeat(item.value);
+                                  setValue("customObj", undefined);
+                                  setCustomRepeatData(undefined);
                                 }
                               }}
                               className={`flex items-center justify-between ${
@@ -569,19 +626,36 @@ export default function useAddEmployee() {
 
                     <CustomModalFile
                       open={openCustomModal}
-                      defaultValues={taskDataById?.data.customObj ?? undefined}
+                      defaultValues={
+                        watch("customObj") ||
+                        CustomRepeatData ||
+                        taskDataById?.data?.customObj
+                      }
                       onOpenChange={setOpenCustomModal}
-                      onSave={(data: CustomObj) => {
+                      onSave={(data) => {
                         field.onChange("CUSTOMTYPE");
                         setSelectedRepeat("CUSTOMTYPE");
                         setValue("customObj", data);
                         handleSaveCustomRepeatData(data);
                       }}
                     />
+
                     {errors.repeatType && (
                       <p className="text-red-500 text-sm mt-1 before:content-['*']">
                         {errors.repeatType.message as string}
                       </p>
+                    )}
+                    {repeatResult && (
+                      <div className="flex gap-2 text-sm text-gray-700">
+                        <p>
+                          <strong>Creat First Task:</strong>{" "}
+                          {formatToLocalDateTime(repeatResult.createDateUTC)}
+                        </p>
+                        <p>
+                          <strong>Next Task:</strong>{" "}
+                          {formatToLocalDateTime(repeatResult.nextDateUTC)}
+                        </p>
+                      </div>
                     )}
                   </>
                 );
@@ -713,7 +787,6 @@ export default function useAddEmployee() {
     );
   };
 
-  // make the current form values available as employeePreview
   const employeePreview = getValues();
 
   const handleKeepAll = () => {
@@ -727,7 +800,7 @@ export default function useAddEmployee() {
   };
 
   return {
-    employeeData: employeedata, // original employee list (optional)
+    employeeData: employeedata,
     showNextStep: watch("employeeType") !== "OWNER",
     isPending,
     onFinish,

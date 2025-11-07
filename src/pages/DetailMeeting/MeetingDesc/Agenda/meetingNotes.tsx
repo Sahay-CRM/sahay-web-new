@@ -1,6 +1,14 @@
 import React, { useMemo, useState } from "react";
 
-import { Plus, EllipsisVertical, X, Edit, Share2, Check } from "lucide-react";
+import {
+  Plus,
+  EllipsisVertical,
+  X,
+  Edit,
+  Share2,
+  Check,
+  Tag,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -141,13 +149,18 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
     setDropdownOpen(null); // Close dropdown after action
   };
 
-  const handleMarkNotes = (data: MeetingNotesRes, type: string) => {
+  const handleMarkNotes = (
+    data: MeetingNotesRes,
+    type?: string,
+    tag?: string,
+  ) => {
     const payload = {
       meetingId,
       employeeId,
       note: data.note,
-      noteType: type.toUpperCase(),
+      noteType: type?.toUpperCase(),
       meetingNoteId: data.meetingNoteId,
+      noteTag: tag,
     };
     addNote(payload, {
       onSuccess: async () => {
@@ -400,6 +413,24 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
               >
                 <div className="flex-1 text-sm text-black">
                   <div className="flex justify-between items-center mb-1">
+                    <div className="flex flex-wrap gap-1.5">
+                      {note.noteTag && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 -mt-1 -ml-1.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+                          <svg
+                            className="w-3 h-3 mr-1"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          {note.noteTag}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex justify-between items-center mb-1">
                       <span className="font-medium text-xs text-gray-600">
                         {author?.employeeName || "Unknown"}
@@ -539,6 +570,33 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                     >
                                       <Share2 className="h-4 w-4 mr-2" />
                                       Mark as Appreciation
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleMarkNotes(note, "", "KPIs")
+                                      }
+                                      className="px-2 py-1.5"
+                                    >
+                                      <Tag className="h-4 w-4 mr-2" />
+                                      KPIs
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleMarkNotes(note, "", "Project")
+                                      }
+                                      className="px-2 py-1.5"
+                                    >
+                                      <Tag className="h-4 w-4 mr-2" />
+                                      Project
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleMarkNotes(note, "", "Task")
+                                      }
+                                      className="px-2 py-1.5"
+                                    >
+                                      <Tag className="h-4 w-4 mr-2" />
+                                      Task
                                     </DropdownMenuItem>
                                   </>
                                 )}

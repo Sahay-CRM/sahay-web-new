@@ -221,7 +221,7 @@ export function buildRepetitionOptions(taskDeadline?: string | Date | null) {
 //   }
 // }
 
-export function getRepeatTypeOrCustom(data: TodoItem | Task): string {
+export function getRepeatTypeOrCustom(data: TodoItem): string {
   if (!data?.repeatType) return "";
 
   const today = new Date();
@@ -369,7 +369,7 @@ export function getRepeatTypeOrCustom(data: TodoItem | Task): string {
 }
 
 export function getRepeatTypeOrCustomForRepeatMeeting(
-  data: RepeatMeeting,
+  data: RepeatMeeting | Task,
 ): string {
   if (!data?.repeatType) return "";
 
@@ -518,5 +518,49 @@ export function getRepeatTypeOrCustomForRepeatMeeting(
 
     default:
       return "CUSTOMTYPE";
+  }
+}
+
+export function buildRepetitionOptionsREPT(
+  taskDeadline?: string | Date | null,
+) {
+  if (!taskDeadline) return [];
+
+  try {
+    const dateObj = new Date(taskDeadline);
+    if (isNaN(dateObj.getTime())) return [];
+
+    const dayName = getDayName(dateObj);
+    const ordinalWeekday = getOrdinalWeekday(dateObj);
+
+    const dateOfMonth = dateObj.getDate();
+    const monthName = dateObj.toLocaleDateString("en-US", { month: "long" });
+
+    return [
+      { value: "DAILY", label: "Daily" },
+
+      { value: "DAILYALTERNATE", label: "Daily (Every Other Day)" },
+
+      { value: "WEEKLY", label: `Weekly on ${dayName}` },
+
+      {
+        value: "MONTHLYNWEEKDAY",
+        label: `Monthly on the ${ordinalWeekday} `,
+      },
+
+      {
+        value: "MONTHLYDATE",
+        label: `Monthly on the ${getOrdinalDate(dateOfMonth)} date`,
+      },
+
+      {
+        value: "YEARLY",
+        label: `Yearly on ${monthName} ${getOrdinalDate(dateOfMonth)}`,
+      },
+
+      { value: "CUSTOMTYPE", label: "Custom" },
+    ];
+  } catch {
+    return [];
   }
 }

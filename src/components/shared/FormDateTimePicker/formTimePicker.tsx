@@ -32,7 +32,7 @@ export function FormTimePicker({
     : null;
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col">
       {label && (
         <FormLabel className={twMerge("", labelClass)}>
           {label}{" "}
@@ -40,7 +40,7 @@ export function FormTimePicker({
         </FormLabel>
       )}
 
-      <div className="relative border h-10 flex items-center px-2 rounded-md">
+      <div className="relative border h-9 flex items-center px-2 rounded-md">
         <DatePicker
           selected={selectedDate}
           onChange={(date) => {

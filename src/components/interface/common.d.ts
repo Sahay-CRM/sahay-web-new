@@ -791,7 +791,8 @@ interface Task {
   repetitiveTaskId?: string;
   employeeIds?: string | string[];
   isActive?: boolean;
-  customObj?: CustomObj;
+  customObj?: CustomObjREPT;
+  repeatTime?: string;
 }
 
 interface ProjectTask {
@@ -1276,6 +1277,7 @@ interface MeetingNotesRes {
   groupId?: string;
   groupName?: string;
   meetingId?: string;
+  noteTag?: string;
 }
 
 interface IssuesProps {

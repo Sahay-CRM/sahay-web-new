@@ -28,6 +28,7 @@ interface CustomObjREPT {
   frequency: FrequencyType;
   // repeatPattern?: RepeatPattern;
   months?: string[];
+  month?: string;
   weekDaysMapping?: WeekDaysMappingREPT[];
   dates?: number[];
   daysOfWeek?: string[];
@@ -35,4 +36,16 @@ interface CustomObjREPT {
   timezone: string;
   interval?: number;
   endOfMonth?: boolean | null;
+}
+
+interface CustomRepeatConfig {
+  frequency: string;
+  interval?: number;
+  daysOfWeek?: string[];
+  dates?: number[];
+  weekPatterns?: Array<{ week: number; day: string }>;
+  endOfMonth?: boolean;
+  month?: string;
+  date?: number;
+  timezone?: string;
 }

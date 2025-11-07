@@ -71,8 +71,6 @@ export default function CustomModalFile({
     { key: 6, label: "Sa", api: "SAT" },
   ];
 
-  console.log(isMonthlyEnd, "isMonthlyEnd");
-
   useEffect(() => {
     if (!multiSelect && selectedMonth.length > 1) {
       setSelectedMonth([selectedMonth[0]]);
@@ -109,7 +107,6 @@ export default function CustomModalFile({
                 value={dateOrWeekly}
                 onValueChange={(value: DateOrWeeklyType) => {
                   setDateOrWeekly(value);
-                  console.log(value, "value");
 
                   if (value === "MONTHLYEND") {
                     setIsMonthlyEnd(true);
@@ -268,7 +265,7 @@ export default function CustomModalFile({
     ...(baseFrequency === "MONTHLY" &&
       isMonthlyEnd && { endOfMonth: isMonthlyEnd }),
   };
-  console.log(customObj, "before save ");
+  // console.log(customObj, "before save ");
 
   return (
     <ModalData

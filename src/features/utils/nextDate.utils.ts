@@ -18,27 +18,20 @@ export interface CustomRepeatConfig {
   timezone?: string;
 }
 
-export type RepeatType =
-  | "DAILY"
-  | "DAILYALTERNATE"
-  | "WEEKLY"
-  | "MONTHLYDATE"
-  | "YEARLY"
-  | "CUSTOMTYPE";
+export type RepeatType = string;
 
 // Main function for standard repeat types
 export function getNextRepeatDates(
   repeatType: RepeatType,
   timeOrNextDate: string,
-  timezone: string = "UTC",
-): RepeatDatesResult {
+  timezone = "UTC",
+) {
   if (!repeatType) throw new Error("repeatType is required");
   if (!timeOrNextDate)
     throw new Error("Either time or nextDate must be provided");
 
-  // Detect if this is a full UTC date or just time
   const isFullDate = timeOrNextDate.includes("T");
-  let baseMomentUTC: moment.Moment;
+  let baseMomentUTC;
 
   if (isFullDate) {
     baseMomentUTC = moment.utc(timeOrNextDate);
@@ -48,17 +41,14 @@ export function getNextRepeatDates(
     const localBase = localNow
       .clone()
       .set({ hour, minute, second: 0, millisecond: 0 });
-
-    if (localBase.isBefore(localNow)) {
-      localBase.add(1, "day");
-    }
+    if (localBase.isBefore(localNow)) localBase.add(1, "day");
     baseMomentUTC = localBase.clone().utc();
   }
 
+  // ✅ Use let instead of const
   const createDateUTC = baseMomentUTC.clone();
+  let nextDateUTC = createDateUTC.clone();
 
-  // Determine nextDate based on repeat type
-  const nextDateUTC = createDateUTC.clone();
   switch (repeatType) {
     case "DAILY":
       nextDateUTC.add(1, "day");
@@ -75,6 +65,43 @@ export function getNextRepeatDates(
     case "YEARLY":
       nextDateUTC.add(1, "year");
       break;
+
+    // 🆕 MONTHLYWEEKDAY
+    case "MONTHLYNWEEKDAY": {
+      const localBase = baseMomentUTC.clone().tz(timezone);
+
+      // Detect weekday (0=Sunday ... 6=Saturday)
+      const weekday = localBase.day();
+
+      // Detect week number in month (1st, 2nd, 3rd, 4th, or last)
+      const dayOfMonth = localBase.date();
+      const weekNumber = Math.ceil(dayOfMonth / 7);
+
+      // Move to next month and find same weekNumber + weekday
+      const nextMonth = localBase.clone().add(1, "month").startOf("month");
+      let target = nextMonth.clone().day(weekday);
+
+      // If day() moves us back to previous month, push forward 1 week
+      if (target.month() !== nextMonth.month()) target.add(7, "days");
+
+      // Move to the same week number
+      target.add((weekNumber - 1) * 7, "days");
+
+      // If it goes beyond next month (e.g., 5th Friday that doesn't exist)
+      if (target.month() !== nextMonth.month()) {
+        // fallback to last occurrence of that weekday
+        target = nextMonth.clone().endOf("month").day(weekday);
+        if (target.month() !== nextMonth.month()) target.subtract(7, "days");
+      }
+
+      // Set time same as input
+      const [hour, minute] = timeOrNextDate.split(":").map(Number);
+      target.set({ hour, minute, second: 0, millisecond: 0 });
+
+      nextDateUTC = target.clone().utc();
+      break;
+    }
+
     default:
       throw new Error("Invalid or unsupported repeatType");
   }
@@ -85,7 +112,6 @@ export function getNextRepeatDates(
   };
 }
 
-// Custom repeat function
 export function getNextRepeatDatesCustom(
   repeatType: RepeatType,
   timeOrNextDate: string,
@@ -97,7 +123,6 @@ export function getNextRepeatDatesCustom(
   if (!timeOrNextDate) {
     throw new Error("Either time or nextDate must be provided");
   }
-
   const {
     frequency,
     interval = 1,
@@ -111,7 +136,7 @@ export function getNextRepeatDatesCustom(
   } = custom;
 
   // Determine base moment (either full date or time)
-  let baseMomentUTC: moment.Moment;
+  let baseMomentUTC;
   if (timeOrNextDate.includes("T")) {
     // full UTC datetime
     baseMomentUTC = moment.utc(timeOrNextDate);
@@ -122,50 +147,36 @@ export function getNextRepeatDatesCustom(
     const localMoment = nowLocal
       .clone()
       .set({ hour, minute, second: 0, millisecond: 0 });
-
-    if (localMoment.isBefore(nowLocal)) {
-      localMoment.add(1, "day");
-    }
+    if (localMoment.isBefore(nowLocal)) localMoment.add(1, "day");
     baseMomentUTC = localMoment.clone().utc();
   }
 
-  const findWeekday = (
-    m: moment.Moment,
-    week: number,
-    dayName: string,
-  ): moment.Moment => {
+  const findWeekday = (m: moment.Moment, week: number, dayName: string) => {
     const dayIndex = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].indexOf(
       dayName,
     );
     let date = m.clone().startOf("month");
-
     if (week === -1) {
       date = m.clone().endOf("month");
       while (date.day() !== dayIndex) date.subtract(1, "day");
       return date;
     }
-
     while (date.day() !== dayIndex) date.add(1, "day");
     date.add((week - 1) * 7, "days");
-
     if (date.month() !== m.month()) {
       date = m.clone().endOf("month");
       while (date.day() !== dayIndex) date.subtract(1, "day");
     }
-
     return date;
   };
 
-  const clampToEndOfMonth = (
-    momentDate: moment.Moment,
-    dayNum: number,
-  ): number => {
+  const clampToEndOfMonth = (momentDate: moment.Moment, dayNum: number) => {
     const daysInMonth = momentDate.daysInMonth();
     return Math.min(dayNum, daysInMonth);
   };
 
   let createDate = baseMomentUTC.clone();
-  let nextDate: moment.Moment | null = null;
+  let nextDate = null;
 
   if (!frequency) {
     throw new Error("frequency is required inside custom object");
@@ -174,6 +185,7 @@ export function getNextRepeatDatesCustom(
   const baseTz = baseMomentUTC.clone().tz(timezone);
   const [hour, minute] = [baseTz.hour(), baseTz.minute()];
 
+  // -------------------- WEEKLY FIXED --------------------
   if (frequency === "WEEKLY") {
     const days = daysOfWeek || [];
     const dayIdx = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
@@ -213,12 +225,21 @@ export function getNextRepeatDatesCustom(
       }
     }
 
+    // ✅ Fixed next date logic
+    let nextLocal;
+    const nextDay = sortedDays.find((d) => d > createLocal.day());
+    if (nextDay !== undefined) {
+      // Next valid weekday in same week
+      nextLocal = createLocal.clone().day(nextDay);
+    } else {
+      // Wrap to first day of next week (interval weeks later)
+      nextLocal = createLocal.clone().add(interval, "weeks").day(sortedDays[0]);
+    }
+
     createDate = createLocal.clone().set({ hour, minute, second: 0 }).utc();
-    nextDate = createLocal
-      .clone()
-      .add(interval, "weeks")
-      .set({ hour, minute, second: 0 })
-      .utc();
+    nextDate = nextLocal.clone().set({ hour, minute, second: 0 }).utc();
+
+    // -------------------- MONTHLY --------------------
   } else if (frequency === "MONTHLY") {
     let m = baseTz.clone().set({ hour, minute, second: 0, millisecond: 0 });
     let nextM = m.clone().add(interval, "months");
@@ -266,15 +287,16 @@ export function getNextRepeatDatesCustom(
 
     createDate = m.clone().utc();
     nextDate = nextM.clone().utc();
+
+    // -------------------- YEARLY --------------------
   } else if (frequency === "YEARLY") {
-    // Handle month safely
     let monthIdx;
     if (typeof month === "string") {
       monthIdx = moment().month(month).month();
     } else if (typeof month === "number") {
       monthIdx = month;
     } else {
-      monthIdx = baseTz.month(); // default to current month if not given
+      monthIdx = baseTz.month();
     }
 
     let m = baseTz
@@ -282,27 +304,21 @@ export function getNextRepeatDatesCustom(
       .month(monthIdx)
       .set({ hour, minute, second: 0, millisecond: 0 });
 
-    // Pick target date from `date` or first value in `dates`
     const targetDate = date ?? (dates?.length ? dates[0] : null);
 
     if (targetDate) {
       const day = clampToEndOfMonth(m, targetDate);
       m.date(day);
-      // if the current year’s date has already passed, move to next year
       if (m.isBefore(baseTz)) m = m.add(interval, "years");
 
       createDate = m.clone().utc();
-      nextDate = m.clone().add(interval, "years").utc(); // ✅ add next year
+      nextDate = m.clone().add(interval, "years").utc();
     } else {
       createDate = m.clone().utc();
       nextDate = createDate.clone().add(interval, "years").utc();
     }
   } else {
     throw new Error("Unsupported frequency type in custom object");
-  }
-
-  if (!nextDate) {
-    throw new Error("Could not calculate next date");
   }
 
   return {

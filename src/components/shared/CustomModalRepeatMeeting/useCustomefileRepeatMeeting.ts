@@ -9,8 +9,6 @@ type FrequencyType =
 type DateOrWeeklyType = "date" | "WEEKLY" | "MONTHLYEND";
 
 export function useCustomModalFile(defaultValues?: CustomObjREPT) {
-  console.log(defaultValues, "defaultValues");
-
   const [baseFrequency, setFrequency] = useState<FrequencyType>("WEEKLY");
   const [dateOrWeekly, setDateOrWeekly] = useState<DateOrWeeklyType>("date");
   const [selectedDate, setSelectedDate] = useState<number[] | null>(null);
@@ -126,7 +124,6 @@ export function useCustomModalFile(defaultValues?: CustomObjREPT) {
 
     const {
       frequency,
-      months,
       daysOfWeek,
       weekDaysMapping,
       weekPatterns,
@@ -184,11 +181,19 @@ export function useCustomModalFile(defaultValues?: CustomObjREPT) {
       }
     }
 
-    if (months?.length && frequency === "YEARLY") {
-      const numericMonth = reorderedMonths.find(
-        (m) => m.api === months[0],
-      )?.value;
-      if (numericMonth !== undefined) setSelectedMonth([numericMonth]);
+    // 🟢 Handle Yearly (month or months)
+    if (frequency === "YEARLY") {
+      const monthValue =
+        Array.isArray(defaultValues?.months) && defaultValues.months.length > 0
+          ? defaultValues.months[0]
+          : defaultValues?.month;
+
+      if (monthValue) {
+        const numericMonth = reorderedMonths.find(
+          (m) => m.api === monthValue,
+        )?.value;
+        if (numericMonth !== undefined) setSelectedMonth([numericMonth]);
+      }
     }
   }, [defaultValues]);
 

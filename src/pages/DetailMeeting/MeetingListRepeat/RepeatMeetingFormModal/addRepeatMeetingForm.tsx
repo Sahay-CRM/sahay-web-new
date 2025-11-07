@@ -31,9 +31,14 @@ import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import PageNotAccess from "@/pages/PageNoAccess";
 import { Repeat } from "lucide-react";
 import CustomModalFile from "@/components/shared/CustomModalRepeatMeeting";
-import { buildRepetitionOptions } from "@/components/shared/RepeatOption/repeatOption";
+import { buildRepetitionOptionsREPT } from "@/components/shared/RepeatOption/repeatOption";
 import { FormLabel } from "@/components/ui/form";
 import { FormTimePicker } from "@/components/shared/FormDateTimePicker/formTimePicker";
+import {
+  getNextRepeatDates,
+  getNextRepeatDatesCustom,
+} from "@/features/utils/nextDate.utils";
+import { formatToLocalDateTime } from "@/features/utils/app.utils";
 
 const MeetingType = () => {
   const {
@@ -144,11 +149,40 @@ const MeetingInfo = () => {
     saveCustomRepeatData,
     setSelectedRepeat,
     selectedRepeat,
+    CustomRepeatData,
+    setCustomRepeatData,
   } = useAddRepeatMeetingForm();
+
   const repeatTime = watch("repeatTime");
 
-  const repeatOptions = buildRepetitionOptions(new Date());
+  const repeatOptions = buildRepetitionOptionsREPT(new Date());
   const [openCustomModal, setOpenCustomModal] = useState(false);
+
+  const [repeatResult, setRepeatResult] = useState<{
+    createDateUTC: string;
+    nextDateUTC: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (selectedRepeat === "CUSTOMTYPE" && CustomRepeatData) {
+      const result = getNextRepeatDatesCustom(
+        "CUSTOMTYPE",
+        repeatTime,
+        CustomRepeatData as CustomRepeatConfig,
+      );
+      setRepeatResult(result);
+    }
+  }, [selectedRepeat, CustomRepeatData, repeatTime]);
+  useEffect(() => {
+    if (selectedRepeat && selectedRepeat !== "CUSTOMTYPE") {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      const result = getNextRepeatDates(selectedRepeat, repeatTime, timezone);
+
+      setRepeatResult(result);
+    }
+  }, [selectedRepeat, repeatTime]);
+
   return (
     <div className="grid grid-cols-2 gap-4">
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
@@ -213,6 +247,9 @@ const MeetingInfo = () => {
                               } else {
                                 field.onChange(item.value);
                                 setSelectedRepeat(item.value);
+                                // ✅ Clear previously saved custom repeat data
+                                setValue("customObj", undefined);
+                                setCustomRepeatData(undefined);
                               }
                             }}
                             className={`flex items-center justify-between ${
@@ -256,10 +293,9 @@ const MeetingInfo = () => {
           name="repeatTime"
           rules={{ required: "Time is required" }}
           render={({ field, fieldState }) => {
-            // If field has no value yet, set it to current time (HH:mm)
             if (!field.value) {
               const now = new Date();
-              const currentTime = now.toTimeString().slice(0, 5); // "HH:mm" format (24hr)
+              const currentTime = now.toTimeString().slice(0, 5);
               field.onChange(currentTime);
             }
 
@@ -274,6 +310,18 @@ const MeetingInfo = () => {
             );
           }}
         />
+        {repeatResult && (
+          <div className="flex gap-2 text-sm text-gray-700">
+            <p>
+              <strong>Creat First Meeting:</strong>{" "}
+              {formatToLocalDateTime(repeatResult.createDateUTC)}
+            </p>
+            <p>
+              <strong>Next Meeting:</strong>{" "}
+              {formatToLocalDateTime(repeatResult.nextDateUTC)}
+            </p>
+          </div>
+        )}
       </Card>
     </div>
   );
