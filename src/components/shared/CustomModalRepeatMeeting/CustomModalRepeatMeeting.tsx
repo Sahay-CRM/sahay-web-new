@@ -230,6 +230,45 @@ export default function CustomModalFile({
         return null;
     }
   };
+  // console.log(customObj, "before save ");
+  const isSaveDisabled = () => {
+    if (!baseFrequency) return true;
+
+    switch (baseFrequency) {
+      case "WEEKLY":
+        return selectedDay.length === 0;
+
+      case "MONTHLY":
+        if (dateOrWeekly === "date") {
+          return !selectedDate || selectedDate.length === 0;
+        }
+        if (dateOrWeekly === "WEEKLY") {
+          return weeklyPatterns.every(
+            (wp) => wp.week === null || wp.daysOfWeek.length === 0,
+          );
+        }
+        if (dateOrWeekly === "MONTHLYEND") {
+          return false; // monthly end is valid without other selections
+        }
+        return true;
+
+      case "YEARLY":
+        if (!selectedMonth.length) return true;
+        if (dateOrWeekly === "date") {
+          return !selectedDate || selectedDate.length === 0;
+        }
+        if (dateOrWeekly === "WEEKLY") {
+          return weeklyPatterns.every(
+            (wp) => wp.week === null || wp.daysOfWeek.length === 0,
+          );
+        }
+        return true;
+
+      default:
+        return true;
+    }
+  };
+
   const isWeekly = baseFrequency === "WEEKLY";
   const customObj = {
     frequency: baseFrequency,
@@ -265,8 +304,6 @@ export default function CustomModalFile({
     ...(baseFrequency === "MONTHLY" &&
       isMonthlyEnd && { endOfMonth: isMonthlyEnd }),
   };
-  // console.log(customObj, "before save ");
-
   return (
     <ModalData
       isModalOpen={open}
@@ -278,9 +315,13 @@ export default function CustomModalFile({
         {
           btnText: "Save",
           btnClick: () => {
+            if (isSaveDisabled()) return;
             onSave(customObj);
             onOpenChange(false);
           },
+          buttonCss: isSaveDisabled()
+            ? "bg-gray-300 text-gray-500 hover:bg-gray-300 cursor-not-allowed"
+            : "",
         },
         {
           btnText: "Cancel",
