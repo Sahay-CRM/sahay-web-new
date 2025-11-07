@@ -271,7 +271,7 @@ export default function CustomModalFile({
     <ModalData
       isModalOpen={open}
       modalClose={() => onOpenChange(false)}
-      modalTitle="Custom Repetition MEETING"
+      modalTitle="Custom Repetition"
       containerClass="min-w-[40%] "
       childclass="py-1"
       buttons={[

@@ -275,13 +275,13 @@ const MeetingInfo = () => {
 
                   <CustomModalFile
                     open={openCustomModal}
+                    multiSelectAllow={false}
                     defaultValues={
                       watch("customObj") ||
                       CustomRepeatData ||
                       meetingApiData?.customObj
                     }
                     // defaultValues={meetingApiData?.customObj ?? undefined}
-                    multiSelectAllow={false}
                     onOpenChange={setOpenCustomModal}
                     onSave={(data) => {
                       field.onChange("CUSTOMTYPE");

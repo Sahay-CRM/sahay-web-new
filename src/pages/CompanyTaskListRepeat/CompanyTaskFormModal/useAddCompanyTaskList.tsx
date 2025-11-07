@@ -626,6 +626,7 @@ export default function useAddEmployee() {
 
                     <CustomModalFile
                       open={openCustomModal}
+                      multiSelectAllow={false}
                       defaultValues={
                         watch("customObj") ||
                         CustomRepeatData ||
