@@ -740,6 +740,7 @@ interface Employee {
     companyId: string;
   };
   reportingManager: string;
+  isTeamLeader?: boolean;
 }
 
 interface TaskEmployee {
@@ -793,6 +794,7 @@ interface Task {
   isActive?: boolean;
   customObj?: CustomObjREPT;
   repeatTime?: string;
+  nextDate?: string;
 }
 
 interface ProjectTask {
@@ -1596,6 +1598,7 @@ interface TaskPreviewData {
   taskName?: string;
   taskDescription?: string;
   repeatType?: string;
+  repeatTime?: string;
 
   meeting?: {
     meetingName?: string;

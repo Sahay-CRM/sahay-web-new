@@ -30,7 +30,7 @@ const AddRepeatMeetingModal: React.FC<MeetingModalProps> = ({
         ...(isChildData
           ? [
               {
-                btnText: "Keep All",
+                btnText: "Update All",
                 buttonCss: "py-1.5 px-5",
                 btnClick: onKeepAll ?? (() => {}),
               },

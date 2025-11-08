@@ -12,7 +12,10 @@ import {
 import { useGetCompanyProjectAll } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
-import { addMeetingNotesMutation } from "@/features/api/detailMeeting";
+import {
+  addMeetingNotesMutation,
+  useGetDetailMeetingAgenda,
+} from "@/features/api/detailMeeting";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 
 type TaskFormData = {
@@ -25,6 +28,8 @@ type TaskFormData = {
   taskStartDate?: string | Date | null;
   taskDeadline?: string | Date | null;
   repetition?: string;
+  ioId?: string;
+  ioType?: string;
 };
 interface TaskDrawerProps {
   open: boolean;
@@ -51,6 +56,12 @@ export default function TaskDrawer({
 
   const { data: taskStatus } = useGetAllTaskStatus({ filter: {} });
   const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
+  const { data: ioList } = useGetDetailMeetingAgenda({
+    filter: {
+      meetingId: meetingId,
+    },
+    enable: !!meetingId,
+  });
   const { data: taskTypeData } = useDdTaskType({
     filter: {
       search: isTypeSearch.length >= 3 ? isTypeSearch : undefined,
@@ -74,6 +85,14 @@ export default function TaskDrawer({
         value: status.taskTypeId || "", // Fallback to empty string
       }))
     : [];
+  const ioOption = ioList
+    ? ioList.map((item) => ({
+        label: item.name,
+        value: item.ioType === "ISSUE" ? item.issueId : item.objectiveId,
+        ioType: item.ioType,
+      }))
+    : [];
+
   const taskStatusOption = taskStatus
     ? taskStatus.data.map((status) => ({
         label: status.taskStatus,
@@ -110,6 +129,8 @@ export default function TaskDrawer({
           ? taskData.assignUsers.map((u) => u.employeeId)
           : [],
         taskDeadline: taskData.taskDeadline || null,
+        ioId: issueId || "",
+        ioType: ioType || "",
       }
     : {
         taskName: "",
@@ -121,6 +142,8 @@ export default function TaskDrawer({
         assignUsers: [],
         taskStartDate: null,
         taskDeadline: null,
+        ioId: issueId || "",
+        ioType: ioType || "",
       };
 
   const {
@@ -185,7 +208,14 @@ export default function TaskDrawer({
 
   const onSubmit = (data: TaskFormData) => {
     if (meetingId) {
-      const { assignUsers, taskStartDate, taskDeadline, ...rest } = data;
+      const {
+        assignUsers,
+        taskStartDate,
+        taskDeadline,
+        ioId,
+        ioType,
+        ...rest
+      } = data;
       const payload: AddUpdateTask = {
         ...rest,
         employeeIds: assignUsers,
@@ -194,9 +224,12 @@ export default function TaskDrawer({
         taskDeadline: taskDeadline ? new Date(taskDeadline) : null,
         meetingId: meetingId,
         ...(ioType === "ISSUE"
-          ? { issueId: issueId }
-          : { objectiveId: issueId }),
-        ioType: ioType,
+          ? { issueId: ioId }
+          : ioType === "OBJECTIVE"
+            ? { objectiveId: ioId }
+            : {}),
+
+        ioType: data.ioType,
       };
 
       addUpdateTask(payload, {
@@ -249,6 +282,33 @@ export default function TaskDrawer({
             </button>
           </div>
           <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4">
+            <div>
+              <Controller
+                control={control}
+                name="ioId"
+                rules={{ required: "Please select an Issue or Objective" }}
+                render={({ field }) => (
+                  <FormSelect
+                    label="Select Issue/Objective"
+                    value={field.value}
+                    onChange={(val) => {
+                      field.onChange(val);
+                      const selected = ioOption.find(
+                        (opt) => opt.value === val,
+                      );
+                      if (selected) {
+                        setValue("ioType", selected.ioType); // 👈 also set ioType
+                      }
+                    }}
+                    options={ioOption}
+                    error={errors.ioId}
+                    placeholder="Select Issue or Objective"
+                    isMandatory
+                  />
+                )}
+              />
+            </div>
+
             <FormInputField
               label="Task Name"
               {...register("taskName", {

@@ -17,6 +17,10 @@ import { useForm } from "react-hook-form";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import { imageUploadMutation } from "@/features/api/file";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import {
+  deleteHolidayMutation,
+  getholidayDropdown,
+} from "@/features/api/Holiday";
 
 export default function useCompany() {
   const companyId = useSelector(getUserDetail).companyId;
@@ -52,6 +56,30 @@ export default function useCompany() {
   const [isEditing, setIsEditing] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isLogoCropOpen, setIsLogoCropOpen] = useState(false);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalData, setModalData] = useState<HolidaysDataProps | null>(null);
+  const { data: holidayData } = getholidayDropdown({
+    filter: {},
+  });
+
+  const { mutate: deleteHoli } = deleteHolidayMutation();
+  const handleAdd = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsModalOpen(false);
+    setModalData(null);
+  };
+
+  const handleEdit = (data: HolidaysDataProps) => {
+    setIsModalOpen(true);
+    setModalData(data);
+  };
+  const handleDelete = (id: string) => {
+    deleteHoli(id);
+  };
 
   const {
     register,
@@ -315,6 +343,14 @@ export default function useCompany() {
     permission,
     isLogoCropOpen,
     skipDaysOption,
+    holidayData,
+    handleEdit,
+    isModalOpen,
+    handleAdd,
+    modalData,
+    handleDelete,
+    handleClose,
+
     // formatOptions,
   };
 }

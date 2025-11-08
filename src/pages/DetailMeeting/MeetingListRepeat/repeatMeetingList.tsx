@@ -195,7 +195,7 @@ export default function RepeatMeetingList() {
             customActions={(row) => {
               return (
                 <>
-                  {permission.Add && (
+                  {/* {permission.Add && (
                     <Button
                       className={`w-fit mr-1`}
                       onClick={() => {
@@ -206,7 +206,7 @@ export default function RepeatMeetingList() {
                     >
                       Details
                     </Button>
-                  )}
+                  )} */}
 
                   {permission.Edit && (
                     <Button
@@ -231,7 +231,7 @@ export default function RepeatMeetingList() {
               handleRowsModalOpen(row);
             }}
             sortableColumns={["meetingName"]}
-            actionColumnWidth="w-[300px]"
+            actionColumnWidth="w-[220px]"
           />
         </div>
 
@@ -254,7 +254,7 @@ export default function RepeatMeetingList() {
             isModalOpen={isModalOpen}
             modalClose={handleClose}
             isChildData={isChildDataActive}
-            onKeepAll={() => handleStopRepeat(istemData!, "KEEP_ALL")}
+            onKeepAll={() => handleStopRepeat(istemData!, "UPDATE_ALL")}
             onDeleteAll={() => handleStopRepeat(istemData!, "DELETE_ALL")}
           />
         )}

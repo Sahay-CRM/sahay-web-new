@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -55,7 +55,7 @@ export default function useAddEmployee() {
     },
     enable: !!repetitiveTaskId,
   });
-
+  const taskData = taskDataById?.data;
   const { mutate: addUpdateTask, isPending } =
     addUpdateRepeatCompanyTaskMutation();
 
@@ -484,11 +484,59 @@ export default function useAddEmployee() {
       nextDateUTC: string;
     } | null>(null);
 
+    const prevCustomDataRef = useRef(CustomRepeatData);
+
+    // ✅ CUSTOMTYPE logic
     useEffect(() => {
-      if (selectedRepeat === "CUSTOMTYPE" && CustomRepeatData) {
+      if (
+        selectedRepeat === "CUSTOMTYPE" &&
+        CustomRepeatData &&
+        repeatTime // ← Only when user selected time
+      ) {
+        const hasCustomChanged =
+          JSON.stringify(prevCustomDataRef.current) !==
+          JSON.stringify(CustomRepeatData);
+
+        prevCustomDataRef.current = CustomRepeatData;
+
+        const shouldUseNextDate = !hasCustomChanged;
+
+        let effectiveTime: string = "";
+
+        if (shouldUseNextDate && taskData?.nextDate) {
+          const nextDateObj = new Date(taskData.nextDate);
+
+          if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(repeatTime)) {
+            const [h, m, s = "0"] = repeatTime.split(":");
+            nextDateObj.setHours(+h, +m, +s, 0);
+            effectiveTime = nextDateObj.toISOString();
+          } else {
+            const repeatTimeObj = new Date(repeatTime);
+            if (!isNaN(repeatTimeObj.getTime())) {
+              nextDateObj.setHours(
+                repeatTimeObj.getHours(),
+                repeatTimeObj.getMinutes(),
+                repeatTimeObj.getSeconds(),
+                repeatTimeObj.getMilliseconds(),
+              );
+              effectiveTime = nextDateObj.toISOString();
+            }
+          }
+        } else {
+          // ✅ Custom changed — ignore nextDate
+          if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(repeatTime)) {
+            const now = new Date();
+            const [h, m, s = "0"] = repeatTime.split(":");
+            now.setHours(+h, +m, +s, 0);
+            effectiveTime = now.toISOString();
+          } else {
+            effectiveTime = new Date(repeatTime).toISOString();
+          }
+        }
+
         const result = getNextRepeatDatesCustom(
           "CUSTOMTYPE",
-          repeatTime,
+          effectiveTime,
           CustomRepeatData as CustomRepeatConfig,
         );
         setRepeatResult(result);
@@ -496,11 +544,56 @@ export default function useAddEmployee() {
     }, [repeatTime]);
 
     useEffect(() => {
-      if (selectedRepeat && selectedRepeat !== "CUSTOMTYPE") {
+      if (
+        selectedRepeat &&
+        selectedRepeat !== "CUSTOMTYPE" &&
+        repeatTime // ← Don’t run unless time is selected
+      ) {
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-        const result = getNextRepeatDates(selectedRepeat, repeatTime, timezone);
+        // ✅ If user changed repeat type (or switched from custom to standard), ignore nextDate
+        const hasRepeatTypeChanged =
+          taskData?.repeatType && taskData.repeatType !== selectedRepeat;
 
+        let effectiveTime: string = "";
+
+        // ✅ Only use nextDate if same repeat type
+        if (!hasRepeatTypeChanged && taskData?.nextDate) {
+          const nextDateObj = new Date(taskData.nextDate);
+
+          if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(repeatTime)) {
+            const [h, m, s = "0"] = repeatTime.split(":");
+            nextDateObj.setHours(+h, +m, +s, 0);
+            effectiveTime = nextDateObj.toISOString();
+          } else {
+            const repeatTimeObj = new Date(repeatTime);
+            if (!isNaN(repeatTimeObj.getTime())) {
+              nextDateObj.setHours(
+                repeatTimeObj.getHours(),
+                repeatTimeObj.getMinutes(),
+                repeatTimeObj.getSeconds(),
+                repeatTimeObj.getMilliseconds(),
+              );
+              effectiveTime = nextDateObj.toISOString();
+            }
+          }
+        } else {
+          // ✅ Ignore nextDate if repeat type changed or not available
+          if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(repeatTime)) {
+            const now = new Date();
+            const [h, m, s = "0"] = repeatTime.split(":");
+            now.setHours(+h, +m, +s, 0);
+            effectiveTime = now.toISOString();
+          } else {
+            effectiveTime = new Date(repeatTime).toISOString();
+          }
+        }
+
+        const result = getNextRepeatDates(
+          selectedRepeat,
+          effectiveTime,
+          timezone,
+        );
         setRepeatResult(result);
       }
     }, [repeatTime]);
@@ -556,11 +649,11 @@ export default function useAddEmployee() {
               name="repeatTime"
               rules={{ required: "Time is required" }}
               render={({ field, fieldState }) => {
-                if (!field.value) {
-                  const now = new Date();
-                  const currentTime = now.toTimeString().slice(0, 5);
-                  field.onChange(currentTime);
-                }
+                // if (!field.value) {
+                //   const now = new Date();
+                //   const currentTime = now.toTimeString().slice(0, 5);
+                //   field.onChange(currentTime);
+                // }
 
                 return (
                   <FormTimePicker
@@ -791,7 +884,7 @@ export default function useAddEmployee() {
   const employeePreview = getValues();
 
   const handleKeepAll = () => {
-    setValue("additionalKey", "KEEP_ALL");
+    setValue("additionalKey", "UPDATE_ALL");
     onSubmit();
   };
 

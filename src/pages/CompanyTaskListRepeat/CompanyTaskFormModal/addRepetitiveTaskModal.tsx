@@ -40,7 +40,7 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
         ...(isChildData
           ? [
               {
-                btnText: "Keep All",
+                btnText: "Update All",
                 buttonCss: "py-1.5 px-5",
                 btnClick: onKeepAll ?? (() => {}),
               },
@@ -108,6 +108,10 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
         <div>
           <span className="font-medium text-primary">Repeat Type:</span>{" "}
           {modalData.repeatType || "-"}
+        </div>
+        <div>
+          <span className="font-medium text-primary">Repeat Time:</span>{" "}
+          {modalData.repeatTime || "-"}
         </div>
 
         {/* <div>

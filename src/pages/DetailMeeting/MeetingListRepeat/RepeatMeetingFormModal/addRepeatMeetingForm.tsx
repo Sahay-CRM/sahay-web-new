@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"; // Added useState, useRef, ChangeEvent
+import { useEffect, useRef, useState } from "react"; // Added useState, useRef, ChangeEvent
 import { FormProvider, useFormContext, Controller } from "react-hook-form"; // Added useFormContext, Controller
 
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,15 @@ import {
   getNextRepeatDatesCustom,
 } from "@/features/utils/nextDate.utils";
 import { formatToLocalDateTime } from "@/features/utils/app.utils";
-
+interface MeetingData {
+  meetingName?: string;
+  meetingDescription?: string;
+  meetingTypeId?: MeetingType;
+  repeatType?: string;
+  repeatTime?: string;
+  employeeId?: Employee[];
+  repetitiveMeetingId?: string;
+}
 const MeetingType = () => {
   const {
     control,
@@ -164,25 +172,126 @@ const MeetingInfo = () => {
   } | null>(null);
 
   const selectedRepeat = watch("repeatType");
+
+  const prevCustomDataRef = useRef(CustomRepeatData);
+
+  // ✅ CUSTOMTYPE logic
   useEffect(() => {
-    if (selectedRepeat === "CUSTOMTYPE" && CustomRepeatData) {
+    if (
+      selectedRepeat === "CUSTOMTYPE" &&
+      CustomRepeatData &&
+      repeatTime // ← Only when user selected time
+    ) {
+      const hasCustomChanged =
+        JSON.stringify(prevCustomDataRef.current) !==
+        JSON.stringify(CustomRepeatData);
+
+      prevCustomDataRef.current = CustomRepeatData;
+
+      const shouldUseNextDate = !hasCustomChanged;
+
+      let effectiveTime: string = "";
+
+      if (shouldUseNextDate && meetingApiData?.nextDate) {
+        const nextDateObj = new Date(meetingApiData.nextDate);
+
+        if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(repeatTime)) {
+          const [h, m, s = "0"] = repeatTime.split(":");
+          nextDateObj.setHours(+h, +m, +s, 0);
+          effectiveTime = nextDateObj.toISOString();
+        } else {
+          const repeatTimeObj = new Date(repeatTime);
+          if (!isNaN(repeatTimeObj.getTime())) {
+            nextDateObj.setHours(
+              repeatTimeObj.getHours(),
+              repeatTimeObj.getMinutes(),
+              repeatTimeObj.getSeconds(),
+              repeatTimeObj.getMilliseconds(),
+            );
+            effectiveTime = nextDateObj.toISOString();
+          }
+        }
+      } else {
+        // ✅ Custom changed — ignore nextDate
+        if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(repeatTime)) {
+          const now = new Date();
+          const [h, m, s = "0"] = repeatTime.split(":");
+          now.setHours(+h, +m, +s, 0);
+          effectiveTime = now.toISOString();
+        } else {
+          effectiveTime = new Date(repeatTime).toISOString();
+        }
+      }
+
       const result = getNextRepeatDatesCustom(
         "CUSTOMTYPE",
-        repeatTime,
+        effectiveTime,
         CustomRepeatData as CustomRepeatConfig,
       );
       setRepeatResult(result);
     }
-  }, [selectedRepeat, CustomRepeatData, repeatTime]);
+  }, [selectedRepeat, CustomRepeatData, repeatTime, meetingApiData?.nextDate]);
+
   useEffect(() => {
-    if (selectedRepeat && selectedRepeat !== "CUSTOMTYPE") {
+    if (
+      selectedRepeat &&
+      selectedRepeat !== "CUSTOMTYPE" &&
+      repeatTime // ← Don’t run unless time is selected
+    ) {
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-      const result = getNextRepeatDates(selectedRepeat, repeatTime, timezone);
+      // ✅ If user changed repeat type (or switched from custom to standard), ignore nextDate
+      const hasRepeatTypeChanged =
+        meetingApiData?.repeatType &&
+        meetingApiData.repeatType !== selectedRepeat;
 
+      let effectiveTime: string = "";
+
+      // ✅ Only use nextDate if same repeat type
+      if (!hasRepeatTypeChanged && meetingApiData?.nextDate) {
+        const nextDateObj = new Date(meetingApiData.nextDate);
+
+        if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(repeatTime)) {
+          const [h, m, s = "0"] = repeatTime.split(":");
+          nextDateObj.setHours(+h, +m, +s, 0);
+          effectiveTime = nextDateObj.toISOString();
+        } else {
+          const repeatTimeObj = new Date(repeatTime);
+          if (!isNaN(repeatTimeObj.getTime())) {
+            nextDateObj.setHours(
+              repeatTimeObj.getHours(),
+              repeatTimeObj.getMinutes(),
+              repeatTimeObj.getSeconds(),
+              repeatTimeObj.getMilliseconds(),
+            );
+            effectiveTime = nextDateObj.toISOString();
+          }
+        }
+      } else {
+        // ✅ Ignore nextDate if repeat type changed or not available
+        if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(repeatTime)) {
+          const now = new Date();
+          const [h, m, s = "0"] = repeatTime.split(":");
+          now.setHours(+h, +m, +s, 0);
+          effectiveTime = now.toISOString();
+        } else {
+          effectiveTime = new Date(repeatTime).toISOString();
+        }
+      }
+
+      const result = getNextRepeatDates(
+        selectedRepeat,
+        effectiveTime,
+        timezone,
+      );
       setRepeatResult(result);
     }
-  }, [selectedRepeat, repeatTime]);
+  }, [
+    selectedRepeat,
+    repeatTime,
+    meetingApiData?.nextDate,
+    meetingApiData?.repeatType,
+  ]);
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -301,11 +410,11 @@ const MeetingInfo = () => {
           name="repeatTime"
           rules={{ required: "Time is required" }}
           render={({ field, fieldState }) => {
-            if (!field.value) {
-              const now = new Date();
-              const currentTime = now.toTimeString().slice(0, 5);
-              field.onChange(currentTime);
-            }
+            // if (!field.value) {
+            //   const now = new Date();
+            //   const currentTime = now.toTimeString().slice(0, 5);
+            //   field.onChange(currentTime);
+            // }
 
             return (
               <FormTimePicker

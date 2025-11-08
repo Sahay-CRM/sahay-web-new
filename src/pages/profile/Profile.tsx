@@ -6,8 +6,16 @@ import { Button } from "@/components/ui/button";
 
 import { getUserDetail } from "@/features/selectors/auth.selector";
 import logoImg from "@/assets/logo_1.png";
+import { capitalizeFirstLetter } from "@/features/utils/app.utils";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useEffect } from "react";
 
 export default function Profile() {
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "User Profile", href: "" }]);
+  }, [setBreadcrumbs]);
   const navigate = useNavigate();
 
   const profileData = useSelector(getUserDetail);
@@ -25,7 +33,9 @@ export default function Profile() {
         { label: "Position", value: "Admin" },
         {
           label: "Employee Type",
-          value: profileData?.role || profileData?.employeeType,
+          value:
+            profileData?.role ||
+            capitalizeFirstLetter(profileData?.employeeType || ""),
         },
         { label: "Mobile No", value: profileData?.employeeMobile },
         { label: "Email", value: profileData?.employeeEmail },

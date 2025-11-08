@@ -153,7 +153,7 @@ export default function useAddRepeatMeetingForm() {
   );
 
   const handleKeepAll = () => {
-    setValue("additionalKey", "KEEP_ALL");
+    setValue("additionalKey", "UPDATE_ALL");
     onSubmit();
   };
 

@@ -26,6 +26,7 @@ export default function useAddUpdateHoliday() {
     onSuccess: (res) => {
       toast.success(res.message || "Successful");
       queryClient.resetQueries({ queryKey: ["get-holiday-list"] });
+      queryClient.resetQueries({ queryKey: ["get-holiday-list-all"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);
