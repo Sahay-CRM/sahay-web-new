@@ -36,6 +36,8 @@ const AddRepeatMeetingModal: React.FC<MeetingModalProps> = ({
   onKeepAll,
   onDeleteAll,
 }) => {
+  console.log(modalData, "modal");
+
   return (
     <ModalData
       isModalOpen={isModalOpen}

@@ -198,17 +198,17 @@ export function getNextRepeatDates(
 
   return { createDateUTC, nextDateUTC };
 }
+
 export function getNextRepeatDatesCustom(
   repeatType: RepeatType,
   timeOrNextDate: string,
   custom: CustomRepeatConfig,
-): RepeatDatesResult {
-  if (repeatType !== "CUSTOMTYPE") {
+) {
+  if (repeatType !== "CUSTOMTYPE")
     throw new Error("repeatType must be CUSTOMTYPE");
-  }
-  if (!timeOrNextDate) {
+  if (!timeOrNextDate)
     throw new Error("Either time or nextDate must be provided");
-  }
+
   const {
     frequency,
     interval = 1,
@@ -340,41 +340,82 @@ export function getNextRepeatDatesCustom(
         .add(interval, "months")
         .date(clampToEndOfMonth(m.clone().add(interval, "months"), d));
     } else if (weekPatterns?.length) {
-      const { week, day } = weekPatterns[0];
-      let candidate = findWeekday(m.clone(), week, day);
-      const baseWeek = Math.ceil(baseTz.date() / 7);
-      const baseDay = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][
-        baseTz.day()
-      ];
+      // const baseWeek = Math.ceil(baseTz.date() / 7);
+      // const baseDay = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][
+      //   baseTz.day()
+      // ];
 
-      if (!(baseWeek === week && baseDay === day)) {
-        if (candidate.isBefore(baseTz)) {
-          candidate = findWeekday(m.clone().add(interval, "months"), week, day);
+      // Find all candidate dates for current month
+      const currentMonthCandidates = weekPatterns.map(({ week, day }) => {
+        return findWeekday(m.clone(), week, day)
+          .set({ hour, minute, second: 0 })
+          .utc();
+      });
+
+      // Find all candidate dates for next month
+      const nextMonthCandidates = weekPatterns.map(({ week, day }) => {
+        return findWeekday(m.clone().add(interval, "months"), week, day)
+          .set({ hour, minute, second: 0 })
+          .utc();
+      });
+
+      // Combine and sort all candidates
+      const allCandidates = [...currentMonthCandidates, ...nextMonthCandidates]
+        .filter(
+          (candidate) => candidate.isAfter(baseTz) || candidate.isSame(baseTz),
+        )
+        .sort((a, b) => a.valueOf() - b.valueOf());
+
+      // Find the nearest future dates
+      let createDate = baseMomentUTC.clone();
+      let nextDate = null;
+
+      if (allCandidates.length >= 2) {
+        createDate = allCandidates[0];
+        nextDate = allCandidates[1];
+      } else if (allCandidates.length === 1) {
+        createDate = allCandidates[0];
+        // For next date, look further into future months
+        const futureCandidates = [];
+        for (let i = 1; i <= 2; i++) {
+          const futureMonthCandidates = weekPatterns.map(({ week, day }) => {
+            return findWeekday(m.clone().add(interval * i, "months"), week, day)
+              .set({ hour, minute, second: 0 })
+              .utc();
+          });
+          futureCandidates.push(...futureMonthCandidates);
         }
+        futureCandidates.sort((a, b) => a.valueOf() - b.valueOf());
+        nextDate = futureCandidates.find((candidate) =>
+          candidate.isAfter(createDate),
+        );
+      } else {
+        // No future candidates found, use fallback
+        const fallbackDate = findWeekday(
+          m.clone(),
+          weekPatterns[0].week,
+          weekPatterns[0].day,
+        )
+          .set({ hour, minute, second: 0 })
+          .utc();
+        createDate = fallbackDate;
+        nextDate = findWeekday(
+          m.clone().add(interval, "months"),
+          weekPatterns[0].week,
+          weekPatterns[0].day,
+        )
+          .set({ hour, minute, second: 0 })
+          .utc();
       }
-
-      createDate = candidate.clone().set({ hour, minute, second: 0 }).utc();
-      const nextCandidate = findWeekday(
-        candidate.clone().add(interval, "months"),
-        week,
-        day,
-      );
-      nextDate = nextCandidate.clone().set({ hour, minute, second: 0 }).utc();
 
       return {
         createDateUTC: createDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
-        nextDateUTC: nextDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
+        nextDateUTC: nextDate?.format("YYYY-MM-DDTHH:mm:ss[Z]"),
       };
     } else if (endOfMonth) {
-      if (m.clone().endOf("month").isBefore(baseTz))
-        m = m.add(interval, "months");
-      const endOfMonthDate = m.clone().endOf("month").date();
-      m.date(endOfMonthDate).set({ hour, minute, second: 0, millisecond: 0 });
-      nextM = m
-        .clone()
-        .add(interval, "months")
-        .endOf("month")
-        .set({ hour, minute, second: 0, millisecond: 0 });
+      if (m.endOf("month").isBefore(baseTz)) m = m.add(interval, "months");
+      m = m.endOf("month");
+      nextM = m.clone().add(interval, "months").endOf("month");
     }
 
     createDate = m.clone().utc();
@@ -415,6 +456,6 @@ export function getNextRepeatDatesCustom(
 
   return {
     createDateUTC: createDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
-    nextDateUTC: nextDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
+    nextDateUTC: nextDate ? nextDate.format("YYYY-MM-DDTHH:mm:ss[Z]") : null,
   };
 }

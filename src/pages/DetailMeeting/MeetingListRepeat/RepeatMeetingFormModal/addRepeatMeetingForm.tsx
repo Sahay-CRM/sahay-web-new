@@ -170,6 +170,7 @@ const MeetingInfo = () => {
     createDateUTC: string;
     nextDateUTC: string;
   } | null>(null);
+  console.log(repeatResult, "repeatResult");
 
   const selectedRepeat = watch("repeatType");
 
@@ -292,6 +293,14 @@ const MeetingInfo = () => {
     meetingApiData?.nextDate,
     meetingApiData?.repeatType,
   ]);
+
+  // ✅ Store repeatResult inside hook form
+  useEffect(() => {
+    if (repeatResult) {
+      setValue("createDateUTC", repeatResult.createDateUTC);
+      setValue("nextDateUTC", repeatResult.nextDateUTC);
+    }
+  }, [repeatResult, setValue]);
 
   return (
     <div className="grid grid-cols-2 gap-4">
