@@ -429,7 +429,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                   <div className="flex justify-between items-baseline ">
                     {note.noteTag && (
                       <div className="flex flex-wrap gap-1.5">
-                        <span className="inline-flex items-center px-1 py-0.5 -mt-1 -ml-1.5 rounded-md text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+                        <span className="inline-flex items-center px-1 py-0.5 -mt-1 -ml-1.5 rounded-md text-[10px] font-medium bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-colors">
                           {note.noteTag}
                         </span>
                       </div>

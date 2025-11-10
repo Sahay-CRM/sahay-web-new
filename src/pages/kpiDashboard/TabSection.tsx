@@ -1,4 +1,10 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { formatFrequencyType } from "@/features/utils/app.utils";
 
 export default function TabsSection({
@@ -43,10 +49,33 @@ export default function TabsSection({
               className="rounded-none bg-white border-b-2 border-transparent p-2 text-sm font-medium text-muted-foreground hover:text-primary data-[state=active]:border-b-primary data-[state=active]:text-primary"
             >
               {formatFrequencyType(tab.frequencyType)}{" "}
-              <span className="ml-1 text-xs text-gray-500">
-                ({tab.count}
-                {showCanEdit && canEdit > 0 ? ` / ${canEdit}` : ""})
-              </span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="ml-1 text-xs text-gray-500 cursor-pointer">
+                      ({tab.count}
+                      {showCanEdit && canEdit > 0 ? ` / ${canEdit}` : ""})
+                    </span>
+                  </TooltipTrigger>
+
+                  <TooltipContent side="top" className="p-2">
+                    <ul className="text-xs text-gray-700">
+                      <li className="flex justify-between gap-2 border-b border-gray-200 pb-1 mb-1 font-medium">
+                        <span className="w-5 text-center text-white">All</span>
+                        <span className="w-5 text-center text-white">Edit</span>
+                        <span className="w-10 text-center text-white">
+                          Auto
+                        </span>
+                      </li>
+                      <li className="flex justify-between gap-2 text-center font-semibold text-white">
+                        <span className="w-5">{tab.count}</span>
+                        <span className="w-5">{canEdit}</span>
+                        <span className="w-10">{tab.count - canEdit}</span>
+                      </li>
+                    </ul>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </TabsTrigger>
           );
         })}

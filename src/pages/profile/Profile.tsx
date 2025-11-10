@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
+import userDummy from "../../../public/user1.png";
 import { getUserDetail } from "@/features/selectors/auth.selector";
-import logoImg from "@/assets/logo_1.png";
 import { capitalizeFirstLetter } from "@/features/utils/app.utils";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect } from "react";
@@ -77,7 +76,7 @@ export default function Profile() {
         <div className="w-1/3 bg-white h-auto relative text-primary flex flex-col items-center p-8">
           <div className="w-56 h-56 rounded-full overflow-hidden shadow-lg ring-4 ring-white mb-4 mt-8">
             <img
-              src={profileData?.photo ? profileData?.photo : logoImg}
+              src={profileData?.photo ? profileData?.photo : userDummy}
               alt="profile"
               className="w-full rounded-full object-contain bg-black"
             />

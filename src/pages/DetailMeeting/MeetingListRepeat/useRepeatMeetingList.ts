@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
+import { AxiosError } from "axios";
 import { useSelector } from "react-redux";
-import { DateRange } from "react-day-picker";
+import { toast } from "sonner";
+// import { DateRange } from "react-day-picker";
 
 import { useGetAllTaskStatus } from "@/features/api/companyTask";
 import { getUserPermission } from "@/features/selectors/auth.selector";
@@ -9,9 +11,7 @@ import {
   deleteRepeatMeetingMutation,
   useGetRepeatMeeting,
 } from "@/features/api/RepeatMeetingApi";
-import { toLocalISOString } from "@/pages/Meeting/useMeeting";
-import { AxiosError } from "axios";
-import { toast } from "sonner";
+// import { toLocalISOString } from "@/pages/Meeting/useMeeting";
 
 export default function useRepeatMeetingList() {
   const permission = useSelector(getUserPermission).LIVE_MEETING_TEMPLATES;
@@ -51,26 +51,26 @@ export default function useRepeatMeetingList() {
     pageSize: 25,
     search: "",
   });
-  const [taskDateRange, setTaskDateRange] = useState<{
-    taskStartDate: Date | undefined;
-    taskDeadline: Date | undefined;
-  }>({
-    taskStartDate: before14,
-    taskDeadline: after14,
-  });
-  const [appliedDateRange, setAppliedDateRange] = useState<{
-    taskStartDate: Date | undefined;
-    taskDeadline: Date | undefined;
-  }>({
-    taskStartDate: before14,
-    taskDeadline: after14,
-  });
+  // const [taskDateRange, setTaskDateRange] = useState<{
+  //   taskStartDate: Date | undefined;
+  //   taskDeadline: Date | undefined;
+  // }>({
+  //   taskStartDate: before14,
+  //   taskDeadline: after14,
+  // });
+  // const [appliedDateRange, setAppliedDateRange] = useState<{
+  //   taskStartDate: Date | undefined;
+  //   taskDeadline: Date | undefined;
+  // }>({
+  //   taskStartDate: before14,
+  //   taskDeadline: after14,
+  // });
 
   const { data: repeatMeetingData, isLoading } = useGetRepeatMeeting({
     filter: {
       ...paginationFilter,
-      startDate: toLocalISOString(appliedDateRange.taskStartDate),
-      endDate: toLocalISOString(appliedDateRange.taskDeadline),
+      // startDate: toLocalISOString(appliedDateRange.taskStartDate),
+      // endDate: toLocalISOString(appliedDateRange.taskDeadline),
     },
   });
 
@@ -172,60 +172,60 @@ export default function useRepeatMeetingList() {
     });
   };
 
-  const handleDateRangeChange: HandleDateRangeChange = (range) => {
-    // Update taskDateRange for preview
-    if (range?.from && !range?.to) {
-      const newTaskDateRange = {
-        taskStartDate: range.from,
-        taskDeadline: range.from,
-      };
-      setTaskDateRange(newTaskDateRange);
-    } else if (range?.from && range?.to) {
-      const newTaskDateRange = {
-        taskStartDate: range.from,
-        taskDeadline: range.to,
-      };
-      setTaskDateRange(newTaskDateRange);
-    } else {
-      const newTaskDateRange = {
-        taskStartDate: undefined,
-        taskDeadline: undefined,
-      };
-      setTaskDateRange(newTaskDateRange);
-    }
-  };
+  // const handleDateRangeChange: HandleDateRangeChange = (range) => {
+  //   // Update taskDateRange for preview
+  //   if (range?.from && !range?.to) {
+  //     const newTaskDateRange = {
+  //       taskStartDate: range.from,
+  //       taskDeadline: range.from,
+  //     };
+  //     setTaskDateRange(newTaskDateRange);
+  //   } else if (range?.from && range?.to) {
+  //     const newTaskDateRange = {
+  //       taskStartDate: range.from,
+  //       taskDeadline: range.to,
+  //     };
+  //     setTaskDateRange(newTaskDateRange);
+  //   } else {
+  //     const newTaskDateRange = {
+  //       taskStartDate: undefined,
+  //       taskDeadline: undefined,
+  //     };
+  //     setTaskDateRange(newTaskDateRange);
+  //   }
+  // };
 
-  const handleDateRangeApply = (range: DateRange | undefined) => {
-    // This is called when Apply button is clicked
-    if (range?.from && !range?.to) {
-      const newTaskDateRange = {
-        taskStartDate: range.from,
-        taskDeadline: range.from,
-      };
-      setTaskDateRange(newTaskDateRange);
-      setAppliedDateRange(newTaskDateRange);
-    } else if (range?.from && range?.to) {
-      const newTaskDateRange = {
-        taskStartDate: range.from,
-        taskDeadline: range.to,
-      };
-      setTaskDateRange(newTaskDateRange);
-      setAppliedDateRange(newTaskDateRange);
-    } else {
-      const newTaskDateRange = {
-        taskStartDate: undefined,
-        taskDeadline: undefined,
-      };
-      setTaskDateRange(newTaskDateRange);
-      setAppliedDateRange(newTaskDateRange);
-    }
+  // const handleDateRangeApply = (range: DateRange | undefined) => {
+  //   // This is called when Apply button is clicked
+  //   if (range?.from && !range?.to) {
+  //     const newTaskDateRange = {
+  //       taskStartDate: range.from,
+  //       taskDeadline: range.from,
+  //     };
+  //     setTaskDateRange(newTaskDateRange);
+  //     setAppliedDateRange(newTaskDateRange);
+  //   } else if (range?.from && range?.to) {
+  //     const newTaskDateRange = {
+  //       taskStartDate: range.from,
+  //       taskDeadline: range.to,
+  //     };
+  //     setTaskDateRange(newTaskDateRange);
+  //     setAppliedDateRange(newTaskDateRange);
+  //   } else {
+  //     const newTaskDateRange = {
+  //       taskStartDate: undefined,
+  //       taskDeadline: undefined,
+  //     };
+  //     setTaskDateRange(newTaskDateRange);
+  //     setAppliedDateRange(newTaskDateRange);
+  //   }
 
-    // Reset pagination to first page
-    setPaginationFilter((prev) => ({
-      ...prev,
-      currentPage: 1,
-    }));
-  };
+  //   // Reset pagination to first page
+  //   setPaginationFilter((prev) => ({
+  //     ...prev,
+  //     currentPage: 1,
+  //   }));
+  // };
 
   return {
     repeatMeetingData,
@@ -253,9 +253,9 @@ export default function useRepeatMeetingList() {
     isLoading,
     taskStatus,
     handleStopRepeat,
-    taskDateRange,
-    handleDateRangeApply,
-    handleDateRangeChange,
+    // taskDateRange,
+    // handleDateRangeApply,
+    // handleDateRangeChange,
     setIsChildDataActive,
     isChildDataActive,
     isModalOpen,

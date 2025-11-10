@@ -50,8 +50,9 @@ export const ViewProjectDocsModal: React.FC<ViewProjectDocsModalProps> = ({
     docUpload(formData, {
       onSuccess: () => {
         setDocs((prev) => prev.filter((d) => d.fileId !== fileId));
-        queryClient.resetQueries({
-          queryKey: ["get-project-by-id", modalData?.projectId],
+
+        queryClient.refetchQueries({
+          queryKey: ["get-project-list-meeting", "get-project-list"],
         });
       },
       onSettled: () => setLoadingId(null),

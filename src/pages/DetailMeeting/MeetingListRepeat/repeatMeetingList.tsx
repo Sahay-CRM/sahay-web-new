@@ -23,7 +23,7 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import PageNotAccess from "../../PageNoAccess";
-import DateRangePicker from "@/components/shared/DateRange";
+// import DateRangePicker from "@/components/shared/DateRange";
 import AddRepeatMeetingModal from "./addRepeatMeetingModal";
 // import { Trash } from "lucide-react";
 
@@ -42,9 +42,9 @@ export default function RepeatMeetingList() {
     handleRowsModalOpen,
     isLoading,
     handleStopRepeat,
-    taskDateRange,
-    handleDateRangeApply,
-    handleDateRangeChange,
+    // taskDateRange,
+    // handleDateRangeApply,
+    // handleDateRangeChange,
     isChildDataActive,
     isModalOpen,
     istemData,
@@ -123,7 +123,7 @@ export default function RepeatMeetingList() {
             />
           </div>
           <div className="flex gap-4 flex-wrap">
-            <div className="relative flex items-center gap-2 ">
+            {/* <div className="relative flex items-center gap-2 ">
               <DateRangePicker
                 value={{
                   from: taskDateRange.taskStartDate,
@@ -132,7 +132,7 @@ export default function RepeatMeetingList() {
                 onChange={handleDateRangeChange}
                 onApply={handleDateRangeApply}
               />
-            </div>
+            </div> */}
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>

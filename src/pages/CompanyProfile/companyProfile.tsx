@@ -307,49 +307,6 @@ export default function CompanyProfile() {
                       </>
                     )}
                   </div>
-                  <div className="w-1/2">
-                    {isEditing ? (
-                      <Controller
-                        control={control}
-                        name="kpiSkipDays"
-                        render={({ field }) => (
-                          <FormSelect
-                            label="Company Skip Days"
-                            value={field.value}
-                            onChange={field.onChange}
-                            options={skipDaysOption}
-                            error={errors.kpiSkipDays}
-                            className="rounded-md"
-                            triggerClassName="py-4"
-                            isMulti
-                          />
-                        )}
-                      />
-                    ) : (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Company Skip Days
-                        </label>
-                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                          {companyData.kpiSkipDays &&
-                            (typeof companyData.kpiSkipDays === "string"
-                              ? companyData.kpiSkipDays.split(",")
-                              : companyData.kpiSkipDays
-                            )
-                              .map(
-                                (dayValue: string) =>
-                                  skipDaysOption.find(
-                                    (opt) => opt.value === dayValue,
-                                  )?.label,
-                              )
-                              .filter((label): label is string =>
-                                Boolean(label),
-                              )
-                              .join(", ")}
-                        </p>
-                      </div>
-                    )}
-                  </div>
                 </div>
                 {/* <div className="w-1/2">
                   {isEditing ? (
