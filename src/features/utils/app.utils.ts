@@ -240,3 +240,65 @@ export const formatToLocalDateTimeIntl = (dateString: string) => {
     hour12: true,
   }).format(date);
 };
+
+/**
+ * Safely update only the time part of a date string
+ * Works with "08/12/2025 03:40 pm" or "2025-12-08T15:40:00Z"
+ */
+export function updateDateTime(
+  dateTimeStr?: string,
+  newTimeStr?: string,
+): string {
+  if (!dateTimeStr || !newTimeStr) return "";
+
+  let dateObj: Date | null = null;
+
+  // Try to parse ISO or native JS format first
+  const isoDate = new Date(dateTimeStr);
+  // console.log(!isNaN(isoDate.getTime()), isoDate);
+  if (!isNaN(isoDate.getTime())) {
+    dateObj = isoDate;
+  } else {
+    const [datePart, timePart, meridiem] = dateTimeStr.split(" ");
+    if (!datePart) return "";
+    const [day, month, year] = datePart.split("/").map(Number);
+    let hours = 0;
+    let minutes = 0;
+    if (timePart) {
+      [hours, minutes] = timePart.split(":").map(Number);
+      if (meridiem?.toLowerCase() === "pm" && hours < 12) hours += 12;
+      if (meridiem?.toLowerCase() === "am" && hours === 12) hours = 0;
+    }
+    dateObj = new Date(year, month - 1, day, hours, minutes);
+  }
+
+  if (!dateObj || isNaN(dateObj.getTime())) return "";
+
+  // Parse new time (24-hour)
+  const [hour, minute] = newTimeStr.split(":").map(Number);
+  dateObj.setHours(hour, minute, 0, 0);
+
+  // Return in same readable format
+  return dateObj
+    .toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
+    .replace(",", "");
+}
+
+export function formatTo12Hour(time24: string): string {
+  if (!time24) return "";
+  const [hourStr, minuteStr] = time24.split(":");
+  let hour = parseInt(hourStr, 10);
+  const minute = parseInt(minuteStr, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12;
+  return `${hour.toString().padStart(2, "0")}:${minute
+    .toString()
+    .padStart(2, "0")} ${ampm}`;
+}

@@ -38,7 +38,10 @@ import {
   getNextRepeatDates,
   getNextRepeatDatesCustom,
 } from "@/features/utils/nextDate.utils";
-import { formatToLocalDateTime } from "@/features/utils/app.utils";
+import {
+  formatToLocalDateTime,
+  updateDateTime,
+} from "@/features/utils/app.utils";
 import { useParams } from "react-router-dom";
 interface MeetingData {
   meetingName?: string;
@@ -176,12 +179,11 @@ const MeetingInfo = () => {
     createDateUTC: string;
     nextDateUTC: string;
   } | null>(null);
+  const [isRepeatChange, setIsRepeatChange] = useState(false);
 
   const prevCustomDataRef = useRef(CustomRepeatData);
-  // Track initial custom repeat from API once
   const initialCustomRef = useRef(meetingApiData?.customObj);
 
-  // 🔹 CUSTOMTYPE logic
   useEffect(() => {
     if (selectedRepeat === "CUSTOMTYPE" && CustomRepeatData && repeatTime) {
       const hasCustomChanged =
@@ -202,9 +204,13 @@ const MeetingInfo = () => {
       );
       setRepeatResult(result);
     }
-  }, [selectedRepeat, CustomRepeatData, repeatTime]);
+  }, [
+    selectedRepeat,
+    CustomRepeatData,
+    repeatTime,
+    meetingApiData?.repeatTime,
+  ]);
 
-  // 🔹 NORMAL repeat types logic
   useEffect(() => {
     if (selectedRepeat && selectedRepeat !== "CUSTOMTYPE" && repeatTime) {
       const hasChanged =
@@ -219,7 +225,12 @@ const MeetingInfo = () => {
       const result = getNextRepeatDates(selectedRepeat, repeatTime, timezone);
       setRepeatResult(result);
     }
-  }, [selectedRepeat, repeatTime]);
+  }, [
+    selectedRepeat,
+    repeatTime,
+    meetingApiData?.repeatType,
+    meetingApiData?.repeatTime,
+  ]);
 
   // 🧠 Update form values when result changes
   useEffect(() => {
@@ -228,6 +239,10 @@ const MeetingInfo = () => {
       setValue("nextDateUTC", repeatResult.nextDateUTC);
     }
   }, [repeatResult, setValue]);
+
+  const oldDate = meetingApiData?.nextDate
+    ? updateDateTime(meetingApiData.nextDate, repeatTime)
+    : "";
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -248,7 +263,6 @@ const MeetingInfo = () => {
           isMandatory
         />
 
-        {/* 🔁 Repetition Selector */}
         <Controller
           control={control}
           name="repeatType"
@@ -258,7 +272,6 @@ const MeetingInfo = () => {
               repeatOptions.find((item) => item.value === selectedRepeat)
                 ?.label ||
               (selectedRepeat === "CUSTOMTYPE" ? "Custom" : "Repeat");
-            console.log(selectedRepeatLabel, repeatOptions, field.value);
 
             return (
               <div className="flex flex-col space-y-1">
@@ -298,6 +311,7 @@ const MeetingInfo = () => {
                               setValue("repeatType", item.value);
                               setValue("customObj", undefined);
                               setCustomRepeatData(undefined);
+                              setIsRepeatChange(true);
                             }
                           }}
                           className={`flex items-center justify-between ${
@@ -333,6 +347,7 @@ const MeetingInfo = () => {
                     setValue("repeatType", "CUSTOMTYPE");
                     setValue("customObj", data);
                     saveCustomRepeatData(data);
+                    setIsRepeatChange(true);
                   }}
                 />
               </div>
@@ -356,9 +371,7 @@ const MeetingInfo = () => {
           )}
         />
 
-        {/* 📅 Show dates */}
-        {hasUserChangedRepeat && repeatResult ? (
-          // ✅ Only show when user has changed repeat/time/custom data
+        {hasUserChangedRepeat && repeatResult && isRepeatChange ? (
           <div className="flex gap-2 text-sm text-gray-700 col-span-2">
             <p>
               <strong>Create First Meeting:</strong>{" "}
@@ -370,11 +383,9 @@ const MeetingInfo = () => {
             </p>
           </div>
         ) : meetingApiData?.nextDate ? (
-          // ✅ Otherwise show only existing meeting info from API
           <div className="flex gap-2 text-sm text-gray-700 col-span-2">
             <p>
-              <strong>Next Meeting:</strong>{" "}
-              {formatToLocalDateTime(meetingApiData.nextDate)}
+              <strong>Next Meeting:</strong> {oldDate}
             </p>
           </div>
         ) : null}

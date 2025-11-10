@@ -1,5 +1,8 @@
 import ModalData from "@/components/shared/Modal/ModalData";
-import { formatToLocalDateTime } from "@/features/utils/app.utils";
+import {
+  formatTo12Hour,
+  formatToLocalDateTime,
+} from "@/features/utils/app.utils";
 
 export interface MeetingType {
   meetingTypeId: string;
@@ -127,7 +130,7 @@ const AddRepeatMeetingModal: React.FC<MeetingModalProps> = ({
         {modalData?.repeatTime && (
           <div>
             <span className="font-medium text-primary">Repeat Time: </span>
-            {modalData.repeatTime}
+            {formatTo12Hour(modalData.repeatTime)}
           </div>
         )}
         {/* Employee List */}

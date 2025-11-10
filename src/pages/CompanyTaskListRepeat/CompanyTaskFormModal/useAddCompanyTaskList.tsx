@@ -43,7 +43,10 @@ import {
   getNextRepeatDates,
   getNextRepeatDatesCustom,
 } from "@/features/utils/nextDate.utils";
-import { formatToLocalDateTime } from "@/features/utils/app.utils";
+import {
+  formatToLocalDateTime,
+  updateDateTime,
+} from "@/features/utils/app.utils";
 
 export default function useAddEmployee() {
   const { id: repetitiveTaskId } = useParams<{ id?: string }>();
@@ -459,6 +462,7 @@ export default function useAddEmployee() {
     const [openCustomModal, setOpenCustomModal] = useState(false);
     const [isTypeSearch, setIsTypeSearch] = useState("");
     const [hasUserChangedRepeat, setHasUserChangedRepeat] = useState(false);
+    const [isRepeatChange, setIsRepeatChange] = useState(false);
 
     const repeatTime = watch("repeatTime");
     const { data: taskTypeData } = useDdTaskType({
@@ -511,9 +515,8 @@ export default function useAddEmployee() {
         );
         setRepeatResult(result);
       }
-    }, [selectedRepeat, CustomRepeatData, repeatTime]);
+    }, [repeatTime]);
 
-    // 🔹 NORMAL repeat types logic
     useEffect(() => {
       if (selectedRepeat && selectedRepeat !== "CUSTOMTYPE" && repeatTime) {
         const hasChanged =
@@ -528,7 +531,7 @@ export default function useAddEmployee() {
         const result = getNextRepeatDates(selectedRepeat, repeatTime, timezone);
         setRepeatResult(result);
       }
-    }, [selectedRepeat, repeatTime]);
+    }, [repeatTime]);
 
     useEffect(() => {
       if (repeatResult) {
@@ -536,6 +539,11 @@ export default function useAddEmployee() {
         setValue("nextDateUTC", repeatResult.nextDateUTC);
       }
     }, [repeatResult]);
+
+    const oldDate = taskDataById?.data?.nextDate
+      ? updateDateTime(taskDataById.data.nextDate, repeatTime)
+      : "";
+
     return (
       <div className="grid mb-10 grid-cols-2 gap-4">
         <Card className="col-span-2 mt-4 px-4 py-4 grid grid-cols-2 gap-4">
@@ -640,6 +648,7 @@ export default function useAddEmployee() {
                                   setSelectedRepeat(item.value);
                                   setValue("customObj", undefined);
                                   setCustomRepeatData(undefined);
+                                  setIsRepeatChange(true);
                                 }
                               }}
                               className={`flex items-center justify-between ${
@@ -670,6 +679,7 @@ export default function useAddEmployee() {
                         setSelectedRepeat("CUSTOMTYPE");
                         setValue("customObj", data);
                         handleSaveCustomRepeatData(data);
+                        setIsRepeatChange(true);
                       }}
                     />
 
@@ -678,7 +688,7 @@ export default function useAddEmployee() {
                         {errors.repeatType.message as string}
                       </p>
                     )}
-                    {hasUserChangedRepeat && repeatResult ? (
+                    {hasUserChangedRepeat && repeatResult && isRepeatChange ? (
                       // ✅ Only show when user has changed repeat/time/custom data
                       <div className="flex gap-2 text-sm text-gray-700 col-span-2">
                         <p>
@@ -694,8 +704,7 @@ export default function useAddEmployee() {
                       // ✅ Otherwise show only existing meeting info from API
                       <div className="flex gap-2 text-sm text-gray-700 col-span-2">
                         <p>
-                          <strong>Next Meeting:</strong>{" "}
-                          {formatToLocalDateTime(taskdata.nextDate)}
+                          <strong>Next Meeting:</strong> {oldDate}
                         </p>
                       </div>
                     ) : null}

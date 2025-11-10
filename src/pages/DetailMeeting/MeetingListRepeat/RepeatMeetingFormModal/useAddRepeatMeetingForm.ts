@@ -115,9 +115,6 @@ export default function useAddRepeatMeetingForm() {
           isActive: true,
         };
 
-    // console.log(payload,"payload");
-
-    // return;
     addDetailMeeting(payload, {
       onSuccess: () => {
         queryClient.resetQueries({ queryKey: ["get-detail-meeting-list"] });
