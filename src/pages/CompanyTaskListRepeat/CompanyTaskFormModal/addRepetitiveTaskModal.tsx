@@ -1,6 +1,8 @@
 import ModalData from "@/components/shared/Modal/ModalData";
-import { formatToLocalDateTime } from "@/features/utils/app.utils";
-import { format } from "date-fns";
+import {
+  formatTo12Hour,
+  formatToLocalDateTime,
+} from "@/features/utils/app.utils";
 
 interface DatapointModalProps {
   modalData: TaskPreviewData;
@@ -105,9 +107,7 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
         </div>
         <div>
           <span className="font-medium text-primary">Repeat Time:</span>{" "}
-          {modalData.repeatTime
-            ? format(new Date(`1970-01-01T${modalData.repeatTime}`), "h:mm aa")
-            : "-"}
+          {modalData.repeatTime ? formatTo12Hour(modalData.repeatTime) : "-"}
         </div>
         {modalData?.createDateUTC && (
           <div>

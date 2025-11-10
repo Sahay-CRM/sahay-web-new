@@ -385,7 +385,7 @@ const MeetingInfo = () => {
         ) : meetingApiData?.nextDate ? (
           <div className="flex gap-2 text-sm text-gray-700 col-span-2">
             <p>
-              <strong>Next Meeting:</strong> {formatToLocalDateTime(oldDate)}
+              <strong>Next Meeting:</strong> {oldDate}
             </p>
           </div>
         ) : null}

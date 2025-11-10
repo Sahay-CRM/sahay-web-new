@@ -255,10 +255,10 @@ export function updateDateTime(
 
   // Try to parse ISO or native JS format first
   const isoDate = new Date(dateTimeStr);
+  // console.log(!isNaN(isoDate.getTime()), isoDate);
   if (!isNaN(isoDate.getTime())) {
     dateObj = isoDate;
   } else {
-    // Fallback: manually parse "DD/MM/YYYY hh:mm a"
     const [datePart, timePart, meridiem] = dateTimeStr.split(" ");
     if (!datePart) return "";
     const [day, month, year] = datePart.split("/").map(Number);
