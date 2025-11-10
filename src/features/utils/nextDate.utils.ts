@@ -198,17 +198,17 @@ export function getNextRepeatDates(
 
   return { createDateUTC, nextDateUTC };
 }
-
 export function getNextRepeatDatesCustom(
   repeatType: RepeatType,
   timeOrNextDate: string,
   custom: CustomRepeatConfig,
-) {
-  if (repeatType !== "CUSTOMTYPE")
+): RepeatDatesResult {
+  if (repeatType !== "CUSTOMTYPE") {
     throw new Error("repeatType must be CUSTOMTYPE");
-  if (!timeOrNextDate)
+  }
+  if (!timeOrNextDate) {
     throw new Error("Either time or nextDate must be provided");
-
+  }
   const {
     frequency,
     interval = 1,
@@ -340,82 +340,41 @@ export function getNextRepeatDatesCustom(
         .add(interval, "months")
         .date(clampToEndOfMonth(m.clone().add(interval, "months"), d));
     } else if (weekPatterns?.length) {
-      // const baseWeek = Math.ceil(baseTz.date() / 7);
-      // const baseDay = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][
-      //   baseTz.day()
-      // ];
+      const { week, day } = weekPatterns[0];
+      let candidate = findWeekday(m.clone(), week, day);
+      const baseWeek = Math.ceil(baseTz.date() / 7);
+      const baseDay = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][
+        baseTz.day()
+      ];
 
-      // Find all candidate dates for current month
-      const currentMonthCandidates = weekPatterns.map(({ week, day }) => {
-        return findWeekday(m.clone(), week, day)
-          .set({ hour, minute, second: 0 })
-          .utc();
-      });
-
-      // Find all candidate dates for next month
-      const nextMonthCandidates = weekPatterns.map(({ week, day }) => {
-        return findWeekday(m.clone().add(interval, "months"), week, day)
-          .set({ hour, minute, second: 0 })
-          .utc();
-      });
-
-      // Combine and sort all candidates
-      const allCandidates = [...currentMonthCandidates, ...nextMonthCandidates]
-        .filter(
-          (candidate) => candidate.isAfter(baseTz) || candidate.isSame(baseTz),
-        )
-        .sort((a, b) => a.valueOf() - b.valueOf());
-
-      // Find the nearest future dates
-      let createDate = baseMomentUTC.clone();
-      let nextDate = null;
-
-      if (allCandidates.length >= 2) {
-        createDate = allCandidates[0];
-        nextDate = allCandidates[1];
-      } else if (allCandidates.length === 1) {
-        createDate = allCandidates[0];
-        // For next date, look further into future months
-        const futureCandidates = [];
-        for (let i = 1; i <= 2; i++) {
-          const futureMonthCandidates = weekPatterns.map(({ week, day }) => {
-            return findWeekday(m.clone().add(interval * i, "months"), week, day)
-              .set({ hour, minute, second: 0 })
-              .utc();
-          });
-          futureCandidates.push(...futureMonthCandidates);
+      if (!(baseWeek === week && baseDay === day)) {
+        if (candidate.isBefore(baseTz)) {
+          candidate = findWeekday(m.clone().add(interval, "months"), week, day);
         }
-        futureCandidates.sort((a, b) => a.valueOf() - b.valueOf());
-        nextDate = futureCandidates.find((candidate) =>
-          candidate.isAfter(createDate),
-        );
-      } else {
-        // No future candidates found, use fallback
-        const fallbackDate = findWeekday(
-          m.clone(),
-          weekPatterns[0].week,
-          weekPatterns[0].day,
-        )
-          .set({ hour, minute, second: 0 })
-          .utc();
-        createDate = fallbackDate;
-        nextDate = findWeekday(
-          m.clone().add(interval, "months"),
-          weekPatterns[0].week,
-          weekPatterns[0].day,
-        )
-          .set({ hour, minute, second: 0 })
-          .utc();
       }
+
+      createDate = candidate.clone().set({ hour, minute, second: 0 }).utc();
+      const nextCandidate = findWeekday(
+        candidate.clone().add(interval, "months"),
+        week,
+        day,
+      );
+      nextDate = nextCandidate.clone().set({ hour, minute, second: 0 }).utc();
 
       return {
         createDateUTC: createDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
-        nextDateUTC: nextDate?.format("YYYY-MM-DDTHH:mm:ss[Z]"),
+        nextDateUTC: nextDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
       };
     } else if (endOfMonth) {
-      if (m.endOf("month").isBefore(baseTz)) m = m.add(interval, "months");
-      m = m.endOf("month");
-      nextM = m.clone().add(interval, "months").endOf("month");
+      if (m.clone().endOf("month").isBefore(baseTz))
+        m = m.add(interval, "months");
+      const endOfMonthDate = m.clone().endOf("month").date();
+      m.date(endOfMonthDate).set({ hour, minute, second: 0, millisecond: 0 });
+      nextM = m
+        .clone()
+        .add(interval, "months")
+        .endOf("month")
+        .set({ hour, minute, second: 0, millisecond: 0 });
     }
 
     createDate = m.clone().utc();
@@ -423,32 +382,166 @@ export function getNextRepeatDatesCustom(
 
     // -------------------- YEARLY --------------------
   } else if (frequency === "YEARLY") {
+    // Normalize month string (allow "NOV", "Nov", "November")
     let monthIdx;
     if (typeof month === "string") {
-      monthIdx = moment().month(month).month();
+      let monthStr = month;
+      if (monthStr.length === 3) {
+        monthStr =
+          monthStr.charAt(0).toUpperCase() + monthStr.slice(1).toLowerCase(); // "NOV" -> "Nov"
+      }
+      // moment accepts full or short month names
+      monthIdx = moment().month(monthStr).month();
+      if (isNaN(monthIdx)) {
+        // fallback -> use baseTz month
+        monthIdx = baseTz.month();
+      }
     } else if (typeof month === "number") {
       monthIdx = month;
     } else {
       monthIdx = baseTz.month();
     }
 
-    let m = baseTz
-      .clone()
-      .month(monthIdx)
-      .set({ hour, minute, second: 0, millisecond: 0 });
+    // If weekPatterns provided, compute using findWeekday for this month/year.
+    if (weekPatterns?.length) {
+      // Build candidate dates for current year and future years (up to interval*2 years to find next)
+      const yearCandidates: moment.Moment[] = [];
 
-    const targetDate = date ?? (dates?.length ? dates[0] : null);
+      // Start from base year, and search forward until we have at least two candidate dates
+      let searchYears = 0;
+      const searchYearStart = baseTz.year();
+      while (yearCandidates.length < 2 && searchYears <= interval + 2) {
+        const y = searchYearStart + searchYears;
+        const mForYear = baseTz.clone().year(y).month(monthIdx).set({
+          hour,
+          minute,
+          second: 0,
+          millisecond: 0,
+        });
 
-    if (targetDate) {
-      const day = clampToEndOfMonth(m, targetDate);
-      m.date(day);
-      if (m.isBefore(baseTz)) m = m.add(interval, "years");
+        weekPatterns.forEach(({ week, day }) => {
+          const candidate = findWeekday(mForYear.clone(), week, day).set({
+            hour,
+            minute,
+            second: 0,
+            millisecond: 0,
+          });
+          // convert to same tz base for comparison
+          // const candidateTz = candidate.clone().tz(timezone);
+          // Only include if candidate is on/after baseTz (for same year), or if in future year
+          if (
+            candidate.isAfter(baseTz) ||
+            candidate.isSame(baseTz) ||
+            y > baseTz.year()
+          ) {
+            yearCandidates.push(candidate.clone().utc());
+          }
+        });
 
-      createDate = m.clone().utc();
-      nextDate = m.clone().add(interval, "years").utc();
+        searchYears++;
+      }
+
+      yearCandidates.sort((a, b) => a.valueOf() - b.valueOf());
+
+      // If first candidate is before baseTz (rare given filter), advance by interval years
+      let c = yearCandidates.find(
+        (c) => c.isSameOrAfter(baseTz) || c.isAfter(baseTz),
+      );
+
+      if (!c && yearCandidates.length) c = yearCandidates[0];
+
+      const idxOfC = yearCandidates.indexOf(c!);
+      const n = yearCandidates[idxOfC + 1] || null;
+
+      // If still not found, fallback: use first weekPattern in future years
+      if (!c) {
+        const fallbackThisYear = findWeekday(
+          baseTz.clone().year(baseTz.year()).month(monthIdx),
+          weekPatterns[0].week,
+          weekPatterns[0].day,
+        )
+          .set({ hour, minute, second: 0 })
+          .utc();
+        const fallbackNextYear = findWeekday(
+          baseTz
+            .clone()
+            .year(baseTz.year() + interval)
+            .month(monthIdx),
+          weekPatterns[0].week,
+          weekPatterns[0].day,
+        )
+          .set({ hour, minute, second: 0 })
+          .utc();
+        createDate = fallbackThisYear;
+        nextDate = fallbackNextYear;
+      } else {
+        createDate = c.clone().utc();
+        nextDate = n
+          ? n.clone().utc()
+          : createDate.clone().add(interval, "years").utc();
+      }
     } else {
-      createDate = m.clone().utc();
-      nextDate = createDate.clone().add(interval, "years").utc();
+      let m = baseTz
+        .clone()
+        .month(monthIdx)
+        .set({ hour, minute, second: 0, millisecond: 0 });
+
+      if (dates?.length) {
+        const sortedDates = [...dates].sort((a, b) => a - b);
+
+        // Find the next date in the list that’s on/after today
+        const futureCandidate = sortedDates.find((d) => {
+          const day = clampToEndOfMonth(m, d);
+          const candidate = m.clone().date(day);
+          return candidate.isSameOrAfter(baseTz);
+        });
+
+        let createMoment;
+        if (futureCandidate) {
+          createMoment = m.clone().date(futureCandidate);
+        } else {
+          // All listed dates have passed → use the first date in the next year
+          createMoment = m
+            .clone()
+            .add(interval, "years")
+            .date(
+              clampToEndOfMonth(
+                m.clone().add(interval, "years"),
+                sortedDates[0],
+              ),
+            );
+        }
+
+        // Determine the "next" date in sequence
+        const idx = sortedDates.indexOf(futureCandidate ?? sortedDates[0]);
+        const nextIdx = (idx + 1) % sortedDates.length;
+        const nextMoment =
+          nextIdx > idx
+            ? m.clone().date(sortedDates[nextIdx])
+            : m
+                .clone()
+                .add(interval, "years")
+                .date(
+                  clampToEndOfMonth(
+                    m.clone().add(interval, "years"),
+                    sortedDates[nextIdx],
+                  ),
+                );
+
+        createDate = createMoment.clone().utc();
+        nextDate = nextMoment.clone().utc();
+      } else if (date) {
+        const day = clampToEndOfMonth(m, date);
+        m.date(day);
+        if (m.isBefore(baseTz)) m = m.add(interval, "years");
+
+        createDate = m.clone().utc();
+        nextDate = m.clone().add(interval, "years").utc();
+      } else {
+        if (m.isBefore(baseTz)) m = m.add(interval, "years");
+        createDate = m.clone().utc();
+        nextDate = createDate.clone().add(interval, "years").utc();
+      }
     }
   } else {
     throw new Error("Unsupported frequency type in custom object");
@@ -456,6 +549,6 @@ export function getNextRepeatDatesCustom(
 
   return {
     createDateUTC: createDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
-    nextDateUTC: nextDate ? nextDate.format("YYYY-MM-DDTHH:mm:ss[Z]") : null,
+    nextDateUTC: nextDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
   };
 }

@@ -162,6 +162,7 @@ const MeetingInfo = () => {
   } = useAddRepeatMeetingForm();
 
   const repeatTime = watch("repeatTime");
+  console.log(repeatTime, "repeatTime");
 
   const repeatOptions = buildRepetitionOptionsREPT(new Date());
   const [openCustomModal, setOpenCustomModal] = useState(false);
@@ -170,7 +171,6 @@ const MeetingInfo = () => {
     createDateUTC: string;
     nextDateUTC: string;
   } | null>(null);
-  console.log(repeatResult, "repeatResult");
 
   const selectedRepeat = watch("repeatType");
 
@@ -183,50 +183,11 @@ const MeetingInfo = () => {
       CustomRepeatData &&
       repeatTime // ← Only when user selected time
     ) {
-      const hasCustomChanged =
-        JSON.stringify(prevCustomDataRef.current) !==
-        JSON.stringify(CustomRepeatData);
-
       prevCustomDataRef.current = CustomRepeatData;
-
-      const shouldUseNextDate = !hasCustomChanged;
-
-      let effectiveTime: string = "";
-
-      if (shouldUseNextDate && meetingApiData?.nextDate) {
-        const nextDateObj = new Date(meetingApiData.nextDate);
-
-        if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(repeatTime)) {
-          const [h, m, s = "0"] = repeatTime.split(":");
-          nextDateObj.setHours(+h, +m, +s, 0);
-          effectiveTime = nextDateObj.toISOString();
-        } else {
-          const repeatTimeObj = new Date(repeatTime);
-          if (!isNaN(repeatTimeObj.getTime())) {
-            nextDateObj.setHours(
-              repeatTimeObj.getHours(),
-              repeatTimeObj.getMinutes(),
-              repeatTimeObj.getSeconds(),
-              repeatTimeObj.getMilliseconds(),
-            );
-            effectiveTime = nextDateObj.toISOString();
-          }
-        }
-      } else {
-        // ✅ Custom changed — ignore nextDate
-        if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(repeatTime)) {
-          const now = new Date();
-          const [h, m, s = "0"] = repeatTime.split(":");
-          now.setHours(+h, +m, +s, 0);
-          effectiveTime = now.toISOString();
-        } else {
-          effectiveTime = new Date(repeatTime).toISOString();
-        }
-      }
 
       const result = getNextRepeatDatesCustom(
         "CUSTOMTYPE",
-        effectiveTime,
+        repeatTime,
         CustomRepeatData as CustomRepeatConfig,
       );
       setRepeatResult(result);
@@ -241,50 +202,7 @@ const MeetingInfo = () => {
     ) {
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-      // ✅ If user changed repeat type (or switched from custom to standard), ignore nextDate
-      const hasRepeatTypeChanged =
-        meetingApiData?.repeatType &&
-        meetingApiData.repeatType !== selectedRepeat;
-
-      let effectiveTime: string = "";
-
-      // ✅ Only use nextDate if same repeat type
-      if (!hasRepeatTypeChanged && meetingApiData?.nextDate) {
-        const nextDateObj = new Date(meetingApiData.nextDate);
-
-        if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(repeatTime)) {
-          const [h, m, s = "0"] = repeatTime.split(":");
-          nextDateObj.setHours(+h, +m, +s, 0);
-          effectiveTime = nextDateObj.toISOString();
-        } else {
-          const repeatTimeObj = new Date(repeatTime);
-          if (!isNaN(repeatTimeObj.getTime())) {
-            nextDateObj.setHours(
-              repeatTimeObj.getHours(),
-              repeatTimeObj.getMinutes(),
-              repeatTimeObj.getSeconds(),
-              repeatTimeObj.getMilliseconds(),
-            );
-            effectiveTime = nextDateObj.toISOString();
-          }
-        }
-      } else {
-        // ✅ Ignore nextDate if repeat type changed or not available
-        if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(repeatTime)) {
-          const now = new Date();
-          const [h, m, s = "0"] = repeatTime.split(":");
-          now.setHours(+h, +m, +s, 0);
-          effectiveTime = now.toISOString();
-        } else {
-          effectiveTime = new Date(repeatTime).toISOString();
-        }
-      }
-
-      const result = getNextRepeatDates(
-        selectedRepeat,
-        effectiveTime,
-        timezone,
-      );
+      const result = getNextRepeatDates(selectedRepeat, repeatTime, timezone);
       setRepeatResult(result);
     }
   }, [
@@ -294,7 +212,6 @@ const MeetingInfo = () => {
     meetingApiData?.repeatType,
   ]);
 
-  // ✅ Store repeatResult inside hook form
   useEffect(() => {
     if (repeatResult) {
       setValue("createDateUTC", repeatResult.createDateUTC);

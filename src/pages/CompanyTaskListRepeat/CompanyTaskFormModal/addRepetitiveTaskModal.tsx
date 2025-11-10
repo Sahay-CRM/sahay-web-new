@@ -1,4 +1,5 @@
 import ModalData from "@/components/shared/Modal/ModalData";
+import { formatToLocalDateTime } from "@/features/utils/app.utils";
 import { format } from "date-fns";
 
 interface DatapointModalProps {
@@ -58,13 +59,6 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
                 isLoading: isLoading,
               },
             ]),
-
-        // {
-        //   btnText: "Submit",
-        //   buttonCss: "py-1.5 px-5",
-        //   btnClick: onSubmit,
-        //   isLoading: isLoading,
-        // },
       ]}
     >
       <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-700">
@@ -95,7 +89,7 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
               ? new Date(modalData.taskStartDate).toLocaleString()
               : "-"}
           </span>
-        </div> */}
+        </div>
         {modalData.taskDeadline && (
           <div>
             <span className="font-medium text-gray-700">Deadline:</span>{" "}
@@ -103,7 +97,7 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
               {format(new Date(modalData.taskDeadline), "dd/MM/yyyy h:mm aa")}
             </span>
           </div>
-        )}
+        )} */}
 
         <div>
           <span className="font-medium text-primary">Repeat Type:</span>{" "}
@@ -111,22 +105,24 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
         </div>
         <div>
           <span className="font-medium text-primary">Repeat Time:</span>{" "}
-          {modalData.repeatTime || "-"}
+          {modalData.repeatTime
+            ? format(new Date(`1970-01-01T${modalData.repeatTime}`), "h:mm aa")
+            : "-"}
         </div>
-
-        {/* <div>
-          <span className="font-medium text-gray-700">Task Status ID:</span>{" "}
-          <span className="text-black font-bold">
-            {modalData.taskStatusId || "-"}
-          </span>
-        </div>
-
-        <div>
-          <span className="font-medium text-gray-700">Task Type ID:</span>{" "}
-          <span className="text-black font-bold">
-            {modalData.taskTypeId || "-"}
-          </span>
-        </div> */}
+        {modalData?.createDateUTC && (
+          <div>
+            <span className="font-medium text-primary">First Task: </span>
+            {/* <span className="text-black font-bold"> */}
+            {formatToLocalDateTime(modalData.createDateUTC)}
+            {/* </span> */}
+          </div>
+        )}
+        {modalData?.nextDateUTC && (
+          <div>
+            <span className="font-medium text-primary">Next Task: </span>
+            {formatToLocalDateTime(modalData.nextDateUTC)}
+          </div>
+        )}
 
         <div className="col-span-2">
           <span className="font-medium text-primary">Assigned Users:</span>{" "}

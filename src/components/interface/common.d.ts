@@ -1608,4 +1608,6 @@ interface TaskPreviewData {
   taskTypeId?: string;
   comment?: string;
   taskDeadline: string;
+  createDateUTC?: string;
+  nextDateUTC?: string;
 }

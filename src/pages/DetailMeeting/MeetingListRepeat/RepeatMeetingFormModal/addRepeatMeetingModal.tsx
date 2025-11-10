@@ -1,4 +1,5 @@
 import ModalData from "@/components/shared/Modal/ModalData";
+import { formatToLocalDateTime } from "@/features/utils/app.utils";
 
 export interface MeetingType {
   meetingTypeId: string;
@@ -13,6 +14,8 @@ export interface MeetingData {
   repeatTime?: string;
   employeeId?: Employee[];
   repetitiveMeetingId?: string;
+  createDateUTC?: string;
+  nextDateUTC?: string;
 }
 
 interface MeetingModalProps {
@@ -36,8 +39,6 @@ const AddRepeatMeetingModal: React.FC<MeetingModalProps> = ({
   onKeepAll,
   onDeleteAll,
 }) => {
-  console.log(modalData, "modal");
-
   return (
     <ModalData
       isModalOpen={isModalOpen}
@@ -109,6 +110,19 @@ const AddRepeatMeetingModal: React.FC<MeetingModalProps> = ({
           </div>
         )}
 
+        {modalData?.createDateUTC && (
+          <div>
+            <span className="font-medium text-primary">First Meeting: </span>
+            {formatToLocalDateTime(modalData.createDateUTC)}
+          </div>
+        )}
+        {modalData?.nextDateUTC && (
+          <div>
+            <span className="font-medium text-primary">Next Meeting:: </span>
+            {formatToLocalDateTime(modalData.nextDateUTC)}
+          </div>
+        )}
+
         {/* Repeat Time */}
         {modalData?.repeatTime && (
           <div>
@@ -116,7 +130,6 @@ const AddRepeatMeetingModal: React.FC<MeetingModalProps> = ({
             {modalData.repeatTime}
           </div>
         )}
-
         {/* Employee List */}
         {Array.isArray(modalData?.employeeId) &&
           modalData.employeeId.length > 0 && (
