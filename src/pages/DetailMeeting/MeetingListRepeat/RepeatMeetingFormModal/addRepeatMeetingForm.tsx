@@ -39,6 +39,7 @@ import {
   getNextRepeatDatesCustom,
 } from "@/features/utils/nextDate.utils";
 import { formatToLocalDateTime } from "@/features/utils/app.utils";
+import { useParams } from "react-router-dom";
 interface MeetingData {
   meetingName?: string;
   meetingDescription?: string;
@@ -152,6 +153,8 @@ const MeetingInfo = () => {
     setValue,
   } = useFormContext();
 
+  const { id: repetitiveMeetingId } = useParams();
+
   const {
     meetingApiData,
     saveCustomRepeatData,
@@ -161,8 +164,11 @@ const MeetingInfo = () => {
 
   const repeatTime = watch("repeatTime");
   const selectedRepeat = watch("repeatType");
+  const nextDate = watch("nextDate");
 
-  const repeatOptions = buildRepetitionOptionsREPT(new Date());
+  const repeatOptions = buildRepetitionOptionsREPT(
+    repetitiveMeetingId ? nextDate : new Date(),
+  );
   const [openCustomModal, setOpenCustomModal] = useState(false);
   const [hasUserChangedRepeat, setHasUserChangedRepeat] = useState(false);
 
@@ -252,6 +258,8 @@ const MeetingInfo = () => {
               repeatOptions.find((item) => item.value === selectedRepeat)
                 ?.label ||
               (selectedRepeat === "CUSTOMTYPE" ? "Custom" : "Repeat");
+            console.log(selectedRepeatLabel, repeatOptions, field.value);
+
             return (
               <div className="flex flex-col space-y-1">
                 <FormLabel className="flex items-center">

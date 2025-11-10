@@ -54,6 +54,7 @@ export default function useAddRepeatMeetingForm() {
         repeatType: data.repeatType,
         customObj: data.customObj,
         isActive: data.isActive,
+        nextDate: data.nextDate,
       });
       if (data.customObj) {
         setCustomRepeatData(data.customObj);
