@@ -61,8 +61,8 @@ export function FormTimePicker({
           showTimeSelectOnly
           timeIntervals={5}
           timeCaption="Time"
-          dateFormat="HH:mm"
-          timeFormat="HH:mm"
+          dateFormat="hh:mm aa"
+          timeFormat="hh:mm aa"
           placeholderText="Select time"
           popperClassName="z-50"
           popperPlacement="bottom-start"
