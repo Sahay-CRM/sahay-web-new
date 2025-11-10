@@ -55,6 +55,7 @@ const AddGraph = lazy(() => import("../pages/homePage"));
 
 const Brand = lazy(() => import("../pages/Brand"));
 const Product = lazy(() => import("../pages/Product"));
+const Updates = lazy(() => import("../pages/Design/Updates"));
 
 const CompanyProfile = lazy(() => import("../pages/CompanyProfile"));
 
@@ -92,6 +93,12 @@ const RepeatTaskToDoList = lazy(() => import("../pages/RepeatTaskToDo"));
 
 const Request = lazy(() => import("../pages/Request"));
 
+// const AddCompanyTaskListRepeat = lazy(
+//   () =>
+//     import(
+//       "../pages/CompanyTaskListRepeat/CompanyTaskFormModal/AddRepetitiveCompanyTaskList"
+//     ),
+// );
 const AddCompanyTaskListRepeat = lazy(
   () =>
     import(
@@ -195,6 +202,7 @@ export default function EmployeeRoutes() {
         <Route path="brand" Component={Brand} />
         <Route path="product" Component={Product} />
         {/* <Route path="user-log" Component={UserLog} /> */}
+        <Route path="design" Component={Updates} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

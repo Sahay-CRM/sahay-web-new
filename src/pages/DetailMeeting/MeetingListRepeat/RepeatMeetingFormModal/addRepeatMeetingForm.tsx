@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"; // Added useState, useRef, ChangeEvent
+import { useEffect, useRef, useState } from "react"; // Added useState, useRef, ChangeEvent
 import { FormProvider, useFormContext, Controller } from "react-hook-form"; // Added useFormContext, Controller
 
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import TableData from "@/components/shared/DataTable/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
+// import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 
 import AddMeetingModal from "./addRepeatMeetingModal";
 import useAddRepeatMeetingForm from "./useAddRepeatMeetingForm"; // Renamed import
@@ -18,16 +18,37 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { getEmployee } from "@/features/api/companyEmployee";
 import { getMeetingType } from "@/features/api/meetingType";
 // import { useDdMeetingStatus } from "@/features/api/meetingStatus";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
-import FormSelect from "@/components/shared/Form/FormSelect";
+// import FormSelect from "@/components/shared/Form/FormSelect";
 // import DatePicker from "react-datepicker";
 import PageNotAccess from "@/pages/PageNoAccess";
-
-// interface MeetingInfoProps {
-//   isUpdateMeeting: boolean;
-// }
-
+import { Repeat } from "lucide-react";
+import CustomModalFile from "@/components/shared/CustomModalRepeatMeeting";
+import { buildRepetitionOptionsREPT } from "@/components/shared/RepeatOption/repeatOption";
+import { FormLabel } from "@/components/ui/form";
+import { FormTimePicker } from "@/components/shared/FormDateTimePicker/formTimePicker";
+import {
+  getNextRepeatDates,
+  getNextRepeatDatesCustom,
+} from "@/features/utils/nextDate.utils";
+import { formatToLocalDateTime } from "@/features/utils/app.utils";
+import { useParams } from "react-router-dom";
+interface MeetingData {
+  meetingName?: string;
+  meetingDescription?: string;
+  meetingTypeId?: MeetingType;
+  repeatType?: string;
+  repeatTime?: string;
+  employeeId?: Employee[];
+  repetitiveMeetingId?: string;
+}
 const MeetingType = () => {
   const {
     control,
@@ -129,160 +150,89 @@ const MeetingInfo = () => {
     formState: { errors },
     control,
     watch,
-    // setValue,
+    setValue,
   } = useFormContext();
 
-  // const meetingType = watch("meetingTypeId");
-  const meetingDateTime = watch("meetingDateTime");
+  const { id: repetitiveMeetingId } = useParams();
 
-  let repetitionOptions = [{}];
-  const getDayName = (date: Date) =>
-    date.toLocaleDateString("en-US", { weekday: "long" });
-  function getOrdinalWeekday(date: Date) {
-    const day = date.getDay();
-    const dateOfMonth = date.getDate();
-    const lastDateOfMonth = new Date(
-      date.getFullYear(),
-      date.getMonth() + 1,
-      0,
-    ).getDate();
+  const {
+    meetingApiData,
+    saveCustomRepeatData,
+    CustomRepeatData,
+    setCustomRepeatData,
+  } = useAddRepeatMeetingForm();
 
-    const weekdayNames = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-    const ordinals = ["first", "second", "third", "fourth", "fifth"];
+  const repeatTime = watch("repeatTime");
+  const selectedRepeat = watch("repeatType");
+  const nextDate = watch("nextDate");
 
-    // Calculate week number in month (1-based)
-    const weekNumber = Math.ceil(dateOfMonth / 7);
+  const repeatOptions = buildRepetitionOptionsREPT(
+    repetitiveMeetingId ? nextDate : new Date(),
+  );
+  const [openCustomModal, setOpenCustomModal] = useState(false);
+  const [hasUserChangedRepeat, setHasUserChangedRepeat] = useState(false);
 
-    // Check if date is in the last week of the month
-    const daysLeftInMonth = lastDateOfMonth - dateOfMonth;
-    const isLastWeek = daysLeftInMonth < 7;
+  const [repeatResult, setRepeatResult] = useState<{
+    createDateUTC: string;
+    nextDateUTC: string;
+  } | null>(null);
 
-    const ordinalLabel = isLastWeek ? "last" : ordinals[weekNumber - 1];
+  const prevCustomDataRef = useRef(CustomRepeatData);
+  // Track initial custom repeat from API once
+  const initialCustomRef = useRef(meetingApiData?.customObj);
 
-    return `${ordinalLabel} ${weekdayNames[day]}`;
-  }
+  // 🔹 CUSTOMTYPE logic
+  useEffect(() => {
+    if (selectedRepeat === "CUSTOMTYPE" && CustomRepeatData && repeatTime) {
+      const hasCustomChanged =
+        JSON.stringify(CustomRepeatData) !==
+        JSON.stringify(initialCustomRef.current);
 
-  if (meetingDateTime) {
-    try {
-      const dateObj = new Date(meetingDateTime);
-      const dayName = getDayName(dateObj);
-      const ordinalWeekday = getOrdinalWeekday(dateObj);
-      const lastDateOfMonth = new Date(
-        dateObj.getFullYear(),
-        dateObj.getMonth() + 1,
-        0,
-      ).getDate();
+      // Mark only if user truly changed data or time
+      if (hasCustomChanged || repeatTime !== meetingApiData?.repeatTime) {
+        setHasUserChangedRepeat(true);
+      }
 
-      const dateOfMonth = dateObj.getDate();
-      const daysLeftInMonth = lastDateOfMonth - dateOfMonth;
-      const isLastWeek = daysLeftInMonth < 7;
-      const monthName = dateObj.toLocaleDateString("en-US", { month: "long" }); // e.g., "March"
-      const isLastDayOfMonth = dateOfMonth === lastDateOfMonth;
+      prevCustomDataRef.current = CustomRepeatData;
 
-      repetitionOptions = [
-        { value: "DAILY", label: "Daily" },
-        { value: "DAILYALTERNATE", label: "Daily (Every Other Day)" },
-        { value: "WEEKLY", label: `Weekly on ${dayName}` },
-        // Conditionally include only one of these two:
-        ...(isLastWeek
-          ? [
-              {
-                value: "MONTHLYLASTWEEKDAY",
-                label: `Monthly on the last ${dayName}`,
-              },
-            ]
-          : [
-              {
-                value: "MONTHLYNWEEKDAY",
-                label: `Monthly on the ${ordinalWeekday}`,
-              },
-            ]),
-        {
-          value: "MONTHLYDATE",
-          label: `Monthly on the ${getOrdinalDate(dateOfMonth)} date `,
-        },
-        ...(isLastDayOfMonth
-          ? [
-              {
-                value: "MONTHLYEOM",
-                label: `Monthly on the last day (${getOrdinalDate(lastDateOfMonth)})`,
-              },
-            ]
-          : []),
-
-        {
-          value: "YEARLYXMONTHDATE",
-          label: `Yearly on ${monthName} ${getOrdinalDate(dateOfMonth)}`, // Yearly - Date (e.g., March 14th)
-        },
-        ...(!isLastDayOfMonth
-          ? [
-              {
-                value: "YEARLYXMONTHNWEEKDAY",
-                label: `Yearly on the ${ordinalWeekday} of ${monthName}  `,
-              },
-            ]
-          : []),
-        ...(isLastDayOfMonth
-          ? [
-              {
-                value: "YEARLYXMONTHLASTWEEKDAY",
-                label: `Yearly on the last ${dayName} of ${monthName}  `,
-              },
-            ]
-          : []),
-      ];
-    } catch {
-      // fallback if invalid date
-      repetitionOptions = [];
+      const result = getNextRepeatDatesCustom(
+        "CUSTOMTYPE",
+        repeatTime,
+        CustomRepeatData as CustomRepeatConfig,
+      );
+      setRepeatResult(result);
     }
-  } else {
-    repetitionOptions = [];
-  }
+  }, [selectedRepeat, CustomRepeatData, repeatTime]);
 
-  function getOrdinalDate(n: number) {
-    const s = ["th", "st", "nd", "rd"];
-    const v = n % 100;
-    return n + (s[(v - 20) % 10] || s[v] || s[0]);
-  }
+  // 🔹 NORMAL repeat types logic
+  useEffect(() => {
+    if (selectedRepeat && selectedRepeat !== "CUSTOMTYPE" && repeatTime) {
+      const hasChanged =
+        selectedRepeat !== meetingApiData?.repeatType ||
+        repeatTime !== meetingApiData?.repeatTime;
 
-  // const { data: meetingStatusData } = useDdMeetingStatus();
+      if (hasChanged) {
+        setHasUserChangedRepeat(true);
+      }
 
-  // const meetingStatusOptions = useMemo(() => {
-  //   return (
-  //     meetingStatusData?.map((status) => ({
-  //       label: status.meetingStatus,
-  //       value: status.meetingStatusId,
-  //       order: status.meetingStatusOrder,
-  //     })) || []
-  //   );
-  // }, [meetingStatusData]);
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const result = getNextRepeatDates(selectedRepeat, repeatTime, timezone);
+      setRepeatResult(result);
+    }
+  }, [selectedRepeat, repeatTime]);
 
-  // const shouldHideStatus =
-  //   !isUpdateMeeting && meetingType?.parentType === "DETAIL";
-
-  // useEffect(() => {
-  //   if (shouldHideStatus && meetingStatusOptions.length > 0) {
-  //     const defaultStatus = meetingStatusOptions.find((s) => s.order === 1);
-  //     if (defaultStatus) {
-  //       setValue("meetingStatusId", defaultStatus.value, {
-  //         shouldValidate: true,
-  //         shouldDirty: true,
-  //       });
-  //     }
-  //   }
-  // }, [shouldHideStatus, meetingStatusOptions, setValue]);
+  // 🧠 Update form values when result changes
+  useEffect(() => {
+    if (repeatResult) {
+      setValue("createDateUTC", repeatResult.createDateUTC);
+      setValue("nextDateUTC", repeatResult.nextDateUTC);
+    }
+  }, [repeatResult, setValue]);
 
   return (
     <div className="grid grid-cols-2 gap-4">
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
+        {/* 📝 Basic fields */}
         <FormInputField
           label="Meeting Name"
           {...register("meetingName", { required: "Name is required" })}
@@ -297,60 +247,137 @@ const MeetingInfo = () => {
           error={errors.meetingDescription}
           isMandatory
         />
-        <Controller
-          control={control}
-          name="meetingDateTime"
-          rules={{ required: "Date & Time is required" }}
-          render={({ field }) => {
-            const localDate = field.value ? new Date(field.value) : null;
 
-            return (
-              <FormDateTimePicker
-                label="Meeting Date & Time"
-                value={localDate}
-                onChange={(date) => {
-                  field.onChange(date?.toISOString());
-                }}
-                disablePastDates={true}
-                error={errors.meetingDateTime}
-                // disableDaysFromToday={5}
-              />
-            );
-          }}
-        />
+        {/* 🔁 Repetition Selector */}
         <Controller
           control={control}
           name="repeatType"
           rules={{ required: "Please select Repetition Type" }}
-          render={({ field }) => (
-            <FormSelect
-              label="Repetition"
-              options={repetitionOptions}
-              placeholder="Select Repetition"
-              {...field}
-              // value={field.value || ""}
-              // onChange={field.onChange}
-              error={errors.repeatType}
-              isMandatory={true}
-              disabled={!meetingDateTime}
+          render={({ field }) => {
+            const selectedRepeatLabel =
+              repeatOptions.find((item) => item.value === selectedRepeat)
+                ?.label ||
+              (selectedRepeat === "CUSTOMTYPE" ? "Custom" : "Repeat");
+            console.log(selectedRepeatLabel, repeatOptions, field.value);
+
+            return (
+              <div className="flex flex-col space-y-1">
+                <FormLabel className="flex items-center">
+                  Repetition
+                  <span className="text-red-500 ml-1">*</span>
+                </FormLabel>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div
+                      className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer border rounded-md ${
+                        !repeatTime
+                          ? "opacity-50 cursor-not-allowed"
+                          : "hover:bg-accent"
+                      }`}
+                      onClick={(e) => {
+                        if (!repeatTime) e.preventDefault();
+                      }}
+                    >
+                      <Repeat className="w-4 h-4" />
+                      <span>{selectedRepeatLabel}</span>
+                    </div>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent align="start" className="w-fit">
+                    {repeatOptions.map((item) => {
+                      const isSelected = item.value === selectedRepeat;
+                      return (
+                        <DropdownMenuItem
+                          key={item.value}
+                          onClick={() => {
+                            if (item.value === "CUSTOMTYPE") {
+                              setOpenCustomModal(true);
+                            } else {
+                              field.onChange(item.value);
+                              setValue("repeatType", item.value);
+                              setValue("customObj", undefined);
+                              setCustomRepeatData(undefined);
+                            }
+                          }}
+                          className={`flex items-center justify-between ${
+                            isSelected ? "bg-accent text-accent-foreground" : ""
+                          }`}
+                        >
+                          <span>{item.label}</span>
+                          {isSelected && <span className="ml-2">✔</span>}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {errors.repeatType && (
+                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                    {String(errors.repeatType.message)}
+                  </span>
+                )}
+
+                {/* 🧩 Custom Repeat Modal */}
+                <CustomModalFile
+                  open={openCustomModal}
+                  multiSelectAllow={false}
+                  defaultValues={
+                    watch("customObj") ||
+                    CustomRepeatData ||
+                    meetingApiData?.customObj
+                  }
+                  onOpenChange={setOpenCustomModal}
+                  onSave={(data) => {
+                    field.onChange("CUSTOMTYPE");
+                    setValue("repeatType", "CUSTOMTYPE");
+                    setValue("customObj", data);
+                    saveCustomRepeatData(data);
+                  }}
+                />
+              </div>
+            );
+          }}
+        />
+
+        {/* ⏰ Time Picker */}
+        <Controller
+          control={control}
+          name="repeatTime"
+          rules={{ required: "Time is required" }}
+          render={({ field, fieldState }) => (
+            <FormTimePicker
+              label="Meeting Time"
+              value={field.value}
+              onChange={field.onChange}
+              error={fieldState.error}
+              isMandatory
             />
           )}
         />
-        {/* <Controller
-          control={control}
-          name="meetingTimePlanned"
-          render={({ field }) => (
-            <DatePicker
-              // selected={selectedDateTime}
-              onChange={field.onChange}
-              showTimeSelect
-              showTimeSelectOnly
-              timeIntervals={15}
-              timeCaption="Time"
-              dateFormat="h:mm aa"
-            />
-          )}
-        /> */}
+
+        {/* 📅 Show dates */}
+        {hasUserChangedRepeat && repeatResult ? (
+          // ✅ Only show when user has changed repeat/time/custom data
+          <div className="flex gap-2 text-sm text-gray-700 col-span-2">
+            <p>
+              <strong>Create First Meeting:</strong>{" "}
+              {formatToLocalDateTime(repeatResult.createDateUTC)}
+            </p>
+            <p>
+              <strong>Next Meeting:</strong>{" "}
+              {formatToLocalDateTime(repeatResult.nextDateUTC)}
+            </p>
+          </div>
+        ) : meetingApiData?.nextDate ? (
+          // ✅ Otherwise show only existing meeting info from API
+          <div className="flex gap-2 text-sm text-gray-700 col-span-2">
+            <p>
+              <strong>Next Meeting:</strong>{" "}
+              {formatToLocalDateTime(meetingApiData.nextDate)}
+            </p>
+          </div>
+        ) : null}
       </Card>
     </div>
   );
@@ -519,6 +546,9 @@ const AddRepeatMeeting = () => {
     isPending,
     meetingApiData,
     permission,
+    isChildData,
+    handleKeepAll,
+    handleDeleteAll,
   } = useAddRepeatMeetingForm();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -593,6 +623,9 @@ const AddRepeatMeeting = () => {
             modalClose={handleClose}
             onSubmit={onSubmit}
             isLoading={isPending}
+            isChildData={isChildData}
+            onKeepAll={handleKeepAll}
+            onDeleteAll={handleDeleteAll}
           />
         )}
       </div>

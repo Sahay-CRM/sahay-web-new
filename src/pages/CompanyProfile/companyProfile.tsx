@@ -1,15 +1,29 @@
-import { Edit2, Save, X, Upload, Building, FileText } from "lucide-react";
+import {
+  Edit2,
+  Save,
+  X,
+  Upload,
+  Building,
+  FileText,
+  Calendar,
+  Edit,
+  Trash2,
+} from "lucide-react";
 import useCompany from "./useCompany";
 import { Button } from "@/components/ui/button";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { Controller } from "react-hook-form";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
-import { formatIndianNumber } from "@/features/utils/app.utils";
+import {
+  formatIndianNumber,
+  formatUTCDateToLocal,
+} from "@/features/utils/app.utils";
 import FormImage from "@/components/shared/Form/FormImage/FormImage";
 import PageNotAccess from "../PageNoAccess";
 import ImageCropModal from "@/components/shared/Modal/ImageCropModal";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import FormSelect from "@/components/shared/Form/FormSelect";
+import AddHolidaysForm from "../CompanyHoliday/AddHolidayFormModal";
 
 export default function CompanyProfile() {
   const {
@@ -41,6 +55,12 @@ export default function CompanyProfile() {
     permission,
     isLogoCropOpen,
     skipDaysOption,
+    holidayData,
+    handleEdit,
+    isModalOpen,
+    modalData,
+    handleClose,
+    handleDelete,
     // formatOptions,
   } = useCompany();
 
@@ -287,49 +307,6 @@ export default function CompanyProfile() {
                       </>
                     )}
                   </div>
-                  <div className="w-1/2">
-                    {isEditing ? (
-                      <Controller
-                        control={control}
-                        name="kpiSkipDays"
-                        render={({ field }) => (
-                          <FormSelect
-                            label="Skip Days"
-                            value={field.value}
-                            onChange={field.onChange}
-                            options={skipDaysOption}
-                            error={errors.kpiSkipDays}
-                            className="rounded-md"
-                            triggerClassName="py-4"
-                            isMulti
-                          />
-                        )}
-                      />
-                    ) : (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Kpi Skip Days
-                        </label>
-                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                          {companyData.kpiSkipDays &&
-                            (typeof companyData.kpiSkipDays === "string"
-                              ? companyData.kpiSkipDays.split(",")
-                              : companyData.kpiSkipDays
-                            )
-                              .map(
-                                (dayValue: string) =>
-                                  skipDaysOption.find(
-                                    (opt) => opt.value === dayValue,
-                                  )?.label,
-                              )
-                              .filter((label): label is string =>
-                                Boolean(label),
-                              )
-                              .join(", ")}
-                        </p>
-                      </div>
-                    )}
-                  </div>
                 </div>
                 {/* <div className="w-1/2">
                   {isEditing ? (
@@ -384,8 +361,8 @@ export default function CompanyProfile() {
                 Contact Information
               </h2>
               <div className="space-y-2">
-                <div className="flex gap-4">
-                  <div className="w-1/3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <div className="">
                     {isEditing ? (
                       <FormInputField
                         label="Account's POC Name"
@@ -406,7 +383,7 @@ export default function CompanyProfile() {
                       </>
                     )}
                   </div>
-                  <div className="w-1/3">
+                  <div className="">
                     {isEditing ? (
                       <FormInputField
                         label="Account's POC Mobile"
@@ -436,7 +413,7 @@ export default function CompanyProfile() {
                       </>
                     )}
                   </div>
-                  <div className="w-1/3">
+                  <div className="">
                     {isEditing ? (
                       <FormInputField
                         label="Account's POC Email"
@@ -696,6 +673,107 @@ export default function CompanyProfile() {
                 </div>
               </div>
             </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8 md:col-span-2">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                Company Skip Days
+              </h2>
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="w-full">
+                    {isEditing ? (
+                      <Controller
+                        control={control}
+                        name="kpiSkipDays"
+                        render={({ field }) => (
+                          <FormSelect
+                            value={field.value}
+                            onChange={field.onChange}
+                            options={skipDaysOption}
+                            error={errors.kpiSkipDays}
+                            className="rounded-md"
+                            triggerClassName="py-4"
+                            isMulti
+                          />
+                        )}
+                      />
+                    ) : (
+                      <div>
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                          {companyData.kpiSkipDays &&
+                            (typeof companyData.kpiSkipDays === "string"
+                              ? companyData.kpiSkipDays.split(",")
+                              : companyData.kpiSkipDays
+                            )
+                              .map(
+                                (dayValue: string) =>
+                                  skipDaysOption.find(
+                                    (opt) => opt.value === dayValue,
+                                  )?.label,
+                              )
+                              .filter((label): label is string =>
+                                Boolean(label),
+                              )
+                              .join(", ")}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8 md:col-span-2">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                Company Holidays
+              </h2>
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="w-full">
+                    <div className="flex-1 p-4  overflow-scroll">
+                      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                        {holidayData?.map((item, index) => (
+                          <div key={index} className="relative group">
+                            <div className="px-4 py-2 w-full border rounded-md shadow-sm bg-gray-50 hover:bg-gray-100 transition">
+                              <span className="font-medium text-gray-800">
+                                {item.holidayName}
+                              </span>
+                              <p className="text-sm flex items-center gap-1 text-gray-600 mt-1">
+                                <Calendar className="h-3 w-3" />
+                                {formatUTCDateToLocal(item.holidayDate!)}
+                              </p>
+                            </div>
+
+                            {/* ✅ Show edit/delete buttons only when editing */}
+                            {isEditing && (
+                              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
+                                  onClick={(e) => {
+                                    e.preventDefault(); // stop form submission
+                                    handleEdit(item);
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                                <button
+                                  className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleDelete(item.holidayId!);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </form>
         <ImageCropModal
@@ -704,6 +782,14 @@ export default function CompanyProfile() {
           onApply={applyCroppedLogo}
           title="Upload & Crop Logo"
         />
+
+        {isModalOpen && (
+          <AddHolidaysForm
+            isModalOpen={isModalOpen}
+            modalClose={handleClose}
+            modalData={modalData!}
+          />
+        )}
       </div>
     </div>
   );

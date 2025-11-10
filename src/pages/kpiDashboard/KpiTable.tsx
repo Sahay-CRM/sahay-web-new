@@ -57,6 +57,7 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 // import CommentModal from "./KpiCommentModal";
 import { twMerge } from "tailwind-merge";
 import CommentModal from "./KpiCommentModal";
+import SearchInput from "@/components/shared/SearchInput";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -124,6 +125,7 @@ type ActiveItem = ActiveGroupItem | ActiveKpiItem | null;
 // Sortable KPI Row Component
 interface SortableKpiRowProps {
   id: string;
+  selectedPeriod?: string;
   kpi: {
     kpiId: string;
     kpiName: string;
@@ -154,6 +156,7 @@ function SortableKpiRow({
   isDragging = false,
   showDragHandle = true,
   getFormattedValue,
+  selectedPeriod,
 }: SortableKpiRowProps) {
   const {
     attributes,
@@ -248,14 +251,23 @@ function SortableKpiRow({
               <span className="line-clamp-2 break-words cursor-default">
                 {kpi.validationType === "YES_NO" ? (
                   <>
-                    {formatToThreeDecimals(kpi.value1)}
-                    {" - "}
-                    {kpi.goalValue === 1 ? "Yes" : "No"}
+                    {selectedPeriod === "DAILY" ? (
+                      Number(kpi.value1) === 1 ? (
+                        "Yes"
+                      ) : (
+                        "No"
+                      )
+                    ) : (
+                      <>
+                        {formatToThreeDecimals(kpi.goalValue)} {" - "}
+                        {Number(kpi.value1) === 1 ? "Yes" : "No"}
+                      </>
+                    )}
                   </>
                 ) : (
                   getFormattedValue(
                     kpi.validationType,
-                    kpi?.value1,
+                    String(kpi?.goalValue),
                     kpi?.value2,
                     kpi?.unit,
                   )
@@ -263,13 +275,12 @@ function SortableKpiRow({
               </span>
             </TooltipTrigger>
 
-            {/* ✅ Show tooltip only if formatted value looks different */}
+            {/* ✅ Tooltip logic remains same */}
             {(() => {
               const rawValue = String(kpi.value1 ?? "");
-              const formattedNormal = formatToThreeDecimals(kpi.value1); // e.g. 11,111,111
-              const formattedCompact = formatCompactNumber(kpi.value1); // e.g. 11.1M
+              const formattedNormal = formatToThreeDecimals(kpi.goalValue);
+              const formattedCompact = formatCompactNumber(kpi.value1);
 
-              // ✅ Tooltip should show if compact value is different from normal (like M, K)
               const shouldShowTooltip =
                 formattedCompact !== formattedNormal &&
                 formattedCompact !== rawValue &&
@@ -280,15 +291,11 @@ function SortableKpiRow({
                 shouldShowTooltip && (
                   <TooltipContent>
                     <span>
-                      {kpi.validationType === "YES_NO"
-                        ? kpi.goalValue === 1
-                          ? `Yes ${formattedNormal}`
-                          : `No ${formattedNormal}`
-                        : kpi.validationType === "BETWEEN"
-                          ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(
-                              kpi?.value2,
-                            )}`
-                          : formattedNormal}
+                      {kpi.validationType === "BETWEEN"
+                        ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(
+                            kpi?.value2,
+                          )}`
+                        : formattedNormal}
                     </span>
                   </TooltipContent>
                 )
@@ -415,10 +422,23 @@ export default function UpdatedKpiTable() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kpiStructure, isKpiStructureLoading, searchParams]);
+  // const [searchTerm, setSearchTerm] = useState({
+  //   search: "",
+  //   currentPage: 1,
+  // });
+  const [searchTerm, setSearchTerm] = useState<PaginationFilter>({
+    search: "",
+  });
 
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
   const [currentCellKey, setCurrentCellKey] = useState<string>("");
-  const [commentModalInput, setCommentModalInput] = useState("");
+  const [commentModalInput, setCommentModalInput] = useState<{
+    note: string;
+    noteId?: string;
+  }>({
+    note: "",
+    noteId: "",
+  });
 
   const canDrag = userData?.isSuperAdmin || permissionSequence?.Edit;
 
@@ -698,8 +718,33 @@ export default function UpdatedKpiTable() {
     selectedPeriod,
   );
 
+  // const groupedKpiRows = useMemo(() => {
+  //   if (!filteredData.length || !filteredData[0].kpis) return [];
+
+  //   const groups: {
+  //     coreParameter: { coreParameterId: string; coreParameterName: string };
+  //     kpis: { kpi: Kpi }[];
+  //   }[] = [];
+
+  //   (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
+  //     if (coreParam.kpis && Array.isArray(coreParam.kpis)) {
+  //       const kpiRows = coreParam.kpis.map((kpi: Kpi) => ({ kpi }));
+  //       groups.push({
+  //         coreParameter: {
+  //           coreParameterId: coreParam.coreParameterId,
+  //           coreParameterName: coreParam.coreParameterName,
+  //         },
+  //         kpis: kpiRows,
+  //       });
+  //     }
+  //   });
+
+  //   return groups;
+  // }, [filteredData]);
+
   const groupedKpiRows = useMemo(() => {
     if (!filteredData.length || !filteredData[0].kpis) return [];
+    const search = String(searchTerm.search ?? "").toLowerCase();
 
     const groups: {
       coreParameter: { coreParameterId: string; coreParameterName: string };
@@ -708,19 +753,32 @@ export default function UpdatedKpiTable() {
 
     (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
       if (coreParam.kpis && Array.isArray(coreParam.kpis)) {
-        const kpiRows = coreParam.kpis.map((kpi: Kpi) => ({ kpi }));
-        groups.push({
-          coreParameter: {
-            coreParameterId: coreParam.coreParameterId,
-            coreParameterName: coreParam.coreParameterName,
-          },
-          kpis: kpiRows,
+        const filteredKpis = coreParam.kpis.filter((kpi: Kpi) => {
+          const coreName = coreParam.coreParameterName?.toLowerCase() || "";
+          const tag = kpi.tag?.toLowerCase() || "";
+          const name = kpi.kpiName?.toLowerCase() || "";
+
+          const match =
+            coreName.includes(search) ||
+            tag.includes(search) ||
+            name.includes(search);
+
+          return match;
         });
+
+        if (filteredKpis.length > 0) {
+          groups.push({
+            coreParameter: {
+              coreParameterId: coreParam.coreParameterId,
+              coreParameterName: coreParam.coreParameterName,
+            },
+            kpis: filteredKpis.map((kpi) => ({ kpi })),
+          });
+        }
       }
     });
-
     return groups;
-  }, [filteredData]);
+  }, [filteredData, searchTerm]);
 
   useEffect(() => {
     const syncScroll = (e: Event) => {
@@ -912,20 +970,43 @@ export default function UpdatedKpiTable() {
     }
   };
 
+  // const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  //   const charCode = e.which ? e.which : e.keyCode;
+  //   const char = String.fromCharCode(charCode);
+
+  //   if (
+  //     !/[\d.]/.test(char) &&
+  //     charCode > 31 &&
+  //     (charCode < 48 || charCode > 57)
+  //   ) {
+  //     e.preventDefault();
+  //   }
+
+  //   // Allow only one decimal point
+  //   if (char === "." && e.currentTarget.value.includes(".")) {
+  //     e.preventDefault();
+  //   }
+  // };
+
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const charCode = e.which ? e.which : e.keyCode;
     const char = String.fromCharCode(charCode);
 
-    if (
-      !/[\d.]/.test(char) &&
-      charCode > 31 &&
-      (charCode < 48 || charCode > 57)
-    ) {
+    // Allow digits, and minus
+    if (!/[\d-]/.test(char) && charCode > 31) {
       e.preventDefault();
     }
 
-    // Allow only one decimal point
-    if (char === "." && e.currentTarget.value.includes(".")) {
+    // Only one decimal point
+    // if (char === "." && e.currentTarget.value.includes(".")) {
+    //   e.preventDefault();
+    // }
+
+    // Only one "-" and only at start
+    if (char === "-" && e.currentTarget.selectionStart !== 0) {
+      e.preventDefault();
+    }
+    if (char === "-" && e.currentTarget.value.includes("-")) {
       e.preventDefault();
     }
   };
@@ -933,7 +1014,7 @@ export default function UpdatedKpiTable() {
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     // Validate pasted content
     const pastedText = e.clipboardData.getData("text");
-    const isValidPaste = /^-?\d*\.?\d*$/.test(pastedText);
+    const isValidPaste = /^-?\d+$/.test(pastedText);
 
     if (!isValidPaste) {
       e.preventDefault();
@@ -1005,6 +1086,13 @@ export default function UpdatedKpiTable() {
                 />
               </div>
             )}
+
+            <SearchInput
+              placeholder="Search..."
+              searchValue={searchTerm?.search || ""}
+              setPaginationFilter={setSearchTerm}
+              className="w-80"
+            />
 
             <FormDatePicker
               value={selectedDate}
@@ -1140,6 +1228,7 @@ export default function UpdatedKpiTable() {
                             disabled={!canDrag}
                             showDragHandle={!!canDrag}
                             getFormattedValue={getFormattedValue}
+                            selectedPeriod={selectedPeriod}
                           />
                         ))}
                       </React.Fragment>
@@ -1224,6 +1313,7 @@ export default function UpdatedKpiTable() {
                                   "";
                                 const inputnote =
                                   tempValues[key]?.comment ?? cell?.note ?? "";
+                                const noteId = cell?.noteId ?? "";
 
                                 const isVisualized = kpi?.isVisualized;
                                 const canAdd = permission?.Add && !cell?.data;
@@ -1235,7 +1325,7 @@ export default function UpdatedKpiTable() {
                                 if (validationType == "YES_NO") {
                                   const selectOptions = [
                                     { value: "1", label: "Yes" },
-                                    { value: "0", label: "No" },
+                                    { value: "2", label: "No" },
                                   ];
                                   const isValid = inputVal === String(value1);
 
@@ -1267,6 +1357,16 @@ export default function UpdatedKpiTable() {
                                                   (isValid
                                                     ? "bg-green-100 border-green-500"
                                                     : "bg-red-100 border-red-500"),
+                                                isVisualized &&
+                                                  cell?.validationPercentage !=
+                                                    null &&
+                                                  (cell.validationPercentage <
+                                                  80
+                                                    ? "bg-red-200"
+                                                    : cell.validationPercentage <
+                                                        100
+                                                      ? "bg-yellow-200"
+                                                      : "bg-green-200"),
                                                 isVisualized &&
                                                   "opacity-60 cursor-not-allowed",
                                                 cell?.isSkipDay &&
@@ -1308,8 +1408,9 @@ export default function UpdatedKpiTable() {
                                                                       ),
                                                                 comment:
                                                                   prev[key]
-                                                                    ?.comment ||
-                                                                  "", // preserve existing comment
+                                                                    ?.comment ??
+                                                                  cell?.note ??
+                                                                  "",
                                                               },
                                                             }),
                                                           );
@@ -1325,9 +1426,9 @@ export default function UpdatedKpiTable() {
                                                 <div className="flex flex-col items-center  justify-center h-full w-full cursor-not-allowed">
                                                   <span className="text-black">
                                                     {inputFocused[key]
-                                                      ? inputVal // Show raw value when focused
+                                                      ? inputVal
                                                       : formatCompactNumber(
-                                                          inputVal,
+                                                          cell?.matchCount,
                                                         )}
                                                   </span>
                                                 </div>
@@ -1376,7 +1477,10 @@ export default function UpdatedKpiTable() {
                                                               key,
                                                             );
                                                             setCommentModalInput(
-                                                              inputnote,
+                                                              {
+                                                                note: inputnote,
+                                                                noteId,
+                                                              },
                                                             );
                                                             setCommentModalOpen(
                                                               true,
@@ -1392,8 +1496,12 @@ export default function UpdatedKpiTable() {
                                                               key,
                                                             );
                                                             setCommentModalInput(
-                                                              "",
+                                                              {
+                                                                note: "",
+                                                                noteId: "",
+                                                              },
                                                             );
+
                                                             setCommentModalOpen(
                                                               true,
                                                             );
@@ -1489,7 +1597,7 @@ export default function UpdatedKpiTable() {
                                                 isVisualized &&
                                                   "cursor-not-allowed",
                                               )}
-                                              placeholder="0"
+                                              // placeholder="0"
                                               disabled={!canInput}
                                               readOnly={!canInput}
                                             />
@@ -1536,9 +1644,10 @@ export default function UpdatedKpiTable() {
                                                           setCurrentCellKey(
                                                             key,
                                                           );
-                                                          setCommentModalInput(
-                                                            inputnote,
-                                                          );
+                                                          setCommentModalInput({
+                                                            note: inputnote,
+                                                            noteId,
+                                                          });
                                                           setCommentModalOpen(
                                                             true,
                                                           );
@@ -1552,9 +1661,11 @@ export default function UpdatedKpiTable() {
                                                           setCurrentCellKey(
                                                             key,
                                                           );
-                                                          setCommentModalInput(
-                                                            "",
-                                                          );
+                                                          setCommentModalInput({
+                                                            note: "",
+                                                            noteId: "",
+                                                          });
+
                                                           setCommentModalOpen(
                                                             true,
                                                           );
@@ -1710,7 +1821,8 @@ export default function UpdatedKpiTable() {
       <CommentModal
         isModalOpen={commentModalOpen}
         modalClose={() => setCommentModalOpen(false)}
-        initialComment={commentModalInput ?? ""}
+        noteId={commentModalInput.noteId}
+        initialComment={commentModalInput.note}
         onSave={(comment) => {
           setTempValues((prev) => {
             const updated = {

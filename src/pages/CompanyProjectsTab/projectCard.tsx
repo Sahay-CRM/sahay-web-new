@@ -7,6 +7,7 @@ import {
 import { TableTooltip } from "@/components/shared/DataTable/tableTooltip";
 import { getInitials } from "@/features/utils/app.utils";
 import { useNavigate } from "react-router-dom";
+import { isColorDark } from "@/features/utils/color.utils";
 interface ProjectCardProps {
   projectId: string;
   name: string;
@@ -153,9 +154,9 @@ export default function ProjectCard({
             <div
               className="max-w-[200px] py-1.5 pl-6 pr-3 rounded-l-full text-sm font-semibold cursor-pointer"
               style={{
-                color: color,
+                color: isColorDark(color) ? "#fff" : "#000",
                 borderRight: `2px solid ${color}`,
-                background: `${color}20`,
+                background: `${color}`,
               }}
             >
               <TableTooltip text={priority} />

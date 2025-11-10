@@ -13,6 +13,7 @@ interface WeeklyPatternSelectorProps {
   setSelectedWeek?: (val: number | null) => void;
   selectedDay?: number[];
   setSelectedDay?: (val: number[]) => void;
+  multiSelectAllow?: boolean;
 }
 
 export default function WeeklyPatternSelector({
@@ -24,6 +25,7 @@ export default function WeeklyPatternSelector({
   setSelectedWeek,
   selectedDay,
   setSelectedDay,
+  multiSelectAllow = true,
 }: WeeklyPatternSelectorProps) {
   if (multiSelect) {
     return (
@@ -86,7 +88,7 @@ export default function WeeklyPatternSelector({
                     newPatterns[index].daysOfWeek = newDays;
                     setWeeklyPatterns(newPatterns);
                   }}
-                  multiSelectAllow
+                  multiSelectAllow={multiSelectAllow}
                 />
               )}
 

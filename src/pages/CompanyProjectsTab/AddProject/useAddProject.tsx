@@ -43,6 +43,7 @@ export default function useAddProject() {
   const StatusOptions = (StatusOptionsData?.data || []).map((status) => ({
     value: status.projectStatusId,
     label: status.projectStatus,
+    color: status.color,
   }));
 
   const bussinessFunctOptions = (coreParams?.data || []).map((status) => ({
@@ -179,6 +180,25 @@ export default function useAddProject() {
           otherProjectEmployees: data.employeeId,
         };
 
+    // addProject(payload, {
+    //   onSuccess: (response) => {
+    //     const projectId = response.data.projectId;
+    //     if (typeof projectId === "string" && projectId) {
+    //       handleFileOperations(
+    //         projectId,
+    //         data.projectDocuments || [],
+    //         data.removedFileIdsArray || []
+    //       );
+    //     }
+    //     handleModalClose();
+    //     if (searchParams.get("from") === "task") {
+    //       navigate(`/dashboard/tasks/add?projectId=${projectId}`);
+    //     } else {
+    //       navigate("/dashboard/projects");
+    //     }
+    //   },
+    // });
+
     addProject(payload, {
       onSuccess: (response) => {
         const projectId = response.data.projectId;
@@ -189,12 +209,28 @@ export default function useAddProject() {
             data.removedFileIdsArray || [],
           );
         }
+
         handleModalClose();
-        if (searchParams.get("from") === "task") {
-          navigate(`/dashboard/tasks/add?projectId=${projectId}`);
-        } else {
-          navigate("/dashboard/projects");
+
+        const from = searchParams.get("from");
+
+        // ✅ Decide base path just like meeting
+        let basePath = "/dashboard/projects";
+
+        if (from === "task") {
+          basePath = "/dashboard/tasks/add";
+        } else if (from === "tasksrepeat") {
+          basePath = "/dashboard/tasksrepeat/add";
         }
+
+        // ✅ If normal project, just go project list
+        if (basePath === "/dashboard/projects") {
+          navigate(basePath);
+          return;
+        }
+
+        // ✅ If task/repeat task, send projectId in URL
+        navigate(`${basePath}?projectId=${projectId}`);
       },
     });
   });

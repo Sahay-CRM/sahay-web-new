@@ -4,6 +4,7 @@ import {
   CircleCheckBig,
   Crown,
   EllipsisVertical,
+  FilePlus2,
   FileText,
   RefreshCcw,
   ThumbsUp,
@@ -28,7 +29,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getInitials } from "@/features/utils/app.utils";
+import { formatUTCDateToLocal, getInitials } from "@/features/utils/app.utils";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import {
   DropdownMenu,
@@ -38,6 +39,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 import { SpinnerIcon } from "@/components/shared/Icons";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 // import FormSelect from "@/components/shared/Form/FormSelect";
 
 const Agenda = React.lazy(() => import("./Agenda"));
@@ -84,7 +91,11 @@ export default function MeetingDesc() {
   useEffect(() => {
     setBreadcrumbs([
       { label: "Detail Meeting", href: "/dashboard/meeting/detail" },
-      { label: `${meetingTiming?.meetingName}`, href: "", isHighlight: true },
+      {
+        label: `${meetingTiming?.meetingName} `,
+        href: "",
+        isHighlight: true,
+      },
     ]);
   }, [meetingTiming?.meetingName, setBreadcrumbs]);
 
@@ -137,11 +148,13 @@ export default function MeetingDesc() {
         className={cn(
           "h-full rounded-lg mx-3",
           // "transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.5,1)]",
-          isCardVisible ? "w-[350px] opacity-100" : "w-0 opacity-0",
+          activeTab !== "" && isCardVisible
+            ? "w-[350px] opacity-100"
+            : "w-0 opacity-0",
         )}
       >
         <Card className="h-full w-full p-0">
-          {activeTab === "joiners" && (
+          {activeTab === "JOINERS" && (
             <div>
               <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
                 <h3 className="p-0 text-base pl-4">Meeting Joiners</h3>
@@ -430,7 +443,7 @@ export default function MeetingDesc() {
               </div>
             </div>
           )}
-          {activeTab === "documents" && (
+          {activeTab === "DOCUMENTS" && (
             <div>
               <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
                 <h3 className="p-0 text-base pl-4">Meeting Notes</h3>
@@ -494,7 +507,7 @@ export default function MeetingDesc() {
               </div>
             </div>
           )}
-          {activeTab === "updates" && (
+          {activeTab === "UPDATES" && (
             <div>
               <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
                 <h3 className="p-0 text-base pl-1">Meeting Updates</h3>
@@ -600,7 +613,7 @@ export default function MeetingDesc() {
               </div>
             </div>
           )}
-          {activeTab === "appreciation" && (
+          {activeTab === "APPRECIATION" && (
             <div>
               <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
                 <h3 className="p-0 text-base">Meeting Appreciation</h3>
@@ -705,6 +718,130 @@ export default function MeetingDesc() {
               </div>
             </div>
           )}
+          {activeTab === "OLDNOTES" && (
+            <div>
+              <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
+                <h3 className="p-0 text-base">Prev Meeting Notes</h3>
+                <div>
+                  <X
+                    className="w-5 h-5 text-gray-500 cursor-pointer"
+                    onClick={() => setIsCardVisible(false)}
+                  />
+                </div>
+              </div>
+              <div className="h-[calc(100vh-180px)] overflow-scroll py-3 border-b px-3 mb-3">
+                {Array.isArray(meetingNotes?.data) &&
+                  (() => {
+                    type GroupedNotes = Record<
+                      string,
+                      { groupName: string; notes: MeetingNotesRes[] }
+                    >;
+
+                    const groupedNotes = meetingNotes.data.reduce<GroupedNotes>(
+                      (acc, note) => {
+                        const groupKey = note.groupId || "ungrouped";
+                        const groupName = note.groupName || "Ungrouped Notes";
+                        if (!acc[groupKey])
+                          acc[groupKey] = { groupName, notes: [] };
+                        acc[groupKey].notes.push(note);
+                        return acc;
+                      },
+                      {},
+                    );
+
+                    return (
+                      <Accordion
+                        type="single"
+                        collapsible
+                        className="w-full space-y-3"
+                      >
+                        {Object.entries(groupedNotes).map(
+                          ([groupId, groupData], gIdx) => {
+                            const filteredNotes = groupData.notes.filter(
+                              (item) => item.meetingId !== meetingId,
+                            );
+
+                            return (
+                              <AccordionItem
+                                key={groupId}
+                                value={`group-${gIdx}`}
+                                className="border rounded-lg shadow-md bg-gray-50"
+                              >
+                                <AccordionTrigger className="px-3 py-2 font-semibold text-gray-800 bg-gray-100 rounded-t-lg">
+                                  {groupData.groupName}
+                                </AccordionTrigger>
+
+                                <AccordionContent>
+                                  <div className="max-h-[200px] overflow-y-auto pr-1">
+                                    <div className="space-y-2 mt-2">
+                                      {filteredNotes.map((note, idx) => {
+                                        const author = (
+                                          meetingTiming?.joiners as Joiners[]
+                                        )?.find(
+                                          (j) =>
+                                            j.employeeId === note.employeeId,
+                                        );
+
+                                        return (
+                                          <div
+                                            key={note.meetingNoteId || idx}
+                                            className="border rounded-lg shadow-sm bg-white"
+                                          >
+                                            <div className="flex justify-between items-center px-3 py-2 text-left">
+                                              <div className="flex flex-col w-full">
+                                                <div className="flex justify-between items-center">
+                                                  <span className="font-medium text-xs text-gray-700">
+                                                    {author?.employeeName ||
+                                                      "Unknown"}
+                                                  </span>
+                                                  <div className="flex items-center gap-2">
+                                                    {note.noteType && (
+                                                      <span className="text-xs text-gray-600 bg-gray-200/80 px-2 py-0.5 rounded-full">
+                                                        {note.noteType}
+                                                      </span>
+                                                    )}
+                                                    <span className="text-xs text-gray-400">
+                                                      {formatUTCDateToLocal(
+                                                        note.createdAt,
+                                                      )}{" "}
+                                                      {note?.createdAt
+                                                        ? new Date(
+                                                            note.createdAt,
+                                                          ).toLocaleTimeString(
+                                                            [],
+                                                            {
+                                                              hour: "2-digit",
+                                                              minute: "2-digit",
+                                                            },
+                                                          )
+                                                        : ""}
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+
+                                            <div className="px-3 py-2 text-sm text-gray-700">
+                                              <p className="break-words m-0">
+                                                {note.note}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            );
+                          },
+                        )}
+                      </Accordion>
+                    );
+                  })()}
+              </div>
+            </div>
+          )}
         </Card>
       </div>
       <div
@@ -714,30 +851,36 @@ export default function MeetingDesc() {
           <Button
             className={`w-full bg-transparent p-0 hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center" : ""}`}
             onClick={() => {
-              handleTabChange("joiners");
+              handleTabChange("JOINERS");
             }}
           >
             <UsersRound className="w-16 h-16" />
           </Button>
           <Button
             className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center" : ""}`}
-            onClick={() => handleTabChange("documents")}
+            onClick={() => handleTabChange("DOCUMENTS")}
           >
             <FileText className="h-6 w-6" />
           </Button>
 
           <Button
             className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center p-0" : "p-2"}`}
-            onClick={() => handleTabChange("updates")}
+            onClick={() => handleTabChange("UPDATES")}
           >
             <RefreshCcw className="h-6 w-6" />
           </Button>
 
           <Button
             className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center p-0" : "p-2"}`}
-            onClick={() => handleTabChange("appreciation")}
+            onClick={() => handleTabChange("APPRECIATION")}
           >
             <ThumbsUp className="h-6 w-6" />
+          </Button>
+          <Button
+            className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center p-0" : "p-2"}`}
+            onClick={() => handleTabChange("OLDNOTES")}
+          >
+            <FilePlus2 className="h-6 w-6" />
           </Button>
         </nav>
       </div>

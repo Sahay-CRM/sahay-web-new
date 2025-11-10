@@ -142,6 +142,7 @@ export default function useCompanyTaskList() {
     const payload = {
       isActive: !data.isActive,
       repetitiveTaskId: data.repetitiveTaskId,
+      isStatusChange: true,
     };
     updateCompanyTask(payload);
   };

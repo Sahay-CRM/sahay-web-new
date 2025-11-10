@@ -18,6 +18,7 @@ export default function useDeleteHoliday() {
     onSuccess: (response) => {
       toast.success(response?.message);
       queryClient.resetQueries({ queryKey: ["get-holiday-list"] });
+      queryClient.resetQueries({ queryKey: ["get-holiday-list-all"] });
     },
   });
 

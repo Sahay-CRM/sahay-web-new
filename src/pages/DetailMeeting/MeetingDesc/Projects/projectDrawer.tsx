@@ -13,7 +13,10 @@ import {
   useGetSubParaFilter,
 } from "@/features/api/companyProject";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
-import { addMeetingNotesMutation } from "@/features/api/detailMeeting";
+import {
+  addMeetingNotesMutation,
+  useGetDetailMeetingAgenda,
+} from "@/features/api/detailMeeting";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 
 type ProjectFormData = {
@@ -25,6 +28,8 @@ type ProjectFormData = {
   coreParameterId: string;
   subParameterId: string[];
   employeeId: string[];
+  ioId?: string;
+  ioType?: string;
 };
 interface ProjectDrawerProps {
   open: boolean;
@@ -48,6 +53,13 @@ export default function ProjectDrawer({
   const [isStatusSearch, setIsStatusSearch] = useState("");
 
   const { mutate: addProject, isPending } = useAddUpdateCompanyProject();
+
+  const { data: ioList } = useGetDetailMeetingAgenda({
+    filter: {
+      meetingId: meetingId,
+    },
+    enable: !!meetingId,
+  });
   const { data: projectStatusData } = useGetAllProjectStatus({
     filter: {
       search: isStatusSearch.length >= 3 ? isStatusSearch : undefined,
@@ -61,11 +73,20 @@ export default function ProjectDrawer({
     filter: { currentPage: 1, pageSize: 100 },
   });
   const { mutate: addNote } = addMeetingNotesMutation();
+
+  const ioOption = ioList
+    ? ioList.map((item) => ({
+        label: item.name,
+        value: item.ioType === "ISSUE" ? item.issueId : item.objectiveId,
+        ioType: item.ioType,
+      }))
+    : [];
   // Prepare options
   const projectStatusOption = projectStatusData
     ? projectStatusData.data.map((status) => ({
         label: status.projectStatus,
         value: status.projectStatusId,
+        color: status.color,
       }))
     : [];
   const employeeOption = employeeData
@@ -98,6 +119,8 @@ export default function ProjectDrawer({
         employeeId: Array.isArray(projectData.ProjectEmployees)
           ? projectData.ProjectEmployees.map((item) => item.employeeId)
           : [],
+        ioId: issueId || "",
+        ioType: ioType || "",
       }
     : {
         projectId: "",
@@ -108,6 +131,8 @@ export default function ProjectDrawer({
         coreParameterId: "",
         subParameterId: [],
         employeeId: [],
+        ioId: issueId || "",
+        ioType: ioType || "",
       };
 
   const {
@@ -191,7 +216,7 @@ export default function ProjectDrawer({
 
   const onSubmit = (data: ProjectFormData) => {
     if (meetingId) {
-      const { employeeId, projectDeadline, ...rest } = data;
+      const { employeeId, projectDeadline, ioType, ioId, ...rest } = data;
       const payload = {
         ...rest,
         projectId: projectData?.projectId,
@@ -201,9 +226,12 @@ export default function ProjectDrawer({
           ? new Date(projectDeadline).toISOString()
           : null,
         ...(ioType === "ISSUE"
-          ? { issueId: issueId }
-          : { objectiveId: issueId }),
-        ioType,
+          ? { issueId: ioId }
+          : ioType === "OBJECTIVE"
+            ? { objectiveId: ioId }
+            : {}),
+
+        ioType: data.ioType,
       };
       addProject(payload, {
         onSuccess: () => {
@@ -211,7 +239,7 @@ export default function ProjectDrawer({
             addNote(
               {
                 meetingNoteId: projectData?.meetingNoteId,
-                noteType: "TASKS",
+                noteType: "PROJECT",
               },
               {
                 onSuccess: () => {
@@ -251,6 +279,32 @@ export default function ProjectDrawer({
             </button>
           </div>
           <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4">
+            <div>
+              <Controller
+                control={control}
+                name="ioId"
+                rules={{ required: "Please select an Issue or Objective" }}
+                render={({ field }) => (
+                  <FormSelect
+                    label="Select Issue/Objective"
+                    value={field.value}
+                    onChange={(val) => {
+                      field.onChange(val);
+                      const selected = ioOption.find(
+                        (opt) => opt.value === val,
+                      );
+                      if (selected) {
+                        setValue("ioType", selected.ioType); // 👈 also set ioType
+                      }
+                    }}
+                    options={ioOption}
+                    error={errors.ioId}
+                    placeholder="Select Issue or Objective"
+                    isMandatory
+                  />
+                )}
+              />
+            </div>
             <FormInputField
               label="Project Name"
               {...register("projectName", {
@@ -268,6 +322,12 @@ export default function ProjectDrawer({
             <Controller
               control={control}
               name="projectDeadline"
+              rules={{
+                required: {
+                  value: true,
+                  message: "Project Deadline is Required",
+                },
+              }}
               render={({ field }) => {
                 const localDate = field.value
                   ? new Date(

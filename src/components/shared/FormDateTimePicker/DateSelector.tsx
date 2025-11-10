@@ -6,11 +6,13 @@ function DateSelector({
   selectedDate,
   setSelectedDate,
   multiSelect,
+  totalDays = 31,
 }: {
   condition: boolean;
   selectedDate: number[] | null;
   setSelectedDate: React.Dispatch<React.SetStateAction<number[] | null>>;
   multiSelect: boolean;
+  totalDays?: number;
 }) {
   useEffect(() => {
     if (!multiSelect && selectedDate && selectedDate.length > 1) {
@@ -25,7 +27,7 @@ function DateSelector({
     <div>
       <Label className="text-sm font-medium mb-2">Select Date</Label>
       <div className="grid grid-cols-15 gap-1">
-        {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => {
+        {Array.from({ length: totalDays }, (_, i) => i + 1).map((date) => {
           const isSelected = selectedDate?.includes(date);
           return (
             <button

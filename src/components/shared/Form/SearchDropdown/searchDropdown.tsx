@@ -9,10 +9,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { twMerge } from "tailwind-merge";
 import { ChevronDown, Check, X } from "lucide-react";
+import { isColorDark } from "@/features/utils/color.utils";
 
 type Option = {
   value: string;
   label: string;
+  color?: string;
 };
 
 interface SearchDropdownProps {
@@ -55,7 +57,8 @@ const SearchDropdown = ({
   const filteredOptions = options.filter((opt) =>
     opt.label.toLowerCase().includes(query.toLowerCase()),
   );
-
+  const bg = selectedOption?.color;
+  const textColor = bg ? (isColorDark(bg) ? "#fff" : "#000") : undefined;
   useEffect(() => {
     if (open && inputRef.current) {
       inputRef.current.focus();
@@ -78,6 +81,11 @@ const SearchDropdown = ({
               "w-full font-extralight hover:bg-white justify-between text-left text-black overflow-hidden whitespace-nowrap text-ellipsis relative",
               className,
             )}
+            style={{
+              backgroundColor: bg,
+              color: textColor,
+              borderColor: bg,
+            }}
             disabled={disabled}
           >
             <span
@@ -85,6 +93,7 @@ const SearchDropdown = ({
                 "truncate pr-10",
                 !selectedOption && "text-gray-500",
               )}
+              style={{ color: selectedOption ? textColor : undefined }}
             >
               {selectedOption ? selectedOption.label : placeholder}
             </span>
@@ -99,11 +108,14 @@ const SearchDropdown = ({
                 }}
                 onMouseDown={(e) => e.preventDefault()}
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" style={{ color: textColor }} />
               </span>
             ) : null}
 
-            <ChevronDown className="absolute right-3 text-gray-500" />
+            <ChevronDown
+              className="absolute right-3 text-gray-500"
+              style={{ color: textColor }}
+            />
           </Button>
         </PopoverTrigger>
 

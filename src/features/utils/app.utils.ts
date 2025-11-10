@@ -17,7 +17,8 @@ export function formatTime(ms: number) {
 }
 
 export function capitalizeFirstLetter(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
 export function formatFrequencyType(value: string) {

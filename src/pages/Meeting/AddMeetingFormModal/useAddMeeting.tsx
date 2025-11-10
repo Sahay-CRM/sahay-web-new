@@ -100,16 +100,31 @@ export default function useAddMeeting() {
         }
 
         handleModalClose();
-        if (searchParams.get("from") === "task") {
-          const projectId = searchParams.get("projectId");
-          navigate(
-            `/dashboard/tasks/add?meetingId=${meetingId}${
-              projectId ? `&projectId=${String(projectId)}` : ""
-            }`,
-          );
-        } else {
-          navigate("/dashboard/meeting");
+
+        const from = searchParams.get("from");
+        const projectId = searchParams.get("projectId");
+
+        // ✅ Decide base path
+        let basePath = "/dashboard/meeting";
+
+        if (from === "task") {
+          basePath = "/dashboard/tasks/add";
+        } else if (from === "tasksrepeat") {
+          basePath = "/dashboard/tasksrepeat/add";
         }
+
+        // ✅ If it's meeting (no task path), go direct
+        if (basePath === "/dashboard/meeting") {
+          navigate(basePath);
+          return;
+        }
+
+        // ✅ Navigate to task or repeat task path
+        navigate(
+          `${basePath}?meetingId=${meetingId}${
+            projectId ? `&projectId=${String(projectId)}` : ""
+          }`,
+        );
       },
     });
   });

@@ -221,7 +221,7 @@ export function buildRepetitionOptions(taskDeadline?: string | Date | null) {
 //   }
 // }
 
-export function getRepeatTypeOrCustom(data: TodoItem | Task): string {
+export function getRepeatTypeOrCustom(data: TodoItem): string {
   if (!data?.repeatType) return "";
 
   const today = new Date();
@@ -365,5 +365,202 @@ export function getRepeatTypeOrCustom(data: TodoItem | Task): string {
 
     default:
       return "CUSTOMTYPE";
+  }
+}
+
+export function getRepeatTypeOrCustomForRepeatMeeting(
+  data: RepeatMeeting | Task,
+): string {
+  if (!data?.repeatType) return "";
+
+  const today = new Date();
+  const rp = data.customObj;
+
+  const daysMap = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  const todayDayStr = daysMap[today.getDay()];
+  const todayDate = today.getDate();
+  // const todayMonth = today.getMonth() + 1;
+
+  switch (data.repeatType) {
+    case "DAILY":
+      return "DAILY";
+    case "DAILYALTERNATE":
+      return "DAILYALTERNATE";
+
+    case "WEEKLY": {
+      const days = rp?.daysOfWeek ?? [];
+      const isWeekly = days.length === 1 && days[0] === todayDayStr;
+      return isWeekly ? "WEEKLY" : "CUSTOMTYPE";
+    }
+
+    case "MONTHLYNWEEKDAY": {
+      const mappings = rp?.weekDaysMapping ?? [];
+      const weekNumber = Math.ceil(todayDate / 7);
+
+      if (
+        mappings.length === 1 &&
+        mappings[0].days.length === 1 &&
+        mappings[0].week === weekNumber &&
+        mappings[0].days[0] === todayDayStr
+      ) {
+        return "MONTHLYNWEEKDAY";
+      }
+
+      return "CUSTOMTYPE";
+    }
+
+    case "MONTHLYDATE": {
+      if (!rp?.dates) return "MONTHLYDATE";
+      const dates = rp.dates ?? [];
+      if (dates.length === 1 && dates[0] === todayDate) {
+        return "MONTHLYDATE";
+      }
+      return "CUSTOMTYPE";
+    }
+
+    case "MONTHLYEOM": {
+      const lastDate = new Date(
+        today.getFullYear(),
+        today.getMonth() + 1,
+        0,
+      ).getDate();
+      return todayDate === lastDate ? "MONTHLYEOM" : "CUSTOMTYPE";
+    }
+
+    case "MONTHLYLASTWEEKDAY": {
+      if (!rp?.weekDaysMapping?.length) return "MONTHLYLASTWEEKDAY";
+
+      const lastDate = new Date(
+        today.getFullYear(),
+        today.getMonth() + 1,
+        0,
+      ).getDate();
+      const todayWeek = Math.ceil(todayDate / 7);
+      const lastWeek = Math.ceil(lastDate / 7);
+
+      if (rp.weekDaysMapping.length !== 1) return "CUSTOMTYPE";
+
+      const w = rp.weekDaysMapping[0];
+      const sameDay = w.days.length === 1 && w.days[0] === todayDayStr;
+      const sameWeek = todayWeek === lastWeek;
+
+      return sameDay && sameWeek ? "MONTHLYLASTWEEKDAY" : "CUSTOMTYPE";
+    }
+
+    case "YEARLYXMONTHDATE": {
+      if (!rp?.dates || !rp?.months) return "YEARLYXMONTHDATE";
+
+      if (rp.dates.length !== 1 || rp.months.length !== 1) return "CUSTOMTYPE";
+
+      const sameDate = rp.dates[0] === todayDate;
+      const sameMonth =
+        rp.months[0].toUpperCase() ===
+        new Intl.DateTimeFormat("en-US", { month: "short" })
+          .format(today)
+          .toUpperCase()
+          .slice(0, 3);
+
+      return sameDate && sameMonth ? "YEARLYXMONTHDATE" : "CUSTOMTYPE";
+    }
+
+    case "YEARLYXMONTHNWEEKDAY": {
+      if (!rp?.weekDaysMapping?.length || !rp?.months?.length)
+        return "YEARLYXMONTHNWEEKDAY";
+
+      if (rp.weekDaysMapping.length !== 1 || rp.months.length !== 1)
+        return "CUSTOMTYPE";
+
+      const w = rp.weekDaysMapping[0];
+      const weekNumber = Math.ceil(todayDate / 7);
+      const sameWeek = w.week === weekNumber;
+      const sameDay = w.days.length === 1 && w.days[0] === todayDayStr;
+      const sameMonth =
+        rp.months[0].toUpperCase() ===
+        new Intl.DateTimeFormat("en-US", { month: "short" })
+          .format(today)
+          .toUpperCase()
+          .slice(0, 3);
+
+      return sameWeek && sameDay && sameMonth
+        ? "YEARLYXMONTHNWEEKDAY"
+        : "CUSTOMTYPE";
+    }
+
+    case "YEARLYXMONTHLASTWEEKDAY": {
+      if (!rp?.weekDaysMapping?.length || !rp?.months?.length)
+        return "YEARLYXMONTHLASTWEEKDAY";
+
+      if (rp.weekDaysMapping.length !== 1 || rp.months.length !== 1)
+        return "CUSTOMTYPE";
+
+      const w = rp.weekDaysMapping[0];
+
+      const lastDate = new Date(
+        today.getFullYear(),
+        today.getMonth() + 1,
+        0,
+      ).getDate();
+      const todayWeek = Math.ceil(todayDate / 7);
+      const lastWeek = Math.ceil(lastDate / 7);
+
+      const sameDay = w.days.length === 1 && w.days[0] === todayDayStr;
+      const sameMonth =
+        rp.months[0].toUpperCase() ===
+        new Intl.DateTimeFormat("en-US", { month: "short" })
+          .format(today)
+          .toUpperCase()
+          .slice(0, 3);
+
+      return sameDay && sameMonth && todayWeek === lastWeek
+        ? "YEARLYXMONTHLASTWEEKDAY"
+        : "CUSTOMTYPE";
+    }
+
+    default:
+      return "CUSTOMTYPE";
+  }
+}
+
+export function buildRepetitionOptionsREPT(
+  taskDeadline?: string | Date | null,
+) {
+  if (!taskDeadline) return [];
+
+  try {
+    const dateObj = new Date(taskDeadline);
+    if (isNaN(dateObj.getTime())) return [];
+
+    const dayName = getDayName(dateObj);
+    const ordinalWeekday = getOrdinalWeekday(dateObj);
+
+    const dateOfMonth = dateObj.getDate();
+    const monthName = dateObj.toLocaleDateString("en-US", { month: "long" });
+
+    return [
+      { value: "DAILY", label: "Daily" },
+
+      { value: "DAILYALTERNATE", label: "Daily (Every Other Day)" },
+
+      { value: "WEEKLY", label: `Weekly on ${dayName}` },
+
+      {
+        value: "MONTHLYNWEEKDAY",
+        label: `Monthly on the ${ordinalWeekday} `,
+      },
+
+      {
+        value: "MONTHLYDATE",
+        label: `Monthly on the ${getOrdinalDate(dateOfMonth)} date`,
+      },
+
+      {
+        value: "YEARLY",
+        label: `Yearly on ${monthName} ${getOrdinalDate(dateOfMonth)}`,
+      },
+
+      { value: "CUSTOMTYPE", label: "Custom" },
+    ];
+  } catch {
+    return [];
   }
 }

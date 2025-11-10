@@ -263,6 +263,8 @@ const Urls = {
   addRepeatMeetingList: () => `${baseUrl}/company/repetitive-meeting/create`,
   updateRepeatMeetingList: (id: string) =>
     `${baseUrl}/company/repetitive-meeting/update/${id}`,
+  updateRepeatMeetingStatusChange: (id: string) =>
+    `${baseUrl}/company/repetitive-meeting/update-status/${id}`,
   deleteRepeatMeetingList: (id: string) =>
     `${baseUrl}/company/repetitive-meeting/delete/${id}`,
 
@@ -359,8 +361,11 @@ const Urls = {
 
   addHoliday: () => `${baseUrl}/company/holiday/add`,
   getHoliday: () => `${baseUrl}/company/holiday/get`,
+  getHolidayAll: () => `${baseUrl}/company/holiday/get-all`,
   updateHoliday: (id: string) => `${baseUrl}/company/holiday/update/${id}`,
   deleteHoliday: (id: string) => `${baseUrl}/company/holiday/delete/${id}`,
+  deleteKpiNote: (id: string) =>
+    `${baseUrl}/company/kpi-data/note-delete/${id}`,
 };
 
 export default Urls;

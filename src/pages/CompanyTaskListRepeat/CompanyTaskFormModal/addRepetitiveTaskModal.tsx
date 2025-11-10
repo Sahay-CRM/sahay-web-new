@@ -1,34 +1,16 @@
 import ModalData from "@/components/shared/Modal/ModalData";
+import { formatToLocalDateTime } from "@/features/utils/app.utils";
 import { format } from "date-fns";
 
-interface CreateTaskPayload {
-  taskId?: string;
-  repetitiveTaskId?: string;
-  project?: {
-    projectId: string;
-    projectName: string;
-    // other fields
-  };
-  taskName?: string;
-  taskDescription?: string;
-  repeatType?: string;
-
-  meeting?: {
-    meetingName?: string;
-  } | null;
-  assignUser?: Employee[];
-  taskStatusId?: string;
-  taskTypeId?: string;
-  comment?: string;
-  taskDeadline: string;
-}
-
 interface DatapointModalProps {
-  modalData: CreateTaskPayload;
+  modalData: TaskPreviewData;
   isModalOpen: boolean;
   modalClose: () => void;
   onSubmit: () => void;
   isLoading?: boolean;
+  isChildData?: string | undefined;
+  onKeepAll?: () => void;
+  onDeleteAll?: () => void;
 }
 
 const AddDatapointModal: React.FC<DatapointModalProps> = ({
@@ -37,6 +19,9 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
   modalClose,
   onSubmit,
   isLoading,
+  isChildData,
+  onKeepAll,
+  onDeleteAll,
 }) => {
   return (
     <ModalData
@@ -53,12 +38,27 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
           buttonCss: "py-1.5 px-5",
           btnClick: modalClose,
         },
-        {
-          btnText: "Submit",
-          buttonCss: "py-1.5 px-5",
-          btnClick: onSubmit,
-          isLoading: isLoading,
-        },
+        ...(isChildData
+          ? [
+              {
+                btnText: "Update All",
+                buttonCss: "py-1.5 px-5",
+                btnClick: onKeepAll ?? (() => {}),
+              },
+              {
+                btnText: "Delete All",
+                buttonCss: "py-1.5 px-5",
+                btnClick: onDeleteAll ?? (() => {}),
+              },
+            ]
+          : [
+              {
+                btnText: "Submit",
+                buttonCss: "py-1.5 px-5",
+                btnClick: onSubmit,
+                isLoading: isLoading,
+              },
+            ]),
       ]}
     >
       <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-700">
@@ -89,7 +89,7 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
               ? new Date(modalData.taskStartDate).toLocaleString()
               : "-"}
           </span>
-        </div> */}
+        </div>
         {modalData.taskDeadline && (
           <div>
             <span className="font-medium text-gray-700">Deadline:</span>{" "}
@@ -97,26 +97,32 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
               {format(new Date(modalData.taskDeadline), "dd/MM/yyyy h:mm aa")}
             </span>
           </div>
-        )}
+        )} */}
 
         <div>
           <span className="font-medium text-primary">Repeat Type:</span>{" "}
           {modalData.repeatType || "-"}
         </div>
-
-        {/* <div>
-          <span className="font-medium text-gray-700">Task Status ID:</span>{" "}
-          <span className="text-black font-bold">
-            {modalData.taskStatusId || "-"}
-          </span>
-        </div>
-
         <div>
-          <span className="font-medium text-gray-700">Task Type ID:</span>{" "}
-          <span className="text-black font-bold">
-            {modalData.taskTypeId || "-"}
-          </span>
-        </div> */}
+          <span className="font-medium text-primary">Repeat Time:</span>{" "}
+          {modalData.repeatTime
+            ? format(new Date(`1970-01-01T${modalData.repeatTime}`), "h:mm aa")
+            : "-"}
+        </div>
+        {modalData?.createDateUTC && (
+          <div>
+            <span className="font-medium text-primary">First Task: </span>
+            {/* <span className="text-black font-bold"> */}
+            {formatToLocalDateTime(modalData.createDateUTC)}
+            {/* </span> */}
+          </div>
+        )}
+        {modalData?.nextDateUTC && (
+          <div>
+            <span className="font-medium text-primary">Next Task: </span>
+            {formatToLocalDateTime(modalData.nextDateUTC)}
+          </div>
+        )}
 
         <div className="col-span-2">
           <span className="font-medium text-primary">Assigned Users:</span>{" "}
@@ -133,6 +139,13 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
             {modalData.comment}
           </div>
         ) : null}
+      </div>
+      <div>
+        {isChildData && (
+          <div className="border-t mt-2 pt-2">
+            <span className="font-bold text-black">{isChildData}</span>
+          </div>
+        )}
       </div>
     </ModalData>
   );

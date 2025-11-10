@@ -1,5 +1,22 @@
 import ModalData from "@/components/shared/Modal/ModalData";
-import { format } from "date-fns";
+import { formatToLocalDateTime } from "@/features/utils/app.utils";
+
+export interface MeetingType {
+  meetingTypeId: string;
+  meetingTypeName: string;
+}
+
+export interface MeetingData {
+  meetingName?: string;
+  meetingDescription?: string;
+  meetingTypeId?: MeetingType;
+  repeatType?: string;
+  repeatTime?: string;
+  employeeId?: Employee[];
+  repetitiveMeetingId?: string;
+  createDateUTC?: string;
+  nextDateUTC?: string;
+}
 
 interface MeetingModalProps {
   modalData: MeetingData;
@@ -7,6 +24,9 @@ interface MeetingModalProps {
   modalClose: () => void;
   onSubmit: () => void;
   isLoading?: boolean;
+  isChildData?: string | undefined;
+  onKeepAll?: () => void;
+  onDeleteAll?: () => void;
 }
 
 const AddRepeatMeetingModal: React.FC<MeetingModalProps> = ({
@@ -15,15 +35,10 @@ const AddRepeatMeetingModal: React.FC<MeetingModalProps> = ({
   modalClose,
   onSubmit,
   isLoading,
+  isChildData,
+  onKeepAll,
+  onDeleteAll,
 }) => {
-  // const joinersArr = Array.isArray(modalData?.joiners)
-  //   ? (modalData.joiners.flat?.() ?? modalData.joiners)
-  //   : [];
-
-  // const joiners = joinersArr
-  //   ?.filter((joiner) => !Array.isArray(joiner))
-  //   .map((joiner) => joiner?.employeeName);
-
   return (
     <ModalData
       isModalOpen={isModalOpen}
@@ -39,57 +54,136 @@ const AddRepeatMeetingModal: React.FC<MeetingModalProps> = ({
           buttonCss: "py-1.5 px-5",
           btnClick: modalClose,
         },
-        {
-          btnText: "Submit",
-          buttonCss: "py-1.5 px-5",
-          btnClick: onSubmit,
-          isLoading: isLoading,
-        },
+        ...(isChildData
+          ? [
+              {
+                btnText: "Update All",
+                buttonCss: "py-1.5 px-5",
+                btnClick: onKeepAll ?? (() => {}),
+              },
+              {
+                btnText: "Delete All",
+                buttonCss: "py-1.5 px-5",
+                btnClick: onDeleteAll ?? (() => {}),
+              },
+            ]
+          : [
+              {
+                btnText: "Submit",
+                buttonCss: "py-1.5 px-5",
+                btnClick: onSubmit,
+                isLoading: isLoading,
+              },
+            ]),
       ]}
     >
       <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm text-gray-700">
+        {/* Meeting Name */}
         {modalData?.meetingName && (
           <div>
             <span className="font-medium text-primary">Meeting Name: </span>
             {modalData.meetingName}
           </div>
         )}
+
+        {/* Description */}
         {modalData?.meetingDescription && (
           <div>
-            <span className="font-medium text-primary">
-              Meeting Description:{" "}
-            </span>
+            <span className="font-medium text-primary">Description: </span>
             {modalData.meetingDescription}
           </div>
         )}
-        {modalData?.meetingDateTime && (
-          <div>
-            <span className="font-medium text-primary">
-              Meeting Date & Time:{" "}
-            </span>
-            {format(new Date(modalData.meetingDateTime), "dd/MM/yyyy h:mm aa")}
-          </div>
-        )}
-        {modalData?.meetingStatus && (
-          <div>
-            <span className="font-medium text-primary">Meeting Status: </span>
-            {typeof modalData.meetingStatus === "object"
-              ? modalData.meetingStatus.meetingStatus
-              : modalData.meetingStatus}
-          </div>
-        )}
-        {modalData?.meetingTypeName && (
+
+        {/* Meeting Type */}
+        {modalData?.meetingTypeId && (
           <div>
             <span className="font-medium text-primary">Meeting Type: </span>
-            {modalData.meetingTypeName}
+            {modalData.meetingTypeId.meetingTypeName}
           </div>
         )}
-        {/* {modalData.joiners && (
-          <div className="col-span-2">
-            <span className="font-medium text-primary">Joiners: </span>
-            {modalData.joiners.map((item) => item.employeeName)}
+
+        {/* Repeat Type */}
+        {modalData?.repeatType && (
+          <div>
+            <span className="font-medium text-primary">Repeat Type: </span>
+            {modalData.repeatType}
           </div>
-        )} */}
+        )}
+
+        {modalData?.createDateUTC && (
+          <div>
+            <span className="font-medium text-primary">First Meeting: </span>
+            {formatToLocalDateTime(modalData.createDateUTC)}
+          </div>
+        )}
+        {modalData?.nextDateUTC && (
+          <div>
+            <span className="font-medium text-primary">Next Meeting:: </span>
+            {formatToLocalDateTime(modalData.nextDateUTC)}
+          </div>
+        )}
+
+        {/* Repeat Time */}
+        {modalData?.repeatTime && (
+          <div>
+            <span className="font-medium text-primary">Repeat Time: </span>
+            {modalData.repeatTime}
+          </div>
+        )}
+        {/* Employee List */}
+        {Array.isArray(modalData?.employeeId) &&
+          modalData.employeeId.length > 0 && (
+            <div className="col-span-2 space-y-2">
+              {(() => {
+                const teamLeaders = modalData.employeeId.filter(
+                  (emp) => emp.isTeamLeader,
+                );
+                const otherJoiners = modalData.employeeId.filter(
+                  (emp) => !emp.isTeamLeader,
+                );
+
+                return (
+                  <>
+                    {/* Team Leaders */}
+                    {teamLeaders.length > 0 && (
+                      <div>
+                        <span className="font-medium text-primary">
+                          Team Leader{teamLeaders.length > 1 ? "s" : " "}:{" "}
+                        </span>
+                        <span className=" font-medium">
+                          {teamLeaders
+                            .map((emp) => emp.employeeName)
+                            .join(", ")}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Joiners */}
+                    {otherJoiners.length > 0 && (
+                      <div>
+                        <span className="font-medium text-primary">
+                          Joiner{otherJoiners.length > 1 ? "s" : ""}:{" "}
+                        </span>
+                        <span>
+                          {otherJoiners
+                            .map((emp) => emp.employeeName)
+                            .join(", ")}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          )}
+      </div>
+
+      <div>
+        {isChildData && (
+          <div className="border-t mt-2 pt-2">
+            <span className="font-bold text-black">{isChildData}</span>
+          </div>
+        )}
       </div>
     </ModalData>
   );

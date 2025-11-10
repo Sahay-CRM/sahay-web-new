@@ -202,7 +202,7 @@ export default function useEditDatapointFormModal({
   ];
   const yesnoOptions = [
     { label: "Yes", value: "1" },
-    { label: "No", value: "0" },
+    { label: "No", value: "2" },
   ];
   // const skipDaysOption = [
   //   { label: "Sun", value: "0" },

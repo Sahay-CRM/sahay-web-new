@@ -820,11 +820,11 @@ export default function Agenda({
                   style={{
                     width:
                       activeTab === "tasks"
-                        ? "0px"
+                        ? "280px"
                         : activeTab === "projects"
                           ? "140px"
                           : activeTab === "kpis"
-                            ? "280px"
+                            ? "0px"
                             : "0px",
                   }}
                 />

@@ -204,6 +204,10 @@ interface IProjectFormData {
     employeeName: string;
     employeeEmail: string;
   }[];
+  projectDocuments: {
+    fileId: string;
+    fileName: string;
+  }[];
   ProjectSubParameterJunction?: {
     projectSubParameterId: string;
     subPara: {
@@ -399,6 +403,7 @@ interface CompanyMeetingDataProps {
   isDetailMeeting?: boolean;
   meetingTimePlanned?: string;
   selectDate?: Date | string;
+  repetitiveMeetingId?: string;
 }
 
 interface ProjectParameters {
@@ -735,6 +740,7 @@ interface Employee {
     companyId: string;
   };
   reportingManager: string;
+  isTeamLeader?: boolean;
 }
 
 interface TaskEmployee {
@@ -786,7 +792,9 @@ interface Task {
   repetitiveTaskId?: string;
   employeeIds?: string | string[];
   isActive?: boolean;
-  customObj?: CustomObj;
+  customObj?: CustomObjREPT;
+  repeatTime?: string;
+  nextDate?: string;
 }
 
 interface ProjectTask {
@@ -1117,7 +1125,10 @@ interface KpiDataCell {
   isSunday?: boolean;
   isSkipDay?: boolean;
   note?: string | null;
+  noteId?: string;
   isHoliday?: boolean;
+  matchCount?: number;
+  validationPercentage?: number;
 }
 
 interface UserLogDetails {
@@ -1267,6 +1278,8 @@ interface MeetingNotesRes {
   noteType?: string;
   groupId?: string;
   groupName?: string;
+  meetingId?: string;
+  noteTag?: string;
 }
 
 interface IssuesProps {
@@ -1380,12 +1393,14 @@ interface RepeatMeeting {
   updatedDatetime?: string;
   nextDate?: string;
   isActive?: boolean;
+  repeatTime?: string;
   meetingDateTime?: string;
   meetingType?: {
     meetingTypeId: string;
     meetingTypeName: string;
   };
   isDetailMeeting?: boolean;
+  customObj?: CustomObjREPT;
   // meetingStatusId?: string;
 }
 
@@ -1571,4 +1586,28 @@ interface StateData {
   stateName: string;
   stateId: string;
   countryId?: string;
+}
+interface TaskPreviewData {
+  taskId?: string;
+  repetitiveTaskId?: string;
+  project?: {
+    projectId: string;
+    projectName: string;
+    // other fields
+  };
+  taskName?: string;
+  taskDescription?: string;
+  repeatType?: string;
+  repeatTime?: string;
+
+  meeting?: {
+    meetingName?: string;
+  } | null;
+  assignUser?: Employee[];
+  taskStatusId?: string;
+  taskTypeId?: string;
+  comment?: string;
+  taskDeadline: string;
+  createDateUTC?: string;
+  nextDateUTC?: string;
 }
