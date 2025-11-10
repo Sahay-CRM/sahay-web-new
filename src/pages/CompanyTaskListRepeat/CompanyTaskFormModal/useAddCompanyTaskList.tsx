@@ -55,6 +55,8 @@ export default function useAddEmployee() {
     },
     enable: !!repetitiveTaskId,
   });
+
+  const taskdata = taskDataById?.data;
   const { mutate: addUpdateTask, isPending } =
     addUpdateRepeatCompanyTaskMutation();
 
@@ -456,6 +458,7 @@ export default function useAddEmployee() {
     const repeatOptions = buildRepetitionOptionsREPT(new Date());
     const [openCustomModal, setOpenCustomModal] = useState(false);
     const [isTypeSearch, setIsTypeSearch] = useState("");
+    const [hasUserChangedRepeat, setHasUserChangedRepeat] = useState(false);
 
     const repeatTime = watch("repeatTime");
     const { data: taskTypeData } = useDdTaskType({
@@ -484,13 +487,21 @@ export default function useAddEmployee() {
     } | null>(null);
 
     const prevCustomDataRef = useRef(CustomRepeatData);
+    // Track initial custom repeat from API once
+    const initialCustomRef = useRef(taskdata?.customObj);
 
+    // 🔹 CUSTOMTYPE logic
     useEffect(() => {
-      if (
-        selectedRepeat === "CUSTOMTYPE" &&
-        CustomRepeatData &&
-        repeatTime // ← Only when user selected time
-      ) {
+      if (selectedRepeat === "CUSTOMTYPE" && CustomRepeatData && repeatTime) {
+        const hasCustomChanged =
+          JSON.stringify(CustomRepeatData) !==
+          JSON.stringify(initialCustomRef.current);
+
+        // Mark only if user truly changed data or time
+        if (hasCustomChanged || repeatTime !== taskdata?.repeatTime) {
+          setHasUserChangedRepeat(true);
+        }
+
         prevCustomDataRef.current = CustomRepeatData;
 
         const result = getNextRepeatDatesCustom(
@@ -500,20 +511,24 @@ export default function useAddEmployee() {
         );
         setRepeatResult(result);
       }
-    }, [repeatTime]);
+    }, [selectedRepeat, CustomRepeatData, repeatTime]);
 
+    // 🔹 NORMAL repeat types logic
     useEffect(() => {
-      if (
-        selectedRepeat &&
-        selectedRepeat !== "CUSTOMTYPE" &&
-        repeatTime // ← Don’t run unless time is selected
-      ) {
-        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (selectedRepeat && selectedRepeat !== "CUSTOMTYPE" && repeatTime) {
+        const hasChanged =
+          selectedRepeat !== taskdata?.repeatType ||
+          repeatTime !== taskdata?.repeatTime;
 
+        if (hasChanged) {
+          setHasUserChangedRepeat(true);
+        }
+
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const result = getNextRepeatDates(selectedRepeat, repeatTime, timezone);
         setRepeatResult(result);
       }
-    }, [repeatTime]);
+    }, [selectedRepeat, repeatTime]);
 
     useEffect(() => {
       if (repeatResult) {
@@ -663,8 +678,9 @@ export default function useAddEmployee() {
                         {errors.repeatType.message as string}
                       </p>
                     )}
-                    {repeatResult && (
-                      <div className="flex gap-2 text-sm text-gray-700">
+                    {hasUserChangedRepeat && repeatResult ? (
+                      // ✅ Only show when user has changed repeat/time/custom data
+                      <div className="flex gap-2 text-sm text-gray-700 col-span-2">
                         <p>
                           <strong>Create First Task:</strong>{" "}
                           {formatToLocalDateTime(repeatResult.createDateUTC)}
@@ -674,7 +690,15 @@ export default function useAddEmployee() {
                           {formatToLocalDateTime(repeatResult.nextDateUTC)}
                         </p>
                       </div>
-                    )}
+                    ) : taskdata?.nextDate ? (
+                      // ✅ Otherwise show only existing meeting info from API
+                      <div className="flex gap-2 text-sm text-gray-700 col-span-2">
+                        <p>
+                          <strong>Next Meeting:</strong>{" "}
+                          {formatToLocalDateTime(taskdata.nextDate)}
+                        </p>
+                      </div>
+                    ) : null}
                   </>
                 );
               }}

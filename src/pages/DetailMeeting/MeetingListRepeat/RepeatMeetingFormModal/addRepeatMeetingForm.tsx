@@ -155,34 +155,38 @@ const MeetingInfo = () => {
   const {
     meetingApiData,
     saveCustomRepeatData,
-    // setSelectedRepeat,
-    // selectedRepeat,
     CustomRepeatData,
     setCustomRepeatData,
   } = useAddRepeatMeetingForm();
 
   const repeatTime = watch("repeatTime");
-  console.log(repeatTime, "repeatTime");
+  const selectedRepeat = watch("repeatType");
 
   const repeatOptions = buildRepetitionOptionsREPT(new Date());
   const [openCustomModal, setOpenCustomModal] = useState(false);
+  const [hasUserChangedRepeat, setHasUserChangedRepeat] = useState(false);
 
   const [repeatResult, setRepeatResult] = useState<{
     createDateUTC: string;
     nextDateUTC: string;
   } | null>(null);
 
-  const selectedRepeat = watch("repeatType");
-
   const prevCustomDataRef = useRef(CustomRepeatData);
+  // Track initial custom repeat from API once
+  const initialCustomRef = useRef(meetingApiData?.customObj);
 
-  // ✅ CUSTOMTYPE logic
+  // 🔹 CUSTOMTYPE logic
   useEffect(() => {
-    if (
-      selectedRepeat === "CUSTOMTYPE" &&
-      CustomRepeatData &&
-      repeatTime // ← Only when user selected time
-    ) {
+    if (selectedRepeat === "CUSTOMTYPE" && CustomRepeatData && repeatTime) {
+      const hasCustomChanged =
+        JSON.stringify(CustomRepeatData) !==
+        JSON.stringify(initialCustomRef.current);
+
+      // Mark only if user truly changed data or time
+      if (hasCustomChanged || repeatTime !== meetingApiData?.repeatTime) {
+        setHasUserChangedRepeat(true);
+      }
+
       prevCustomDataRef.current = CustomRepeatData;
 
       const result = getNextRepeatDatesCustom(
@@ -192,26 +196,26 @@ const MeetingInfo = () => {
       );
       setRepeatResult(result);
     }
-  }, [selectedRepeat, CustomRepeatData, repeatTime, meetingApiData?.nextDate]);
+  }, [selectedRepeat, CustomRepeatData, repeatTime]);
 
+  // 🔹 NORMAL repeat types logic
   useEffect(() => {
-    if (
-      selectedRepeat &&
-      selectedRepeat !== "CUSTOMTYPE" &&
-      repeatTime // ← Don’t run unless time is selected
-    ) {
-      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (selectedRepeat && selectedRepeat !== "CUSTOMTYPE" && repeatTime) {
+      const hasChanged =
+        selectedRepeat !== meetingApiData?.repeatType ||
+        repeatTime !== meetingApiData?.repeatTime;
 
+      if (hasChanged) {
+        setHasUserChangedRepeat(true);
+      }
+
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const result = getNextRepeatDates(selectedRepeat, repeatTime, timezone);
       setRepeatResult(result);
     }
-  }, [
-    selectedRepeat,
-    repeatTime,
-    meetingApiData?.nextDate,
-    meetingApiData?.repeatType,
-  ]);
+  }, [selectedRepeat, repeatTime]);
 
+  // 🧠 Update form values when result changes
   useEffect(() => {
     if (repeatResult) {
       setValue("createDateUTC", repeatResult.createDateUTC);
@@ -222,6 +226,7 @@ const MeetingInfo = () => {
   return (
     <div className="grid grid-cols-2 gap-4">
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
+        {/* 📝 Basic fields */}
         <FormInputField
           label="Meeting Name"
           {...register("meetingName", { required: "Name is required" })}
@@ -237,6 +242,7 @@ const MeetingInfo = () => {
           isMandatory
         />
 
+        {/* 🔁 Repetition Selector */}
         <Controller
           control={control}
           name="repeatType"
@@ -247,114 +253,105 @@ const MeetingInfo = () => {
                 ?.label ||
               (selectedRepeat === "CUSTOMTYPE" ? "Custom" : "Repeat");
             return (
-              <>
-                <div className="flex flex-col space-y-1">
-                  <FormLabel className="flex items-center">
-                    Repetition
-                    <span className="text-red-500 ml-1">*</span>
-                  </FormLabel>
+              <div className="flex flex-col space-y-1">
+                <FormLabel className="flex items-center">
+                  Repetition
+                  <span className="text-red-500 ml-1">*</span>
+                </FormLabel>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <div
-                        className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer border rounded-md ${
-                          !repeatTime
-                            ? "opacity-50 cursor-not-allowed"
-                            : "hover:bg-accent"
-                        }`}
-                        onClick={(e) => {
-                          if (!repeatTime) e.preventDefault();
-                        }}
-                      >
-                        <Repeat className="w-4 h-4" />
-                        <span>{selectedRepeatLabel}</span>
-                      </div>
-                    </DropdownMenuTrigger>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div
+                      className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer border rounded-md ${
+                        !repeatTime
+                          ? "opacity-50 cursor-not-allowed"
+                          : "hover:bg-accent"
+                      }`}
+                      onClick={(e) => {
+                        if (!repeatTime) e.preventDefault();
+                      }}
+                    >
+                      <Repeat className="w-4 h-4" />
+                      <span>{selectedRepeatLabel}</span>
+                    </div>
+                  </DropdownMenuTrigger>
 
-                    <DropdownMenuContent align="start" className="w-fit">
-                      {repeatOptions.map((item) => {
-                        const isSelected = item.value === selectedRepeat;
-                        return (
-                          <DropdownMenuItem
-                            key={item.value}
-                            onClick={() => {
-                              if (item.value === "CUSTOMTYPE") {
-                                setOpenCustomModal(true);
-                              } else {
-                                field.onChange(item.value);
-                                // setSelectedRepeat(item.value);
-                                setValue("repeatType", item.value);
-                                // ✅ Clear previously saved custom repeat data
-                                setValue("customObj", undefined);
-                                setCustomRepeatData(undefined);
-                              }
-                            }}
-                            className={`flex items-center justify-between ${
-                              isSelected
-                                ? "bg-accent text-accent-foreground"
-                                : ""
-                            }`}
-                          >
-                            <span>{item.label}</span>
-                            {isSelected && <span className="ml-2">✔</span>}
-                          </DropdownMenuItem>
-                        );
-                      })}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  {errors.repeatType && (
-                    <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                      {String(errors.repeatType.message)}
-                    </span>
-                  )}
+                  <DropdownMenuContent align="start" className="w-fit">
+                    {repeatOptions.map((item) => {
+                      const isSelected = item.value === selectedRepeat;
+                      return (
+                        <DropdownMenuItem
+                          key={item.value}
+                          onClick={() => {
+                            if (item.value === "CUSTOMTYPE") {
+                              setOpenCustomModal(true);
+                            } else {
+                              field.onChange(item.value);
+                              setValue("repeatType", item.value);
+                              setValue("customObj", undefined);
+                              setCustomRepeatData(undefined);
+                            }
+                          }}
+                          className={`flex items-center justify-between ${
+                            isSelected ? "bg-accent text-accent-foreground" : ""
+                          }`}
+                        >
+                          <span>{item.label}</span>
+                          {isSelected && <span className="ml-2">✔</span>}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-                  <CustomModalFile
-                    open={openCustomModal}
-                    multiSelectAllow={false}
-                    defaultValues={
-                      watch("customObj") ||
-                      CustomRepeatData ||
-                      meetingApiData?.customObj
-                    }
-                    // defaultValues={meetingApiData?.customObj ?? undefined}
-                    onOpenChange={setOpenCustomModal}
-                    onSave={(data) => {
-                      field.onChange("CUSTOMTYPE");
-                      // setSelectedRepeat("CUSTOMTYPE");
-                      setValue("repeatType", "CUSTOMTYPE");
-                      setValue("customObj", data);
-                      saveCustomRepeatData(data);
-                    }}
-                  />
-                </div>
-              </>
+                {errors.repeatType && (
+                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                    {String(errors.repeatType.message)}
+                  </span>
+                )}
+
+                {/* 🧩 Custom Repeat Modal */}
+                <CustomModalFile
+                  open={openCustomModal}
+                  multiSelectAllow={false}
+                  defaultValues={
+                    watch("customObj") ||
+                    CustomRepeatData ||
+                    meetingApiData?.customObj
+                  }
+                  onOpenChange={setOpenCustomModal}
+                  onSave={(data) => {
+                    field.onChange("CUSTOMTYPE");
+                    setValue("repeatType", "CUSTOMTYPE");
+                    setValue("customObj", data);
+                    saveCustomRepeatData(data);
+                  }}
+                />
+              </div>
             );
           }}
         />
+
+        {/* ⏰ Time Picker */}
         <Controller
           control={control}
           name="repeatTime"
           rules={{ required: "Time is required" }}
-          render={({ field, fieldState }) => {
-            // if (!field.value) {
-            //   const now = new Date();
-            //   const currentTime = now.toTimeString().slice(0, 5);
-            //   field.onChange(currentTime);
-            // }
-
-            return (
-              <FormTimePicker
-                label="Meeting Time"
-                value={field.value}
-                onChange={field.onChange}
-                error={fieldState.error}
-                isMandatory
-              />
-            );
-          }}
+          render={({ field, fieldState }) => (
+            <FormTimePicker
+              label="Meeting Time"
+              value={field.value}
+              onChange={field.onChange}
+              error={fieldState.error}
+              isMandatory
+            />
+          )}
         />
-        {repeatResult && (
-          <div className="flex gap-2 text-sm text-gray-700">
+
+        {/* 📅 Show dates */}
+        {hasUserChangedRepeat && repeatResult ? (
+          // ✅ Only show when user has changed repeat/time/custom data
+          <div className="flex gap-2 text-sm text-gray-700 col-span-2">
             <p>
               <strong>Create First Meeting:</strong>{" "}
               {formatToLocalDateTime(repeatResult.createDateUTC)}
@@ -364,7 +361,15 @@ const MeetingInfo = () => {
               {formatToLocalDateTime(repeatResult.nextDateUTC)}
             </p>
           </div>
-        )}
+        ) : meetingApiData?.nextDate ? (
+          // ✅ Otherwise show only existing meeting info from API
+          <div className="flex gap-2 text-sm text-gray-700 col-span-2">
+            <p>
+              <strong>Next Meeting:</strong>{" "}
+              {formatToLocalDateTime(meetingApiData.nextDate)}
+            </p>
+          </div>
+        ) : null}
       </Card>
     </div>
   );
