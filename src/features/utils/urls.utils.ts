@@ -242,6 +242,9 @@ const Urls = {
   deleteCompanyMeetingNote: (id: string) =>
     `${baseUrl}/company/detail-meeting/note/delete/${id}`,
 
+  deleteTagFromNote: (id: string) =>
+    `${baseUrl}/company/detail-meeting/note/remove-tag/${id}`,
+
   updateDetailMeetingKPIData: () =>
     `${baseUrl}/company/detail-meeting/kpi/update-data`,
 

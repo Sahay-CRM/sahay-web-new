@@ -124,6 +124,7 @@ export default function MeetingList() {
             primaryKey="employeeId"
             paginationDetails={employeeData as PaginationFilter}
             setPaginationFilter={setPaginationFilter}
+            searchValue={paginationFilter?.search}
             isLoading={isLoading}
             permissionKey="users"
             isActionButton={() => false}

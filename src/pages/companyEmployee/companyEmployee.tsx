@@ -180,6 +180,7 @@ export default function CompanyDesignation() {
             paginationDetails={mapPaginationDetails(employeeData)}
             isLoading={isLoading}
             setPaginationFilter={setPaginationFilter}
+            searchValue={paginationFilter?.search}
             permissionKey="employeeId"
             moduleKey="EMPLOYEE"
             sortableColumns={["employeeName", "employeeType"]}

@@ -57,14 +57,17 @@ interface TableProps<T extends Record<string, unknown>> {
   paginationDetails?: PaginationFilter & {
     sortBy?: string;
     sortOrder?: "asc" | "desc";
+    search?: string;
   };
   setPaginationFilter?: (
     filter: PaginationFilter & {
       sortBy?: string;
       sortOrder?: "asc" | "desc";
+      search?: string;
     },
   ) => void;
   isLoading?: boolean;
+  searchValue?: string;
   isActionButton?: (item: T) => boolean;
   additionalButton?: ((item: T) => boolean) | React.ReactNode;
   viewButton?: React.ReactNode;
@@ -138,6 +141,7 @@ const TableData = <T extends Record<string, unknown>>({
   showActionsColumn = true,
   actionColumnWidth,
   isPermissionIcon,
+  searchValue,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   // Only show checkboxes if explicitly enabled with multiSelect OR if both selectedValue and handleChange are provided
@@ -220,7 +224,8 @@ const TableData = <T extends Record<string, unknown>>({
       ...paginationDetails,
       sortBy: columnKey,
       sortOrder: newSortOrder,
-      currentPage: 1, // Reset to first page when sorting
+      currentPage: 1,
+      search: searchValue,
     });
   };
 

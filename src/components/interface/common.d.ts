@@ -687,6 +687,7 @@ interface TaskGetPaging {
   employees?: Employee;
   projectDetails?: TaskProject;
   taskDeadline?: string;
+  nextDate?: string;
   taskStartDate?: string;
   color?: string;
   objectiveTaskId?: string;
@@ -1274,6 +1275,7 @@ interface MeetingNotesRes {
   employeeId: string;
   note: string;
   meetingNoteId: string;
+  noteId?: string;
   createdAt: string;
   noteType?: string;
   groupId?: string;
@@ -1286,6 +1288,7 @@ interface IssuesProps {
   issueId?: string;
   issueName: string;
   isResolved?: boolean;
+  isParked?: boolean;
   sequence?: number;
   departmentId?: string;
   departmentName?: string;
@@ -1309,6 +1312,7 @@ interface ObjectiveProps {
   objectiveId?: string;
   objectiveName: string;
   isResolved?: boolean;
+  isParked?: boolean;
   detailMeetingId?: string;
   sequence?: number;
   departmentId?: string;
@@ -1335,6 +1339,7 @@ interface MeetingAgenda {
   noOfProjects: number;
   noOfKPIs: number;
   isResolved?: boolean;
+  isParked?: boolean;
   issueId?: string;
   objectiveId?: string;
   sequence?: number;
@@ -1485,6 +1490,7 @@ interface AgendaListProps {
   cancelEdit: () => void;
   handleListClick?: (id: string, item: boolean) => void;
   handleMarkAsSolved: (data: MeetingAgenda) => void;
+  handleMarkAsPark: (data: MeetingAgenda) => void;
   startEdit: (
     type: "ISSUE" | "OBJECTIVE",
     issueId: string | null,

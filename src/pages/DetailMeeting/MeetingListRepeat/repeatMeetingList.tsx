@@ -222,6 +222,7 @@ export default function RepeatMeetingList() {
             // isEditDeleteShow={true}
             paginationDetails={mapPaginationDetails(repeatMeetingData)}
             setPaginationFilter={setPaginationFilter}
+            searchValue={paginationFilter?.search}
             isLoading={isLoading}
             moduleKey="LIVE_MEETING_TEMPLATES"
             showIndexColumn={false}

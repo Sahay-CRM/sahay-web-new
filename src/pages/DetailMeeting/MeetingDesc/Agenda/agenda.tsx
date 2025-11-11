@@ -184,6 +184,7 @@ export default function Agenda({
     ioType,
     setSelectedIoType,
     handleMarkAsSolved,
+    handleMarkAsPark,
     resolutionFilter,
     handleDragEnd,
     unFollowByUser,
@@ -730,12 +731,12 @@ export default function Agenda({
                   //   meetingStatus !== "ENDED"
                   // ) {
                   // }
-                  handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
+                  handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED | PARK");
                 }}
                 value={resolutionFilter}
                 className="w-full"
               >
-                <TabsList className="grid w-64 grid-cols-2">
+                <TabsList className="grid w-86 grid-cols-3">
                   <TabsTrigger
                     value="UNSOLVED"
                     className="data-[state=active]:bg-primary data-[state=active]:text-white"
@@ -748,10 +749,17 @@ export default function Agenda({
                   >
                     Resolved
                   </TabsTrigger>
+                  <TabsTrigger
+                    value="PARK"
+                    className="data-[state=active]:bg-primary data-[state=active]:text-white"
+                  >
+                    Parked
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="UNSOLVED" className="mt-0"></TabsContent>
                 <TabsContent value="SOLVED" className="mt-0"></TabsContent>
+                <TabsContent value="PARK" className="mt-0"></TabsContent>
               </Tabs>
             </div>
             <div className="mt-2 h-[calc(100vh-280px)] pr-1 w-full overflow-auto">
@@ -780,6 +788,7 @@ export default function Agenda({
                           cancelEdit={cancelEdit}
                           handleListClick={handleListClick}
                           handleMarkAsSolved={handleMarkAsSolved}
+                          handleMarkAsPark={handleMarkAsPark}
                           startEdit={startEdit}
                           handleDelete={handleDelete}
                           meetingResponse={meetingResponse}

@@ -146,6 +146,7 @@ export default function CompanyDesignation() {
             }
             paginationDetails={mapPaginationDetails(designationList)}
             setPaginationFilter={setPaginationFilter}
+            searchValue={paginationFilter?.search}
             isLoading={isLoading}
             permissionKey="users"
             moduleKey="DESIGNATION"

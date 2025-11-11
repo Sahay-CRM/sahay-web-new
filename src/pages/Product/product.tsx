@@ -150,6 +150,7 @@ export default function Product() {
             onDelete={onDelete}
             paginationDetails={mapPaginationDetails(product)}
             setPaginationFilter={setPaginationFilter}
+            searchValue={paginationFilter?.search}
             isLoading={isLoading}
             moduleKey="PRODUCT"
             showIndexColumn={false}

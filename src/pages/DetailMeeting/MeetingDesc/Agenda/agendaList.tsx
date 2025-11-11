@@ -20,6 +20,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getUserDetail } from "@/features/selectors/auth.selector";
+import { useSelector } from "react-redux";
 
 export default function AgendaList({
   item,
@@ -33,6 +35,7 @@ export default function AgendaList({
   cancelEdit,
   handleListClick,
   handleMarkAsSolved,
+  handleMarkAsPark,
   startEdit,
   handleDelete,
   meetingResponse,
@@ -48,9 +51,8 @@ export default function AgendaList({
     transition,
     isDragging,
   } = useSortable({ id: item?.issueObjectiveId || `agenda-${idx}` });
-
   const canEdit = true;
-
+  const userData = useSelector(getUserDetail);
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -108,6 +110,10 @@ export default function AgendaList({
   ) => {
     e.stopPropagation(); // Prevent event from bubbling to li
     handleMarkAsSolved(item);
+  };
+  const handleMarkAsParkClick = (e: React.MouseEvent, item: MeetingAgenda) => {
+    e.stopPropagation(); // Prevent event from bubbling to li
+    handleMarkAsPark(item);
   };
 
   // Handle edit button click with event prevention
@@ -302,7 +308,8 @@ export default function AgendaList({
             )
           }
 
-          {isTeamLeader && (
+          {(userData?.employeeType === "CONSULTANT" ||
+            (isTeamLeader && meetingStatus !== "NOT_STARTED")) && (
             <div
               className={`absolute -right-[2px] rounded-md w-fit flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-0" : "h-[70px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
             >
@@ -329,6 +336,30 @@ export default function AgendaList({
                             {item.isResolved
                               ? "Mark As Unresolved"
                               : "Mark As Resolved"}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            onClick={(e) => handleMarkAsParkClick(e, item)} // Use the new handler
+                            className="w-fit cursor-pointer hover:bg-transparent"
+                          >
+                            {item.isParked ? (
+                              <CopyX className="w-7 h-7 text-red-600" />
+                            ) : (
+                              <CopyCheck className="w-7 h-7 text-green-600" />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            {item.isParked
+                              ? "Mark As UnParked"
+                              : "Mark As Parked"}
                           </p>
                         </TooltipContent>
                       </Tooltip>

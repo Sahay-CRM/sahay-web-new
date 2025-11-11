@@ -276,6 +276,7 @@ export default function DetailMeetingList() {
             }}
             paginationDetails={mapPaginationDetails(meetingData)}
             setPaginationFilter={setPaginationFilter}
+            searchValue={paginationFilter?.search}
             isLoading={isLoading}
             permissionKey="users"
             localStorageId="MeetingList"
