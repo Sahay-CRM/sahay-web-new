@@ -13,6 +13,7 @@ import { queryClient } from "@/queryClient";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 import { getRepeatTypeOrCustomForRepeatMeeting } from "@/components/shared/RepeatOption/repeatOption";
+import { convertUtcTimeToLocal } from "@/features/utils/app.utils";
 
 // Renamed function
 export default function useAddRepeatMeetingForm() {
@@ -49,7 +50,7 @@ export default function useAddRepeatMeetingForm() {
         meetingName: data.meetingName || "",
         meetingDescription: data.meetingDescription || "",
         meetingTypeId: data.meetingType,
-        repeatTime: data.repeatTime,
+        repeatTime: convertUtcTimeToLocal(data.repeatTime),
         employeeId: data.joiners,
         repeatType: data.repeatType,
         customObj: data.customObj,

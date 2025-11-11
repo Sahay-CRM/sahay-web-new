@@ -33,7 +33,7 @@ const detailMeetingOpt = [
   { label: "Not Started", value: "NOT_STARTED" },
   { label: "Join Meeting", value: "JOIN" },
   { label: "Ended", value: "ENDED" },
-  { label: "Past Meeting", value: "PAST_MEETING" },
+  { label: "Missed Meeting", value: "PAST_MEETING" },
 ];
 
 export default function DetailMeetingList() {
@@ -147,7 +147,7 @@ export default function DetailMeetingList() {
                     isDataFilter === option.value ? "default" : "outline"
                   }
                   onClick={() => setIsDataFilter(option.value)}
-                  className="capitalize w-28"
+                  className="capitalize w-30"
                 >
                   {option.label}
                 </Button>

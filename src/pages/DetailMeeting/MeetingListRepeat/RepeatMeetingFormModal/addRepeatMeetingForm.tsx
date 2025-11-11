@@ -243,7 +243,6 @@ const MeetingInfo = () => {
   const oldDate = meetingApiData?.nextDate
     ? updateDateTime(meetingApiData.nextDate, repeatTime)
     : "";
-
   return (
     <div className="grid grid-cols-2 gap-4">
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">

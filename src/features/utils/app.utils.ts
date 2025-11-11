@@ -302,3 +302,33 @@ export function formatTo12Hour(time24: string): string {
     .toString()
     .padStart(2, "0")} ${ampm}`;
 }
+
+/**
+ * Convert a UTC time string ("HH:mm:ss") to local 24-hour time ("HH:mm")
+ */
+export function convertUtcTimeToLocal(timeStr?: string): string {
+  if (!timeStr) return "";
+
+  const [hour, minute, second] = timeStr.split(":").map(Number);
+  if (isNaN(hour) || isNaN(minute)) return "";
+
+  // Create a UTC date (today's date + given time)
+  const now = new Date();
+  const utcDate = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      hour,
+      minute,
+      second || 0,
+    ),
+  );
+
+  // Convert to local time
+  return utcDate.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}

@@ -44,6 +44,7 @@ import {
   getNextRepeatDatesCustom,
 } from "@/features/utils/nextDate.utils";
 import {
+  convertUtcTimeToLocal,
   formatToLocalDateTime,
   updateDateTime,
 } from "@/features/utils/app.utils";
@@ -78,8 +79,9 @@ export default function useAddEmployee() {
   } = useForm();
 
   const [isModalOpen, setModalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_selectedRepeat, setSelectedRepeat] = useState<string>("");
 
-  const [selectedRepeat, setSelectedRepeat] = useState<string>("");
   const [CustomRepeatData, setCustomRepeatData] = useState<
     CustomObjREPT | undefined
   >();
@@ -127,7 +129,7 @@ export default function useAddEmployee() {
       const employeeIds = t?.employeeIds ?? [];
 
       setValue("repetitiveTaskId", t.repetitiveTaskId);
-      setValue("repeatTime", t.repeatTime);
+      setValue("repeatTime", convertUtcTimeToLocal(t.repeatTime));
       setValue(
         "project",
         projectListdata?.data?.find((p) => p.projectId === t.projectId) || null,
@@ -465,10 +467,10 @@ export default function useAddEmployee() {
     const [isRepeatChange, setIsRepeatChange] = useState(false);
 
     const repeatTime = watch("repeatTime");
+    const selectedRepeat = watch("repeatType");
+
     const { data: taskTypeData } = useDdTaskType({
-      filter: {
-        search: isTypeSearch.length >= 3 ? isTypeSearch : undefined,
-      },
+      filter: { search: isTypeSearch.length >= 3 ? isTypeSearch : undefined },
       enable: isTypeSearch.length >= 3,
     });
 
@@ -479,60 +481,70 @@ export default function useAddEmployee() {
         }))
       : [];
 
+    const [repeatResult, setRepeatResult] = useState<{
+      createDateUTC: string;
+      nextDateUTC: string;
+    } | null>(null);
+
+    // const prevCustomDataRef = useRef<CustomObjREPT | undefined>(
+    //   CustomRepeatData
+    // );
+    // const initialCustomRef = useRef<CustomObjREPT | undefined>(
+    //   taskdata?.customObj
+    // );
+    const prevCustomDataRef = useRef(CustomRepeatData);
+    const initialCustomRef = useRef(taskdata?.customObj);
     const handleSaveCustomRepeatData = useCallback(
       (customData: CustomObjREPT) => {
         setCustomRepeatData(customData);
       },
       [],
     );
-    const [repeatResult, setRepeatResult] = useState<{
-      createDateUTC: string;
-      nextDateUTC: string;
-    } | null>(null);
-
-    const prevCustomDataRef = useRef(CustomRepeatData);
-    // Track initial custom repeat from API once
-    const initialCustomRef = useRef(taskdata?.customObj);
-
     // 🔹 CUSTOMTYPE logic
     useEffect(() => {
-      if (selectedRepeat === "CUSTOMTYPE" && CustomRepeatData && repeatTime) {
-        const hasCustomChanged =
-          JSON.stringify(CustomRepeatData) !==
-          JSON.stringify(initialCustomRef.current);
+      if (selectedRepeat !== "CUSTOMTYPE" || !CustomRepeatData || !repeatTime)
+        return;
 
-        // Mark only if user truly changed data or time
-        if (hasCustomChanged || repeatTime !== taskdata?.repeatTime) {
-          setHasUserChangedRepeat(true);
-        }
+      const hasCustomChanged =
+        JSON.stringify(CustomRepeatData) !==
+        JSON.stringify(initialCustomRef.current);
 
-        prevCustomDataRef.current = CustomRepeatData;
-
-        const result = getNextRepeatDatesCustom(
-          "CUSTOMTYPE",
-          repeatTime,
-          CustomRepeatData as CustomRepeatConfig,
-        );
-        setRepeatResult(result);
+      // mark user-changed only if user really changed custom data or time
+      if (hasCustomChanged || repeatTime !== taskdata?.repeatTime) {
+        setHasUserChangedRepeat(true);
+        setIsRepeatChange(true);
       }
-    }, [repeatTime]);
 
+      prevCustomDataRef.current = CustomRepeatData;
+
+      const result = getNextRepeatDatesCustom(
+        "CUSTOMTYPE",
+        repeatTime,
+        CustomRepeatData as CustomRepeatConfig,
+      );
+      setRepeatResult(result);
+    }, [selectedRepeat, repeatTime]);
+
+    // 🔹 Non-CUSTOMTYPE logic
     useEffect(() => {
-      if (selectedRepeat && selectedRepeat !== "CUSTOMTYPE" && repeatTime) {
-        const hasChanged =
-          selectedRepeat !== taskdata?.repeatType ||
-          repeatTime !== taskdata?.repeatTime;
+      if (!selectedRepeat || selectedRepeat === "CUSTOMTYPE" || !repeatTime)
+        return;
 
-        if (hasChanged) {
-          setHasUserChangedRepeat(true);
-        }
+      const hasChanged =
+        selectedRepeat !== taskdata?.repeatType ||
+        repeatTime !== taskdata?.repeatTime;
 
-        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const result = getNextRepeatDates(selectedRepeat, repeatTime, timezone);
-        setRepeatResult(result);
+      if (hasChanged) {
+        setHasUserChangedRepeat(true);
+        setIsRepeatChange(true);
       }
-    }, [repeatTime]);
 
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const result = getNextRepeatDates(selectedRepeat, repeatTime, timezone);
+      setRepeatResult(result);
+    }, [selectedRepeat, repeatTime]);
+
+    // 🔹 Update form fields when repeat result changes
     useEffect(() => {
       if (repeatResult) {
         setValue("createDateUTC", repeatResult.createDateUTC);
@@ -550,9 +562,7 @@ export default function useAddEmployee() {
           <div>
             <FormInputField
               label="Task Name"
-              {...register("taskName", {
-                required: "Task Name is required",
-              })}
+              {...register("taskName", { required: "Task Name is required" })}
               error={errors.taskName}
             />
             <div className="mt-2">
@@ -591,28 +601,22 @@ export default function useAddEmployee() {
                 />
               )}
             </div>
+
             <Controller
               control={control}
               name="repeatTime"
               rules={{ required: "Time is required" }}
-              render={({ field, fieldState }) => {
-                // if (!field.value) {
-                //   const now = new Date();
-                //   const currentTime = now.toTimeString().slice(0, 5);
-                //   field.onChange(currentTime);
-                // }
-
-                return (
-                  <FormTimePicker
-                    label="Task Time"
-                    value={field.value}
-                    onChange={field.onChange}
-                    error={fieldState.error}
-                    isMandatory
-                  />
-                );
-              }}
+              render={({ field, fieldState }) => (
+                <FormTimePicker
+                  label="Task Time"
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={fieldState.error}
+                  isMandatory
+                />
+              )}
             />
+
             <Controller
               control={control}
               name="repeatType"
@@ -688,8 +692,8 @@ export default function useAddEmployee() {
                         {errors.repeatType.message as string}
                       </p>
                     )}
+
                     {hasUserChangedRepeat && repeatResult && isRepeatChange ? (
-                      // ✅ Only show when user has changed repeat/time/custom data
                       <div className="flex gap-2 text-sm text-gray-700 col-span-2">
                         <p>
                           <strong>Create First Task:</strong>{" "}
@@ -701,10 +705,9 @@ export default function useAddEmployee() {
                         </p>
                       </div>
                     ) : taskdata?.nextDate ? (
-                      // ✅ Otherwise show only existing meeting info from API
                       <div className="flex gap-2 text-sm text-gray-700 col-span-2">
                         <p>
-                          <strong>Next Meeting:</strong> {oldDate}
+                          <strong>Next Task:</strong> {oldDate}
                         </p>
                       </div>
                     ) : null}
@@ -729,7 +732,7 @@ export default function useAddEmployee() {
                       error={errors.isActive}
                       {...field}
                       triggerClassName="py-3"
-                      isMandatory={true}
+                      isMandatory
                     />
                   )}
                 />
