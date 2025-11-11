@@ -328,18 +328,113 @@ export function getNextRepeatDatesCustom(
     // -------------------- MONTHLY --------------------
   } else if (frequency === "MONTHLY") {
     let m = baseTz.clone().set({ hour, minute, second: 0, millisecond: 0 });
-    let nextM = m.clone().add(interval, "months");
+    let nextM = m.clone(); // ✅ add this line
 
-    if (dates?.length) {
-      const d = dates[0];
-      const day = clampToEndOfMonth(m, d);
-      if (m.date(day).isBefore(baseTz)) m = m.add(interval, "months");
-      m.date(clampToEndOfMonth(m, d));
-      nextM = m
+    // Helper: build a candidate moment for a given month-base and date value (clamped)
+    const buildCandidate = (monthBase: moment.Moment, dateVal: number) => {
+      const day = clampToEndOfMonth(monthBase, dateVal);
+      return monthBase
         .clone()
-        .add(interval, "months")
-        .date(clampToEndOfMonth(m.clone().add(interval, "months"), d));
-    } else if (weekPatterns?.length) {
+        .date(day)
+        .set({ hour, minute, second: 0, millisecond: 0 });
+    };
+
+    // ------------- DATES LIST (robust search across months) -------------
+    if (dates?.length) {
+      const sortedDates = [...dates].sort((a, b) => a - b);
+
+      const MAX_MONTH_LOOKUP = 24; // search up to 24 months ahead to find next candidates
+
+      // Find createMoment: first candidate >= baseTz scanning month-by-month and date-by-date
+      let createMoment = null;
+      let createMonthOffset = 0;
+      let createDateIndex = -1;
+
+      for (
+        let monthOffset = 0;
+        monthOffset <= MAX_MONTH_LOOKUP && !createMoment;
+        monthOffset++
+      ) {
+        const monthBase = m.clone().add(monthOffset * interval, "months");
+        for (let i = 0; i < sortedDates.length; i++) {
+          const candidate = buildCandidate(monthBase, sortedDates[i]);
+          if (candidate.isSameOrAfter(baseTz)) {
+            createMoment = candidate;
+            createMonthOffset = monthOffset;
+            createDateIndex = i;
+            break;
+          }
+        }
+      }
+
+      // If none found in search window, fall back to first date in next immediate interval month
+      if (!createMoment) {
+        const fallbackMonth = m.clone().add(interval, "months");
+        createMoment = buildCandidate(fallbackMonth, sortedDates[0]);
+        createMonthOffset = 1;
+        createDateIndex = 0;
+      }
+
+      // Find nextMoment: the next date in the cycle that is strictly AFTER createMoment
+      let nextMoment = null;
+      // Start from the next index in sequence (wrap around)
+      let idx = (createDateIndex + 1) % sortedDates.length;
+      let monthOffsetForNext = createMonthOffset;
+
+      // Attempt up to MAX_MONTH_LOOKUP steps to locate the next > createMoment
+      let attempts = 0;
+      while (!nextMoment && attempts < MAX_MONTH_LOOKUP * sortedDates.length) {
+        const monthBase = m
+          .clone()
+          .add(monthOffsetForNext * interval, "months");
+        const candidate = buildCandidate(monthBase, sortedDates[idx]);
+
+        // If candidate is strictly after createMoment, accept it
+        if (candidate.isAfter(createMoment)) {
+          nextMoment = candidate;
+          break;
+        }
+
+        // Otherwise advance the sequence:
+        // move to the next date index; if we wrapped, advance monthOffsetForNext by interval
+        idx++;
+        if (idx >= sortedDates.length) {
+          idx = 0;
+          monthOffsetForNext += 1;
+        }
+        attempts++;
+      }
+
+      // If still not found (very unlikely), fallback: nextMoment = createMoment + interval months (clamped)
+      if (!nextMoment) {
+        const fallbackBase = createMoment.clone().add(interval, "months");
+        nextMoment = buildCandidate(fallbackBase, sortedDates[0]);
+        if (!nextMoment.isAfter(createMoment)) {
+          // final safety: add months until strictly after
+          let safety = 0;
+          while (
+            !nextMoment.isAfter(createMoment) &&
+            safety < MAX_MONTH_LOOKUP
+          ) {
+            nextMoment = buildCandidate(
+              fallbackBase.clone().add(++safety * interval, "months"),
+              sortedDates[0],
+            );
+          }
+        }
+      }
+
+      createDate = createMoment.clone().utc();
+      nextDate = nextMoment.clone().utc();
+
+      return {
+        createDateUTC: createDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
+        nextDateUTC: nextDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
+      };
+    }
+
+    // ------------- WEEK PATTERNS -------------
+    else if (weekPatterns?.length) {
       const { week, day } = weekPatterns[0];
       let candidate = findWeekday(m.clone(), week, day);
       const baseWeek = Math.ceil(baseTz.date() / 7);
@@ -365,7 +460,10 @@ export function getNextRepeatDatesCustom(
         createDateUTC: createDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
         nextDateUTC: nextDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
       };
-    } else if (endOfMonth) {
+    }
+
+    // ------------- END OF MONTH -------------
+    else if (endOfMonth) {
       if (m.clone().endOf("month").isBefore(baseTz))
         m = m.add(interval, "months");
       const endOfMonthDate = m.clone().endOf("month").date();
@@ -375,12 +473,20 @@ export function getNextRepeatDatesCustom(
         .add(interval, "months")
         .endOf("month")
         .set({ hour, minute, second: 0, millisecond: 0 });
+
+      createDate = m.clone().utc();
+      nextDate = nextM.clone().utc();
+
+      return {
+        createDateUTC: createDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
+        nextDateUTC: nextDate.format("YYYY-MM-DDTHH:mm:ss[Z]"),
+      };
     }
 
+    // ------------- FALLBACK (single-date monthly) -------------
+    nextM = m.clone().add(interval, "months");
     createDate = m.clone().utc();
     nextDate = nextM.clone().utc();
-
-    // -------------------- YEARLY --------------------
   } else if (frequency === "YEARLY") {
     // Normalize month string (allow "NOV", "Nov", "November")
     let monthIdx;
