@@ -202,7 +202,7 @@ export default function EmployeeRoutes() {
         <Route path="brand" Component={Brand} />
         <Route path="product" Component={Product} />
         {/* <Route path="user-log" Component={UserLog} /> */}
-        <Route path="design" Component={Updates} />
+        <Route path="updates" Component={Updates} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

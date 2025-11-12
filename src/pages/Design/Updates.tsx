@@ -12,35 +12,12 @@ const updates = [
           "When adding a new company, the auto preset for roles and permissions was not being applied correctly. The system required a manual update from the preset configuration. After updating all presets, the issue was resolved and the automatic role and permission assignment now works as expected.",
       },
       {
-        id: 2,
-        title:
-          "User Profile - Employee Type Value Normalized & Default Profile Picture Added",
-        description:
-          "Removed unnecessary capitalization from the Employee Type value in user profiles. Also, introduced a default profile picture that appears automatically when a user hasn’t uploaded one.",
-      },
-      {
-        id: 3,
-        title: "Meeting Notes - Shift + Enter for New Line",
-        description:
-          "In the meeting notes editor, users can now press Shift + Enter to insert a new line without submitting the note. This improves readability and allows better formatting for longer notes.",
-        image:
-          "https://www.trackbizhealth.com/share/changeLogs/1762945992410-32046.webp",
-      },
-      {
         id: 4,
         title: "Moved Holiday Section to Company Profile",
         description:
           "The Holiday module has been removed from the main list view and is now added as a dedicated section within the Company Profile page, positioned after the Legal section for better organization.",
         image:
           "https://www.trackbizhealth.com/share/changeLogs/1762946030739-45002.webp",
-      },
-      {
-        id: 5,
-        title: "Project Card Text Color Updated",
-        description:
-          "Adjusted the project card text to a darker color for better readability and visual contrast against light backgrounds.",
-        image:
-          "https://www.trackbizhealth.com/share/changeLogs/1762946065129-527.webp",
       },
     ],
   },
@@ -66,8 +43,6 @@ const updates = [
         title: "Renamed 'Past Meeting' to 'Missed Meeting'",
         description:
           "Updated the meeting status label from 'Past Meeting' to 'Missed Meeting' for clearer communication and consistency across the meeting dashboard.",
-        image:
-          "https://www.trackbizhealth.com/share/changeLogs/1762946156428-55989.webp",
       },
       {
         id: 9,
@@ -87,20 +62,14 @@ const updates = [
         image:
           "https://www.trackbizhealth.com/share/changeLogs/1762946030739-45002.webp",
       },
-      {
-        id: 11,
-        title: "Added Meeting Note Tag Section",
-        description:
-          "Introduced a new side section named 'Tagged' where all tags from Tasks, Meetings, KPIs, and Notes are displayed together in one place for quick reference and easy navigation.",
-        image:
-          "https://www.trackbizhealth.com/share/changeLogs/1762946258273-37542.webp",
-      },
-      {
-        id: 12,
-        title: "Made Project Deadline Required in Meeting Project Drawer",
-        description:
-          "Updated the Meeting Project Drawer to make the project deadline field mandatory. ",
-      },
+      // {
+      //   id: 11,
+      //   title: "Added Meeting Note Tag Section",
+      //   description:
+      //     "Introduced a new side section named 'Tagged' where all tags from Tasks, Meetings, KPIs, and Notes are displayed together in one place for quick reference and easy navigation.",
+      //   image:
+      //     "https://www.trackbizhealth.com/share/changeLogs/1762946258273-37542.webp",
+      // },
       {
         id: 13,
         title:
@@ -118,20 +87,14 @@ const updates = [
       },
       {
         id: 15,
-        title: "Implemented Health Score Calculation",
+        title: "Implemented Health Score Calculation (Bug Fix)",
         description: " Health score calculation Done.",
       },
       {
         id: 16,
-        title: "Fixed Pagination Issue in Live Meeting",
+        title: "Fixed Pagination Issue in Live Meeting (Bug Fix)",
         description:
           "Resolved an issue where pagination in the Live Meeting list was not working correctly. ",
-      },
-      {
-        id: 17,
-        title: "Sahay Team Restricted to Ended Meetings",
-        description:
-          "Updated meeting visibility rules so that members of the Sahay team can now only view meetings with status 'ENDED'. ",
       },
       {
         id: 18,
@@ -140,7 +103,7 @@ const updates = [
           "Introduced the ability to set custom repetition schedules for meetings and repeat tasks. Users can now define personalized recurrence patterns beyond standard daily, weekly, or monthly options.",
         image: [
           "https://www.trackbizhealth.com/share/changeLogs/1762947352825-94283.webp",
-          "https://www.trackbizhealth.com/share/changeLogs/1762947401561-2487.webp",
+          // "https://www.trackbizhealth.com/share/changeLogs/1762947401561-2487.webp",
         ],
       },
       {

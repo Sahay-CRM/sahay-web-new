@@ -9,7 +9,7 @@ import {
 } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Bell, LaptopMinimal, LogOut, User2Icon } from "lucide-react";
+import { Bell, Info, LaptopMinimal, LogOut, User2Icon } from "lucide-react";
 
 import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
 import VerticalNavBar from "@/components/shared/VerticalNavBar/VerticalNavBar";
@@ -307,6 +307,15 @@ const DashboardLayout = () => {
               </div>
 
               <div className="flex items-center justify-end gap-x-4 pt-1 relative">
+                <div>
+                  <Button
+                    variant="ghost"
+                    className="p-2 border relative"
+                    onClick={() => navigate("/dashboard/updates")}
+                  >
+                    <Info />
+                  </Button>
+                </div>
                 {/* Notifications */}
                 <div className="relative">
                   <Button
