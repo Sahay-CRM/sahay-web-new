@@ -53,8 +53,11 @@ export default function TabsSection({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="ml-1 text-xs text-gray-500 cursor-pointer">
-                      ({tab.count}
-                      {showCanEdit && canEdit > 0 ? ` / ${canEdit}` : ""})
+                      (
+                      {showCanEdit && canEdit > 0
+                        ? `${canEdit} / ${tab.count - canEdit}`
+                        : tab.count}
+                      )
                     </span>
                   </TooltipTrigger>
 

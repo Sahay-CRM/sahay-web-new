@@ -9,13 +9,7 @@ import {
 } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
-import {
-  Bell,
-  CalendarDays,
-  LaptopMinimal,
-  LogOut,
-  User2Icon,
-} from "lucide-react";
+import { Bell, LaptopMinimal, LogOut, User2Icon } from "lucide-react";
 
 import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
 import VerticalNavBar from "@/components/shared/VerticalNavBar/VerticalNavBar";
@@ -397,12 +391,6 @@ const DashboardLayout = () => {
                             <LaptopMinimal /> Company Profile
                           </DropdownMenuItem>
                         </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => navigate("/dashboard/holidays")}
-                        >
-                          <CalendarDays /> Holidays
-                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                       </>
                     )}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 
 import {
   Plus,
@@ -25,8 +25,8 @@ import {
 } from "@/features/api/detailMeeting";
 import { get, ref, update } from "firebase/database";
 import { queryClient } from "@/queryClient";
-import { useSelector } from "react-redux";
-import { getUserId } from "@/features/selectors/auth.selector";
+// import { useSelector } from "react-redux";
+// import { getUserId } from "@/features/selectors/auth.selector";
 import { database } from "@/firebaseConfig";
 import { formatUTCDateToLocal } from "@/features/utils/app.utils";
 import { removeTagFromnote } from "@/features/api/detailMeeting/NoteGroup";
@@ -80,7 +80,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
     CompanyProjectDataProps | TaskData
   >();
 
-  const userId = useSelector(getUserId);
+  // const userId = useSelector(getUserId);
 
   // New states for editing notes
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
@@ -299,13 +299,13 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
     });
   };
 
-  const isTeamLeader = useMemo(
-    () =>
-      (joiners as Joiners[])?.some(
-        (item) => item.employeeId === userId && item.isTeamLeader,
-      ),
-    [joiners, userId],
-  );
+  // const isTeamLeader = useMemo(
+  //   () =>
+  //     (joiners as Joiners[])?.some(
+  //       (item) => item.employeeId === userId && item.isTeamLeader
+  //     ),
+  //   [joiners, userId]
+  // );
 
   const [expandedNotes, setExpandedNotes] = useState<{
     [key: string]: boolean;
@@ -542,18 +542,18 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                               }
                             >
                               <DropdownMenuTrigger asChild>
-                                {(note.employeeId === userId ||
-                                  isTeamLeader) && (
-                                  <button
-                                    className="text-gray-500 items-center text-sm w-fit py-1.5 px-2 cursor-pointer"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      toggleDropdown(note.meetingNoteId);
-                                    }}
-                                  >
-                                    <EllipsisVertical className="h-5 w-5" />
-                                  </button>
-                                )}
+                                {/* {(note.employeeId === userId ||
+                                  isTeamLeader) && ( */}
+                                <button
+                                  className="text-gray-500 items-center text-sm w-fit py-1.5 px-2 cursor-pointer"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    toggleDropdown(note.meetingNoteId);
+                                  }}
+                                >
+                                  <EllipsisVertical className="h-5 w-5" />
+                                </button>
+                                {/* )} */}
                               </DropdownMenuTrigger>
 
                               <DropdownMenuContent

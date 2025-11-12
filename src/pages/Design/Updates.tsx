@@ -1,74 +1,284 @@
-import React from "react";
+import React, { useState } from "react";
 
-type Update = {
-  id: number;
-  title: string;
-  description: string;
-  image?: string;
-  video?: string;
-  date: string;
-};
-
-const updates: Update[] = [
+const updates = [
   {
-    id: 1,
-    title: "Added Dark Mode 🌙",
-    description:
-      "We introduced dark mode to improve user experience during nighttime browsing.",
-    image: "/images/darkmode-preview.png",
-    date: "2025-11-10",
+    date: "November 11, 2025",
+    items: [
+      {
+        id: 1,
+        title: "Fixed Auto Preset Issue When Adding New Company",
+        tag: "Fixed Issue",
+        description:
+          "When adding a new company, the auto preset for roles and permissions was not being applied correctly. The system required a manual update from the preset configuration. After updating all presets, the issue was resolved and the automatic role and permission assignment now works as expected.",
+      },
+      {
+        id: 2,
+        title:
+          "User Profile - Employee Type Value Normalized & Default Profile Picture Added",
+        description:
+          "Removed unnecessary capitalization from the Employee Type value in user profiles. Also, introduced a default profile picture that appears automatically when a user hasn’t uploaded one.",
+      },
+      {
+        id: 3,
+        title: "Meeting Notes - Shift + Enter for New Line",
+        description:
+          "In the meeting notes editor, users can now press Shift + Enter to insert a new line without submitting the note. This improves readability and allows better formatting for longer notes.",
+        image:
+          "https://www.trackbizhealth.com/share/changeLogs/1762945992410-32046.webp",
+      },
+      {
+        id: 4,
+        title: "Moved Holiday Section to Company Profile",
+        description:
+          "The Holiday module has been removed from the main list view and is now added as a dedicated section within the Company Profile page, positioned after the Legal section for better organization.",
+        image:
+          "https://www.trackbizhealth.com/share/changeLogs/1762946030739-45002.webp",
+      },
+      {
+        id: 5,
+        title: "Project Card Text Color Updated",
+        description:
+          "Adjusted the project card text to a darker color for better readability and visual contrast against light backgrounds.",
+        image:
+          "https://www.trackbizhealth.com/share/changeLogs/1762946065129-527.webp",
+      },
+    ],
   },
   {
-    id: 2,
-    title: "New Dashboard Layout 📊",
-    description:
-      "The dashboard now includes analytics widgets and a cleaner layout.",
-    video: "/videos/dashboard-demo.mp4",
-    date: "2025-11-05",
-  },
-  {
-    id: 3,
-    title: "Performance Optimization 🚀",
-    description:
-      "Reduced load times by 40% and improved lazy loading for media-heavy pages.",
-    date: "2025-10-28",
+    date: "November 12, 2025",
+    items: [
+      {
+        id: 6,
+        title: "Added Tooltip in KPI Dashboard for Weekly Auto Edit",
+        description:
+          "Added a tooltip in the KPI Dashboard showing detailed breakdowns like 'Weekly auto edit (10/12)' where 10 represents manual edits and 12 represents automatic ones. For daily view, only a single number is displayed for clarity.",
+        image:
+          "https://www.trackbizhealth.com/share/changeLogs/1762946091692-84075.webp",
+      },
+      {
+        id: 7,
+        title: "Enhanced Search to Include All Columns",
+        description:
+          "Updated the list view search functionality to include all columns. Now, any value across all columns can be searched, making it easier to find specific records quickly.",
+      },
+      {
+        id: 8,
+        title: "Renamed 'Past Meeting' to 'Missed Meeting'",
+        description:
+          "Updated the meeting status label from 'Past Meeting' to 'Missed Meeting' for clearer communication and consistency across the meeting dashboard.",
+        image:
+          "https://www.trackbizhealth.com/share/changeLogs/1762946156428-55989.webp",
+      },
+      {
+        id: 9,
+        title: "Added Option to Remove Tag in Meeting Notes",
+        description:
+          "Introduced a new option in Meeting Notes that allows users to remove assigned tags from notes, giving more flexibility in note organization and management.",
+        image: [
+          "https://www.trackbizhealth.com/share/changeLogs/1762945926377-66816.webp",
+          "https://trackbizhealth.com/share/changeLogs/1762945445735-98243.webp",
+        ],
+      },
+      {
+        id: 10,
+        title: "Added Skip Days Section",
+        description:
+          "Introduced a new 'Skip Days' section that allows users to define and manage days to be skipped in specific workflows. This provides better control and flexibility in scheduling and automation processes.",
+        image:
+          "https://www.trackbizhealth.com/share/changeLogs/1762946030739-45002.webp",
+      },
+      {
+        id: 11,
+        title: "Added Meeting Note Tag Section",
+        description:
+          "Introduced a new side section named 'Tagged' where all tags from Tasks, Meetings, KPIs, and Notes are displayed together in one place for quick reference and easy navigation.",
+        image:
+          "https://www.trackbizhealth.com/share/changeLogs/1762946258273-37542.webp",
+      },
+      {
+        id: 12,
+        title: "Made Project Deadline Required in Meeting Project Drawer",
+        description:
+          "Updated the Meeting Project Drawer to make the project deadline field mandatory. ",
+      },
+      {
+        id: 13,
+        title:
+          "Create Task, Project, and KPI from Notes After Meeting Ended (Connected with Agenda)",
+        description:
+          "Enabled the ability to create Tasks, Projects, and KPIs directly from meeting notes even after the meeting has ended. ",
+        image:
+          "https://www.trackbizhealth.com/share/changeLogs/1762945926377-66816.webp",
+      },
+      {
+        id: 14,
+        title: "Removed Date Filter from Live Meeting Template",
+        description:
+          "Removed the date filter option from the Live Meeting Template view to simplify the interface and ensure all templates remain easily accessible regardless of date selection.",
+      },
+      {
+        id: 15,
+        title: "Implemented Health Score Calculation",
+        description: " Health score calculation Done.",
+      },
+      {
+        id: 16,
+        title: "Fixed Pagination Issue in Live Meeting",
+        description:
+          "Resolved an issue where pagination in the Live Meeting list was not working correctly. ",
+      },
+      {
+        id: 17,
+        title: "Sahay Team Restricted to Ended Meetings",
+        description:
+          "Updated meeting visibility rules so that members of the Sahay team can now only view meetings with status 'ENDED'. ",
+      },
+      {
+        id: 18,
+        title: "Custom Repetition in Meeting or Repeat Task",
+        description:
+          "Introduced the ability to set custom repetition schedules for meetings and repeat tasks. Users can now define personalized recurrence patterns beyond standard daily, weekly, or monthly options.",
+        image: [
+          "https://www.trackbizhealth.com/share/changeLogs/1762947352825-94283.webp",
+          "https://www.trackbizhealth.com/share/changeLogs/1762947401561-2487.webp",
+        ],
+      },
+      {
+        id: 19,
+        title: "Custom KPI Dashboard Search",
+        description:
+          "Implemented search functionality in the KPI dashboard. Users can now search KPIs by name, business function, or tags, making it easier to find relevant KPIs quickly.",
+        image: [
+          "https://www.trackbizhealth.com/share/changeLogs/1762947835428-61450.webp",
+          "https://www.trackbizhealth.com/share/changeLogs/1762947813255-11240.webp",
+        ],
+      },
+    ],
   },
 ];
+const SingleUpdate: React.FC = () => {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-const Updates: React.FC = () => {
+  const activeSection = updates.find((u) => u.date === selectedDate);
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8 text-center">Project Updates</h1>
-
-      <div className="space-y-8">
-        {updates.map((update) => (
-          <div
-            key={update.id}
-            className="p-6 border rounded-2xl shadow-md bg-white dark:bg-gray-900"
+    <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-950 py-10 px-4">
+      <div className="max-w-7xl mx-auto space-y-12">
+        {/* Back Button if filtered */}
+        {selectedDate && (
+          <button
+            onClick={() => setSelectedDate(null)}
+            className="text-sm text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-1"
           >
-            <h2 className="text-2xl font-semibold mb-2">{update.title}</h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              {update.description}
-            </p>
-            {update.image && (
+            ← Back to all updates
+          </button>
+        )}
+
+        {/* Updates list */}
+        {(selectedDate ? [activeSection] : updates).map(
+          (section) =>
+            section && (
+              <div key={section.date} className="space-y-6 border-b pb-8">
+                {/* 🗓️ Date + Heading layout */}
+                <div className="flex gap-6 items-start">
+                  <button
+                    onClick={() =>
+                      selectedDate ? null : setSelectedDate(section.date)
+                    }
+                    className="w-32 text-sm text-gray-400 dark:text-gray-500 text-left hover:text-gray-600"
+                  >
+                    {new Date(section.date).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </button>
+
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    {section.date} updates
+                  </h2>
+                </div>
+
+                {/* Update items */}
+                <div className="pl-[8.5rem] space-y-5">
+                  {section.items.map((update) => (
+                    <div
+                      key={update.id}
+                      className="border-l border-gray-200 dark:border-gray-800 pl-4"
+                    >
+                      {/* {update.tag && (
+                        <span className="inline-block text-xs font-medium bg-blue-100 text-blue-800 px-3 py-1 rounded-full mb-2">
+                          {update.tag}
+                        </span>
+                      )} */}
+
+                      {/* Title */}
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1 flex items-center gap-2">
+                        {/* {update.icon && <span>{update.icon}</span>} */}
+                        {update.title}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+                        {update.description}
+                      </p>
+
+                      {/* Images */}
+                      {update.image && Array.isArray(update.image) ? (
+                        <div className="flex flex-wrap gap-3">
+                          {update.image.map((img, idx) => (
+                            <img
+                              key={idx}
+                              src={img}
+                              alt={`${update.title} ${idx + 1}`}
+                              className="w-[240px] rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm cursor-pointer hover:scale-[1.02] transition"
+                              onClick={() => setSelectedImage(img)}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        update.image && (
+                          <img
+                            src={update.image}
+                            alt={update.title}
+                            className="w-[240px] rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm cursor-pointer hover:scale-[1.02] transition"
+                            onClick={() =>
+                              setSelectedImage(update.image as string)
+                            }
+                          />
+                        )
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ),
+        )}
+
+        {/* Image Modal */}
+        {selectedImage && (
+          <div
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+            onClick={() => setSelectedImage(null)}
+          >
+            <div className="relative">
               <img
-                src={update.image}
-                alt={update.title}
-                className="w-full rounded-lg mb-4"
+                src={selectedImage}
+                alt="Preview"
+                className="max-w-[90vw] max-h-[85vh] rounded-lg shadow-2xl"
               />
-            )}
-            {update.video && (
-              <video controls className="w-full rounded-lg mb-4">
-                <source src={update.video} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-            )}
-            <p className="text-sm text-gray-500">Updated on {update.date}</p>
+              <button
+                onClick={() => setSelectedImage(null)}
+                className="absolute -top-3 -right-3 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-full p-1.5 shadow-md"
+              >
+                ✕
+              </button>
+            </div>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
 };
 
-export default Updates;
+export default SingleUpdate;

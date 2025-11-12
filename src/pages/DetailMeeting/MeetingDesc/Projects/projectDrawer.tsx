@@ -340,6 +340,7 @@ export default function ProjectDrawer({
                   <FormDateTimePicker
                     label="Project Deadline"
                     value={localDate}
+                    isMandatory
                     onChange={(date) => {
                       const utcDate = date
                         ? new Date(
