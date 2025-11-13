@@ -65,7 +65,6 @@ import {
 import SidebarControlContext from "./SidebarControlContext";
 import ModalData from "@/components/shared/Modal/ModalData";
 import { ExclamationRoundIcon } from "@/components/shared/Icons";
-import { loginToFirebase } from "@/pages/auth/login/loginToFirebase";
 import { useGetCompanyList } from "@/features/api/SelectCompany";
 
 const CompanyModal = lazy(() => import("@/pages/auth/login/CompanyModal"));
@@ -209,8 +208,6 @@ const DashboardLayout = () => {
       {
         onSuccess: async (response) => {
           if (response?.status) {
-            await loginToFirebase(response.data.fbToken!);
-
             dispatch(
               setAuth({
                 userId: response.data.employeeId,

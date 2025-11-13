@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import React, { useEffect, useState } from "react";
 
 const updates = [
   {
@@ -120,6 +121,10 @@ const updates = [
   },
 ];
 const SingleUpdate: React.FC = () => {
+  const { setBreadcrumbs } = useBreadcrumbs();
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Project Updates", href: "" }]);
+  }, [setBreadcrumbs]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 

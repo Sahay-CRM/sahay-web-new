@@ -257,11 +257,15 @@ export const useAgenda = ({
       let filteredData = selectedAgenda;
 
       if (resolutionFilter === "SOLVED") {
-        filteredData = filteredData.filter((item) => item.isResolved === true);
+        filteredData = filteredData.filter(
+          (item) => item.isResolved === true && item.type !== "PARKED",
+        );
       } else if (resolutionFilter === "UNSOLVED") {
-        filteredData = filteredData.filter((item) => item.isResolved === false);
-      } else if (resolutionFilter === "PARK") {
-        filteredData = filteredData.filter((item) => item.isParked === true);
+        filteredData = filteredData.filter(
+          (item) => item.isResolved === false && item.type !== "PARKED",
+        );
+      } else if (resolutionFilter === "PARKED") {
+        filteredData = filteredData.filter((item) => item.type === "PARKED");
       }
 
       setAgendaList(filteredData);
@@ -1062,7 +1066,7 @@ export const useAgenda = ({
         {
           issueId: data.issueId,
           issueName: data.name,
-          isParked: !data.isParked, // ← toggle park status
+          type: data.type === "PARKED" ? null : "PARKED",
           meetingId: meetingId,
         },
         {
@@ -1085,7 +1089,7 @@ export const useAgenda = ({
         {
           objectiveId: data.objectiveId,
           objectiveName: data.name,
-          isParked: !data.isParked, // ← toggle park status
+          type: data.type === "PARKED" ? null : "PARKED",
           meetingId: meetingId,
         },
         {

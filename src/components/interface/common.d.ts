@@ -1288,13 +1288,13 @@ interface IssuesProps {
   issueId?: string;
   issueName: string;
   isResolved?: boolean;
-  isParked?: boolean;
   sequence?: number;
   departmentId?: string;
   departmentName?: string;
   meetingId?: string;
   isForce?: boolean;
   isDelete?: boolean;
+  type?: string | null;
 }
 
 interface UseIssuesFormModalProps {
@@ -1312,7 +1312,6 @@ interface ObjectiveProps {
   objectiveId?: string;
   objectiveName: string;
   isResolved?: boolean;
-  isParked?: boolean;
   detailMeetingId?: string;
   sequence?: number;
   departmentId?: string;
@@ -1320,6 +1319,7 @@ interface ObjectiveProps {
   meetingId?: string;
   isForce?: boolean;
   isDelete?: boolean;
+  type?: string | null;
 }
 
 interface DetailMeetingObjectives {
@@ -1339,12 +1339,12 @@ interface MeetingAgenda {
   noOfProjects: number;
   noOfKPIs: number;
   isResolved?: boolean;
-  isParked?: boolean;
   issueId?: string;
   objectiveId?: string;
   sequence?: number;
   departmentId?: string;
   departmentName?: string;
+  type?: string;
 }
 
 interface DetailMeetingAgendaIssue {
@@ -1504,6 +1504,7 @@ interface AgendaListProps {
   conclusionTime?: MeetingConclusionData;
   isTeamLeader?: boolean;
   isUnFollow?: boolean;
+  meetingTime?: string;
 }
 
 interface EditingProps {
@@ -1569,6 +1570,7 @@ interface SimpleCompanyDetails {
   pan?: string;
   kpiSkipDays?: string[] | string;
   unit?: string;
+  validationKey?: number;
 }
 
 interface IndustryOption {

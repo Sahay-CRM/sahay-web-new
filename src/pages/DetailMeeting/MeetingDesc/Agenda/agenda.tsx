@@ -731,7 +731,9 @@ export default function Agenda({
                   //   meetingStatus !== "ENDED"
                   // ) {
                   // }
-                  handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED | PARK");
+                  handleAgendaTabFilter(
+                    value as "SOLVED" | "UNSOLVED | PARKED",
+                  );
                 }}
                 value={resolutionFilter}
                 className="w-full"
@@ -750,7 +752,7 @@ export default function Agenda({
                     Resolved
                   </TabsTrigger>
                   <TabsTrigger
-                    value="PARK"
+                    value="PARKED"
                     className="data-[state=active]:bg-primary data-[state=active]:text-white"
                   >
                     Parked
@@ -759,7 +761,7 @@ export default function Agenda({
 
                 <TabsContent value="UNSOLVED" className="mt-0"></TabsContent>
                 <TabsContent value="SOLVED" className="mt-0"></TabsContent>
-                <TabsContent value="PARK" className="mt-0"></TabsContent>
+                <TabsContent value="PARKED" className="mt-0"></TabsContent>
               </Tabs>
             </div>
             <div className="mt-2 h-[calc(100vh-280px)] pr-1 w-full overflow-auto">
@@ -795,6 +797,7 @@ export default function Agenda({
                           conclusionTime={conclusionTime}
                           isTeamLeader={isTeamLeader}
                           isUnFollow={unFollowByUser}
+                          meetingTime={meetingTime}
                         />
                       ))}
                     </ul>

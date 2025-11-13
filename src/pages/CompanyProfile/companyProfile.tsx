@@ -78,7 +78,6 @@ export default function CompanyProfile() {
   if (permission && permission.View === false) {
     return <PageNotAccess />;
   }
-
   return (
     <div className="bg-gray-50 py-4">
       <div className="mx-auto px-4">
@@ -673,6 +672,92 @@ export default function CompanyProfile() {
                 </div>
               </div>
             </div>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8 md:col-span-2">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  KPI Validation
+                </h2>
+              </div>
+
+              {/* Content */}
+              <div className="space-y-4">
+                <div className="flex flex-row items-center gap-4">
+                  <Controller
+                    control={control}
+                    name="validationKey"
+                    render={({ field }) => {
+                      const numericValue =
+                        field.value && !isNaN(Number(field.value))
+                          ? Number(field.value)
+                          : null;
+
+                      return (
+                        <>
+                          {isEditing && (
+                            <input
+                              type="number"
+                              min={0}
+                              max={99}
+                              placeholder="0"
+                              value={numericValue ?? ""}
+                              onChange={(e) => {
+                                let value = e.target.value;
+                                value = value.replace(/\D/g, "");
+                                if (value.length > 2) value = value.slice(0, 2);
+                                field.onChange(value === "" ? null : value);
+                              }}
+                              className="w-20 border mb-4  border-gray-300 rounded align-top py-1 text-center text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                            />
+                          )}
+
+                          {/* Progress Bar and Labels */}
+                          <div className="flex flex-col w-full gap-1">
+                            {/* Progress Bar */}
+                            <div
+                              className="relative w-full h-5 rounded-full overflow-hidden bg-gray-200 transition-all duration-300"
+                              style={{
+                                background:
+                                  numericValue !== null
+                                    ? `linear-gradient(to right, 
+                      red 0%, 
+                      red ${numericValue}%, 
+                      yellow ${numericValue}%, 
+                      yellow 99%, 
+                      green 99%, 
+                      green 100%)`
+                                    : "#e5e7eb",
+                              }}
+                            />
+
+                            <div className="flex relative w-full text-sm text-gray-600">
+                              {numericValue !== null && (
+                                <div
+                                  className="absolute top-3 flex justify-end text-xs font-semibold text-gray-800 transition-all duration-300 transform -translate-y-1"
+                                  style={{
+                                    width: `${numericValue}%`,
+                                  }}
+                                >
+                                  {numericValue}%
+                                </div>
+                              )}
+
+                              {/* 0% and 100% boundary labels */}
+                              <div className="flex justify-between w-full mt-2">
+                                <span className="text-xs font-medium">0%</span>
+                                <span className="text-xs font-medium">
+                                  100%
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      );
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8 md:col-span-2">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
@@ -794,3 +879,105 @@ export default function CompanyProfile() {
     </div>
   );
 }
+
+//  <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8 md:col-span-2">
+//               <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
+//                 <h2 className="text-lg font-semibold text-gray-900">
+//                   KPI Validation
+//                 </h2>
+//                 <button
+//                   onClick={() => setIsEditing(!isEditing)}
+//                   className="text-sm text-blue-600 hover:underline"
+//                 >
+//                   {isEditing ? "Save" : "Edit"}
+//                 </button>
+//               </div>
+
+//               <div className="space-y-4">
+//                 {isEditing ? (
+//                   <div className="flex flex-col gap-4">
+//                     {/* Editable Controls */}
+//                     <div className="flex items-center justify-center gap-6">
+//                       {/* Left Static */}
+//                       <div className="flex flex-col items-center">
+//                         <span className="text-sm text-gray-600 mb-1">10%</span>
+//                         <div
+//                           className="w-12 h-10 rounded"
+//                           style={{ backgroundColor: "#ff4d4f" }}
+//                         ></div>
+//                       </div>
+
+//                       {/* Middle Editable */}
+//                       <div className="flex flex-col items-center">
+//                         <span className="text-sm text-gray-600 mb-1">
+//                           Editable
+//                         </span>
+//                         <div className="flex items-center gap-2">
+//                           <input
+//                             type="color"
+//                             value={middleColor}
+//                             onChange={(e) => setMiddleColor(e.target.value)}
+//                             className="h-10 w-16 cursor-pointer rounded"
+//                           />
+//                           <input
+//                             type="number"
+//                             min={0}
+//                             max={100}
+//                             value={middlePercent}
+//                             onChange={(e) => setMiddlePercent(e.target.value)}
+//                             placeholder="%"
+//                             className="w-20 border border-gray-300 rounded px-2 py-1"
+//                           />
+//                         </div>
+//                       </div>
+
+//                       {/* Right Static */}
+//                       <div className="flex flex-col items-center">
+//                         <span className="text-sm text-gray-600 mb-1">100%</span>
+//                         <div
+//                           className="w-12 h-10 rounded"
+//                           style={{ backgroundColor: "#22c55e" }}
+//                         ></div>
+//                       </div>
+//                     </div>
+
+//                     {/* Progress Bar */}
+//                     <div className="relative h-5 rounded-full overflow-hidden bg-gray-200">
+//                       {/* Left Red 10% */}
+//                       <div
+//                         className="absolute left-0 top-0 h-full"
+//                         style={{ width: "10%", backgroundColor: "#ff4d4f" }}
+//                       />
+//                       {/* Middle Editable */}
+//                       {middlePercent && (
+//                         <div
+//                           className="absolute top-0 h-full transition-all duration-300"
+//                           style={{
+//                             left: "10%",
+//                             width: `${Math.max(
+//                               0,
+//                               Math.min(0, middlePercent - 10)
+//                             )}%`,
+//                             backgroundColor: middleColor || "gray",
+//                           }}
+//                         />
+//                       )}
+//                       {/* Right Green 100% */}
+//                       <div
+//                         className="absolute right-0 top-0 h-full"
+//                         style={{ width: "10%", backgroundColor: "#22c55e" }}
+//                       />
+//                     </div>
+//                   </div>
+//                 ) : (
+//                   // View Mode
+//                   <div>
+//                     <div className="flex justify-between text-sm mb-2">
+//                       <span className="text-gray-600">10%</span>
+//                       <span className="text-gray-600">100%</span>
+//                     </div>
+//                     <div className="relative h-5 rounded-full overflow-hidden bg-gray-200" />
+//                   </div>
+//                 )}
+//               </div>
+//             </div>
