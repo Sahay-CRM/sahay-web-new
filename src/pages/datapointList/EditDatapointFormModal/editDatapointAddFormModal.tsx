@@ -118,6 +118,7 @@ export default function EditDatapointAddFormModal({
                 options={frequenceOptions}
                 error={errors.frequencyType}
                 disabled={hasData}
+                //  disabled={hasData && field.value !== "MONTHLY"}
                 className={hasData ? "rounded-md" : ""}
                 isMandatory
                 triggerClassName="py-4"

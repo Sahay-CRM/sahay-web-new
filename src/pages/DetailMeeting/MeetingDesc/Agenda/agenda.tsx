@@ -3,6 +3,7 @@ import React, { Suspense, useEffect, useState } from "react";
 import {
   ArrowUp,
   BarChart2,
+  Bell,
   Calendar,
   CheckSquare,
   Clock,
@@ -123,6 +124,7 @@ interface AgendaProps {
   meetingTime?: string;
   isTeamLeader: boolean | undefined;
   follow?: boolean;
+  isBellRing?: () => void;
 }
 
 export default function Agenda({
@@ -134,6 +136,7 @@ export default function Agenda({
   isTeamLeader,
   follow,
   joiners,
+  isBellRing,
 }: AgendaProps) {
   const {
     issueInput,
@@ -603,13 +606,21 @@ export default function Agenda({
                   </Button>
                 )}
                 {meetingStatus === "DISCUSSION" && (
-                  <Button
-                    variant="outline"
-                    className="w-[180px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
-                    onClick={handleConclusionMeeting}
-                  >
-                    Go To Conclusion
-                  </Button>
+                  <>
+                    <Button
+                      className={`w-20px ml-2 mt-1 bg-primary p-2  rounded-full text-white justify-start cursor-pointer flex items-center `}
+                      onClick={isBellRing}
+                    >
+                      <Bell className="w-16 h-16" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-[180px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
+                      onClick={handleConclusionMeeting}
+                    >
+                      Go To Conclusion
+                    </Button>
+                  </>
                 )}
                 {meetingStatus === "CONCLUSION" && (
                   <Button

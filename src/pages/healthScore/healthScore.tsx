@@ -35,6 +35,7 @@ export default function HealthScoreList() {
   }, [setBreadcrumbs]);
 
   const isCoreSelected = !!coreParameterId;
+  const islevelIdSelected = !!levelId;
 
   if (permission && permission.View === false) {
     return <PageNotAccess />;
@@ -48,11 +49,13 @@ export default function HealthScoreList() {
             Health Score
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
-            {(permission.Add || permission.Edit) && (
-              <Button className="py-2 w-fit" onClick={handleEditToggle}>
-                {isEditing ? "Submit" : "Edit"}
-              </Button>
-            )}
+            {(permission.Add || permission.Edit) &&
+              isCoreSelected &&
+              islevelIdSelected && (
+                <Button className="py-2 w-fit" onClick={handleEditToggle}>
+                  {isEditing ? "Submit" : "Edit"}
+                </Button>
+              )}
 
             {isEditing && (
               <Button

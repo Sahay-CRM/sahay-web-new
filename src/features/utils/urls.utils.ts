@@ -226,6 +226,7 @@ const Urls = {
   addObjective: () => `${baseUrl}/company/objective/create`,
   updateObjective: (id: string) => `${baseUrl}/company/objective/update/${id}`,
   getObjective: () => `${baseUrl}/company/objective/get`,
+  getUpdates: () => `${baseUrl}/company/updates/get-all`,
   deleteObjective: (id: string) => `${baseUrl}/company/objective/delete/${id}`,
 
   getDetailObjectivesIssue: () =>

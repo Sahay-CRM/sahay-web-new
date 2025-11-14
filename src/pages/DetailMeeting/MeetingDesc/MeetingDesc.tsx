@@ -1,7 +1,6 @@
 import React, { Suspense, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import {
-  Bell,
   CircleCheckBig,
   Crown,
   EllipsisVertical,
@@ -141,6 +140,7 @@ export default function MeetingDesc() {
             joiners={meetingTiming?.joiners as Joiners[]}
             meetingTime={meetingTiming?.meetingTimePlanned}
             isTeamLeader={isTeamLeader}
+            isBellRing={handleRing}
             // isCheckIn={
             //   (meetingTiming?.joiners as Joiners[])?.find(
             //     (item) => item.employeeId === userId
@@ -890,12 +890,6 @@ export default function MeetingDesc() {
         className={`${isSidebarCollapsed ? "bg-white border rounded-md" : ""} flex flex-col z-30`}
       >
         <nav className="space-y-1 w-[56px]">
-          <Button
-            className={`w-20px ml-2 mt-1 bg-primary p-2  rounded-full text-white justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center" : ""}`}
-            onClick={handleRing}
-          >
-            <Bell className="w-16 h-16" />
-          </Button>
           <Button
             className={`w-full bg-transparent p-0 hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center" : ""}`}
             onClick={() => {

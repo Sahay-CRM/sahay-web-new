@@ -1321,6 +1321,18 @@ interface ObjectiveProps {
   isDelete?: boolean;
   type?: string | null;
 }
+interface UpdateItem {
+  srNo: number;
+  updateId: string;
+  title: string;
+  description: string;
+  image: string[]; // array of image URLs
+  date: string; // ISO string
+  createdBy: string;
+  createdAt: string;
+  updatedBy: string;
+  updatedAt: string;
+}
 
 interface DetailMeetingObjectives {
   id: string;

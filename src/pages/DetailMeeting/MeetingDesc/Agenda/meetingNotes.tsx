@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import {
   Plus,
@@ -349,6 +349,25 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   //   setIsConfirmModalOpen(true);
   // };
 
+  const [showToggle, setShowToggle] = useState<{ [key: string]: boolean }>({});
+
+  const textRefs = useRef<{ [key: string]: HTMLParagraphElement | null }>({});
+
+  useEffect(() => {
+    if (!Array.isArray(meetingNotes?.data)) return; // ✅ ensure array
+
+    const newShowToggles: { [key: string]: boolean } = {};
+
+    meetingNotes.data.forEach((note: MeetingNotesRes) => {
+      const el = textRefs.current[note.meetingNoteId];
+      if (el && el.scrollHeight > el.clientHeight) {
+        newShowToggles[note.meetingNoteId] = true;
+      }
+    });
+
+    setShowToggle(newShowToggles);
+  }, [meetingNotes]);
+
   return (
     <div className={cn("px-2", className)}>
       {meetingStatus !== "ENDED" && FilterBy !== "noteTag" && (
@@ -509,6 +528,9 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                         <>
                           <div className="flex-1">
                             <p
+                              ref={(el) => {
+                                textRefs.current[note.meetingNoteId] = el;
+                              }}
                               className={cn(
                                 "break-words whitespace-pre-line text-[12px] text-gray-800 transition-all mt-1 duration-300",
                                 !expandedNotes[note.meetingNoteId] &&
@@ -518,18 +540,16 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                               {note.note}
                             </p>
 
-                            {/* ✅ Read More / Less */}
-                            {note.note?.split("\n").length > 3 ||
-                            note.note?.length > 150 ? (
+                            {showToggle[note.meetingNoteId] && (
                               <button
+                                className="text-blue-600 text-[12px] mt-1"
                                 onClick={() => toggleExpand(note.meetingNoteId)}
-                                className="text-xs text-blue-600 hover:underline mt-1"
                               >
                                 {expandedNotes[note.meetingNoteId]
-                                  ? "Read less"
-                                  : "Read more"}
+                                  ? "See less"
+                                  : "See more"}
                               </button>
-                            ) : null}
+                            )}
                           </div>
 
                           <div>
