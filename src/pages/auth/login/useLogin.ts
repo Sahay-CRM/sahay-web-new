@@ -13,6 +13,7 @@ import {
   requestFirebaseNotificationPermission,
 } from "@/firebaseConfig";
 import { fireTokenMutation } from "@/features/api";
+import { loginToFirebase } from "@/pages/auth/login/loginToFirebase";
 
 const useLogin = () => {
   const dispatch = useDispatch();
@@ -54,8 +55,9 @@ const useLogin = () => {
     };
 
     companyVerifyOtp(verifyCompanyData, {
-      onSuccess: (response) => {
+      onSuccess: async (response) => {
         if (response?.status) {
+          await loginToFirebase(response.data.fbToken!);
           dispatch(
             setAuth({
               token: response.data.token ?? null,
@@ -114,7 +116,7 @@ const useLogin = () => {
       verifyOtp(
         { mobile: countryCode + data.mobile, otp: data.otp },
         {
-          onSuccess: (response) => {
+          onSuccess: async (response) => {
             setIsVerifyingOtp(false);
             if (response.status) {
               const dataRes = response.data;
@@ -122,6 +124,7 @@ const useLogin = () => {
                 setCompanies(dataRes);
                 setCompanyModalOpen(true);
               } else if (!Array.isArray(dataRes)) {
+                await loginToFirebase(response.data.fbToken!);
                 const token = dataRes.token;
                 dispatch(
                   setAuth({
