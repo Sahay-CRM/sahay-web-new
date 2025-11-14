@@ -81,6 +81,9 @@ export default function MeetingDesc() {
     meetingData,
     handleUnFollow,
     handleFollowBack,
+    handleRing,
+    isShaking,
+    audioRef,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   } = useMeetingDesc();
@@ -124,8 +127,10 @@ export default function MeetingDesc() {
         className={cn(
           "bg-white p-4 flex-1 min-w-0",
           "transition-all duration-300 ease-in-out",
+          isShaking && "animate-shake",
         )}
       >
+        <audio ref={audioRef} src="/public/BackToWork.mp3" preload="auto" />
         <div className="w-full mt-4 overflow-hidden">
           <Agenda
             meetingName={meetingTiming?.meetingName ?? ""}
@@ -135,6 +140,7 @@ export default function MeetingDesc() {
             joiners={meetingTiming?.joiners as Joiners[]}
             meetingTime={meetingTiming?.meetingTimePlanned}
             isTeamLeader={isTeamLeader}
+            isBellRing={handleRing}
             // isCheckIn={
             //   (meetingTiming?.joiners as Joiners[])?.find(
             //     (item) => item.employeeId === userId
@@ -495,6 +501,42 @@ export default function MeetingDesc() {
                     <MeetingNotes
                       joiners={meetingTiming?.joiners as Joiners[]}
                       meetingId={meetingId}
+                      // detailMeetingId={meetingTiming?.detailMeetingId}
+                      employeeId={userId}
+                      className="mt-2"
+                      meetingName={meetingTiming?.meetingName}
+                      meetingStatus={meetingStatus}
+                      // groupFlag={selectedGroupFilter}
+                    />
+                  </Suspense>
+                )}
+              </div>
+            </div>
+          )}
+          {activeTab === "DOCUMENTSTAG" && (
+            <div>
+              <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
+                <h3 className="p-0 text-base pl-4">Meeting Tag Notes </h3>
+                <div>
+                  <X
+                    className="w-5 h-5 text-gray-500 cursor-pointer"
+                    onClick={() => setIsCardVisible(false)}
+                  />
+                </div>
+              </div>
+              <div className="px-2">
+                {meetingId && (meetingTiming?.joiners as Joiners[]) && (
+                  <Suspense
+                    fallback={
+                      <div className="animate-spin flex w-fit h-fit">
+                        <SpinnerIcon />
+                      </div>
+                    }
+                  >
+                    <MeetingNotes
+                      joiners={meetingTiming?.joiners as Joiners[]}
+                      meetingId={meetingId}
+                      FilterBy={"noteTag"}
                       // detailMeetingId={meetingTiming?.detailMeetingId}
                       employeeId={userId}
                       className="mt-2"
@@ -881,6 +923,14 @@ export default function MeetingDesc() {
             onClick={() => handleTabChange("OLDNOTES")}
           >
             <FilePlus2 className="h-6 w-6" />
+          </Button>
+          <Button
+            className={`w-full bg-transparent p-0 hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center" : ""}`}
+            onClick={() => {
+              handleTabChange("DOCUMENTSTAG");
+            }}
+          >
+            <UsersRound className="w-16 h-16" />
           </Button>
         </nav>
       </div>

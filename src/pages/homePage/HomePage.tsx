@@ -17,6 +17,7 @@ export default function HealthScoreDashboard() {
   const [individualDataList, setIndividualDataList] = useState<
     IndividualResult[]
   >([]);
+
   const { data: reportData } = useGetHealthScore();
 
   useEffect(() => {
@@ -68,16 +69,16 @@ export default function HealthScoreDashboard() {
         )}
       </div>
       <div className="grid grid-cols-3 items-center justify-center gap-8 w-full border-t pt-5">
-        {individualDataList.map((param) => (
+        {individualDataList.map((param, idx) => (
           <div
-            key={param.coreParameterId}
+            key={param.coreParameterId + idx}
             className="flex flex-col items-center border-b"
           >
             <h3 className="text-md mb-5 text-black font-semibold">
               {param.coreParameterName}
             </h3>
             <ReactSpeedometer
-              value={param.healthPercentage}
+              value={Number(param.healthPercentage.toFixed(2))}
               maxValue={maxValue}
               customSegmentLabels={customSegmentLabels}
               segments={10}

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import { Label } from "recharts";
 
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
@@ -313,15 +312,15 @@ export default function useAddDataPoint() {
         label: `${emp.employeeName}`,
       }));
 
-    const employee = watch("employeeId");
+    // const employee = watch("employeeId");
 
-    const getEmployeeName = (emp: DataPointEmployee) => {
-      if (emp?.employeeName) return emp.employeeName;
-      const found = employeeData?.data?.find(
-        (e: EmployeeDetails) => e.employeeId === emp.employeeId,
-      );
-      return found?.employeeName || emp.employeeId || "";
-    };
+    // const getEmployeeName = (emp: DataPointEmployee) => {
+    //   if (emp?.employeeName) return emp.employeeName;
+    //   const found = employeeData?.data?.find(
+    //     (e: EmployeeDetails) => e.employeeId === emp.employeeId
+    //   );
+    //   return found?.employeeName || emp.employeeId || "";
+    // };
 
     // const validationType = useWatch({ name: "validationType", control });
 
@@ -457,27 +456,47 @@ export default function useAddDataPoint() {
             />
           </div>
 
-          {employee && (
-            <div>
-              <div key={employee} className="flex mb-2 flex-col gap-2">
-                <Label className="text-[18px] mb-0">
-                  {getEmployeeName(employee)}
-                </Label>
-                <div
-                  className={`grid ${
-                    showBoth ? "grid-cols-2" : "grid-cols-1"
-                  } gap-4 mt-0`}
-                >
-                  {!showYesNo && (
-                    <>
+          {/* {employee && ( */}
+          <div>
+            <div className="flex mb-2 flex-col gap-2">
+              {/* <Label className="text-[18px] mb-0">
+                  {getEmployeeName(employee)} 
+                </Label> */}
+              <div
+                className={`grid ${
+                  showBoth ? "grid-cols-2" : "grid-cols-1"
+                } gap-4 mt-0`}
+              >
+                {!showYesNo && (
+                  <>
+                    <Controller
+                      name="value1"
+                      control={control}
+                      rules={{ required: "Please enter Goal Value 1" }}
+                      render={({ field, fieldState }) => (
+                        <FormInputField
+                          label="Goal Value 1"
+                          placeholder="Enter Goal Value 1"
+                          isMandatory
+                          value={formatIndianNumber(field.value)}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/,/g, "");
+                            field.onChange(raw);
+                          }}
+                          error={fieldState.error}
+                        />
+                      )}
+                    />
+
+                    {showBoth && (
                       <Controller
-                        name="value1"
+                        name="value2"
                         control={control}
-                        rules={{ required: "Please enter Goal Value 1" }}
+                        rules={{ required: "Please enter Goal Value 2" }}
                         render={({ field, fieldState }) => (
                           <FormInputField
-                            label="Goal Value 1"
-                            placeholder="Enter Goal Value 1"
+                            label="Goal Value 2"
+                            placeholder="Enter Goal Value 2"
                             isMandatory
                             value={formatIndianNumber(field.value)}
                             onChange={(e) => {
@@ -488,61 +507,41 @@ export default function useAddDataPoint() {
                           />
                         )}
                       />
-
-                      {showBoth && (
-                        <Controller
-                          name="value2"
-                          control={control}
-                          rules={{ required: "Please enter Goal Value 2" }}
-                          render={({ field, fieldState }) => (
-                            <FormInputField
-                              label="Goal Value 2"
-                              placeholder="Enter Goal Value 2"
-                              isMandatory
-                              value={formatIndianNumber(field.value)}
-                              onChange={(e) => {
-                                const raw = e.target.value.replace(/,/g, "");
-                                field.onChange(raw);
-                              }}
-                              error={fieldState.error}
-                            />
-                          )}
+                    )}
+                  </>
+                )}
+                {showYesNo && (
+                  <Controller
+                    name={`value1`}
+                    control={control}
+                    rules={{ required: "Please select Yes or No" }}
+                    render={({ field, fieldState }) => {
+                      const selectedOption =
+                        field.value?.value ?? field.value ?? "";
+                      return (
+                        <FormSelect
+                          {...field}
+                          label="Yes/No"
+                          options={yesnoOptions}
+                          error={fieldState.error}
+                          isMandatory={true}
+                          value={selectedOption}
+                          onChange={field.onChange}
                         />
-                      )}
-                    </>
-                  )}
-                  {showYesNo && (
-                    <Controller
-                      name={`value1`}
-                      control={control}
-                      rules={{ required: "Please select Yes or No" }}
-                      render={({ field, fieldState }) => {
-                        const selectedOption =
-                          field.value?.value ?? field.value ?? "";
-                        return (
-                          <FormSelect
-                            {...field}
-                            label="Yes/No"
-                            options={yesnoOptions}
-                            error={fieldState.error}
-                            isMandatory={true}
-                            value={selectedOption}
-                            onChange={field.onChange}
-                          />
-                        );
-                      }}
-                    />
-                  )}
-                </div>
+                      );
+                    }}
+                  />
+                )}
               </div>
-              <FormInputField
-                label="Tag"
-                placeholder="Enter Tag"
-                {...register(`tag`)}
-                error={errors?.tag}
-              />
             </div>
-          )}
+            <FormInputField
+              label="Tag"
+              placeholder="Enter Tag"
+              {...register(`tag`)}
+              error={errors?.tag}
+            />
+          </div>
+          {/* )} */}
         </div>
       </div>
     );

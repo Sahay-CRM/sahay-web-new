@@ -38,6 +38,7 @@ export default function HealthWeightage() {
   const { control, reset, setValue } = formMethods;
 
   const isCoreSelected = !!coreParameterId;
+  const islevelSelected = !!level;
 
   const handleEditToggleWithLog = () => {
     if (isEditable) {
@@ -86,11 +87,16 @@ export default function HealthWeightage() {
             Health Weightage
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
-            {(permission.Add || permission.Edit) && (
-              <Button className="py-2 w-fit" onClick={handleEditToggleWithLog}>
-                {isEditable ? "Submit" : "Edit"}
-              </Button>
-            )}
+            {(permission.Add || permission.Edit) &&
+              isCoreSelected &&
+              islevelSelected && (
+                <Button
+                  className="py-2 w-fit"
+                  onClick={handleEditToggleWithLog}
+                >
+                  {isEditable ? "Submit" : "Edit"}
+                </Button>
+              )}
 
             {isEditable && (
               <Button

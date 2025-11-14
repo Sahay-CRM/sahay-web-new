@@ -51,7 +51,7 @@ export default function CustomModalFile({
     setSelectedDay,
     // setMultiSelect,
     setWeeklyPatterns,
-    getScheduleSummary,
+    // getScheduleSummary,
     IntervalCount,
     setIntervalCount,
     setIsMonthlyEnd,
@@ -430,13 +430,13 @@ export default function CustomModalFile({
 
         {renderFrequencyFields()}
 
-        {getScheduleSummary().trim() !== "Summary :" && (
+        {/* {getScheduleSummary().trim() !== "Summary :" && (
           <div className="pt-4 border-t border-gray-200">
             <p className="text-sm text-gray-600 bg-gray-100 p-3 rounded-md">
               {getScheduleSummary()}
             </p>
           </div>
-        )}
+        )} */}
       </div>
     </ModalData>
   );

@@ -104,7 +104,7 @@ export default function useHealthScore() {
         healthScoreList.map((item) => ({
           subParameterId: item.subParameterId,
           name: item.subParameterName,
-          score: item.score,
+          score: item.score * 10,
         })),
       );
     } else {

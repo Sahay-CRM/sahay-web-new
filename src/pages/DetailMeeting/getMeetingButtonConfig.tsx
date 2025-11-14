@@ -46,7 +46,7 @@ export const getMeetingButtonConfig = ({
 
   // Logic for button text and color
   if (isPast && meeting.detailMeetingStatus === "NOT_STARTED") {
-    buttonText = "Past Meeting";
+    buttonText = "Missed Meeting";
     buttonColor = "bg-red-900";
   } else if (meeting.detailMeetingStatus === "ENDED") {
     buttonText = "Meeting Details";

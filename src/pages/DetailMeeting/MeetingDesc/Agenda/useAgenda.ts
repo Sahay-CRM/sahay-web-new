@@ -77,7 +77,6 @@ export const useAgenda = ({
   const [resolutionFilter, setResolutionFilter] = useState<string>("UNSOLVED");
   const [selectedIoType, setSelectedIoType] = useState("ISSUE");
   const [ioType, setIoType] = useState("");
-
   // const unFollowId = meetingResponse?.state.unfollow;
 
   const unFollowByUser = meetingResponse?.state.unfollow?.[userId] ?? false;
@@ -258,9 +257,15 @@ export const useAgenda = ({
       let filteredData = selectedAgenda;
 
       if (resolutionFilter === "SOLVED") {
-        filteredData = filteredData.filter((item) => item.isResolved === true);
+        filteredData = filteredData.filter(
+          (item) => item.isResolved === true && item.type !== "PARKED",
+        );
       } else if (resolutionFilter === "UNSOLVED") {
-        filteredData = filteredData.filter((item) => item.isResolved === false);
+        filteredData = filteredData.filter(
+          (item) => item.isResolved === false && item.type !== "PARKED",
+        );
+      } else if (resolutionFilter === "PARKED") {
+        filteredData = filteredData.filter((item) => item.type === "PARKED");
       }
 
       setAgendaList(filteredData);
@@ -1051,6 +1056,59 @@ export const useAgenda = ({
       );
     }
   };
+  const handleMarkAsPark = async (data: MeetingAgenda) => {
+    const db = database;
+    const meetingRef = ref(db, `meetings/${meetingId}`);
+    const meetingSnapshot = await get(meetingRef);
+
+    if (data.ioType === "ISSUE") {
+      addIssue(
+        {
+          issueId: data.issueId,
+          issueName: data.name,
+          type: data.type === "PARKED" ? null : "PARKED",
+          meetingId: meetingId,
+        },
+        {
+          onSuccess: () => {
+            if (!meetingSnapshot.exists()) {
+              queryClient.resetQueries({
+                queryKey: ["get-detail-meeting-agenda-issue-obj"],
+              });
+              return;
+            } else {
+              update(ref(db, `meetings/${meetingId}/state`), {
+                updatedAt: Date.now(),
+              });
+            }
+          },
+        },
+      );
+    } else if (data.ioType === "OBJECTIVE") {
+      addObjective(
+        {
+          objectiveId: data.objectiveId,
+          objectiveName: data.name,
+          type: data.type === "PARKED" ? null : "PARKED",
+          meetingId: meetingId,
+        },
+        {
+          onSuccess: () => {
+            if (!meetingSnapshot.exists()) {
+              queryClient.resetQueries({
+                queryKey: ["get-detail-meeting-agenda-issue-obj"],
+              });
+              return;
+            } else {
+              update(ref(db, `meetings/${meetingId}/state`), {
+                updatedAt: Date.now(),
+              });
+            }
+          },
+        },
+      );
+    }
+  };
 
   const handleAgendaTabFilter = async (data: string) => {
     if (
@@ -1216,6 +1274,7 @@ export const useAgenda = ({
     ioType,
     setSelectedIoType,
     handleMarkAsSolved,
+    handleMarkAsPark,
     handleAgendaTabFilter,
     resolutionFilter,
     handleDragEnd,

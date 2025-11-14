@@ -256,7 +256,6 @@ export default function CompanyTaskList() {
                     : `${item.value1}`,
               employeeName: getInitials(item.employeeName || ""), // Use initials for the display
               employeeFullName: item.employeeName,
-
             }))}
             columns={visibleColumns}
             primaryKey="kpiId"
@@ -280,6 +279,7 @@ export default function CompanyTaskList() {
             isActionButton={() => true}
             paginationDetails={mapPaginationDetails(datpointData)}
             setPaginationFilter={setPaginationFilter}
+            searchValue={paginationFilter?.search}
             permissionKey="users"
             localStorageId="KpiList"
             moduleKey="DATAPOINT_LIST"
@@ -303,7 +303,6 @@ export default function CompanyTaskList() {
             onSubmit={conformDelete}
             isChildData={isChildData}
             onForceSubmit={onForceSubmit}
-
           />
         )}
         {isEditModalOpen && (
@@ -311,7 +310,6 @@ export default function CompanyTaskList() {
             modalClose={closeDeleteModal}
             kpiId={isEditKpiId}
             isModalOpen={isEditModalOpen}
-
           />
         )}
         <ViewKPIDetailModal

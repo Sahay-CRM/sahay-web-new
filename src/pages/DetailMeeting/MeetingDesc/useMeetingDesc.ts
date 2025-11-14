@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { get, off, onValue, ref, remove, update } from "firebase/database";
 import { database } from "@/firebaseConfig";
@@ -29,6 +29,9 @@ export default function useMeetingDesc() {
   const [isCardVisible, setIsCardVisible] = useState(false);
   const [openEmployeeId, setOpenEmployeeId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isShaking, setIsShaking] = useState(false);
   // const [selectedGroupFilter, setSelectedGroupFilter] = useState<
   //   boolean | null
   // >(null);
@@ -600,6 +603,15 @@ export default function useMeetingDesc() {
       unsubscribe();
     };
   }, [meetingId]);
+  const handleRing = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play();
+    }
+
+    setIsShaking(true);
+    setTimeout(() => setIsShaking(false), 600);
+  };
 
   return {
     meetingStatus: meetingTiming?.detailMeetingStatus,
@@ -631,6 +643,9 @@ export default function useMeetingDesc() {
     meetingData,
     handleUnFollow,
     handleFollowBack,
+    handleRing,
+    isShaking,
+    audioRef,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   };

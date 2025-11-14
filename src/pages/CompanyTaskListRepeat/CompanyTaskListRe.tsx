@@ -69,7 +69,7 @@ export default function CompanyTaskListRe() {
       label: "Task Description",
       visible: true,
     },
-    { key: "taskDeadline", label: "Next Date", visible: true },
+    { key: "nextDate", label: "Next Date", visible: true },
     { key: "employeeName", label: "Assignees", visible: true },
   ]);
 
@@ -155,8 +155,8 @@ export default function CompanyTaskListRe() {
                   index +
                   1,
                 status: item.taskStatusId,
-                taskDeadline: item.taskDeadline
-                  ? format(new Date(item.taskDeadline), "dd/MM/yyyy h:mm aa")
+                nextDate: item.nextDate
+                  ? format(new Date(item.nextDate), "dd/MM/yyyy h:mm aa")
                   : "",
               }),
             )}
@@ -198,6 +198,7 @@ export default function CompanyTaskListRe() {
             // isEditDeleteShow={true}
             paginationDetails={mapPaginationDetails(companyTaskData)}
             setPaginationFilter={setPaginationFilter}
+            searchValue={paginationFilter?.search}
             isLoading={isLoading}
             moduleKey="TASK"
             showIndexColumn={false}
@@ -232,7 +233,7 @@ export default function CompanyTaskListRe() {
             onRowClick={(row) => {
               handleRowsModalOpen(row);
             }}
-            sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
+            sortableColumns={["taskName", "nextDate"]}
             actionColumnWidth="w-[200px]"
           />
         </div>

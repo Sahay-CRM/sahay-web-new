@@ -993,14 +993,14 @@ export default function UpdatedKpiTable() {
     const char = String.fromCharCode(charCode);
 
     // Allow digits, and minus
-    if (!/[\d-]/.test(char) && charCode > 31) {
+    if (!/[\d.-]/.test(char) && charCode > 31) {
       e.preventDefault();
     }
 
     // Only one decimal point
-    // if (char === "." && e.currentTarget.value.includes(".")) {
-    //   e.preventDefault();
-    // }
+    if (char === "." && e.currentTarget.value.includes(".")) {
+      e.preventDefault();
+    }
 
     // Only one "-" and only at start
     if (char === "-" && e.currentTarget.selectionStart !== 0) {

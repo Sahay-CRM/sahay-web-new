@@ -1,74 +1,143 @@
-import React from "react";
+import useGetUpdates from "@/features/api/Updates/useGetUpdates";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import React, { useEffect, useMemo, useState } from "react";
 
-type Update = {
-  id: number;
-  title: string;
-  description: string;
-  image?: string;
-  video?: string;
-  date: string;
-};
+const SingleUpdate: React.FC = () => {
+  const { setBreadcrumbs } = useBreadcrumbs();
 
-const updates: Update[] = [
-  {
-    id: 1,
-    title: "Added Dark Mode 🌙",
-    description:
-      "We introduced dark mode to improve user experience during nighttime browsing.",
-    image: "/images/darkmode-preview.png",
-    date: "2025-11-10",
-  },
-  {
-    id: 2,
-    title: "New Dashboard Layout 📊",
-    description:
-      "The dashboard now includes analytics widgets and a cleaner layout.",
-    video: "/videos/dashboard-demo.mp4",
-    date: "2025-11-05",
-  },
-  {
-    id: 3,
-    title: "Performance Optimization 🚀",
-    description:
-      "Reduced load times by 40% and improved lazy loading for media-heavy pages.",
-    date: "2025-10-28",
-  },
-];
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Project Updates", href: "" }]);
+  }, [setBreadcrumbs]);
 
-const Updates: React.FC = () => {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  // Fetch updates
+  const { data: UpdateList } = useGetUpdates();
+  const rawUpdates = UpdateList?.data ?? [];
+
+  // Group updates by date
+  const groupedUpdates = useMemo(() => {
+    const groups: { date: string; items: UpdateItem[] }[] = [];
+
+    rawUpdates.forEach((item) => {
+      const dateKey = item.date.split("T")[0]; // group by date only
+
+      let group = groups.find((g) => g.date === dateKey);
+      if (!group) {
+        group = { date: dateKey, items: [] };
+        groups.push(group);
+      }
+      group.items.push(item);
+    });
+
+    return groups;
+  }, [rawUpdates]);
+
+  // If a date is selected, filter the section
+  const activeSection = selectedDate
+    ? groupedUpdates.find((u) => u.date === selectedDate)
+    : null;
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8 text-center">Project Updates</h1>
-
-      <div className="space-y-8">
-        {updates.map((update) => (
-          <div
-            key={update.id}
-            className="p-6 border rounded-2xl shadow-md bg-white dark:bg-gray-900"
+    <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-950 py-10 px-4">
+      <div className="max-w-7xl mx-auto space-y-12">
+        {/* Back Button */}
+        {selectedDate && (
+          <button
+            onClick={() => setSelectedDate(null)}
+            className="text-sm text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-1"
           >
-            <h2 className="text-2xl font-semibold mb-2">{update.title}</h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              {update.description}
-            </p>
-            {update.image && (
+            ← Back to all updates
+          </button>
+        )}
+
+        {/* Updates list */}
+        {(selectedDate ? [activeSection] : groupedUpdates).map(
+          (section) =>
+            section && (
+              <div key={section.date} className="space-y-6 border-b pb-8">
+                {/* 🗓️ Date Header */}
+                <div className="flex gap-6 items-start">
+                  <button
+                    onClick={() =>
+                      selectedDate ? null : setSelectedDate(section.date)
+                    }
+                    className="w-32 text-sm text-gray-400 dark:text-gray-500 text-left hover:text-gray-600"
+                  >
+                    {new Date(section.date).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </button>
+
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    {section.date} updates
+                  </h2>
+                </div>
+
+                {/* Update items */}
+                <div className="pl-[8.5rem] space-y-5">
+                  {section.items.map((update) => (
+                    <div
+                      key={update.updateId}
+                      className="border-l border-gray-200 dark:border-gray-800 pl-4"
+                    >
+                      {/* Title */}
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                        {update.title}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+                        {update.description}
+                      </p>
+
+                      {/* Images */}
+                      {update.image && Array.isArray(update.image) && (
+                        <div className="flex flex-wrap gap-3">
+                          {update.image.map((img: string, idx: number) => (
+                            <img
+                              key={idx}
+                              src={img}
+                              alt="update"
+                              className="w-[240px] rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm cursor-pointer hover:scale-[1.02] transition"
+                              onClick={() => setSelectedImage(img)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ),
+        )}
+
+        {/* Image Modal */}
+        {selectedImage && (
+          <div
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+            onClick={() => setSelectedImage(null)}
+          >
+            <div className="relative">
               <img
-                src={update.image}
-                alt={update.title}
-                className="w-full rounded-lg mb-4"
+                src={selectedImage}
+                alt="Preview"
+                className="max-w-[90vw] max-h-[85vh] rounded-lg shadow-2xl"
               />
-            )}
-            {update.video && (
-              <video controls className="w-full rounded-lg mb-4">
-                <source src={update.video} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-            )}
-            <p className="text-sm text-gray-500">Updated on {update.date}</p>
+              <button
+                onClick={() => setSelectedImage(null)}
+                className="absolute -top-3 -right-3 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-full p-1.5 shadow-md"
+              >
+                ✕
+              </button>
+            </div>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
 };
 
-export default Updates;
+export default SingleUpdate;

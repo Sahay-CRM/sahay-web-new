@@ -9,13 +9,7 @@ import {
 } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
-import {
-  Bell,
-  CalendarDays,
-  LaptopMinimal,
-  LogOut,
-  User2Icon,
-} from "lucide-react";
+import { Bell, Info, LaptopMinimal, LogOut, User2Icon } from "lucide-react";
 
 import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
 import VerticalNavBar from "@/components/shared/VerticalNavBar/VerticalNavBar";
@@ -71,8 +65,8 @@ import {
 import SidebarControlContext from "./SidebarControlContext";
 import ModalData from "@/components/shared/Modal/ModalData";
 import { ExclamationRoundIcon } from "@/components/shared/Icons";
-import { loginToFirebase } from "@/pages/auth/login/loginToFirebase";
 import { useGetCompanyList } from "@/features/api/SelectCompany";
+import { loginToFirebase } from "@/pages/auth/login/loginToFirebase";
 
 const CompanyModal = lazy(() => import("@/pages/auth/login/CompanyModal"));
 const NotificationDropdown = lazy(() => import("./notificationDropdown"));
@@ -313,6 +307,15 @@ const DashboardLayout = () => {
               </div>
 
               <div className="flex items-center justify-end gap-x-4 pt-1 relative">
+                <div>
+                  <Button
+                    variant="ghost"
+                    className="p-2 border relative"
+                    onClick={() => navigate("/dashboard/updates")}
+                  >
+                    <Info />
+                  </Button>
+                </div>
                 {/* Notifications */}
                 <div className="relative">
                   <Button
@@ -397,12 +400,6 @@ const DashboardLayout = () => {
                             <LaptopMinimal /> Company Profile
                           </DropdownMenuItem>
                         </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => navigate("/dashboard/holidays")}
-                        >
-                          <CalendarDays /> Holidays
-                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                       </>
                     )}

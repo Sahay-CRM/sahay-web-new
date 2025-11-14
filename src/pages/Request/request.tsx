@@ -180,7 +180,7 @@ export default function Request() {
             // showActionsColumn={false}
             isEditDeleteShow={false}
             permissionKey="users"
-            sortableColumns={["productName", "brandName"]}
+            // sortableColumns={["productName", "brandName"]}
             actionColumnWidth="w-24"
           />
         </div>

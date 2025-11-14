@@ -64,14 +64,17 @@ interface TableProps<T extends Record<string, unknown>> {
   paginationDetails?: PaginationFilter & {
     sortBy?: string;
     sortOrder?: "asc" | "desc";
+    search?: string;
   };
   setPaginationFilter?: (
     filter: PaginationFilter & {
       sortBy?: string;
       sortOrder?: "asc" | "desc";
+      search?: string;
     },
   ) => void;
   isLoading?: boolean;
+  searchValue?: string;
   isActionButton?: (item: T) => boolean;
   additionalButton?: ((item: T) => boolean) | React.ReactNode;
   viewButton?: React.ReactNode;
@@ -144,6 +147,7 @@ const TableDataKpi = <T extends Record<string, unknown>>({
   showActionsColumn = true,
   actionColumnWidth,
   isPermissionIcon = false,
+  searchValue,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   const showCheckboxes =
@@ -220,6 +224,7 @@ const TableDataKpi = <T extends Record<string, unknown>>({
       sortBy: columnKey,
       sortOrder: newSortOrder,
       currentPage: 1,
+      search: searchValue,
     });
   };
 

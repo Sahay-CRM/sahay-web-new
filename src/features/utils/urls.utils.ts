@@ -226,6 +226,7 @@ const Urls = {
   addObjective: () => `${baseUrl}/company/objective/create`,
   updateObjective: (id: string) => `${baseUrl}/company/objective/update/${id}`,
   getObjective: () => `${baseUrl}/company/objective/get`,
+  getUpdates: () => `${baseUrl}/company/updates/get-all`,
   deleteObjective: (id: string) => `${baseUrl}/company/objective/delete/${id}`,
 
   getDetailObjectivesIssue: () =>
@@ -241,6 +242,9 @@ const Urls = {
 
   deleteCompanyMeetingNote: (id: string) =>
     `${baseUrl}/company/detail-meeting/note/delete/${id}`,
+
+  deleteTagFromNote: (id: string) =>
+    `${baseUrl}/company/detail-meeting/note/remove-tag/${id}`,
 
   updateDetailMeetingKPIData: () =>
     `${baseUrl}/company/detail-meeting/kpi/update-data`,

@@ -82,6 +82,7 @@ export default function Brand() {
             onDelete={onDelete}
             paginationDetails={mapPaginationDetails(brand)}
             setPaginationFilter={setPaginationFilter}
+            searchValue={paginationFilter?.search}
             isLoading={isLoading}
             moduleKey="BRAND"
             showIndexColumn={false}

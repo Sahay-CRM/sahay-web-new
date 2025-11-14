@@ -3,6 +3,7 @@ import React, { Suspense, useEffect, useState } from "react";
 import {
   ArrowUp,
   BarChart2,
+  Bell,
   Calendar,
   CheckSquare,
   Clock,
@@ -123,6 +124,7 @@ interface AgendaProps {
   meetingTime?: string;
   isTeamLeader: boolean | undefined;
   follow?: boolean;
+  isBellRing?: () => void;
 }
 
 export default function Agenda({
@@ -134,6 +136,7 @@ export default function Agenda({
   isTeamLeader,
   follow,
   joiners,
+  isBellRing,
 }: AgendaProps) {
   const {
     issueInput,
@@ -184,6 +187,7 @@ export default function Agenda({
     ioType,
     setSelectedIoType,
     handleMarkAsSolved,
+    handleMarkAsPark,
     resolutionFilter,
     handleDragEnd,
     unFollowByUser,
@@ -602,13 +606,21 @@ export default function Agenda({
                   </Button>
                 )}
                 {meetingStatus === "DISCUSSION" && (
-                  <Button
-                    variant="outline"
-                    className="w-[180px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
-                    onClick={handleConclusionMeeting}
-                  >
-                    Go To Conclusion
-                  </Button>
+                  <>
+                    <Button
+                      className={`w-20px ml-2 mt-1 bg-primary p-2  rounded-full text-white justify-start cursor-pointer flex items-center `}
+                      onClick={isBellRing}
+                    >
+                      <Bell className="w-16 h-16" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-[180px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
+                      onClick={handleConclusionMeeting}
+                    >
+                      Go To Conclusion
+                    </Button>
+                  </>
                 )}
                 {meetingStatus === "CONCLUSION" && (
                   <Button
@@ -730,12 +742,14 @@ export default function Agenda({
                   //   meetingStatus !== "ENDED"
                   // ) {
                   // }
-                  handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
+                  handleAgendaTabFilter(
+                    value as "SOLVED" | "UNSOLVED | PARKED",
+                  );
                 }}
                 value={resolutionFilter}
                 className="w-full"
               >
-                <TabsList className="grid w-64 grid-cols-2">
+                <TabsList className="grid w-86 grid-cols-3">
                   <TabsTrigger
                     value="UNSOLVED"
                     className="data-[state=active]:bg-primary data-[state=active]:text-white"
@@ -748,10 +762,17 @@ export default function Agenda({
                   >
                     Resolved
                   </TabsTrigger>
+                  <TabsTrigger
+                    value="PARKED"
+                    className="data-[state=active]:bg-primary data-[state=active]:text-white"
+                  >
+                    Parked
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="UNSOLVED" className="mt-0"></TabsContent>
                 <TabsContent value="SOLVED" className="mt-0"></TabsContent>
+                <TabsContent value="PARKED" className="mt-0"></TabsContent>
               </Tabs>
             </div>
             <div className="mt-2 h-[calc(100vh-280px)] pr-1 w-full overflow-auto">
@@ -780,12 +801,14 @@ export default function Agenda({
                           cancelEdit={cancelEdit}
                           handleListClick={handleListClick}
                           handleMarkAsSolved={handleMarkAsSolved}
+                          handleMarkAsPark={handleMarkAsPark}
                           startEdit={startEdit}
                           handleDelete={handleDelete}
                           meetingResponse={meetingResponse}
                           conclusionTime={conclusionTime}
                           isTeamLeader={isTeamLeader}
                           isUnFollow={unFollowByUser}
+                          meetingTime={meetingTime}
                         />
                       ))}
                     </ul>

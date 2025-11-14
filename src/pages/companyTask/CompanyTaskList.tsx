@@ -217,6 +217,7 @@ export default function CompanyTaskList() {
             }}
             paginationDetails={mapPaginationDetails(companyTaskData)}
             setPaginationFilter={setPaginationFilter}
+            searchValue={paginationFilter?.search}
             isLoading={isLoading}
             moduleKey="TASK"
             showIndexColumn={false}

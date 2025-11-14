@@ -687,6 +687,7 @@ interface TaskGetPaging {
   employees?: Employee;
   projectDetails?: TaskProject;
   taskDeadline?: string;
+  nextDate?: string;
   taskStartDate?: string;
   color?: string;
   objectiveTaskId?: string;
@@ -1274,6 +1275,7 @@ interface MeetingNotesRes {
   employeeId: string;
   note: string;
   meetingNoteId: string;
+  noteId?: string;
   createdAt: string;
   noteType?: string;
   groupId?: string;
@@ -1292,6 +1294,7 @@ interface IssuesProps {
   meetingId?: string;
   isForce?: boolean;
   isDelete?: boolean;
+  type?: string | null;
 }
 
 interface UseIssuesFormModalProps {
@@ -1316,6 +1319,19 @@ interface ObjectiveProps {
   meetingId?: string;
   isForce?: boolean;
   isDelete?: boolean;
+  type?: string | null;
+}
+interface UpdateItem {
+  srNo: number;
+  updateId: string;
+  title: string;
+  description: string;
+  image: string[]; // array of image URLs
+  date: string; // ISO string
+  createdBy: string;
+  createdAt: string;
+  updatedBy: string;
+  updatedAt: string;
 }
 
 interface DetailMeetingObjectives {
@@ -1340,6 +1356,7 @@ interface MeetingAgenda {
   sequence?: number;
   departmentId?: string;
   departmentName?: string;
+  type?: string;
 }
 
 interface DetailMeetingAgendaIssue {
@@ -1485,6 +1502,7 @@ interface AgendaListProps {
   cancelEdit: () => void;
   handleListClick?: (id: string, item: boolean) => void;
   handleMarkAsSolved: (data: MeetingAgenda) => void;
+  handleMarkAsPark: (data: MeetingAgenda) => void;
   startEdit: (
     type: "ISSUE" | "OBJECTIVE",
     issueId: string | null,
@@ -1498,6 +1516,7 @@ interface AgendaListProps {
   conclusionTime?: MeetingConclusionData;
   isTeamLeader?: boolean;
   isUnFollow?: boolean;
+  meetingTime?: string;
 }
 
 interface EditingProps {
@@ -1563,6 +1582,7 @@ interface SimpleCompanyDetails {
   pan?: string;
   kpiSkipDays?: string[] | string;
   unit?: string;
+  validationKey?: number;
 }
 
 interface IndustryOption {

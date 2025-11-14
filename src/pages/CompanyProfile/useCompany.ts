@@ -32,6 +32,7 @@ export default function useCompany() {
   const [isStateSearch, setIsStateSearch] = useState("");
   const [isCitySearch, setIsCitySearch] = useState("");
 
+  const [middlePercent, setMiddlePercent] = useState<number | null>(null);
   const { setBreadcrumbs } = useBreadcrumbs();
   useEffect(() => {
     setBreadcrumbs([{ label: "Company Profile", href: "" }]);
@@ -123,6 +124,7 @@ export default function useCompany() {
         industryId: companyData.Industry?.industryId,
         cityId: companyData.cityId,
         stateId: companyData.stateId,
+        validationKey: companyData.validationKey,
         countryId: companyData.countryId,
         engagementTypeId: companyData.engagementTypeId,
         accountPocMobile: companyData.companyMobile?.replace("+91", ""),
@@ -247,6 +249,7 @@ export default function useCompany() {
       consultants: data?.consultants,
       superAdmin: data?.superAdmin,
       kpiSkipDays: data.kpiSkipDays,
+      validationKey: data.validationKey,
     };
 
     addCompany(payload, {
@@ -350,7 +353,8 @@ export default function useCompany() {
     modalData,
     handleDelete,
     handleClose,
-
+    middlePercent,
+    setMiddlePercent,
     // formatOptions,
   };
 }
