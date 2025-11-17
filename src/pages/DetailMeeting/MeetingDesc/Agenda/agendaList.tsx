@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   BadgeCheck,
-  BadgeX,
   CircleX,
   CopyCheck,
   CopyX,
@@ -373,58 +372,77 @@ export default function AgendaList({
                 <div className="">
                   {editing?.issueObjectiveId !== item.issueObjectiveId && (
                     <div className="flex gap-1">
-                      {item.type !== "PARKED" && (
+                      {/* ✅ Always show RESOLVED / UNRESOLVED button */}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              onClick={(e) => handleMarkAsSolvedClick(e, item)}
+                              className="w-7 cursor-pointer hover:bg-transparent"
+                            >
+                              {item.type === "RESOLVED" ? (
+                                <CopyX className="w-7 h-7 text-red-600" />
+                              ) : (
+                                <CopyCheck className="w-7 h-7 text-green-600" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+
+                          <TooltipContent>
+                            <p>
+                              {item.type === "RESOLVED"
+                                ? "Mark As Unresolved"
+                                : "Mark As Resolved"}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      {item.type === "PARKED" && (
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="ghost"
                                 onClick={(e) =>
-                                  handleMarkAsSolvedClick(e, item)
-                                } // Use the new handler
+                                  handleMarkAsSolvedClick(e, {
+                                    ...item,
+                                    type: "RESOLVED",
+                                  })
+                                }
                                 className="w-7 cursor-pointer hover:bg-transparent"
                               >
-                                {item.isResolved ? (
-                                  <CopyX className="w-7 h-7 text-red-600" />
-                                ) : (
-                                  <CopyCheck className="w-7 h-7 text-green-600" />
-                                )}
+                                <CopyX className="w-7 h-7 text-red-600" />
                               </Button>
                             </TooltipTrigger>
+
                             <TooltipContent>
-                              <p>
-                                {item.isResolved
-                                  ? "Mark As Unresolved"
-                                  : "Mark As Resolved"}
-                              </p>
+                              <p>Mark As Unresolved</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                       )}
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              onClick={(e) => handleMarkAsParkClick(e, item)} // Use the new handler
-                              className="w-7 cursor-pointer hover:bg-transparent"
-                            >
-                              {item.type === "PARKED" ? (
-                                <BadgeX className="w-7 h-7 text-red-600" />
-                              ) : (
+
+                      {item.type !== "PARKED" && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                onClick={(e) => handleMarkAsParkClick(e, item)}
+                                className="w-7 cursor-pointer hover:bg-transparent"
+                              >
                                 <BadgeCheck className="w-7 h-7 text-green-600" />
-                              )}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              {item.type === "PARKED"
-                                ? "Mark As UnParked"
-                                : "Mark As Parked"}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                              </Button>
+                            </TooltipTrigger>
+
+                            <TooltipContent>
+                              <p>Mark As Parked</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
 
                       <TooltipProvider>
                         <Tooltip>

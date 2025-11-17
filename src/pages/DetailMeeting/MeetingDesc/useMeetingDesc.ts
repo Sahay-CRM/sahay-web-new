@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { get, off, onValue, ref, remove, update } from "firebase/database";
+import { get, onValue, ref, remove, update } from "firebase/database";
 import { database } from "@/firebaseConfig";
 
 import { queryClient } from "@/queryClient";
@@ -77,32 +77,31 @@ export default function useMeetingDesc() {
 
   const db = database;
 
+  const hasStartedTriggered = useRef(false);
+
   useEffect(() => {
     const meetingRef = ref(db, `meetings/${meetingId}`);
 
-    onValue(meetingRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        setMeetingResponse(data);
-        if (
-          data.state.status === "IN_PROGRESS" ||
-          meetingTiming?.detailMeetingStatus === "STARTED"
-        ) {
-          setActiveTab("DOCUMENTS");
-          setIsCardVisible(true);
-        }
-        // if (userData.employeeType !== "CONSULTANT" && sidebarControl?.setOpen) {
-        //   sidebarControl.setOpen(false);
-        // }
-      } else {
-        setMeetingResponse(null);
+    const unsubscribe = onValue(meetingRef, (snapshot) => {
+      if (!snapshot.exists()) return;
+
+      const data = snapshot.val();
+      setMeetingResponse(data);
+
+      const isStarted =
+        data.state?.status === "IN_PROGRESS" ||
+        meetingTiming?.detailMeetingStatus === "STARTED";
+
+      // ⭐ RUN ONLY ONE TIME WHEN STARTED
+      if (isStarted && !hasStartedTriggered.current) {
+        hasStartedTriggered.current = true;
+        setActiveTab("DOCUMENTS");
+        setIsCardVisible(true);
       }
     });
 
-    return () => {
-      off(meetingRef);
-    };
-  }, [db, handleUpdatedRefresh, meetingId, meetingTiming?.detailMeetingStatus]);
+    return () => unsubscribe();
+  }, [db, meetingId, meetingTiming?.detailMeetingStatus]);
 
   // useEffect(() => {
   //   if (!meetingId || !meetingResponse) return;
@@ -381,7 +380,7 @@ export default function useMeetingDesc() {
             return;
           } else {
             update(meetRef, {
-              updatedAt: new Date(),
+              updatedAt: Date.now(),
             });
           }
         },
@@ -415,7 +414,7 @@ export default function useMeetingDesc() {
       const meetRef = ref(db, `meetings/${meetingId}/state`);
       update(meetRef, {
         follow: employeeId,
-        updatedAt: new Date(),
+        updatedAt: Date.now(),
       });
     }
   };
@@ -603,11 +602,37 @@ export default function useMeetingDesc() {
       unsubscribe();
     };
   }, [meetingId]);
+  useEffect(() => {
+    const db = database;
+    const meetingRef = ref(db, `meetings/${meetingId}/alert/updatedAt`);
+
+    const RingAlert = onValue(meetingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+          audioRef.current.play();
+        }
+        setIsShaking(true);
+        setTimeout(() => setIsShaking(false), 600);
+      }
+    });
+
+    return () => {
+      RingAlert();
+    };
+  }, [meetingId]);
+
   const handleRing = () => {
+    const alertsRef = ref(db, `meetings/${meetingId}/alert`);
+
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
       audioRef.current.play();
     }
+
+    update(alertsRef, {
+      updatedAt: Date.now(),
+    });
 
     setIsShaking(true);
     setTimeout(() => setIsShaking(false), 600);

@@ -16,6 +16,7 @@ interface AuthState {
   userId?: string;
   fireBaseToken?: string | null;
   fbToken?: string;
+  validationKey?: string;
 }
 
 interface CustomError {

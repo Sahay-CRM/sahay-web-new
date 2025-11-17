@@ -3,6 +3,8 @@ export const getToken = (store: RootState): string | null => store.auth?.token;
 export const getIsLoading = (store: RootState): boolean => store.auth.isLoading;
 
 export const getUserId = (store: RootState): string => store.auth.userId || "";
+export const getValidationKeyId = (store: RootState): string =>
+  store.auth.validationKey || "";
 
 export const getUserDetail = (store: RootState): User =>
   store.auth.user as User;

@@ -212,8 +212,9 @@ export default function MeetingDesc() {
                               className="flex items-center gap-3 cursor-pointer w-full"
                               onClick={() => {
                                 if (
-                                  meetingStatus === "NOT_STARTED" ||
-                                  meetingStatus !== "ENDED"
+                                  (meetingStatus === "NOT_STARTED" ||
+                                    meetingStatus !== "ENDED") &&
+                                  (follow === userId || isTeamLeader)
                                 ) {
                                   toggleOpen();
                                 }

@@ -9,10 +9,7 @@ import {
   useGetIndustryDropdown,
   useGetStateDropdown,
 } from "@/features/api/CompanyProfile";
-import {
-  getUserDetail,
-  getUserPermission,
-} from "@/features/selectors/auth.selector";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useForm } from "react-hook-form";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import { imageUploadMutation } from "@/features/api/file";
@@ -23,8 +20,6 @@ import {
 } from "@/features/api/Holiday";
 
 export default function useCompany() {
-  const companyId = useSelector(getUserDetail).companyId;
-
   const permission = useSelector(getUserPermission).COMPANY_PROFILE;
 
   const [isIndSearch, setIsIndSearch] = useState("");
@@ -40,7 +35,7 @@ export default function useCompany() {
 
   const { mutate: addCompany } = addCompanyMutation();
   const { mutate: uploadImage } = imageUploadMutation();
-  const { data: companyData } = useGetCompanyId(companyId!);
+  const { data: companyData } = useGetCompanyId();
   const { data: industryList } = useGetIndustryDropdown({
     filter: {
       search: isIndSearch.length >= 3 ? isIndSearch : undefined,

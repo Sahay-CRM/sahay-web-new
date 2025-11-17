@@ -14,10 +14,10 @@ const SingleUpdate: React.FC = () => {
 
   // Fetch updates
   const { data: UpdateList } = useGetUpdates();
-  const rawUpdates = UpdateList?.data ?? [];
 
   // Group updates by date
   const groupedUpdates = useMemo(() => {
+    const rawUpdates = UpdateList?.data ?? [];
     const groups: { date: string; items: UpdateItem[] }[] = [];
 
     rawUpdates.forEach((item) => {
@@ -32,7 +32,7 @@ const SingleUpdate: React.FC = () => {
     });
 
     return groups;
-  }, [rawUpdates]);
+  }, [UpdateList?.data]);
 
   // If a date is selected, filter the section
   const activeSection = selectedDate

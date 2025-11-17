@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { get, off, onValue, ref, update } from "firebase/database";
 import { database } from "@/firebaseConfig";
 
 import { addUpdateIssues } from "@/features/api/Issues";
 import { addUpdateObjective } from "@/features/api/Objective";
 import { queryClient } from "@/queryClient";
-import { setMeeting } from "@/features/reducers/common.reducer";
+// import { setMeeting } from "@/features/reducers/common.reducer";
 import useGetMeetingConclusion from "@/features/api/detailMeeting/useGetMeetingConclusion";
 // import SidebarControlContext from "@/features/layouts/DashboardLayout/SidebarControlContext";
 import {
@@ -45,8 +45,9 @@ export const useAgenda = ({
   meetingResponse,
   canEdit,
   joiners,
+  follow,
 }: UseAgendaProps) => {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
   const db = database;
   const meetStateRef = ref(db, `meetings/${meetingId}/state`);
   // const sidebarControl = useContext(SidebarControlContext);
@@ -65,7 +66,7 @@ export const useAgenda = ({
   const [modalOpen, setModalOpen] = useState(false);
   const [modalIssue, setModalIssue] = useState("");
   const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [agendaList, setAgendaList] = useState<MeetingAgenda[]>([]);
+  // const [agendaList, setAgendaList] = useState<MeetingAgenda[]>([]);
   const [isSelectedAgenda, setIsSelectedAgenda] = useState<string>();
   const [isSideBar, setIsSideBar] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>();
@@ -81,7 +82,7 @@ export const useAgenda = ({
 
   const unFollowByUser = meetingResponse?.state.unfollow?.[userId] ?? false;
 
-  const { data: selectedAgenda } = useGetDetailMeetingAgenda({
+  const { data: agendaList } = useGetDetailMeetingAgenda({
     filter: {
       meetingId: meetingId,
       // isResolved: resolutionFilter === "SOLVED" ? true : false,
@@ -95,7 +96,7 @@ export const useAgenda = ({
       !unFollowByUser &&
       meetingResponse.state.currentAgendaItemId !== isSelectedAgenda
     ) {
-      const io = selectedAgenda?.find(
+      const io = agendaList?.find(
         (item) =>
           item.issueObjectiveId === meetingResponse.state.currentAgendaItemId,
       )?.ioType;
@@ -104,7 +105,7 @@ export const useAgenda = ({
         setIoType(io);
       }
     }
-  }, [isSelectedAgenda, meetingResponse, selectedAgenda, unFollowByUser]);
+  }, [isSelectedAgenda, meetingResponse, agendaList, unFollowByUser]);
 
   // API hooks
 
@@ -167,12 +168,12 @@ export const useAgenda = ({
           : isSelectedAgenda,
       ...(ioType === "ISSUE"
         ? {
-            issueId: selectedAgenda?.find(
+            issueId: agendaList?.find(
               (item) => item.issueObjectiveId === isSelectedAgenda,
             )?.issueId,
           }
         : {
-            objectiveId: selectedAgenda?.find(
+            objectiveId: agendaList?.find(
               (item) => item.issueObjectiveId === isSelectedAgenda,
             )?.objectiveId,
           }),
@@ -222,7 +223,7 @@ export const useAgenda = ({
     filter: {
       meetingId: meetingId,
     },
-    enable: meetingResponse?.state.activeTab === "CONCLUSION" || !!meetingId,
+    enable: meetingResponse?.state.activeTab === "CONCLUSION" && !!meetingId,
   });
 
   // Mutations
@@ -252,28 +253,26 @@ export const useAgenda = ({
   //   }
   // };
 
-  useEffect(() => {
-    if (selectedAgenda && selectedAgenda) {
-      let filteredData = selectedAgenda;
+  // useEffect(() => {
+  //   if (selectedAgenda) {
+  //     let filteredData = selectedAgenda;
 
-      if (resolutionFilter === "SOLVED") {
-        filteredData = filteredData.filter(
-          (item) => item.isResolved === true && item.type !== "PARKED",
-        );
-      } else if (resolutionFilter === "UNSOLVED") {
-        filteredData = filteredData.filter(
-          (item) => item.isResolved === false && item.type !== "PARKED",
-        );
-      } else if (resolutionFilter === "PARKED") {
-        filteredData = filteredData.filter((item) => item.type === "PARKED");
-      }
+  //     if (resolutionFilter === "SOLVED") {
+  //       filteredData = filteredData.filter((item) => item.type === "RESOLVED");
+  //     } else if (resolutionFilter === "UNSOLVED") {
+  //       filteredData = filteredData.filter(
+  //         (item) => item.type === "UNRESOLVED" || item.type === null
+  //       );
+  //     } else if (resolutionFilter === "PARKED") {
+  //       filteredData = filteredData.filter((item) => item.type === "PARKED");
+  //     }
 
-      setAgendaList(filteredData);
-      dispatch(setMeeting(selectedAgenda));
-    } else {
-      setAgendaList([]);
-    }
-  }, [dispatch, selectedAgenda, resolutionFilter]);
+  //     setAgendaList(filteredData);
+  //     dispatch(setMeeting(selectedAgenda));
+  //   } else {
+  //     setAgendaList([]);
+  //   }
+  // }, [dispatch, selectedAgenda, resolutionFilter]);
 
   useEffect(() => {
     if (meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED") {
@@ -827,9 +826,8 @@ export const useAgenda = ({
     if (isUnFollow) {
       const io =
         (meetingStatus !== "ENDED" &&
-          selectedAgenda?.find(
-            (item) => item.issueObjectiveId === issueObjectiveId,
-          )?.ioType) ||
+          agendaList?.find((item) => item.issueObjectiveId === issueObjectiveId)
+            ?.ioType) ||
         "";
 
       setIsSelectedAgenda(issueObjectiveId);
@@ -839,9 +837,8 @@ export const useAgenda = ({
       queryClient.resetQueries({ queryKey: ["get-detailMeeting-kpis-res"] });
     } else if (meetingStatus === "ENDED") {
       const io =
-        selectedAgenda?.find(
-          (item) => item.issueObjectiveId === issueObjectiveId,
-        )?.ioType || "";
+        agendaList?.find((item) => item.issueObjectiveId === issueObjectiveId)
+          ?.ioType || "";
 
       setIsSelectedAgenda(issueObjectiveId);
       setIoType(io);
@@ -1007,6 +1004,7 @@ export const useAgenda = ({
 
     const meetingRef = ref(db, `meetings/${meetingId}`);
     const meetingSnapshot = await get(meetingRef);
+    const newType = data.type === "RESOLVED" ? "UNRESOLVED" : "RESOLVED";
 
     if (data.ioType === "ISSUE") {
       addIssue(
@@ -1015,6 +1013,7 @@ export const useAgenda = ({
           issueName: data.name,
           isResolved: !data.isResolved,
           meetingId: meetingId,
+          type: newType,
         },
         {
           onSuccess: () => {
@@ -1038,6 +1037,7 @@ export const useAgenda = ({
           objectiveName: data.name,
           isResolved: !data.isResolved,
           meetingId: meetingId,
+          type: newType,
         },
         {
           onSuccess: () => {
@@ -1117,7 +1117,7 @@ export const useAgenda = ({
       unFollowByUser
     ) {
       setResolutionFilter(data);
-    } else {
+    } else if (follow) {
       const meetingRef = ref(db, `meetings/${meetingId}`);
       const meetingSnapshot = await get(meetingRef);
 
@@ -1193,7 +1193,7 @@ export const useAgenda = ({
       const draggedId = String(active.id);
       const dropIndex = Number(over?.data?.current?.sortable?.index) + 1;
 
-      const ioType = agendaList.find(
+      const ioType = agendaList?.find(
         (item) => item.issueObjectiveId === draggedId,
       )?.ioType;
 

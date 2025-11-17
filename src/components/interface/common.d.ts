@@ -1582,7 +1582,7 @@ interface SimpleCompanyDetails {
   pan?: string;
   kpiSkipDays?: string[] | string;
   unit?: string;
-  validationKey?: number;
+  validationKey?: string;
 }
 
 interface IndustryOption {

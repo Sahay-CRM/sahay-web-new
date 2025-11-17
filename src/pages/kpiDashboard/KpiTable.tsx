@@ -52,6 +52,7 @@ import { useSelector } from "react-redux";
 import {
   getUserDetail,
   getUserPermission,
+  getValidationKeyId,
 } from "@/features/selectors/auth.selector";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 // import CommentModal from "./KpiCommentModal";
@@ -712,6 +713,8 @@ export default function UpdatedKpiTable() {
       ) ?? []
     );
   }, [kpiStructure, selectedPeriod]);
+  const validationKeyString = useSelector(getValidationKeyId);
+  const validationKey = Number(validationKeyString);
 
   const headers = getKpiHeadersFromData(
     isKpiDataCellArrayArray(kpiData?.data) ? kpiData.data : [],
@@ -1352,6 +1355,7 @@ export default function UpdatedKpiTable() {
                                             <div
                                               className={twMerge(
                                                 "relative rounded-sm text-sm w-[80px] h-[42px] bg-white group",
+
                                                 inputVal !== "" &&
                                                   selectedPeriod !== "YEARLY" &&
                                                   (isValid
@@ -1360,13 +1364,14 @@ export default function UpdatedKpiTable() {
                                                 isVisualized &&
                                                   cell?.validationPercentage !=
                                                     null &&
-                                                  (cell.validationPercentage <
-                                                  80
-                                                    ? "bg-red-200"
+                                                  (cell.validationPercentage ===
+                                                  100
+                                                    ? "bg-green-200"
                                                     : cell.validationPercentage <
-                                                        100
-                                                      ? "bg-yellow-200"
-                                                      : "bg-green-200"),
+                                                        validationKey
+                                                      ? "bg-red-200"
+                                                      : "bg-yellow-200"),
+
                                                 isVisualized &&
                                                   "opacity-60 cursor-not-allowed",
                                                 cell?.isSkipDay &&
@@ -1580,9 +1585,28 @@ export default function UpdatedKpiTable() {
                                               }
                                               onKeyPress={handleKeyPress}
                                               onPaste={handlePaste}
+                                              // className={twMerge(
+                                              //   "border p-2 rounded-sm text-center text-sm w-full h-[42px] transition-all bg-white",
+                                              //   "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                                              //   inputVal !== "" &&
+                                              //     validationType &&
+                                              //     selectedPeriod !== "YEARLY" &&
+                                              //     (isValidInput(
+                                              //       validationType,
+                                              //       inputVal,
+                                              //       value1 ?? null,
+                                              //       value2 ?? null
+                                              //     )
+                                              //       ? "bg-green-100 border-green-500"
+                                              //       : "bg-red-100 border-red-500"),
+                                              //   isVisualized &&
+                                              //     "cursor-not-allowed"
+                                              // )}
                                               className={twMerge(
                                                 "border p-2 rounded-sm text-center text-sm w-full h-[42px] transition-all bg-white",
                                                 "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+
+                                                // ⭐ Normal validation (when input is editable)
                                                 inputVal !== "" &&
                                                   validationType &&
                                                   selectedPeriod !== "YEARLY" &&
@@ -1594,6 +1618,19 @@ export default function UpdatedKpiTable() {
                                                   )
                                                     ? "bg-green-100 border-green-500"
                                                     : "bg-red-100 border-red-500"),
+
+                                                // ⭐ Visualization-based color logic
+                                                isVisualized &&
+                                                  cell?.validationPercentage !=
+                                                    null &&
+                                                  (cell.validationPercentage ===
+                                                  100
+                                                    ? "bg-green-200"
+                                                    : cell.validationPercentage <
+                                                        validationKey
+                                                      ? "bg-red-200"
+                                                      : "bg-yellow-200  border-yellow-500"),
+
                                                 isVisualized &&
                                                   "cursor-not-allowed",
                                               )}

@@ -307,51 +307,6 @@ export default function CompanyProfile() {
                     )}
                   </div>
                 </div>
-                {/* <div className="w-1/2">
-                  {isEditing ? (
-                    <Controller
-                      control={control}
-                      name="unit"
-                      render={({ field }) => (
-                        <FormSelect
-                          label="Unit"
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={formatOptions}
-                          error={errors.unit}
-                          className="rounded-md"
-                          triggerClassName="py-4"
-                        />
-                      )}
-                    />
-                  ) : (
-                    <div>
-                      {companyData.kpiSkipDays && (
-                        <>
-                          <label className="block text-sm font-medium text-gray-700">
-                            Unit
-                          </label>
-                          <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                            {(typeof companyData.kpiSkipDays === "string"
-                              ? companyData.kpiSkipDays.split(",")
-                              : companyData.kpiSkipDays
-                            )
-                              .map(
-                                (dayValue: string) =>
-                                  skipDaysOption.find(
-                                    (opt) => opt.value === dayValue
-                                  )?.label
-                              )
-                              .filter((label): label is string =>
-                                Boolean(label)
-                              )
-                              .join(", ")}
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div> */}
               </div>
             </div>
 
@@ -578,7 +533,7 @@ export default function CompanyProfile() {
                 {/* PAN Card Section */}
                 <div className="w-1/2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700">
                       Pancard Number
                     </label>
                     {isEditing ? (
@@ -588,7 +543,7 @@ export default function CompanyProfile() {
                         error={errors.pancardNumber}
                       />
                     ) : (
-                      <p className="text-gray-900 bg-gray-50 px-3  rounded-lg">
+                      <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
                         {watch("pancardNumber") || "Not provided"}
                       </p>
                     )}
@@ -682,79 +637,58 @@ export default function CompanyProfile() {
 
               {/* Content */}
               <div className="space-y-4">
-                <div className="flex flex-row items-center gap-4">
-                  <Controller
-                    control={control}
-                    name="validationKey"
-                    render={({ field }) => {
-                      const numericValue =
-                        field.value && !isNaN(Number(field.value))
-                          ? Number(field.value)
-                          : null;
+                <div className="flex flex-row items-start gap-12">
+                  {/* 0% Red */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-8 h-8 rounded bg-red-100 border border-red-500" />
+                    <span className="text-xs mt-1 text-gray-700 font-medium">
+                      0%
+                    </span>
+                  </div>
+                  {/* 100% Green */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-8 h-8 rounded bg-green-100 border border-green-500" />
+                    <span className="text-xs mt-1 text-gray-700 font-medium">
+                      100%
+                    </span>
+                  </div>
+                  {/* Middle % Yellow */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-8 h-8 rounded bg-yellow-200 border border-yellow-500" />
 
-                      return (
-                        <>
-                          {isEditing && (
+                    {!isEditing ? (
+                      <span className="text-xs mt-1 text-gray-700 font-medium">
+                        {watch("validationKey") ?? "--"}%
+                      </span>
+                    ) : (
+                      <Controller
+                        control={control}
+                        name="validationKey"
+                        render={({ field }) => {
+                          const numericValue =
+                            field.value && !isNaN(Number(field.value))
+                              ? Number(field.value)
+                              : "";
+
+                          return (
                             <input
                               type="number"
                               min={0}
                               max={99}
                               placeholder="0"
-                              value={numericValue ?? ""}
+                              value={numericValue}
                               onChange={(e) => {
-                                let value = e.target.value;
-                                value = value.replace(/\D/g, "");
+                                let value = e.target.value.replace(/\D/g, "");
                                 if (value.length > 2) value = value.slice(0, 2);
                                 field.onChange(value === "" ? null : value);
                               }}
-                              className="w-20 border mb-4  border-gray-300 rounded align-top py-1 text-center text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                              className="w-12 mt-1 border border-gray-300 rounded py-0.5 text-center text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400"
                             />
-                          )}
-
-                          {/* Progress Bar and Labels */}
-                          <div className="flex flex-col w-full gap-1">
-                            {/* Progress Bar */}
-                            <div
-                              className="relative w-full h-5 rounded-full overflow-hidden bg-gray-200 transition-all duration-300"
-                              style={{
-                                background:
-                                  numericValue !== null
-                                    ? `linear-gradient(to right, 
-                      red 0%, 
-                      red ${numericValue}%, 
-                      yellow ${numericValue}%, 
-                      yellow 99%, 
-                      green 99%, 
-                      green 100%)`
-                                    : "#e5e7eb",
-                              }}
-                            />
-
-                            <div className="flex relative w-full text-sm text-gray-600">
-                              {numericValue !== null && (
-                                <div
-                                  className="absolute top-3 flex justify-end text-xs font-semibold text-gray-800 transition-all duration-300 transform -translate-y-1"
-                                  style={{
-                                    width: `${numericValue}%`,
-                                  }}
-                                >
-                                  {numericValue}%
-                                </div>
-                              )}
-
-                              {/* 0% and 100% boundary labels */}
-                              <div className="flex justify-between w-full mt-2">
-                                <span className="text-xs font-medium">0%</span>
-                                <span className="text-xs font-medium">
-                                  100%
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </>
-                      );
-                    }}
-                  />
+                          );
+                        }}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

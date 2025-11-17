@@ -20,6 +20,7 @@ import {
   setFireBaseToken,
   setUser,
   setUserPermission,
+  setValidationKey,
 } from "@/features/reducers/auth.reducer";
 import useGetUserPermission from "./useGetUserPermission";
 import { companyNavigationData } from "@/features/utils/navigation.data";
@@ -67,6 +68,7 @@ import ModalData from "@/components/shared/Modal/ModalData";
 import { ExclamationRoundIcon } from "@/components/shared/Icons";
 import { useGetCompanyList } from "@/features/api/SelectCompany";
 import { loginToFirebase } from "@/pages/auth/login/loginToFirebase";
+import { useGetCompanyId } from "@/features/api/CompanyProfile";
 
 const CompanyModal = lazy(() => import("@/pages/auth/login/CompanyModal"));
 const NotificationDropdown = lazy(() => import("./notificationDropdown"));
@@ -107,6 +109,7 @@ const DashboardLayout = () => {
   const { mutate: readAllNoti } = updateReadNotificationMutation();
 
   const { data: permission } = useGetUserPermission();
+  const { data: companyData } = useGetCompanyId();
   const { data: userData, failureReason } = useGetEmployeeById({
     filter: {
       employeeId: userId,
@@ -124,6 +127,11 @@ const DashboardLayout = () => {
       dispatch(setUserPermission(permission));
     }
   }, [dispatch, permission]);
+  useEffect(() => {
+    if (companyData) {
+      dispatch(setValidationKey(companyData.validationKey!));
+    }
+  }, [dispatch, companyData]);
 
   useEffect(() => {
     if (notificationData?.data) {

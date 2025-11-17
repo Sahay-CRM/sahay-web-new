@@ -15,6 +15,7 @@ const initialState: AuthState = {
     selectFrequency: "",
   },
   fireBaseToken: null,
+  validationKey: "",
 };
 
 export const authSlice = createSlice({
@@ -30,6 +31,9 @@ export const authSlice = createSlice({
     },
     setUserId: (state, action: PayloadAction<string>) => {
       state.userId = action.payload;
+    },
+    setValidationKey: (state, action: PayloadAction<string>) => {
+      state.validationKey = action.payload;
     },
     setUser: (state, action: PayloadAction<User | null>) => {
       state.user = action.payload;
@@ -58,6 +62,7 @@ export const {
   logout,
   setKpiData,
   setUserId,
+  setValidationKey,
   setFireBaseToken,
 } = authSlice.actions;
 export default authSlice.reducer;
