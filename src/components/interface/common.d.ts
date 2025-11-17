@@ -1582,7 +1582,8 @@ interface SimpleCompanyDetails {
   pan?: string;
   kpiSkipDays?: string[] | string;
   unit?: string;
-  validationKey?: number;
+  validationKey?: string;
+  date?: number;
 }
 
 interface IndustryOption {

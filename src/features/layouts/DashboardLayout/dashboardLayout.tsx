@@ -20,6 +20,7 @@ import {
   setFireBaseToken,
   setUser,
   setUserPermission,
+  setValidationKey,
 } from "@/features/reducers/auth.reducer";
 import useGetUserPermission from "./useGetUserPermission";
 import { companyNavigationData } from "@/features/utils/navigation.data";
@@ -67,6 +68,13 @@ import ModalData from "@/components/shared/Modal/ModalData";
 import { ExclamationRoundIcon } from "@/components/shared/Icons";
 import { useGetCompanyList } from "@/features/api/SelectCompany";
 import { loginToFirebase } from "@/pages/auth/login/loginToFirebase";
+import { useGetCompanyId } from "@/features/api/CompanyProfile";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const CompanyModal = lazy(() => import("@/pages/auth/login/CompanyModal"));
 const NotificationDropdown = lazy(() => import("./notificationDropdown"));
@@ -107,6 +115,7 @@ const DashboardLayout = () => {
   const { mutate: readAllNoti } = updateReadNotificationMutation();
 
   const { data: permission } = useGetUserPermission();
+  const { data: companyData } = useGetCompanyId();
   const { data: userData, failureReason } = useGetEmployeeById({
     filter: {
       employeeId: userId,
@@ -124,6 +133,11 @@ const DashboardLayout = () => {
       dispatch(setUserPermission(permission));
     }
   }, [dispatch, permission]);
+  useEffect(() => {
+    if (companyData) {
+      dispatch(setValidationKey(companyData.validationKey!));
+    }
+  }, [dispatch, companyData]);
 
   useEffect(() => {
     if (notificationData?.data) {
@@ -273,6 +287,15 @@ const DashboardLayout = () => {
     setIsNotificationOpen(false);
   };
 
+  // Convert to Date object
+  const updateTime = new Date(companyData?.date ?? 0);
+  const now = new Date();
+
+  const diffInDays =
+    (now.getTime() - updateTime.getTime()) / (1000 * 60 * 60 * 24);
+
+  const showDot = diffInDays < 2;
+
   // const isCompanyView =
   //   user.employeeType === "CONSULTANT" || user.isSuperAdmin === true;
 
@@ -307,15 +330,32 @@ const DashboardLayout = () => {
               </div>
 
               <div className="flex items-center justify-end gap-x-4 pt-1 relative">
-                <div>
-                  <Button
-                    variant="ghost"
-                    className="p-2 border relative"
-                    onClick={() => navigate("/dashboard/updates")}
-                  >
-                    <Info />
-                  </Button>
+                <div className="relative">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="relative">
+                          <Button
+                            variant="ghost"
+                            className="p-2 border relative"
+                            onClick={() => navigate("/dashboard/updates")}
+                          >
+                            <Info />
+                          </Button>
+
+                          {showDot && (
+                            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-primary border-2 border-white"></span>
+                          )}
+                        </div>
+                      </TooltipTrigger>
+
+                      <TooltipContent side="bottom">
+                        {showDot ? "New Updates" : "Updates"}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
+
                 {/* Notifications */}
                 <div className="relative">
                   <Button
