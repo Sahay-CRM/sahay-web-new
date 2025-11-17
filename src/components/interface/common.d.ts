@@ -1583,6 +1583,7 @@ interface SimpleCompanyDetails {
   kpiSkipDays?: string[] | string;
   unit?: string;
   validationKey?: string;
+  date?: number;
 }
 
 interface IndustryOption {
