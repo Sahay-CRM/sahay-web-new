@@ -41,14 +41,24 @@ export default function ObjDeleteModal({
         },
       ]}
     >
-      <div>
+      <div className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm ">
         <div className="flex gap-1">
-          Issue Name: <h2>{modalData.objectiveName}</h2>
+          <span className="font-medium text-primary"> Objective Name : </span>
+          <h2>{modalData.objectiveName}</h2>
         </div>
-        {modalData.departmentName && (
-          <p>Department Name: {modalData.departmentName}</p>
-        )}
 
+        {modalData.departmentName && (
+          <div>
+            <span className="font-medium text-primary">Department Name : </span>
+            {modalData.departmentName}
+          </div>
+        )}
+        {modalData?.type && (
+          <div>
+            <span className="font-medium text-primary">Type : </span>
+            {modalData.type}
+          </div>
+        )}
         {isChildData && (
           <div className="border-t pt-2">
             <span className="font-bold text-black">{isChildData}</span>

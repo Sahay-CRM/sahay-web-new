@@ -1418,6 +1418,7 @@ interface RepeatMeeting {
   };
   isDetailMeeting?: boolean;
   customObj?: CustomObjREPT;
+  joinerNames?: string;
   // meetingStatusId?: string;
 }
 

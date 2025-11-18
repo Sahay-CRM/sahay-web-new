@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
 
 import TableData from "@/components/shared/DataTable/DataTable";
-import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyDesignation from "./useCompanyDesignation";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
+import ConfirmationDeleteModal from "./ConfirmDesignationDeleteModal";
 
 export default function CompanyDesignation() {
   const {
@@ -169,8 +169,7 @@ export default function CompanyDesignation() {
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
             title={"Delete Designation Name"}
-            label={"Designation Name :"}
-            modalData={`${modalData?.designationName}`}
+            modalData={modalData}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}

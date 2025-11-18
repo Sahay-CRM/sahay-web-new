@@ -12,6 +12,7 @@ import {
   useGetMeetingNotes,
   useGetMeetingTiming,
 } from "@/features/api/detailMeeting";
+import { toast } from "sonner";
 // import SidebarControlContext from "@/features/layouts/DashboardLayout/SidebarControlContext";
 // import { useSelector } from "react-redux";
 // import { getUserDetail } from "@/features/selectors/auth.selector";
@@ -606,36 +607,27 @@ export default function useMeetingDesc() {
     const db = database;
     const meetingRef = ref(db, `meetings/${meetingId}/alert/updatedAt`);
 
+    const audio = new Audio("/BackToWork.mp3");
     const RingAlert = onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
-        if (audioRef.current) {
-          audioRef.current.currentTime = 0;
-          audioRef.current.play();
-        }
+        audio.play();
         setIsShaking(true);
-        setTimeout(() => setIsShaking(false), 600);
+        setTimeout(() => {
+          setIsShaking(false);
+          remove(meetingRef).catch((err) => {
+            toast(err);
+          });
+        }, 600);
       }
     });
-
-    return () => {
-      RingAlert();
-    };
+    return () => RingAlert();
   }, [meetingId]);
 
   const handleRing = () => {
     const alertsRef = ref(db, `meetings/${meetingId}/alert`);
-
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play();
-    }
-
     update(alertsRef, {
       updatedAt: Date.now(),
     });
-
-    setIsShaking(true);
-    setTimeout(() => setIsShaking(false), 600);
   };
 
   return {

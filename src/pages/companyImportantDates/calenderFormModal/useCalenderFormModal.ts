@@ -43,7 +43,6 @@ export default function useCalenderFormModal({
 
   const { mutate: addImportantDate } = addUpdateImportantDateMutation();
   const onSubmit = handleSubmit(async (data) => {
-    // Validate date field manually since react-datepicker doesn't use register
     if (!data.importantDate) {
       setError("importantDate", {
         type: "required",
@@ -54,10 +53,9 @@ export default function useCalenderFormModal({
 
     clearErrors("importantDate");
 
-    // Convert display date back to ISO format before sending to API
     const submitData = {
       ...data,
-      // importantDate: displayDateToIso(data.importantDate),
+      importantDate: new Date(data.importantDate).toISOString(),
     };
 
     addImportantDate(submitData, {

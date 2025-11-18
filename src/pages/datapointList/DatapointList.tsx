@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
-import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyTaskList from "./useDatapointList";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
@@ -20,6 +18,7 @@ import PageNotAccess from "../PageNoAccess";
 import { formatFrequencyType } from "@/features/utils/app.utils";
 import EditDatapointAddFormModal from "./EditDatapointFormModal/editDatapointAddFormModal";
 import TableData from "@/components/shared/DataTable/DataTableKpi";
+import ConfirmationDeleteModal from "./ConfirmationKPIDeleteModal";
 
 const validationOptions = [
   { value: "EQUAL_TO", label: "= Equal to" },
@@ -103,6 +102,7 @@ export default function CompanyTaskList() {
     setIsEditKpiId,
     setIsEditModalOpen,
   } = useCompanyTaskList();
+  console.log(modalData);
 
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -296,8 +296,7 @@ export default function CompanyTaskList() {
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
             title={"Delete KPI"}
-            label={"KPI Name :"}
-            modalData={`${modalData?.KPIName}`}
+            modalData={modalData}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}

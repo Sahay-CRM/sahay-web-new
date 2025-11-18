@@ -6,6 +6,7 @@ import {
   EllipsisVertical,
   FilePlus2,
   FileText,
+  NotebookTabs,
   RefreshCcw,
   ThumbsUp,
   Trash2,
@@ -931,7 +932,7 @@ export default function MeetingDesc() {
               handleTabChange("DOCUMENTSTAG");
             }}
           >
-            <UsersRound className="w-16 h-16" />
+            <NotebookTabs className="w-16 h-16" />
           </Button>
         </nav>
       </div>

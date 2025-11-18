@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TableData from "@/components/shared/DataTable/DataTable";
-import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useMeeting from "./useMeeting";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
@@ -21,6 +20,7 @@ import { format } from "date-fns";
 import DateRangePicker from "@/components/shared/DateRange";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
+import ConfirmationDeleteModal from "./confirmMeetingDeleteModal";
 // import { useSelector } from "react-redux";
 // import { getUserId } from "@/features/selectors/auth.selector";
 
@@ -334,8 +334,7 @@ export default function MeetingList() {
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
             title={"Delete Meeting"}
-            label={"Meeting Name :"}
-            modalData={`${modalData?.meetingName}`}
+            modalData={modalData}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}
