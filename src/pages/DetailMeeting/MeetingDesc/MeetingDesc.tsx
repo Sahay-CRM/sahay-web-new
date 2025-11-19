@@ -566,10 +566,6 @@ export default function MeetingDesc() {
                 {Array.isArray(meetingNotes?.data) &&
                   meetingNotes.data.map(
                     (note: MeetingNotesRes, idx: number) => {
-                      const author = (
-                        meetingTiming?.joiners as Joiners[]
-                      )?.find((j) => j.employeeId === note.employeeId);
-
                       return (
                         <div
                           key={note.meetingNoteId || idx}
@@ -578,7 +574,7 @@ export default function MeetingDesc() {
                           <div className="flex-1 text-sm text-black">
                             <div className="flex justify-between items-center mb-1">
                               <span className="font-medium text-xs text-gray-600">
-                                {author?.employeeName || "Unknown"}
+                                {note?.employeeName || "Unknown"}
                               </span>
                               <div>
                                 <span className="text-xs text-gray-600 mr-2 bg-gray-200/80 p-0.5 rounded-full px-2">
@@ -672,10 +668,6 @@ export default function MeetingDesc() {
                 {Array.isArray(meetingNotes?.data) &&
                   meetingNotes.data.map(
                     (note: MeetingNotesRes, idx: number) => {
-                      const author = (
-                        meetingTiming?.joiners as Joiners[]
-                      )?.find((j) => j.employeeId === note.employeeId);
-
                       return (
                         <div
                           key={note.meetingNoteId || idx}
@@ -684,7 +676,7 @@ export default function MeetingDesc() {
                           <div className="flex-1 text-sm text-black">
                             <div className="flex justify-between items-center mb-1">
                               <span className="font-medium text-xs text-gray-600">
-                                {author?.employeeName || "Unknown"}
+                                {note?.employeeName || "Unknown"}
                               </span>
                               <div>
                                 <span className="text-xs text-gray-600 mr-2 bg-gray-200/80 p-0.5 rounded-full px-2">
@@ -819,13 +811,6 @@ export default function MeetingDesc() {
                                   <div className="max-h-[200px] overflow-y-auto pr-1">
                                     <div className="space-y-2 mt-2">
                                       {filteredNotes.map((note, idx) => {
-                                        const author = (
-                                          meetingTiming?.joiners as Joiners[]
-                                        )?.find(
-                                          (j) =>
-                                            j.employeeId === note.employeeId,
-                                        );
-
                                         return (
                                           <div
                                             key={note.meetingNoteId || idx}
@@ -835,7 +820,7 @@ export default function MeetingDesc() {
                                               <div className="flex flex-col w-full">
                                                 <div className="flex justify-between items-center">
                                                   <span className="font-medium text-xs text-gray-700">
-                                                    {author?.employeeName ||
+                                                    {note?.employeeName ||
                                                       "Unknown"}
                                                   </span>
                                                   <div className="flex items-center gap-2">

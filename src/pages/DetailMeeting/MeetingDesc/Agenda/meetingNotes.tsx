@@ -51,7 +51,7 @@ interface TaskData {
 }
 
 const MeetingNotes: React.FC<MeetingNotesProps> = ({
-  joiners,
+  // joiners,
   employeeId,
   meetingId,
   className,
@@ -446,9 +446,9 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
               FilterBy ? note.noteTag !== null : note.noteTag === null,
             )
             .map((note: MeetingNotesRes, idx: number) => {
-              const author = joiners.find(
-                (j) => j.employeeId === note.employeeId,
-              );
+              // const author = joiners.find(
+              //   (j) => j.employeeId === note.employeeId,
+              // );
 
               return (
                 <div
@@ -466,7 +466,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                       )}
                       <div className="flex justify-between items-center mb-1">
                         <span className="font-medium text-xs text-gray-600">
-                          {author?.employeeName || "Unknown"}
+                          {note?.employeeName || "Unknown"}
                         </span>
                       </div>
                       <div>
