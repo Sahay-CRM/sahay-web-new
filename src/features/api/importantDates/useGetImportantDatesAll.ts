@@ -3,21 +3,16 @@ import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 type ImportantDatePaging = BaseResponse<ImportantDatesDataProps>;
 
-export default function useGetImportantDatesPagination({
-  filter,
-  enable,
-}: FilterDataProps) {
+export default function useGetImportantDates() {
   const query = useQuery({
-    queryKey: ["get-importantdatelist-page", filter],
+    queryKey: ["get-important-dates-list"],
     queryFn: async () => {
       const { data: resData } = await Api.post<ImportantDatePaging>({
-        url: Urls.getAllImportantDatesByPage(),
-        data: filter,
+        url: Urls.getAllImportantDates(),
       });
 
       return resData;
     },
-    enabled: !!enable || !!filter,
   });
   return query;
 }

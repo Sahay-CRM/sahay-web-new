@@ -7,7 +7,6 @@ import useCompanyDesignation from "./useCompanyDesignation";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 
 import { Button } from "@/components/ui/button";
-import DesignationAddFormModal from "./designationFormModal/designationAddFormModal";
 import SearchInput from "@/components/shared/SearchInput";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import {
@@ -17,41 +16,42 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import PageNotAccess from "../PageNoAccess";
+import PageNotAccess from "@/pages/PageNoAccess";
+import CalenderFormModal from "../companyImportantDates/calenderFormModal/CalenderFormModal";
 import ConfirmationDeleteModal from "./ConfirmDesignationDeleteModal";
+import { format } from "date-fns";
 
 export default function CompanyDesignation() {
   const {
-    designationList,
-    closeDeleteModal,
+    importantDatesList,
     setPaginationFilter,
-    handleAdd,
-    openModal,
-    onDelete,
+    handleAddModal,
+    addImportantDate,
+    handleCloseModal,
     modalData,
-    conformDelete,
-    isDeleteModalOpen,
     paginationFilter,
-    addDesignationModal,
-    isChildData,
     permission,
     isLoading,
+    openModal,
+    onDelete,
+    isDeleteModalOpen,
+    conformDelete,
+    closeDeleteModal,
   } = useCompanyDesignation();
-  const { setBreadcrumbs } = useBreadcrumbs();
 
+  const { setBreadcrumbs } = useBreadcrumbs();
   useEffect(() => {
-    setBreadcrumbs([{ label: "Company Designation", href: "" }]);
+    setBreadcrumbs([
+      { label: "Calendar", href: "/dashboard/calendar" },
+      { label: "important Dates", href: "", isHighlight: true },
+    ]);
   }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
-    { key: "designationName", label: "Designation Name", visible: true },
-    {
-      key: "departmentName",
-      label: "Department Name",
-      visible: true,
-    },
-    { key: "parentName", label: "Parent Designation", visible: true },
+    { key: "importantDateName", label: "Important Date Name", visible: true },
+    { key: "importantDate", label: "Date", visible: true },
+    { key: "importantDateRemarks", label: "Remarks", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -82,13 +82,13 @@ export default function CompanyDesignation() {
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
         <div className="flex mb-5 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
-            Designation List
+            important Date List
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
             {permission.Add && (
               <Link to="">
-                <Button className="py-2 w-fit" onClick={handleAdd}>
-                  Add Designation
+                <Button className="py-2 w-fit" onClick={handleAddModal}>
+                  Add Important Date
                 </Button>
               </Link>
             )}
@@ -128,55 +128,55 @@ export default function CompanyDesignation() {
 
         <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
           <TableData
-            tableData={designationList?.data.map(
-              (item: DesignationDataProps, index: number) => ({
-                ...item,
-                srNo:
-                  (designationList.currentPage - 1) * designationList.pageSize +
-                  index +
-                  1,
-              }),
-            )}
-            columns={visibleColumns} // Pass only visible columns to the Table
-            primaryKey="designationId"
-            onEdit={(row) => openModal(row as unknown as DesignationData)}
-            onDelete={(row) => onDelete(row as unknown as DesignationData)}
+            tableData={importantDatesList?.data.map((item, index) => ({
+              ...item,
+              srNo:
+                (importantDatesList.currentPage - 1) *
+                  importantDatesList.pageSize +
+                index +
+                1,
+              importantDate: item.importantDate
+                ? format(new Date(item.importantDate), "dd/MM/yyyy hh:mm a")
+                : "-",
+            }))}
+            columns={visibleColumns}
+            primaryKey="importantDateId"
+            onEdit={(row) =>
+              openModal(row as unknown as ImportantDatesDataProps)
+            }
+            onDelete={(row) =>
+              onDelete(row as unknown as ImportantDatesDataProps)
+            }
             isActionButton={() =>
               columnToggleOptions.some((col) => col.visible)
             }
-            paginationDetails={mapPaginationDetails(designationList)}
+            paginationDetails={mapPaginationDetails(importantDatesList)}
             setPaginationFilter={setPaginationFilter}
             searchValue={paginationFilter?.search}
             isLoading={isLoading}
             permissionKey="users"
-            moduleKey="DESIGNATION"
-            sortableColumns={[
-              "designationName",
-              "departmentName",
-              "parentName",
-            ]}
+            moduleKey="IMPORTANT_DATE"
             actionColumnWidth="w-[100px] overflow-hidden "
           />
         </div>
-        {addDesignationModal && (
-          <DesignationAddFormModal
-            isModalOpen={addDesignationModal}
-            modalClose={closeDeleteModal}
-            modalData={modalData}
-          />
-        )}
-
-        {isDeleteModalOpen && (
-          <ConfirmationDeleteModal
-            title={"Delete Designation"}
-            modalData={modalData}
-            isModalOpen={isDeleteModalOpen}
-            modalClose={closeDeleteModal}
-            onSubmit={conformDelete}
-            isChildData={isChildData}
-          />
-        )}
       </div>
+      {isDeleteModalOpen && (
+        <ConfirmationDeleteModal
+          title={"Delete Important Date"}
+          modalData={modalData}
+          isModalOpen={isDeleteModalOpen}
+          modalClose={closeDeleteModal}
+          onSubmit={conformDelete}
+          // isChildData={isChildData}
+        />
+      )}
+      {addImportantDate && (
+        <CalenderFormModal
+          isModalOpen={addImportantDate}
+          modalClose={handleCloseModal}
+          modalData={modalData}
+        />
+      )}
     </FormProvider>
   );
 }
