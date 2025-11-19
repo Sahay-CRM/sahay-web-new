@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
 
 import TableData from "@/components/shared/DataTable/DataTable";
-import useCompanyDesignation from "./useCompanyDesignation";
+import useCompanyImportantDate from "./useCompanyImportantDate";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 
 import { Button } from "@/components/ui/button";
@@ -18,10 +18,10 @@ import {
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "@/pages/PageNoAccess";
 import CalenderFormModal from "../companyImportantDates/calenderFormModal/CalenderFormModal";
-import ConfirmationDeleteModal from "./ConfirmDesignationDeleteModal";
+import ConfirmationDeleteModal from "./ConfirmImportantDateDeleteModal";
 import { format } from "date-fns";
 
-export default function CompanyDesignation() {
+export default function CompanyImportantDate() {
   const {
     importantDatesList,
     setPaginationFilter,
@@ -37,7 +37,7 @@ export default function CompanyDesignation() {
     isDeleteModalOpen,
     conformDelete,
     closeDeleteModal,
-  } = useCompanyDesignation();
+  } = useCompanyImportantDate();
 
   const { setBreadcrumbs } = useBreadcrumbs();
   useEffect(() => {

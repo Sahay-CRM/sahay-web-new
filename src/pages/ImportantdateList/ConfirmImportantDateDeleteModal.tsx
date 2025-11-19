@@ -93,7 +93,7 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
               </div>
             )}
 
-            {modalData?.color && (
+            {/* {modalData?.color && (
               <div className="flex items-center gap-2">
                 <span className="font-medium text-primary">Color: </span>
                 <div
@@ -101,7 +101,7 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
                   style={{ backgroundColor: modalData.color }}
                 />
               </div>
-            )}
+            )} */}
           </div>
 
           {/* Child Data Section */}

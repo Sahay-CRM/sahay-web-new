@@ -13,8 +13,10 @@ interface UseFormModalProps {
 
 // Helper function to convert ISO date to YYYY-MM-DD format
 const isoToDisplayDate = (isoDate: string | null | undefined): string => {
-  if (!isoDate) return "";
-  return new Date(isoDate).toISOString().split("T")[0];
+  if (!isoDate) return ""; // handle null/undefined
+  const date = new Date(isoDate);
+  if (isNaN(date.getTime())) return ""; // handle invalid date
+  return date.toISOString().split("T")[0]; // YYYY-MM-DD
 };
 
 export default function useCalenderFormModal({

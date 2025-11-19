@@ -21,7 +21,7 @@ export default function useAdminUser() {
     pageSize: 25,
     search: "",
   });
-  const { mutate: deleteDesignation } = useDeleteImportantDates();
+  const { mutate: deleteImportantDate } = useDeleteImportantDates();
   const { data: importantDatesList, isLoading } =
     useGetImportantDatesPagination({
       filter: paginationFilter,
@@ -67,7 +67,7 @@ export default function useAdminUser() {
 
   const conformDelete = async () => {
     if (modalData && modalData.importantDateId) {
-      deleteDesignation(modalData, {
+      deleteImportantDate(modalData, {
         onSuccess: () => {
           closeDeleteModal();
         },
