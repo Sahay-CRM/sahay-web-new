@@ -10,7 +10,7 @@ import {
   RefreshCcw,
   ThumbsUp,
   Trash2,
-  Unlink,
+  // Unlink,
   UsersRound,
   X,
 } from "lucide-react";
@@ -76,7 +76,7 @@ export default function MeetingDesc() {
     handleUpdateNotes,
     dropdownOpen,
     setDropdownOpen,
-    handleDelete,
+    // handleDelete,
     handleAddEmp,
     handleDeleteEmp,
     meetingData,
@@ -84,7 +84,7 @@ export default function MeetingDesc() {
     handleFollowBack,
     handleRing,
     isShaking,
-    audioRef,
+    // audioRef,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   } = useMeetingDesc();
@@ -131,7 +131,7 @@ export default function MeetingDesc() {
           isShaking && "animate-shake",
         )}
       >
-        <audio ref={audioRef} src="/public/BackToWork.mp3" preload="auto" />
+        {/* <audio ref={audioRef} src="/public/BackToWork.mp3" preload="auto" /> */}
         <div className="w-full mt-4 overflow-hidden">
           <Agenda
             meetingName={meetingTiming?.meetingName ?? ""}
@@ -631,7 +631,7 @@ export default function MeetingDesc() {
                                           Remove From Updates
                                         </DropdownMenuItem>
 
-                                        <DropdownMenuItem
+                                        {/* <DropdownMenuItem
                                           onClick={() =>
                                             handleDelete(note.meetingNoteId)
                                           }
@@ -639,7 +639,7 @@ export default function MeetingDesc() {
                                         >
                                           <Unlink className="h-4 w-4 mr-2" />
                                           Delete
-                                        </DropdownMenuItem>
+                                        </DropdownMenuItem> */}
                                       </DropdownMenuContent>
                                     </DropdownMenu>
                                   </div>
@@ -732,7 +732,7 @@ export default function MeetingDesc() {
                                           <X className="h-4 w-4 mr-2" />
                                           Remove From Appreciation
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem
+                                        {/* <DropdownMenuItem
                                           onClick={() =>
                                             handleDelete(note.meetingNoteId)
                                           }
@@ -740,7 +740,7 @@ export default function MeetingDesc() {
                                         >
                                           <Unlink className="h-4 w-4 mr-2" />
                                           Delete
-                                        </DropdownMenuItem>
+                                        </DropdownMenuItem> */}
                                       </DropdownMenuContent>
                                     </DropdownMenu>
                                   </div>
