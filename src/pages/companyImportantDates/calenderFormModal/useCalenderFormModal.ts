@@ -13,8 +13,10 @@ interface UseFormModalProps {
 
 // Helper function to convert ISO date to YYYY-MM-DD format
 const isoToDisplayDate = (isoDate: string | null | undefined): string => {
-  if (!isoDate) return "";
-  return new Date(isoDate).toISOString().split("T")[0];
+  if (!isoDate) return ""; // handle null/undefined
+  const date = new Date(isoDate);
+  if (isNaN(date.getTime())) return ""; // handle invalid date
+  return date.toISOString().split("T")[0]; // YYYY-MM-DD
 };
 
 export default function useCalenderFormModal({
@@ -43,7 +45,6 @@ export default function useCalenderFormModal({
 
   const { mutate: addImportantDate } = addUpdateImportantDateMutation();
   const onSubmit = handleSubmit(async (data) => {
-    // Validate date field manually since react-datepicker doesn't use register
     if (!data.importantDate) {
       setError("importantDate", {
         type: "required",
@@ -54,10 +55,9 @@ export default function useCalenderFormModal({
 
     clearErrors("importantDate");
 
-    // Convert display date back to ISO format before sending to API
     const submitData = {
       ...data,
-      // importantDate: displayDateToIso(data.importantDate),
+      importantDate: new Date(data.importantDate).toISOString(),
     };
 
     addImportantDate(submitData, {

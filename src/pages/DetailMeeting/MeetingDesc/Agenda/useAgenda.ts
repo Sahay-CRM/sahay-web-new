@@ -69,13 +69,14 @@ export const useAgenda = ({
   // const [agendaList, setAgendaList] = useState<MeetingAgenda[]>([]);
   const [isSelectedAgenda, setIsSelectedAgenda] = useState<string>();
   const [isSideBar, setIsSideBar] = useState(false);
-  const [activeTab, setActiveTab] = useState<ActiveTab>();
+  const [activeTab, setActiveTab] = useState<ActiveTab>("kpis");
   const [selectedItem, setSelectedItem] = useState<AgendaResConclusion | null>(
     null,
   );
   const [addIssueModal, setAddIssueModal] = useState(false);
   const [debouncedInput, setDebouncedInput] = useState(issueInput);
-  const [resolutionFilter, setResolutionFilter] = useState<string>("UNSOLVED");
+  const [resolutionFilter, setResolutionFilter] =
+    useState<string>("UNRESOLVED");
   const [selectedIoType, setSelectedIoType] = useState("ISSUE");
   const [ioType, setIoType] = useState("");
   // const unFollowId = meetingResponse?.state.unfollow;
@@ -223,7 +224,9 @@ export const useAgenda = ({
     filter: {
       meetingId: meetingId,
     },
-    enable: meetingResponse?.state.activeTab === "CONCLUSION" && !!meetingId,
+    enable:
+      meetingResponse?.state.activeTab === "CONCLUSION" ||
+      (meetingStatus === "ENDED" && !!meetingId),
   });
 
   // Mutations
@@ -847,7 +850,6 @@ export const useAgenda = ({
       queryClient.resetQueries({ queryKey: ["get-detailMeeting-kpis-res"] });
     }
   };
-
   const tasksFireBase = () => {
     if (meetingResponse?.state.status === "DISCUSSION" && isSelectedAgenda) {
       const db = database;

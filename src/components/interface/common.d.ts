@@ -1275,6 +1275,7 @@ interface MeetingNotesRes {
   employeeId: string;
   note: string;
   meetingNoteId: string;
+  employeeName?: string;
   noteId?: string;
   createdAt: string;
   noteType?: string;
@@ -1418,6 +1419,7 @@ interface RepeatMeeting {
   };
   isDetailMeeting?: boolean;
   customObj?: CustomObjREPT;
+  joinerNames?: string;
   // meetingStatusId?: string;
 }
 

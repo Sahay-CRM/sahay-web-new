@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
 
 import TableData from "@/components/shared/DataTable/DataTable";
-import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyEmployee from "./useCompanyEmployee";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
@@ -20,6 +19,7 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
+import ConfirmationDeleteModal from "./confirmEmployeDeleteModal";
 
 export default function CompanyDesignation() {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -197,8 +197,7 @@ export default function CompanyDesignation() {
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
             title={"Delete Company Employee"}
-            label={"User Name :"}
-            modalData={`${modalData?.employeeName}`}
+            modalData={modalData}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}

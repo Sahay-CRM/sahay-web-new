@@ -28,6 +28,7 @@ export default function useAddUpdateImportantDates() {
     onSuccess: (res) => {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["get-important-dates-list"] });
+      queryClient.resetQueries({ queryKey: ["get-importantdatelist-page"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

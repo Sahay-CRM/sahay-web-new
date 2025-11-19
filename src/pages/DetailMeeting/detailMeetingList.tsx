@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { CopyPlus } from "lucide-react";
 
 import TableData from "@/components/shared/DataTable/DataTable";
-import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useDetailMeeting from "./useDetailMeeting";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
@@ -27,6 +26,7 @@ import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
 import DuplicateMeetingModal from "./duplicateMeetingModal";
 import { formatToLocalDateTime } from "@/features/utils/app.utils";
 import { getMeetingButtonConfig } from "./getMeetingButtonConfig";
+import ConfirmationDeleteModal from "./DetailMeetingDeleteModal";
 
 const detailMeetingOpt = [
   { label: "All", value: "ALL" },
@@ -301,8 +301,7 @@ export default function DetailMeetingList() {
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
             title={"Delete Meeting"}
-            label={"Meeting Name :"}
-            modalData={`${modalData?.meetingName}`}
+            modalData={modalData}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}

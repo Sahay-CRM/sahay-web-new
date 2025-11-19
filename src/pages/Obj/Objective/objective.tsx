@@ -69,7 +69,8 @@ export default function Objective() {
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "objectiveName", label: "Objective Name", visible: true },
-    { key: "isResolved", label: "isResolved", visible: true },
+    // { key: "isResolved", label: "isResolved", visible: true },
+    { key: "type", label: "Type", visible: true },
     { key: "departmentName", label: "Department Name", visible: true },
   ]);
 

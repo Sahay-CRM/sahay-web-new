@@ -1,5 +1,4 @@
 import { Link, useNavigate } from "react-router-dom";
-import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import useCompanyTaskList from "./useCompanyTaskList";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
@@ -22,6 +21,7 @@ import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
 import { format } from "date-fns";
+import ConfirmationDeleteModal from "./ConfirmTaskDeleteModal";
 
 export default function CompanyTaskList() {
   const {
@@ -246,8 +246,7 @@ export default function CompanyTaskList() {
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
             title={"Delete Company Task"}
-            label={"taskName Name :"}
-            modalData={`${modalData?.taskName}`}
+            modalData={modalData}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={conformDelete}

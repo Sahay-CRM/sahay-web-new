@@ -626,7 +626,7 @@ export default function Agenda({
           <div className="relative h-full">
             <div className="mb-3">
               <Tabs
-                defaultValue="UNSOLVED"
+                defaultValue="UNRESOLVED"
                 onValueChange={(value) => {
                   // if (follow) {
                   //   handleAgendaTabFilter(value as "SOLVED" | "UNSOLVED");
@@ -637,7 +637,7 @@ export default function Agenda({
                   // ) {
                   // }
                   handleAgendaTabFilter(
-                    value as "SOLVED" | "UNSOLVED | PARKED",
+                    value as "SOLVED" | "UNRESOLVED" | "PARKED",
                   );
                 }}
                 value={resolutionFilter}

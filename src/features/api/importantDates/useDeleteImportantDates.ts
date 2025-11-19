@@ -20,6 +20,7 @@ export default function useDeleteImportantDates() {
     },
     onSuccess: (response) => {
       toast.success(response?.message);
+      queryClient.resetQueries({ queryKey: ["get-importantdatelist-page"] });
       queryClient.resetQueries({ queryKey: ["get-important-dates-list"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {

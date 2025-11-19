@@ -4,12 +4,13 @@ import {
   CircleCheckBig,
   Crown,
   EllipsisVertical,
-  FilePlus2,
+  // FilePlus2,
   FileText,
+  NotebookTabs,
   RefreshCcw,
   ThumbsUp,
   Trash2,
-  Unlink,
+  // Unlink,
   UsersRound,
   X,
 } from "lucide-react";
@@ -75,7 +76,7 @@ export default function MeetingDesc() {
     handleUpdateNotes,
     dropdownOpen,
     setDropdownOpen,
-    handleDelete,
+    // handleDelete,
     handleAddEmp,
     handleDeleteEmp,
     meetingData,
@@ -83,7 +84,7 @@ export default function MeetingDesc() {
     handleFollowBack,
     handleRing,
     isShaking,
-    audioRef,
+    // audioRef,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   } = useMeetingDesc();
@@ -116,6 +117,14 @@ export default function MeetingDesc() {
         .length,
     [meetingTiming?.joiners],
   );
+  const sidebarItems = [
+    { key: "JOINERS", icon: UsersRound, label: " Joiners" },
+    { key: "DOCUMENTS", icon: FileText, label: " Notes" },
+    { key: "UPDATES", icon: RefreshCcw, label: " Updates" },
+    { key: "APPRECIATION", icon: ThumbsUp, label: " Appreciation" },
+    // { key: "OLDNOTES", icon: FilePlus2, label: "Old Meeting Notes" },
+    { key: "DOCUMENTSTAG", icon: NotebookTabs, label: "Meeting Tag Notes" },
+  ];
 
   if (meetingData?.status === 401) {
     return <div>You are Not Authorized</div>;
@@ -130,7 +139,7 @@ export default function MeetingDesc() {
           isShaking && "animate-shake",
         )}
       >
-        <audio ref={audioRef} src="/public/BackToWork.mp3" preload="auto" />
+        {/* <audio ref={audioRef} src="/public/BackToWork.mp3" preload="auto" /> */}
         <div className="w-full mt-4 overflow-hidden">
           <Agenda
             meetingName={meetingTiming?.meetingName ?? ""}
@@ -565,10 +574,6 @@ export default function MeetingDesc() {
                 {Array.isArray(meetingNotes?.data) &&
                   meetingNotes.data.map(
                     (note: MeetingNotesRes, idx: number) => {
-                      const author = (
-                        meetingTiming?.joiners as Joiners[]
-                      )?.find((j) => j.employeeId === note.employeeId);
-
                       return (
                         <div
                           key={note.meetingNoteId || idx}
@@ -577,7 +582,7 @@ export default function MeetingDesc() {
                           <div className="flex-1 text-sm text-black">
                             <div className="flex justify-between items-center mb-1">
                               <span className="font-medium text-xs text-gray-600">
-                                {author?.employeeName || "Unknown"}
+                                {note?.employeeName || "Unknown"}
                               </span>
                               <div>
                                 <span className="text-xs text-gray-600 mr-2 bg-gray-200/80 p-0.5 rounded-full px-2">
@@ -634,7 +639,7 @@ export default function MeetingDesc() {
                                           Remove From Updates
                                         </DropdownMenuItem>
 
-                                        <DropdownMenuItem
+                                        {/* <DropdownMenuItem
                                           onClick={() =>
                                             handleDelete(note.meetingNoteId)
                                           }
@@ -642,7 +647,7 @@ export default function MeetingDesc() {
                                         >
                                           <Unlink className="h-4 w-4 mr-2" />
                                           Delete
-                                        </DropdownMenuItem>
+                                        </DropdownMenuItem> */}
                                       </DropdownMenuContent>
                                     </DropdownMenu>
                                   </div>
@@ -671,10 +676,6 @@ export default function MeetingDesc() {
                 {Array.isArray(meetingNotes?.data) &&
                   meetingNotes.data.map(
                     (note: MeetingNotesRes, idx: number) => {
-                      const author = (
-                        meetingTiming?.joiners as Joiners[]
-                      )?.find((j) => j.employeeId === note.employeeId);
-
                       return (
                         <div
                           key={note.meetingNoteId || idx}
@@ -683,7 +684,7 @@ export default function MeetingDesc() {
                           <div className="flex-1 text-sm text-black">
                             <div className="flex justify-between items-center mb-1">
                               <span className="font-medium text-xs text-gray-600">
-                                {author?.employeeName || "Unknown"}
+                                {note?.employeeName || "Unknown"}
                               </span>
                               <div>
                                 <span className="text-xs text-gray-600 mr-2 bg-gray-200/80 p-0.5 rounded-full px-2">
@@ -739,7 +740,7 @@ export default function MeetingDesc() {
                                           <X className="h-4 w-4 mr-2" />
                                           Remove From Appreciation
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem
+                                        {/* <DropdownMenuItem
                                           onClick={() =>
                                             handleDelete(note.meetingNoteId)
                                           }
@@ -747,7 +748,7 @@ export default function MeetingDesc() {
                                         >
                                           <Unlink className="h-4 w-4 mr-2" />
                                           Delete
-                                        </DropdownMenuItem>
+                                        </DropdownMenuItem> */}
                                       </DropdownMenuContent>
                                     </DropdownMenu>
                                   </div>
@@ -764,7 +765,7 @@ export default function MeetingDesc() {
           {activeTab === "OLDNOTES" && (
             <div>
               <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
-                <h3 className="p-0 text-base">Prev Meeting Notes</h3>
+                <h3 className="p-0 text-base">Old Meeting Notes</h3>
                 <div>
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
@@ -818,13 +819,6 @@ export default function MeetingDesc() {
                                   <div className="max-h-[200px] overflow-y-auto pr-1">
                                     <div className="space-y-2 mt-2">
                                       {filteredNotes.map((note, idx) => {
-                                        const author = (
-                                          meetingTiming?.joiners as Joiners[]
-                                        )?.find(
-                                          (j) =>
-                                            j.employeeId === note.employeeId,
-                                        );
-
                                         return (
                                           <div
                                             key={note.meetingNoteId || idx}
@@ -834,7 +828,7 @@ export default function MeetingDesc() {
                                               <div className="flex flex-col w-full">
                                                 <div className="flex justify-between items-center">
                                                   <span className="font-medium text-xs text-gray-700">
-                                                    {author?.employeeName ||
+                                                    {note?.employeeName ||
                                                       "Unknown"}
                                                   </span>
                                                   <div className="flex items-center gap-2">
@@ -891,48 +885,25 @@ export default function MeetingDesc() {
         className={`${isSidebarCollapsed ? "bg-white border rounded-md" : ""} flex flex-col z-30`}
       >
         <nav className="space-y-1 w-[56px]">
-          <Button
-            className={`w-full bg-transparent p-0 hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center" : ""}`}
-            onClick={() => {
-              handleTabChange("JOINERS");
-            }}
-          >
-            <UsersRound className="w-16 h-16" />
-          </Button>
-          <Button
-            className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center" : ""}`}
-            onClick={() => handleTabChange("DOCUMENTS")}
-          >
-            <FileText className="h-6 w-6" />
-          </Button>
+          <TooltipProvider>
+            {sidebarItems.map(({ key, icon: Icon, label }) => (
+              <Tooltip key={key}>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => handleTabChange(key)}
+                    className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black flex items-center
+                ${isSidebarCollapsed ? "justify-center p-0" : "justify-start p-2"}`}
+                  >
+                    <Icon className="h-6 w-6" />
+                  </Button>
+                </TooltipTrigger>
 
-          <Button
-            className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center p-0" : "p-2"}`}
-            onClick={() => handleTabChange("UPDATES")}
-          >
-            <RefreshCcw className="h-6 w-6" />
-          </Button>
-
-          <Button
-            className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center p-0" : "p-2"}`}
-            onClick={() => handleTabChange("APPRECIATION")}
-          >
-            <ThumbsUp className="h-6 w-6" />
-          </Button>
-          <Button
-            className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center p-0" : "p-2"}`}
-            onClick={() => handleTabChange("OLDNOTES")}
-          >
-            <FilePlus2 className="h-6 w-6" />
-          </Button>
-          <Button
-            className={`w-full bg-transparent p-0 hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center" : ""}`}
-            onClick={() => {
-              handleTabChange("DOCUMENTSTAG");
-            }}
-          >
-            <UsersRound className="w-16 h-16" />
-          </Button>
+                <TooltipContent side="right">
+                  <p>{label}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </TooltipProvider>
         </nav>
       </div>
     </div>

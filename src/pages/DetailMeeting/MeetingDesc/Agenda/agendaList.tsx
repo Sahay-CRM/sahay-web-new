@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/tooltip";
 import { getUserDetail } from "@/features/selectors/auth.selector";
 import { useSelector } from "react-redux";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AgendaTimeAlert from "./AgendaTimeAlert";
 
 export default function AgendaList({
@@ -56,7 +56,7 @@ export default function AgendaList({
     isDragging,
   } = useSortable({ id: item?.issueObjectiveId || `agenda-${idx}` });
   const [isOverTime, setIsOverTime] = useState(false);
-  const [alertShown, setAlertShown] = useState(false);
+  const alertShownRef = useRef(false);
   const [showTimeAlert, setShowTimeAlert] = useState(false);
   const canEdit = true;
   const userData = useSelector(getUserDetail);
@@ -67,21 +67,18 @@ export default function AgendaList({
   };
   useEffect(() => {
     if (!meetingResponse?.timers?.objectives || !meetingTime || !item) return;
+
     const totalTime = Number(meetingTime) || 0;
-    const threshold = totalTime * 0.33;
+    const redThreshold = totalTime * 0.33;
+
     const objectiveData =
       meetingResponse.timers.objectives[item.issueObjectiveId];
 
     if (objectiveData?.actualTime) {
       const currentTime = Number(objectiveData.actualTime);
 
-      // check against threshold
-      if (currentTime >= threshold) {
-        setIsOverTime(true);
-        setAlertShown(true);
-      } else {
-        setIsOverTime(false);
-      }
+      // 33% alert border
+      setIsOverTime(currentTime >= redThreshold);
     }
   }, [meetingResponse?.timers?.objectives, item, meetingTime]);
 
@@ -172,15 +169,14 @@ export default function AgendaList({
     const totalTime = Number(meetingTime) || 0;
     if (totalTime === 0) return;
 
-    const redThreshold = totalTime * 0.33; // for red border
-    const warningThreshold = totalTime * 0.4; // for popup
+    const redThreshold = totalTime * 0.33;
+    const warningThreshold = totalTime * 0.4;
 
-    // Red border at 33%
     setIsOverTime(currentTime >= redThreshold);
-    // Alert once at 40%
-    if (currentTime >= warningThreshold && !alertShown) {
-      setAlertShown(true);
-      setShowTimeAlert(true); // <-- Optional: open your <AgendaTimeAlert /> modal here
+
+    if (currentTime >= warningThreshold && !alertShownRef.current) {
+      alertShownRef.current = true;
+      setShowTimeAlert(true);
     }
   };
 

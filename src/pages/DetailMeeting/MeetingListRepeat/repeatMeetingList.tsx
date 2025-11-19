@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
 import { format } from "date-fns";
 
-import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
@@ -25,6 +24,7 @@ import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import PageNotAccess from "../../PageNoAccess";
 // import DateRangePicker from "@/components/shared/DateRange";
 import AddRepeatMeetingModal from "./addRepeatMeetingModal";
+import ConfirmationDeleteModal from "./LiveMeetingTempDeleteModal";
 // import { Trash } from "lucide-react";
 
 export default function RepeatMeetingList() {
@@ -240,8 +240,7 @@ export default function RepeatMeetingList() {
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
             title="Delete Repetitive Meeting"
-            label="Repetitive Meeting Name:"
-            modalData={`${modalData?.meetingName}`}
+            modalData={modalData}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={(isGroupDelete) => conformDelete(isGroupDelete ?? false)}

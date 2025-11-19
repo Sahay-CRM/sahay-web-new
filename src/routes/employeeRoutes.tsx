@@ -13,6 +13,9 @@ const Profile = lazy(() => import("../pages/profile/Profile"));
 const companydesignation = lazy(
   () => import("../pages/companyDesignation/companyDesignation"),
 );
+const importantDate = lazy(
+  () => import("../pages/ImportantdateList/importantDate"),
+);
 const companyEmployee = lazy(
   () => import("../pages/companyEmployee/companyEmployee"),
 );
@@ -127,6 +130,7 @@ export default function EmployeeRoutes() {
         <Route path="company-profile" Component={CompanyProfile} />
         <Route path="holidays" Component={CompanyHoliDays} />
 
+        <Route path="importantdate" Component={importantDate} />
         <Route path="settings" Component={Theme} />
         <Route path="company-designation" Component={companydesignation} />
         <Route path="company-employee" Component={companyEmployee} />

@@ -311,6 +311,7 @@ export default function TaskDrawer({
 
             <FormInputField
               label="Task Name"
+              placeholder="Task Name"
               {...register("taskName", {
                 required: "Task Name is required",
               })}

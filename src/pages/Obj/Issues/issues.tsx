@@ -69,7 +69,8 @@ export default function Issues() {
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "issueName", label: "Issues Name", visible: true },
-    { key: "isResolved", label: "isResolved", visible: true },
+    // { key: "isResolved", label: "isResolved", visible: true },
+    { key: "type", label: "Type", visible: true },
     { key: "departmentName", label: "Department Name", visible: true },
   ]);
 

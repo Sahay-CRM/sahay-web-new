@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
-
-import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
@@ -23,6 +21,7 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import PageNotAccess from "../PageNoAccess";
 import { format } from "date-fns";
+import ConfirmationDeleteModal from "./ConfirmRepTaskDeleteModal";
 // import { Trash } from "lucide-react";
 
 export default function CompanyTaskListRe() {
@@ -242,13 +241,11 @@ export default function CompanyTaskListRe() {
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
             title="Delete Repetitive Task"
-            label="Repetitive Task Name:"
-            modalData={`${modalData?.taskName}`}
+            modalData={modalData}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
             onSubmit={(isGroupDelete) => conformDelete(isGroupDelete ?? false)}
             isChildData={isChildData}
-            // showDeleteOptions={true}
           />
         )}
         {/* <ViewRepeatTaskModal

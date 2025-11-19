@@ -14,6 +14,7 @@ import CalenderFormModal from "./calenderFormModal/CalenderFormModal";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import ConfirmationTaskModal from "./confirmationTaskModal";
 import ConfirmationMeetingModal from "./confirmationMeetingModal";
+import { useNavigate } from "react-router-dom";
 
 const locales = {
   "en-US": enUS,
@@ -55,7 +56,7 @@ function Calendar() {
   useEffect(() => {
     setBreadcrumbs([{ label: "Calendar", href: "" }]);
   }, [setBreadcrumbs]);
-
+  const navigate = useNavigate();
   const [selectedOption, setSelectedOption] = useState<
     "all" | "task" | "meeting" | "importantDate"
   >("all");
@@ -88,7 +89,7 @@ function Calendar() {
   if (permission.IMPORTANT_DATE?.View)
     selectOptions.push({
       value: "importantDate",
-      label: "ImportantDate",
+      label: "Important Date",
     });
   if (selectOptions.length > 1)
     selectOptions.unshift({ value: "all", label: "All" });
@@ -97,13 +98,21 @@ function Calendar() {
     <FormProvider {...methods}>
       <div className="px-2 h-[calc(100vh-120px)] min-h-[500px] sm:px-4 py-4">
         <div className="flex justify-between gap-5">
-          {permission.IMPORTANT_DATE.Add && (
-            <div>
+          {/* LEFT SIDE BUTTONS */}
+          <div className="flex gap-3">
+            {permission.IMPORTANT_DATE.Add && (
               <Button onClick={() => handleAddModal()}>
                 Add Important Date
               </Button>
-            </div>
-          )}
+            )}
+            {permission.IMPORTANT_DATE.View && (
+              <Button onClick={() => navigate("/dashboard/importantdate")}>
+                View Important Date
+              </Button>
+            )}
+          </div>
+
+          {/* RIGHT SIDE SELECT */}
           {(permission.TASK?.View ||
             permission.MEETING_LIST?.View ||
             permission.IMPORTANT_DATE?.View) && (
@@ -115,11 +124,11 @@ function Calendar() {
                 }
                 options={selectOptions}
                 triggerClassName="mb-0 py-4"
-                // className="h-9"
               />
             </div>
           )}
         </div>
+
         {addImportantDate && (
           <CalenderFormModal
             isModalOpen={addImportantDate}
