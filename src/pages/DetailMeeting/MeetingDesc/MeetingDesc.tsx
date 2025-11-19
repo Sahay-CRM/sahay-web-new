@@ -4,7 +4,7 @@ import {
   CircleCheckBig,
   Crown,
   EllipsisVertical,
-  FilePlus2,
+  // FilePlus2,
   FileText,
   NotebookTabs,
   RefreshCcw,
@@ -117,6 +117,14 @@ export default function MeetingDesc() {
         .length,
     [meetingTiming?.joiners],
   );
+  const sidebarItems = [
+    { key: "JOINERS", icon: UsersRound, label: " Joiners" },
+    { key: "DOCUMENTS", icon: FileText, label: " Notes" },
+    { key: "UPDATES", icon: RefreshCcw, label: " Updates" },
+    { key: "APPRECIATION", icon: ThumbsUp, label: " Appreciation" },
+    // { key: "OLDNOTES", icon: FilePlus2, label: "Old Meeting Notes" },
+    { key: "DOCUMENTSTAG", icon: NotebookTabs, label: "Meeting Tag Notes" },
+  ];
 
   if (meetingData?.status === 401) {
     return <div>You are Not Authorized</div>;
@@ -757,7 +765,7 @@ export default function MeetingDesc() {
           {activeTab === "OLDNOTES" && (
             <div>
               <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
-                <h3 className="p-0 text-base">Prev Meeting Notes</h3>
+                <h3 className="p-0 text-base">Old Meeting Notes</h3>
                 <div>
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
@@ -877,48 +885,25 @@ export default function MeetingDesc() {
         className={`${isSidebarCollapsed ? "bg-white border rounded-md" : ""} flex flex-col z-30`}
       >
         <nav className="space-y-1 w-[56px]">
-          <Button
-            className={`w-full bg-transparent p-0 hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center" : ""}`}
-            onClick={() => {
-              handleTabChange("JOINERS");
-            }}
-          >
-            <UsersRound className="w-16 h-16" />
-          </Button>
-          <Button
-            className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center" : ""}`}
-            onClick={() => handleTabChange("DOCUMENTS")}
-          >
-            <FileText className="h-6 w-6" />
-          </Button>
+          <TooltipProvider>
+            {sidebarItems.map(({ key, icon: Icon, label }) => (
+              <Tooltip key={key}>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => handleTabChange(key)}
+                    className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black flex items-center
+                ${isSidebarCollapsed ? "justify-center p-0" : "justify-start p-2"}`}
+                  >
+                    <Icon className="h-6 w-6" />
+                  </Button>
+                </TooltipTrigger>
 
-          <Button
-            className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center p-0" : "p-2"}`}
-            onClick={() => handleTabChange("UPDATES")}
-          >
-            <RefreshCcw className="h-6 w-6" />
-          </Button>
-
-          <Button
-            className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center p-0" : "p-2"}`}
-            onClick={() => handleTabChange("APPRECIATION")}
-          >
-            <ThumbsUp className="h-6 w-6" />
-          </Button>
-          <Button
-            className={`w-full bg-transparent hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center p-0" : "p-2"}`}
-            onClick={() => handleTabChange("OLDNOTES")}
-          >
-            <FilePlus2 className="h-6 w-6" />
-          </Button>
-          <Button
-            className={`w-full bg-transparent p-0 hover:bg-gray-300 rounded-full text-black justify-start cursor-pointer flex items-center ${isSidebarCollapsed ? "justify-center" : ""}`}
-            onClick={() => {
-              handleTabChange("DOCUMENTSTAG");
-            }}
-          >
-            <NotebookTabs className="w-16 h-16" />
-          </Button>
+                <TooltipContent side="right">
+                  <p>{label}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </TooltipProvider>
         </nav>
       </div>
     </div>
