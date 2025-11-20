@@ -361,12 +361,9 @@ const AssignUserStep = () => {
         control={control}
         rules={{ required: "Please select a User" }}
         render={({ field }) => {
-          const selectedEmployees =
-            Array.isArray(field.value) && Array.isArray(employeedata?.data)
-              ? employeedata.data.filter((emp) =>
-                  field.value.includes(emp.employeeId),
-                )
-              : [];
+          const selectedEmployees = Array.isArray(field.value)
+            ? field.value.map((id) => ({ employeeId: id }))
+            : [];
           return (
             <TableData
               tableData={employeedata?.data?.map((item, index) => ({
@@ -378,7 +375,7 @@ const AssignUserStep = () => {
               }))}
               isActionButton={() => false}
               columns={{
-                srNo: "srNo",
+                srNo: "sr No",
                 employeeName: "User Name",
                 designationName: "Designation",
                 employeeType: "Employee Type",
