@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-import { getUserId } from "@/features/selectors/auth.selector";
+import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -89,9 +89,9 @@ export default function MeetingDesc() {
     // setSelectedGroupFilter,
   } = useMeetingDesc();
   const { setBreadcrumbs } = useBreadcrumbs();
-
+  const userDetail = useSelector(getUserDetail);
   const userId = useSelector(getUserId);
-
+  const isSuperAdmin = userDetail.isSuperAdmin;
   useEffect(() => {
     setBreadcrumbs([
       { label: "Detail Meeting", href: "/dashboard/meeting/detail" },
@@ -149,6 +149,7 @@ export default function MeetingDesc() {
             joiners={meetingTiming?.joiners as Joiners[]}
             meetingTime={meetingTiming?.meetingTimePlanned}
             isTeamLeader={isTeamLeader}
+            isSuperAdmin={!!isSuperAdmin}
             isBellRing={handleRing}
             // isCheckIn={
             //   (meetingTiming?.joiners as Joiners[])?.find(
@@ -181,23 +182,24 @@ export default function MeetingDesc() {
                 </div>
               </div>
               <div className="h-[calc(100vh-170px)] overflow-auto">
-                {meetingStatus !== "ENDED" && isTeamLeader && (
-                  <div className="px-4 mb-2">
-                    <Suspense
-                      fallback={
-                        <div className="animate-spin">
-                          <SpinnerIcon />
-                        </div>
-                      }
-                    >
-                      <EmployeeSearchDropdown
-                        onAdd={handleAddEmp}
-                        minSearchLength={2}
-                        filterProps={{ pageSize: 20 }}
-                      />
-                    </Suspense>
-                  </div>
-                )}
+                {meetingStatus !== "ENDED" &&
+                  (isTeamLeader || isSuperAdmin) && (
+                    <div className="px-4 mb-2">
+                      <Suspense
+                        fallback={
+                          <div className="animate-spin">
+                            <SpinnerIcon />
+                          </div>
+                        }
+                      >
+                        <EmployeeSearchDropdown
+                          onAdd={handleAddEmp}
+                          minSearchLength={2}
+                          filterProps={{ pageSize: 20 }}
+                        />
+                      </Suspense>
+                    </div>
+                  )}
 
                 <div className="flex flex-col gap-3 px-3">
                   {meetingTiming &&
@@ -223,7 +225,9 @@ export default function MeetingDesc() {
                                 if (
                                   (meetingStatus === "NOT_STARTED" ||
                                     meetingStatus !== "ENDED") &&
-                                  (follow === userId || isTeamLeader)
+                                  (follow === userId ||
+                                    isTeamLeader ||
+                                    isSuperAdmin)
                                 ) {
                                   toggleOpen();
                                 }
@@ -294,7 +298,7 @@ export default function MeetingDesc() {
                             {/* <div> */}
                             {meetingStatus === "NOT_STARTED" &&
                               item.employeeId !== userId &&
-                              isTeamLeader && (
+                              (isTeamLeader || isSuperAdmin) && (
                                 <Trash2
                                   className="w-6 h-6 mt-1.5"
                                   onClick={() =>
@@ -311,9 +315,11 @@ export default function MeetingDesc() {
                               <div className="mt-3 pl-12 flex flex-col gap-2">
                                 <>
                                   {/* {follow !== item.employeeId && ( */}
-                                  {item.employeeId !== userId && (
+                                  {(item.employeeId !== userId ||
+                                    isSuperAdmin) && (
                                     <div className="flex flex-col gap-2">
-                                      {item.employeeId !== userId && (
+                                      {(item.employeeId !== userId ||
+                                        isSuperAdmin) && (
                                         <>
                                           {!item.isTeamLeader && (
                                             <button
@@ -388,7 +394,7 @@ export default function MeetingDesc() {
                                   <div className="flex flex-col gap-2">
                                     {follow !== userId &&
                                       follow !== item.employeeId &&
-                                      isTeamLeader &&
+                                      (isTeamLeader || isSuperAdmin) &&
                                       item.isTeamLeader &&
                                       !unfollowed.includes(userId) &&
                                       meetingStatus !== "NOT_STARTED" &&

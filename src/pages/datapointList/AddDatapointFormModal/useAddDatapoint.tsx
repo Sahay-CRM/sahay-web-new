@@ -312,18 +312,6 @@ export default function useAddDataPoint() {
         label: `${emp.employeeName}`,
       }));
 
-    // const employee = watch("employeeId");
-
-    // const getEmployeeName = (emp: DataPointEmployee) => {
-    //   if (emp?.employeeName) return emp.employeeName;
-    //   const found = employeeData?.data?.find(
-    //     (e: EmployeeDetails) => e.employeeId === emp.employeeId
-    //   );
-    //   return found?.employeeName || emp.employeeId || "";
-    // };
-
-    // const validationType = useWatch({ name: "validationType", control });
-
     const showBoth = validationType === "6" || validationType === "BETWEEN";
     const showYesNo = validationType === "7" || validationType === "YES_NO";
 
@@ -331,48 +319,137 @@ export default function useAddDataPoint() {
       { label: "Yes", value: "1" },
       { label: "No", value: "0" },
     ];
+    const watchFrequency = useWatch({ control, name: "frequencyType" });
+    const watchValidation = useWatch({ control, name: "validationType" });
+    const watchGoalValue = useWatch({ control, name: "value1" });
+
+    const isValidationDisabled = !watchFrequency;
+    const isGoalValueDisabled = !watchValidation;
+    const isOtherFieldsDisabled = !watchGoalValue;
 
     return (
       <div className="h-[calc(100vh-200px)]">
-        <div className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
-          <Controller
-            control={control}
-            name="frequencyType"
-            rules={{ required: "Frequency is required" }}
-            render={({ field }) => (
-              <FormSelect
-                label="Frequency"
-                value={field.value}
-                onChange={(value) => {
-                  field.onChange(value);
-                  setValue("visualFrequencyTypes", []);
-                }}
-                options={frequenceOptions}
-                error={errors.frequencyType}
-                triggerClassName="py-4"
-                isMandatory
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="validationType"
-            rules={{ required: "Validation Type is required" }}
-            render={({ field }) => (
-              <FormSelect
-                label="Validation Type"
-                triggerClassName="py-4"
-                value={field.value}
-                onChange={field.onChange}
-                options={validationOptions}
-                error={errors.validationType}
-                className="rounded-md"
-                isMandatory
-                // labelClass="mb-2"
-              />
-            )}
-          />
+        <div className="grid grid-cols-2 gap-4 px-4">
+          {/* LEFT SIDE : Frequency + Validation */}
+          <div className="space-y-1 grid gap-4 grid-cols-2">
+            <Controller
+              control={control}
+              name="frequencyType"
+              rules={{ required: "Frequency is required" }}
+              render={({ field }) => (
+                <FormSelect
+                  label="Frequency"
+                  value={field.value}
+                  onChange={(value) => {
+                    field.onChange(value);
+                    setValue("visualFrequencyTypes", []);
+                  }}
+                  options={frequenceOptions}
+                  error={errors.frequencyType}
+                  triggerClassName="py-4"
+                  isMandatory
+                  disabled={false}
+                />
+              )}
+            />
 
+            <Controller
+              control={control}
+              name="validationType"
+              rules={{ required: "Validation Type is required" }}
+              render={({ field }) => (
+                <FormSelect
+                  label="Validation Type"
+                  triggerClassName="py-4"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={validationOptions}
+                  error={errors.validationType}
+                  className="rounded-md"
+                  isMandatory
+                  disabled={isValidationDisabled}
+                  // labelClass="mb-2"
+                />
+              )}
+            />
+          </div>
+
+          {/* RIGHT SIDE : Dynamic Goal / Yes No */}
+          <div className="space-y-4">
+            {/* YES/NO CONDITION */}
+            {showYesNo && (
+              <Controller
+                name="value1"
+                control={control}
+                rules={{ required: "Please select Yes or No" }}
+                render={({ field, fieldState }) => (
+                  <FormSelect
+                    {...field}
+                    label="Yes / No"
+                    triggerClassName="py-4"
+                    options={yesnoOptions}
+                    error={fieldState.error}
+                    isMandatory
+                    disabled={isGoalValueDisabled}
+                  />
+                )}
+              />
+            )}
+
+            {/* SHOW GOAL VALUES WHEN NOT YES/NO */}
+            {!showYesNo && (
+              <div
+                className={`grid gap-4 ${showBoth ? "grid-cols-2" : "grid-cols-1"}`}
+              >
+                {/* Goal 1 */}
+                <Controller
+                  name="value1"
+                  control={control}
+                  rules={{ required: "Please enter Goal Value 1" }}
+                  render={({ field, fieldState }) => (
+                    <FormInputField
+                      label="Goal Value 1"
+                      placeholder="Enter Goal Value 1"
+                      isMandatory
+                      value={formatIndianNumber(field.value)}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/,/g, "");
+                        field.onChange(raw);
+                      }}
+                      disabled={isGoalValueDisabled}
+                      error={fieldState.error}
+                    />
+                  )}
+                />
+
+                {/* Goal 2 (only when showBoth = true) */}
+                {showBoth && (
+                  <Controller
+                    name="value2"
+                    control={control}
+                    rules={{ required: "Please enter Goal Value 2" }}
+                    render={({ field, fieldState }) => (
+                      <FormInputField
+                        label="Goal Value 2"
+                        placeholder="Enter Goal Value 2"
+                        isMandatory
+                        value={formatIndianNumber(field.value)}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/,/g, "");
+                          field.onChange(raw);
+                        }}
+                        disabled={isGoalValueDisabled}
+                        error={fieldState.error}
+                      />
+                    )}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
           {shouldShowVisualFrequency && (
             <div className="flex">
               <div className="w-full">
@@ -393,7 +470,7 @@ export default function useAddDataPoint() {
                       error={errors.visualFrequencyTypes}
                       isMulti={true}
                       placeholder="Select visual frequency types"
-                      disabled={false}
+                      disabled={isOtherFieldsDisabled}
                       key={
                         selectedFrequency +
                         "-" +
@@ -416,7 +493,7 @@ export default function useAddDataPoint() {
                         options={sumAveOptions}
                         error={errors.visualFrequencyAggregate}
                         placeholder="Select visual frequency Aggregate"
-                        disabled={false}
+                        disabled={isOtherFieldsDisabled}
                         triggerClassName="w-full mb-0 border rounded-md px-3 text-left text-sm py-4"
                       />
                     )}
@@ -428,120 +505,47 @@ export default function useAddDataPoint() {
           <FormInputField
             label="Unit"
             placeholder="Enter Unit"
+            disabled={isOtherFieldsDisabled}
             {...register(`unit`)}
             className="h-[38px] mt-2"
           />
         </div>
         <div className="px-4 py-4 border-t-2">
-          <div className="mb-2">
-            <Controller
-              control={control}
-              name="employeeId"
-              rules={{ required: "Assign User is required" }}
-              render={({ field }) => (
-                <SearchDropdown
-                  options={allOptions}
-                  selectedValues={field.value ? [field.value] : []}
-                  onSelect={(value) => {
-                    field.onChange(value.value);
-                    setValue("employeeId", value.value);
-                  }}
-                  placeholder="Select an Assign User..."
-                  label="Assign User"
-                  error={errors.employeeId}
-                  isMandatory
-                  onSearchChange={setIsEmployeeSearch}
-                />
-              )}
-            />
-          </div>
-
-          {/* {employee && ( */}
-          <div>
-            <div className="flex mb-2 flex-col gap-2">
-              {/* <Label className="text-[18px] mb-0">
-                  {getEmployeeName(employee)} 
-                </Label> */}
-              <div
-                className={`grid ${
-                  showBoth ? "grid-cols-2" : "grid-cols-1"
-                } gap-4 mt-0`}
-              >
-                {!showYesNo && (
-                  <>
-                    <Controller
-                      name="value1"
-                      control={control}
-                      rules={{ required: "Please enter Goal Value 1" }}
-                      render={({ field, fieldState }) => (
-                        <FormInputField
-                          label="Goal Value 1"
-                          placeholder="Enter Goal Value 1"
-                          isMandatory
-                          value={formatIndianNumber(field.value)}
-                          onChange={(e) => {
-                            const raw = e.target.value.replace(/,/g, "");
-                            field.onChange(raw);
-                          }}
-                          error={fieldState.error}
-                        />
-                      )}
-                    />
-
-                    {showBoth && (
-                      <Controller
-                        name="value2"
-                        control={control}
-                        rules={{ required: "Please enter Goal Value 2" }}
-                        render={({ field, fieldState }) => (
-                          <FormInputField
-                            label="Goal Value 2"
-                            placeholder="Enter Goal Value 2"
-                            isMandatory
-                            value={formatIndianNumber(field.value)}
-                            onChange={(e) => {
-                              const raw = e.target.value.replace(/,/g, "");
-                              field.onChange(raw);
-                            }}
-                            error={fieldState.error}
-                          />
-                        )}
-                      />
-                    )}
-                  </>
-                )}
-                {showYesNo && (
-                  <Controller
-                    name={`value1`}
-                    control={control}
-                    rules={{ required: "Please select Yes or No" }}
-                    render={({ field, fieldState }) => {
-                      const selectedOption =
-                        field.value?.value ?? field.value ?? "";
-                      return (
-                        <FormSelect
-                          {...field}
-                          label="Yes/No"
-                          options={yesnoOptions}
-                          error={fieldState.error}
-                          isMandatory={true}
-                          value={selectedOption}
-                          onChange={field.onChange}
-                        />
-                      );
+          <div className="flex gap-4">
+            <div className="w-1/2">
+              <Controller
+                control={control}
+                name="employeeId"
+                rules={{ required: "Assign User is required" }}
+                render={({ field }) => (
+                  <SearchDropdown
+                    options={allOptions}
+                    selectedValues={field.value ? [field.value] : []}
+                    onSelect={(value) => {
+                      field.onChange(value.value);
+                      setValue("employeeId", value.value);
                     }}
+                    placeholder="Select an Assign User..."
+                    label="Assign User"
+                    error={errors.employeeId}
+                    isMandatory
+                    disabled={isGoalValueDisabled}
+                    onSearchChange={setIsEmployeeSearch}
                   />
                 )}
-              </div>
+              />
             </div>
-            <FormInputField
-              label="Tag"
-              placeholder="Enter Tag"
-              {...register(`tag`)}
-              error={errors?.tag}
-            />
+
+            <div className="w-1/2">
+              <FormInputField
+                label="Tag"
+                placeholder="Enter Tag"
+                {...register(`tag`)}
+                disabled={isOtherFieldsDisabled}
+                error={errors?.tag}
+              />
+            </div>
           </div>
-          {/* )} */}
         </div>
       </div>
     );

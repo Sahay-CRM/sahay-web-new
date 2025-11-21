@@ -123,6 +123,7 @@ interface AgendaProps {
   joiners: Joiners[];
   meetingTime?: string;
   isTeamLeader: boolean | undefined;
+  isSuperAdmin: boolean;
   follow?: boolean;
   isBellRing?: () => void;
 }
@@ -134,6 +135,7 @@ export default function Agenda({
   meetingResponse,
   meetingTime,
   isTeamLeader,
+  isSuperAdmin,
   follow,
   joiners,
   isBellRing,
@@ -199,6 +201,7 @@ export default function Agenda({
     canEdit: true,
     joiners,
     isTeamLeader,
+    isSuperAdmin,
     follow,
   });
 
@@ -474,19 +477,20 @@ export default function Agenda({
             )}
             {meetingStatus !== "ENDED" && (
               <div className="flex flex-wrap md:flex-nowrap items-center gap-3 md:w-auto">
-                {meetingStatus === "NOT_STARTED" && isTeamLeader && (
-                  <Button
-                    variant="outline"
-                    className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
-                    onClick={handleStartMeeting}
-                    isLoading={isPending}
-                  >
-                    Start Meeting
-                  </Button>
-                )}
+                {meetingStatus === "NOT_STARTED" &&
+                  (isTeamLeader || isSuperAdmin) && (
+                    <Button
+                      variant="outline"
+                      className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
+                      onClick={handleStartMeeting}
+                      isLoading={isPending}
+                    >
+                      Start Meeting
+                    </Button>
+                  )}
 
                 {meetingStatus === "NOT_STARTED" ||
-                  (!isTeamLeader && (
+                  (!(isTeamLeader || isSuperAdmin) && (
                     <Button
                       variant="outline"
                       className="w-[200px] h-[40px] cursor-not-allowed hover:bg-primary hover:text-white bg-primary text-white rounded-[10px] text-lg font-semibold"
@@ -500,7 +504,7 @@ export default function Agenda({
                     </Button>
                   ))}
 
-                {isTeamLeader && (
+                {(isTeamLeader || isSuperAdmin) && (
                   <>
                     {meetingStatus === "STARTED" && (
                       <Button
@@ -527,9 +531,7 @@ export default function Agenda({
                       meetingStart={meetingStatus !== "NOT_STARTED"}
                       className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
                       onTimeUpdate={handleTimeUpdate}
-                      isEditMode={
-                        meetingStatus === "NOT_STARTED" && isTeamLeader
-                      }
+                      isEditMode={meetingStatus === "NOT_STARTED"}
                       meetingStatus={meetingStatus}
                       isUpdating={isUpdatingTime}
                     />
@@ -714,7 +716,7 @@ export default function Agenda({
                               handleDelete={handleDelete}
                               meetingResponse={meetingResponse}
                               conclusionTime={conclusionTime}
-                              isTeamLeader={isTeamLeader}
+                              isTeamLeader={isTeamLeader || isSuperAdmin}
                               isUnFollow={unFollowByUser}
                               meetingTime={meetingTime}
                             />
@@ -910,7 +912,7 @@ export default function Agenda({
               </div>
             )}
             <div className="flex flex-wrap md:flex-nowrap items-center gap-3 md:w-auto">
-              {isTeamLeader && (
+              {(isTeamLeader || isSuperAdmin) && (
                 <>
                   {meetingStatus === "DISCUSSION" && (
                     <>
@@ -955,9 +957,9 @@ export default function Agenda({
                       meetingStart={meetingStatus !== "NOT_STARTED"}
                       className="text-xl sm:text-2xl md:text-3xl font-semibold text-primary"
                       onTimeUpdate={handleTimeUpdate}
-                      isEditMode={
-                        meetingStatus === "NOT_STARTED" && isTeamLeader
-                      }
+                      // isEditMode={
+                      //   meetingStatus === "NOT_STARTED" && isTeamLeader
+                      // }
                       meetingStatus={meetingStatus}
                       isUpdating={isUpdatingTime}
                     />
@@ -1089,7 +1091,7 @@ export default function Agenda({
                                     const updatedAttendance = e.target.checked;
                                     handleCheckIn(item, updatedAttendance);
                                   }}
-                                  disabled={!isTeamLeader}
+                                  disabled={!(isTeamLeader || isSuperAdmin)}
                                 />
                               </div>
                             </div>
@@ -1123,7 +1125,7 @@ export default function Agenda({
                         }
                         ioType={ioType}
                         selectedIssueId={isSelectedAgenda}
-                        isTeamLeader={isTeamLeader}
+                        isTeamLeader={isTeamLeader || isSuperAdmin}
                       />
                     )}
                     {activeTab === "projects" && (
@@ -1142,7 +1144,7 @@ export default function Agenda({
                         }
                         ioType={ioType}
                         selectedIssueId={isSelectedAgenda}
-                        isTeamLeader={isTeamLeader}
+                        isTeamLeader={isTeamLeader || isSuperAdmin}
                       />
                     )}
                     {activeTab === "kpis" && (
@@ -1162,7 +1164,7 @@ export default function Agenda({
                         }
                         ioType={ioType}
                         selectedIssueId={isSelectedAgenda}
-                        isTeamLeader={isTeamLeader}
+                        isTeamLeader={isTeamLeader || isSuperAdmin}
                         follow={follow}
                         meetingRes={meetingResponse!}
                       />

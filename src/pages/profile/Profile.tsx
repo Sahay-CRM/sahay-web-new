@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import userDummy from "../../../public/user1.png";
+import userDummy from "../../../public/userDummy.jpg";
 import { getUserDetail } from "@/features/selectors/auth.selector";
 import { capitalizeFirstLetter } from "@/features/utils/app.utils";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
@@ -29,7 +29,7 @@ export default function Profile() {
   const details = profileData
     ? [
         { label: "Name", value: profileData?.employeeName },
-        { label: "Position", value: "Admin" },
+        // { label: "Position", value: "Admin" },
         {
           label: "Employee Type",
           value:
@@ -60,7 +60,7 @@ export default function Profile() {
 
   return (
     <>
-      <div className="w-full flex justify-end mt-4">
+      <div className="w-full p-4 flex justify-end ">
         {!hideEditProfile && (
           <Button
             onClick={() => {
@@ -71,7 +71,7 @@ export default function Profile() {
           </Button>
         )}
       </div>
-      <div className="w-full h-full flex">
+      <div className="w-full  flex">
         {/* Left Side - Image + Name */}
         <div className="w-1/3 bg-white h-auto relative text-primary flex flex-col items-center p-8">
           <div className="w-56 h-56 rounded-full overflow-hidden shadow-lg ring-4 ring-white mb-4 mt-8">

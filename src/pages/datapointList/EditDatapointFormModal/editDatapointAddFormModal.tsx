@@ -50,6 +50,8 @@ export default function EditDatapointAddFormModal({
     allKpi,
     setIsKpiSearch,
     setIsEmployeeSearch,
+    isChildData,
+    isForceDelete,
     // skipDaysOption,
   } = useEditDatapointFormModal({ modalClose, kpiId });
 
@@ -60,14 +62,31 @@ export default function EditDatapointAddFormModal({
         modalTitle={datapointApiData?.KPIMaster?.KPIName}
         modalClose={handleClose}
         containerClass="min-w-[50%]"
-        buttons={[
-          {
-            btnText: "Submit",
-            buttonCss: "py-1.5 px-5",
-            btnClick: onSubmit,
-            isLoading: isPending,
-          },
-        ]}
+        buttons={
+          isForceDelete
+            ? [
+                {
+                  btnText: "Cancel",
+                  buttonCss: "py-1.5 px-5 border",
+                  btnClick: handleClose,
+                },
+                {
+                  btnText: "Force Change",
+                  buttonCss:
+                    "py-1.5 bg-red-700 hover:bg-red-700 text-white px-5",
+                  btnClick: () => onSubmit(true),
+                  isLoading: isPending,
+                },
+              ]
+            : [
+                {
+                  btnText: "Submit",
+                  buttonCss: "py-1.5 px-5",
+                  btnClick: () => onSubmit(false),
+                  isLoading: isPending,
+                },
+              ]
+        }
       >
         {!hasData && (
           <Controller
@@ -101,7 +120,6 @@ export default function EditDatapointAddFormModal({
         /> */}
 
         <div className="grid grid-cols-2 gap-4">
-          {/* Frequency */}
           <Controller
             control={control}
             name="frequencyType"
@@ -110,15 +128,9 @@ export default function EditDatapointAddFormModal({
               <FormSelect
                 label="Frequency"
                 value={field.value}
-                // onChange={(value) => {
-                //   field.onChange(value);
-                //   setValue("visualFrequencyTypes", []);
-                // }}
                 onChange={field.onChange}
                 options={frequenceOptions}
                 error={errors.frequencyType}
-                disabled={hasData}
-                //  disabled={hasData && field.value !== "MONTHLY"}
                 className={hasData ? "rounded-md" : ""}
                 isMandatory
                 triggerClassName="py-4"
@@ -215,11 +227,8 @@ export default function EditDatapointAddFormModal({
           <FormInputField
             label="Tag"
             placeholder="Enter Tag"
-            // isMandatory
             {...register(`tag`)}
             error={errors?.tag}
-            // disabled={isDisabled}
-            // readOnly={isDisabled}
           />
           {employee && (
             <div className="col-span-2 flex flex-col gap-2">
@@ -229,7 +238,6 @@ export default function EditDatapointAddFormModal({
 
               <div className="grid w-full gap-4 mt-0">
                 {!showYesNo && !showBoth && (
-                  // Case: Only Goal Value 1 -> side by side with Unit
                   <div className="grid grid-cols-2 gap-4">
                     <Controller
                       name="value1"
@@ -264,7 +272,6 @@ export default function EditDatapointAddFormModal({
                 )}
 
                 {!showYesNo && showBoth && (
-                  // Case: Goal Value 1 + Goal Value 2
                   <>
                     <div className="grid grid-cols-2 gap-4">
                       <Controller
@@ -314,7 +321,6 @@ export default function EditDatapointAddFormModal({
                 )}
 
                 {showYesNo && (
-                  // Case: Yes/No dropdown
                   <div className="grid grid-cols-2 gap-4">
                     <Controller
                       name={`value1`}
@@ -359,6 +365,9 @@ export default function EditDatapointAddFormModal({
               />
             )}
           /> */}
+        </div>
+        <div className="mt-2">
+          <span className=" w-full text-red-600 "> {isChildData}</span>
         </div>
       </ModalData>
     </FormProvider>

@@ -21,7 +21,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSelector } from "react-redux";
-import { getUserId } from "@/features/selectors/auth.selector";
+import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
 import useMeetingUi from "./useMeetingUi";
 // import { useEffect } from "react";
 
@@ -70,8 +70,9 @@ const MeetingDrawer: React.FC<MeetingDrawerProps> = ({
   // }, []);
 
   const userId = useSelector(getUserId);
+  const userDetail = useSelector(getUserDetail);
   const isTeamLeader = joiners.some((j) => j.isTeamLeader);
-
+  const isSuperAdmin = userDetail.isSuperAdmin;
   const getInitials = (name: string) => {
     if (!name) return "";
     const names = name.split(" ");
@@ -128,7 +129,7 @@ const MeetingDrawer: React.FC<MeetingDrawerProps> = ({
                   {(joiners || []).map((item, index) => (
                     <div key={index + item.employeeId} className="relative">
                       {/* Crown icon visibility controlled by showCrown prop */}
-                      {item.isTeamLeader && showCrown && (
+                      {(item.isTeamLeader || isSuperAdmin) && showCrown && (
                         <span className="absolute -top-0 right-1 z-10 bg-white shadow-2xl rounded-full p-0.5">
                           <Crown className="w-4 h-4 text-[#303290] drop-shadow" />
                         </span>
@@ -163,7 +164,7 @@ const MeetingDrawer: React.FC<MeetingDrawerProps> = ({
                           <>
                             {item.attendanceMark ? (
                               <DropdownMenuContent>
-                                {isTeamLeader && (
+                                {(isTeamLeader || isSuperAdmin) && (
                                   <DropdownMenuItem
                                     onClick={() => handleAddTeamLeader(item)}
                                     className="border mb-2"
