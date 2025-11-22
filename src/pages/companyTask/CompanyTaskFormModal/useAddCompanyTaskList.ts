@@ -9,7 +9,7 @@ import {
 } from "@/features/api/companyTask";
 import { getEmployee } from "@/features/api/companyEmployee";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetCompanyMeeting } from "@/features/api/companyMeeting";
+import { useGetBothCompanyMeeting } from "@/features/api/companyMeeting";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 
@@ -124,11 +124,10 @@ export const useAddCompanyTask = () => {
       filter: paginationFilterProject,
       enable: !!paginationFilterProject,
     });
-  const { data: meetingData, isLoading: meetingLoading } = useGetCompanyMeeting(
-    {
+  const { data: meetingData, isLoading: meetingLoading } =
+    useGetBothCompanyMeeting({
       filter: paginationFilterMeeting,
-    },
-  );
+    });
 
   const taskStatusOptions = taskStatus
     ? taskStatus.data.map((status) => ({

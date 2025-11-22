@@ -148,6 +148,7 @@ const MeetingSelectionStep = () => {
           <TableData
             tableData={meetingData?.data?.map((item, index) => ({
               ...item,
+              isDetailMeeting: item.isDetailMeeting ?? false,
               srNo:
                 (meetingData.currentPage - 1) * meetingData.pageSize +
                 index +
@@ -157,6 +158,7 @@ const MeetingSelectionStep = () => {
             columns={{
               srNo: "srNo",
               meetingName: "Meeting Name",
+              isDetailMeeting: "Live Meeting",
             }}
             primaryKey="meetingId"
             multiSelect={false}

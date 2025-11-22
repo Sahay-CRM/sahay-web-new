@@ -34,7 +34,7 @@ interface UseAgendaProps {
   canEdit: boolean;
   joiners: Joiners[];
   isTeamLeader: boolean | undefined;
-  isSuperAdmin: boolean | undefined;
+  isSuperAdmin?: boolean | undefined;
   follow?: boolean;
 }
 
