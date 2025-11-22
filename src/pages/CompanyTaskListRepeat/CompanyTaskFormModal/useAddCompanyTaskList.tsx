@@ -26,7 +26,7 @@ import {
   useGetRepeatCompanyTaskById,
 } from "@/features/api/companyTask";
 import { useGetCompanyProject } from "@/features/api/companyProject";
-import { useGetCompanyMeeting } from "@/features/api/companyMeeting";
+import { useGetBothCompanyMeeting } from "@/features/api/companyMeeting";
 import { getEmployee } from "@/features/api/companyEmployee";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 
@@ -108,9 +108,10 @@ export default function useAddEmployee() {
     enable: !!projectPagination,
   });
 
-  const { data: meetingData } = useGetCompanyMeeting({
-    filter: meetingPagination,
-  });
+  const { data: meetingData, isLoading: meetingLoading } =
+    useGetBothCompanyMeeting({
+      filter: meetingPagination,
+    });
 
   const { data: employeedata } = getEmployee({
     filter: { ...employeePagination, isDeactivated: false },
@@ -136,7 +137,9 @@ export default function useAddEmployee() {
       );
       setValue(
         "meeting",
-        meetingData?.data?.find((m) => m.meetingId === t.meetingId) || null,
+        (meetingData &&
+          meetingData?.data?.find((m) => m.meetingId === t.meetingId)) ||
+          null,
       );
       setValue("taskName", t.taskName || "");
       setValue("taskDescription", t.taskDescription || "");
@@ -170,6 +173,7 @@ export default function useAddEmployee() {
     meetingData?.data,
     employeedata?.data,
     setValue,
+    meetingData,
   ]);
 
   const onSubmit = handleSubmit(async (data) => {
@@ -378,11 +382,6 @@ export default function useAddEmployee() {
       search: "",
     });
 
-    const { data: localMeetingList, isLoading: localMeetingLoading } =
-      useGetCompanyMeeting({
-        filter: localPagination,
-      });
-
     return (
       <div className="p-0">
         <div className="flex items-center justify-between mb-4 space-x-5 tb:space-x-7">
@@ -417,11 +416,10 @@ export default function useAddEmployee() {
           render={({ field }) => (
             <TableData
               {...field}
-              tableData={localMeetingList?.data?.map((item, index: number) => ({
+              tableData={meetingData?.data?.map((item, index: number) => ({
                 ...item,
                 srNo:
-                  (localMeetingList.currentPage - 1) *
-                    localMeetingList.pageSize +
+                  (meetingData.currentPage - 1) * meetingData.pageSize +
                   index +
                   1,
               }))}
@@ -434,7 +432,7 @@ export default function useAddEmployee() {
               multiSelect={false}
               selectedValue={
                 field.value?.meetingId &&
-                localMeetingList?.data?.find(
+                meetingData?.data?.find(
                   (item) => item.meetingId === field.value.meetingId,
                 )
               }
@@ -448,10 +446,10 @@ export default function useAddEmployee() {
                 }
               }}
               onCheckbox={() => true}
-              paginationDetails={localMeetingList as PaginationFilter}
+              paginationDetails={meetingData as PaginationFilter}
               setPaginationFilter={setLocalPagination}
               showActionsColumn={false}
-              isLoading={localMeetingLoading}
+              isLoading={meetingLoading}
             />
           )}
         />

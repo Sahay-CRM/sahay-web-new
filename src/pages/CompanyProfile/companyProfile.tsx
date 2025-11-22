@@ -549,7 +549,7 @@ export default function CompanyProfile() {
                     )}
                   </div>
                   <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       PAN Card
                     </label>
                     {isEditing ? (
@@ -560,12 +560,12 @@ export default function CompanyProfile() {
                         error={errors.pan}
                       />
                     ) : (
-                      <div className="h-full bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center">
+                      <div className="h-full bg-gray-50 rounded-lg border border-gray-200 p-1 flex items-center justify-center">
                         {watch("pan") ? (
                           <img
                             src={watch("pan")}
                             alt="PAN Card"
-                            className="h-full w-full object-contain rounded-lg"
+                            className="w-[400px] h-[300px] object-contain rounded-lg"
                           />
                         ) : (
                           <div className="text-center text-gray-500">
@@ -608,12 +608,12 @@ export default function CompanyProfile() {
                         error={errors.gstCertificate}
                       />
                     ) : (
-                      <div className="h-full bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center">
+                      <div className="h-full bg-gray-50 rounded-lg border p-1 border-gray-200 flex items-center justify-center">
                         {watch("gstCertificate") ? (
                           <img
                             src={watch("gstCertificate")}
                             alt="GST Certificate"
-                            className="h-full w-full object-contain rounded-lg"
+                            className="w-[400px] h-[300px] object-contain rounded-lg"
                           />
                         ) : (
                           <div className="text-center text-gray-500">

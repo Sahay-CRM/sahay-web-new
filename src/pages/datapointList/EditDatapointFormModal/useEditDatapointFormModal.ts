@@ -6,6 +6,8 @@ import {
 import { useEffect, useState } from "react";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import { useDdNonSelectAllKpiList } from "@/features/api/KpiList";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 interface UseEditDatapointFormModalProps {
   modalClose: () => void;
@@ -19,6 +21,9 @@ export default function useEditDatapointFormModal({
   const [isKpiSearch, setIsKpiSearch] = useState("");
   const [isEmployeeSearch, setIsEmployeeSearch] = useState("");
 
+  const [isChildData, setIsChildData] = useState<string | undefined>();
+
+  const [isForceDelete, setIsForceDelete] = useState(false);
   const { mutate: addDatapoint, isPending } = useAddUpdateDatapoint();
 
   const { data: datapointApiData } = useGetDatapointById(kpiId);
@@ -97,31 +102,49 @@ export default function useEditDatapointFormModal({
     }
   }, [datapointApiData, setValue]);
 
-  const onSubmit = handleSubmit((data) => {
-    const visualFrequencyTypesStr = Array.isArray(data.visualFrequencyTypes)
-      ? data.visualFrequencyTypes.join(",")
-      : data.visualFrequencyTypes;
-    const payload = {
-      KPIMasterId: data.KPIMasterId,
-      kpiId: data.kpiId,
-      coreParameterId: data.coreParameterId,
-      employeeId: data.employeeId,
-      tag: data.tag,
-      unit: data.unit,
-      validationType: data.validationType,
-      value1: data.value1,
-      value2: data.value2,
-      frequencyType: data.frequencyType,
-      visualFrequencyTypes: visualFrequencyTypesStr,
-      visualFrequencyAggregate: data.visualFrequencyAggregate,
-    };
-    addDatapoint(payload, {
-      onSuccess: () => {
-        handleClose();
-      },
-    });
-  });
+  const onSubmit = (isForceChange?: boolean) => {
+    handleSubmit((data) => {
+      const visualFrequencyTypesStr = Array.isArray(data.visualFrequencyTypes)
+        ? data.visualFrequencyTypes.join(",")
+        : data.visualFrequencyTypes;
+      const payload = {
+        KPIMasterId: data.KPIMasterId,
+        kpiId: data.kpiId,
+        coreParameterId: data.coreParameterId,
+        employeeId: data.employeeId,
+        tag: data.tag,
+        unit: data.unit,
+        validationType: data.validationType,
+        value1: data.value1,
+        value2: data.value2,
+        frequencyType: data.frequencyType,
+        visualFrequencyTypes: visualFrequencyTypesStr,
+        visualFrequencyAggregate: data.visualFrequencyAggregate,
+        isForceChange: isForceChange,
+      };
+      addDatapoint(payload, {
+        onSuccess: () => {
+          handleClose();
+          setIsForceDelete(false);
+        },
+        onError: (error: Error) => {
+          const axiosError = error as AxiosError<{
+            message?: string;
+            status: number;
+          }>;
 
+          if (axiosError.response?.data?.status === 417) {
+            setIsChildData(axiosError.response?.data?.message);
+            setIsForceDelete(true);
+          } else if (axiosError.response?.data.status !== 417) {
+            toast.error(
+              `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+            );
+          }
+        },
+      });
+    })();
+  };
   const handleClose = () => {
     reset();
     modalClose();
@@ -270,7 +293,9 @@ export default function useEditDatapointFormModal({
     showBoth,
     yesnoOptions,
     setIsKpiSearch,
+    isChildData,
     setIsEmployeeSearch,
+    isForceDelete,
     // skipDaysOption,
   };
 }

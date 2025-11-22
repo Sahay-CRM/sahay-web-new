@@ -26,10 +26,17 @@ export default function useAdminUser() {
     useGetImportantDatesPagination({
       filter: paginationFilter,
     });
-  const openModal = useCallback((data: ImportantDatesDataProps) => {
-    setModalData(data);
-    setAddImportantDateModal(true);
-  }, []);
+  const openModal = useCallback(
+    (data: ImportantDatesDataProps) => {
+      const impDate = importantDatesList?.data.find(
+        (item) => item.importantDateId === data.importantDateId,
+      );
+
+      setModalData(impDate!);
+      setAddImportantDateModal(true);
+    },
+    [importantDatesList?.data],
+  );
 
   const onDelete = useCallback((data: ImportantDatesDataProps) => {
     setIsDeleteModalOpen(true);

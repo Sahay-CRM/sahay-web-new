@@ -50,7 +50,7 @@ export default function CompanyImportantDate() {
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "importantDateName", label: "Important Date Name", visible: true },
-    { key: "importantDate", label: "Date", visible: true },
+    { key: "importantDateDisplay", label: "Date", visible: true },
     { key: "importantDateRemarks", label: "Remarks", visible: true },
   ]);
 
@@ -135,8 +135,8 @@ export default function CompanyImportantDate() {
                   importantDatesList.pageSize +
                 index +
                 1,
-              importantDate: item.importantDate
-                ? format(new Date(item.importantDate), "dd/MM/yyyy hh:mm a")
+              importantDateDisplay: item?.importantDate
+                ? format(new Date(item.importantDate), "dd-MM-yyyy")
                 : "-",
             }))}
             columns={visibleColumns}

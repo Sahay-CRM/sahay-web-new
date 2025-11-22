@@ -148,6 +148,7 @@ const MeetingSelectionStep = () => {
           <TableData
             tableData={meetingData?.data?.map((item, index) => ({
               ...item,
+              isDetailMeeting: item.isDetailMeeting ?? false,
               srNo:
                 (meetingData.currentPage - 1) * meetingData.pageSize +
                 index +
@@ -157,6 +158,7 @@ const MeetingSelectionStep = () => {
             columns={{
               srNo: "srNo",
               meetingName: "Meeting Name",
+              isDetailMeeting: "Live Meeting",
             }}
             primaryKey="meetingId"
             multiSelect={false}
@@ -361,12 +363,9 @@ const AssignUserStep = () => {
         control={control}
         rules={{ required: "Please select a User" }}
         render={({ field }) => {
-          const selectedEmployees =
-            Array.isArray(field.value) && Array.isArray(employeedata?.data)
-              ? employeedata.data.filter((emp) =>
-                  field.value.includes(emp.employeeId),
-                )
-              : [];
+          const selectedEmployees = Array.isArray(field.value)
+            ? field.value.map((id) => ({ employeeId: id }))
+            : [];
           return (
             <TableData
               tableData={employeedata?.data?.map((item, index) => ({
@@ -378,7 +377,7 @@ const AssignUserStep = () => {
               }))}
               isActionButton={() => false}
               columns={{
-                srNo: "srNo",
+                srNo: "sr No",
                 employeeName: "User Name",
                 designationName: "Designation",
                 employeeType: "Employee Type",

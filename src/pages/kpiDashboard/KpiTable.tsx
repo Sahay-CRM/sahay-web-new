@@ -375,24 +375,29 @@ export default function UpdatedKpiTable() {
   const [isDataFilter, setIsDataFilter] = useState("default");
   const [commentModalOpen, setCommentModalOpen] = useState(false);
 
+  const urlSelectedPeriod = searchParams.get("selectedType");
+  const [selectedPeriod, setSelectedPeriod] = useState(urlSelectedPeriod || "");
+  useEffect(() => {
+    if (selectedPeriod === "DAILY") {
+      setIsDataFilter("default");
+    }
+  }, [selectedPeriod]);
   // const [sortConfig, setSortConfig] = useState<SortConfig>({
   //   key: "sequence",
   //   direction: "asc",
   // });
-
+  const finalFilterValue =
+    selectedPeriod === "DAILY" ? "default" : isDataFilter;
   const { data: kpiStructure, isLoading: isKpiStructureLoading } =
     useGetKpiDashboardStructure({
       filter: {
         sortBy: "sequence",
         sortOrder: "asc",
-        filter: isDataFilter,
+        filter: finalFilterValue,
       },
     });
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const urlSelectedPeriod = searchParams.get("selectedType");
-
-  const [selectedPeriod, setSelectedPeriod] = useState(urlSelectedPeriod || "");
   const [showWarning, setShowWarning] = useState(false);
   const [pendingPeriod, setPendingPeriod] = useState<string | null>(null);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(
@@ -699,7 +704,7 @@ export default function UpdatedKpiTable() {
   const { kpiData } = useKpiDashboard({
     selectedPeriod,
     selectedDate,
-    isDataFilter,
+    isDataFilter: finalFilterValue,
   });
 
   const hasNoKpis = useMemo(() => {
@@ -1354,14 +1359,15 @@ export default function UpdatedKpiTable() {
                                           <TooltipTrigger asChild>
                                             <div
                                               className={twMerge(
-                                                "relative rounded-sm text-sm w-[80px] h-[42px] bg-white group",
-
-                                                inputVal !== "" &&
+                                                "relative border  rounded-sm text-sm w-[80px] h-[42px] bg-white group",
+                                                cell?.data !== "-" &&
+                                                  inputVal !== "" &&
                                                   selectedPeriod !== "YEARLY" &&
                                                   (isValid
-                                                    ? "bg-green-100 border-green-500"
-                                                    : "bg-red-100 border-red-500"),
-                                                isVisualized &&
+                                                    ? "bg-green-100 "
+                                                    : "bg-red-100 "),
+                                                cell?.data !== "-" &&
+                                                  isVisualized &&
                                                   cell?.validationPercentage !=
                                                     null &&
                                                   (cell.validationPercentage ===
@@ -1425,7 +1431,7 @@ export default function UpdatedKpiTable() {
                                                   options={selectOptions}
                                                   placeholder="Select"
                                                   disabled={!canInput}
-                                                  triggerClassName="text-sm px-1 text-center justify-center"
+                                                  triggerClassName="text-sm px-1 text-center justify-center border-none"
                                                 />
                                               ) : (
                                                 <div className="flex flex-col items-center  justify-center h-full w-full cursor-not-allowed">
@@ -1607,7 +1613,8 @@ export default function UpdatedKpiTable() {
                                                 "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
 
                                                 // ⭐ Normal validation (when input is editable)
-                                                inputVal !== "" &&
+                                                cell?.data !== "-" &&
+                                                  inputVal !== "" &&
                                                   validationType &&
                                                   selectedPeriod !== "YEARLY" &&
                                                   (isValidInput(
@@ -1620,7 +1627,8 @@ export default function UpdatedKpiTable() {
                                                     : "bg-red-100 border-red-500"),
 
                                                 // ⭐ Visualization-based color logic
-                                                isVisualized &&
+                                                cell?.data !== "-" &&
+                                                  isVisualized &&
                                                   cell?.validationPercentage !=
                                                     null &&
                                                   (cell.validationPercentage ===

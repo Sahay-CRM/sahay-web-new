@@ -26,19 +26,21 @@ export default function TabsSection({
     >
       <TabsList className="bg-transparent h-auto p-0 flex flex-wrap items-start justify-start space-x-6 border-b border-gray-200">
         {kpiStructure?.data?.map((tab) => {
+          const isDaily = tab.frequencyType === "DAILY";
+
           const canEdit = tab.kpis?.reduce(
             (acc: number, coreParam: CoreParameterGroup) => {
-              const innerCount =
-                coreParam.kpis?.filter((kpi: Kpi) => kpi.isVisualized === false)
+              const unvisualized =
+                coreParam.kpis?.filter((kpi: Kpi) => !kpi.isVisualized)
                   ?.length || 0;
-              return acc + innerCount;
+              return acc + unvisualized;
             },
             0,
           );
 
-          const isDailyTab = tab.frequencyType === "DAILY";
-          const showCanEdit =
-            !isDailyTab &&
+          // tooltip show condition
+          const shouldShowTooltip =
+            !isDaily &&
             isDataFilter === "default" &&
             selectedPeriod !== "DAILY";
 
@@ -48,37 +50,49 @@ export default function TabsSection({
               value={tab.frequencyType}
               className="rounded-none bg-white border-b-2 border-transparent p-2 text-sm font-medium text-muted-foreground hover:text-primary data-[state=active]:border-b-primary data-[state=active]:text-primary"
             >
-              {formatFrequencyType(tab.frequencyType)}{" "}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="ml-1 text-xs text-gray-500 cursor-pointer">
-                      (
-                      {showCanEdit && canEdit > 0
-                        ? `${canEdit} / ${tab.count - canEdit}`
-                        : tab.count}
-                      )
-                    </span>
-                  </TooltipTrigger>
+              {formatFrequencyType(tab.frequencyType)}
 
-                  <TooltipContent side="top" className="p-2">
-                    <ul className="text-xs text-gray-700">
-                      <li className="flex justify-between gap-2 border-b border-gray-200 pb-1 mb-1 font-medium">
-                        <span className="w-5 text-center text-white">All</span>
-                        <span className="w-5 text-center text-white">Edit</span>
-                        <span className="w-10 text-center text-white">
-                          Auto
-                        </span>
-                      </li>
-                      <li className="flex justify-between gap-2 text-center font-semibold text-white">
-                        <span className="w-5">{tab.count}</span>
-                        <span className="w-5">{canEdit}</span>
-                        <span className="w-10">{tab.count - canEdit}</span>
-                      </li>
-                    </ul>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              {/* DAILY => nothing show */}
+              {shouldShowTooltip ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="ml-1 text-xs text-gray-500 cursor-pointer">
+                        (
+                        {shouldShowTooltip && canEdit > 0
+                          ? `${canEdit} / ${tab.count - canEdit}`
+                          : tab.count}
+                        )
+                      </span>
+                    </TooltipTrigger>
+
+                    <TooltipContent side="top" className="p-2">
+                      <ul className="text-xs text-gray-700">
+                        <li className="flex justify-between gap-2 border-b border-gray-200 pb-1 mb-1 font-medium">
+                          <span className="w-5 text-white text-center">
+                            All
+                          </span>
+                          <span className="w-5 text-white text-center">
+                            Edit
+                          </span>
+                          <span className="w-10 text-white text-center">
+                            Auto
+                          </span>
+                        </li>
+                        <li className="flex justify-between gap-2 text-center font-semibold text-white">
+                          <span className="w-5">{tab.count}</span>
+                          <span className="w-5">{canEdit}</span>
+                          <span className="w-10">{tab.count - canEdit}</span>
+                        </li>
+                      </ul>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <span className="ml-1 text-xs text-gray-500">
+                  ({tab.count})
+                </span>
+              )}
             </TabsTrigger>
           );
         })}
