@@ -1060,6 +1060,7 @@ interface Kpi {
   assignees: Assignee[];
   isVisualized: boolean;
   employeeName: string;
+  employeeId?: string;
   value1: string;
   value2?: string | null;
   photo?: string | null;

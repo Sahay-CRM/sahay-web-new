@@ -372,6 +372,8 @@ const Urls = {
     `${baseUrl}/company/kpi-data/note-delete/${id}`,
 
   getBothMeeting: () => `${baseUrl}/company/meeting/get-both`,
+  kpiNewValidation: () => `${baseUrl}/company/kpi/kpi-new-validation`,
+  kpiResetValidation: () => `${baseUrl}/company/kpi/kpi-new-reset`,
 };
 
 export default Urls;

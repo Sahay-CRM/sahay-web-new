@@ -259,3 +259,73 @@ export function formatTempValuesMeetingToPayload(
     issueObjectiveId: selectedIssueId,
   };
 }
+
+export interface FormattedPeriodDate {
+  label: string;
+  year?: string;
+}
+
+export function formatPeriodDate(
+  startDate: string | Date,
+  endDate: string | Date,
+  period: string,
+): FormattedPeriodDate {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    return { label: String(startDate), year: String(endDate) };
+  }
+
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  switch (period.toUpperCase()) {
+    case "YEARLY":
+      return {
+        label: `${format(start, "yyyy")}-${format(end, "yyyy")}`,
+        year: "",
+      };
+    case "HALFYEARLY":
+      return {
+        label: `${monthNames[start.getMonth()]}-${monthNames[end.getMonth()]}`,
+        year: start.getFullYear().toString(),
+      };
+    case "QUARTERLY":
+      return {
+        label: `${monthNames[start.getMonth()]}-${monthNames[end.getMonth()]}`,
+        year: end.getFullYear().toString(),
+      };
+    case "MONTHLY":
+      return {
+        label: monthNames[start.getMonth()],
+        year: start.getFullYear().toString(),
+      };
+    case "WEEKLY":
+      return {
+        label: `${start.getDate()} ${monthNames[start.getMonth()]}`,
+        year: `${end.getDate()} ${monthNames[end.getMonth()]}`,
+      };
+    case "DAILY":
+      return {
+        label: `${start.getDate()} ${monthNames[start.getMonth()]} ${start.getFullYear()}`,
+      };
+    default:
+      return {
+        label: `${start.getDate()} ${monthNames[start.getMonth()]}`,
+        year: end.getFullYear().toString(),
+      };
+  }
+}
