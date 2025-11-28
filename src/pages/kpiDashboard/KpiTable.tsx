@@ -1574,86 +1574,81 @@ export default function UpdatedKpiTable() {
                                                     : "opacity-0 group-hover:opacity-100",
                                                 )}
                                               >
-                                                {canInput && !isVisualized && (
-                                                  <Tooltip>
-                                                    <TooltipTrigger asChild>
+                                                {/* {canInput && !isVisualized && ( */}
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    {inputnote &&
+                                                    inputnote.trim() !== "" &&
+                                                    inputnote !== "0" ? (
+                                                      <span
+                                                        className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
+                                                        style={{
+                                                          background:
+                                                            inputVal !== "" &&
+                                                            validationType &&
+                                                            selectedPeriod !==
+                                                              "YEARLY"
+                                                              ? isValidInput(
+                                                                  validationType,
+                                                                  inputVal,
+                                                                  value1 ??
+                                                                    null,
+                                                                  value2 ??
+                                                                    null,
+                                                                )
+                                                                ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)" // valid → greenish
+                                                                : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)" // invalid → reddish
+                                                              : "linear-gradient(to bottom left, #2e3090 50%, white 55%)",
+                                                          borderBottomLeftRadius:
+                                                            "5px",
+                                                        }}
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          setCurrentCellKey(
+                                                            key,
+                                                          );
+                                                          setCommentModalInput({
+                                                            note: inputnote,
+                                                            noteId,
+                                                          });
+                                                          setCommentModalOpen(
+                                                            true,
+                                                          );
+                                                        }}
+                                                      ></span>
+                                                    ) : (
+                                                      <span
+                                                        className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          setCurrentCellKey(
+                                                            key,
+                                                          );
+                                                          setCommentModalInput({
+                                                            note: "",
+                                                            noteId: "",
+                                                          });
+
+                                                          setCommentModalOpen(
+                                                            true,
+                                                          );
+                                                        }}
+                                                      >
+                                                        <Plus className="w-3 h-3 text-gray-700" />
+                                                      </span>
+                                                    )}
+                                                  </TooltipTrigger>{" "}
+                                                  <TooltipContent>
+                                                    <span>
                                                       {inputnote &&
                                                       inputnote.trim() !== "" &&
-                                                      inputnote !== "0" ? (
-                                                        <span
-                                                          className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
-                                                          style={{
-                                                            background:
-                                                              inputVal !== "" &&
-                                                              validationType &&
-                                                              selectedPeriod !==
-                                                                "YEARLY"
-                                                                ? isValidInput(
-                                                                    validationType,
-                                                                    inputVal,
-                                                                    value1 ??
-                                                                      null,
-                                                                    value2 ??
-                                                                      null,
-                                                                  )
-                                                                  ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)" // valid → greenish
-                                                                  : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)" // invalid → reddish
-                                                                : "linear-gradient(to bottom left, #2e3090 50%, white 55%)",
-                                                            borderBottomLeftRadius:
-                                                              "5px",
-                                                          }}
-                                                          onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setCurrentCellKey(
-                                                              key,
-                                                            );
-                                                            setCommentModalInput(
-                                                              {
-                                                                note: inputnote,
-                                                                noteId,
-                                                              },
-                                                            );
-                                                            setCommentModalOpen(
-                                                              true,
-                                                            );
-                                                          }}
-                                                        ></span>
-                                                      ) : (
-                                                        <span
-                                                          className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
-                                                          onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setCurrentCellKey(
-                                                              key,
-                                                            );
-                                                            setCommentModalInput(
-                                                              {
-                                                                note: "",
-                                                                noteId: "",
-                                                              },
-                                                            );
-
-                                                            setCommentModalOpen(
-                                                              true,
-                                                            );
-                                                          }}
-                                                        >
-                                                          <Plus className="w-3 h-3 text-gray-700" />
-                                                        </span>
-                                                      )}
-                                                    </TooltipTrigger>{" "}
-                                                    <TooltipContent>
-                                                      <span>
-                                                        {inputnote &&
-                                                        inputnote.trim() !==
-                                                          "" &&
-                                                        inputnote !== "0"
-                                                          ? "View note"
-                                                          : "Add note"}
-                                                      </span>
-                                                    </TooltipContent>
-                                                  </Tooltip>
-                                                )}
+                                                      inputnote !== "0"
+                                                        ? "View note"
+                                                        : "Add note"}
+                                                    </span>
+                                                  </TooltipContent>
+                                                </Tooltip>
+                                                {/* )} */}
                                               </div>
                                             </div>
                                           </TooltipTrigger>
@@ -1776,81 +1771,75 @@ export default function UpdatedKpiTable() {
                                                   : "opacity-0 group-hover:opacity-100", // only on hover when no note
                                               )}
                                             >
-                                              {canInput && (
-                                                <Tooltip>
-                                                  <TooltipTrigger asChild>
+                                              {/* {canInput && ( */}
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  {inputnote &&
+                                                  inputnote.trim() !== "" &&
+                                                  inputnote !== "0" ? (
+                                                    <span
+                                                      className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
+                                                      style={{
+                                                        background:
+                                                          inputVal !== "" &&
+                                                          validationType &&
+                                                          selectedPeriod !==
+                                                            "YEARLY"
+                                                            ? isValidInput(
+                                                                validationType,
+                                                                inputVal,
+                                                                value1 ?? null,
+                                                                value2 ?? null,
+                                                              )
+                                                              ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)" // valid → greenish
+                                                              : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)" // invalid → reddish
+                                                            : "linear-gradient(to bottom left, #2e3090 50%, white 55%)", // default
+                                                        borderBottomLeftRadius:
+                                                          "5px",
+                                                      }}
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setCurrentCellKey(key);
+                                                        setCommentModalInput({
+                                                          note: inputnote,
+                                                          noteId,
+                                                        });
+                                                        setCommentModalOpen(
+                                                          true,
+                                                        );
+                                                      }}
+                                                    ></span>
+                                                  ) : (
+                                                    <span
+                                                      className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setCurrentCellKey(key);
+                                                        setCommentModalInput({
+                                                          note: "",
+                                                          noteId: "",
+                                                        });
+
+                                                        setCommentModalOpen(
+                                                          true,
+                                                        );
+                                                      }}
+                                                    >
+                                                      <Plus className="w-3 h-3 text-gray-700" />
+                                                    </span>
+                                                  )}
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                  <span>
                                                     {inputnote &&
                                                     inputnote.trim() !== "" &&
-                                                    inputnote !== "0" ? (
-                                                      <span
-                                                        className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
-                                                        style={{
-                                                          background:
-                                                            inputVal !== "" &&
-                                                            validationType &&
-                                                            selectedPeriod !==
-                                                              "YEARLY"
-                                                              ? isValidInput(
-                                                                  validationType,
-                                                                  inputVal,
-                                                                  value1 ??
-                                                                    null,
-                                                                  value2 ??
-                                                                    null,
-                                                                )
-                                                                ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)" // valid → greenish
-                                                                : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)" // invalid → reddish
-                                                              : "linear-gradient(to bottom left, #2e3090 50%, white 55%)", // default
-                                                          borderBottomLeftRadius:
-                                                            "5px",
-                                                        }}
-                                                        onClick={(e) => {
-                                                          e.stopPropagation();
-                                                          setCurrentCellKey(
-                                                            key,
-                                                          );
-                                                          setCommentModalInput({
-                                                            note: inputnote,
-                                                            noteId,
-                                                          });
-                                                          setCommentModalOpen(
-                                                            true,
-                                                          );
-                                                        }}
-                                                      ></span>
-                                                    ) : (
-                                                      <span
-                                                        className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
-                                                        onClick={(e) => {
-                                                          e.stopPropagation();
-                                                          setCurrentCellKey(
-                                                            key,
-                                                          );
-                                                          setCommentModalInput({
-                                                            note: "",
-                                                            noteId: "",
-                                                          });
-
-                                                          setCommentModalOpen(
-                                                            true,
-                                                          );
-                                                        }}
-                                                      >
-                                                        <Plus className="w-3 h-3 text-gray-700" />
-                                                      </span>
-                                                    )}
-                                                  </TooltipTrigger>
-                                                  <TooltipContent>
-                                                    <span>
-                                                      {inputnote &&
-                                                      inputnote.trim() !== "" &&
-                                                      inputnote !== "0"
-                                                        ? `View note`
-                                                        : "Add note"}
-                                                    </span>
-                                                  </TooltipContent>
-                                                </Tooltip>
-                                              )}
+                                                    inputnote !== "0"
+                                                      ? `View note`
+                                                      : "Add note"}
+                                                  </span>
+                                                </TooltipContent>
+                                              </Tooltip>
+                                              {/* )} */}
                                             </div>
                                           </div>
                                         </TooltipTrigger>
