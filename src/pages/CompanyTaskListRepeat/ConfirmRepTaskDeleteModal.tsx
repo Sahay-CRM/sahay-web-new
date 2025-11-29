@@ -38,7 +38,7 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
                 {
                   btnText: "Update All",
                   buttonCss: "py-1.5 px-5",
-                  btnClick: () => onSubmit("UPDATE_ALL"),
+                  btnClick: () => onSubmit("KEEP_ALL"),
                 },
                 {
                   btnText: "Delete All",
