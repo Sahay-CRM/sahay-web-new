@@ -244,7 +244,7 @@ export default function CompanyTaskListRe() {
             modalData={modalData}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
-            onSubmit={(isGroupDelete) => conformDelete(isGroupDelete ?? false)}
+            onSubmit={(additionalKey) => conformDelete(additionalKey)}
             isChildData={isChildData}
           />
         )}

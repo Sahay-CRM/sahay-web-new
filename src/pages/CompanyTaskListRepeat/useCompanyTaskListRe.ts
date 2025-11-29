@@ -8,6 +8,8 @@ import {
 import useAddUpdateRepeatCompanyTask from "@/features/api/companyTask/useAddUpdateRepeatCompanyTask";
 import useGetRepeatCompanyTask from "@/features/api/companyTask/useGetRepeatCompanyTask";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 export default function useCompanyTaskList() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -102,17 +104,34 @@ export default function useCompanyTaskList() {
     setIsChildData("");
   }, []);
 
-  const conformDelete = (isGroupDelete: boolean) => {
+  const conformDelete = (additionalKey?: string) => {
     if (!modalData?.repetitiveTaskId) {
       return;
     }
     const payload = {
       repetitiveTaskId: modalData.repetitiveTaskId,
-      groupDelete: isGroupDelete,
+      additionalKey,
     };
 
-    deleteTaskById(payload);
-    closeDeleteModal();
+    deleteTaskById(payload, {
+      onSuccess: () => {
+        closeDeleteModal();
+      },
+      onError: (error: Error) => {
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+
+        if (axiosError.response?.data?.status === 417) {
+          setIsChildData(axiosError.response?.data?.message);
+        } else if (axiosError.response?.data.status !== 417) {
+          toast.error(
+            `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+          );
+        }
+      },
+    });
   };
 
   const openImportModal = useCallback(() => {
