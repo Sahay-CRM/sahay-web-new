@@ -36,7 +36,7 @@ const AddRepeatMeetingModal: React.FC<MeetingModalProps> = ({
               },
               {
                 btnText: "Delete All",
-                buttonCss: "py-1.5 px-5",
+                buttonCss: "py-1.5 px-5 bg-red-600 text-white",
                 btnClick: onDeleteAll ?? (() => {}),
               },
             ]

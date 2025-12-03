@@ -366,121 +366,126 @@ export default function AgendaList({
                 className={`absolute -right-[2px] rounded-md w-fit flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-0" : "h-[70px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
               >
                 <div className="">
-                  {editing?.issueObjectiveId !== item.issueObjectiveId && (
-                    <div className="flex gap-1">
-                      {/* ✅ Always show RESOLVED / UNRESOLVED button */}
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              onClick={(e) => handleMarkAsSolvedClick(e, item)}
-                              className="w-7 cursor-pointer hover:bg-transparent"
-                            >
-                              {item.type === "RESOLVED" ? (
-                                <CopyX className="w-7 h-7 text-red-600" />
-                              ) : (
-                                <CopyCheck className="w-7 h-7 text-green-600" />
-                              )}
-                            </Button>
-                          </TooltipTrigger>
-
-                          <TooltipContent>
-                            <p>
-                              {item.type === "RESOLVED"
-                                ? "Mark As Unresolved"
-                                : "Mark As Resolved"}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                      {item.type === "PARKED" && (
+                  {editing?.issueObjectiveId !== item.issueObjectiveId &&
+                    meetingStatus !== "ENDED" && (
+                      <div className="flex gap-1">
+                        {/* ✅ Always show RESOLVED / UNRESOLVED button */}
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="ghost"
                                 onClick={(e) =>
-                                  handleMarkAsSolvedClick(e, {
-                                    ...item,
-                                    type: "RESOLVED",
-                                  })
+                                  handleMarkAsSolvedClick(e, item)
                                 }
                                 className="w-7 cursor-pointer hover:bg-transparent"
                               >
-                                <CopyX className="w-7 h-7 text-red-600" />
+                                {item.type === "RESOLVED" ? (
+                                  <CopyX className="w-7 h-7 text-red-600" />
+                                ) : (
+                                  <CopyCheck className="w-7 h-7 text-green-600" />
+                                )}
                               </Button>
                             </TooltipTrigger>
 
                             <TooltipContent>
-                              <p>Mark As Unresolved</p>
+                              <p>
+                                {item.type === "RESOLVED"
+                                  ? "Mark As Unresolved"
+                                  : "Mark As Resolved"}
+                              </p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                      )}
 
-                      {item.type !== "PARKED" && (
+                        {item.type === "PARKED" && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  onClick={(e) =>
+                                    handleMarkAsSolvedClick(e, {
+                                      ...item,
+                                      type: "RESOLVED",
+                                    })
+                                  }
+                                  className="w-7 cursor-pointer hover:bg-transparent"
+                                >
+                                  <CopyX className="w-7 h-7 text-red-600" />
+                                </Button>
+                              </TooltipTrigger>
+
+                              <TooltipContent>
+                                <p>Mark As Unresolved</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+
+                        {item.type !== "PARKED" && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  onClick={(e) =>
+                                    handleMarkAsParkClick(e, item)
+                                  }
+                                  className="w-7 cursor-pointer hover:bg-transparent"
+                                >
+                                  <BadgeCheck className="w-7 h-7 text-green-600" />
+                                </Button>
+                              </TooltipTrigger>
+
+                              <TooltipContent>
+                                <p>Mark As Parked</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="ghost"
-                                onClick={(e) => handleMarkAsParkClick(e, item)}
-                                className="w-7 cursor-pointer hover:bg-transparent"
+                                onClick={handleEditClick} // Use the new handler
+                                className="w-5 hover:bg-transparent"
                               >
-                                <BadgeCheck className="w-7 h-7 text-green-600" />
+                                <SquarePen
+                                  className={`h-4 w-4 ${
+                                    isSelectedAgenda === item.issueObjectiveId
+                                      ? "text-white"
+                                      : "text-primary"
+                                  }`}
+                                />
                               </Button>
                             </TooltipTrigger>
-
                             <TooltipContent>
-                              <p>Mark As Parked</p>
+                              <p>Edit Issue Objective</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                      )}
 
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              onClick={handleEditClick} // Use the new handler
-                              className="w-5 hover:bg-transparent"
-                            >
-                              <SquarePen
-                                className={`h-4 w-4 ${
-                                  isSelectedAgenda === item.issueObjectiveId
-                                    ? "text-white"
-                                    : "text-primary"
-                                }`}
-                              />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Edit Issue Objective</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              onClick={(e) => handleDeleteClick(e, item)} // Use the new handler
-                              className="w-5 hover:bg-transparent"
-                            >
-                              <Unlink className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Unlink from this Meeting</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  )}
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                onClick={(e) => handleDeleteClick(e, item)} // Use the new handler
+                                className="w-5 hover:bg-transparent"
+                              >
+                                <Unlink className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Unlink from this Meeting</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    )}
                 </div>
               </div>
             )}
