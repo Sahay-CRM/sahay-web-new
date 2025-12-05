@@ -1131,6 +1131,20 @@ interface KpiDataCell {
   isHoliday?: boolean;
   matchCount?: number;
   validationPercentage?: number;
+  goalValue: string | number;
+}
+
+interface KpiType {
+  kpiId: string;
+  kpiName: string;
+  kpiLabel?: string;
+  employeeName?: string;
+  tag?: string;
+  validationType: string;
+  goalValue?: number;
+  value1: string | number | null;
+  value2?: string | number | null;
+  unit?: string | null;
 }
 
 interface UserLogDetails {

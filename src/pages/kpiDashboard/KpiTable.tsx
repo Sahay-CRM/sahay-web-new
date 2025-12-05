@@ -21,7 +21,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import Loader from "@/components/shared/Loader/Loader";
 import { FormDatePicker } from "@/components/shared/Form/FormDatePicker/FormDatePicker";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, GripVertical, Plus } from "lucide-react";
+import { RefreshCcw, GripVertical, Plus, ChartSpline } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -61,6 +61,7 @@ import CommentModal from "./KpiCommentModal";
 import SearchInput from "@/components/shared/SearchInput";
 import MultiIconSelect from "@/components/shared/Form/FormSelect/MultiIconSelect";
 import KpiDetailsSheet from "./KpiDetailsSheet";
+import GraphModal from "./GraphModal/graphModal";
 
 function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
   return (
@@ -124,18 +125,6 @@ interface ActiveKpiItem {
 }
 
 type ActiveItem = ActiveGroupItem | ActiveKpiItem | null;
-type KpiType = {
-  kpiId: string;
-  kpiName: string;
-  kpiLabel?: string;
-  employeeName?: string;
-  tag?: string;
-  validationType: string;
-  goalValue?: number;
-  value1: string | number | null;
-  value2?: string | number | null;
-  unit?: string | null;
-};
 
 // Sortable KPI Row Component
 interface SortableKpiRowProps {
@@ -152,6 +141,7 @@ interface SortableKpiRowProps {
     value2?: string | number | null,
     unit?: string | null,
   ) => string;
+  graphClick: (id: string) => void;
 }
 
 function SortableKpiRow({
@@ -163,6 +153,7 @@ function SortableKpiRow({
   getFormattedValue,
   selectedPeriod,
   onRowClick,
+  graphClick,
 }: SortableKpiRowProps) {
   const {
     attributes,
@@ -188,7 +179,7 @@ function SortableKpiRow({
         "group/row border-b bg-gray-50 transition-all duration-150",
         isDragging ? "pointer-events-none" : "",
         isSortableDragging ? "z-10" : "",
-        "hover:outline  cursor-pointer hover:outline-primary hover:outline-offset-[-1px]",
+        "hover:outline cursor-pointer hover:outline-primary hover:outline-offset-[-1px]",
       )}
       {...attributes}
       onClick={() => {
@@ -196,23 +187,23 @@ function SortableKpiRow({
         onRowClick?.(kpi);
       }}
     >
-      <td className="p-3  w-[75px] h-[55px]">
-        <div className="flex items-center gap-2">
+      <td className="py-3 w-[60px] h-[55px]">
+        <div className="flex items-center gap-2 w-full h-full">
           {showDragHandle && (
             <div
-              className="cursor-grab active:cursor-grabbing opacity-0 group-hover/row:opacity-100 transition-opacity"
+              className="cursor-grab pl-1.5 active:cursor-grabbing opacity-0 group-hover/row:opacity-100 transition-opacity"
               {...listeners}
             >
-              <GripVertical className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+              <GripVertical className="w-4 h-4 text-black hover:text-black" />
             </div>
           )}
-          <Avatar className="h-6 w-6">
+          <Avatar className="h-5 w-5">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <AvatarFallback
                     className={clsx(
-                      "font-semibold",
+                      "font-semibold text-sm",
                       getColorFromName(kpi?.employeeName),
                     )}
                   >
@@ -232,7 +223,7 @@ function SortableKpiRow({
           </Avatar>
         </div>
       </td>
-      <td className="px-3 border w-[180px] text-left h-[59px] align-middle">
+      <td className="px-3 border w-[170px] text-left h-[59px] align-middle">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -246,7 +237,7 @@ function SortableKpiRow({
           </Tooltip>
         </TooltipProvider>
       </td>
-      <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
+      <td className="px-3 border w-[120px] text-left h-[59px] align-middle">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -320,6 +311,19 @@ function SortableKpiRow({
           </Tooltip>
         </TooltipProvider>
       </td>
+      <td className="border">
+        {kpi.validationType != "YES_NO" && (
+          <span
+            className="w-full h-full flex justify-center"
+            onClick={(e) => {
+              e.stopPropagation();
+              graphClick(kpi.kpiId);
+            }}
+          >
+            <ChartSpline className="w-4 h-4" />
+          </span>
+        )}
+      </td>
     </tr>
   );
 }
@@ -359,7 +363,7 @@ function SortableCoreParameterGroup({
     <tr
       ref={setNodeRef}
       style={style}
-      className={`sticky top-[50px] bg-blue-50 z-10 h-[39px] group/group ${isDragging ? "pointer-events-none" : ""} ${isSortableDragging ? "z-20" : ""}`}
+      className={`sticky top-[50px] w-full bg-blue-50 z-10 h-[39px] group/group ${isDragging ? "pointer-events-none" : ""} ${isSortableDragging ? "z-20" : ""}`}
       {...attributes}
     >
       <td colSpan={4} className="p-2 text-blue-800 font-bold">
@@ -375,6 +379,7 @@ function SortableCoreParameterGroup({
           {children}
         </div>
       </td>
+      <td></td>
     </tr>
   );
 }
@@ -513,9 +518,13 @@ export default function UpdatedKpiTable() {
   );
 
   // Drag and drop state
+  const { mutate: updateSequence } = updateKPISequenceMutation();
+
   const [isDragging, setIsDragging] = useState(false);
   const [activeItem, setActiveItem] = useState<ActiveItem>(null);
-  const { mutate: updateSequence } = updateKPISequenceMutation();
+  const [modalData, setModalData] = useState<KpiDataCell[]>();
+  const [isGraphClick, setIsGraphClick] = useState(false);
+  const [kpiD, setKpiD] = useState<KpiType>();
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -1151,9 +1160,6 @@ export default function UpdatedKpiTable() {
     },
   ];
 
-  //   if (isLoading) {
-  //     return <Loader />;
-  //   }
   if (isKpiStructureLoading || !kpiStructure || !kpiData || !kpiData.data) {
     return <Loader />;
   }
@@ -1171,6 +1177,25 @@ export default function UpdatedKpiTable() {
       </div>
     );
   }
+
+  const handleGraphClick = (id: string) => {
+    const matchedGroup = groupedKpiRows.find((item) =>
+      item.kpis.some((data) => data.kpi.kpiId === id),
+    );
+    const matchedKpi = matchedGroup?.kpis.find(
+      (data) => data.kpi.kpiId === id,
+    )?.kpi;
+
+    const matchDa = kpiData.data.filter((i) => i.some((d) => d.kpiId === id));
+
+    setKpiD(matchedKpi);
+    setIsGraphClick(true);
+    setModalData(matchDa[0]);
+  };
+
+  const handleGraphClose = () => {
+    setIsGraphClick(false);
+  };
 
   return (
     <FormProvider {...methods}>
@@ -1250,14 +1275,14 @@ export default function UpdatedKpiTable() {
               className="max-h-[78vh] overflow-y-scroll scrollbar-hide border shadow-sm"
               style={{ width: "500px", minWidth: "500px", maxWidth: "500px" }}
             >
-              <table className="w-full table-fixed border-collapse text-sm bg-white">
+              <table className="w-full border-collapse text-sm bg-white">
                 <thead className="bg-primary sticky top-0 z-20">
                   <tr>
                     <th
-                      className="w-[75px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
+                      className="w-[60px] p-1 font-medium text-sm text-white text-left h-[51px] cursor-pointer select-none"
                       // onClick={() => handleSort("employeeName")}
                     >
-                      <div className="flex items-center ">
+                      <div className="flex items-center">
                         Who
                         <MultiIconSelect
                           value={selectedEmployees}
@@ -1278,10 +1303,10 @@ export default function UpdatedKpiTable() {
                     )} */}
                     </th>
                     <th
-                      className="w-[190px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
+                      className="w-[190px] p-2 font-medium text-sm text-white text-left h-[51px] cursor-pointer select-none"
                       // onClick={() => handleSort("KPIName")}
                     >
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 text-sm">
                         KPI
                         {/* {sortConfig.key === "KPIName" &&
                       (sortConfig.direction === "asc" ? (
@@ -1295,7 +1320,7 @@ export default function UpdatedKpiTable() {
                       </div>
                     </th>
                     <th
-                      className="w-[120px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
+                      className="w-[110px] p-2 font-medium text-sm text-white text-left h-[51px] cursor-pointer select-none"
                       // onClick={() => handleSort("tag")}
                     >
                       <div className="flex items-center gap-1">
@@ -1314,6 +1339,7 @@ export default function UpdatedKpiTable() {
                     <th className="w-[100px] p-2 font-semibold text-white text-left h-[51px]">
                       Goal
                     </th>
+                    <th className="w-[30px] p-2 font-semibold text-white text-left h-[51px]"></th>
                   </tr>
                 </thead>
                 <SortableContext
@@ -1352,6 +1378,7 @@ export default function UpdatedKpiTable() {
                             getFormattedValue={getFormattedValue}
                             selectedPeriod={selectedPeriod}
                             onRowClick={handleRowClick}
+                            graphClick={(id: string) => handleGraphClick(id)}
                           />
                         ))}
                       </React.Fragment>
@@ -1990,6 +2017,12 @@ export default function UpdatedKpiTable() {
             return updated;
           });
         }}
+      />
+      <GraphModal
+        modalData={modalData!}
+        isModalOpen={isGraphClick}
+        modalClose={handleGraphClose}
+        kpiData={kpiD!}
       />
     </FormProvider>
   );
