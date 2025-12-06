@@ -1271,7 +1271,7 @@ export default function UpdatedKpiTable() {
               className="max-h-[78vh] overflow-y-scroll scrollbar-hide border shadow-sm"
               style={{ width: "500px", minWidth: "500px", maxWidth: "500px" }}
             >
-              <table className="w-full border-collapse text-sm bg-white">
+              <table className="w-full table-fixed border-collapse text-sm bg-white">
                 <thead className="bg-primary sticky top-0 z-20">
                   <tr>
                     <th

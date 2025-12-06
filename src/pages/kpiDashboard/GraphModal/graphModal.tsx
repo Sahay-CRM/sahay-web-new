@@ -28,7 +28,7 @@ export default function GraphModal({
   const formatDateDaily = (dateStr: string) => {
     const date = new Date(dateStr);
     const day = String(date.getDate()).padStart(2, "0");
-    return `${day} ${date.toLocaleString("en-US", { month: "short" })}`;
+    return `${day} ${date.toLocaleString("en-US", { month: "short" })} ${date.getFullYear()}`;
   };
 
   const formatDateWeekly = (startStr: string, endStr: string) => {
@@ -41,9 +41,6 @@ export default function GraphModal({
     const endMonth = endDate.toLocaleString("en-US", { month: "short" });
     const endYear = endDate.getFullYear();
 
-    if (startYear === endYear) {
-      return `${startDay} ${startMonth} to ${endDay} ${endMonth}`;
-    }
     return `${startDay} ${startMonth} ${startYear} to ${endDay} ${endMonth} ${endYear}`;
   };
 
@@ -119,17 +116,15 @@ export default function GraphModal({
   };
 
   // Process data for chart
-  const chartData = (modalData ?? [])
-    .map((item, index) => ({
-      date: getFormattedDate(item, index),
-      actual: item.data ? parseInt(String(item.data)) : 0,
-      goal: parseInt(String(item.goalValue)),
-      isSunday: item.isSunday,
-      isSkipDay: item.isSkipDay,
-      isHoliday: item.isHoliday,
-      note: item.note,
-    }))
-    .reverse();
+  const chartData = (modalData ?? []).map((item, index) => ({
+    date: getFormattedDate(item, index),
+    actual: item.data ? parseInt(String(item.data)) : 0,
+    goal: parseInt(String(item.goalValue)),
+    isSunday: item.isSunday,
+    isSkipDay: item.isSkipDay,
+    isHoliday: item.isHoliday,
+    note: item.note,
+  }));
 
   const getDateRange = () => {
     if (!modalData || modalData.length === 0) return null;
@@ -197,13 +192,17 @@ export default function GraphModal({
   const dateRange = getDateRange();
 
   const downloadChart = async () => {
-    if (chartRef.current) {
+    if (chartRef.current && dateRange) {
+      const from = new Date(dateRange.from).toISOString().split("T")[0];
+      const to = new Date(dateRange.to).toISOString().split("T")[0];
+
       const dataUrl = await toJpeg(chartRef.current, {
         quality: 0.95,
         backgroundColor: "#fff",
       });
       const link = document.createElement("a");
-      link.download = `${kpiData?.kpiName || "chart"}-${new Date().getTime()}.jpg`;
+      link.download = `${kpiData?.kpiName || "chart"}-${from}-to-${to}.jpg`;
+      // link.download = `${kpiData?.kpiName || "chart"}-new Date(${dateRange.from}).jpg`;
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
@@ -271,7 +270,7 @@ export default function GraphModal({
                   textAnchor="end"
                   height={100}
                   interval={0}
-                  tick={{ fontSize: 13, fill: "#666" }}
+                  tick={{ fontSize: 12, fill: "#666" }}
                 />
                 <YAxis />
                 <Tooltip
