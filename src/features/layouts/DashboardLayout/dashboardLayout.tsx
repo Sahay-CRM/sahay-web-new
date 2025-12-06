@@ -187,6 +187,7 @@ const DashboardLayout = () => {
 
   const toggleDrawer = useCallback(() => setOpen((prev) => !prev), []);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleConfirmLogout = async () => {
     await deleteFirebaseToken();
@@ -215,6 +216,7 @@ const DashboardLayout = () => {
   };
 
   const handleLogin = (company: Company) => {
+    setIsLoading(true);
     companyVerifyOtp(
       {
         selectedCompanyId: company.companyId,
@@ -234,7 +236,6 @@ const DashboardLayout = () => {
                 fbToken: response.data.fbToken,
               }),
             );
-
             requestFirebaseNotificationPermission().then((firebaseToken) => {
               if (firebaseToken) {
                 dispatch(setFireBaseToken(String(firebaseToken)));
@@ -260,6 +261,7 @@ const DashboardLayout = () => {
                 );
               }
             });
+            setIsLoading(false);
             navigate("/");
             window.location.reload();
           }
@@ -458,6 +460,7 @@ const DashboardLayout = () => {
                     isModalOpen={isCompanyModalOpen}
                     onSelect={handleLogin}
                     modalClose={() => setCompanyModalOpen(false)}
+                    isLoading={isLoading}
                   />
                 </Suspense>
               )}

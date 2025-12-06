@@ -1145,6 +1145,12 @@ interface KpiType {
   value1: string | number | null;
   value2?: string | number | null;
   unit?: string | null;
+  labels?: KpiLabels[];
+}
+
+interface KpiLabels {
+  label: string;
+  year: string;
 }
 
 interface UserLogDetails {

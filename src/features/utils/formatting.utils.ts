@@ -87,6 +87,20 @@ export function getKpiHeadersFromData(
   });
 }
 
+export function isKpiDataCellArrayArray(
+  data: unknown,
+): data is KpiDataCell[][] {
+  return (
+    Array.isArray(data) &&
+    data.length > 0 &&
+    Array.isArray(data[0]) &&
+    (data[0].length === 0 ||
+      (typeof data[0][0] === "object" &&
+        data[0][0] !== null &&
+        "kpiId" in data[0][0]))
+  );
+}
+
 export function isValidInput(
   validationType: string,
   inputValue: string,

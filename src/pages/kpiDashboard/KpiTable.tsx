@@ -8,6 +8,7 @@ import {
   formatTempValuesToPayload,
   getColorFromName,
   getKpiHeadersFromData,
+  isKpiDataCellArrayArray,
   isValidInput,
 } from "@/features/utils/formatting.utils";
 import {
@@ -60,20 +61,8 @@ import { twMerge } from "tailwind-merge";
 import CommentModal from "./KpiCommentModal";
 import SearchInput from "@/components/shared/SearchInput";
 import MultiIconSelect from "@/components/shared/Form/FormSelect/MultiIconSelect";
-import KpiDetailsSheet from "./KpiDetailsSheet";
+// import KpiDetailsSheet from "./KpiDetailsSheet";
 import GraphModal from "./GraphModal/graphModal";
-
-function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
-  return (
-    Array.isArray(data) &&
-    data.length > 0 &&
-    Array.isArray(data[0]) &&
-    (data[0].length === 0 ||
-      (typeof data[0][0] === "object" &&
-        data[0][0] !== null &&
-        "kpiId" in data[0][0]))
-  );
-}
 
 function formatToThreeDecimals(value: string | number | null | undefined) {
   if (value === null || value === undefined || value === "") return "";
@@ -152,7 +141,7 @@ function SortableKpiRow({
   showDragHandle = true,
   getFormattedValue,
   selectedPeriod,
-  onRowClick,
+  // onRowClick,
   graphClick,
 }: SortableKpiRowProps) {
   const {
@@ -182,10 +171,10 @@ function SortableKpiRow({
         "hover:outline cursor-pointer hover:outline-primary hover:outline-offset-[-1px]",
       )}
       {...attributes}
-      onClick={() => {
-        if (kpi.validationType === "YES_NO") return;
-        onRowClick?.(kpi);
-      }}
+      // onClick={() => {
+      //   if (kpi.validationType === "YES_NO") return;
+      //   onRowClick?.(kpi);
+      // }}
     >
       <td className="py-3 w-[60px] h-[55px]">
         <div className="flex items-center gap-2 w-full h-full">
@@ -446,34 +435,34 @@ export default function UpdatedKpiTable() {
   const location = useLocation();
   const leftScrollRef = React.useRef<HTMLDivElement>(null);
   const rightScrollRef = React.useRef<HTMLDivElement>(null);
-  const [selectedKpi, setSelectedKpi] = useState<SelectedKpi | null>(null);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  // const [selectedKpi, setSelectedKpi] = useState<SelectedKpi | null>(null);
+  // const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  type SelectedKpi = KpiType & {
-    details: KpiDataCell[];
-    selectedPeriod: string;
-  };
-  const handleRowClick = (kpi: KpiType) => {
-    if (!kpiData?.data) {
-      return;
-    }
+  // type SelectedKpi = KpiType & {
+  //   details: KpiDataCell[];
+  //   selectedPeriod: string;
+  // };
+  // const handleRowClick = (kpi: KpiType) => {
+  //   if (!kpiData?.data) {
+  //     return;
+  //   }
 
-    const flatKpiData: KpiDataCell[] = kpiData.data.flat();
+  //   const flatKpiData: KpiDataCell[] = kpiData.data.flat();
 
-    const matchingDetails = flatKpiData.filter(
-      (item) => item.kpiId === kpi.kpiId,
-    );
+  //   const matchingDetails = flatKpiData.filter(
+  //     (item) => item.kpiId === kpi.kpiId
+  //   );
 
-    if (matchingDetails.length > 0) {
-      const combinedKpi: SelectedKpi = {
-        ...kpi,
-        selectedPeriod: selectedPeriod,
-        details: matchingDetails,
-      };
-      setSelectedKpi(combinedKpi);
-      setIsSheetOpen(true);
-    }
-  };
+  //   if (matchingDetails.length > 0) {
+  //     const combinedKpi: SelectedKpi = {
+  //       ...kpi,
+  //       selectedPeriod: selectedPeriod,
+  //       details: matchingDetails,
+  //     };
+  //     setSelectedKpi(combinedKpi);
+  //     setIsSheetOpen(true);
+  //   }
+  // };
 
   useEffect(() => {
     if (!isKpiStructureLoading && kpiStructure?.data?.length) {
@@ -1179,6 +1168,11 @@ export default function UpdatedKpiTable() {
   }
 
   const handleGraphClick = (id: string) => {
+    // If you want to extract labels and years, use:
+    const label = headers.map((item) => ({
+      label: item.label,
+      year: item.year,
+    }));
     const matchedGroup = groupedKpiRows.find((item) =>
       item.kpis.some((data) => data.kpi.kpiId === id),
     );
@@ -1188,7 +1182,9 @@ export default function UpdatedKpiTable() {
 
     const matchDa = kpiData.data.filter((i) => i.some((d) => d.kpiId === id));
 
-    setKpiD(matchedKpi);
+    if (matchedKpi?.kpiId) {
+      setKpiD({ ...matchedKpi, labels: label });
+    }
     setIsGraphClick(true);
     setModalData(matchDa[0]);
   };
@@ -1377,17 +1373,17 @@ export default function UpdatedKpiTable() {
                             showDragHandle={!!canDrag}
                             getFormattedValue={getFormattedValue}
                             selectedPeriod={selectedPeriod}
-                            onRowClick={handleRowClick}
+                            // onRowClick={handleRowClick}
                             graphClick={(id: string) => handleGraphClick(id)}
                           />
                         ))}
                       </React.Fragment>
                     ))}
-                    <KpiDetailsSheet
+                    {/* <KpiDetailsSheet
                       isOpen={isSheetOpen}
                       onOpenChange={setIsSheetOpen}
                       selectedKpi={selectedKpi}
-                    />
+                    /> */}
                   </tbody>
                 </SortableContext>
               </table>
