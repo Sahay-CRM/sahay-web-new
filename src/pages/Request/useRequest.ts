@@ -35,6 +35,11 @@ export default function useRequest() {
     setIsRequestModal(true);
   };
 
+  const handleRequestEdit = (data: CreateRequest) => {
+    setIsEditData(data);
+    setModalOpen(true);
+  };
+
   return {
     paginationFilter,
     reqData,
@@ -48,5 +53,6 @@ export default function useRequest() {
     handleClose,
     handleRequestModalOpen,
     isRequestModal,
+    handleRequestEdit,
   };
 }
