@@ -52,6 +52,7 @@ export default function CompanyTaskList() {
     taskStatus,
     taskDateRange,
     appliedDateRange,
+    handleDateRangeReset,
   } = useCompanyTaskList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -138,6 +139,8 @@ export default function CompanyTaskList() {
                     startDate: appliedDateRange.taskStartDate,
                     deadline: appliedDateRange.taskDeadline,
                   }}
+                  isClear
+                  handleClear={handleDateRangeReset}
                 />
               )}
             </div>

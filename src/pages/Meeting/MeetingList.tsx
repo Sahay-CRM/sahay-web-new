@@ -51,6 +51,7 @@ export default function MeetingList() {
     showOverdue,
     handleOverdueToggle,
     taskDateRange,
+    handleDateRangeReset,
     // handleDetailToggle,
     // showDetail,
   } = useMeeting();
@@ -138,6 +139,8 @@ export default function MeetingList() {
                     startDate: taskDateRange.taskStartDate,
                     deadline: taskDateRange.taskDeadline,
                   }}
+                  isClear
+                  handleClear={handleDateRangeReset}
                 />
               )}
             </div>

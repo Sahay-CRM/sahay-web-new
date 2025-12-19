@@ -323,6 +323,36 @@ export default function useDetailMeeting() {
     }));
   };
 
+  // Reset date range and clear only this module's localStorage key
+  const handleDateRangeReset = () => {
+    // Recalculate default 30-day window relative to "today"
+    const today = new Date();
+    const before14 = new Date(today);
+    before14.setDate(today.getDate() - 14);
+    const after14 = new Date(today);
+    after14.setDate(today.getDate() + 14);
+
+    const defaultRange = {
+      taskStartDate: before14,
+      taskDeadline: after14,
+    };
+
+    setTaskDateRange(defaultRange);
+    setAppliedDateRange(defaultRange);
+
+    // Remove only this page's stored date range
+    saveDateRangeToStorage({
+      taskStartDate: undefined,
+      taskDeadline: undefined,
+    });
+
+    // Reset pagination to first page
+    setPaginationFilter((prev) => ({
+      ...prev,
+      currentPage: 1,
+    }));
+  };
+
   const handleDuplicateMeeting = (data: CompanyMeetingDataProps) => {
     if (data.meetingId) {
       duplicateMeeting({
@@ -364,6 +394,7 @@ export default function useDetailMeeting() {
     handleDateRangeChange,
     handleDateRangeApply,
     handleDateRangeSaveApply,
+    handleDateRangeReset,
     handleDuplicateMeeting,
     setIsDuplicateModalOpen,
     setSelectedMeeting,

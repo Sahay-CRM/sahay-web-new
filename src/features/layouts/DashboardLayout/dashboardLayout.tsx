@@ -67,7 +67,7 @@ import SidebarControlContext from "./SidebarControlContext";
 import ModalData from "@/components/shared/Modal/ModalData";
 import { ExclamationRoundIcon } from "@/components/shared/Icons";
 import { useGetCompanyList } from "@/features/api/SelectCompany";
-import { loginToFirebase } from "@/pages/auth/login/loginToFirebase";
+// import { loginToFirebase } from "@/pages/auth/login/loginToFirebase";
 import { useGetCompanyId } from "@/features/api/CompanyProfile";
 import {
   Tooltip,
@@ -225,7 +225,7 @@ const DashboardLayout = () => {
       {
         onSuccess: async (response) => {
           if (response?.status) {
-            await loginToFirebase(response.data.fbToken!);
+            // await loginToFirebase(response.data.fbToken!);
 
             dispatch(
               setAuth({
