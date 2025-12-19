@@ -140,16 +140,16 @@ export default function DateRangePicker({
           />
           <div className="flex justify-between gap-2 mt-3 pt-3 border-t">
             <div className="flex gap-2">
-              {isClear && (
-                <Button variant="outline" size="sm" onClick={onClear}>
-                  Clear
-                </Button>
-              )}
               <Button variant="outline" size="sm" onClick={onClose}>
                 Close
               </Button>
             </div>
             <div className="flex gap-4">
+              {isClear && (
+                <Button variant="outline" size="sm" onClick={onClear}>
+                  Reset
+                </Button>
+              )}
               {onSaveApply && (
                 <Button
                   variant="outline"
@@ -158,7 +158,7 @@ export default function DateRangePicker({
                   disabled={!tempDate?.from}
                   className="border-primary"
                 >
-                  Save & Apply
+                  Save
                 </Button>
               )}
               <Button

@@ -68,6 +68,7 @@ export default function DetailMeetingList() {
     selectedMeeting,
     setIsDataFilter,
     isDataFilter,
+    handleDateRangeReset,
   } = useDetailMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -168,6 +169,8 @@ export default function DetailMeetingList() {
                   startDate: taskDateRange.taskStartDate,
                   deadline: taskDateRange.taskDeadline,
                 }}
+                isClear
+                handleClear={handleDateRangeReset}
               />
             </div>
             {/* <div>
