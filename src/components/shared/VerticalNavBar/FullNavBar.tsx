@@ -70,7 +70,7 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
             <img
               src={user?.companyLogo ? user?.companyLogo : companyLogo}
               alt="profile"
-              className="w-full rounded-full object-cover bg-black"
+              className="w-full rounded-full object-cover"
             />
           </div>
           <span className="ml-2 mr-1">{user?.companyName}</span>

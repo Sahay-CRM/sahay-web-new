@@ -59,6 +59,7 @@ export default function DetailMeetingList() {
     handleStatusChange,
     handleDateRangeChange,
     handleDateRangeApply,
+    handleDateRangeSaveApply,
     taskDateRange,
     handleDuplicateMeeting,
     setIsDuplicateModalOpen,
@@ -162,6 +163,11 @@ export default function DetailMeetingList() {
                 }}
                 onChange={handleDateRangeChange}
                 onApply={handleDateRangeApply}
+                onSaveApply={handleDateRangeSaveApply}
+                defaultDate={{
+                  startDate: taskDateRange.taskStartDate,
+                  deadline: taskDateRange.taskDeadline,
+                }}
               />
             </div>
             {/* <div>

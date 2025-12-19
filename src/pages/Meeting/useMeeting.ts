@@ -33,6 +33,9 @@ export default function useAdminUser() {
   const [showOverdue, setShowOverdue] = useState(false);
   // const [showDetail, setShowDetail] = useState(true);
 
+  // LocalStorage key for persisting meeting date range
+  const COMPANY_MEETINGS_DATE_RANGE_KEY = "CompanyMeetingsDateRange";
+
   // Calculate default 30-day range: 15 days before and after today
   const today = new Date();
   const before14 = new Date(today);
@@ -40,20 +43,49 @@ export default function useAdminUser() {
   const after14 = new Date(today);
   after14.setDate(today.getDate() + 14);
 
+  // Helper to safely read date range from localStorage
+  const getStoredDateRange = () => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = window.localStorage.getItem(COMPANY_MEETINGS_DATE_RANGE_KEY);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw) as {
+        from?: string;
+        to?: string;
+      };
+
+      if (!parsed.from) return null;
+
+      const from = new Date(parsed.from);
+      const to = parsed.to ? new Date(parsed.to) : undefined;
+
+      if (Number.isNaN(from.getTime())) return null;
+      if (to && Number.isNaN(to.getTime())) return null;
+
+      return {
+        taskStartDate: from,
+        taskDeadline: to ?? from,
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const getInitialDateRange = () =>
+    getStoredDateRange() ?? {
+      taskStartDate: before14,
+      taskDeadline: after14,
+    };
+
   const [taskDateRange, setTaskDateRange] = useState<{
     taskStartDate: Date | undefined;
     taskDeadline: Date | undefined;
-  }>({
-    taskStartDate: before14,
-    taskDeadline: after14,
-  });
+  }>(() => getInitialDateRange());
   const [appliedDateRange, setAppliedDateRange] = useState<{
     taskStartDate: Date | undefined;
     taskDeadline: Date | undefined;
-  }>({
-    taskStartDate: before14,
-    taskDeadline: after14,
-  });
+  }>(() => getInitialDateRange());
 
   // Add state for view modal
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -68,6 +100,27 @@ export default function useAdminUser() {
     pageSize: 25,
     search: "",
   });
+
+  // Helper to persist date range in localStorage
+  const saveDateRangeToStorage = (range: {
+    taskStartDate: Date | undefined;
+    taskDeadline: Date | undefined;
+  }) => {
+    if (typeof window === "undefined") return;
+
+    if (!range.taskStartDate) {
+      window.localStorage.removeItem(COMPANY_MEETINGS_DATE_RANGE_KEY);
+      return;
+    }
+
+    window.localStorage.setItem(
+      COMPANY_MEETINGS_DATE_RANGE_KEY,
+      JSON.stringify({
+        from: range.taskStartDate.toISOString(),
+        to: range.taskDeadline?.toISOString(),
+      }),
+    );
+  };
   const permission = useSelector(getUserPermission).MEETING_LIST;
   const { data: meetingData } = useGetCompanyMeeting({
     filter: {
@@ -254,6 +307,41 @@ export default function useAdminUser() {
     }));
   };
 
+  // Called from DateRangePicker "Save & Apply" button
+  const handleDateRangeSaveApply = (range: DateRange | undefined) => {
+    let newTaskDateRange: {
+      taskStartDate: Date | undefined;
+      taskDeadline: Date | undefined;
+    };
+
+    if (range?.from && !range?.to) {
+      newTaskDateRange = {
+        taskStartDate: range.from,
+        taskDeadline: range.from,
+      };
+    } else if (range?.from && range?.to) {
+      newTaskDateRange = {
+        taskStartDate: range.from,
+        taskDeadline: range.to,
+      };
+    } else {
+      newTaskDateRange = {
+        taskStartDate: undefined,
+        taskDeadline: undefined,
+      };
+    }
+
+    setTaskDateRange(newTaskDateRange);
+    setAppliedDateRange(newTaskDateRange);
+    saveDateRangeToStorage(newTaskDateRange);
+
+    // Reset pagination to first page
+    setPaginationFilter((prev) => ({
+      ...prev,
+      currentPage: 1,
+    }));
+  };
+
   const handleOverdueToggle = () => {
     const newOverdueState = !showOverdue;
     if (newOverdueState) {
@@ -309,6 +397,7 @@ export default function useAdminUser() {
     setTaskDateRange,
     handleDateRangeChange,
     handleDateRangeApply,
+    handleDateRangeSaveApply,
     showOverdue,
     handleOverdueToggle,
     // handleDetailToggle,

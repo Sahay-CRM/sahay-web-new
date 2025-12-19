@@ -842,15 +842,62 @@ export default function UpdatedKpiTable() {
   //   return groups;
   // }, [filteredData, searchTerm]);
 
+  // const groupedKpiRows = useMemo(() => {
+  //   if (!filteredData.length || !filteredData[0].kpis) return [];
+  //   console.log(filteredData);
+
+  //   const search = String(searchTerm.search ?? "").toLowerCase();
+
+  //   const groups: {
+  //     coreParameter: { coreParameterId: string; coreParameterName: string };
+  //     kpis: { kpi: Kpi }[];
+  //   }[] = [];
+
+  //   const selectedList = Array.isArray(selectedEmployees)
+  //     ? selectedEmployees
+  //     : selectedEmployees
+  //       ? [selectedEmployees]
+  //       : [];
+
+  //   (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
+  //     if (coreParam.kpis && Array.isArray(coreParam.kpis)) {
+  //       const filteredKpis = coreParam.kpis.filter((kpi: Kpi) => {
+  //         const coreName = coreParam.coreParameterName?.toLowerCase() || "";
+  //         const tag = kpi.tag?.toLowerCase() || "";
+  //         const name = kpi.kpiName?.toLowerCase() || "";
+
+  //         const matchesSearch =
+  //           coreName.includes(search) ||
+  //           tag.includes(search) ||
+  //           name.includes(search);
+
+  //         // ⭐ Employee Filter (supports multi + none)
+  //         const matchesEmployee =
+  //           selectedList.length === 0 ||
+  //           selectedList.includes(String(kpi.employeeId));
+
+  //         return matchesSearch && matchesEmployee;
+  //       });
+
+  //       if (filteredKpis.length > 0) {
+  //         groups.push({
+  //           coreParameter: {
+  //             coreParameterId: coreParam.coreParameterId,
+  //             coreParameterName: coreParam.coreParameterName,
+  //           },
+  //           kpis: filteredKpis.map((kpi) => ({ kpi })),
+  //         });
+  //       }
+  //     }
+  //   });
+
+  //   return groups;
+  // }, [filteredData, searchTerm, selectedEmployees]);
+
   const groupedKpiRows = useMemo(() => {
     if (!filteredData.length || !filteredData[0].kpis) return [];
 
     const search = String(searchTerm.search ?? "").toLowerCase();
-
-    const groups: {
-      coreParameter: { coreParameterId: string; coreParameterName: string };
-      kpis: { kpi: Kpi }[];
-    }[] = [];
 
     const selectedList = Array.isArray(selectedEmployees)
       ? selectedEmployees
@@ -858,39 +905,54 @@ export default function UpdatedKpiTable() {
         ? [selectedEmployees]
         : [];
 
-    (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
-      if (coreParam.kpis && Array.isArray(coreParam.kpis)) {
-        const filteredKpis = coreParam.kpis.filter((kpi: Kpi) => {
-          const coreName = coreParam.coreParameterName?.toLowerCase() || "";
-          const tag = kpi.tag?.toLowerCase() || "";
-          const name = kpi.kpiName?.toLowerCase() || "";
-
-          const matchesSearch =
-            coreName.includes(search) ||
-            tag.includes(search) ||
-            name.includes(search);
-
-          // ⭐ Employee Filter (supports multi + none)
-          const matchesEmployee =
-            selectedList.length === 0 ||
-            selectedList.includes(String(kpi.employeeId));
-
-          return matchesSearch && matchesEmployee;
-        });
-
-        if (filteredKpis.length > 0) {
-          groups.push({
-            coreParameter: {
-              coreParameterId: coreParam.coreParameterId,
-              coreParameterName: coreParam.coreParameterName,
-            },
-            kpis: filteredKpis.map((kpi) => ({ kpi })),
-          });
-        }
+    const groupsMap = new Map<
+      string,
+      {
+        coreParameter: {
+          coreParameterId: string;
+          coreParameterName: string;
+        };
+        kpis: { kpi: Kpi }[];
       }
+    >();
+
+    (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
+      const groupId = coreParam.coreParameterId ?? "UNGROUPED";
+      const groupName = coreParam.coreParameterName ?? "";
+
+      if (!groupsMap.has(groupId)) {
+        groupsMap.set(groupId, {
+          coreParameter: {
+            coreParameterId: groupId,
+            coreParameterName: groupName,
+          },
+          kpis: [],
+        });
+      }
+
+      coreParam.kpis?.forEach((kpi: Kpi) => {
+        const coreName = groupName.toLowerCase();
+        const tag = kpi.tag?.toLowerCase() || "";
+        const name = kpi.kpiName?.toLowerCase() || "";
+
+        const matchesSearch =
+          coreName.includes(search) ||
+          tag.includes(search) ||
+          name.includes(search);
+
+        const matchesEmployee =
+          selectedList.length === 0 ||
+          selectedList.includes(String(kpi.employeeId));
+
+        if (matchesSearch && matchesEmployee) {
+          groupsMap.get(groupId)!.kpis.push({ kpi });
+        }
+      });
     });
 
-    return groups;
+    return Array.from(groupsMap.values()).filter(
+      (group) => group.kpis.length > 0,
+    );
   }, [filteredData, searchTerm, selectedEmployees]);
 
   useEffect(() => {

@@ -18,7 +18,7 @@ export default function useDdNonSelectAllKpiList({
 
       return resData;
     },
-    enabled: !!enable,
+    enabled: !!enable || !!filter,
   });
   return query;
 }

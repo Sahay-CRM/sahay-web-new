@@ -92,7 +92,6 @@ export function useCustomModalFile(defaultValues?: CustomObj) {
 
     const { months, daysOfWeek, weekDaysMapping, dates, multiSelect } =
       repeatPattern;
-    // console.log(weekDaysMapping, "weekDaysMapping");
 
     if (daysOfWeek?.length) {
       setSelectedDay(daysOfWeek);

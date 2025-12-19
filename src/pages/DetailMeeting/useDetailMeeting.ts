@@ -27,6 +27,9 @@ const toLocalISOString = (date: Date | undefined) => {
 export default function useDetailMeeting() {
   const permission = useSelector(getUserPermission).LIVE_MEETING;
 
+  // LocalStorage key for persisting live meeting date range
+  const LIVE_MEETINGS_DATE_RANGE_KEY = "LiveMeetingsDateRange";
+
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [modalData, setModalData] = useState<MeetingData>({} as MeetingData);
@@ -44,20 +47,49 @@ export default function useDetailMeeting() {
   const after14 = new Date(today);
   after14.setDate(today.getDate() + 14);
 
+  // Helper to safely read date range from localStorage
+  const getStoredDateRange = () => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = window.localStorage.getItem(LIVE_MEETINGS_DATE_RANGE_KEY);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw) as {
+        from?: string;
+        to?: string;
+      };
+
+      if (!parsed.from) return null;
+
+      const from = new Date(parsed.from);
+      const to = parsed.to ? new Date(parsed.to) : undefined;
+
+      if (Number.isNaN(from.getTime())) return null;
+      if (to && Number.isNaN(to.getTime())) return null;
+
+      return {
+        taskStartDate: from,
+        taskDeadline: to ?? from,
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const getInitialDateRange = () =>
+    getStoredDateRange() ?? {
+      taskStartDate: before14,
+      taskDeadline: after14,
+    };
+
   const [taskDateRange, setTaskDateRange] = useState<{
     taskStartDate: Date | undefined;
     taskDeadline: Date | undefined;
-  }>({
-    taskStartDate: before14,
-    taskDeadline: after14,
-  });
+  }>(() => getInitialDateRange());
   const [appliedDateRange, setAppliedDateRange] = useState<{
     taskStartDate: Date | undefined;
     taskDeadline: Date | undefined;
-  }>({
-    taskStartDate: before14,
-    taskDeadline: after14,
-  });
+  }>(() => getInitialDateRange());
 
   // Add state for view modal
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -78,6 +110,27 @@ export default function useDetailMeeting() {
       detailMeetingStatus: isDataFilter,
     },
   });
+
+  // Helper to persist date range in localStorage
+  const saveDateRangeToStorage = (range: {
+    taskStartDate: Date | undefined;
+    taskDeadline: Date | undefined;
+  }) => {
+    if (typeof window === "undefined") return;
+
+    if (!range.taskStartDate) {
+      window.localStorage.removeItem(LIVE_MEETINGS_DATE_RANGE_KEY);
+      return;
+    }
+
+    window.localStorage.setItem(
+      LIVE_MEETINGS_DATE_RANGE_KEY,
+      JSON.stringify({
+        from: range.taskStartDate.toISOString(),
+        to: range.taskDeadline?.toISOString(),
+      }),
+    );
+  };
 
   const { data: meetingStatus, isLoading } = useDdMeetingStatus({
     filter: {},
@@ -236,6 +289,40 @@ export default function useDetailMeeting() {
     }));
   };
 
+  // Called from DateRangePicker "Save & Apply" button
+  const handleDateRangeSaveApply = (range: DateRange | undefined) => {
+    let newTaskDateRange: {
+      taskStartDate: Date | undefined;
+      taskDeadline: Date | undefined;
+    };
+
+    if (range?.from && !range?.to) {
+      newTaskDateRange = {
+        taskStartDate: range.from,
+        taskDeadline: range.from,
+      };
+    } else if (range?.from && range?.to) {
+      newTaskDateRange = {
+        taskStartDate: range.from,
+        taskDeadline: range.to,
+      };
+    } else {
+      newTaskDateRange = {
+        taskStartDate: undefined,
+        taskDeadline: undefined,
+      };
+    }
+
+    setTaskDateRange(newTaskDateRange);
+    setAppliedDateRange(newTaskDateRange);
+    saveDateRangeToStorage(newTaskDateRange);
+
+    setPaginationFilter((prev) => ({
+      ...prev,
+      currentPage: 1,
+    }));
+  };
+
   const handleDuplicateMeeting = (data: CompanyMeetingDataProps) => {
     if (data.meetingId) {
       duplicateMeeting({
@@ -276,6 +363,7 @@ export default function useDetailMeeting() {
     setTaskDateRange,
     handleDateRangeChange,
     handleDateRangeApply,
+    handleDateRangeSaveApply,
     handleDuplicateMeeting,
     setIsDuplicateModalOpen,
     setSelectedMeeting,
