@@ -278,7 +278,7 @@ export default function RepeatTaskToDo() {
                                       <TooltipTrigger asChild>
                                         <Button
                                           size="sm"
-                                          className="text-black h-6 w-6 p-0 hover:bg-gray-300 bg-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-2"
+                                          className="text-white h-6 w-6 p-0 bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-2"
                                           onClick={() =>
                                             handleDeleteTask(task.taskId)
                                           }
@@ -391,7 +391,7 @@ export default function RepeatTaskToDo() {
                             {permission.Delete && (
                               <Button
                                 size="sm"
-                                className="text-black h-6 w-6 p-0 hover:bg-gray-300 bg-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-2"
+                                className="text-white h-6 w-6 p-0 bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-2"
                                 onClick={() => handleDeleteTask(task.taskId)}
                               >
                                 <Trash2 className="w-4 h-4" />

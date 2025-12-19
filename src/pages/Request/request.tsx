@@ -16,7 +16,7 @@ import useRequest from "./useRequest";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import RequestModal from "@/components/shared/Modal/RequestModal";
 import { Button } from "@/components/ui/button";
-import { Trash } from "lucide-react";
+// import { Trash } from "lucide-react";
 import CreateRequestModal from "./createRequestModal";
 
 export default function Request() {
@@ -39,6 +39,7 @@ export default function Request() {
     handleClose,
     handleRequestModalOpen,
     isRequestModal,
+    handleRequestEdit,
   } = useRequest();
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -156,31 +157,33 @@ export default function Request() {
             columns={visibleColumns}
             primaryKey="changeRequestId"
             // onEdit={openModal}
-            customActions={(row) => {
-              return (
-                <>
-                  {row.requestStatus === "PENDING" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-red-600"
-                      onClick={() => onDelete(row.changeRequestId!)}
-                    >
-                      <Trash className="w-4 h-4" />
-                    </Button>
-                  )}
-                </>
-              );
-            }}
+            // customActions={(row) => {
+            //   return (
+            //     <>
+            //       {row.requestStatus === "PENDING" && (
+            //         <Button
+            //           variant="outline"
+            //           size="sm"
+            //           className="h-8 w-8 p-0 text-red-600"
+            //           onClick={() => onDelete(row.changeRequestId!)}
+            //         >
+            //           <Trash className="w-4 h-4" />
+            //         </Button>
+            //       )}
+            //     </>
+            //   );
+            // }}
+            onEdit={handleRequestEdit}
+            onDelete={(row) => onDelete(row.changeRequestId!)}
+            // isEditDelete={() => true}
             paginationDetails={mapPaginationDetails(reqData)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
-            moduleKey="PRODUCT"
+            moduleKey=""
             showIndexColumn={false}
             // showActionsColumn={false}
-            isEditDeleteShow={false}
+            isEditDeleteShow={true}
             permissionKey="users"
-            // sortableColumns={["productName", "brandName"]}
             actionColumnWidth="w-24"
           />
         </div>

@@ -9,6 +9,7 @@ interface CompanyModalProps {
   modalClose: () => void;
   companies: Company[];
   onSelect: (data: Company) => void;
+  isLoading?: boolean;
 }
 
 interface FormValues {
@@ -20,6 +21,7 @@ const CompanyModal: React.FC<CompanyModalProps> = ({
   modalClose,
   companies,
   onSelect,
+  isLoading,
 }) => {
   const methods = useForm<FormValues>({ defaultValues: { companyId: "" } });
   const {
@@ -33,7 +35,7 @@ const CompanyModal: React.FC<CompanyModalProps> = ({
     const selected = companies.find((c) => c.companyId === data.companyId);
     if (selected) {
       onSelect(selected);
-      modalClose();
+      // modalClose();
     }
   };
 
@@ -67,6 +69,7 @@ const CompanyModal: React.FC<CompanyModalProps> = ({
             btnText: "Submit",
             buttonCss: "py-1.5 px-5",
             btnClick: handleSubmit(onSubmit),
+            isLoading: isLoading,
           },
         ]}
       >

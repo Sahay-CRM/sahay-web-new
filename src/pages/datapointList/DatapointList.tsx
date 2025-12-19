@@ -102,7 +102,6 @@ export default function CompanyTaskList() {
     setIsEditKpiId,
     setIsEditModalOpen,
   } = useCompanyTaskList();
-  console.log(modalData);
 
   const { setBreadcrumbs } = useBreadcrumbs();
 

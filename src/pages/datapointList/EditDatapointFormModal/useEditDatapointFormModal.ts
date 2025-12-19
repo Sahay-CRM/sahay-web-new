@@ -37,9 +37,9 @@ export default function useEditDatapointFormModal({
   });
   const { data: datpointData } = useDdNonSelectAllKpiList({
     filter: {
-      search: isKpiSearch.length >= 3 ? isKpiSearch : undefined,
+      search: isKpiSearch && isKpiSearch.length >= 3 ? isKpiSearch : undefined,
     },
-    enable: isKpiSearch.length >= 3,
+    enable: false,
   });
 
   const {

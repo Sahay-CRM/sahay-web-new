@@ -8,6 +8,7 @@ import {
   formatTempValuesToPayload,
   getColorFromName,
   getKpiHeadersFromData,
+  isKpiDataCellArrayArray,
   isValidInput,
 } from "@/features/utils/formatting.utils";
 import {
@@ -21,7 +22,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import Loader from "@/components/shared/Loader/Loader";
 import { FormDatePicker } from "@/components/shared/Form/FormDatePicker/FormDatePicker";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, GripVertical, Plus } from "lucide-react";
+import { RefreshCcw, GripVertical, Plus, ChartSpline } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -59,18 +60,9 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import CommentModal from "./KpiCommentModal";
 import SearchInput from "@/components/shared/SearchInput";
-
-function isKpiDataCellArrayArray(data: unknown): data is KpiDataCell[][] {
-  return (
-    Array.isArray(data) &&
-    data.length > 0 &&
-    Array.isArray(data[0]) &&
-    (data[0].length === 0 ||
-      (typeof data[0][0] === "object" &&
-        data[0][0] !== null &&
-        "kpiId" in data[0][0]))
-  );
-}
+import MultiIconSelect from "@/components/shared/Form/FormSelect/MultiIconSelect";
+// import KpiDetailsSheet from "./KpiDetailsSheet";
+import GraphModal from "./GraphModal/graphModal";
 
 function formatToThreeDecimals(value: string | number | null | undefined) {
   if (value === null || value === undefined || value === "") return "";
@@ -127,18 +119,8 @@ type ActiveItem = ActiveGroupItem | ActiveKpiItem | null;
 interface SortableKpiRowProps {
   id: string;
   selectedPeriod?: string;
-  kpi: {
-    kpiId: string;
-    kpiName: string;
-    kpiLabel?: string;
-    employeeName?: string;
-    tag?: string;
-    validationType: string;
-    goalValue?: number;
-    value1: string | number | null;
-    value2?: string | number | null;
-    unit?: string | null;
-  };
+  onRowClick?: (kpi: KpiType) => void;
+  kpi: KpiType;
   disabled?: boolean;
   isDragging?: boolean;
   showDragHandle?: boolean;
@@ -148,6 +130,7 @@ interface SortableKpiRowProps {
     value2?: string | number | null,
     unit?: string | null,
   ) => string;
+  graphClick: (id: string) => void;
 }
 
 function SortableKpiRow({
@@ -158,6 +141,8 @@ function SortableKpiRow({
   showDragHandle = true,
   getFormattedValue,
   selectedPeriod,
+  // onRowClick,
+  graphClick,
 }: SortableKpiRowProps) {
   const {
     attributes,
@@ -178,26 +163,36 @@ function SortableKpiRow({
     <tr
       ref={setNodeRef}
       style={style}
-      className={`group/row border-b bg-gray-50 ${isDragging ? "pointer-events-none" : ""} ${isSortableDragging ? "z-10" : ""}`}
+      // className={`group/row border-b bg-gray-50 ${isDragging ? "pointer-events-none" : ""} ${isSortableDragging ? "z-10" : ""}`}
+      className={clsx(
+        "group/row border-b bg-gray-50 transition-all duration-150",
+        isDragging ? "pointer-events-none" : "",
+        isSortableDragging ? "z-10" : "",
+        "hover:outline cursor-pointer hover:outline-primary hover:outline-offset-[-1px]",
+      )}
       {...attributes}
+      // onClick={() => {
+      //   if (kpi.validationType === "YES_NO") return;
+      //   onRowClick?.(kpi);
+      // }}
     >
-      <td className="p-3  w-[75px] h-[55px]">
-        <div className="flex items-center gap-2">
+      <td className="py-3 w-[60px] h-[55px]">
+        <div className="flex items-center gap-2 w-full h-full">
           {showDragHandle && (
             <div
-              className="cursor-grab active:cursor-grabbing opacity-0 group-hover/row:opacity-100 transition-opacity"
+              className="cursor-grab pl-1.5 active:cursor-grabbing opacity-0 group-hover/row:opacity-100 transition-opacity"
               {...listeners}
             >
-              <GripVertical className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+              <GripVertical className="w-4 h-4 text-black hover:text-black" />
             </div>
           )}
-          <Avatar className="h-6 w-6">
+          <Avatar className="h-5 w-5">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <AvatarFallback
                     className={clsx(
-                      "font-semibold",
+                      "font-semibold text-sm",
                       getColorFromName(kpi?.employeeName),
                     )}
                   >
@@ -217,7 +212,7 @@ function SortableKpiRow({
           </Avatar>
         </div>
       </td>
-      <td className="px-3 border w-[180px] text-left h-[59px] align-middle">
+      <td className="px-3 border w-[170px] text-left h-[59px] align-middle">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -231,7 +226,7 @@ function SortableKpiRow({
           </Tooltip>
         </TooltipProvider>
       </td>
-      <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
+      <td className="px-3 border w-[120px] text-left h-[59px] align-middle">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -305,6 +300,19 @@ function SortableKpiRow({
           </Tooltip>
         </TooltipProvider>
       </td>
+      <td className="border">
+        {kpi.validationType != "YES_NO" && (
+          <span
+            className="w-full h-full flex justify-center"
+            onClick={(e) => {
+              e.stopPropagation();
+              graphClick(kpi.kpiId);
+            }}
+          >
+            <ChartSpline className="w-4 h-4" />
+          </span>
+        )}
+      </td>
     </tr>
   );
 }
@@ -344,7 +352,7 @@ function SortableCoreParameterGroup({
     <tr
       ref={setNodeRef}
       style={style}
-      className={`sticky top-[50px] bg-blue-50 z-10 h-[39px] group/group ${isDragging ? "pointer-events-none" : ""} ${isSortableDragging ? "z-20" : ""}`}
+      className={`sticky top-[50px] w-full bg-blue-50 z-10 h-[39px] group/group ${isDragging ? "pointer-events-none" : ""} ${isSortableDragging ? "z-20" : ""}`}
       {...attributes}
     >
       <td colSpan={4} className="p-2 text-blue-800 font-bold">
@@ -360,6 +368,7 @@ function SortableCoreParameterGroup({
           {children}
         </div>
       </td>
+      <td></td>
     </tr>
   );
 }
@@ -397,6 +406,22 @@ export default function UpdatedKpiTable() {
       },
     });
 
+  const employeeOptions =
+    kpiStructure?.data
+      ?.flatMap((item) => item.kpis?.flatMap((k) => k.kpis ?? [])) // flatten nested levels
+      ?.filter((k) => k.employeeId != null) // remove undefined/null IDs
+      ?.map((k) => ({
+        label: k.employeeName,
+        value: k.employeeId as string, // now safe
+      })) ?? [];
+
+  const uniqueEmployeeOptions = Array.from(
+    new Map(employeeOptions.map((item) => [item.value, item])).values(),
+  );
+
+  // const [selectOpen, setSelectOpen] = useState(false);
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showWarning, setShowWarning] = useState(false);
   const [pendingPeriod, setPendingPeriod] = useState<string | null>(null);
@@ -410,6 +435,34 @@ export default function UpdatedKpiTable() {
   const location = useLocation();
   const leftScrollRef = React.useRef<HTMLDivElement>(null);
   const rightScrollRef = React.useRef<HTMLDivElement>(null);
+  // const [selectedKpi, setSelectedKpi] = useState<SelectedKpi | null>(null);
+  // const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  // type SelectedKpi = KpiType & {
+  //   details: KpiDataCell[];
+  //   selectedPeriod: string;
+  // };
+  // const handleRowClick = (kpi: KpiType) => {
+  //   if (!kpiData?.data) {
+  //     return;
+  //   }
+
+  //   const flatKpiData: KpiDataCell[] = kpiData.data.flat();
+
+  //   const matchingDetails = flatKpiData.filter(
+  //     (item) => item.kpiId === kpi.kpiId
+  //   );
+
+  //   if (matchingDetails.length > 0) {
+  //     const combinedKpi: SelectedKpi = {
+  //       ...kpi,
+  //       selectedPeriod: selectedPeriod,
+  //       details: matchingDetails,
+  //     };
+  //     setSelectedKpi(combinedKpi);
+  //     setIsSheetOpen(true);
+  //   }
+  // };
 
   useEffect(() => {
     if (!isKpiStructureLoading && kpiStructure?.data?.length) {
@@ -428,10 +481,7 @@ export default function UpdatedKpiTable() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kpiStructure, isKpiStructureLoading, searchParams]);
-  // const [searchTerm, setSearchTerm] = useState({
-  //   search: "",
-  //   currentPage: 1,
-  // });
+
   const [searchTerm, setSearchTerm] = useState<PaginationFilter>({
     search: "",
   });
@@ -457,9 +507,13 @@ export default function UpdatedKpiTable() {
   );
 
   // Drag and drop state
+  const { mutate: updateSequence } = updateKPISequenceMutation();
+
   const [isDragging, setIsDragging] = useState(false);
   const [activeItem, setActiveItem] = useState<ActiveItem>(null);
-  const { mutate: updateSequence } = updateKPISequenceMutation();
+  const [modalData, setModalData] = useState<KpiDataCell[]>();
+  const [isGraphClick, setIsGraphClick] = useState(false);
+  const [kpiD, setKpiD] = useState<KpiType>();
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -706,7 +760,6 @@ export default function UpdatedKpiTable() {
     selectedDate,
     isDataFilter: finalFilterValue,
   });
-
   const hasNoKpis = useMemo(() => {
     return !kpiStructure?.totalCount || kpiStructure.totalCount === 0;
   }, [kpiStructure]);
@@ -750,43 +803,157 @@ export default function UpdatedKpiTable() {
   //   return groups;
   // }, [filteredData]);
 
+  // const groupedKpiRows = useMemo(() => {
+  //   if (!filteredData.length || !filteredData[0].kpis) return [];
+  //   const search = String(searchTerm.search ?? "").toLowerCase();
+  //   console.log(filteredData, "filteredData");
+
+  //   const groups: {
+  //     coreParameter: { coreParameterId: string; coreParameterName: string };
+  //     kpis: { kpi: Kpi }[];
+  //   }[] = [];
+
+  //   (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
+  //     if (coreParam.kpis && Array.isArray(coreParam.kpis)) {
+  //       const filteredKpis = coreParam.kpis.filter((kpi: Kpi) => {
+  //         const coreName = coreParam.coreParameterName?.toLowerCase() || "";
+  //         const tag = kpi.tag?.toLowerCase() || "";
+  //         const name = kpi.kpiName?.toLowerCase() || "";
+
+  //         const match =
+  //           coreName.includes(search) ||
+  //           tag.includes(search) ||
+  //           name.includes(search);
+
+  //         return match;
+  //       });
+
+  //       if (filteredKpis.length > 0) {
+  //         groups.push({
+  //           coreParameter: {
+  //             coreParameterId: coreParam.coreParameterId,
+  //             coreParameterName: coreParam.coreParameterName,
+  //           },
+  //           kpis: filteredKpis.map((kpi) => ({ kpi })),
+  //         });
+  //       }
+  //     }
+  //   });
+  //   return groups;
+  // }, [filteredData, searchTerm]);
+
+  // const groupedKpiRows = useMemo(() => {
+  //   if (!filteredData.length || !filteredData[0].kpis) return [];
+  //   console.log(filteredData);
+
+  //   const search = String(searchTerm.search ?? "").toLowerCase();
+
+  //   const groups: {
+  //     coreParameter: { coreParameterId: string; coreParameterName: string };
+  //     kpis: { kpi: Kpi }[];
+  //   }[] = [];
+
+  //   const selectedList = Array.isArray(selectedEmployees)
+  //     ? selectedEmployees
+  //     : selectedEmployees
+  //       ? [selectedEmployees]
+  //       : [];
+
+  //   (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
+  //     if (coreParam.kpis && Array.isArray(coreParam.kpis)) {
+  //       const filteredKpis = coreParam.kpis.filter((kpi: Kpi) => {
+  //         const coreName = coreParam.coreParameterName?.toLowerCase() || "";
+  //         const tag = kpi.tag?.toLowerCase() || "";
+  //         const name = kpi.kpiName?.toLowerCase() || "";
+
+  //         const matchesSearch =
+  //           coreName.includes(search) ||
+  //           tag.includes(search) ||
+  //           name.includes(search);
+
+  //         // ⭐ Employee Filter (supports multi + none)
+  //         const matchesEmployee =
+  //           selectedList.length === 0 ||
+  //           selectedList.includes(String(kpi.employeeId));
+
+  //         return matchesSearch && matchesEmployee;
+  //       });
+
+  //       if (filteredKpis.length > 0) {
+  //         groups.push({
+  //           coreParameter: {
+  //             coreParameterId: coreParam.coreParameterId,
+  //             coreParameterName: coreParam.coreParameterName,
+  //           },
+  //           kpis: filteredKpis.map((kpi) => ({ kpi })),
+  //         });
+  //       }
+  //     }
+  //   });
+
+  //   return groups;
+  // }, [filteredData, searchTerm, selectedEmployees]);
+
   const groupedKpiRows = useMemo(() => {
     if (!filteredData.length || !filteredData[0].kpis) return [];
+
     const search = String(searchTerm.search ?? "").toLowerCase();
 
-    const groups: {
-      coreParameter: { coreParameterId: string; coreParameterName: string };
-      kpis: { kpi: Kpi }[];
-    }[] = [];
+    const selectedList = Array.isArray(selectedEmployees)
+      ? selectedEmployees
+      : selectedEmployees
+        ? [selectedEmployees]
+        : [];
+
+    const groupsMap = new Map<
+      string,
+      {
+        coreParameter: {
+          coreParameterId: string;
+          coreParameterName: string;
+        };
+        kpis: { kpi: Kpi }[];
+      }
+    >();
 
     (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
-      if (coreParam.kpis && Array.isArray(coreParam.kpis)) {
-        const filteredKpis = coreParam.kpis.filter((kpi: Kpi) => {
-          const coreName = coreParam.coreParameterName?.toLowerCase() || "";
-          const tag = kpi.tag?.toLowerCase() || "";
-          const name = kpi.kpiName?.toLowerCase() || "";
+      const groupId = coreParam.coreParameterId ?? "UNGROUPED";
+      const groupName = coreParam.coreParameterName ?? "";
 
-          const match =
-            coreName.includes(search) ||
-            tag.includes(search) ||
-            name.includes(search);
-
-          return match;
+      if (!groupsMap.has(groupId)) {
+        groupsMap.set(groupId, {
+          coreParameter: {
+            coreParameterId: groupId,
+            coreParameterName: groupName,
+          },
+          kpis: [],
         });
-
-        if (filteredKpis.length > 0) {
-          groups.push({
-            coreParameter: {
-              coreParameterId: coreParam.coreParameterId,
-              coreParameterName: coreParam.coreParameterName,
-            },
-            kpis: filteredKpis.map((kpi) => ({ kpi })),
-          });
-        }
       }
+
+      coreParam.kpis?.forEach((kpi: Kpi) => {
+        const coreName = groupName.toLowerCase();
+        const tag = kpi.tag?.toLowerCase() || "";
+        const name = kpi.kpiName?.toLowerCase() || "";
+
+        const matchesSearch =
+          coreName.includes(search) ||
+          tag.includes(search) ||
+          name.includes(search);
+
+        const matchesEmployee =
+          selectedList.length === 0 ||
+          selectedList.includes(String(kpi.employeeId));
+
+        if (matchesSearch && matchesEmployee) {
+          groupsMap.get(groupId)!.kpis.push({ kpi });
+        }
+      });
     });
-    return groups;
-  }, [filteredData, searchTerm]);
+
+    return Array.from(groupsMap.values()).filter(
+      (group) => group.kpis.length > 0,
+    );
+  }, [filteredData, searchTerm, selectedEmployees]);
 
   useEffect(() => {
     const syncScroll = (e: Event) => {
@@ -1044,9 +1211,6 @@ export default function UpdatedKpiTable() {
     },
   ];
 
-  //   if (isLoading) {
-  //     return <Loader />;
-  //   }
   if (isKpiStructureLoading || !kpiStructure || !kpiData || !kpiData.data) {
     return <Loader />;
   }
@@ -1064,6 +1228,32 @@ export default function UpdatedKpiTable() {
       </div>
     );
   }
+
+  const handleGraphClick = (id: string) => {
+    // If you want to extract labels and years, use:
+    const label = headers.map((item) => ({
+      label: item.label,
+      year: item.year,
+    }));
+    const matchedGroup = groupedKpiRows.find((item) =>
+      item.kpis.some((data) => data.kpi.kpiId === id),
+    );
+    const matchedKpi = matchedGroup?.kpis.find(
+      (data) => data.kpi.kpiId === id,
+    )?.kpi;
+
+    const matchDa = kpiData.data.filter((i) => i.some((d) => d.kpiId === id));
+
+    if (matchedKpi?.kpiId) {
+      setKpiD({ ...matchedKpi, labels: label });
+    }
+    setIsGraphClick(true);
+    setModalData(matchDa[0]);
+  };
+
+  const handleGraphClose = () => {
+    setIsGraphClick(false);
+  };
 
   return (
     <FormProvider {...methods}>
@@ -1129,7 +1319,7 @@ export default function UpdatedKpiTable() {
         </div>
       </div>
 
-      {groupedKpiRows && groupedKpiRows.length > 0 && (
+      {groupedKpiRows && (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -1147,12 +1337,20 @@ export default function UpdatedKpiTable() {
                 <thead className="bg-primary sticky top-0 z-20">
                   <tr>
                     <th
-                      className="w-[75px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
+                      className="w-[60px] p-1 font-medium text-sm text-white text-left h-[51px] cursor-pointer select-none"
                       // onClick={() => handleSort("employeeName")}
                     >
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center">
                         Who
-                        {/* {sortConfig.key === "employeeName" &&
+                        <MultiIconSelect
+                          value={selectedEmployees}
+                          options={uniqueEmployeeOptions}
+                          onChange={(v) => setSelectedEmployees(v)}
+                          searchable
+                          className="ml-0.5"
+                        />
+                      </div>
+                      {/* {sortConfig.key === "employeeName" &&
                       (sortConfig.direction === "asc" ? (
                         <ArrowUp className="w-4 h-4 ml-1" />
                       ) : (
@@ -1161,13 +1359,12 @@ export default function UpdatedKpiTable() {
                     {sortConfig.key !== "employeeName" && (
                       <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />
                     )} */}
-                      </div>
                     </th>
                     <th
-                      className="w-[190px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
+                      className="w-[190px] p-2 font-medium text-sm text-white text-left h-[51px] cursor-pointer select-none"
                       // onClick={() => handleSort("KPIName")}
                     >
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 text-sm">
                         KPI
                         {/* {sortConfig.key === "KPIName" &&
                       (sortConfig.direction === "asc" ? (
@@ -1181,7 +1378,7 @@ export default function UpdatedKpiTable() {
                       </div>
                     </th>
                     <th
-                      className="w-[120px] p-2 font-semibold text-white text-left h-[51px] cursor-pointer select-none"
+                      className="w-[110px] p-2 font-medium text-sm text-white text-left h-[51px] cursor-pointer select-none"
                       // onClick={() => handleSort("tag")}
                     >
                       <div className="flex items-center gap-1">
@@ -1200,6 +1397,7 @@ export default function UpdatedKpiTable() {
                     <th className="w-[100px] p-2 font-semibold text-white text-left h-[51px]">
                       Goal
                     </th>
+                    <th className="w-[30px] p-2 font-semibold text-white text-left h-[51px]"></th>
                   </tr>
                 </thead>
                 <SortableContext
@@ -1237,10 +1435,17 @@ export default function UpdatedKpiTable() {
                             showDragHandle={!!canDrag}
                             getFormattedValue={getFormattedValue}
                             selectedPeriod={selectedPeriod}
+                            // onRowClick={handleRowClick}
+                            graphClick={(id: string) => handleGraphClick(id)}
                           />
                         ))}
                       </React.Fragment>
                     ))}
+                    {/* <KpiDetailsSheet
+                      isOpen={isSheetOpen}
+                      onOpenChange={setIsSheetOpen}
+                      selectedKpi={selectedKpi}
+                    /> */}
                   </tbody>
                 </SortableContext>
               </table>
@@ -1454,86 +1659,81 @@ export default function UpdatedKpiTable() {
                                                     : "opacity-0 group-hover:opacity-100",
                                                 )}
                                               >
-                                                {canInput && !isVisualized && (
-                                                  <Tooltip>
-                                                    <TooltipTrigger asChild>
+                                                {/* {canInput && !isVisualized && ( */}
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    {inputnote &&
+                                                    inputnote.trim() !== "" &&
+                                                    inputnote !== "0" ? (
+                                                      <span
+                                                        className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
+                                                        style={{
+                                                          background:
+                                                            inputVal !== "" &&
+                                                            validationType &&
+                                                            selectedPeriod !==
+                                                              "YEARLY"
+                                                              ? isValidInput(
+                                                                  validationType,
+                                                                  inputVal,
+                                                                  value1 ??
+                                                                    null,
+                                                                  value2 ??
+                                                                    null,
+                                                                )
+                                                                ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)" // valid → greenish
+                                                                : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)" // invalid → reddish
+                                                              : "linear-gradient(to bottom left, #2e3090 50%, white 55%)",
+                                                          borderBottomLeftRadius:
+                                                            "5px",
+                                                        }}
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          setCurrentCellKey(
+                                                            key,
+                                                          );
+                                                          setCommentModalInput({
+                                                            note: inputnote,
+                                                            noteId,
+                                                          });
+                                                          setCommentModalOpen(
+                                                            true,
+                                                          );
+                                                        }}
+                                                      ></span>
+                                                    ) : (
+                                                      <span
+                                                        className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          setCurrentCellKey(
+                                                            key,
+                                                          );
+                                                          setCommentModalInput({
+                                                            note: "",
+                                                            noteId: "",
+                                                          });
+
+                                                          setCommentModalOpen(
+                                                            true,
+                                                          );
+                                                        }}
+                                                      >
+                                                        <Plus className="w-3 h-3 text-gray-700" />
+                                                      </span>
+                                                    )}
+                                                  </TooltipTrigger>{" "}
+                                                  <TooltipContent>
+                                                    <span>
                                                       {inputnote &&
                                                       inputnote.trim() !== "" &&
-                                                      inputnote !== "0" ? (
-                                                        <span
-                                                          className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
-                                                          style={{
-                                                            background:
-                                                              inputVal !== "" &&
-                                                              validationType &&
-                                                              selectedPeriod !==
-                                                                "YEARLY"
-                                                                ? isValidInput(
-                                                                    validationType,
-                                                                    inputVal,
-                                                                    value1 ??
-                                                                      null,
-                                                                    value2 ??
-                                                                      null,
-                                                                  )
-                                                                  ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)" // valid → greenish
-                                                                  : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)" // invalid → reddish
-                                                                : "linear-gradient(to bottom left, #2e3090 50%, white 55%)",
-                                                            borderBottomLeftRadius:
-                                                              "5px",
-                                                          }}
-                                                          onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setCurrentCellKey(
-                                                              key,
-                                                            );
-                                                            setCommentModalInput(
-                                                              {
-                                                                note: inputnote,
-                                                                noteId,
-                                                              },
-                                                            );
-                                                            setCommentModalOpen(
-                                                              true,
-                                                            );
-                                                          }}
-                                                        ></span>
-                                                      ) : (
-                                                        <span
-                                                          className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
-                                                          onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setCurrentCellKey(
-                                                              key,
-                                                            );
-                                                            setCommentModalInput(
-                                                              {
-                                                                note: "",
-                                                                noteId: "",
-                                                              },
-                                                            );
-
-                                                            setCommentModalOpen(
-                                                              true,
-                                                            );
-                                                          }}
-                                                        >
-                                                          <Plus className="w-3 h-3 text-gray-700" />
-                                                        </span>
-                                                      )}
-                                                    </TooltipTrigger>{" "}
-                                                    <TooltipContent>
-                                                      <span>
-                                                        {inputnote &&
-                                                        inputnote.trim() !==
-                                                          "" &&
-                                                        inputnote !== "0"
-                                                          ? "View note"
-                                                          : "Add note"}
-                                                      </span>
-                                                    </TooltipContent>
-                                                  </Tooltip>
-                                                )}
+                                                      inputnote !== "0"
+                                                        ? "View note"
+                                                        : "Add note"}
+                                                    </span>
+                                                  </TooltipContent>
+                                                </Tooltip>
+                                                {/* )} */}
                                               </div>
                                             </div>
                                           </TooltipTrigger>
@@ -1656,81 +1856,75 @@ export default function UpdatedKpiTable() {
                                                   : "opacity-0 group-hover:opacity-100", // only on hover when no note
                                               )}
                                             >
-                                              {canInput && (
-                                                <Tooltip>
-                                                  <TooltipTrigger asChild>
+                                              {/* {canInput && ( */}
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  {inputnote &&
+                                                  inputnote.trim() !== "" &&
+                                                  inputnote !== "0" ? (
+                                                    <span
+                                                      className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
+                                                      style={{
+                                                        background:
+                                                          inputVal !== "" &&
+                                                          validationType &&
+                                                          selectedPeriod !==
+                                                            "YEARLY"
+                                                            ? isValidInput(
+                                                                validationType,
+                                                                inputVal,
+                                                                value1 ?? null,
+                                                                value2 ?? null,
+                                                              )
+                                                              ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)" // valid → greenish
+                                                              : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)" // invalid → reddish
+                                                            : "linear-gradient(to bottom left, #2e3090 50%, white 55%)", // default
+                                                        borderBottomLeftRadius:
+                                                          "5px",
+                                                      }}
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setCurrentCellKey(key);
+                                                        setCommentModalInput({
+                                                          note: inputnote,
+                                                          noteId,
+                                                        });
+                                                        setCommentModalOpen(
+                                                          true,
+                                                        );
+                                                      }}
+                                                    ></span>
+                                                  ) : (
+                                                    <span
+                                                      className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setCurrentCellKey(key);
+                                                        setCommentModalInput({
+                                                          note: "",
+                                                          noteId: "",
+                                                        });
+
+                                                        setCommentModalOpen(
+                                                          true,
+                                                        );
+                                                      }}
+                                                    >
+                                                      <Plus className="w-3 h-3 text-gray-700" />
+                                                    </span>
+                                                  )}
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                  <span>
                                                     {inputnote &&
                                                     inputnote.trim() !== "" &&
-                                                    inputnote !== "0" ? (
-                                                      <span
-                                                        className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
-                                                        style={{
-                                                          background:
-                                                            inputVal !== "" &&
-                                                            validationType &&
-                                                            selectedPeriod !==
-                                                              "YEARLY"
-                                                              ? isValidInput(
-                                                                  validationType,
-                                                                  inputVal,
-                                                                  value1 ??
-                                                                    null,
-                                                                  value2 ??
-                                                                    null,
-                                                                )
-                                                                ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)" // valid → greenish
-                                                                : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)" // invalid → reddish
-                                                              : "linear-gradient(to bottom left, #2e3090 50%, white 55%)", // default
-                                                          borderBottomLeftRadius:
-                                                            "5px",
-                                                        }}
-                                                        onClick={(e) => {
-                                                          e.stopPropagation();
-                                                          setCurrentCellKey(
-                                                            key,
-                                                          );
-                                                          setCommentModalInput({
-                                                            note: inputnote,
-                                                            noteId,
-                                                          });
-                                                          setCommentModalOpen(
-                                                            true,
-                                                          );
-                                                        }}
-                                                      ></span>
-                                                    ) : (
-                                                      <span
-                                                        className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
-                                                        onClick={(e) => {
-                                                          e.stopPropagation();
-                                                          setCurrentCellKey(
-                                                            key,
-                                                          );
-                                                          setCommentModalInput({
-                                                            note: "",
-                                                            noteId: "",
-                                                          });
-
-                                                          setCommentModalOpen(
-                                                            true,
-                                                          );
-                                                        }}
-                                                      >
-                                                        <Plus className="w-3 h-3 text-gray-700" />
-                                                      </span>
-                                                    )}
-                                                  </TooltipTrigger>
-                                                  <TooltipContent>
-                                                    <span>
-                                                      {inputnote &&
-                                                      inputnote.trim() !== "" &&
-                                                      inputnote !== "0"
-                                                        ? `View note`
-                                                        : "Add note"}
-                                                    </span>
-                                                  </TooltipContent>
-                                                </Tooltip>
-                                              )}
+                                                    inputnote !== "0"
+                                                      ? `View note`
+                                                      : "Add note"}
+                                                  </span>
+                                                </TooltipContent>
+                                              </Tooltip>
+                                              {/* )} */}
                                             </div>
                                           </div>
                                         </TooltipTrigger>
@@ -1881,6 +2075,12 @@ export default function UpdatedKpiTable() {
             return updated;
           });
         }}
+      />
+      <GraphModal
+        modalData={modalData!}
+        isModalOpen={isGraphClick}
+        modalClose={handleGraphClose}
+        kpiData={kpiD!}
       />
     </FormProvider>
   );

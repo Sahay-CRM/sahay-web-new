@@ -434,227 +434,285 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
         </>
       )}
 
-      <div
-        className={cn(
-          " space-y-2 h-[calc(100vh-230px)] overflow-y-scroll ",
-          className,
-        )}
-      >
+      <div className={cn("h-[calc(100vh-230px)] overflow-y-scroll", className)}>
         {Array.isArray(meetingNotes?.data) &&
-          meetingNotes.data
-            .filter((note: MeetingNotesRes) =>
-              FilterBy ? note.noteTag !== null : note.noteTag === null,
-            )
-            .map((note: MeetingNotesRes, idx: number) => {
-              // const author = joiners.find(
-              //   (j) => j.employeeId === note.employeeId,
-              // );
+          (() => {
+            // Filter and sort notes
+            const filteredNotes = [...meetingNotes.data]
+              .filter((note: MeetingNotesRes) =>
+                FilterBy ? note.noteTag !== null : note.noteTag === null,
+              )
+              .sort((a, b) => {
+                if (meetingStatus === "ENDED") {
+                  // DESC — newest first
+                  return (
+                    new Date(a.createdAt).getTime() -
+                    new Date(b.createdAt).getTime()
+                  );
+                }
+                return 0; // keep original order for all other statuses
+              });
 
-              return (
-                <div
-                  key={note.meetingNoteId || idx}
-                  className="bg-white border rounded-lg px-1.5 py-2.5 shadow-sm space-y-2"
-                >
-                  {/* TOP ROW */}
-                  <div className="flex h-3.5 justify-between items-start">
-                    {/* LEFT: EMPLOYEE NAME */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] text-gray-600 mt-0.5">
-                        {note.employeeName || "Unknown"}
-                      </span>
-                    </div>
+            // Group notes by date (without time)
+            const groupedByDate = filteredNotes.reduce(
+              (
+                groups: { [key: string]: MeetingNotesRes[] },
+                note: MeetingNotesRes,
+              ) => {
+                const dateKey = formatUTCDateToLocal(note.createdAt);
+                if (!groups[dateKey]) {
+                  groups[dateKey] = [];
+                }
+                groups[dateKey].push(note);
+                return groups;
+              },
+              {},
+            );
 
-                    {/* RIGHT: DATE + MENU */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[11px] text-gray-400">
-                        {formatUTCDateToLocal(note.createdAt)}{" "}
-                        {note?.createdAt
-                          ? new Date(note.createdAt).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : ""}
-                      </span>
+            // Get sorted date keys
+            const dateKeys = Object.keys(groupedByDate).sort((a, b) => {
+              // Sort dates in descending order (newest first)
+              const dateA = new Date(groupedByDate[a][0].createdAt).getTime();
+              const dateB = new Date(groupedByDate[b][0].createdAt).getTime();
+              return dateB - dateA;
+            });
 
-                      {/* MENU */}
-                      <DropdownMenu
-                        open={dropdownOpen === note.meetingNoteId}
-                        onOpenChange={(open) =>
-                          setDropdownOpen(open ? note.meetingNoteId : null)
-                        }
+            return dateKeys.map((dateKey, groupIdx) => (
+              <div key={dateKey} className="mb-6">
+                {/* Date Header */}
+                <div className="sticky top-0 bg-gray-50 border-b-2 border-primary/20 px-3 py-2 mb-3 rounded-t-lg z-10">
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    {dateKey}
+                  </h3>
+                </div>
+
+                {/* Notes for this date */}
+                <div className="space-y-2 px-1">
+                  {groupedByDate[dateKey].map(
+                    (note: MeetingNotesRes, idx: number) => (
+                      <div
+                        key={note.meetingNoteId || idx}
+                        className="bg-white border rounded-lg px-1.5 py-2.5 shadow-sm space-y-2"
                       >
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            className="text-gray-500 p-1 hover:bg-gray-100 rounded-md"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              toggleDropdown(note.meetingNoteId);
-                            }}
-                          >
-                            <EllipsisVertical className="h-4 w-4" />
-                          </button>
-                        </DropdownMenuTrigger>
+                        {/* TOP ROW */}
+                        <div className="flex h-3.5 justify-between items-start">
+                          {/* LEFT: EMPLOYEE NAME */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-gray-600 mt-0.5">
+                              {note.employeeName || "Unknown"}
+                            </span>
+                          </div>
 
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem
-                            onClick={() => handleEditNote(note)}
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Update Notes
-                          </DropdownMenuItem>
+                          {/* RIGHT: TIME + MENU (removed date since it's in the header) */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-[11px] text-gray-400">
+                              {note?.createdAt
+                                ? new Date(note.createdAt).toLocaleTimeString(
+                                    [],
+                                    {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    },
+                                  )
+                                : ""}
+                            </span>
 
-                          {FilterBy === "noteTag" && (
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteTag(note)}
+                            {/* MENU */}
+                            <DropdownMenu
+                              open={dropdownOpen === note.meetingNoteId}
+                              onOpenChange={(open) =>
+                                setDropdownOpen(
+                                  open ? note.meetingNoteId : null,
+                                )
+                              }
                             >
-                              <Edit className="h-4 w-4 mr-2" />
-                              Delete Tag
-                            </DropdownMenuItem>
-                          )}
+                              <DropdownMenuTrigger asChild>
+                                <button
+                                  className="text-gray-500 p-1 hover:bg-gray-100 rounded-md"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    toggleDropdown(note.meetingNoteId);
+                                  }}
+                                >
+                                  <EllipsisVertical className="h-4 w-4" />
+                                </button>
+                              </DropdownMenuTrigger>
 
-                          {!note.noteType && (
+                              <DropdownMenuContent align="end" className="w-44">
+                                <DropdownMenuItem
+                                  onClick={() => handleEditNote(note)}
+                                >
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Update Notes
+                                </DropdownMenuItem>
+
+                                {FilterBy === "noteTag" && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeleteTag(note)}
+                                  >
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Delete Tag
+                                  </DropdownMenuItem>
+                                )}
+
+                                {!note.noteType && (
+                                  <>
+                                    <DropdownMenuItem
+                                      onClick={() => handleAddTask(note)}
+                                    >
+                                      <Plus className="h-4 w-4 mr-2" />
+                                      Add to Task
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem
+                                      onClick={() => handleAddProject(note)}
+                                    >
+                                      <Plus className="h-4 w-4 mr-2" />
+                                      Add to Project
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleMarkNotes(note, "updates")
+                                      }
+                                    >
+                                      <Share2 className="h-4 w-4 mr-2" />
+                                      Mark as Updates
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleMarkNotes(note, "appreciation")
+                                      }
+                                    >
+                                      <Share2 className="h-4 w-4 mr-2" />
+                                      Mark as Appreciation
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleMarkNotes(note, "", "KPIs")
+                                      }
+                                    >
+                                      <Tag className="h-4 w-4 mr-2" />
+                                      KPIs
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleMarkNotes(note, "", "Project")
+                                      }
+                                    >
+                                      <Tag className="h-4 w-4 mr-2" />
+                                      Project
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleMarkNotes(note, "", "Task")
+                                      }
+                                    >
+                                      <Tag className="h-4 w-4 mr-2" />
+                                      Task
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+
+                        {/* NOTE TEXT */}
+                        <div>
+                          {editingNoteId === note.meetingNoteId ? (
+                            <div className="flex-1">
+                              <textarea
+                                className="w-full border rounded-md px-2 py-1 text-black text-sm resize-none focus:ring-1 focus:ring-primary/40"
+                                value={editingNoteText}
+                                onChange={(e) =>
+                                  setEditingNoteText(e.target.value)
+                                }
+                                rows={expandedNotes[note.meetingNoteId] ? 5 : 2}
+                                autoFocus
+                              />
+                              <div className="flex gap-2 mt-2">
+                                <button
+                                  onClick={() =>
+                                    handleSubmitUpdate(note.meetingNoteId)
+                                  }
+                                  className=" flex items-center  gap-1 text-xs bg-primary text-white px-2 py-1 rounded-md"
+                                >
+                                  <Check className="h-3 w-3" />
+                                  Save
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="flex items-center  gap-1  text-xs bg-gray-500 text-white px-2 py-1 rounded-md"
+                                >
+                                  <X className="h-3 w-3" />
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
                             <>
-                              <DropdownMenuItem
-                                onClick={() => handleAddTask(note)}
+                              <p
+                                ref={(el) => {
+                                  textRefs.current[note.meetingNoteId] = el;
+                                }}
+                                className={cn(
+                                  "text-[12px] text-gray-800 leading-normal whitespace-pre-line",
+                                  !expandedNotes[note.meetingNoteId] &&
+                                    "line-clamp-2",
+                                )}
                               >
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add to Task
-                              </DropdownMenuItem>
+                                {note.note}
+                              </p>
 
-                              <DropdownMenuItem
-                                onClick={() => handleAddProject(note)}
-                              >
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add to Project
-                              </DropdownMenuItem>
-
-                              <DropdownMenuItem
-                                onClick={() => handleMarkNotes(note, "updates")}
-                              >
-                                <Share2 className="h-4 w-4 mr-2" />
-                                Mark as Updates
-                              </DropdownMenuItem>
-
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleMarkNotes(note, "appreciation")
-                                }
-                              >
-                                <Share2 className="h-4 w-4 mr-2" />
-                                Mark as Appreciation
-                              </DropdownMenuItem>
-
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleMarkNotes(note, "", "KPIs")
-                                }
-                              >
-                                <Tag className="h-4 w-4 mr-2" />
-                                KPIs
-                              </DropdownMenuItem>
-
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleMarkNotes(note, "", "Project")
-                                }
-                              >
-                                <Tag className="h-4 w-4 mr-2" />
-                                Project
-                              </DropdownMenuItem>
-
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleMarkNotes(note, "", "Task")
-                                }
-                              >
-                                <Tag className="h-4 w-4 mr-2" />
-                                Task
-                              </DropdownMenuItem>
+                              {showToggle[note.meetingNoteId] && (
+                                <button
+                                  className="text-primary text-[12px] mt-1"
+                                  onClick={() =>
+                                    toggleExpand(note.meetingNoteId)
+                                  }
+                                >
+                                  {expandedNotes[note.meetingNoteId]
+                                    ? "See less"
+                                    : "See more"}
+                                </button>
+                              )}
                             </>
                           )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-
-                  {/* NOTE TEXT */}
-                  <div>
-                    {editingNoteId === note.meetingNoteId ? (
-                      <div className="flex-1">
-                        <textarea
-                          className="w-full border rounded-md px-2 py-1 text-black text-sm resize-none focus:ring-1 focus:ring-primary/40"
-                          value={editingNoteText}
-                          onChange={(e) => setEditingNoteText(e.target.value)}
-                          rows={expandedNotes[note.meetingNoteId] ? 5 : 2}
-                          autoFocus
-                        />
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            onClick={() =>
-                              handleSubmitUpdate(note.meetingNoteId)
-                            }
-                            className=" flex items-center  gap-1 text-xs bg-primary text-white px-2 py-1 rounded-md"
-                          >
-                            <Check className="h-3 w-3" />
-                            Save
-                          </button>
-                          <button
-                            onClick={handleCancelEdit}
-                            className="flex items-center  gap-1  text-xs bg-gray-500 text-white px-2 py-1 rounded-md"
-                          >
-                            <X className="h-3 w-3" />
-                            Cancel
-                          </button>
                         </div>
-                      </div>
-                    ) : (
-                      <>
-                        <p
-                          ref={(el) => {
-                            textRefs.current[note.meetingNoteId] = el;
-                          }}
-                          className={cn(
-                            "text-[12px] text-gray-800 leading-normal whitespace-pre-line",
-                            !expandedNotes[note.meetingNoteId] &&
-                              "line-clamp-2",
-                          )}
-                        >
-                          {note.note}
-                        </p>
 
-                        {showToggle[note.meetingNoteId] && (
-                          <button
-                            className="text-primary text-[12px] mt-1"
-                            onClick={() => toggleExpand(note.meetingNoteId)}
-                          >
-                            {expandedNotes[note.meetingNoteId]
-                              ? "See less"
-                              : "See more"}
-                          </button>
+                        {/* FOOTER TAGS */}
+                        {(note.noteTag || note.noteType) && (
+                          <div className="pt-1 border-t flex items-center gap-2 flex-wrap">
+                            {note.noteTag && (
+                              <span className="px-2 py-0.5 text-[10px] rounded-full bg-primary/10 text-primary border border-primary/30">
+                                {note.noteTag}
+                              </span>
+                            )}
+
+                            {note.noteType && (
+                              <span className="px-2 py-0.5 text-[10px] bg-gray-200 rounded-full text-gray-700">
+                                {note.noteType}
+                              </span>
+                            )}
+                          </div>
                         )}
-                      </>
-                    )}
-                  </div>
-
-                  {/* FOOTER TAGS */}
-                  {(note.noteTag || note.noteType) && (
-                    <div className="pt-1 border-t flex items-center gap-2 flex-wrap">
-                      {note.noteTag && (
-                        <span className="px-2 py-0.5 text-[10px] rounded-full bg-primary/10 text-primary border border-primary/30">
-                          {note.noteTag}
-                        </span>
-                      )}
-
-                      {note.noteType && (
-                        <span className="px-2 py-0.5 text-[10px] bg-gray-200 rounded-full text-gray-700">
-                          {note.noteType}
-                        </span>
-                      )}
-                    </div>
+                      </div>
+                    ),
                   )}
                 </div>
-              );
-            })}
+
+                {/* Date Group Separator - visible border between different date groups */}
+                {groupIdx < dateKeys.length - 1 && (
+                  <div className="mt-4 border-b-2 border-dashed border-gray-300"></div>
+                )}
+              </div>
+            ));
+          })()}
       </div>
 
       {drawerOpen && (

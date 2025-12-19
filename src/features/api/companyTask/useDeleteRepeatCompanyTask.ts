@@ -9,27 +9,18 @@ import { AxiosError } from "axios";
 
 type DatePaging = BaseResponse<CompanyProjectDataProps>;
 
+interface DeleteRepeatTask {
+  repetitiveTaskId: string;
+  additionalKey?: string;
+}
+
 export default function useDeleteRepeatCompanyTask() {
   const deleteRepeatCompanyTaskMutation = useMutation({
     mutationKey: ["delete-company-Repeattask"],
-    mutationFn: async ({
-      repetitiveTaskId,
-      groupDelete,
-    }: {
-      repetitiveTaskId: string;
-      groupDelete?: boolean;
-    }) => {
-      if (!repetitiveTaskId) {
-        throw new Error("Something Went Wrong");
-      }
-
-      let url = Urls.deleteRepeatCompanyTask(repetitiveTaskId);
-      if (groupDelete) {
-        url += `?groupDelete=true`;
-      }
-
-      const { data: resData } = await Api.delete<DatePaging>({
-        url: url,
+    mutationFn: async (data: DeleteRepeatTask) => {
+      const { data: resData } = await Api.post<DatePaging>({
+        url: Urls.deleteRepeatCompanyTask(data.repetitiveTaskId),
+        data,
       });
 
       return resData;

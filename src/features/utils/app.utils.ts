@@ -255,7 +255,7 @@ export function updateDateTime(
 
   // Try to parse ISO or native JS format first
   const isoDate = new Date(dateTimeStr);
-  // console.log(!isNaN(isoDate.getTime()), isoDate);
+
   if (!isNaN(isoDate.getTime())) {
     dateObj = isoDate;
   } else {

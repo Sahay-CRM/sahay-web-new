@@ -230,7 +230,7 @@ export default function CustomModalFile({
         return null;
     }
   };
-  // console.log(customObj, "before save ");
+
   const isSaveDisabled = () => {
     if (!baseFrequency) return true;
 

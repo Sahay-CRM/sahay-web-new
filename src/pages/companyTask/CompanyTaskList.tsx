@@ -41,6 +41,7 @@ export default function CompanyTaskList() {
     handleFilterChange,
     handleDateRangeChange,
     handleDateRangeApply,
+    handleDateRangeSaveApply,
     showOverdue,
     handleOverdueToggle,
     handleRowsModalOpen,
@@ -132,6 +133,7 @@ export default function CompanyTaskList() {
                   }}
                   onChange={handleDateRangeChange}
                   onApply={handleDateRangeApply}
+                  onSaveApply={handleDateRangeSaveApply}
                   defaultDate={{
                     startDate: appliedDateRange.taskStartDate,
                     deadline: appliedDateRange.taskDeadline,

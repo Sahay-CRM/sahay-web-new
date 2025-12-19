@@ -1060,6 +1060,7 @@ interface Kpi {
   assignees: Assignee[];
   isVisualized: boolean;
   employeeName: string;
+  employeeId?: string;
   value1: string;
   value2?: string | null;
   photo?: string | null;
@@ -1130,6 +1131,26 @@ interface KpiDataCell {
   isHoliday?: boolean;
   matchCount?: number;
   validationPercentage?: number;
+  goalValue: string | number;
+}
+
+interface KpiType {
+  kpiId: string;
+  kpiName: string;
+  kpiLabel?: string;
+  employeeName?: string;
+  tag?: string;
+  validationType: string;
+  goalValue?: number;
+  value1: string | number | null;
+  value2?: string | number | null;
+  unit?: string | null;
+  labels?: KpiLabels[];
+}
+
+interface KpiLabels {
+  label: string;
+  year: string;
 }
 
 interface UserLogDetails {

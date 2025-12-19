@@ -47,6 +47,7 @@ export default function MeetingList() {
     handleStatusChange,
     handleDateRangeChange,
     handleDateRangeApply,
+    handleDateRangeSaveApply,
     showOverdue,
     handleOverdueToggle,
     taskDateRange,
@@ -132,6 +133,11 @@ export default function MeetingList() {
                   }}
                   onChange={handleDateRangeChange}
                   onApply={handleDateRangeApply}
+                  onSaveApply={handleDateRangeSaveApply}
+                  defaultDate={{
+                    startDate: taskDateRange.taskStartDate,
+                    deadline: taskDateRange.taskDeadline,
+                  }}
                 />
               )}
             </div>

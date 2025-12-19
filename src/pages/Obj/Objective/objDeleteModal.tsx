@@ -36,7 +36,7 @@ export default function ObjDeleteModal({
         },
         {
           btnText: "Force Delete",
-          buttonCss: "py-1.5 px-5",
+          buttonCss: "py-1.5 px-5 bg-red-600 text-white",
           btnClick: onForceSubmit,
         },
       ]}

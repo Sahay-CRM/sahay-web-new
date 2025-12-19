@@ -469,35 +469,6 @@ export default function MeetingDesc() {
             <div>
               <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
                 <h3 className="p-0 text-base pl-4">Meeting Notes</h3>
-                {/* <div>
-                  <FormSelect
-                    placeholder="Group Filter"
-                    options={[
-                      { label: "All", value: "null" },
-                      { label: "By Group", value: "true" },
-                      { label: "None of Group", value: "false" },
-                    ]}
-                    value={
-                      selectedGroupFilter === null
-                        ? "null"
-                        : selectedGroupFilter
-                          ? "true"
-                          : "false"
-                    }
-                    onChange={(selected) => {
-                      const value = selected as string;
-                      setSelectedGroupFilter(
-                        value === "true"
-                          ? true
-                          : value === "false"
-                            ? false
-                            : null,
-                      );
-                    }}
-                    className="h-10"
-                    triggerClassName="py-0"
-                  />
-                </div> */}
                 <div>
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
