@@ -103,7 +103,7 @@ function DesignationAddFormModal({
           <div className="space-y-2 mt-2">
             <div className="flex flex-col items-start space-y-2">
               <Label className="text-md" htmlFor="designationSwitch">
-                Is Parent Designation
+                Has Parent Designation?
               </Label>
               <Controller
                 name="isParentDesignation"

@@ -60,8 +60,11 @@ export default function useCompany() {
   });
 
   const { mutate: deleteHoli } = deleteHolidayMutation();
-  const handleAdd = () => {
+
+  const handleAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
     setIsModalOpen(true);
+    setModalData(null);
   };
 
   const handleClose = () => {

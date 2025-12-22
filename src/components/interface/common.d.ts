@@ -698,6 +698,7 @@ interface TaskGetPaging {
   repetitiveTaskId?: string;
   employeeName?: string;
   isActive?: boolean;
+  projectName?: string;
 }
 
 interface RepeatTaskAllRes {
@@ -714,6 +715,8 @@ interface RepeatTaskAllRes {
   taskTypeId?: string;
   TaskEmployeeJunction?: Employee[];
   employeeIds?: string[];
+  projectName?: string;
+  projectId?: string;
 }
 
 interface TaskProject {

@@ -62,6 +62,7 @@ export default function CompanyProfile() {
     handleClose,
     handleDelete,
     // formatOptions,
+    handleAdd,
   } = useCompany();
 
   if (!companyData) {
@@ -742,9 +743,19 @@ export default function CompanyProfile() {
               </div>
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8 md:col-span-2">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                Company Holidays
-              </h2>
+              <div className="flex gap-4 justify-between mb-4 pb-2 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Company Holidays
+                </h2>
+
+                <div>
+                  {isEditing && (
+                    <Button className="py-2 px-4" onClick={handleAdd}>
+                      Add Holiday
+                    </Button>
+                  )}
+                </div>
+              </div>
               <div className="space-y-4">
                 <div className="flex gap-4">
                   <div className="w-full">

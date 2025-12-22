@@ -47,7 +47,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
         )}
       </div>
       <div className="text-xs font-medium mt-1.5 text-black">
-        {total} of {completed} Items Completed
+        {completed} of {total} {total === 1 ? "item" : "items"} completed
       </div>
     </div>
   );

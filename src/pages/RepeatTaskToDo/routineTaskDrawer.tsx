@@ -183,17 +183,17 @@ export default function RoutineTaskDrawer({
               control={control}
               name="taskDeadline"
               render={({ field }) => {
-                const localDate = field.value
-                  ? new Date(
-                      new Date(field.value).getTime() +
-                        new Date().getTimezoneOffset() * 60000,
-                    )
-                  : null;
+                // const localDate = field.value
+                //   ? new Date(
+                //       new Date(field.value).getTime() +
+                //         new Date().getTimezoneOffset() * 60000,
+                //     )
+                //   : null;
 
                 return (
                   <FormDateTimePicker
                     label="Task Deadline"
-                    value={localDate}
+                    value={field.value!}
                     labelClass="mb-2"
                     onChange={(date) => {
                       const utcDate = date
