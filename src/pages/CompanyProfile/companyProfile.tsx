@@ -4,7 +4,6 @@ import {
   X,
   Upload,
   Building,
-  FileText,
   Calendar,
   Edit,
   Trash2,
@@ -18,7 +17,9 @@ import {
   formatIndianNumber,
   formatUTCDateToLocal,
 } from "@/features/utils/app.utils";
-import FormImage from "@/components/shared/Form/FormImage/FormImage";
+import FormFile, {
+  FilePreview,
+} from "@/components/shared/Form/FormFile/FormFile";
 import PageNotAccess from "../PageNoAccess";
 import ImageCropModal from "@/components/shared/Modal/ImageCropModal";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
@@ -554,26 +555,20 @@ export default function CompanyProfile() {
                       PAN Card
                     </label>
                     {isEditing ? (
-                      <FormImage
+                      <FormFile
                         label=""
                         value={watch("pan") ?? ""}
                         onChange={(val) => setValue("pan", val)}
                         error={errors.pan}
+                        acceptedFormats="*"
                       />
                     ) : (
                       <div className="h-full bg-gray-50 rounded-lg border border-gray-200 p-1 flex items-center justify-center">
-                        {watch("pan") ? (
-                          <img
-                            src={watch("pan")}
-                            alt="PAN Card"
-                            className="w-[400px] h-[300px] object-contain rounded-lg"
-                          />
-                        ) : (
-                          <div className="text-center text-gray-500">
-                            <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                            <p>No PAN card uploaded</p>
-                          </div>
-                        )}
+                        <FilePreview
+                          value={watch("pan") ?? ""}
+                          className="w-[400px] h-[300px]"
+                          placeholder="No PAN card uploaded"
+                        />
                       </div>
                     )}
                   </div>
@@ -602,26 +597,20 @@ export default function CompanyProfile() {
                       GST Certificate
                     </label>
                     {isEditing ? (
-                      <FormImage
+                      <FormFile
                         label=""
                         value={watch("gstCertificate") ?? ""}
                         onChange={(val) => setValue("gstCertificate", val)}
                         error={errors.gstCertificate}
+                        acceptedFormats="*"
                       />
                     ) : (
                       <div className="h-full bg-gray-50 rounded-lg border p-1 border-gray-200 flex items-center justify-center">
-                        {watch("gstCertificate") ? (
-                          <img
-                            src={watch("gstCertificate")}
-                            alt="GST Certificate"
-                            className="w-[400px] h-[300px] object-contain rounded-lg"
-                          />
-                        ) : (
-                          <div className="text-center text-gray-500">
-                            <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                            <p>No GST certificate uploaded</p>
-                          </div>
-                        )}
+                        <FilePreview
+                          value={watch("gstCertificate") ?? ""}
+                          className="w-[400px] h-[300px]"
+                          placeholder="No GST certificate uploaded"
+                        />
                       </div>
                     )}
                   </div>

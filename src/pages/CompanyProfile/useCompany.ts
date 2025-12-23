@@ -12,12 +12,13 @@ import {
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useForm } from "react-hook-form";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
-import { imageUploadMutation } from "@/features/api/file";
+import { docUploadMutation } from "@/features/api/file";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import {
   deleteHolidayMutation,
   getholidayDropdown,
 } from "@/features/api/Holiday";
+import { queryClient } from "@/queryClient";
 
 export default function useCompany() {
   const permission = useSelector(getUserPermission).COMPANY_PROFILE;
@@ -34,7 +35,7 @@ export default function useCompany() {
   }, [setBreadcrumbs]);
 
   const { mutate: addCompany } = addCompanyMutation();
-  const { mutate: uploadImage } = imageUploadMutation();
+  const { mutate: docUpload } = docUploadMutation();
   const { data: companyData } = useGetCompanyId();
   const { data: industryList } = useGetIndustryDropdown({
     filter: {
@@ -260,51 +261,118 @@ export default function useCompany() {
             ? (res[0] as AdminUserRes).adminUserId
             : data.companyId;
 
-        const uploadIfPresent = (
-          file: File | string | null | undefined,
-          fileType: string,
-        ) => {
-          if (
-            file &&
-            ((typeof file === "string" && file.startsWith("data:")) ||
-              (typeof File !== "undefined" && file instanceof File))
-          ) {
-            const formData = new FormData();
-            formData.append("refId", adminUserId || "");
-            formData.append("fileType", fileType);
-            formData.append("isMaster", "1");
-            formData.append("isUpdate", "1");
-            if (typeof file === "string" && file.startsWith("data:")) {
-              const arr = file.split(",");
-              const mime = arr[0].match(/:(.*?);/)?.[1] || "image/png";
-              const bstr = atob(arr[1]);
-              let n = bstr.length;
-              const u8arr = new Uint8Array(n);
-              while (n--) {
-                u8arr[n] = bstr.charCodeAt(n);
-              }
-              formData.append(
-                "file",
-                new Blob([u8arr], { type: mime }),
-                "file.png",
-              );
-            } else {
-              formData.append("file", file as File);
-            }
-            uploadImage(formData, {
-              onSuccess: () => {
-                window.location.reload();
-              },
-            });
-          }
-        };
+        // const uploadIfPresent = (
+        //   file: File | string | null | undefined,
+        //   fileType: string
+        // ) => {
+        //   if (
+        //     file &&
+        //     ((typeof file === "string" && file.startsWith("data:")) ||
+        //       (typeof File !== "undefined" && file instanceof File))
+        //   ) {
+        //     const formData = new FormData();
+        //     formData.append("refId", adminUserId || "");
+        //     formData.append("fileType", fileType);
+        //     formData.append("isMaster", "1");
+        //     formData.append("isUpdate", "1");
+        //     if (typeof file === "string" && file.startsWith("data:")) {
+        //       const arr = file.split(",");
+        //       const mime = arr[0].match(/:(.*?);/)?.[1] || "image/png";
+        //       const bstr = atob(arr[1]);
+        //       let n = bstr.length;
+        //       const u8arr = new Uint8Array(n);
+        //       while (n--) {
+        //         u8arr[n] = bstr.charCodeAt(n);
+        //       }
+        //       formData.append(
+        //         "file",
+        //         new Blob([u8arr], { type: mime }),
+        //         "file.png"
+        //       );
+        //     } else {
+        //       formData.append("file", file as File);
+        //     }
+        //     // return
+        //     uploadImage(formData, {
+        //       onSuccess: () => {
+        //         // window.location.reload();
+        //       },
+        //     });
+        //   }
+        // };
 
-        uploadIfPresent(data.logo, "2000");
-        uploadIfPresent(data.pan, "2020");
-        uploadIfPresent(data.gstCertificate, "2030");
+        const filesToUpload: Array<{
+          file: File | string | null | undefined;
+          fileType: string;
+        }> = [];
+
+        // Add logo if present
+        if (data.logo) {
+          filesToUpload.push({ file: data.logo, fileType: "2000" });
+        }
+
+        // Add pancard if present
+        if (data.pancard) {
+          filesToUpload.push({ file: data.pancard, fileType: "2020" });
+        }
+
+        // Add GST certificate if present - NOTE THE CORRECT FIELD NAME
+        if (data.gstCertificate) {
+          filesToUpload.push({ file: data.gstCertificate, fileType: "2030" });
+        }
+
+        // Upload all files
+        filesToUpload.forEach(({ file, fileType }) => {
+          if (file) {
+            handleFileOperations(adminUserId!, [file], fileType);
+          }
+        });
+        console.log(filesToUpload);
+
+        if (filesToUpload) {
+          filesToUpload.map((item) => {
+            handleFileOperations(adminUserId!, [item.file!], item.fileType);
+          });
+        }
+
+        // uploadIfPresent(data.logo, "2000");
+        // uploadIfPresent(data.pan, "2020");
+        // uploadIfPresent(data.gstCertificate, "2030");
       },
     });
     setIsEditing(false);
+  };
+
+  const handleFileOperations = async (
+    refId: string,
+    currentFiles: (File | string | { fileId: string; fileName: string })[],
+    fileType: string,
+  ) => {
+    const uploadMeetingFile = (file: File | string, fileType: string) => {
+      const formData = new FormData();
+      formData.append("refId", refId);
+      formData.append("isMaster", "0");
+      formData.append("fileType", fileType);
+      formData.append("files", file);
+
+      docUpload(formData, {
+        onSuccess: () => {
+          queryClient.resetQueries({
+            queryKey: ["get-meeting-list-by-id", refId],
+          });
+          queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
+          queryClient.resetQueries({ queryKey: ["get-meeting-dropdown"] });
+        },
+      });
+    };
+
+    const newFilesToUpload = currentFiles.filter(
+      (file) => file instanceof File || typeof file === "string",
+    ) as (File | string)[];
+
+    newFilesToUpload.forEach((file) => {
+      uploadMeetingFile(file, fileType); // ✅ correct
+    });
   };
 
   // Handle cancel edit
