@@ -1575,7 +1575,7 @@ interface SimpleCompanyDetails {
   companyName: string;
   logo?: string;
   pancard?: string | null;
-  gstCertificate?: string;
+  gstCertificate?: File | string;
   annualTurnOver: number;
   businessStartDate?: string;
   companyAddress?: string;
@@ -1610,6 +1610,12 @@ interface SimpleCompanyDetails {
   unit?: string;
   validationKey?: string;
   date?: number;
+  imageGst?: imageGst;
+}
+
+interface imageGst {
+  fileId?: string;
+  fileName?: string;
 }
 
 interface IndustryOption {

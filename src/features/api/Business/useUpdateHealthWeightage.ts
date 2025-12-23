@@ -31,6 +31,9 @@ export default function useUpdateHealthWeightage() {
       queryClient.resetQueries({
         queryKey: ["get-Sub-ParaByCore"],
       });
+      queryClient.resetQueries({
+        queryKey: ["get-healthScore-list"],
+      });
       navigate("/dashboard/business/health-weightage");
     },
     onError: (error: AxiosError<{ message?: string }>) => {

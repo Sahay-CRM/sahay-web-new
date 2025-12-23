@@ -21,6 +21,20 @@ import {
 import { queryClient } from "@/queryClient";
 
 export default function useCompany() {
+  const dataUrlToFile = (dataUrl: string, fileName: string): File => {
+    const arr = dataUrl.split(",");
+    const mime = arr[0].match(/:(.*?);/)?.[1] || "application/octet-stream";
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+
+    return new File([u8arr], fileName, { type: mime });
+  };
+
   const permission = useSelector(getUserPermission).COMPANY_PROFILE;
 
   const [isIndSearch, setIsIndSearch] = useState("");
@@ -49,7 +63,7 @@ export default function useCompany() {
     },
     enable: isCountrySearch.length >= 3,
   });
-
+  const [gstFileToRemove, setGstFileToRemove] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isLogoCropOpen, setIsLogoCropOpen] = useState(false);
@@ -142,6 +156,12 @@ export default function useCompany() {
     }
   }, [companyData, reset]);
 
+  useEffect(() => {
+    if (companyData?.imageGst?.fileId) {
+      setGstFileToRemove(companyData.imageGst.fileId);
+    }
+  }, [companyData]);
+
   const watchedCountryId = watch("countryId");
   const watchedStateId = watch("stateId");
 
@@ -188,11 +208,6 @@ export default function useCompany() {
     { label: "Fri", value: "5" },
     { label: "Sat", value: "6" },
   ];
-
-  // const formatOptions = [
-  //   { value: "compact", label: "International (1K, 1M)" },
-  //   { value: "indian", label: "Indian System (1L, 1Cr)" },
-  // ];
 
   // Handle logo upload
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -261,46 +276,6 @@ export default function useCompany() {
             ? (res[0] as AdminUserRes).adminUserId
             : data.companyId;
 
-        // const uploadIfPresent = (
-        //   file: File | string | null | undefined,
-        //   fileType: string
-        // ) => {
-        //   if (
-        //     file &&
-        //     ((typeof file === "string" && file.startsWith("data:")) ||
-        //       (typeof File !== "undefined" && file instanceof File))
-        //   ) {
-        //     const formData = new FormData();
-        //     formData.append("refId", adminUserId || "");
-        //     formData.append("fileType", fileType);
-        //     formData.append("isMaster", "1");
-        //     formData.append("isUpdate", "1");
-        //     if (typeof file === "string" && file.startsWith("data:")) {
-        //       const arr = file.split(",");
-        //       const mime = arr[0].match(/:(.*?);/)?.[1] || "image/png";
-        //       const bstr = atob(arr[1]);
-        //       let n = bstr.length;
-        //       const u8arr = new Uint8Array(n);
-        //       while (n--) {
-        //         u8arr[n] = bstr.charCodeAt(n);
-        //       }
-        //       formData.append(
-        //         "file",
-        //         new Blob([u8arr], { type: mime }),
-        //         "file.png"
-        //       );
-        //     } else {
-        //       formData.append("file", file as File);
-        //     }
-        //     // return
-        //     uploadImage(formData, {
-        //       onSuccess: () => {
-        //         // window.location.reload();
-        //       },
-        //     });
-        //   }
-        // };
-
         const filesToUpload: Array<{
           file: File | string | null | undefined;
           fileType: string;
@@ -317,8 +292,16 @@ export default function useCompany() {
         }
 
         // Add GST certificate if present - NOTE THE CORRECT FIELD NAME
-        if (data.gstCertificate) {
+        if (data.gstCertificate instanceof File) {
           filesToUpload.push({ file: data.gstCertificate, fileType: "2030" });
+        } else if (
+          typeof data.gstCertificate === "string" &&
+          data.gstCertificate.startsWith("data:")
+        ) {
+          filesToUpload.push({
+            file: dataUrlToFile(data.gstCertificate, "gst.pdf"),
+            fileType: "2030",
+          });
         }
 
         // Upload all files
@@ -327,17 +310,6 @@ export default function useCompany() {
             handleFileOperations(adminUserId!, [file], fileType);
           }
         });
-        console.log(filesToUpload);
-
-        if (filesToUpload) {
-          filesToUpload.map((item) => {
-            handleFileOperations(adminUserId!, [item.file!], item.fileType);
-          });
-        }
-
-        // uploadIfPresent(data.logo, "2000");
-        // uploadIfPresent(data.pan, "2020");
-        // uploadIfPresent(data.gstCertificate, "2030");
       },
     });
     setIsEditing(false);
@@ -354,6 +326,9 @@ export default function useCompany() {
       formData.append("isMaster", "0");
       formData.append("fileType", fileType);
       formData.append("files", file);
+      if (gstFileToRemove) {
+        formData.append("removedFiles", gstFileToRemove);
+      }
 
       docUpload(formData, {
         onSuccess: () => {

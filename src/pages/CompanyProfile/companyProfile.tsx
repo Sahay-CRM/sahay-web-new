@@ -603,6 +603,18 @@ export default function CompanyProfile() {
                         onChange={(val) => setValue("gstCertificate", val)}
                         error={errors.gstCertificate}
                         acceptedFormats="*"
+                        // onChange={(val) => {
+                        //   const oldVal = watch("gstCertificate");
+
+                        //   if (
+                        //     typeof oldVal === "string" &&
+                        //     oldVal.startsWith("http")
+                        //   ) {
+                        //     setGstFileToRemove(oldVal.split("/").pop() || null);
+                        //   }
+
+                        //   setValue("gstCertificate", val);
+                        // }}
                       />
                     ) : (
                       <div className="h-full bg-gray-50 rounded-lg border p-1 border-gray-200 flex items-center justify-center">

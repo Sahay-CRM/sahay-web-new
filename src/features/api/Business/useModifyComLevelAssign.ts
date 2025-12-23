@@ -25,6 +25,9 @@ export default function useModifyComLevelAssign() {
       queryClient.resetQueries({ queryKey: ["get-core-parameter-dropdown"] });
       queryClient.resetQueries({ queryKey: ["get-CompanyLevelAssign"] });
       queryClient.resetQueries({ queryKey: ["get-levels-assign"] });
+      queryClient.resetQueries({
+        queryKey: ["get-healthScore-list"],
+      });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

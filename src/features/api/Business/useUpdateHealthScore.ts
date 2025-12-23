@@ -25,6 +25,9 @@ export default function useUpdateHealthScore() {
       queryClient.resetQueries({
         queryKey: ["get-health-score-by-core-param-id"],
       });
+      queryClient.resetQueries({
+        queryKey: ["get-healthScore-list"],
+      });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);
