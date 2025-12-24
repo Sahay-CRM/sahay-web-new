@@ -1575,7 +1575,7 @@ interface SimpleCompanyDetails {
   companyName: string;
   logo?: string;
   pancard?: string | null;
-  gstCertificate?: File | string;
+  gstCertificate?: string | null;
   annualTurnOver: number;
   businessStartDate?: string;
   companyAddress?: string;

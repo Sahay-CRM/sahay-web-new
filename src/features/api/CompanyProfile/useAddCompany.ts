@@ -7,7 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-type ConRes = BaseResponse<SimpleCompanyDetails>;
+type ConRes = CommonResponse<SimpleCompanyDetails>;
 
 export default function useAddCompany() {
   const addCompanyMutation = useMutation({
@@ -21,8 +21,9 @@ export default function useAddCompany() {
       return resData;
     },
     onSuccess: (res) => {
+      const companyId = res.data.companyId;
       toast.success(res.message || "Operation successful");
-      queryClient.resetQueries({ queryKey: ["companyDataGetById"] });
+      queryClient.resetQueries({ queryKey: ["companyDataGetById", companyId] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

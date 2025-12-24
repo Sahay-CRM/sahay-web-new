@@ -18,7 +18,6 @@ import {
   deleteHolidayMutation,
   getholidayDropdown,
 } from "@/features/api/Holiday";
-import { queryClient } from "@/queryClient";
 
 export default function useCompany() {
   const dataUrlToFile = (dataUrl: string, fileName: string): File => {
@@ -292,9 +291,7 @@ export default function useCompany() {
         }
 
         // Add GST certificate if present - NOTE THE CORRECT FIELD NAME
-        if (data.gstCertificate instanceof File) {
-          filesToUpload.push({ file: data.gstCertificate, fileType: "2030" });
-        } else if (
+        if (
           typeof data.gstCertificate === "string" &&
           data.gstCertificate.startsWith("data:")
         ) {
@@ -332,11 +329,7 @@ export default function useCompany() {
 
       docUpload(formData, {
         onSuccess: () => {
-          queryClient.resetQueries({
-            queryKey: ["get-meeting-list-by-id", refId],
-          });
-          queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
-          queryClient.resetQueries({ queryKey: ["get-meeting-dropdown"] });
+          window.location.reload();
         },
       });
     };
