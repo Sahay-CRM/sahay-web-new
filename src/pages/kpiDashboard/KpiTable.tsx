@@ -1575,7 +1575,7 @@ export default function UpdatedKpiTable() {
                                                   isVisualized &&
                                                   cell?.validationPercentage !=
                                                     null &&
-                                                  (cell.validationPercentage ===
+                                                  (cell.validationPercentage >=
                                                   100
                                                     ? "bg-green-200"
                                                     : cell.validationPercentage <
@@ -1831,12 +1831,12 @@ export default function UpdatedKpiTable() {
                                                   isVisualized &&
                                                   cell?.validationPercentage !=
                                                     null &&
-                                                  (cell.validationPercentage ===
+                                                  (cell.validationPercentage >=
                                                   100
                                                     ? "bg-green-200"
                                                     : cell.validationPercentage <
                                                         validationKey
-                                                      ? "bg-red-200"
+                                                      ? "bg-red-200 border-red-500"
                                                       : "bg-yellow-200  border-yellow-500"),
 
                                                 isVisualized &&
