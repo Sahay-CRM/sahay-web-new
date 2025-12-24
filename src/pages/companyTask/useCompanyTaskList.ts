@@ -5,6 +5,7 @@ import {
 } from "@/features/api/companyTask";
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { getUTCEndOfDay, getUTCStartOfDay } from "@/features/utils/app.utils";
 import { AxiosError } from "axios";
 import { useCallback, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
@@ -119,16 +120,16 @@ export default function useCompanyTaskList() {
   };
 
   // Helper function to convert date to YYYY-MM-DD format
-  const toLocalISOString = (date: Date | undefined) => {
-    if (!date) return undefined;
+  // const toLocalISOString = (date: Date | undefined) => {
+  //   if (!date) return undefined;
 
-    // Use local date methods to avoid timezone conversion
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
+  //   // Use local date methods to avoid timezone conversion
+  //   const year = date.getFullYear();
+  //   const month = String(date.getMonth() + 1).padStart(2, "0");
+  //   const day = String(date.getDate()).padStart(2, "0");
 
-    return `${year}-${month}-${day}`;
-  };
+  //   return `${year}-${month}-${day}`;
+  // };
 
   const {
     data: companyTaskData,
@@ -141,8 +142,8 @@ export default function useCompanyTaskList() {
       ...(showOverdue
         ? {}
         : {
-            startDate: toLocalISOString(appliedDateRange.taskStartDate),
-            endDate: toLocalISOString(appliedDateRange.taskDeadline),
+            startDate: getUTCStartOfDay(appliedDateRange.taskStartDate),
+            endDate: getUTCEndOfDay(appliedDateRange.taskDeadline),
           }),
       overDue: showOverdue,
     },

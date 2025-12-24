@@ -13,17 +13,7 @@ import {
   useGetDetailMeeting,
 } from "@/features/api/detailMeeting";
 import { queryClient } from "@/queryClient";
-import { normalizeRangeToUTC } from "@/features/utils/normalizeRangeToUTC ";
-
-// const toLocalISOString = (date: Date | undefined) => {
-//   if (!date) return undefined;
-
-//   const year = date.getFullYear();
-//   const month = String(date.getMonth() + 1).padStart(2, "0");
-//   const day = String(date.getDate()).padStart(2, "0");
-
-//   return `${year}-${month}-${day}`;
-// };
+import { getUTCEndOfDay, getUTCStartOfDay } from "@/features/utils/app.utils";
 
 export default function useDetailMeeting() {
   const permission = useSelector(getUserPermission).LIVE_MEETING;
@@ -106,8 +96,8 @@ export default function useDetailMeeting() {
   const { data: meetingData } = useGetDetailMeeting({
     filter: {
       ...paginationFilter,
-      startDate: appliedDateRange.taskStartDate,
-      endDate: appliedDateRange.taskDeadline,
+      startDate: getUTCStartOfDay(appliedDateRange.taskStartDate),
+      endDate: getUTCEndOfDay(appliedDateRange.taskDeadline),
       detailMeetingStatus: isDataFilter,
     },
   });
@@ -259,9 +249,7 @@ export default function useDetailMeeting() {
     }
   };
 
-  const handleDateRangeApply = (dateRange: DateRange | undefined) => {
-    const range = normalizeRangeToUTC(dateRange);
-
+  const handleDateRangeApply = (range: DateRange | undefined) => {
     if (range?.from && !range?.to) {
       const newTaskDateRange = {
         taskStartDate: range.from,

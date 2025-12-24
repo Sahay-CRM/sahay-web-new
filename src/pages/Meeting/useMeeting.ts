@@ -9,6 +9,7 @@ import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
+import { getUTCEndOfDay, getUTCStartOfDay } from "@/features/utils/app.utils";
 
 export const toLocalISOString = (date: Date | undefined) => {
   if (!date) return undefined;
@@ -129,8 +130,8 @@ export default function useAdminUser() {
       ...(showOverdue
         ? {}
         : {
-            startDate: toLocalISOString(appliedDateRange.taskStartDate),
-            endDate: toLocalISOString(appliedDateRange.taskDeadline),
+            startDate: getUTCStartOfDay(appliedDateRange.taskStartDate),
+            endDate: getUTCEndOfDay(appliedDateRange.taskDeadline),
           }),
       overDue: showOverdue,
       parentType: "Show All Other",
