@@ -12,7 +12,7 @@ import {
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useForm } from "react-hook-form";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
-import { imageUploadMutation } from "@/features/api/file";
+import { docUploadMutation } from "@/features/api/file";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import {
   deleteHolidayMutation,
@@ -20,6 +20,20 @@ import {
 } from "@/features/api/Holiday";
 
 export default function useCompany() {
+  const dataUrlToFile = (dataUrl: string, fileName: string): File => {
+    const arr = dataUrl.split(",");
+    const mime = arr[0].match(/:(.*?);/)?.[1] || "application/octet-stream";
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+
+    return new File([u8arr], fileName, { type: mime });
+  };
+
   const permission = useSelector(getUserPermission).COMPANY_PROFILE;
 
   const [isIndSearch, setIsIndSearch] = useState("");
@@ -34,7 +48,7 @@ export default function useCompany() {
   }, [setBreadcrumbs]);
 
   const { mutate: addCompany } = addCompanyMutation();
-  const { mutate: uploadImage } = imageUploadMutation();
+  const { mutate: docUpload } = docUploadMutation();
   const { data: companyData } = useGetCompanyId();
   const { data: industryList } = useGetIndustryDropdown({
     filter: {
@@ -48,7 +62,7 @@ export default function useCompany() {
     },
     enable: isCountrySearch.length >= 3,
   });
-
+  const [gstFileToRemove, setGstFileToRemove] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isLogoCropOpen, setIsLogoCropOpen] = useState(false);
@@ -60,8 +74,11 @@ export default function useCompany() {
   });
 
   const { mutate: deleteHoli } = deleteHolidayMutation();
-  const handleAdd = () => {
+
+  const handleAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
     setIsModalOpen(true);
+    setModalData(null);
   };
 
   const handleClose = () => {
@@ -138,6 +155,12 @@ export default function useCompany() {
     }
   }, [companyData, reset]);
 
+  useEffect(() => {
+    if (companyData?.imageGst?.fileId) {
+      setGstFileToRemove(companyData.imageGst.fileId);
+    }
+  }, [companyData]);
+
   const watchedCountryId = watch("countryId");
   const watchedStateId = watch("stateId");
 
@@ -184,11 +207,6 @@ export default function useCompany() {
     { label: "Fri", value: "5" },
     { label: "Sat", value: "6" },
   ];
-
-  // const formatOptions = [
-  //   { value: "compact", label: "International (1K, 1M)" },
-  //   { value: "indian", label: "Indian System (1L, 1Cr)" },
-  // ];
 
   // Handle logo upload
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -257,51 +275,72 @@ export default function useCompany() {
             ? (res[0] as AdminUserRes).adminUserId
             : data.companyId;
 
-        const uploadIfPresent = (
-          file: File | string | null | undefined,
-          fileType: string,
-        ) => {
-          if (
-            file &&
-            ((typeof file === "string" && file.startsWith("data:")) ||
-              (typeof File !== "undefined" && file instanceof File))
-          ) {
-            const formData = new FormData();
-            formData.append("refId", adminUserId || "");
-            formData.append("fileType", fileType);
-            formData.append("isMaster", "1");
-            formData.append("isUpdate", "1");
-            if (typeof file === "string" && file.startsWith("data:")) {
-              const arr = file.split(",");
-              const mime = arr[0].match(/:(.*?);/)?.[1] || "image/png";
-              const bstr = atob(arr[1]);
-              let n = bstr.length;
-              const u8arr = new Uint8Array(n);
-              while (n--) {
-                u8arr[n] = bstr.charCodeAt(n);
-              }
-              formData.append(
-                "file",
-                new Blob([u8arr], { type: mime }),
-                "file.png",
-              );
-            } else {
-              formData.append("file", file as File);
-            }
-            uploadImage(formData, {
-              onSuccess: () => {
-                window.location.reload();
-              },
-            });
-          }
-        };
+        const filesToUpload: Array<{
+          file: File | string | null | undefined;
+          fileType: string;
+        }> = [];
 
-        uploadIfPresent(data.logo, "2000");
-        uploadIfPresent(data.pan, "2020");
-        uploadIfPresent(data.gstCertificate, "2030");
+        // Add logo if present
+        if (data.logo) {
+          filesToUpload.push({ file: data.logo, fileType: "2000" });
+        }
+
+        // Add pancard if present
+        if (data.pancard) {
+          filesToUpload.push({ file: data.pancard, fileType: "2020" });
+        }
+
+        // Add GST certificate if present - NOTE THE CORRECT FIELD NAME
+        if (
+          typeof data.gstCertificate === "string" &&
+          data.gstCertificate.startsWith("data:")
+        ) {
+          filesToUpload.push({
+            file: dataUrlToFile(data.gstCertificate, "gst.pdf"),
+            fileType: "2030",
+          });
+        }
+
+        // Upload all files
+        filesToUpload.forEach(({ file, fileType }) => {
+          if (file) {
+            handleFileOperations(adminUserId!, [file], fileType);
+          }
+        });
       },
     });
     setIsEditing(false);
+  };
+
+  const handleFileOperations = async (
+    refId: string,
+    currentFiles: (File | string | { fileId: string; fileName: string })[],
+    fileType: string,
+  ) => {
+    const uploadMeetingFile = (file: File | string, fileType: string) => {
+      const formData = new FormData();
+      formData.append("refId", refId);
+      formData.append("isMaster", "0");
+      formData.append("fileType", fileType);
+      formData.append("files", file);
+      if (gstFileToRemove) {
+        formData.append("removedFiles", gstFileToRemove);
+      }
+
+      docUpload(formData, {
+        onSuccess: () => {
+          window.location.reload();
+        },
+      });
+    };
+
+    const newFilesToUpload = currentFiles.filter(
+      (file) => file instanceof File || typeof file === "string",
+    ) as (File | string)[];
+
+    newFilesToUpload.forEach((file) => {
+      uploadMeetingFile(file, fileType); // ✅ correct
+    });
   };
 
   // Handle cancel edit

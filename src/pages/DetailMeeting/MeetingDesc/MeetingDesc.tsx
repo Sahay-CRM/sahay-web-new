@@ -13,6 +13,7 @@ import {
   // Unlink,
   UsersRound,
   X,
+  Download,
 } from "lucide-react";
 
 import useMeetingDesc from "./useMeetingDesc";
@@ -53,6 +54,9 @@ const MeetingNotes = React.lazy(() => import("./Agenda/meetingNotes"));
 const EmployeeSearchDropdown = React.lazy(
   () => import("./EmployeeSearchDropdown"),
 );
+const DownloadNotesModal = React.lazy(
+  () => import("./Agenda/DownloadNotesModal"),
+);
 
 export default function MeetingDesc() {
   const {
@@ -88,6 +92,13 @@ export default function MeetingDesc() {
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   } = useMeetingDesc();
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = React.useState(false);
+  const [selectedDate, setSelectedDate] = React.useState<string | undefined>();
+
+  const handleOpenDownloadModal = (date?: string) => {
+    setSelectedDate(date);
+    setIsDownloadModalOpen(true);
+  };
   const { setBreadcrumbs } = useBreadcrumbs();
   const userDetail = useSelector(getUserDetail);
   const userId = useSelector(getUserId);
@@ -469,7 +480,18 @@ export default function MeetingDesc() {
             <div>
               <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
                 <h3 className="p-0 text-base pl-4">Meeting Notes</h3>
-                <div>
+                <div className="flex gap-2 items-center">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Download
+                          className="w-5 h-5 text-gray-500 cursor-pointer hover:text-primary transition-colors"
+                          onClick={() => handleOpenDownloadModal()}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>Download Notes</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
                     onClick={() => setIsCardVisible(false)}
@@ -493,6 +515,7 @@ export default function MeetingDesc() {
                       className="mt-2"
                       meetingName={meetingTiming?.meetingName}
                       meetingStatus={meetingStatus}
+                      onPerDateDownload={handleOpenDownloadModal}
                       // groupFlag={selectedGroupFilter}
                     />
                   </Suspense>
@@ -504,7 +527,18 @@ export default function MeetingDesc() {
             <div>
               <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
                 <h3 className="p-0 text-base pl-4">Meeting Tag Notes </h3>
-                <div>
+                <div className="flex gap-2 items-center">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Download
+                          className="w-5 h-5 text-gray-500 cursor-pointer hover:text-primary transition-colors"
+                          onClick={() => handleOpenDownloadModal()}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>Download Notes</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
                     onClick={() => setIsCardVisible(false)}
@@ -529,6 +563,7 @@ export default function MeetingDesc() {
                       className="mt-2"
                       meetingName={meetingTiming?.meetingName}
                       meetingStatus={meetingStatus}
+                      onPerDateDownload={handleOpenDownloadModal}
                       // groupFlag={selectedGroupFilter}
                     />
                   </Suspense>
@@ -758,7 +793,10 @@ export default function MeetingDesc() {
                       { groupName: string; notes: MeetingNotesRes[] }
                     >;
 
-                    const groupedNotes = meetingNotes.data.reduce<GroupedNotes>(
+                    const notesData = meetingNotes?.data as
+                      | MeetingNotesRes[]
+                      | undefined;
+                    const groupedNotes = (notesData || []).reduce<GroupedNotes>(
                       (acc, note) => {
                         const groupKey = note.groupId || "ungrouped";
                         const groupName = note.groupName || "Ungrouped Notes";
@@ -858,6 +896,24 @@ export default function MeetingDesc() {
           )}
         </Card>
       </div>
+
+      <Suspense fallback={null}>
+        {isDownloadModalOpen && (
+          <DownloadNotesModal
+            isOpen={isDownloadModalOpen}
+            onClose={() => setIsDownloadModalOpen(false)}
+            meetingName={meetingTiming?.meetingName || ""}
+            meetingDate={
+              meetingTiming?.meetingDateTime
+                ? formatUTCDateToLocal(meetingTiming.meetingDateTime)
+                : ""
+            }
+            joiners={(meetingTiming?.joiners as Joiners[]) || []}
+            meetingId={meetingId!}
+            dateFilter={selectedDate}
+          />
+        )}
+      </Suspense>
       <div
         className={`${isSidebarCollapsed ? "bg-white border rounded-md" : ""} flex flex-col z-30`}
       >

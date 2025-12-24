@@ -1,3 +1,7 @@
+import { useState, useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
+import { format } from "date-fns";
+
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import {
   deleteCompanyTaskMutation,
@@ -5,17 +9,20 @@ import {
   useGetRepeatAllTask,
 } from "@/features/api/companyTask";
 import {
-  getUserId,
+  getUserDetail,
   getUserPermission,
 } from "@/features/selectors/auth.selector";
-import { format } from "date-fns";
-import { useState, useEffect, useMemo } from "react";
-// import { DateRange } from "react-day-picker";
-import { useSelector } from "react-redux";
+import {
+  getISTNow,
+  isAfterEndOfTodayIST,
+  isSameDay,
+} from "@/features/utils/app.utils";
 
 export function useRepeatTaskToDo() {
   const permission = useSelector(getUserPermission).ROUTINE_TASK;
-  const userid = useSelector(getUserId);
+
+  const userData = useSelector(getUserDetail);
+  const userid = userData.employeeId;
 
   const today = useMemo(() => new Date(), []);
 
@@ -23,14 +30,6 @@ export function useRepeatTaskToDo() {
   before14.setDate(today.getDate() - 14);
   const after14 = new Date(today);
   after14.setDate(today.getDate() + 14);
-
-  // const toLocalISOString = (date: Date | undefined) => {
-  //   if (!date) return undefined;
-  //   const year = date.getFullYear();
-  //   const month = String(date.getMonth() + 1).padStart(2, "0");
-  //   const day = String(date.getDate()).padStart(2, "0");
-  //   return `${year}-${month}-${day}`;
-  // };
 
   const loadSavedDateRange = () => {
     const saved = localStorage.getItem("taskDateRange");
@@ -50,10 +49,6 @@ export function useRepeatTaskToDo() {
 
   const [isEmployeeId, setIsEmployeeId] = useState("");
   const [isEmpSearch, setIsEmpSearch] = useState("");
-  // const [isDateRange, setIsDateRange] = useState<{
-  //   startDate: Date | undefined;
-  //   deadline: Date | undefined;
-  // }>(loadSavedDateRange());
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState<RepeatTaskAllRes | null>(null);
@@ -135,17 +130,22 @@ export function useRepeatTaskToDo() {
     }
   }, [permission]);
 
+  const employeeIds = useMemo(() => {
+    if (isEmployeeId === "ALL") {
+      return employeeList?.data
+        ?.map((emp) => emp.employeeId)
+        .filter(Boolean)
+        .join(","); // "id1,id2,id3"
+    }
+
+    return isEmployeeId;
+  }, [isEmployeeId, employeeList]);
+
   const { data: companyTaskData, isLoading } = useGetRepeatAllTask({
     filter: {
-      employeeId: shouldUseSelectedRange ? isEmployeeId : userid,
+      employeeIds: shouldUseSelectedRange ? employeeIds : userid,
       startDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : undefined,
       endDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : undefined,
-      // startDate: shouldUseSelectedRange
-      //   ? toLocalISOString(isAppliedDateRange.startDate)
-      //   : todayStr,
-      // endDate: shouldUseSelectedRange
-      //   ? toLocalISOString(isAppliedDateRange.deadline)
-      //   : todayStr,
     },
     enable: !!isEmployeeId || !!selectedDate,
   });
@@ -154,62 +154,18 @@ export function useRepeatTaskToDo() {
     updateRepeatTask({ taskId, isCompleted });
   };
 
-  // const handleDateRangeChange = (range: DateRange | undefined) => {
-  //   if (range?.from && !range?.to) {
-  //     setIsDateRange({ startDate: range.from, deadline: range.from });
-  //   } else if (range?.from && range?.to) {
-  //     setIsDateRange({ startDate: range.from, deadline: range.to });
-  //   } else {
-  //     setIsDateRange({ startDate: undefined, deadline: undefined });
-  //   }
-  // };
-
-  // const handleDateRangeApply = (range: DateRange | undefined) => {
-  //   if (range?.from && !range?.to) {
-  //     const newRange = { startDate: range.from, deadline: range.from };
-  //     setIsDateRange(newRange);
-  //     setIsAppliedDateRange(newRange);
-  //   } else if (range?.from && range?.to) {
-  //     const newRange = { startDate: range.from, deadline: range.to };
-  //     setIsDateRange(newRange);
-  //     setIsAppliedDateRange(newRange);
-  //   } else {
-  //     const newRange = { startDate: undefined, deadline: undefined };
-  //     setIsDateRange(newRange);
-  //     setIsAppliedDateRange(newRange);
-  //   }
-  // };
-
-  // const handleDateRangeSaveApply = (range: DateRange | undefined) => {
-  //   if (range) {
-  //     const newTaskDateRange = {
-  //       startDate: range.from,
-  //       deadline: range.to,
-  //     };
-  //     localStorage.setItem("taskDateRange", JSON.stringify(newTaskDateRange));
-  //     setIsDateRange(newTaskDateRange);
-  //     setIsAppliedDateRange(newTaskDateRange);
-  //   }
-  // };
-
-  // const handleClear = () => {
-  //   localStorage.removeItem("taskDateRange");
-
-  //   const defaultRange = {
-  //     startDate: before14,
-  //     deadline: after14,
-  //   };
-
-  //   setIsDateRange(defaultRange);
-  //   setIsAppliedDateRange(defaultRange);
-  // };
-
-  const employeeOption = employeeList?.data
-    ? employeeList.data.map((status) => ({
-        label: status.employeeName || "Unnamed",
-        value: status.employeeId || "",
-      }))
-    : [];
+  const employeeOption = [
+    {
+      label: "All",
+      value: "ALL",
+    },
+    ...(employeeList?.data
+      ? employeeList.data.map((emp) => ({
+          label: emp.employeeName || "Unnamed",
+          value: emp.employeeId || "",
+        }))
+      : []),
+  ];
 
   const handleEditTask = (data: RepeatTaskAllRes) => {
     setIsModalOpen(true);
@@ -232,15 +188,28 @@ export function useRepeatTaskToDo() {
     deleteTaskById(taskId);
   };
 
+  const shouldDisableCheckbox = (task: RepeatTaskAllRes) => {
+    if (userData.employeeType !== "EMPLOYEE") return false;
+
+    const istNow = getISTNow();
+    const todayIST = new Date(
+      istNow.getFullYear(),
+      istNow.getMonth(),
+      istNow.getDate(),
+    );
+
+    const taskDeadline = new Date(task.taskDeadline!);
+
+    const isTaskDeadlineToday = isSameDay(taskDeadline, todayIST);
+    const isSelectedDateNotToday = !isSameDay(selectedDate!, todayIST);
+    const isAfterTodayEnd = isAfterEndOfTodayIST();
+
+    return isTaskDeadlineToday && isSelectedDateNotToday && isAfterTodayEnd;
+  };
+
   return {
     companyTaskData,
     toggleComplete,
-    // isDateRange,
-    // isAppliedDateRange,
-    // handleDateRangeChange,
-    // handleDateRangeApply,
-    // handleDateRangeSaveApply,
-    // handleClear,
     setIsEmployeeId,
     employeeOption,
     isEmployeeId,
@@ -259,5 +228,7 @@ export function useRepeatTaskToDo() {
     setSelectedDate,
     selectedDate,
     today,
+    userData,
+    shouldDisableCheckbox,
   };
 }

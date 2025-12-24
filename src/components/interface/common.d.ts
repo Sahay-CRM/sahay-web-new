@@ -698,6 +698,7 @@ interface TaskGetPaging {
   repetitiveTaskId?: string;
   employeeName?: string;
   isActive?: boolean;
+  projectName?: string;
 }
 
 interface RepeatTaskAllRes {
@@ -714,6 +715,8 @@ interface RepeatTaskAllRes {
   taskTypeId?: string;
   TaskEmployeeJunction?: Employee[];
   employeeIds?: string[];
+  projectName?: string;
+  projectId?: string;
 }
 
 interface TaskProject {
@@ -1572,7 +1575,7 @@ interface SimpleCompanyDetails {
   companyName: string;
   logo?: string;
   pancard?: string | null;
-  gstCertificate?: string;
+  gstCertificate?: string | null;
   annualTurnOver: number;
   businessStartDate?: string;
   companyAddress?: string;
@@ -1607,6 +1610,12 @@ interface SimpleCompanyDetails {
   unit?: string;
   validationKey?: string;
   date?: number;
+  imageGst?: imageGst;
+}
+
+interface imageGst {
+  fileId?: string;
+  fileName?: string;
 }
 
 interface IndustryOption {

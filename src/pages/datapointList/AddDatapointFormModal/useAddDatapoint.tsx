@@ -30,7 +30,11 @@ import { Button } from "@/components/ui/button";
 
 export default function useAddDataPoint() {
   const [isModalOpen, setModalOpen] = useState(false);
-
+  const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
+    currentPage: 1,
+    pageSize: 25,
+    search: "",
+  });
   const { mutate: addDatapoint, isPending } = useAddUpdateDatapoint();
   const navigate = useNavigate();
 
@@ -108,11 +112,6 @@ export default function useAddDataPoint() {
   };
 
   const Kpi = () => {
-    const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-      currentPage: 1,
-      pageSize: 25,
-      search: "",
-    });
     const { data: kpidata, isLoading } = useGetKpiNonSel({
       filter: paginationFilter,
     });

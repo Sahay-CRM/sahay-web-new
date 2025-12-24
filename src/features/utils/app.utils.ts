@@ -332,3 +332,25 @@ export function convertUtcTimeToLocal(timeStr?: string): string {
     hour12: false,
   });
 }
+
+export function getISTNow() {
+  const now = new Date();
+  return new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+}
+
+export function isAfterEndOfTodayIST(): boolean {
+  const istNow = getISTNow();
+
+  const endOfToday = new Date(istNow);
+  endOfToday.setHours(23, 59, 59, 999);
+
+  return istNow > endOfToday;
+}
+
+export function isSameDay(d1: Date, d2: Date): boolean {
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+}
