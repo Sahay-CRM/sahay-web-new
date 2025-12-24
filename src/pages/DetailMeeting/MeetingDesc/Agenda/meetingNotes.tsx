@@ -8,6 +8,7 @@ import {
   Share2,
   Tag,
   Check,
+  Download,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -43,6 +44,7 @@ interface MeetingNotesProps {
   meetingName?: string;
   meetingStatus?: string;
   FilterBy?: string;
+  onPerDateDownload?: (date?: string) => void;
   // groupFlag?: boolean | null;
 }
 
@@ -58,6 +60,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   meetingName,
   meetingStatus,
   FilterBy,
+  onPerDateDownload,
   // groupFlag,
 }) => {
   const [noteInput, setNoteInput] = useState("");
@@ -480,10 +483,14 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
             return dateKeys.map((dateKey, groupIdx) => (
               <div key={dateKey} className="mb-6">
                 {/* Date Header */}
-                <div className="sticky top-0 bg-gray-50 border-b-2 border-primary/20 px-3 py-2 mb-3 rounded-t-lg z-10">
+                <div className="sticky top-0 bg-gray-50 border-b-2 border-primary/20 px-3 py-2 mb-3 rounded-t-lg z-10 flex justify-between items-center">
                   <h3 className="text-sm font-semibold text-gray-700">
                     {dateKey}
                   </h3>
+                  <Download
+                    className="w-4 h-4 text-gray-500 cursor-pointer hover:text-primary transition-colors"
+                    onClick={() => onPerDateDownload?.(dateKey)}
+                  />
                 </div>
 
                 {/* Notes for this date */}
