@@ -11,6 +11,7 @@ import {
   PopoverTrigger,
 } from "@radix-ui/react-popover";
 import { Calendar } from "@/components/ui/calendar";
+import { normalizeRangeToUTC } from "@/features/utils/normalizeRangeToUTC ";
 
 interface DateRangePickerProps {
   className?: string;
@@ -69,14 +70,18 @@ export default function DateRangePicker({
   };
 
   const handleApply = () => {
+    const normalized = normalizeRangeToUTC(tempDate);
+
     setDate(tempDate);
-    onApply?.(tempDate);
+    onApply?.(normalized);
     setIsOpen(false);
   };
 
   const handleSave = () => {
+    const normalized = normalizeRangeToUTC(tempDate);
+
     setDate(tempDate);
-    onSaveApply?.(tempDate);
+    onSaveApply?.(normalized);
     setIsOpen(false);
   };
 
@@ -115,11 +120,11 @@ export default function DateRangePicker({
             {date?.from ? (
               date.to ? (
                 <>
-                  {format(date.from, "LLL dd, y")} -{" "}
-                  {format(date.to, "LLL dd, y")}
+                  {format(date.from, "dd-mm-yyyy")} -{" "}
+                  {format(date.to, "dd-mm-yyyy")}
                 </>
               ) : (
-                format(date.from, "LLL dd, y")
+                format(date.from, "dd-mm-yyyy")
               )
             ) : (
               <span>Pick a date</span>

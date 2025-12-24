@@ -63,6 +63,7 @@ export default function useCompany() {
     enable: isCountrySearch.length >= 3,
   });
   const [gstFileToRemove, setGstFileToRemove] = useState<string | null>(null);
+  const [panFileToRemove, setPanFileToRemove] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isLogoCropOpen, setIsLogoCropOpen] = useState(false);
@@ -143,12 +144,11 @@ export default function useCompany() {
         gstCertificate: companyData?.gstCertificate
           ? `${ImageBaseURL}/share/company/gst/${companyData.gstCertificate}`
           : "",
-
+        pancard: companyData?.pancard
+          ? `${ImageBaseURL}/share/company/pancard/${companyData.pancard}`
+          : "",
         logo: companyData?.logo
           ? `${ImageBaseURL}/share/company/logo/${companyData.logo}`
-          : "",
-        pan: companyData?.pancard
-          ? `${ImageBaseURL}/share/company/pancard/${companyData.pancard}`
           : "",
         kpiSkipDays: skipDaysValue,
       });
@@ -158,6 +158,11 @@ export default function useCompany() {
   useEffect(() => {
     if (companyData?.imageGst?.fileId) {
       setGstFileToRemove(companyData.imageGst.fileId);
+    }
+  }, [companyData]);
+  useEffect(() => {
+    if (companyData?.imagePancard?.fileId) {
+      setPanFileToRemove(companyData.imagePancard.fileId);
     }
   }, [companyData]);
 
@@ -286,8 +291,21 @@ export default function useCompany() {
         }
 
         // Add pancard if present
-        if (data.pancard) {
-          filesToUpload.push({ file: data.pancard, fileType: "2020" });
+        // if (data.pancard) {
+        //   filesToUpload.push({ file: data.pancard, fileType: "2020" });
+        // }
+
+        if (
+          typeof data.pancard === "string" &&
+          data.pancard.startsWith("data:")
+        ) {
+          filesToUpload.push({
+            file: dataUrlToFile(
+              data.pancard,
+              data.pancardFileName || "pan.pdf",
+            ),
+            fileType: "2020",
+          });
         }
 
         // Add GST certificate if present - NOTE THE CORRECT FIELD NAME
@@ -296,7 +314,10 @@ export default function useCompany() {
           data.gstCertificate.startsWith("data:")
         ) {
           filesToUpload.push({
-            file: dataUrlToFile(data.gstCertificate, "gst.pdf"),
+            file: dataUrlToFile(
+              data.gstCertificate,
+              data.gstCertificateFileName || "gst.pdf",
+            ),
             fileType: "2030",
           });
         }
@@ -323,13 +344,16 @@ export default function useCompany() {
       formData.append("isMaster", "0");
       formData.append("fileType", fileType);
       formData.append("files", file);
-      if (gstFileToRemove) {
+
+      if (gstFileToRemove && fileType === "2030") {
         formData.append("removedFiles", gstFileToRemove);
+      } else if (panFileToRemove && fileType === "2020") {
+        formData.append("removedFiles", panFileToRemove);
       }
 
       docUpload(formData, {
         onSuccess: () => {
-          window.location.reload();
+          // window.location.reload();
         },
       });
     };
