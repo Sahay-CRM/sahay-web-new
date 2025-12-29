@@ -263,7 +263,7 @@ function SortableKpiRow({
                 ) : (
                   getFormattedValue(
                     kpi.validationType,
-                    String(kpi?.goalValue),
+                    String(kpi?.value1),
                     kpi?.value2,
                     kpi?.unit,
                   )
@@ -1035,6 +1035,62 @@ export default function UpdatedKpiTable() {
       default:
         return formatted1;
     }
+  }
+
+  function getInputValidationClass(
+    validationType: string,
+    inputValue: string,
+    value1: string | number | null,
+    value2: string | number | null | undefined,
+  ) {
+    const isValid = isValidInput(validationType, inputValue, value1, value2);
+
+    if (
+      validationType === "BETWEEN" ||
+      validationType === "YES_NO" ||
+      value1 === null ||
+      value1 === ""
+    ) {
+      return isValid
+        ? "bg-green-100 border-green-200"
+        : "bg-red-100 border-red-300";
+    }
+
+    const val = parseFloat(inputValue);
+    const target = parseFloat(String(value1));
+
+    if (isNaN(val) || isNaN(target)) {
+      return isValid
+        ? "bg-green-100 border-green-200"
+        : "bg-red-100 border-red-300";
+    }
+
+    let percentage = 0;
+    // Logic: High is Good
+    if (
+      validationType === "GREATER_THAN" ||
+      validationType === "GREATER_THAN_OR_EQUAL_TO" ||
+      validationType === "EQUAL_TO"
+    ) {
+      if (target === 0) percentage = val >= 0 ? 100 : 0;
+      else percentage = (val / target) * 100;
+    }
+    // Logic: Low is Good
+    else if (
+      validationType === "LESS_THAN" ||
+      validationType === "LESS_THAN_OR_EQUAL_TO"
+    ) {
+      if (val === 0) percentage = 100;
+      else percentage = (target / val) * 100;
+    } else {
+      return isValid
+        ? "bg-green-100 border-green-300"
+        : "bg-red-100 border-red-300";
+    }
+
+    if (percentage >= 100) return "bg-green-100 border-green-300";
+    if (percentage >= validationKey) return "bg-yellow-100 border-yellow-200";
+    return "bg-red-100 border-red-300";
   }
 
   const handleSubmit = () => {
@@ -1817,27 +1873,25 @@ export default function UpdatedKpiTable() {
                                                   inputVal !== "" &&
                                                   validationType &&
                                                   selectedPeriod !== "YEARLY" &&
-                                                  (isValidInput(
+                                                  getInputValidationClass(
                                                     validationType,
                                                     inputVal,
                                                     value1 ?? null,
                                                     value2 ?? null,
-                                                  )
-                                                    ? "bg-green-100 border-green-500"
-                                                    : "bg-red-100 border-red-500"),
+                                                  ),
 
                                                 // ⭐ Visualization-based color logic
                                                 cell?.data !== "-" &&
-                                                  isVisualized &&
+                                                  // isVisualized &&
                                                   cell?.validationPercentage !=
                                                     null &&
                                                   (cell.validationPercentage >=
                                                   100
-                                                    ? "bg-green-200"
+                                                    ? "bg-green-100"
                                                     : cell.validationPercentage <
                                                         validationKey
                                                       ? "bg-red-200 border-red-500"
-                                                      : "bg-yellow-200  border-yellow-500"),
+                                                      : "bg-yellow-200  border-yellow-300"),
 
                                                 isVisualized &&
                                                   "cursor-not-allowed",

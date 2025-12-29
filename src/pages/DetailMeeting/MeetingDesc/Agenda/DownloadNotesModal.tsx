@@ -41,6 +41,7 @@ interface SelectedFilters {
     Kpi: boolean;
     Task: boolean;
     Project: boolean;
+    Reminder: boolean;
   };
   types: {
     appreciation: boolean;
@@ -58,6 +59,7 @@ const TAG_LABELS: Record<keyof SelectedFilters["tags"], string> = {
   Kpi: "KPI",
   Task: "Task",
   Project: "Project",
+  Reminder: "Reminder",
 };
 
 const TYPE_LABELS: Record<keyof SelectedFilters["types"], string> = {
@@ -92,6 +94,7 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
       Kpi: false,
       Task: false,
       Project: false,
+      Reminder: false,
     },
     types: {
       appreciation: false,
