@@ -137,6 +137,12 @@ export default function MeetingDesc() {
     { key: "DOCUMENTSTAG", icon: NotebookTabs, label: "Meeting Tag Notes" },
   ];
 
+  const updatesNotes = Array.isArray(meetingNotes?.data)
+    ? meetingNotes.data.filter(
+        (note: MeetingNotesRes) => note.noteType === "UPDATES",
+      )
+    : [];
+
   if (meetingData?.status === 401) {
     return <div>You are Not Authorized</div>;
   }
@@ -583,75 +589,72 @@ export default function MeetingDesc() {
                 </div>
               </div>
               <div className="px-3 h-[calc(100vh-170px)] overflow-auto">
-                {Array.isArray(meetingNotes?.data) &&
-                  meetingNotes.data.map(
-                    (note: MeetingNotesRes, idx: number) => {
-                      return (
-                        <div
-                          key={note.meetingNoteId || idx}
-                          className="flex items-start bg-white rounded-lg border px-3 mb-3 py-2 shadow-sm gap-2"
-                        >
-                          <div className="flex-1 text-sm text-black">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="font-medium text-xs text-gray-600">
-                                {note?.employeeName || "Unknown"}
-                              </span>
+                {updatesNotes.map((note: MeetingNotesRes, idx: number) => {
+                  return (
+                    <div
+                      key={note.meetingNoteId || idx}
+                      className="flex items-start bg-white rounded-lg border px-3 mb-3 py-2 shadow-sm gap-2"
+                    >
+                      <div className="flex-1 text-sm text-black">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="font-medium text-xs text-gray-600">
+                            {note?.employeeName || "Unknown"}
+                          </span>
+                          <div>
+                            <span className="text-xs text-gray-600 mr-2 bg-gray-200/80 p-0.5 rounded-full px-2">
+                              {note.noteType}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {note?.createdAt
+                                ? new Date(note.createdAt).toLocaleTimeString(
+                                    [],
+                                    {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    },
+                                  )
+                                : ""}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-start gap-2 group">
+                          <p className="break-words">{note.note}</p>
+                          {meetingStatus !== "NOT_STARTED" &&
+                            meetingStatus !== "ENDED" && (
                               <div>
-                                <span className="text-xs text-gray-600 mr-2 bg-gray-200/80 p-0.5 rounded-full px-2">
-                                  {note.noteType}
-                                </span>
-                                <span className="text-xs text-gray-400">
-                                  {note?.createdAt
-                                    ? new Date(
-                                        note.createdAt,
-                                      ).toLocaleTimeString([], {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })
-                                    : ""}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex justify-between items-start gap-2 group">
-                              <p className="break-words">{note.note}</p>
-                              {meetingStatus !== "NOT_STARTED" &&
-                                meetingStatus !== "ENDED" && (
-                                  <div>
-                                    <DropdownMenu
-                                      open={dropdownOpen === note.meetingNoteId}
-                                      onOpenChange={(open) =>
-                                        setDropdownOpen(
-                                          open ? note.meetingNoteId : null,
-                                        )
+                                <DropdownMenu
+                                  open={dropdownOpen === note.meetingNoteId}
+                                  onOpenChange={(open) =>
+                                    setDropdownOpen(
+                                      open ? note.meetingNoteId : null,
+                                    )
+                                  }
+                                >
+                                  <DropdownMenuTrigger asChild>
+                                    <button
+                                      onClick={() =>
+                                        setDropdownOpen(note.meetingNoteId)
                                       }
+                                      className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
                                     >
-                                      <DropdownMenuTrigger asChild>
-                                        <button
-                                          onClick={() =>
-                                            setDropdownOpen(note.meetingNoteId)
-                                          }
-                                          className="text-gray-500 items-center text-sm w-fit py-1.5 px-2"
-                                        >
-                                          <EllipsisVertical className="h-5 w-5" />
-                                        </button>
-                                      </DropdownMenuTrigger>
+                                      <EllipsisVertical className="h-5 w-5" />
+                                    </button>
+                                  </DropdownMenuTrigger>
 
-                                      <DropdownMenuContent
-                                        align="end"
-                                        className="w-full"
-                                      >
-                                        <DropdownMenuItem
-                                          onClick={() =>
-                                            handleUpdateNotes(note)
-                                          }
-                                          className="px-2 py-1.5"
-                                        >
-                                          <X className="h-4 w-4 mr-2" />
-                                          Remove From Updates
-                                        </DropdownMenuItem>
+                                  <DropdownMenuContent
+                                    align="end"
+                                    className="w-full"
+                                  >
+                                    <DropdownMenuItem
+                                      onClick={() => handleUpdateNotes(note)}
+                                      className="px-2 py-1.5"
+                                    >
+                                      <X className="h-4 w-4 mr-2" />
+                                      Remove From Updates
+                                    </DropdownMenuItem>
 
-                                        {/* <DropdownMenuItem
+                                    {/* <DropdownMenuItem
                                           onClick={() =>
                                             handleDelete(note.meetingNoteId)
                                           }
@@ -660,16 +663,15 @@ export default function MeetingDesc() {
                                           <Unlink className="h-4 w-4 mr-2" />
                                           Delete
                                         </DropdownMenuItem> */}
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </div>
-                                )}
-                            </div>
-                          </div>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            )}
                         </div>
-                      );
-                    },
-                  )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -686,8 +688,9 @@ export default function MeetingDesc() {
               </div>
               <div className="px-3 h-[calc(100vh-170px)] overflow-auto">
                 {Array.isArray(meetingNotes?.data) &&
-                  meetingNotes.data.map(
-                    (note: MeetingNotesRes, idx: number) => {
+                  meetingNotes.data
+                    .filter((note) => note.noteType === "APPRECIATION")
+                    .map((note: MeetingNotesRes, idx: number) => {
                       return (
                         <div
                           key={note.meetingNoteId || idx}
@@ -769,8 +772,7 @@ export default function MeetingDesc() {
                           </div>
                         </div>
                       );
-                    },
-                  )}
+                    })}
               </div>
             </div>
           )}
