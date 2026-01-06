@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+/* eslint-disable no-console */
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { get, onValue, ref, remove, update } from "firebase/database";
 import { database } from "@/firebaseConfig";
@@ -12,10 +13,9 @@ import {
   useGetMeetingNotes,
   useGetMeetingTiming,
 } from "@/features/api/detailMeeting";
+import { docUploadMutation } from "@/features/api/file";
+import { ImageBaseURL } from "@/features/utils/urls.utils";
 import { toast } from "sonner";
-// import SidebarControlContext from "@/features/layouts/DashboardLayout/SidebarControlContext";
-// import { useSelector } from "react-redux";
-// import { getUserDetail } from "@/features/selectors/auth.selector";
 
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();
@@ -66,6 +66,7 @@ export default function useMeetingDesc() {
   // const { mutate: addMeeting } = useAddUpdateCompanyMeeting();
 
   const { mutate: addDetailMeeting } = addUpdateDetailMeetingMutation();
+  const { mutate: uploadDoc } = docUploadMutation();
 
   const handleUpdatedRefresh = useCallback(async () => {
     await Promise.all([
@@ -622,6 +623,306 @@ export default function useMeetingDesc() {
     return () => RingAlert();
   }, [meetingId]);
 
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+
+  const isRecording = useMemo(
+    () => !!meetingResponse?.state?.isRecording,
+    [meetingResponse],
+  );
+
+  // Listen for isRecording change to stop recorder if it was started by this user
+  useEffect(() => {
+    if (
+      !isRecording &&
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state !== "inactive"
+    ) {
+      mediaRecorderRef.current.stop();
+    }
+  }, [isRecording]);
+
+  const uploadToFireflies = async (audioUrl: string, title: string) => {
+    const firefliesApiKey = import.meta.env.VITE_FIREFLIES_API_KEY;
+    if (!firefliesApiKey) {
+      toast.error("Fireflies API key not configured");
+      return;
+    }
+
+    try {
+      // Step 1: Upload audio to Fireflies
+      const uploadResponse = await fetch("https://api.fireflies.ai/graphql", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${firefliesApiKey}`,
+        },
+        body: JSON.stringify({
+          query: `
+            mutation($input: AudioUploadInput!) {
+              uploadAudio(input: $input) {
+                success
+                title
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              url: audioUrl,
+              title: title,
+              client_reference_id: meetingId,
+            },
+          },
+        }),
+      });
+
+      const uploadResult = await uploadResponse.json();
+      if (!uploadResult.data?.uploadAudio?.success) {
+        toast.error(
+          "Failed to upload to Fireflies: " +
+            uploadResult.data?.uploadAudio?.message,
+        );
+        return;
+      }
+
+      toast.success("Audio uploaded to Fireflies for transcription!");
+
+      // Step 2: Poll for transcription completion
+      await pollForTranscript();
+    } catch (error) {
+      console.error("Error uploading to Fireflies:", error);
+      toast.error("Error uploading to Fireflies");
+    }
+  };
+
+  const pollForTranscript = async () => {
+    const firefliesApiKey = import.meta.env.VITE_FIREFLIES_API_KEY;
+    if (!firefliesApiKey) return;
+
+    const maxAttempts = 60; // Poll for up to 10 minutes (60 * 10 seconds)
+    const pollInterval = 10000; // 10 seconds
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const response = await fetch("https://api.fireflies.ai/graphql", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${firefliesApiKey}`,
+          },
+          body: JSON.stringify({
+            query: `
+              query($clientReferenceId: String!) {
+                transcripts(client_reference_id: $clientReferenceId) {
+                  id
+                  title
+                  status
+                  transcript_url
+                  duration
+                  date
+                }
+              }
+            `,
+            variables: {
+              clientReferenceId: meetingId,
+            },
+          }),
+        });
+
+        const result = await response.json();
+        const transcripts = result.data?.transcripts || [];
+
+        if (transcripts.length > 0) {
+          const transcript = transcripts[0];
+          if (transcript.status === "COMPLETE" && transcript.transcript_url) {
+            // Download the transcript
+            await downloadTranscript(transcript);
+            return;
+          } else if (transcript.status === "PROCESSING") {
+            // Continue polling
+            await new Promise((resolve) => setTimeout(resolve, pollInterval));
+            continue;
+          } else if (transcript.status === "FAILED") {
+            toast.error("Transcription failed");
+            return;
+          }
+        }
+
+        // Wait before next poll
+        await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      } catch (error) {
+        console.error("Error polling for transcript:", error);
+        toast.error("Error checking transcription status");
+        return;
+      }
+    }
+
+    toast.error("Transcription timed out");
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const downloadTranscript = async (transcript: any) => {
+    try {
+      // Fetch the transcript content
+      const response = await fetch(transcript.transcript_url);
+      const transcriptText = await response.text();
+
+      // Create and download the file
+      const blob = new Blob([transcriptText], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `transcript-${meetingId}-${Date.now()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      toast.success("Transcript downloaded successfully!");
+    } catch (error) {
+      console.error("Error downloading transcript:", error);
+      toast.error("Failed to download transcript");
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      // 1. Capture system/tab audio
+      // Note: video: true is required for the picker to show up in most browsers.
+      // We use preferCurrentTab to make it easier to share the meeting tab.
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          displaySurface: "browser",
+        },
+        audio: {
+          suppressLocalAudioPlayback: false,
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+
+      // 2. Capture local microphone audio
+      const micStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+
+      // 3. Mix the audio tracks using Web Audio API
+      const audioContext = new AudioContext();
+      if (audioContext.state === "suspended") {
+        await audioContext.resume();
+      }
+
+      const destination = audioContext.createMediaStreamDestination();
+
+      // Connect screen/tab audio if available
+      if (displayStream.getAudioTracks().length > 0) {
+        const source = audioContext.createMediaStreamSource(displayStream);
+        source.connect(destination);
+      }
+
+      // Connect microphone audio
+      if (micStream.getAudioTracks().length > 0) {
+        const source = audioContext.createMediaStreamSource(micStream);
+        source.connect(destination);
+      }
+
+      // Combine tracks: Keep the mixed audio track
+      const mixedStream = new MediaStream([
+        ...destination.stream.getAudioTracks(),
+      ]);
+
+      const recorder = new MediaRecorder(mixedStream, {
+        mimeType: "audio/webm",
+      });
+      mediaRecorderRef.current = recorder;
+      recordedChunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        if (!meetingId) {
+          toast.error("Meeting ID not found");
+          return;
+        }
+
+        const blob = new Blob(recordedChunksRef.current, {
+          type: "audio/webm",
+        });
+        const timestamp = Date.now();
+        const fileName = `meeting-full-mixed-audio-${meetingId}-${timestamp}.webm`;
+
+        // Upload to backend first
+        const formData = new FormData();
+        formData.append("refId", meetingId);
+        formData.append("imageType", "MEETING");
+        formData.append("isMaster", "0");
+        formData.append("fileType", "2040"); // Audio file type
+        formData.append("files", blob, fileName);
+
+        try {
+          // Upload to backend
+          uploadDoc(formData, {
+            onSuccess: async () => {
+              // File uploaded successfully, now upload to Fireflies
+              const audioUrl = `${ImageBaseURL}/share/mDocs/${fileName}`;
+              await uploadToFireflies(
+                audioUrl,
+                `Meeting Recording - ${meetingId}`,
+              );
+              toast.success("Recording saved and uploaded for transcription!");
+            },
+            onError: (error) => {
+              console.error("Error uploading recording:", error);
+              toast.error("Failed to save recording");
+            },
+          });
+        } catch (error) {
+          console.error("Error uploading recording:", error);
+          toast.error("Failed to save recording");
+        }
+
+        // Stop all tracks in all streams
+        [displayStream, micStream, mixedStream].forEach((s) => {
+          s.getTracks().forEach((track) => track.stop());
+        });
+        audioContext.close();
+        mediaRecorderRef.current = null;
+      };
+
+      recorder.start();
+
+      // Update Firebase
+      const meetStateRef = ref(db, `meetings/${meetingId}/state`);
+      update(meetStateRef, { isRecording: true });
+
+      toast.success(
+        "Recording started! IMPORTANT: Ensure you checked 'Share tab audio' in the browser popup.",
+      );
+    } catch (err) {
+      console.error("Error starting recording:", err);
+      toast.error(
+        "Could not start recording. Ensure you share tab/system audio and permit microphone access.",
+      );
+    }
+  };
+
+  const stopRecording = () => {
+    // eslint-disable-next-line no-alert
+    const isConfirmed = window.confirm(
+      "Are you sure to store recording and stop it?",
+    );
+    if (isConfirmed) {
+      const meetStateRef = ref(db, `meetings/${meetingId}/state`);
+      update(meetStateRef, { isRecording: false });
+    }
+  };
+
   const handleRing = () => {
     const alertsRef = ref(db, `meetings/${meetingId}/alert`);
     update(alertsRef, {
@@ -662,6 +963,9 @@ export default function useMeetingDesc() {
     handleRing,
     isShaking,
     audioRef,
+    isRecording,
+    startRecording,
+    stopRecording,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   };

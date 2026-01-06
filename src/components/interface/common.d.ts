@@ -1211,6 +1211,7 @@ interface MeetingResFire {
     unfollow?: {
       [employeeId: string]: boolean;
     };
+    isRecording?: boolean;
   };
   timers: {
     agenda?: TimerEntry;

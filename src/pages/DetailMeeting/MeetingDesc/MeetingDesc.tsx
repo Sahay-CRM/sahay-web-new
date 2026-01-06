@@ -88,7 +88,9 @@ export default function MeetingDesc() {
     handleFollowBack,
     handleRing,
     isShaking,
-    // audioRef,
+    isRecording,
+    startRecording,
+    stopRecording,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   } = useMeetingDesc();
@@ -158,6 +160,25 @@ export default function MeetingDesc() {
       >
         {/* <audio ref={audioRef} src="/public/BackToWork.mp3" preload="auto" /> */}
         <div className="w-full mt-4 overflow-hidden">
+          {meetingStatus === "DISCUSSION" &&
+            (isTeamLeader ||
+              userDetail?.employeeType === "CONSULTANT" ||
+              userDetail?.employeeType === "SAHAYTEAMMATE") && (
+              <div className="flex justify-end mb-4 pr-4">
+                <Button
+                  onClick={isRecording ? stopRecording : startRecording}
+                  variant="outline"
+                  className={cn(
+                    "w-[200px] h-[40px] rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-lg",
+                    isRecording
+                      ? "bg-red-600 hover:bg-red-700 text-white animate-pulse"
+                      : "bg-primary hover:bg-primary/90 text-white",
+                  )}
+                >
+                  {isRecording ? "Stop Recording" : "Start Recording"}
+                </Button>
+              </div>
+            )}
           <Agenda
             meetingName={meetingTiming?.meetingName ?? ""}
             meetingId={meetingId ?? ""}

@@ -1089,7 +1089,8 @@ export default function UpdatedKpiTable() {
     }
 
     if (percentage >= 100) return "bg-green-100 border-green-300";
-    if (percentage >= validationKey) return "bg-yellow-100 border-yellow-200";
+    if (validationKey > 0 && percentage >= validationKey)
+      return "bg-yellow-100 border-yellow-200";
     return "bg-red-100 border-red-300";
   }
 
@@ -1634,8 +1635,11 @@ export default function UpdatedKpiTable() {
                                                   (cell.validationPercentage >=
                                                   100
                                                     ? "bg-green-200"
-                                                    : cell.validationPercentage <
-                                                        validationKey
+                                                    : cell.validationPercentage !=
+                                                          null &&
+                                                        validationKey > 0 &&
+                                                        cell.validationPercentage <
+                                                          validationKey
                                                       ? "bg-red-200"
                                                       : "bg-yellow-200"),
 
@@ -1882,16 +1886,33 @@ export default function UpdatedKpiTable() {
 
                                                 // ⭐ Visualization-based color logic
                                                 cell?.data !== "-" &&
-                                                  // isVisualized &&
+                                                  validationKey &&
+                                                  validationKey !== null &&
+                                                  selectedPeriod !== "YEARLY" &&
                                                   cell?.validationPercentage !=
                                                     null &&
-                                                  (cell.validationPercentage >=
-                                                  100
-                                                    ? "bg-green-100"
-                                                    : cell.validationPercentage <
-                                                        validationKey
-                                                      ? "bg-red-200 border-red-500"
-                                                      : "bg-yellow-200  border-yellow-300"),
+                                                  (() => {
+                                                    const percentage =
+                                                      cell.validationPercentage;
+
+                                                    if (percentage >= 100)
+                                                      return "bg-green-100";
+
+                                                    if (
+                                                      validationKey > 0 &&
+                                                      percentage < validationKey
+                                                    )
+                                                      return "bg-red-200 border-red-500";
+
+                                                    if (
+                                                      validationKey > 0 &&
+                                                      percentage < 100 &&
+                                                      validationKey
+                                                    )
+                                                      return "bg-yellow-200 border-yellow-300";
+
+                                                    return "bg-green-200 border-green-300";
+                                                  })(),
 
                                                 isVisualized &&
                                                   "cursor-not-allowed",
