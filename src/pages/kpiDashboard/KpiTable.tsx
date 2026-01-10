@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useEffect, useState, useMemo } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import clsx from "clsx";
@@ -466,14 +466,18 @@ export default function UpdatedKpiTable() {
 
   useEffect(() => {
     if (!isKpiStructureLoading && kpiStructure?.data?.length) {
+      const visibleTabs = kpiStructure.data.filter((item) => item.count > 0);
+
+      if (!visibleTabs.length) return;
+
       const urlSelectedPeriod = searchParams.get("selectedType");
-      const availablePeriods = kpiStructure.data.map(
-        (item) => item.frequencyType,
-      );
+
+      const availablePeriods = visibleTabs.map((item) => item.frequencyType);
+
       const newPeriod =
         urlSelectedPeriod && availablePeriods.includes(urlSelectedPeriod)
           ? urlSelectedPeriod
-          : kpiStructure.data[0].frequencyType;
+          : visibleTabs[0].frequencyType;
 
       if (newPeriod !== selectedPeriod) {
         setSelectedPeriod(newPeriod);
@@ -1243,29 +1247,81 @@ export default function UpdatedKpiTable() {
     }
   };
 
+  const isTabLocked = useRef(false);
+
+  const handleInputKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    cellKey: string,
+  ) => {
+    if (e.key !== "Tab") return;
+    if (e.repeat || isTabLocked.current) {
+      e.preventDefault();
+      return;
+    }
+    isTabLocked.current = true;
+    e.preventDefault();
+    const inputs = Array.from(
+      document.querySelectorAll<HTMLInputElement>("input.kpi-input"),
+    ).filter((el) => !el.disabled && el.tabIndex >= 0);
+    const idx = inputs.findIndex((el) => el.dataset.cellKey === cellKey);
+    if (idx === -1) {
+      isTabLocked.current = false;
+      return;
+    }
+    const nextIdx = e.shiftKey ? idx - 1 : idx + 1;
+    const target = inputs[nextIdx];
+    if (target) {
+      target.focus();
+      setTimeout(() => target.select(), 0);
+    }
+    setTimeout(() => {
+      isTabLocked.current = false;
+    }, 300);
+  };
+
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    // Validate pasted content
     const pastedText = e.clipboardData.getData("text");
     const isValidPaste = /^-?\d+$/.test(pastedText);
-
     if (!isValidPaste) {
       e.preventDefault();
     }
   };
+  const selectedTab = kpiStructure?.data?.find(
+    (item) => item.frequencyType === urlSelectedPeriod,
+  );
+
+  const editableCount =
+    selectedTab?.kpis?.reduce((acc: number, coreParam: CoreParameterGroup) => {
+      return (
+        acc +
+        (coreParam.kpis?.filter((kpi: Kpi) => !kpi.isVisualized)?.length || 0)
+      );
+    }, 0) ?? 0;
+
+  const canEdit = editableCount > 0;
+  const canAuto = (selectedTab?.count ?? 0) - editableCount > 0;
 
   const dataFilterOption = [
     {
       label: "All",
       value: "default",
     },
-    {
-      label: "Edit",
-      value: "edit",
-    },
-    {
-      label: "Auto",
-      value: "auto",
-    },
+    ...(canEdit
+      ? [
+          {
+            label: "Edit",
+            value: "edit",
+          },
+        ]
+      : []),
+    ...(canAuto
+      ? [
+          {
+            label: "Auto",
+            value: "auto",
+          },
+        ]
+      : []),
   ];
 
   if (isKpiStructureLoading || !kpiStructure || !kpiData || !kpiData.data) {
@@ -1849,6 +1905,10 @@ export default function UpdatedKpiTable() {
                                                   ? (e) => handleChange(e, key)
                                                   : undefined
                                               }
+                                              data-cell-key={key}
+                                              onKeyDown={(e) =>
+                                                handleInputKeyDown(e, key)
+                                              }
                                               onKeyPress={handleKeyPress}
                                               onPaste={handlePaste}
                                               // className={twMerge(
@@ -1869,6 +1929,7 @@ export default function UpdatedKpiTable() {
                                               //     "cursor-not-allowed"
                                               // )}
                                               className={twMerge(
+                                                "kpi-input",
                                                 "border p-2 rounded-sm text-center text-sm w-full h-[42px] transition-all bg-white",
                                                 "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
 

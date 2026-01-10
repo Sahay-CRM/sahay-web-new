@@ -495,6 +495,7 @@ export const useAgenda = ({
           update(meetRef, { updatedAt: Date.now() });
           setModalOpen(false);
           setAddIssueModal(false);
+          setIssueInput("");
           // queryClient.resetQueries({
           //   queryKey: ["get-detail-meeting-agenda-issue-obj"],
           // });

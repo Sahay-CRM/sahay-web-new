@@ -61,9 +61,7 @@ function Calendar() {
     "all" | "task" | "meeting" | "importantDate"
   >("all");
 
-  // Change handler to accept string value
   const handleOptionChange = (value: string | string[]) => {
-    // Only single select, so value is string
     setSelectedOption(value as "all" | "task" | "meeting" | "importantDate");
   };
 
