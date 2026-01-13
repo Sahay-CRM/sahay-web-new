@@ -14,6 +14,8 @@ import {
   UsersRound,
   X,
   Download,
+  MicIcon,
+  DownloadIcon,
 } from "lucide-react";
 
 import useMeetingDesc from "./useMeetingDesc";
@@ -61,6 +63,9 @@ const DownloadNotesModal = React.lazy(
 export default function MeetingDesc() {
   const {
     meetingStatus,
+    isTranscriptReady,
+    checkTranscriptStatus,
+    firefliesMeetingId,
     meetingId,
     meetingResponse,
     meetingTiming,
@@ -160,25 +165,6 @@ export default function MeetingDesc() {
       >
         {/* <audio ref={audioRef} src="/public/BackToWork.mp3" preload="auto" /> */}
         <div className="w-full mt-4 overflow-hidden">
-          {meetingStatus === "DISCUSSION" &&
-            (isTeamLeader ||
-              userDetail?.employeeType === "CONSULTANT" ||
-              userDetail?.employeeType === "SAHAYTEAMMATE") && (
-              <div className="flex justify-end mb-4 pr-4">
-                <Button
-                  onClick={isRecording ? stopRecording : startRecording}
-                  variant="outline"
-                  className={cn(
-                    "w-[200px] h-[40px] rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-lg",
-                    isRecording
-                      ? "bg-red-600 hover:bg-red-700 text-white animate-pulse"
-                      : "bg-primary hover:bg-primary/90 text-white",
-                  )}
-                >
-                  {isRecording ? "Stop Recording" : "Start Recording"}
-                </Button>
-              </div>
-            )}
           <Agenda
             meetingName={meetingTiming?.meetingName ?? ""}
             meetingId={meetingId ?? ""}
@@ -940,6 +926,61 @@ export default function MeetingDesc() {
       <div
         className={`${isSidebarCollapsed ? "bg-white border rounded-md" : ""} flex flex-col z-30`}
       >
+        {meetingStatus === "DISCUSSION" &&
+          (isTeamLeader ||
+            userDetail?.employeeType === "CONSULTANT" ||
+            userDetail?.employeeType === "SAHAYTEAMMATE") && (
+            <div className="flex justify-center ">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={isRecording ? stopRecording : startRecording}
+                      variant="outline"
+                      className={cn(
+                        "h-[40px] rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-lg",
+                        isRecording
+                          ? "bg-red-600 hover:bg-red-700 text-white animate-pulse"
+                          : "bg-primary hover:bg-primary/90 text-white",
+                      )}
+                    >
+                      <MicIcon className="w-5 h-5 text-white" />
+                    </Button>
+                  </TooltipTrigger>
+
+                  <TooltipContent side="right">
+                    <p>{isRecording ? "Stop Recording" : "Start Recording"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          )}
+        {meetingStatus === "DISCUSSION" &&
+          isTranscriptReady === true &&
+          firefliesMeetingId &&
+          (isTeamLeader ||
+            userDetail?.employeeType === "CONSULTANT" ||
+            userDetail?.employeeType === "SAHAYTEAMMATE") && (
+            <div className="flex justify-center ">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => checkTranscriptStatus(firefliesMeetingId)}
+                      variant="outline"
+                      className="h-[40px] rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2 bg-primary hover:bg-primary text-white transition-all duration-300 shadow-lg"
+                    >
+                      <DownloadIcon className="w-5 h-5 text-white" />
+                    </Button>
+                  </TooltipTrigger>
+
+                  <TooltipContent side="right">
+                    <p>{"Dewnload File"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          )}
         <nav className="space-y-1 w-[56px]">
           <TooltipProvider>
             {sidebarItems.map(({ key, icon: Icon, label }) => (
