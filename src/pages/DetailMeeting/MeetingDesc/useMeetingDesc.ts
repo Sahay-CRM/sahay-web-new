@@ -15,6 +15,7 @@ import {
 } from "@/features/api/detailMeeting";
 import { toast } from "sonner";
 import { AudioUploadMutation } from "@/features/api/file";
+import useGetTranscript from "@/features/api/detailMeeting/useGetDetailMeetingTranscript";
 
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();
@@ -45,6 +46,8 @@ export default function useMeetingDesc() {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [isRecordingLocally, setIsRecordingLocally] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const getTranscriptMutation = useGetTranscript(firefliesMeetingId!);
+  console.log(firefliesMeetingId, "firefliesMeetingId");
 
   const { data: meetingData } = useGetMeetingTiming(meetingId ?? "");
 
@@ -93,9 +96,9 @@ export default function useMeetingDesc() {
       if (!snapshot.exists()) return;
 
       const data = snapshot.val();
-      console.log(data, "datadfdg");
 
       setMeetingResponse(data);
+
       const isTranscript = data?.state.isTranscript;
       const firefliesId = data?.state.firefliesMeetingId;
 
@@ -649,7 +652,7 @@ export default function useMeetingDesc() {
   const handleDownloadTranscript = async () => {
     setIsDownloading(true);
 
-    const ok = await checkTranscriptStatus(firefliesMeetingId!);
+    const ok = await checkTranscriptStatus();
 
     // Download triggered successfully
     if (ok) {
@@ -661,9 +664,7 @@ export default function useMeetingDesc() {
     }
   };
 
-  const checkTranscriptStatus = async (transcriptId: string) => {
-    const firefliesApiKey = import.meta.env.VITE_FIREFLIES_API_KEY;
-
+  const checkTranscriptStatus = async () => {
     const downloadDocFile = (data: TranscriptSentence[], title: string) => {
       const fileName = `${title.replace(/\s+/g, "_")}.doc`;
 
@@ -697,45 +698,17 @@ export default function useMeetingDesc() {
     };
 
     try {
-      const response = await fetch("https://api.fireflies.ai/graphql", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${firefliesApiKey}`,
-        },
-        body: JSON.stringify({
-          query: `
-          query GetTranscript($id: String!) {
-            transcript(id: $id) {
-              id
-              title
-              sentences {
-                text
-                speaker_name
-                start_time
-              }
-            }
-          }
-        `,
-          variables: { id: transcriptId },
-        }),
-      });
+      const transcript = await getTranscriptMutation.mutateAsync();
 
-      const result = await response.json();
-
-      const transcriptData = result.data?.transcript;
-
-      if (transcriptData?.sentences?.length > 0) {
-        downloadDocFile(
-          transcriptData.sentences,
-          transcriptData.title || "Transcript",
-        );
-        return true; // ⬅ important
+      if (!transcript?.sentences?.length) {
+        return false;
       }
 
-      return false;
+      downloadDocFile(transcript.sentences, transcript.title || "Transcript");
+
+      return true;
     } catch (err) {
-      console.error("Fetch Error:", err);
+      console.error("Transcript error:", err);
       return false;
     }
   };
