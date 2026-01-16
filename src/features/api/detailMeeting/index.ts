@@ -35,3 +35,4 @@ export { default as useGetDetailMeeting } from "./useGetDetailMeeting";
 
 export { default as updateIoSequenceMutation } from "./useUpdateMeetingIoSequence";
 export { default as deleteDetailMeetingMutation } from "./useDeleteDetailMeeting";
+export { default as getTranscript } from "./useGetDetailMeetingTranscript";
