@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -10,12 +10,19 @@ import {
 } from "recharts";
 import { Download } from "lucide-react";
 import { toJpeg } from "html-to-image";
+import DateRangePicker from "@/components/shared/DateRange";
+import { getUTCEndOfDay, getUTCStartOfDay } from "@/features/utils/app.utils";
+import { DateRange } from "react-day-picker";
+import useGetKpiChartData from "@/features/api/kpiDashboard/useGetKpiChartData";
+
+/** ====================== TYPES ====================== **/
 
 interface GraphModalProps {
   modalData: KpiDataCell[];
   isModalOpen: boolean;
   modalClose: () => void;
   kpiData?: KpiType;
+  selectedPeriod?: string;
 }
 
 export default function GraphModal({
@@ -23,14 +30,54 @@ export default function GraphModal({
   isModalOpen,
   modalClose,
   kpiData,
+  selectedPeriod,
 }: GraphModalProps) {
   const chartRef = useRef<HTMLDivElement>(null);
+
+  /** ====================== DEFAULT DATE CALCULATION ====================== **/
+  const defaultRange = useMemo(() => {
+    if (!modalData || modalData.length === 0)
+      return { from: undefined, to: undefined };
+
+    const sorted = [...modalData].sort(
+      (a, b) =>
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+    );
+
+    return {
+      from: new Date(sorted[0].startDate),
+      to: new Date(
+        sorted[sorted.length - 1].endDate ||
+          sorted[sorted.length - 1].startDate,
+      ),
+    };
+  }, [modalData]);
+
+  /** ====================== STATE ====================== **/
+  const [selectedRange, setSelectedRange] = useState<{
+    from: Date | undefined;
+    to: Date | undefined;
+  }>({ from: undefined, to: undefined });
+
+  const [applyFilter, setApplyFilter] = useState(false);
+
+  // Sync state when modal opens
+  useEffect(() => {
+    if (isModalOpen) {
+      setSelectedRange({
+        from: defaultRange.from,
+        to: defaultRange.to,
+      });
+      setApplyFilter(false);
+    }
+  }, [isModalOpen, defaultRange]);
+
+  /** ====================== FORMATTERS ====================== **/
   const formatDateDaily = (dateStr: string) => {
     const date = new Date(dateStr);
     const day = String(date.getDate()).padStart(2, "0");
     return `${day} ${date.toLocaleString("en-US", { month: "short" })} ${date.getFullYear()}`;
   };
-
   const formatDateWeekly = (startStr: string, endStr: string) => {
     const startDate = new Date(startStr);
     const endDate = new Date(endStr);
@@ -87,7 +134,6 @@ export default function GraphModal({
     return `${startYear}-${endYear}`;
   };
 
-  // Format date for X-axis based on validation type
   const getFormattedDate = (item: KpiDataCell, index: number): string => {
     // If labels are available in kpiData, use them
     if (kpiData?.labels && kpiData.labels[index]) {
@@ -114,99 +160,61 @@ export default function GraphModal({
         return formatDateDaily(item.startDate);
     }
   };
-
-  // Process data for chart
-  const chartData = (modalData ?? []).map((item, index) => ({
-    date: getFormattedDate(item, index),
-    actual: item.data ? parseInt(String(item.data)) : 0,
-    goal: parseInt(String(item.goalValue)),
-    isSunday: item.isSunday,
-    isSkipDay: item.isSkipDay,
-    isHoliday: item.isHoliday,
-    note: item.note,
-  }));
-
-  const getDateRange = () => {
-    if (!modalData || modalData.length === 0) return null;
-
-    const sorted = [...modalData].sort(
-      (a, b) =>
-        new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
-    );
-
-    const first = sorted[0];
-    const last = sorted[sorted.length - 1];
-    const validationType = kpiData?.validationType || first.validationType;
-
-    switch (validationType) {
-      case "DAILY":
-        return {
-          from: formatDateDaily(first.startDate),
-          to: formatDateDaily(last.startDate),
-        };
-      case "WEEKLY":
-        return {
-          from: formatDateWeekly(first.startDate, first.endDate),
-          to: formatDateWeekly(last.startDate, last.endDate),
-        };
-      case "MONTHLY":
-        return {
-          from: formatDateMonthly(first.startDate).replace("\n", " "),
-          to: formatDateMonthly(last.startDate).replace("\n", " "),
-        };
-      case "QUARTERLY":
-        return {
-          from: formatDateQuarterly(first.startDate, first.endDate).replace(
-            "\n",
-            " ",
-          ),
-          to: formatDateQuarterly(last.startDate, last.endDate).replace(
-            "\n",
-            " ",
-          ),
-        };
-      case "HALFYEARLY":
-        return {
-          from: formatDateHalfYearly(first.startDate, first.endDate).replace(
-            "\n",
-            " ",
-          ),
-          to: formatDateHalfYearly(last.startDate, last.endDate).replace(
-            "\n",
-            " ",
-          ),
-        };
-      case "YEARLY":
-        return {
-          from: formatDateYearly(first.startDate, first.endDate),
-          to: formatDateYearly(last.startDate, last.endDate),
-        };
-      default:
-        return {
-          from: formatDateDaily(first.startDate),
-          to: formatDateDaily(last.startDate),
-        };
-    }
+  /** ====================== HANDLERS ====================== **/
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setSelectedRange({
+      from: range?.from,
+      to: range?.to || range?.from,
+    });
   };
 
-  const dateRange = getDateRange();
+  const handleDateRangeApply = (range: DateRange | undefined) => {
+    setSelectedRange({ from: range?.from, to: range?.to || range?.from });
+    setApplyFilter(true);
+  };
 
+  const handleDateRangeReset = () => {
+    setSelectedRange({ from: defaultRange.from, to: defaultRange.to });
+    setApplyFilter(false);
+  };
+
+  /** ====================== API CALL ====================== **/
+  const { data: chartApiData } = useGetKpiChartData({
+    filter: {
+      frequencyType: selectedPeriod,
+      startDate: selectedRange.from
+        ? getUTCStartOfDay(selectedRange.from)
+        : null,
+      endDate: selectedRange.to ? getUTCEndOfDay(selectedRange.to) : null,
+    },
+    enable: applyFilter,
+  });
+
+  /** ====================== CHART DATA ====================== **/
+  const apiList = useMemo((): KpiDataCell[] => {
+    if (chartApiData?.data?.[0] && Array.isArray(chartApiData.data[0])) {
+      return chartApiData.data[0] as KpiDataCell[];
+    }
+    return modalData || [];
+  }, [chartApiData, modalData]);
+
+  const chartData = apiList.map((item, idx) => ({
+    date: getFormattedDate(item, idx),
+    actual: item.data ? Number(item.data) : 0,
+    goal: Number(item.goalValue || 0),
+  }));
+
+  /** ====================== DOWNLOAD ====================== **/
   const downloadChart = async () => {
-    if (chartRef.current && dateRange) {
-      const from = new Date(dateRange.from).toISOString().split("T")[0];
-      const to = new Date(dateRange.to).toISOString().split("T")[0];
-
+    if (chartRef.current) {
       const dataUrl = await toJpeg(chartRef.current, {
         quality: 0.95,
         backgroundColor: "#fff",
       });
       const link = document.createElement("a");
-      link.download = `${kpiData?.kpiName || "chart"}-${from}-to-${to}.jpg`;
-      // link.download = `${kpiData?.kpiName || "chart"}-new Date(${dateRange.from}).jpg`;
+      link.download = `${kpiData?.kpiName || "chart"}.jpg`;
       link.href = dataUrl;
-      document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
     }
   };
 
@@ -216,30 +224,35 @@ export default function GraphModal({
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto px-4">
         <div className="flex items-center justify-between py-4">
-          <div className="flex items-center justify-between gap-6 flex-wrap">
+          <div className="flex items-center gap-6 flex-wrap">
             <div className="p-4 bg-gray-50 rounded-lg">
               <span className="font-semibold text-gray-700">KPI Name:</span>{" "}
               <span className="text-gray-900 text-lg">{kpiData?.kpiName}</span>
             </div>
-            {dateRange && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <span className="font-semibold text-gray-700">Date Range:</span>{" "}
-                <span className="text-gray-900">
-                  {dateRange.from}
-                  {dateRange.to && ` to ${dateRange.to}`}
-                </span>
-              </div>
-            )}
+
+            <DateRangePicker
+              value={{ from: selectedRange.from, to: selectedRange.to }}
+              onChange={handleDateRangeChange}
+              onApply={handleDateRangeApply}
+              onSaveApply={handleDateRangeApply}
+              defaultDate={{
+                startDate: selectedRange.from,
+                deadline: selectedRange.to,
+              }}
+              isClear
+              handleClear={handleDateRangeReset}
+            />
           </div>
+
           <div className="flex items-center gap-2">
             <button
               onClick={downloadChart}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-              title="Download chart as PNG"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
             >
               <Download size={18} />
               Download
             </button>
+
             <button
               onClick={modalClose}
               className="text-gray-500 hover:text-gray-700 text-3xl p-2"
@@ -261,7 +274,7 @@ export default function GraphModal({
             <ResponsiveContainer width="100%" height={400}>
               <LineChart
                 data={chartData}
-                margin={{ top: 5, right: 30, left: 30, bottom: 60 }}
+                margin={{ top: 5, right: 30, left: 0, bottom: 10 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis

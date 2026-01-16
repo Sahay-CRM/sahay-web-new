@@ -13,9 +13,8 @@ import {
   useGetMeetingNotes,
   useGetMeetingTiming,
 } from "@/features/api/detailMeeting";
+import { docUploadMutation } from "@/features/api/file";
 import { toast } from "sonner";
-import { AudioUploadMutation } from "@/features/api/file";
-import useGetTranscript from "@/features/api/detailMeeting/useGetDetailMeetingTranscript";
 
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();
@@ -25,12 +24,7 @@ export default function useMeetingDesc() {
   const [meetingResponse, setMeetingResponse] = useState<MeetingResFire | null>(
     null,
   );
-  const [isDownloading, setIsDownloading] = useState(false);
 
-  const [isTranscriptReady, setIsTranscriptReady] = useState(false);
-  const [firefliesMeetingId, setFirefliesMeetingId] = useState<string | null>(
-    null,
-  );
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [activeTab, setActiveTab] = useState<string>();
   const [isCardVisible, setIsCardVisible] = useState(false);
@@ -46,7 +40,6 @@ export default function useMeetingDesc() {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [isRecordingLocally, setIsRecordingLocally] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
-  const getTranscriptMutation = useGetTranscript(firefliesMeetingId!);
 
   const { data: meetingData } = useGetMeetingTiming(meetingId ?? "");
 
@@ -74,7 +67,7 @@ export default function useMeetingDesc() {
   const deleteNoteMutation = deleteCompanyMeetingMutation();
 
   const { mutate: addDetailMeeting } = addUpdateDetailMeetingMutation();
-  const { mutate: uploadAudio } = AudioUploadMutation();
+  const { mutate: uploadDoc } = docUploadMutation();
 
   const handleUpdatedRefresh = useCallback(async () => {
     await Promise.all([
@@ -95,15 +88,8 @@ export default function useMeetingDesc() {
       if (!snapshot.exists()) return;
 
       const data = snapshot.val();
-
       setMeetingResponse(data);
 
-      const isTranscript = data?.state.isTranscript;
-      const firefliesId = data?.state.firefliesMeetingId;
-
-      // store in state
-      setIsTranscriptReady(isTranscript === true);
-      setFirefliesMeetingId(firefliesId ?? null);
       const isStarted =
         data.state?.status === "IN_PROGRESS" ||
         meetingTiming?.detailMeetingStatus === "STARTED";
@@ -548,31 +534,34 @@ export default function useMeetingDesc() {
       setIsRecordingLocally(false);
     }
   }, [isRecording]);
+  useEffect(() => {
+    console.log("canStopRecording:", canStopRecording);
+  }, [canStopRecording]);
 
-  // const downloadRecordingLocally = (blob: Blob, fileName: string) => {
-  //   try {
-  //     // Create download link
-  //     const url = URL.createObjectURL(blob);
-  //     const a = document.createElement("a");
-  //     a.href = url;
-  //     a.download = fileName;
+  const downloadRecordingLocally = (blob: Blob, fileName: string) => {
+    try {
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
 
-  //     // Trigger download
-  //     document.body.appendChild(a);
-  //     a.click();
+      // Trigger download
+      document.body.appendChild(a);
+      a.click();
 
-  //     // Cleanup
-  //     setTimeout(() => {
-  //       document.body.removeChild(a);
-  //       URL.revokeObjectURL(url);
-  //     }, 100);
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
 
-  //     toast.success("Recording downloaded locally as MP3!");
-  //   } catch (error) {
-  //     console.error("Error downloading recording:", error);
-  //     toast.error("Failed to download recording locally");
-  //   }
-  // };
+      toast.success("Recording downloaded locally as MP3!");
+    } catch (error) {
+      console.error("Error downloading recording:", error);
+      toast.error("Failed to download recording locally");
+    }
+  };
 
   const convertWebmToMp3 = async (webmBlob: Blob): Promise<Blob> => {
     // eslint-disable-next-line no-async-promise-executor
@@ -638,102 +627,139 @@ export default function useMeetingDesc() {
       }
     });
   };
-  interface TranscriptSentence {
-    text: string;
-    speaker_name: string | null;
-    start_time: number;
-    end_time?: number;
-  }
 
-  const handleDownloadTranscript = async () => {
-    setIsDownloading(true);
+  const uploadToFireflies = async (
+    audioUrl: string,
+    title: string,
+    blobSize: number,
+  ) => {
+    if (blobSize < 50 * 1024) {
+      toast.error("Audio file is too small for transcription (min 50KB)");
+      return;
+    }
 
-    const ok = await checkTranscriptStatus();
+    const firefliesApiKey = import.meta.env.VITE_FIREFLIES_API_KEY;
+    if (!firefliesApiKey) {
+      toast.error("Fireflies API Key not found");
+      return;
+    }
 
-    // Download triggered successfully
-    if (ok) {
-      setIsDownloading(false);
-    } else {
-      // Transcript not ready or error
-      setIsDownloading(false);
-      toast.error("Transcript not ready yet, try again later.");
+    // secure URL (Fireflies requires https)
+    const secureAudioUrl = audioUrl.startsWith("http://")
+      ? audioUrl.replace("http://", "https://")
+      : audioUrl;
+
+    try {
+      const response = await fetch("https://api.fireflies.ai/graphql", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${firefliesApiKey}`,
+        },
+        body: JSON.stringify({
+          query: `
+        mutation($input: AudioUploadInput!) {
+          uploadAudio(input: $input) {
+           success
+           message
+          }
+        }
+      `,
+          variables: {
+            input: {
+              url: secureAudioUrl,
+              title: title,
+              client_reference_id: meetingId, // optional
+            },
+          },
+        }),
+      });
+
+      const uploadResult = await response.json();
+
+      if (uploadResult.errors) {
+        toast.error(uploadResult.errors[0]?.message || "Fireflies Error");
+        return;
+      }
+
+      const uploadData = uploadResult.data?.uploadAudio;
+
+      if (!uploadData?.success) {
+        toast.error(uploadData?.message || "Failed to upload to Fireflies");
+        return;
+      }
+
+      toast.success("Uploaded to Fireflies. Transcription started!");
+
+      await checkTranscriptStatus(meetingId!);
+    } catch (err) {
+      console.error("Fireflies Upload Error:", err);
+      toast.error("Fireflies upload failed");
     }
   };
 
-  const checkTranscriptStatus = async () => {
-    const downloadDocFile = (data: TranscriptSentence[], title: string) => {
-      const fileName = `${title.replace(/\s+/g, "_")}.doc`;
-
-      const header = `<html><head><meta charset='utf-8'></head><body>`;
-      const footer = "</body></html>";
-
-      const content = data
-        .map(
-          (s) => `
-        <div class="sentence">
-          <span>[${s.start_time}s]</span> 
-          <strong>${s.speaker_name || "Speaker"}:</strong>
-          <span>${s.text}</span>
-        </div>
-      `,
-        )
-        .join("");
-
-      const blob = new Blob(["\ufeff", header + content + footer], {
-        type: "application/msword",
-      });
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    };
+  const checkTranscriptStatus = async (transcriptId: string) => {
+    const firefliesApiKey = import.meta.env.VITE_FIREFLIES_API_KEY;
+    const targetId = transcriptId || "01KEKRGGN7AJ4A3T5XQH7NC12M";
 
     try {
-      const transcript = await getTranscriptMutation.mutateAsync();
+      const response = await fetch("https://api.fireflies.ai/graphql", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${firefliesApiKey}`,
+        },
+        body: JSON.stringify({
+          query: `
+          query GetTranscript($id: String!) {
+            transcript(id: $id) {
+              id
+              title
+              host_email
+              sentences {
+                text
+                speaker_name
+                start_time
+                end_time
+              }
+            }
+          }
+        `,
+          variables: {
+            id: targetId,
+          },
+        }),
+      });
 
-      if (!transcript?.sentences?.length) {
-        return false;
+      const result = await response.json();
+
+      if (result.errors) {
+        console.error("Fireflies API Error:", result.errors);
+        toast.error(result.errors[0].message);
+        return;
       }
 
-      downloadDocFile(transcript.sentences, transcript.title || "Transcript");
+      const transcriptData = result.data?.transcript;
 
-      return true;
+      if (
+        transcriptData &&
+        transcriptData.sentences &&
+        transcriptData.sentences.length > 0
+      ) {
+        console.log(
+          "Transcript fetched successfully!",
+          transcriptData.sentences,
+        );
+        return transcriptData.sentences; // Yeh aapka actual text data hai
+      } else {
+        toast.info("Transcript is still processing or no sentences found.");
+      }
     } catch (err) {
-      console.error("Transcript error:", err);
-      return false;
+      console.error("Fetch Error:", err);
     }
   };
 
   const startRecording = async () => {
-    const meetingMetaRef = ref(db, `meetings/${meetingId}/state`);
-    const snapshot = await get(meetingMetaRef);
-    const meetingMeta = snapshot.val();
-
-    const { firefliesMeetingId, isTranscriptReady } = meetingMeta || {};
-
-    if (firefliesMeetingId || isTranscriptReady) {
-      const confirmDelete = window.confirm(
-        "A previous recording and transcript already exist. Starting a new recording will delete them. Do you want to continue?",
-      );
-
-      if (!confirmDelete) {
-        toast.info("Recording cancelled.");
-        return;
-      }
-
-      // Delete previous data
-      await update(meetingMetaRef, {
-        firefliesMeetingId: null,
-        isTranscriptReady: false,
-      });
-
-      toast.success("Previous recording removed. Starting new...");
-    }
     try {
       // 1. Capture system/tab audio
       const displayStream = await navigator.mediaDevices.getDisplayMedia({
@@ -792,6 +818,7 @@ export default function useMeetingDesc() {
       for (const mimeType of mimeTypes) {
         if (MediaRecorder.isTypeSupported(mimeType)) {
           selectedMimeType = mimeType;
+          console.log("Using mimeType:", mimeType);
           break;
         }
       }
@@ -847,6 +874,7 @@ export default function useMeetingDesc() {
           return;
         }
 
+        // Create blob from recorded chunks
         const webmBlob = new Blob(recordedChunksRef.current, {
           type: selectedMimeType,
         });
@@ -872,43 +900,45 @@ export default function useMeetingDesc() {
           return;
         }
 
-        // const timestamp = Date.now();
+        const timestamp = Date.now();
 
         // Convert to MP3 for better compatibility
         const mp3Blob = await convertWebmToMp3(webmBlob);
         setRecordedBlob(mp3Blob);
 
-        // const mp3FileName = `meeting-recording-${meetingId}-${timestamp}.mp3`;
-        const mp3FileName = `${meetingTiming?.meetingName?.trim()}.mp3`;
-
+        const mp3FileName = `meeting-recording-${meetingId}-${timestamp}.mp3`;
         // const webmFileName = `meeting-recording-${meetingId}-${timestamp}.webm`;
 
         // 🔴 STEP 1: LOCAL DOWNLOAD (MP3 format)
-        // downloadRecordingLocally(mp3Blob, mp3FileName);
+        downloadRecordingLocally(mp3Blob, mp3FileName);
 
         // 🔴 STEP 2: UPLOAD TO BACKEND (MP3 format)
         const formData = new FormData();
         formData.append("refId", meetingId);
         formData.append("imageType", "MEETING");
         formData.append("isMaster", "0");
-        formData.append("fileType", "2060");
+        formData.append("fileType", "2040"); // Audio file type
         formData.append("files", mp3Blob, mp3FileName);
 
         try {
           // Upload to backend
-          uploadAudio(
-            { id: meetingId, formData },
-            {
-              onSuccess: () => {
-                toast.success(
-                  "Recording saved and uploaded for transcription!",
-                );
-              },
-              onError: () => {
-                toast.error("Failed to save recording to server");
-              },
+          uploadDoc(formData, {
+            onSuccess: async () => {
+              // File uploaded successfully, now upload to Fireflies (MP3 format)
+              // const audioUrl = `${ImageBaseURL}/share/mDocs/${mp3FileName}`;
+              await uploadToFireflies(
+                // audioUrl,
+                "https://carvetheraw.com/wp-content/uploads/2024/05/listening-part-3.mp3",
+                `${meetingTiming?.meetingName}`,
+                mp3Blob.size,
+              );
+              toast.success("Recording saved and uploaded for transcription!");
             },
-          );
+            onError: (error) => {
+              console.error("Error uploading recording:", error);
+              toast.error("Failed to save recording to server");
+            },
+          });
         } catch (error) {
           console.error("Error uploading recording:", error);
           toast.error("Failed to save recording");
@@ -957,10 +987,10 @@ export default function useMeetingDesc() {
   };
 
   const stopRecording = () => {
-    if (!canStopRecording) {
-      toast.error("Please record for at least 20 seconds before stopping.");
-      return;
-    }
+    // if (!canStopRecording) {
+    //   toast.error("Please record for at least 20 seconds before stopping.");
+    //   return;
+    // }
 
     // eslint-disable-next-line no-alert
     const isConfirmed = window.confirm(
@@ -990,14 +1020,14 @@ export default function useMeetingDesc() {
     update(meetStateRef, { isRecording: false });
   };
 
-  // const handleDownloadRecording = () => {
-  //   if (recordedBlob && meetingId) {
-  //     // const fileName = `meeting-recording-${meetingId}-${Date.now()}.mp3`;
-  //     // downloadRecordingLocally(recordedBlob, fileName);
-  //   } else {
-  //     toast.error("No recording available to download");
-  //   }
-  // };
+  const handleDownloadRecording = () => {
+    if (recordedBlob && meetingId) {
+      const fileName = `meeting-recording-${meetingId}-${Date.now()}.mp3`;
+      downloadRecordingLocally(recordedBlob, fileName);
+    } else {
+      toast.error("No recording available to download");
+    }
+  };
 
   const handleRing = () => {
     const alertsRef = ref(db, `meetings/${meetingId}/alert`);
@@ -1043,13 +1073,8 @@ export default function useMeetingDesc() {
     recordingDuration,
     isRecordingLocally,
     canStopRecording,
-    // handleDownloadRecording,
-    isTranscriptReady,
-    checkTranscriptStatus,
-    firefliesMeetingId,
+    handleDownloadRecording,
     hasRecording: !!recordedBlob,
-    isDownloading,
-    handleDownloadTranscript,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   };

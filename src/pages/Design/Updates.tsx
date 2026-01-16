@@ -1,6 +1,7 @@
 import useGetUpdates from "@/features/api/Updates/useGetUpdates";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 const SingleUpdate: React.FC = () => {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -10,7 +11,10 @@ const SingleUpdate: React.FC = () => {
   }, [setBreadcrumbs]);
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  // ⭐ URL-based selected date
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedDate = searchParams.get("date");
 
   // Fetch updates
   const { data: UpdateList } = useGetUpdates();
@@ -21,7 +25,7 @@ const SingleUpdate: React.FC = () => {
     const groups: { date: string; items: UpdateItem[] }[] = [];
 
     rawUpdates.forEach((item) => {
-      const dateKey = item.date.split("T")[0]; // group by date only
+      const dateKey = item.date.split("T")[0];
 
       let group = groups.find((g) => g.date === dateKey);
       if (!group) {
@@ -34,7 +38,7 @@ const SingleUpdate: React.FC = () => {
     return groups;
   }, [UpdateList?.data]);
 
-  // If a date is selected, filter the section
+  // If URL has ?date=..., show that section
   const activeSection = selectedDate
     ? groupedUpdates.find((u) => u.date === selectedDate)
     : null;
@@ -45,7 +49,7 @@ const SingleUpdate: React.FC = () => {
         {/* Back Button */}
         {selectedDate && (
           <button
-            onClick={() => setSelectedDate(null)}
+            onClick={() => setSearchParams({})}
             className="text-sm text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-1"
           >
             ← Back to all updates
@@ -57,11 +61,13 @@ const SingleUpdate: React.FC = () => {
           (section) =>
             section && (
               <div key={section.date} className="space-y-6 border-b pb-8">
-                {/* 🗓️ Date Header */}
+                {/* Date Header */}
                 <div className="flex gap-6 items-start">
                   <button
                     onClick={() =>
-                      selectedDate ? null : setSelectedDate(section.date)
+                      selectedDate
+                        ? null
+                        : setSearchParams({ date: section.date })
                     }
                     className="w-32 text-sm text-gray-400 dark:text-gray-500 text-left hover:text-gray-600"
                   >
@@ -89,7 +95,7 @@ const SingleUpdate: React.FC = () => {
                       </h3>
 
                       {/* Description */}
-                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-4 whitespace-pre-line ">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-4 whitespace-pre-line">
                         {update.description}
                       </p>
 
