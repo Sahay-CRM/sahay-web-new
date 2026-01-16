@@ -2217,6 +2217,7 @@ export default function UpdatedKpiTable() {
         isModalOpen={isGraphClick}
         modalClose={handleGraphClose}
         kpiData={kpiD!}
+        selectedPeriod={selectedPeriod}
       />
     </FormProvider>
   );

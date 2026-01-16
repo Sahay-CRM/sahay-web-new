@@ -20,6 +20,16 @@ import { queryClient } from "./queryClient";
 //   appId: "1:186510074634:web:f1000c0ed66bbce33dd0f3",
 // };
 
+//production
+// const firebaseConfig = {
+//   apiKey: "AIzaSyDYvESA-w5we9O7sxMBaezt9ibg6-Tfhw4",
+//   authDomain: "sahay-prod-51dd7.firebaseapp.com",
+//   databaseURL: "https://sahay-prod-51dd7-default-rtdb.firebaseio.com",
+//   projectId: "sahay-prod-51dd7",
+//   storageBucket: "sahay-prod-51dd7.firebasestorage.app",
+//   messagingSenderId: "277313703948",
+//   appId: "1:277313703948:web:b3bb7692591bcc80289e29",
+// };
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,

@@ -15,8 +15,6 @@ import {
   X,
   Download,
   MicIcon,
-  DownloadIcon,
-  Loader2,
 } from "lucide-react";
 
 import useMeetingDesc from "./useMeetingDesc";
@@ -64,9 +62,6 @@ const DownloadNotesModal = React.lazy(
 export default function MeetingDesc() {
   const {
     meetingStatus,
-    isTranscriptReady,
-    handleDownloadTranscript,
-    firefliesMeetingId,
     meetingId,
     meetingResponse,
     meetingTiming,
@@ -97,7 +92,6 @@ export default function MeetingDesc() {
     isRecording,
     startRecording,
     stopRecording,
-    isDownloading,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   } = useMeetingDesc();
@@ -932,7 +926,7 @@ export default function MeetingDesc() {
           (isTeamLeader ||
             userDetail?.employeeType === "CONSULTANT" ||
             userDetail?.employeeType === "SAHAYTEAMMATE") && (
-            <div className="flex justify-center ">
+            <div className="flex justify-center mb-3">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -952,37 +946,6 @@ export default function MeetingDesc() {
 
                   <TooltipContent side="right">
                     <p>{isRecording ? "Stop Recording" : "Start Recording"}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          )}
-        {(meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") &&
-          isTranscriptReady === true &&
-          firefliesMeetingId &&
-          (userDetail?.employeeType === "CONSULTANT" ||
-            userDetail?.employeeType === "SAHAYTEAMMATE") && (
-            <div className="flex justify-center ">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      onClick={handleDownloadTranscript}
-                      variant="outline"
-                      className="h-[40px] rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2 bg-primary hover:bg-primary text-white transition-all duration-300 shadow-lg"
-                    >
-                      {isDownloading ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin text-white" />
-                        </>
-                      ) : (
-                        <DownloadIcon className="w-5 h-5 text-white" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-
-                  <TooltipContent side="right">
-                    <p>{"Dewnload File"}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

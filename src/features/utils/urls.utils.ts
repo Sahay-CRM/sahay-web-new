@@ -135,6 +135,7 @@ const Urls = {
 
   kpiStructureGet: () => `${baseUrl}/company/kpi-data/frame`,
   kpiDataGet: () => `${baseUrl}/company/kpi-data/get`,
+  kpiChartDataGet: () => `${baseUrl}/company/kpi-data/get-range`,
   addUpdateKpi: () => `${baseUrl}/company/kpi-data/update`,
   getKpiVisualize: () => `${baseUrl}/company/kpi-data/get/visual`,
 
