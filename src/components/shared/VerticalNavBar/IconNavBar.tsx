@@ -184,8 +184,8 @@ const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
       </div>
 
       {/* S Logo at Bottom */}
-      <div className="flex justify-center items-center p-4 mt-auto">
-        <img src={logoImg} alt="logo" className="w-8" />
+      <div className="flex justify-center items-center p-1 mb-1 mt-auto">
+        <img src={logoImg} alt="logo" className="w-10" />
       </div>
     </div>
   );

@@ -128,6 +128,8 @@ const Urls = {
   gelAllProduct: () => `${baseUrl}/company/product/get-all`,
 
   uploadDoc: () => `${baseUrl}/file/upload-docs`,
+  uploadAudio: (id: string) =>
+    `${baseUrl}/company/detail-meeting/upload-audio/${id}`,
 
   subParameterByFilter: () => `${baseUrl}/sub-param/get-by-level`,
 

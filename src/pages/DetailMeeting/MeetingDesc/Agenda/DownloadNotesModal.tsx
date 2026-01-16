@@ -38,13 +38,14 @@ interface SelectedFields {
 
 interface SelectedFilters {
   tags: {
-    KPI: boolean;
-    TASK: boolean;
-    PROJECT: boolean;
+    Kpi: boolean;
+    Task: boolean;
+    Project: boolean;
+    Reminder: boolean;
   };
   types: {
-    APPRECIATION: boolean;
-    UPDATES: boolean;
+    appreciation: boolean;
+    updates: boolean;
   };
 }
 
@@ -55,14 +56,15 @@ const FIELD_LABELS: Record<keyof SelectedFields, string> = {
 };
 
 const TAG_LABELS: Record<keyof SelectedFilters["tags"], string> = {
-  KPI: "KPI",
-  TASK: "Task",
-  PROJECT: "Project",
+  Kpi: "KPI",
+  Task: "Task",
+  Project: "Project",
+  Reminder: "Reminder",
 };
 
 const TYPE_LABELS: Record<keyof SelectedFilters["types"], string> = {
-  APPRECIATION: "Appreciation",
-  UPDATES: "Updates",
+  appreciation: "appreciation",
+  updates: "updates",
 };
 
 const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
@@ -89,13 +91,14 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
 
   const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({
     tags: {
-      KPI: false,
-      TASK: false,
-      PROJECT: false,
+      Kpi: false,
+      Task: false,
+      Project: false,
+      Reminder: false,
     },
     types: {
-      APPRECIATION: false,
-      UPDATES: false,
+      appreciation: false,
+      updates: false,
     },
   });
 

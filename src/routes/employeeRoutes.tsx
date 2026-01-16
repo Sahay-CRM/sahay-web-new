@@ -121,6 +121,7 @@ export default function EmployeeRoutes() {
   return (
     <Routes>
       <Route index element={<Navigate to="/dashboard" replace />} />
+
       <Route path="/dashboard" element={<DashboardLayout />}>
         <Route index element={<AddGraph />} />
 

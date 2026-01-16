@@ -554,20 +554,38 @@ export default function CompanyProfile() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       PAN Card
                     </label>
+
                     {isEditing ? (
                       <FormFile
                         label=""
-                        value={watch("pan") ?? ""}
-                        onChange={(val) => setValue("pan", val)}
-                        error={errors.pan}
-                        acceptedFormats="*"
+                        value={watch("pancard") ?? ""}
+                        fileName={watch("pancardFileName")}
+                        onChange={(val, fileName) => {
+                          setValue("pancard", val);
+                          setValue("pancardFileName", fileName);
+                        }}
+                        error={errors.pancard}
+                        acceptedFormats=".jpg,.jpeg,.png,.webp,.pdf"
+                        // onChange={(val) => {
+                        //   const oldVal = watch("gstCertificate");
+
+                        //   if (
+                        //     typeof oldVal === "string" &&
+                        //     oldVal.startsWith("http")
+                        //   ) {
+                        //     setGstFileToRemove(oldVal.split("/").pop() || null);
+                        //   }
+
+                        //   setValue("gstCertificate", val);
+                        // }}
                       />
                     ) : (
-                      <div className="h-full bg-gray-50 rounded-lg border border-gray-200 p-1 flex items-center justify-center">
+                      <div className="h-full bg-gray-50 rounded-lg border p-1 border-gray-200 flex items-center justify-center">
                         <FilePreview
-                          value={watch("pan") ?? ""}
+                          value={watch("pancard") ?? ""}
+                          fileName={watch("pancardFileName")}
                           className="w-[400px] h-[300px]"
-                          placeholder="No PAN card uploaded"
+                          placeholder="No Pan Card uploaded"
                         />
                       </div>
                     )}
@@ -600,9 +618,13 @@ export default function CompanyProfile() {
                       <FormFile
                         label=""
                         value={watch("gstCertificate") ?? ""}
-                        onChange={(val) => setValue("gstCertificate", val)}
+                        fileName={watch("gstCertificateFileName")}
+                        onChange={(val, fileName) => {
+                          setValue("gstCertificate", val);
+                          setValue("gstCertificateFileName", fileName);
+                        }}
                         error={errors.gstCertificate}
-                        acceptedFormats="*"
+                        acceptedFormats=".jpg,.jpeg,.png,.webp,.pdf"
                         // onChange={(val) => {
                         //   const oldVal = watch("gstCertificate");
 
@@ -620,6 +642,7 @@ export default function CompanyProfile() {
                       <div className="h-full bg-gray-50 rounded-lg border p-1 border-gray-200 flex items-center justify-center">
                         <FilePreview
                           value={watch("gstCertificate") ?? ""}
+                          fileName={watch("gstCertificateFileName")}
                           className="w-[400px] h-[300px]"
                           placeholder="No GST certificate uploaded"
                         />

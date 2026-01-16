@@ -135,7 +135,7 @@ const DashboardLayout = () => {
   }, [dispatch, permission]);
   useEffect(() => {
     if (companyData) {
-      dispatch(setValidationKey(companyData.validationKey!));
+      dispatch(setValidationKey(String(companyData.validationKey)));
     }
   }, [dispatch, companyData]);
 

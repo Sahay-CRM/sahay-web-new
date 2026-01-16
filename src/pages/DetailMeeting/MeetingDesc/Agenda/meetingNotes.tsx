@@ -622,6 +622,15 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                       <Tag className="h-4 w-4 mr-2" />
                                       Task
                                     </DropdownMenuItem>
+
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleMarkNotes(note, "", "Reminder")
+                                      }
+                                    >
+                                      <Tag className="h-4 w-4 mr-2" />
+                                      Reminder
+                                    </DropdownMenuItem>
                                   </>
                                 )}
                               </DropdownMenuContent>

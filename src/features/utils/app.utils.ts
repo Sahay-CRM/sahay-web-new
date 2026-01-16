@@ -354,3 +354,21 @@ export function isSameDay(d1: Date, d2: Date): boolean {
     d1.getDate() === d2.getDate()
   );
 }
+
+export const getUTCStartOfDay = (date?: string | Date) => {
+  if (!date) return undefined;
+
+  const d = new Date(date);
+  return new Date(
+    Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0),
+  ).toISOString();
+};
+
+export const getUTCEndOfDay = (date?: string | Date) => {
+  if (!date) return undefined;
+
+  const d = new Date(date);
+  return new Date(
+    Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999),
+  ).toISOString();
+};

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useEffect, useState, useMemo } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import clsx from "clsx";
@@ -263,7 +263,7 @@ function SortableKpiRow({
                 ) : (
                   getFormattedValue(
                     kpi.validationType,
-                    String(kpi?.goalValue),
+                    String(kpi?.value1),
                     kpi?.value2,
                     kpi?.unit,
                   )
@@ -466,14 +466,18 @@ export default function UpdatedKpiTable() {
 
   useEffect(() => {
     if (!isKpiStructureLoading && kpiStructure?.data?.length) {
+      const visibleTabs = kpiStructure.data.filter((item) => item.count > 0);
+
+      if (!visibleTabs.length) return;
+
       const urlSelectedPeriod = searchParams.get("selectedType");
-      const availablePeriods = kpiStructure.data.map(
-        (item) => item.frequencyType,
-      );
+
+      const availablePeriods = visibleTabs.map((item) => item.frequencyType);
+
       const newPeriod =
         urlSelectedPeriod && availablePeriods.includes(urlSelectedPeriod)
           ? urlSelectedPeriod
-          : kpiStructure.data[0].frequencyType;
+          : visibleTabs[0].frequencyType;
 
       if (newPeriod !== selectedPeriod) {
         setSelectedPeriod(newPeriod);
@@ -1037,6 +1041,63 @@ export default function UpdatedKpiTable() {
     }
   }
 
+  function getInputValidationClass(
+    validationType: string,
+    inputValue: string,
+    value1: string | number | null,
+    value2: string | number | null | undefined,
+  ) {
+    const isValid = isValidInput(validationType, inputValue, value1, value2);
+
+    if (
+      validationType === "BETWEEN" ||
+      validationType === "YES_NO" ||
+      value1 === null ||
+      value1 === ""
+    ) {
+      return isValid
+        ? "bg-green-100 border-green-200"
+        : "bg-red-100 border-red-300";
+    }
+
+    const val = parseFloat(inputValue);
+    const target = parseFloat(String(value1));
+
+    if (isNaN(val) || isNaN(target)) {
+      return isValid
+        ? "bg-green-100 border-green-200"
+        : "bg-red-100 border-red-300";
+    }
+
+    let percentage = 0;
+    // Logic: High is Good
+    if (
+      validationType === "GREATER_THAN" ||
+      validationType === "GREATER_THAN_OR_EQUAL_TO" ||
+      validationType === "EQUAL_TO"
+    ) {
+      if (target === 0) percentage = val >= 0 ? 100 : 0;
+      else percentage = (val / target) * 100;
+    }
+    // Logic: Low is Good
+    else if (
+      validationType === "LESS_THAN" ||
+      validationType === "LESS_THAN_OR_EQUAL_TO"
+    ) {
+      if (val === 0) percentage = 100;
+      else percentage = (target / val) * 100;
+    } else {
+      return isValid
+        ? "bg-green-100 border-green-300"
+        : "bg-red-100 border-red-300";
+    }
+
+    if (percentage >= 100) return "bg-green-100 border-green-300";
+    if (validationKey > 0 && percentage >= validationKey)
+      return "bg-yellow-100 border-yellow-200";
+    return "bg-red-100 border-red-300";
+  }
+
   const handleSubmit = () => {
     addUpdateKpiData(formatTempValuesToPayload(tempValues));
   };
@@ -1186,29 +1247,81 @@ export default function UpdatedKpiTable() {
     }
   };
 
+  const isTabLocked = useRef(false);
+
+  const handleInputKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    cellKey: string,
+  ) => {
+    if (e.key !== "Tab") return;
+    if (e.repeat || isTabLocked.current) {
+      e.preventDefault();
+      return;
+    }
+    isTabLocked.current = true;
+    e.preventDefault();
+    const inputs = Array.from(
+      document.querySelectorAll<HTMLInputElement>("input.kpi-input"),
+    ).filter((el) => !el.disabled && el.tabIndex >= 0);
+    const idx = inputs.findIndex((el) => el.dataset.cellKey === cellKey);
+    if (idx === -1) {
+      isTabLocked.current = false;
+      return;
+    }
+    const nextIdx = e.shiftKey ? idx - 1 : idx + 1;
+    const target = inputs[nextIdx];
+    if (target) {
+      target.focus();
+      setTimeout(() => target.select(), 0);
+    }
+    setTimeout(() => {
+      isTabLocked.current = false;
+    }, 300);
+  };
+
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    // Validate pasted content
     const pastedText = e.clipboardData.getData("text");
     const isValidPaste = /^-?\d+$/.test(pastedText);
-
     if (!isValidPaste) {
       e.preventDefault();
     }
   };
+  const selectedTab = kpiStructure?.data?.find(
+    (item) => item.frequencyType === urlSelectedPeriod,
+  );
+
+  const editableCount =
+    selectedTab?.kpis?.reduce((acc: number, coreParam: CoreParameterGroup) => {
+      return (
+        acc +
+        (coreParam.kpis?.filter((kpi: Kpi) => !kpi.isVisualized)?.length || 0)
+      );
+    }, 0) ?? 0;
+
+  const canEdit = editableCount > 0;
+  const canAuto = (selectedTab?.count ?? 0) - editableCount > 0;
 
   const dataFilterOption = [
     {
       label: "All",
       value: "default",
     },
-    {
-      label: "Edit",
-      value: "edit",
-    },
-    {
-      label: "Auto",
-      value: "auto",
-    },
+    ...(canEdit
+      ? [
+          {
+            label: "Edit",
+            value: "edit",
+          },
+        ]
+      : []),
+    ...(canAuto
+      ? [
+          {
+            label: "Auto",
+            value: "auto",
+          },
+        ]
+      : []),
   ];
 
   if (isKpiStructureLoading || !kpiStructure || !kpiData || !kpiData.data) {
@@ -1575,11 +1688,14 @@ export default function UpdatedKpiTable() {
                                                   isVisualized &&
                                                   cell?.validationPercentage !=
                                                     null &&
-                                                  (cell.validationPercentage ===
+                                                  (cell.validationPercentage >=
                                                   100
                                                     ? "bg-green-200"
-                                                    : cell.validationPercentage <
-                                                        validationKey
+                                                    : cell.validationPercentage !=
+                                                          null &&
+                                                        validationKey > 0 &&
+                                                        cell.validationPercentage <
+                                                          validationKey
                                                       ? "bg-red-200"
                                                       : "bg-yellow-200"),
 
@@ -1789,6 +1905,10 @@ export default function UpdatedKpiTable() {
                                                   ? (e) => handleChange(e, key)
                                                   : undefined
                                               }
+                                              data-cell-key={key}
+                                              onKeyDown={(e) =>
+                                                handleInputKeyDown(e, key)
+                                              }
                                               onKeyPress={handleKeyPress}
                                               onPaste={handlePaste}
                                               // className={twMerge(
@@ -1809,6 +1929,7 @@ export default function UpdatedKpiTable() {
                                               //     "cursor-not-allowed"
                                               // )}
                                               className={twMerge(
+                                                "kpi-input",
                                                 "border p-2 rounded-sm text-center text-sm w-full h-[42px] transition-all bg-white",
                                                 "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
 
@@ -1817,27 +1938,42 @@ export default function UpdatedKpiTable() {
                                                   inputVal !== "" &&
                                                   validationType &&
                                                   selectedPeriod !== "YEARLY" &&
-                                                  (isValidInput(
+                                                  getInputValidationClass(
                                                     validationType,
                                                     inputVal,
                                                     value1 ?? null,
                                                     value2 ?? null,
-                                                  )
-                                                    ? "bg-green-100 border-green-500"
-                                                    : "bg-red-100 border-red-500"),
+                                                  ),
 
                                                 // ⭐ Visualization-based color logic
                                                 cell?.data !== "-" &&
-                                                  isVisualized &&
+                                                  validationKey &&
+                                                  validationKey !== null &&
+                                                  selectedPeriod !== "YEARLY" &&
                                                   cell?.validationPercentage !=
                                                     null &&
-                                                  (cell.validationPercentage ===
-                                                  100
-                                                    ? "bg-green-200"
-                                                    : cell.validationPercentage <
-                                                        validationKey
-                                                      ? "bg-red-200"
-                                                      : "bg-yellow-200  border-yellow-500"),
+                                                  (() => {
+                                                    const percentage =
+                                                      cell.validationPercentage;
+
+                                                    if (percentage >= 100)
+                                                      return "bg-green-100";
+
+                                                    if (
+                                                      validationKey > 0 &&
+                                                      percentage < validationKey
+                                                    )
+                                                      return "bg-red-200 border-red-500";
+
+                                                    if (
+                                                      validationKey > 0 &&
+                                                      percentage < 100 &&
+                                                      validationKey
+                                                    )
+                                                      return "bg-yellow-200 border-yellow-300";
+
+                                                    return "bg-green-200 border-green-300";
+                                                  })(),
 
                                                 isVisualized &&
                                                   "cursor-not-allowed",

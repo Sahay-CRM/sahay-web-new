@@ -180,6 +180,7 @@ interface MeetingData {
   meetingStatus?: string | MeetingStatusDataProps;
   color?: string;
   joiners?: Employee[];
+  employeeId?: Employee[];
   [key: string]: string | string[] | number | undefined;
 }
 
@@ -1211,6 +1212,7 @@ interface MeetingResFire {
     unfollow?: {
       [employeeId: string]: boolean;
     };
+    isRecording?: boolean;
   };
   timers: {
     agenda?: TimerEntry;
@@ -1575,7 +1577,9 @@ interface SimpleCompanyDetails {
   companyName: string;
   logo?: string;
   pancard?: string | null;
+  pancardFileName?: string;
   gstCertificate?: string | null;
+  gstCertificateFileName?: string;
   annualTurnOver: number;
   businessStartDate?: string;
   companyAddress?: string;
@@ -1611,6 +1615,7 @@ interface SimpleCompanyDetails {
   validationKey?: string;
   date?: number;
   imageGst?: imageGst;
+  imagePancard?: imageGst;
 }
 
 interface imageGst {

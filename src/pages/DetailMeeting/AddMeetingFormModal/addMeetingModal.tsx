@@ -16,14 +16,9 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
   onSubmit,
   isLoading,
 }) => {
-  // const joinersArr = Array.isArray(modalData?.joiners)
-  //   ? (modalData.joiners.flat?.() ?? modalData.joiners)
-  //   : [];
-
-  // const joiners = joinersArr
-  //   ?.filter((joiner) => !Array.isArray(joiner))
-  //   .map((joiner) => joiner?.employeeName);
-
+  const employeeNames = modalData
+    ?.employeeId!.map((e) => e.employeeName)
+    .join(", ");
   return (
     <ModalData
       isModalOpen={isModalOpen}
@@ -80,12 +75,12 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
             {modalData.meetingTypeName}
           </div>
         )}
-        {/* {modalData.joiners && (
+        {employeeNames && (
           <div className="col-span-2">
             <span className="font-medium text-primary">Joiners: </span>
-            {modalData.joiners.map((item) => item.employeeName)}
+            {employeeNames}
           </div>
-        )} */}
+        )}
       </div>
     </ModalData>
   );

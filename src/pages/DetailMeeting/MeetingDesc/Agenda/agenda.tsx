@@ -14,6 +14,7 @@ import {
   Plus,
   Target,
   User,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,11 @@ function IssueModal({
   onSubmit?: (data: { type: string; value: string }) => void;
 }) {
   const [selectedType, setSelectedType] = useState(defaultType);
+  useEffect(() => {
+    if (open) {
+      setSelectedType(defaultType || "");
+    }
+  }, [open, defaultType]);
   if (!open) return null;
   return (
     <div
@@ -85,7 +91,13 @@ function IssueModal({
         zIndex: 1000,
       }}
     >
-      <div className="bg-white w-96 p-5 rounded-md shadow-2xl border-2">
+      <div className="bg-white w-96 p-5 rounded-md shadow-2xl border-2 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 transition"
+        >
+          <X className="w-5 h-5" />
+        </button>
         <p>Value: {issue}</p>
         <div className="my-3">
           <RadioGroup value={selectedType} onValueChange={setSelectedType}>
@@ -107,9 +119,9 @@ function IssueModal({
         >
           Submit
         </Button>
-        <Button onClick={onClose} style={{ marginLeft: 8 }}>
+        {/* <Button onClick={onClose} style={{ marginLeft: 8 }}>
           Close
-        </Button>
+        </Button> */}
       </div>
     </div>
   );
