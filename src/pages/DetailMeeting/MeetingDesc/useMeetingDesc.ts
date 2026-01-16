@@ -24,6 +24,8 @@ export default function useMeetingDesc() {
   const [meetingResponse, setMeetingResponse] = useState<MeetingResFire | null>(
     null,
   );
+  const [isDownloading, setIsDownloading] = useState(false);
+
   const [isTranscriptReady, setIsTranscriptReady] = useState(false);
   const [firefliesMeetingId, setFirefliesMeetingId] = useState<string | null>(
     null,
@@ -548,30 +550,30 @@ export default function useMeetingDesc() {
     console.log("canStopRecording:", canStopRecording);
   }, [canStopRecording]);
 
-  const downloadRecordingLocally = (blob: Blob, fileName: string) => {
-    try {
-      // Create download link
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
+  // const downloadRecordingLocally = (blob: Blob, fileName: string) => {
+  //   try {
+  //     // Create download link
+  //     const url = URL.createObjectURL(blob);
+  //     const a = document.createElement("a");
+  //     a.href = url;
+  //     a.download = fileName;
 
-      // Trigger download
-      document.body.appendChild(a);
-      a.click();
+  //     // Trigger download
+  //     document.body.appendChild(a);
+  //     a.click();
 
-      // Cleanup
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 100);
+  //     // Cleanup
+  //     setTimeout(() => {
+  //       document.body.removeChild(a);
+  //       URL.revokeObjectURL(url);
+  //     }, 100);
 
-      toast.success("Recording downloaded locally as MP3!");
-    } catch (error) {
-      console.error("Error downloading recording:", error);
-      toast.error("Failed to download recording locally");
-    }
-  };
+  //     toast.success("Recording downloaded locally as MP3!");
+  //   } catch (error) {
+  //     console.error("Error downloading recording:", error);
+  //     toast.error("Failed to download recording locally");
+  //   }
+  // };
 
   const convertWebmToMp3 = async (webmBlob: Blob): Promise<Blob> => {
     // eslint-disable-next-line no-async-promise-executor
@@ -644,34 +646,39 @@ export default function useMeetingDesc() {
     end_time?: number;
   }
 
+  const handleDownloadTranscript = async () => {
+    setIsDownloading(true);
+
+    const ok = await checkTranscriptStatus(firefliesMeetingId!);
+
+    // Download triggered successfully
+    if (ok) {
+      setIsDownloading(false);
+    } else {
+      // Transcript not ready or error
+      setIsDownloading(false);
+      toast.error("Transcript not ready yet, try again later.");
+    }
+  };
+
   const checkTranscriptStatus = async (transcriptId: string) => {
     const firefliesApiKey = import.meta.env.VITE_FIREFLIES_API_KEY;
 
-    // --- Helper Function to Download DOC File ---
     const downloadDocFile = (data: TranscriptSentence[], title: string) => {
       const fileName = `${title.replace(/\s+/g, "_")}.doc`;
 
-      // MS Word compatible HTML content
-      const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-                    <head><meta charset='utf-8'><style>
-                      body { font-family: 'Calibri', sans-serif; line-height: 1.6; }
-                      .speaker { font-weight: bold; color: #2c3e50; }
-                      .timestamp { color: #7f8c8d; font-size: 0.9em; }
-                      .sentence { margin-bottom: 10px; }
-                    </style></head><body>`;
-
+      const header = `<html><head><meta charset='utf-8'></head><body>`;
       const footer = "</body></html>";
 
-      // Data ko HTML paragraphs mein convert karna
       const content = data
         .map(
           (s) => `
-      <div class="sentence">
-        <span class="timestamp">[${s.start_time}s]</span> 
-        <span class="speaker">${s.speaker_name || "Speaker"}:</span> 
-        <span>${s.text}</span>
-      </div>
-    `,
+        <div class="sentence">
+          <span>[${s.start_time}s]</span> 
+          <strong>${s.speaker_name || "Speaker"}:</strong>
+          <span>${s.text}</span>
+        </div>
+      `,
         )
         .join("");
 
@@ -679,7 +686,6 @@ export default function useMeetingDesc() {
         type: "application/msword",
       });
 
-      // Create Download Link
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -717,29 +723,48 @@ export default function useMeetingDesc() {
 
       const result = await response.json();
 
-      if (result.errors) {
-        console.error("Fireflies API Error:", result.errors);
-        return;
-      }
-
       const transcriptData = result.data?.transcript;
 
       if (transcriptData?.sentences?.length > 0) {
-        // ✅ Yahan DOC file download trigger hogi
         downloadDocFile(
           transcriptData.sentences,
           transcriptData.title || "Transcript",
         );
-
-        return transcriptData.sentences;
-      } else {
-        console.info("Transcript processing...");
+        return true; // ⬅ important
       }
+
+      return false;
     } catch (err) {
       console.error("Fetch Error:", err);
+      return false;
     }
   };
+
   const startRecording = async () => {
+    const meetingMetaRef = ref(db, `meetings/${meetingId}/state`);
+    const snapshot = await get(meetingMetaRef);
+    const meetingMeta = snapshot.val();
+
+    const { firefliesMeetingId, isTranscriptReady } = meetingMeta || {};
+
+    if (firefliesMeetingId || isTranscriptReady) {
+      const confirmDelete = window.confirm(
+        "A previous recording and transcript already exist. Starting a new recording will delete them. Do you want to continue?",
+      );
+
+      if (!confirmDelete) {
+        toast.info("Recording cancelled.");
+        return;
+      }
+
+      // Delete previous data
+      await update(meetingMetaRef, {
+        firefliesMeetingId: null,
+        isTranscriptReady: false,
+      });
+
+      toast.success("Previous recording removed. Starting new...");
+    }
     try {
       // 1. Capture system/tab audio
       const displayStream = await navigator.mediaDevices.getDisplayMedia({
@@ -854,7 +879,6 @@ export default function useMeetingDesc() {
           return;
         }
 
-        // Create blob from recorded chunks
         const webmBlob = new Blob(recordedChunksRef.current, {
           type: selectedMimeType,
         });
@@ -892,7 +916,7 @@ export default function useMeetingDesc() {
         // const webmFileName = `meeting-recording-${meetingId}-${timestamp}.webm`;
 
         // 🔴 STEP 1: LOCAL DOWNLOAD (MP3 format)
-        downloadRecordingLocally(mp3Blob, mp3FileName);
+        // downloadRecordingLocally(mp3Blob, mp3FileName);
 
         // 🔴 STEP 2: UPLOAD TO BACKEND (MP3 format)
         const formData = new FormData();
@@ -998,14 +1022,14 @@ export default function useMeetingDesc() {
     update(meetStateRef, { isRecording: false });
   };
 
-  const handleDownloadRecording = () => {
-    if (recordedBlob && meetingId) {
-      const fileName = `meeting-recording-${meetingId}-${Date.now()}.mp3`;
-      downloadRecordingLocally(recordedBlob, fileName);
-    } else {
-      toast.error("No recording available to download");
-    }
-  };
+  // const handleDownloadRecording = () => {
+  //   if (recordedBlob && meetingId) {
+  //     // const fileName = `meeting-recording-${meetingId}-${Date.now()}.mp3`;
+  //     // downloadRecordingLocally(recordedBlob, fileName);
+  //   } else {
+  //     toast.error("No recording available to download");
+  //   }
+  // };
 
   const handleRing = () => {
     const alertsRef = ref(db, `meetings/${meetingId}/alert`);
@@ -1051,11 +1075,13 @@ export default function useMeetingDesc() {
     recordingDuration,
     isRecordingLocally,
     canStopRecording,
-    handleDownloadRecording,
+    // handleDownloadRecording,
     isTranscriptReady,
     checkTranscriptStatus,
     firefliesMeetingId,
     hasRecording: !!recordedBlob,
+    isDownloading,
+    handleDownloadTranscript,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   };

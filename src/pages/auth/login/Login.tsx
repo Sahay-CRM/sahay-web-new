@@ -55,8 +55,8 @@ const Login: React.FC = () => {
         {/* Right - Form */}
         <div className="flex items-center justify-center bg-white">
           <div className="w-full max-w-xl px-8 py-10">
-            <div className="flex justify-center py-4">
-              <img src={logoImg} alt="logo" className="w-[60%]" />
+            <div className="flex justify-center py-4 mb-5">
+              <img src={logoImg} alt="logo" className="w-[60%] " />
             </div>
             <div className="space-y-6">
               <FormInputField

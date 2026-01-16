@@ -16,6 +16,7 @@ import {
   Download,
   MicIcon,
   DownloadIcon,
+  Loader2,
 } from "lucide-react";
 
 import useMeetingDesc from "./useMeetingDesc";
@@ -64,7 +65,7 @@ export default function MeetingDesc() {
   const {
     meetingStatus,
     isTranscriptReady,
-    checkTranscriptStatus,
+    handleDownloadTranscript,
     firefliesMeetingId,
     meetingId,
     meetingResponse,
@@ -96,6 +97,7 @@ export default function MeetingDesc() {
     isRecording,
     startRecording,
     stopRecording,
+    isDownloading,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   } = useMeetingDesc();
@@ -955,7 +957,7 @@ export default function MeetingDesc() {
               </TooltipProvider>
             </div>
           )}
-        {meetingStatus === "DISCUSSION" &&
+        {(meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") &&
           isTranscriptReady === true &&
           firefliesMeetingId &&
           (isTeamLeader ||
@@ -966,11 +968,17 @@ export default function MeetingDesc() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      onClick={() => checkTranscriptStatus(firefliesMeetingId)}
+                      onClick={handleDownloadTranscript}
                       variant="outline"
                       className="h-[40px] rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2 bg-primary hover:bg-primary text-white transition-all duration-300 shadow-lg"
                     >
-                      <DownloadIcon className="w-5 h-5 text-white" />
+                      {isDownloading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin text-white" />
+                        </>
+                      ) : (
+                        <DownloadIcon className="w-5 h-5 text-white" />
+                      )}
                     </Button>
                   </TooltipTrigger>
 
