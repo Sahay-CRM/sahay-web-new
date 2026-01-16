@@ -44,8 +44,8 @@ export default function Request() {
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
+    { key: "requestTitle", label: "Request Title", visible: true },
     { key: "requestType", label: "Type", visible: true },
-    { key: "requestType", label: "Title", visible: true },
     { key: "requesterNote", label: "Request Notes", visible: true },
     { key: "requestStatus", label: "Status", visible: true },
     { key: "reviewerNote", label: "Review Notes", visible: true },

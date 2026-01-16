@@ -180,6 +180,7 @@ interface MeetingData {
   meetingStatus?: string | MeetingStatusDataProps;
   color?: string;
   joiners?: Employee[];
+  employeeId?: Employee[];
   [key: string]: string | string[] | number | undefined;
 }
 

@@ -327,22 +327,7 @@ const Joiners = () => {
       <Controller
         name="employeeId"
         control={control}
-        rules={{
-          validate: (value) => {
-            if (meetingType.parentType === "DETAIL") {
-              if (!value || value.length === 0) {
-                return "Please select at least one joiner";
-              }
-              const hasTeamLeader = value.some(
-                (emp: EmployeeDetails) => emp.isTeamLeader,
-              );
-              if (!hasTeamLeader) {
-                return "At least one joiner must be marked as Team Leader";
-              }
-            }
-            return true;
-          },
-        }}
+        rules={{ required: "Please select a Joiner" }}
         render={({ field }) => {
           return (
             <TableData
@@ -571,7 +556,10 @@ const AddMeeting = () => {
   useEffect(() => {
     setBreadcrumbs([
       { label: "Company Meeting", href: "/dashboard/meeting" },
-      { label: companyMeetingId ? "Update Meeting" : "Add Meeting", href: "" },
+      {
+        label: companyMeetingId ? "Update Meeting" : "Add Meeting ",
+        href: "",
+      },
       ...(companyMeetingId
         ? [
             {

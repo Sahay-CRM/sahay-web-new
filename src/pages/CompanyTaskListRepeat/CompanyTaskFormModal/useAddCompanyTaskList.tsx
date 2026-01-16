@@ -91,7 +91,12 @@ export default function useAddEmployee() {
     search: "",
   });
 
-  const [meetingPagination] = useState<PaginationFilter>({
+  // const [meetingPagination] = useState<PaginationFilter>({
+  //   currentPage: 1,
+  //   pageSize: 25,
+  //   search: "",
+  // });
+  const [localPagination, setLocalPagination] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 25,
     search: "",
@@ -110,7 +115,7 @@ export default function useAddEmployee() {
 
   const { data: meetingData, isLoading: meetingLoading } =
     useGetBothCompanyMeeting({
-      filter: meetingPagination,
+      filter: localPagination,
     });
 
   const { data: employeedata } = getEmployee({
@@ -375,12 +380,6 @@ export default function useAddEmployee() {
   const MeetingSelectionStep = () => {
     const permission = useSelector(getUserPermission);
     const projectId = watch("project");
-
-    const [localPagination, setLocalPagination] = useState<PaginationFilter>({
-      currentPage: 1,
-      pageSize: 25,
-      search: "",
-    });
 
     return (
       <div className="p-0">
