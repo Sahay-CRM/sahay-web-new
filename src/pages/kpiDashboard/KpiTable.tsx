@@ -1094,7 +1094,7 @@ export default function UpdatedKpiTable() {
 
     if (percentage >= 100) return "bg-green-100 border-green-300";
     if (validationKey > 0 && percentage >= validationKey)
-      return "bg-yellow-100 border-yellow-200";
+      return "bg-yellow-200 border-yellow-300";
     return "bg-red-100 border-red-300";
   }
 
@@ -1688,17 +1688,24 @@ export default function UpdatedKpiTable() {
                                                   isVisualized &&
                                                   cell?.validationPercentage !=
                                                     null &&
+                                                  cell?.data !== "-" &&
+                                                  isVisualized &&
+                                                  cell?.validationPercentage !=
+                                                    null &&
                                                   (cell.validationPercentage >=
                                                   100
-                                                    ? "bg-green-200"
-                                                    : cell.validationPercentage !=
-                                                          null &&
-                                                        validationKey > 0 &&
+                                                    ? "bg-green-100"
+                                                    : validationKey > 0 &&
                                                         cell.validationPercentage <
                                                           validationKey
-                                                      ? "bg-red-200"
-                                                      : "bg-yellow-200"),
-
+                                                      ? "bg-red-100"
+                                                      : validationKey > 0 &&
+                                                          cell.validationPercentage >=
+                                                            validationKey &&
+                                                          cell.validationPercentage <
+                                                            100
+                                                        ? "bg-yellow-200"
+                                                        : "bg-red-100"),
                                                 isVisualized &&
                                                   "opacity-60 cursor-not-allowed",
                                                 cell?.isSkipDay &&
