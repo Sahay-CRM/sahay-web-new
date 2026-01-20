@@ -16,6 +16,8 @@ import {
 import { toast } from "sonner";
 import { AudioUploadMutation } from "@/features/api/file";
 import useGetTranscript from "@/features/api/detailMeeting/useGetDetailMeetingTranscript";
+import { useSelector } from "react-redux";
+import { getUserId } from "@/features/selectors/auth.selector";
 
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();
@@ -47,6 +49,8 @@ export default function useMeetingDesc() {
   const [isRecordingLocally, setIsRecordingLocally] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const getTranscriptMutation = useGetTranscript(firefliesMeetingId!);
+
+  const userId = useSelector(getUserId);
 
   const { data: meetingData } = useGetMeetingTiming(meetingId ?? "");
 
@@ -737,9 +741,9 @@ export default function useMeetingDesc() {
     try {
       // 1. Capture system/tab audio
       const displayStream = await navigator.mediaDevices.getDisplayMedia({
-        video: {
-          displaySurface: "browser",
-        },
+        // video: {
+        //   displaySurface: "browser",
+        // },
         audio: {
           suppressLocalAudioPlayback: false,
         },
@@ -932,7 +936,7 @@ export default function useMeetingDesc() {
 
       // Update Firebase
       const meetStateRef = ref(db, `meetings/${meetingId}/state`);
-      update(meetStateRef, { isRecording: true });
+      update(meetStateRef, { isRecording: true, recordingUserId: userId });
 
       // Set minimum recording time (20 seconds)
       setCanStopRecording(false);
@@ -1050,6 +1054,8 @@ export default function useMeetingDesc() {
     hasRecording: !!recordedBlob,
     isDownloading,
     handleDownloadTranscript,
+    recordingUserId: meetingResponse?.state.recordingUserId,
+    userId,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   };

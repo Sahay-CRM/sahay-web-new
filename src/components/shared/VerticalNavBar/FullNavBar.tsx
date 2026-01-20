@@ -93,8 +93,8 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
         })}
       </nav>
 
-      <div className="flex justify-center mb-4 cursor-pointer">
-        <img src={logoImg} alt="logo" className="w-[80%]" />
+      <div className="flex justify-center mb-6 border-t-4 pt-3 cursor-pointer">
+        <img src={logoImg} alt="logo" className="w-[70%]" />
       </div>
     </div>
   );
