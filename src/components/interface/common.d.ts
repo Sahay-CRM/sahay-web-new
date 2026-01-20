@@ -1213,6 +1213,7 @@ interface MeetingResFire {
       [employeeId: string]: boolean;
     };
     isRecording?: boolean;
+    recordingUserId: string;
   };
   timers: {
     agenda?: TimerEntry;

@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-import { getUserDetail, getUserId } from "@/features/selectors/auth.selector";
+import { getUserDetail } from "@/features/selectors/auth.selector";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -98,6 +98,8 @@ export default function MeetingDesc() {
     startRecording,
     stopRecording,
     isDownloading,
+    recordingUserId,
+    userId,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   } = useMeetingDesc();
@@ -110,7 +112,6 @@ export default function MeetingDesc() {
   };
   const { setBreadcrumbs } = useBreadcrumbs();
   const userDetail = useSelector(getUserDetail);
-  const userId = useSelector(getUserId);
   const isSuperAdmin = userDetail.isSuperAdmin;
   useEffect(() => {
     setBreadcrumbs([
@@ -929,8 +930,7 @@ export default function MeetingDesc() {
         className={`${isSidebarCollapsed ? "bg-white border rounded-md" : ""} flex flex-col z-30`}
       >
         {meetingStatus === "DISCUSSION" &&
-          (isTeamLeader ||
-            userDetail?.employeeType === "CONSULTANT" ||
+          (userDetail?.employeeType === "CONSULTANT" ||
             userDetail?.employeeType === "SAHAYTEAMMATE") && (
             <div className="flex justify-center ">
               <TooltipProvider>
@@ -939,6 +939,7 @@ export default function MeetingDesc() {
                     <Button
                       onClick={isRecording ? stopRecording : startRecording}
                       variant="outline"
+                      disabled={isRecording && userId !== recordingUserId}
                       className={cn(
                         "h-[40px] rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-lg",
                         isRecording
