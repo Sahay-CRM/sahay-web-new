@@ -11,6 +11,7 @@ export default function useRequest() {
   const [isEditData, setIsEditData] = useState<CreateRequest | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
   const [isRequestModal, setIsRequestModal] = useState(false);
+  const [viewData, setViewData] = useState<CreateRequest | null>(null);
 
   const { mutate: deleteReq } = deleteRequestMutation();
   const { data: reqData, isLoading } = useGetRequest({
@@ -40,6 +41,14 @@ export default function useRequest() {
     setModalOpen(true);
   };
 
+  const handleView = (row: CreateRequest) => {
+    setViewData(row);
+  };
+
+  const closeViewModal = () => {
+    setViewData(null);
+  };
+
   return {
     paginationFilter,
     reqData,
@@ -54,5 +63,8 @@ export default function useRequest() {
     handleRequestModalOpen,
     isRequestModal,
     handleRequestEdit,
+    handleView,
+    closeViewModal,
+    viewData,
   };
 }
