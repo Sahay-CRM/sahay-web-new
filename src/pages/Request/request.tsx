@@ -18,6 +18,7 @@ import RequestModal from "@/components/shared/Modal/RequestModal";
 import { Button } from "@/components/ui/button";
 // import { Trash } from "lucide-react";
 import CreateRequestModal from "./createRequestModal";
+import ViewRequestModal from "./viewRequestModal";
 
 export default function Request() {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -40,6 +41,9 @@ export default function Request() {
     handleRequestModalOpen,
     isRequestModal,
     handleRequestEdit,
+    handleView,
+    closeViewModal,
+    viewData,
   } = useRequest();
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -175,6 +179,8 @@ export default function Request() {
             // }}
             onEdit={handleRequestEdit}
             onDelete={(row) => onDelete(row.changeRequestId!)}
+            viewButton={true}
+            onViewButton={handleView}
             // isEditDelete={() => true}
             paginationDetails={mapPaginationDetails(reqData)}
             setPaginationFilter={setPaginationFilter}
@@ -194,6 +200,15 @@ export default function Request() {
             modalClose={handleClose}
             modalTitle="Request KPI"
             defaultData={isEditData}
+          />
+        )}
+
+        {viewData && (
+          <ViewRequestModal
+            isOpen={!!viewData}
+            onClose={closeViewModal}
+            data={viewData}
+            onEdit={handleRequestEdit}
           />
         )}
 
