@@ -712,7 +712,6 @@ export default function useMeetingDesc() {
       return false;
     }
   };
-
   const startRecording = async () => {
     const meetingMetaRef = ref(db, `meetings/${meetingId}/state`);
     const snapshot = await get(meetingMetaRef);
@@ -720,7 +719,11 @@ export default function useMeetingDesc() {
 
     const { firefliesMeetingId, isTranscriptReady } = meetingMeta || {};
 
-    if (firefliesMeetingId || isTranscriptReady) {
+    if (
+      firefliesMeetingId ||
+      isTranscriptReady ||
+      meetingResponse?.state.recordingUserId
+    ) {
       const confirmDelete = window.confirm(
         "A previous recording and transcript already exist. Starting a new recording will delete them. Do you want to continue?",
       );
@@ -739,105 +742,176 @@ export default function useMeetingDesc() {
       toast.success("Previous recording removed. Starting new...");
     }
     try {
-      // 1. Capture system/tab audio
-      const displayStream = await navigator.mediaDevices.getDisplayMedia({
-        // video: {
-        //   displaySurface: "browser",
-        // },
-        audio: {
-          suppressLocalAudioPlayback: false,
-        },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
-
-      // 2. Capture local microphone audio
-      const micStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
-
-      // 3. Mix the audio tracks using Web Audio API
-      const audioContext = new AudioContext();
-      if (audioContext.state === "suspended") {
-        await audioContext.resume();
+      // Check if getDisplayMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        throw new Error("Screen sharing is not supported in this browser.");
       }
 
-      const destination = audioContext.createMediaStreamDestination();
+      try {
+        // Capture local microphone audio only
+        const micStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+        });
 
-      // Connect screen/tab audio if available
-      if (displayStream.getAudioTracks().length > 0) {
-        const source = audioContext.createMediaStreamSource(displayStream);
-        source.connect(destination);
-      }
-
-      // Connect microphone audio
-      if (micStream.getAudioTracks().length > 0) {
-        const source = audioContext.createMediaStreamSource(micStream);
-        source.connect(destination);
-      }
-
-      // Combine tracks: Keep the mixed audio track
-      const mixedStream = new MediaStream([
-        ...destination.stream.getAudioTracks(),
-      ]);
-
-      // Try to use MP3 format if supported
-      const mimeTypes = [
-        "audio/mp3",
-        "audio/mpeg",
-        "audio/webm;codecs=opus",
-        "audio/webm",
-      ];
-
-      let selectedMimeType = "audio/webm";
-      for (const mimeType of mimeTypes) {
-        if (MediaRecorder.isTypeSupported(mimeType)) {
-          selectedMimeType = mimeType;
-          break;
-        }
-      }
-
-      const recorder = new MediaRecorder(mixedStream, {
-        mimeType: selectedMimeType,
-        audioBitsPerSecond: 128000, // 128 kbps
-      });
-
-      mediaRecorderRef.current = recorder;
-      recordedChunksRef.current = [];
-
-      let recordingStartTime = 0;
-
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          recordedChunksRef.current.push(event.data);
-        }
-      };
-
-      recorder.onstart = () => {
-        recordingStartTime = Date.now();
-        recordingStartTimeRef.current = recordingStartTime;
-        setIsRecordingLocally(true);
-      };
-
-      recorder.onstop = async () => {
-        if (!meetingId) {
-          toast.error("Meeting ID not found");
-          return;
+        // Initialize Web Audio API
+        const audioContext = new AudioContext();
+        if (audioContext.state === "suspended") {
+          await audioContext.resume();
         }
 
-        const recordingDuration = Date.now() - recordingStartTime;
+        const destination = audioContext.createMediaStreamDestination();
 
-        // Check if recording is too short (less than 15 seconds)
-        if (recordingDuration < 15000) {
-          toast.error(
-            "Recording is too short. Please record for at least 15 seconds.",
-          );
+        // Connect microphone audio
+        if (micStream.getAudioTracks().length > 0) {
+          const source = audioContext.createMediaStreamSource(micStream);
+          source.connect(destination);
+        }
 
-          // Stop all tracks and cleanup
-          [displayStream, micStream, mixedStream].forEach((s) => {
+        // Combine tracks: Keep the microphone audio track
+        const mixedStream = new MediaStream([
+          ...destination.stream.getAudioTracks(),
+        ]);
+
+        // Try to use MP3 format if supported
+        const mimeTypes = [
+          "audio/mp3",
+          "audio/mpeg",
+          "audio/webm;codecs=opus",
+          "audio/webm",
+        ];
+
+        let selectedMimeType = "audio/webm";
+        for (const mimeType of mimeTypes) {
+          if (MediaRecorder.isTypeSupported(mimeType)) {
+            selectedMimeType = mimeType;
+            break;
+          }
+        }
+
+        const recorder = new MediaRecorder(mixedStream, {
+          mimeType: selectedMimeType,
+          audioBitsPerSecond: 128000, // 128 kbps
+        });
+
+        mediaRecorderRef.current = recorder;
+        recordedChunksRef.current = [];
+
+        let recordingStartTime = 0;
+
+        recorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            recordedChunksRef.current.push(event.data);
+          }
+        };
+
+        recorder.onstart = () => {
+          recordingStartTime = Date.now();
+          recordingStartTimeRef.current = recordingStartTime;
+          setIsRecordingLocally(true);
+        };
+
+        recorder.onstop = async () => {
+          if (!meetingId) {
+            toast.error("Meeting ID not found");
+            return;
+          }
+
+          const recordingDuration = Date.now() - recordingStartTime;
+
+          // Check if recording is too short (less than 15 seconds)
+          if (recordingDuration < 15000) {
+            toast.error(
+              "Recording is too short. Please record for at least 15 seconds.",
+            );
+
+            // Stop all tracks and cleanup
+            [micStream, mixedStream].forEach((s) => {
+              s.getTracks().forEach((track) => track.stop());
+            });
+            audioContext.close();
+            mediaRecorderRef.current = null;
+            setIsRecordingLocally(false);
+            if (recordingTimer) {
+              clearTimeout(recordingTimer);
+              setRecordingTimer(null);
+            }
+            setCanStopRecording(false);
+            return;
+          }
+
+          const webmBlob = new Blob(recordedChunksRef.current, {
+            type: selectedMimeType,
+          });
+
+          // Check file size (minimum 50KB)
+          if (webmBlob.size < 50 * 1024) {
+            toast.error(
+              "Recording file is too small. Please record longer audio.",
+            );
+
+            // Stop all tracks and cleanup
+            [micStream, mixedStream].forEach((s) => {
+              s.getTracks().forEach((track) => track.stop());
+            });
+            audioContext.close();
+            mediaRecorderRef.current = null;
+            setIsRecordingLocally(false);
+            if (recordingTimer) {
+              clearTimeout(recordingTimer);
+              setRecordingTimer(null);
+            }
+            setCanStopRecording(false);
+            return;
+          }
+
+          // const timestamp = Date.now();
+
+          // Convert to MP3 for better compatibility
+          const mp3Blob = await convertWebmToMp3(webmBlob);
+          setRecordedBlob(mp3Blob);
+
+          // const mp3FileName = `meeting-recording-${meetingId}-${timestamp}.mp3`;
+          const mp3FileName = `${meetingTiming?.meetingName?.trim()}.mp3`;
+
+          // const webmFileName = `meeting-recording-${meetingId}-${timestamp}.webm`;
+
+          // 🔴 STEP 1: LOCAL DOWNLOAD (MP3 format)
+          // downloadRecordingLocally(mp3Blob, mp3FileName);
+
+          // 🔴 STEP 2: UPLOAD TO BACKEND (MP3 format)
+          const formData = new FormData();
+          formData.append("refId", meetingId);
+          formData.append("imageType", "MEETING");
+          formData.append("isMaster", "0");
+          formData.append("fileType", "2060");
+          formData.append("files", mp3Blob, mp3FileName);
+
+          try {
+            // Upload to backend
+            uploadAudio(
+              { id: meetingId, formData },
+              {
+                onSuccess: () => {
+                  toast.success(
+                    "Recording saved and uploaded for transcription!",
+                  );
+                },
+                onError: () => {
+                  toast.error("Failed to save recording to server");
+                },
+              },
+            );
+          } catch (error) {
+            console.error("Error uploading recording:", error);
+            toast.error("Failed to save recording");
+          }
+
+          // Stop all tracks in all streams
+          [micStream, mixedStream].forEach((s) => {
             s.getTracks().forEach((track) => track.stop());
           });
           audioContext.close();
@@ -848,130 +922,61 @@ export default function useMeetingDesc() {
             setRecordingTimer(null);
           }
           setCanStopRecording(false);
-          return;
-        }
+        };
 
-        const webmBlob = new Blob(recordedChunksRef.current, {
-          type: selectedMimeType,
+        recorder.start(1000); // Collect data every second for better size tracking
+
+        // Update Firebase
+        const meetStateRef = ref(db, `meetings/${meetingId}/state`);
+        update(meetStateRef, {
+          isRecording: true,
+          recordingUserId: userId,
+          recordingTimestamp: Date.now(),
         });
 
-        // Check file size (minimum 50KB)
-        if (webmBlob.size < 50 * 1024) {
-          toast.error(
-            "Recording file is too small. Please record longer audio.",
-          );
-
-          // Stop all tracks and cleanup
-          [displayStream, micStream, mixedStream].forEach((s) => {
-            s.getTracks().forEach((track) => track.stop());
-          });
-          audioContext.close();
-          mediaRecorderRef.current = null;
-          setIsRecordingLocally(false);
-          if (recordingTimer) {
-            clearTimeout(recordingTimer);
-            setRecordingTimer(null);
-          }
-          setCanStopRecording(false);
-          return;
-        }
-
-        // const timestamp = Date.now();
-
-        // Convert to MP3 for better compatibility
-        const mp3Blob = await convertWebmToMp3(webmBlob);
-        setRecordedBlob(mp3Blob);
-
-        // const mp3FileName = `meeting-recording-${meetingId}-${timestamp}.mp3`;
-        const mp3FileName = `${meetingTiming?.meetingName?.trim()}.mp3`;
-
-        // const webmFileName = `meeting-recording-${meetingId}-${timestamp}.webm`;
-
-        // 🔴 STEP 1: LOCAL DOWNLOAD (MP3 format)
-        // downloadRecordingLocally(mp3Blob, mp3FileName);
-
-        // 🔴 STEP 2: UPLOAD TO BACKEND (MP3 format)
-        const formData = new FormData();
-        formData.append("refId", meetingId);
-        formData.append("imageType", "MEETING");
-        formData.append("isMaster", "0");
-        formData.append("fileType", "2060");
-        formData.append("files", mp3Blob, mp3FileName);
-
-        try {
-          // Upload to backend
-          uploadAudio(
-            { id: meetingId, formData },
-            {
-              onSuccess: () => {
-                toast.success(
-                  "Recording saved and uploaded for transcription!",
-                );
-              },
-              onError: () => {
-                toast.error("Failed to save recording to server");
-              },
-            },
-          );
-        } catch (error) {
-          console.error("Error uploading recording:", error);
-          toast.error("Failed to save recording");
-        }
-
-        // Stop all tracks in all streams
-        [displayStream, micStream, mixedStream].forEach((s) => {
-          s.getTracks().forEach((track) => track.stop());
-        });
-        audioContext.close();
-        mediaRecorderRef.current = null;
-        setIsRecordingLocally(false);
-        if (recordingTimer) {
-          clearTimeout(recordingTimer);
-          setRecordingTimer(null);
-        }
+        // Set minimum recording time (20 seconds)
         setCanStopRecording(false);
-      };
+        const timer = setTimeout(() => {
+          setCanStopRecording(true);
+          toast.info("You can now stop the recording.");
+        }, 20000); // 20 seconds minimum
 
-      recorder.start(1000); // Collect data every second for better size tracking
+        setRecordingTimer(timer);
 
-      // Update Firebase
-      const meetStateRef = ref(db, `meetings/${meetingId}/state`);
-      update(meetStateRef, { isRecording: true, recordingUserId: userId });
-
-      // Set minimum recording time (20 seconds)
-      setCanStopRecording(false);
-      const timer = setTimeout(() => {
-        setCanStopRecording(true);
-        toast.info("You can now stop the recording.");
-      }, 20000); // 20 seconds minimum
-
-      setRecordingTimer(timer);
-
-      toast.success(
-        "Recording started! Please record for at least 20 seconds.",
-      );
-    } catch (err) {
-      console.error("Error starting recording:", err);
-      toast.error(
-        "Could not start recording. Ensure you share tab/system audio and permit microphone access.",
-      );
-      setIsRecordingLocally(false);
-      setCanStopRecording(false);
+        toast.success(
+          "Recording started! Please record for at least 20 seconds.",
+        );
+      } catch (error) {
+        console.error("Error starting recording:", error);
+        toast.error(
+          `Error starting recording: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+        return;
+      }
+    } catch (error) {
+      console.error("Error in recording setup:", error);
+      toast.error("Failed to initialize recording");
     }
   };
 
   const stopRecording = () => {
-    if (!canStopRecording) {
-      toast.error("Please record for at least 20 seconds before stopping.");
-      return;
+    const now = Date.now();
+    const startTime = meetingResponse?.state?.recordingTimestamp;
+
+    if (userId === meetingResponse?.state.recordingUserId) {
+      // ⏱️ Check if 20 seconds have passed
+      if (startTime && now - startTime < 20 * 1000) {
+        toast.error("Please record for at least 20 seconds before stopping.");
+        return;
+      }
+
+      // eslint-disable-next-line no-alert
+      const isConfirmed = window.confirm(
+        "Are you sure to store recording and stop it?",
+      );
+
+      if (!isConfirmed) return;
     }
-
-    // eslint-disable-next-line no-alert
-    const isConfirmed = window.confirm(
-      "Are you sure to store recording and stop it?",
-    );
-
-    if (!isConfirmed) return;
 
     // 🔴 CLEAR TIMER
     if (recordingTimer) {
@@ -991,7 +996,7 @@ export default function useMeetingDesc() {
 
     // 🔴 Firebase sync (secondary)
     const meetStateRef = ref(db, `meetings/${meetingId}/state`);
-    update(meetStateRef, { isRecording: false });
+    update(meetStateRef, { isRecording: false, recordingTimestamp: null });
   };
 
   // const handleDownloadRecording = () => {
@@ -1009,6 +1014,11 @@ export default function useMeetingDesc() {
       updatedAt: Date.now(),
     });
   };
+
+  const now = Date.now();
+  const startTime = meetingResponse?.state?.recordingTimestamp;
+
+  const isStop = now - startTime! < 20 * 1000;
 
   return {
     meetingStatus: meetingTiming?.detailMeetingStatus,
@@ -1057,6 +1067,7 @@ export default function useMeetingDesc() {
     recordingUserId: meetingResponse?.state.recordingUserId,
     userId,
     isMeetingRecording: meetingResponse?.state.isRecording,
+    isStop,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   };

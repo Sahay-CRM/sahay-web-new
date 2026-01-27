@@ -1214,6 +1214,7 @@ interface MeetingResFire {
     };
     isRecording?: boolean;
     recordingUserId: string;
+    recordingTimestamp?: number;
   };
   timers: {
     agenda?: TimerEntry;

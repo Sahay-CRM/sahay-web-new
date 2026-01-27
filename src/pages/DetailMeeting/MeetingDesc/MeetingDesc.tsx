@@ -101,6 +101,7 @@ export default function MeetingDesc() {
     recordingUserId,
     userId,
     isMeetingRecording,
+    isStop,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   } = useMeetingDesc();
@@ -955,13 +956,13 @@ export default function MeetingDesc() {
                   </TooltipTrigger>
 
                   <TooltipContent side="right">
-                    <p>{isRecording ? "Stop Recording" : "Start Recording"}</p>
+                    <p>Start Recording</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
           )}
-        {meetingStatus === "DISCUSSION" &&
+        {(meetingStatus === "DISCUSSION" || meetingStatus === "CONCLUSION") &&
           isMeetingRecording === true &&
           (userDetail?.employeeType === "CONSULTANT" ||
             userDetail?.employeeType === "SAHAYTEAMMATE") && (
@@ -972,7 +973,9 @@ export default function MeetingDesc() {
                     <Button
                       onClick={stopRecording}
                       variant="outline"
-                      disabled={isRecording && userId !== recordingUserId}
+                      disabled={
+                        isRecording && userId !== recordingUserId && !isStop
+                      }
                       className={cn(
                         "h-[40px] rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-lg",
                         isRecording
@@ -985,7 +988,7 @@ export default function MeetingDesc() {
                   </TooltipTrigger>
 
                   <TooltipContent side="right">
-                    <p>{isRecording ? "Stop Recording" : "Start Recording"}</p>
+                    <p>Stop Recording</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
