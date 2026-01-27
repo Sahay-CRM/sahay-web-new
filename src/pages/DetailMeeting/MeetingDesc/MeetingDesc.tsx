@@ -100,6 +100,7 @@ export default function MeetingDesc() {
     isDownloading,
     recordingUserId,
     userId,
+    isMeetingRecording,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   } = useMeetingDesc();
@@ -184,6 +185,7 @@ export default function MeetingDesc() {
             //   )?.attendanceMark
             // }
             follow={meetingResponse?.state.follow === userId}
+            stopRecording={stopRecording}
           />
         </div>
       </div>
@@ -930,6 +932,7 @@ export default function MeetingDesc() {
         className={`${isSidebarCollapsed ? "bg-white border rounded-md" : ""} flex flex-col z-30`}
       >
         {meetingStatus === "DISCUSSION" &&
+          !isMeetingRecording &&
           (userDetail?.employeeType === "CONSULTANT" ||
             userDetail?.employeeType === "SAHAYTEAMMATE") && (
             <div className="flex justify-center ">
@@ -937,7 +940,37 @@ export default function MeetingDesc() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      onClick={isRecording ? stopRecording : startRecording}
+                      onClick={startRecording}
+                      variant="outline"
+                      disabled={isRecording && userId !== recordingUserId}
+                      className={cn(
+                        "h-[40px] rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-lg",
+                        isRecording
+                          ? "bg-red-600 hover:bg-red-700 text-white animate-pulse"
+                          : "bg-primary hover:bg-primary/90 text-white",
+                      )}
+                    >
+                      <MicIcon className="w-5 h-5 text-white" />
+                    </Button>
+                  </TooltipTrigger>
+
+                  <TooltipContent side="right">
+                    <p>{isRecording ? "Stop Recording" : "Start Recording"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          )}
+        {meetingStatus === "DISCUSSION" &&
+          isMeetingRecording === true &&
+          (userDetail?.employeeType === "CONSULTANT" ||
+            userDetail?.employeeType === "SAHAYTEAMMATE") && (
+            <div className="flex justify-center ">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={stopRecording}
                       variant="outline"
                       disabled={isRecording && userId !== recordingUserId}
                       className={cn(

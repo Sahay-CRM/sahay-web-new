@@ -138,6 +138,7 @@ interface AgendaProps {
   isSuperAdmin: boolean;
   follow?: boolean;
   isBellRing?: () => void;
+  stopRecording?: () => void;
 }
 
 export default function Agenda({
@@ -151,6 +152,7 @@ export default function Agenda({
   follow,
   joiners,
   isBellRing,
+  stopRecording,
 }: AgendaProps) {
   const {
     issueInput,
@@ -215,6 +217,7 @@ export default function Agenda({
     isTeamLeader,
     isSuperAdmin,
     follow,
+    stopRecording,
   });
 
   const unresolvedCount = agendaList?.filter(

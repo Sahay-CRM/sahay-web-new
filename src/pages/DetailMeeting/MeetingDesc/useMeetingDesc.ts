@@ -1056,6 +1056,7 @@ export default function useMeetingDesc() {
     handleDownloadTranscript,
     recordingUserId: meetingResponse?.state.recordingUserId,
     userId,
+    isMeetingRecording: meetingResponse?.state.isRecording,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   };

@@ -36,6 +36,7 @@ interface UseAgendaProps {
   isTeamLeader: boolean | undefined;
   isSuperAdmin?: boolean | undefined;
   follow?: boolean;
+  stopRecording?: () => void;
 }
 
 type ActiveTab = "kpis" | "projects" | "tasks";
@@ -47,6 +48,7 @@ export const useAgenda = ({
   canEdit,
   joiners,
   follow,
+  stopRecording,
 }: UseAgendaProps) => {
   // const dispatch = useDispatch();
   const db = database;
@@ -893,6 +895,7 @@ export const useAgenda = ({
 
   const handleCloseMeetingWithLog = () => {
     if (meetingId && meetingId) {
+      stopRecording?.();
       endMeet(meetingId);
     }
   };
