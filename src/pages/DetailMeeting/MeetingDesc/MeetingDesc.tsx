@@ -932,7 +932,8 @@ export default function MeetingDesc() {
       <div
         className={`${isSidebarCollapsed ? "bg-white border rounded-md" : ""} flex flex-col z-30`}
       >
-        {meetingStatus === "DISCUSSION" &&
+        {meetingStatus !== "NOT_STARTED" &&
+          meetingStatus !== "ENDED" &&
           !isMeetingRecording &&
           (userDetail?.employeeType === "CONSULTANT" ||
             userDetail?.employeeType === "SAHAYTEAMMATE") && (
@@ -962,7 +963,8 @@ export default function MeetingDesc() {
               </TooltipProvider>
             </div>
           )}
-        {(meetingStatus === "DISCUSSION" || meetingStatus === "CONCLUSION") &&
+        {meetingStatus !== "NOT_STARTED" &&
+          meetingStatus !== "ENDED" &&
           isMeetingRecording === true &&
           (userDetail?.employeeType === "CONSULTANT" ||
             userDetail?.employeeType === "SAHAYTEAMMATE") && (
@@ -994,7 +996,7 @@ export default function MeetingDesc() {
               </TooltipProvider>
             </div>
           )}
-        {(meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") &&
+        {meetingStatus === "ENDED" &&
           isTranscriptReady === true &&
           firefliesMeetingId &&
           (userDetail?.employeeType === "CONSULTANT" ||
@@ -1019,7 +1021,7 @@ export default function MeetingDesc() {
                   </TooltipTrigger>
 
                   <TooltipContent side="right">
-                    <p>{"Dewnload File"}</p>
+                    <p>{"Download File"}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
