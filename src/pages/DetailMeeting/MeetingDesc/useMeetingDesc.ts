@@ -713,6 +713,30 @@ export default function useMeetingDesc() {
     }
   };
   const startRecording = async () => {
+    // Check microphone permission before starting
+    try {
+      // Check if Permissions API is supported
+      if (navigator.permissions && navigator.permissions.query) {
+        const permissionStatus = await navigator.permissions.query({
+          name: "microphone" as PermissionName,
+        });
+
+        if (permissionStatus.state === "denied") {
+          toast.error(
+            "Microphone access is denied. Please enable microphone permission in your browser settings to record audio.",
+          );
+          return;
+        }
+
+        if (permissionStatus.state === "prompt") {
+          toast.info("Please allow microphone access to start recording.");
+        }
+      }
+    } catch (permissionError) {
+      // Permissions API might not be fully supported, continue with getUserMedia which will prompt
+      console.warn("Permissions API not fully supported:", permissionError);
+    }
+
     const meetingMetaRef = ref(db, `meetings/${meetingId}/state`);
     const snapshot = await get(meetingMetaRef);
     const meetingMeta = snapshot.val();
@@ -742,13 +766,13 @@ export default function useMeetingDesc() {
       toast.success("Previous recording removed. Starting new...");
     }
     try {
-      // Check if getDisplayMedia is supported
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-        throw new Error("Screen sharing is not supported in this browser.");
+      // Check if mediaDevices is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Audio recording is not supported in this browser.");
       }
 
       try {
-        // Capture local microphone audio only
+        // Request microphone access for audio recording only
         const micStream = await navigator.mediaDevices.getUserMedia({
           audio: {
             echoCancellation: true,
