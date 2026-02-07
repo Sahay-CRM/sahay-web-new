@@ -52,7 +52,7 @@ export default function useMeetingDesc() {
 
   const userId = useSelector(getUserId);
 
-  const { data: meetingData } = useGetMeetingTiming(meetingId ?? "");
+  const { data: meetingData, isLoading } = useGetMeetingTiming(meetingId ?? "");
 
   const meetingTiming = meetingData?.data as
     | CompanyMeetingDataProps
@@ -712,7 +712,6 @@ export default function useMeetingDesc() {
       return false;
     }
   };
-
   const startRecording = async () => {
     const meetingMetaRef = ref(db, `meetings/${meetingId}/state`);
     const snapshot = await get(meetingMetaRef);
@@ -720,7 +719,11 @@ export default function useMeetingDesc() {
 
     const { firefliesMeetingId, isTranscriptReady } = meetingMeta || {};
 
-    if (firefliesMeetingId || isTranscriptReady) {
+    if (
+      firefliesMeetingId ||
+      isTranscriptReady ||
+      meetingResponse?.state.recordingUserId
+    ) {
       const confirmDelete = window.confirm(
         "A previous recording and transcript already exist. Starting a new recording will delete them. Do you want to continue?",
       );
@@ -741,9 +744,9 @@ export default function useMeetingDesc() {
     try {
       // 1. Capture system/tab audio
       const displayStream = await navigator.mediaDevices.getDisplayMedia({
-        // video: {
-        //   displaySurface: "browser",
-        // },
+        video: {
+          displaySurface: "browser",
+        },
         audio: {
           suppressLocalAudioPlayback: false,
         },
@@ -936,7 +939,11 @@ export default function useMeetingDesc() {
 
       // Update Firebase
       const meetStateRef = ref(db, `meetings/${meetingId}/state`);
-      update(meetStateRef, { isRecording: true, recordingUserId: userId });
+      update(meetStateRef, {
+        isRecording: true,
+        recordingUserId: userId,
+        recordingTimestamp: Date.now(),
+      });
 
       // Set minimum recording time (20 seconds)
       setCanStopRecording(false);
@@ -950,28 +957,30 @@ export default function useMeetingDesc() {
       toast.success(
         "Recording started! Please record for at least 20 seconds.",
       );
-    } catch (err) {
-      console.error("Error starting recording:", err);
-      toast.error(
-        "Could not start recording. Ensure you share tab/system audio and permit microphone access.",
-      );
-      setIsRecordingLocally(false);
-      setCanStopRecording(false);
+    } catch (error) {
+      console.error("Error in recording setup:", error);
+      toast.error("Failed to initialize recording");
     }
   };
 
   const stopRecording = () => {
-    if (!canStopRecording) {
-      toast.error("Please record for at least 20 seconds before stopping.");
-      return;
+    const now = Date.now();
+    const startTime = meetingResponse?.state?.recordingTimestamp;
+
+    if (userId === meetingResponse?.state.recordingUserId) {
+      // ⏱️ Check if 20 seconds have passed
+      if (startTime && now - startTime < 20 * 1000) {
+        toast.error("Please record for at least 20 seconds before stopping.");
+        return;
+      }
+
+      // eslint-disable-next-line no-alert
+      const isConfirmed = window.confirm(
+        "Are you sure to store recording and stop it?",
+      );
+
+      if (!isConfirmed) return;
     }
-
-    // eslint-disable-next-line no-alert
-    const isConfirmed = window.confirm(
-      "Are you sure to store recording and stop it?",
-    );
-
-    if (!isConfirmed) return;
 
     // 🔴 CLEAR TIMER
     if (recordingTimer) {
@@ -991,7 +1000,7 @@ export default function useMeetingDesc() {
 
     // 🔴 Firebase sync (secondary)
     const meetStateRef = ref(db, `meetings/${meetingId}/state`);
-    update(meetStateRef, { isRecording: false });
+    update(meetStateRef, { isRecording: false, recordingTimestamp: null });
   };
 
   // const handleDownloadRecording = () => {
@@ -1009,6 +1018,11 @@ export default function useMeetingDesc() {
       updatedAt: Date.now(),
     });
   };
+
+  const now = Date.now();
+  const startTime = meetingResponse?.state?.recordingTimestamp;
+
+  const isStop = now - startTime! < 20 * 1000;
 
   return {
     meetingStatus: meetingTiming?.detailMeetingStatus,
@@ -1056,6 +1070,9 @@ export default function useMeetingDesc() {
     handleDownloadTranscript,
     recordingUserId: meetingResponse?.state.recordingUserId,
     userId,
+    isMeetingRecording: meetingResponse?.state.isRecording,
+    isStop,
+    isLoading,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   };

@@ -958,6 +958,7 @@ interface KPIFormData {
   employeeName?: string;
   visualFrequencyAggregate: string | null;
   ioKPIId?: string;
+  isDelete?: boolean;
   // skipDays?: string[];
 }
 
@@ -1214,6 +1215,7 @@ interface MeetingResFire {
     };
     isRecording?: boolean;
     recordingUserId: string;
+    recordingTimestamp?: number;
   };
   timers: {
     agenda?: TimerEntry;

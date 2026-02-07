@@ -17,7 +17,9 @@ import {
   MicIcon,
   DownloadIcon,
   Loader2,
+  Search,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 import useMeetingDesc from "./useMeetingDesc";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
@@ -100,11 +102,18 @@ export default function MeetingDesc() {
     isDownloading,
     recordingUserId,
     userId,
+    isMeetingRecording,
+    isStop,
+    isLoading,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   } = useMeetingDesc();
   const [isDownloadModalOpen, setIsDownloadModalOpen] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState<string | undefined>();
+  const [updatesSearchTerm, setUpdatesSearchTerm] = React.useState("");
+  const [appreciationSearchTerm, setAppreciationSearchTerm] =
+    React.useState("");
+  console.log(isLoading);
 
   const handleOpenDownloadModal = (date?: string) => {
     setSelectedDate(date);
@@ -148,9 +157,18 @@ export default function MeetingDesc() {
   ];
 
   const updatesNotes = Array.isArray(meetingNotes?.data)
-    ? meetingNotes.data.filter(
-        (note: MeetingNotesRes) => note.noteType === "UPDATES",
-      )
+    ? meetingNotes.data
+        .filter((note: MeetingNotesRes) => note.noteType === "UPDATES")
+        .filter((note: MeetingNotesRes) =>
+          updatesSearchTerm
+            ? note.note
+                ?.toLowerCase()
+                .includes(updatesSearchTerm.toLowerCase()) ||
+              note.employeeName
+                ?.toLowerCase()
+                .includes(updatesSearchTerm.toLowerCase())
+            : true,
+        )
     : [];
 
   if (meetingData?.status === 401) {
@@ -184,6 +202,7 @@ export default function MeetingDesc() {
             //   )?.attendanceMark
             // }
             follow={meetingResponse?.state.follow === userId}
+            stopRecording={stopRecording}
           />
         </div>
       </div>
@@ -598,7 +617,19 @@ export default function MeetingDesc() {
                   />
                 </div>
               </div>
-              <div className="px-3 h-[calc(100vh-170px)] overflow-auto">
+              <div className="px-3 mb-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                  <Input
+                    type="search"
+                    placeholder="Search updates..."
+                    className="pl-9 h-9 bg-white border-gray-200"
+                    value={updatesSearchTerm}
+                    onChange={(e) => setUpdatesSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="px-3 h-[calc(100vh-215px)] overflow-auto">
                 {updatesNotes.map((note: MeetingNotesRes, idx: number) => {
                   return (
                     <div
@@ -696,10 +727,32 @@ export default function MeetingDesc() {
                   />
                 </div>
               </div>
-              <div className="px-3 h-[calc(100vh-170px)] overflow-auto">
+              <div className="px-3 mb-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                  <Input
+                    type="search"
+                    placeholder="Search appreciation..."
+                    className="pl-9 h-9 bg-white border-gray-200"
+                    value={appreciationSearchTerm}
+                    onChange={(e) => setAppreciationSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="px-3 h-[calc(100vh-215px)] overflow-auto">
                 {Array.isArray(meetingNotes?.data) &&
                   meetingNotes.data
                     .filter((note) => note.noteType === "APPRECIATION")
+                    .filter((note: MeetingNotesRes) =>
+                      appreciationSearchTerm
+                        ? note.note
+                            ?.toLowerCase()
+                            .includes(appreciationSearchTerm.toLowerCase()) ||
+                          note.employeeName
+                            ?.toLowerCase()
+                            .includes(appreciationSearchTerm.toLowerCase())
+                        : true,
+                    )
                     .map((note: MeetingNotesRes, idx: number) => {
                       return (
                         <div
@@ -929,7 +982,48 @@ export default function MeetingDesc() {
       <div
         className={`${isSidebarCollapsed ? "bg-white border rounded-md" : ""} flex flex-col z-30`}
       >
-        {meetingStatus === "DISCUSSION" &&
+        {isLoading ? (
+          <div className="flex justify-center items-center"></div>
+        ) : (
+          <div>
+            {meetingStatus !== "NOT_STARTED" &&
+              meetingStatus !== "ENDED" &&
+              !isMeetingRecording &&
+              (userDetail?.employeeType === "CONSULTANT" ||
+                userDetail?.employeeType === "SAHAYTEAMMATE") && (
+                <div className="flex justify-center ">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          onClick={startRecording}
+                          variant="outline"
+                          disabled={isRecording && userId !== recordingUserId}
+                          className={cn(
+                            "h-[40px] rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-lg",
+                            isRecording
+                              ? "bg-red-600 hover:bg-red-700 text-white animate-pulse"
+                              : "bg-primary hover:bg-primary/90 text-white",
+                          )}
+                        >
+                          <MicIcon className="w-5 h-5 text-white" />
+                        </Button>
+                      </TooltipTrigger>
+
+                      <TooltipContent side="right">
+                        <p>Start Recording</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              )}
+          </div>
+        )}
+        {meetingStatus &&
+          userDetail?.employeeType &&
+          meetingStatus !== "NOT_STARTED" &&
+          meetingStatus !== "ENDED" &&
+          isMeetingRecording === true &&
           (userDetail?.employeeType === "CONSULTANT" ||
             userDetail?.employeeType === "SAHAYTEAMMATE") && (
             <div className="flex justify-center ">
@@ -937,9 +1031,11 @@ export default function MeetingDesc() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      onClick={isRecording ? stopRecording : startRecording}
+                      onClick={stopRecording}
                       variant="outline"
-                      disabled={isRecording && userId !== recordingUserId}
+                      disabled={
+                        isRecording && userId !== recordingUserId && !isStop
+                      }
                       className={cn(
                         "h-[40px] rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-lg",
                         isRecording
@@ -952,13 +1048,14 @@ export default function MeetingDesc() {
                   </TooltipTrigger>
 
                   <TooltipContent side="right">
-                    <p>{isRecording ? "Stop Recording" : "Start Recording"}</p>
+                    <p>Stop Recording</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
           )}
-        {(meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") &&
+
+        {meetingStatus === "ENDED" &&
           isTranscriptReady === true &&
           firefliesMeetingId &&
           (userDetail?.employeeType === "CONSULTANT" ||
@@ -983,7 +1080,7 @@ export default function MeetingDesc() {
                   </TooltipTrigger>
 
                   <TooltipContent side="right">
-                    <p>{"Dewnload File"}</p>
+                    <p>{"Download File"}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
