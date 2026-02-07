@@ -110,6 +110,8 @@ interface TableProps<T extends Record<string, unknown>> {
   showActionsColumn?: boolean;
   actionColumnWidth?: string;
   isPermissionIcon?: boolean;
+  activeTooltip?: string;
+  inactiveTooltip?: string;
 }
 
 const TableDataKpi = <T extends Record<string, unknown>>({
@@ -148,6 +150,8 @@ const TableDataKpi = <T extends Record<string, unknown>>({
   actionColumnWidth,
   isPermissionIcon = false,
   searchValue,
+  activeTooltip,
+  inactiveTooltip,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   const showCheckboxes =
@@ -648,8 +652,8 @@ const TableDataKpi = <T extends Record<string, unknown>>({
                                   </TooltipTrigger>
                                   <TooltipContent>
                                     {getActiveState(item)
-                                      ? "Set Inactive"
-                                      : "Set Active"}
+                                      ? activeTooltip || "Active"
+                                      : inactiveTooltip || "Inactive"}
                                   </TooltipContent>
                                 </Tooltip>
                               )}
