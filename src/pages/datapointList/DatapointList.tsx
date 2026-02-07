@@ -19,7 +19,6 @@ import { formatFrequencyType } from "@/features/utils/app.utils";
 import EditDatapointAddFormModal from "./EditDatapointFormModal/editDatapointAddFormModal";
 import TableData from "@/components/shared/DataTable/DataTableKpi";
 import ConfirmationDeleteModal from "./ConfirmationKPIDeleteModal";
-import { RotateCcw } from "lucide-react";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
 
@@ -264,6 +263,7 @@ export default function CompanyTaskList() {
                       : `${item.value1}`,
                 employeeName: getInitials(item.employeeName || ""), // Use initials for the display
                 employeeFullName: item.employeeName,
+                isActive: !item.isDelete,
               }),
             )}
             columns={visibleColumns}
@@ -292,59 +292,13 @@ export default function CompanyTaskList() {
             permissionKey="users"
             localStorageId="KpiList"
             moduleKey="DATAPOINT_LIST"
-            customActions={(row: KPIFormData) => (
-              <div className="flex gap-1">
-                {userDetail.employeeType === "CONSULTANT" && (
-                  <div>
-                    {!row.isDelete ? (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="px-4 text-red-500 hover:text-red-700"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSoftDeleteRestore(
-                                  row.kpiId as string,
-                                  true,
-                                );
-                              }}
-                            >
-                              Temp Delete
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Soft Delete</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-green-500 hover:text-green-700"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSoftDeleteRestore(
-                                  row.kpiId as string,
-                                  false,
-                                );
-                              }}
-                            >
-                              <RotateCcw className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Restore</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+            showActiveToggle={userDetail.employeeType === "CONSULTANT"}
+            onToggleActive={(item) => {
+              handleSoftDeleteRestore(item.kpiId as string, !!item.isActive);
+            }}
+            activeToggleKey="isActive"
+            activeTooltip="active KPI"
+            inactiveTooltip="Inactive KPI"
             sortableColumns={[
               "KPIName",
               "KPILabel",
