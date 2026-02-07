@@ -9,7 +9,9 @@ import {
   Tag,
   Check,
   Download,
+  Search,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -78,6 +80,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   //   useState<MeetingNotesRes | null>(null);
 
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedTask, setSelectedTask] = useState<TaskGetPaging | TaskData>();
   const [selectedProject, setSelectedProject] = useState<
     CompanyProjectDataProps | TaskData
@@ -437,13 +440,38 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
         </>
       )}
 
-      <div className={cn("h-[calc(100vh-230px)] overflow-y-scroll", className)}>
+      {/* Local Search Input */}
+      <div className="relative mt-3 mb-1">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+        <Input
+          type="search"
+          placeholder="Search notes..."
+          className="pl-9 h-9 bg-white border-gray-200"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      <div className={cn("h-[calc(100vh-280px)] overflow-y-scroll", className)}>
         {Array.isArray(meetingNotes?.data) &&
           (() => {
             // Filter and sort notes
             const filteredNotes = [...meetingNotes.data]
               .filter((note: MeetingNotesRes) =>
                 FilterBy ? note.noteTag !== null : note.noteTag === null,
+              )
+              .filter((note: MeetingNotesRes) =>
+                searchTerm
+                  ? note.note
+                      ?.toLowerCase()
+                      .includes(searchTerm.toLowerCase()) ||
+                    note.employeeName
+                      ?.toLowerCase()
+                      .includes(searchTerm.toLowerCase()) ||
+                    note.noteTag
+                      ?.toLowerCase()
+                      .includes(searchTerm.toLowerCase())
+                  : true,
               )
               .sort((a, b) => {
                 if (meetingStatus === "ENDED") {

@@ -958,6 +958,7 @@ interface KPIFormData {
   employeeName?: string;
   visualFrequencyAggregate: string | null;
   ioKPIId?: string;
+  isDelete?: boolean;
   // skipDays?: string[];
 }
 

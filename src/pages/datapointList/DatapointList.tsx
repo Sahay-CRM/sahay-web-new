@@ -19,6 +19,9 @@ import { formatFrequencyType } from "@/features/utils/app.utils";
 import EditDatapointAddFormModal from "./EditDatapointFormModal/editDatapointAddFormModal";
 import TableData from "@/components/shared/DataTable/DataTableKpi";
 import ConfirmationDeleteModal from "./ConfirmationKPIDeleteModal";
+import { RotateCcw } from "lucide-react";
+import { useSelector } from "react-redux";
+import { getUserDetail } from "@/features/selectors/auth.selector";
 
 const validationOptions = [
   { value: "EQUAL_TO", label: "= Equal to" },
@@ -101,9 +104,12 @@ export default function CompanyTaskList() {
     isEditKpiId,
     setIsEditKpiId,
     setIsEditModalOpen,
+    handleSoftDeleteRestore,
   } = useCompanyTaskList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
+
+  const userDetail = useSelector(getUserDetail);
 
   useEffect(() => {
     setBreadcrumbs([{ label: "KPI List", href: "" }]);
@@ -233,45 +239,49 @@ export default function CompanyTaskList() {
         <div className="bg-white">
           <TableData
             key={datpointData?.currentPage}
-            tableData={datpointData?.data.map((item, index) => ({
-              ...item,
-              srNo:
-                (datpointData.currentPage - 1) * datpointData.pageSize +
-                index +
-                1,
+            tableData={datpointData?.data.map(
+              (item: KPIFormData, index: number) => ({
+                ...item,
+                srNo:
+                  (datpointData.currentPage - 1) * datpointData.pageSize +
+                  index +
+                  1,
 
-              validationType: getValidationSymbol(item.validationType),
-              validationTypeFullLabel: getValidationLabel(item.validationType),
-              frequencyType: formatFrequencyType(item.frequencyType),
-              // frequencyType: getFrequencySymbol(item.frequencyType),
-              // frequencyTypeFullName: formatFrequencyType(item.frequencyType),
-              goal:
-                item.validationType === "YES_NO"
-                  ? item.value1 === "1"
-                    ? "Yes"
-                    : "No"
-                  : item.value2
-                    ? `${item.value1} to ${item.value2}`
-                    : `${item.value1}`,
-              employeeName: getInitials(item.employeeName || ""), // Use initials for the display
-              employeeFullName: item.employeeName,
-            }))}
+                validationType: getValidationSymbol(item.validationType),
+                validationTypeFullLabel: getValidationLabel(
+                  item.validationType,
+                ),
+                frequencyType: formatFrequencyType(item.frequencyType),
+                // frequencyType: getFrequencySymbol(item.frequencyType),
+                // frequencyTypeFullName: formatFrequencyType(item.frequencyType),
+                goal:
+                  item.validationType === "YES_NO"
+                    ? item.value1 === "1"
+                      ? "Yes"
+                      : "No"
+                    : item.value2
+                      ? `${item.value1} to ${item.value2}`
+                      : `${item.value1}`,
+                employeeName: getInitials(item.employeeName || ""), // Use initials for the display
+                employeeFullName: item.employeeName,
+              }),
+            )}
             columns={visibleColumns}
             primaryKey="kpiId"
-            onDelete={(row) => {
+            onDelete={(row: KPIFormData) => {
               onDelete(row);
             }}
             onEdit={
               permission.Edit
-                ? (row) => {
+                ? (row: KPIFormData) => {
                     if (row.kpiId) {
-                      setIsEditKpiId(row.kpiId);
+                      setIsEditKpiId(row.kpiId as string);
                       setIsEditModalOpen(true);
                     }
                   }
                 : undefined
             }
-            onRowClick={(row) => {
+            onRowClick={(row: KPIFormData) => {
               handleRowsModalOpen(row);
             }}
             isLoading={isLoading}
@@ -282,6 +292,59 @@ export default function CompanyTaskList() {
             permissionKey="users"
             localStorageId="KpiList"
             moduleKey="DATAPOINT_LIST"
+            customActions={(row: KPIFormData) => (
+              <div className="flex gap-1">
+                {userDetail.employeeType === "CONSULTANT" && (
+                  <div>
+                    {!row.isDelete ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="px-4 text-red-500 hover:text-red-700"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSoftDeleteRestore(
+                                  row.kpiId as string,
+                                  true,
+                                );
+                              }}
+                            >
+                              Temp Delete
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Soft Delete</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-green-500 hover:text-green-700"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSoftDeleteRestore(
+                                  row.kpiId as string,
+                                  false,
+                                );
+                              }}
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Restore</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             sortableColumns={[
               "KPIName",
               "KPILabel",
@@ -289,7 +352,7 @@ export default function CompanyTaskList() {
               "frequencyType",
               "coreParameterName",
             ]}
-            actionColumnWidth="w-[100px] overflow-hidden "
+            actionColumnWidth="w-[180px] overflow-hidden "
           />
         </div>
         {isDeleteModalOpen && (

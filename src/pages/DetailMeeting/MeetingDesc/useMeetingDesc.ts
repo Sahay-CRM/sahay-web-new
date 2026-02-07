@@ -52,7 +52,7 @@ export default function useMeetingDesc() {
 
   const userId = useSelector(getUserId);
 
-  const { data: meetingData } = useGetMeetingTiming(meetingId ?? "");
+  const { data: meetingData, isLoading } = useGetMeetingTiming(meetingId ?? "");
 
   const meetingTiming = meetingData?.data as
     | CompanyMeetingDataProps
@@ -1072,6 +1072,7 @@ export default function useMeetingDesc() {
     userId,
     isMeetingRecording: meetingResponse?.state.isRecording,
     isStop,
+    isLoading,
     // selectedGroupFilter,
     // setSelectedGroupFilter,
   };

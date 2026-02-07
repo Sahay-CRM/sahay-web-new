@@ -104,6 +104,9 @@ const Urls = {
   getDatapointList: () => `${baseUrl}/company/kpi/get`,
   ddAllDatapointList: () => `${baseUrl}/company/kpi/get-all`,
 
+  softDeleteRestoreDatapoint: (id: string) =>
+    `${baseUrl}/company/kpi/soft-delete/${id}`,
+
   getKpinonselectList: () => `${baseUrl}/kpi/get/non-select`,
   updateCompanyDatapoint: (id: string) => `${baseUrl}/company/kpi/update/${id}`,
   addCompanyDatapoint: () => `${baseUrl}/company/kpi/create`,

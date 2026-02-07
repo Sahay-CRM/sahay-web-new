@@ -2,6 +2,7 @@ import {
   useDeleteDatapoint,
   useGetCompanyDatapoint,
 } from "@/features/api/companyDatapoint";
+import { updateKPISoftDeleteMutation } from "@/features/api/KpiList";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { AxiosError } from "axios";
 import { useCallback, useState } from "react";
@@ -20,6 +21,12 @@ export default function useAdminUser() {
   const permission = useSelector(getUserPermission).DATAPOINT_LIST;
 
   const { mutate: deleteDatapoint } = useDeleteDatapoint();
+  const { mutate: softDeleteRestore } = updateKPISoftDeleteMutation();
+
+  const handleSoftDeleteRestore = (dataPointId: string, isDeleted: boolean) => {
+    softDeleteRestore({ dataPointId, isDeleted });
+  };
+
   const [isChildData, setIsChildData] = useState<string | undefined>();
   const [viewModalData, setViewModalData] = useState<KPIFormData>(
     {} as KPIFormData,
@@ -191,5 +198,6 @@ export default function useAdminUser() {
     isEditKpiId,
     setIsEditKpiId,
     setIsEditModalOpen,
+    handleSoftDeleteRestore,
   };
 }
