@@ -13,7 +13,6 @@ import {
   // Unlink,
   UsersRound,
   X,
-  Download,
   MicIcon,
   DownloadIcon,
   Loader2,
@@ -113,7 +112,9 @@ export default function MeetingDesc() {
   const [updatesSearchTerm, setUpdatesSearchTerm] = React.useState("");
   const [appreciationSearchTerm, setAppreciationSearchTerm] =
     React.useState("");
-  console.log(isLoading);
+  const [isUpdatesSearching, setIsUpdatesSearching] = React.useState(false);
+  const [isAppreciationSearching, setIsAppreciationSearching] =
+    React.useState(false);
 
   const handleOpenDownloadModal = (date?: string) => {
     setSelectedDate(date);
@@ -512,74 +513,37 @@ export default function MeetingDesc() {
             </div>
           )}
           {activeTab === "DOCUMENTS" && (
-            <div>
-              <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
-                <h3 className="p-0 text-base pl-4">Meeting Notes</h3>
-                <div className="flex gap-2 items-center">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Download
-                          className="w-5 h-5 text-gray-500 cursor-pointer hover:text-primary transition-colors"
-                          onClick={() => handleOpenDownloadModal()}
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent>Download Notes</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <X
-                    className="w-5 h-5 text-gray-500 cursor-pointer"
-                    onClick={() => setIsCardVisible(false)}
+            <div className="px-2">
+              {meetingId && (meetingTiming?.joiners as Joiners[]) && (
+                <Suspense
+                  fallback={
+                    <div className="animate-spin flex w-fit h-fit">
+                      <SpinnerIcon />
+                    </div>
+                  }
+                >
+                  <MeetingNotes
+                    joiners={meetingTiming?.joiners as Joiners[]}
+                    meetingId={meetingId}
+                    // detailMeetingId={meetingTiming?.detailMeetingId}
+                    employeeId={userId}
+                    className="mt-2"
+                    meetingName={meetingTiming?.meetingName}
+                    meetingStatus={meetingStatus}
+                    onPerDateDownload={handleOpenDownloadModal}
+                    setIsCardVisible={setIsCardVisible}
+                    isCardVisible={isCardVisible}
+                    isTopBarShow={true}
+                    handleOpenDownloadModal={handleOpenDownloadModal}
+                    title="Meeting Notes"
+                    // groupFlag={selectedGroupFilter}
                   />
-                </div>
-              </div>
-              <div className="px-2">
-                {meetingId && (meetingTiming?.joiners as Joiners[]) && (
-                  <Suspense
-                    fallback={
-                      <div className="animate-spin flex w-fit h-fit">
-                        <SpinnerIcon />
-                      </div>
-                    }
-                  >
-                    <MeetingNotes
-                      joiners={meetingTiming?.joiners as Joiners[]}
-                      meetingId={meetingId}
-                      // detailMeetingId={meetingTiming?.detailMeetingId}
-                      employeeId={userId}
-                      className="mt-2"
-                      meetingName={meetingTiming?.meetingName}
-                      meetingStatus={meetingStatus}
-                      onPerDateDownload={handleOpenDownloadModal}
-                      // groupFlag={selectedGroupFilter}
-                    />
-                  </Suspense>
-                )}
-              </div>
+                </Suspense>
+              )}
             </div>
           )}
           {activeTab === "DOCUMENTSTAG" && (
             <div>
-              <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
-                <h3 className="p-0 text-base pl-4">Meeting Tag Notes </h3>
-                <div className="flex gap-2 items-center">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Download
-                          className="w-5 h-5 text-gray-500 cursor-pointer hover:text-primary transition-colors"
-                          onClick={() => handleOpenDownloadModal()}
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent>Download Notes</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <X
-                    className="w-5 h-5 text-gray-500 cursor-pointer"
-                    onClick={() => setIsCardVisible(false)}
-                  />
-                </div>
-              </div>
               <div className="px-2">
                 {meetingId && (meetingTiming?.joiners as Joiners[]) && (
                   <Suspense
@@ -599,6 +563,11 @@ export default function MeetingDesc() {
                       meetingName={meetingTiming?.meetingName}
                       meetingStatus={meetingStatus}
                       onPerDateDownload={handleOpenDownloadModal}
+                      setIsCardVisible={setIsCardVisible}
+                      isCardVisible={isCardVisible}
+                      handleOpenDownloadModal={handleOpenDownloadModal}
+                      isTopBarShow={true}
+                      title={"Meeting Tag Notes"}
                       // groupFlag={selectedGroupFilter}
                     />
                   </Suspense>
@@ -608,24 +577,44 @@ export default function MeetingDesc() {
           )}
           {activeTab === "UPDATES" && (
             <div>
-              <div className="h-[50px] flex items-center justify-between py-3 border-b px-3 mb-3">
-                <h3 className="p-0 text-base pl-1">Meeting Updates</h3>
-                <div>
+              <div className="h-[50px] flex items-center justify-between px-2 py-3 border-b mb-3">
+                {isUpdatesSearching ? (
+                  <div className="flex-1 flex items-center gap-2 mr-2">
+                    <div className="relative w-full">
+                      <Search className="absolute left-0 ml-1 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-900" />
+                      <Input
+                        type="search"
+                        placeholder="Search updates..."
+                        className="pl-6 h-8 bg-gray-100 border border-black focus-visible:ring-1 placeholder:text-black focus-visible:ring-primary/20 text-sm"
+                        value={updatesSearchTerm}
+                        onChange={(e) => setUpdatesSearchTerm(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                    <button
+                      onClick={() => {
+                        setIsUpdatesSearching(false);
+                        setUpdatesSearchTerm("");
+                      }}
+                      className="p-1 hover:bg-gray-100 rounded-full"
+                    >
+                      <X className="h-4 w-4 text-gray-400" />
+                    </button>
+                  </div>
+                ) : (
+                  <h3 className="p-0 text-base pl-0">Meeting Updates</h3>
+                )}
+
+                <div className="flex gap-2 items-center">
+                  {!isUpdatesSearching && (
+                    <Search
+                      className="w-5 h-5 text-gray-500 cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => setIsUpdatesSearching(true)}
+                    />
+                  )}
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
                     onClick={() => setIsCardVisible(false)}
-                  />
-                </div>
-              </div>
-              <div className="px-3 mb-2">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                  <Input
-                    type="search"
-                    placeholder="Search updates..."
-                    className="pl-9 h-9 bg-white border-gray-200"
-                    value={updatesSearchTerm}
-                    onChange={(e) => setUpdatesSearchTerm(e.target.value)}
                   />
                 </div>
               </div>
@@ -718,24 +707,46 @@ export default function MeetingDesc() {
           )}
           {activeTab === "APPRECIATION" && (
             <div>
-              <div className="h-[64px] flex items-center justify-between py-3 border-b px-3 mb-3">
-                <h3 className="p-0 text-base">Meeting Appreciation</h3>
-                <div>
+              <div className="h-[50px] flex items-center justify-between py-3 border-b px-2 mb-3">
+                {isAppreciationSearching ? (
+                  <div className="flex-1 flex items-center gap-2 mr-2">
+                    <div className="relative w-full">
+                      <Search className="absolute left-0 ml-1 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-900" />
+                      <Input
+                        type="search"
+                        placeholder="Search appreciation..."
+                        className="pl-6 h-8 bg-gray-100 border border-black focus-visible:ring-1 placeholder:text-black focus-visible:ring-primary/20 text-sm"
+                        value={appreciationSearchTerm}
+                        onChange={(e) =>
+                          setAppreciationSearchTerm(e.target.value)
+                        }
+                        autoFocus
+                      />
+                    </div>
+                    <button
+                      onClick={() => {
+                        setIsAppreciationSearching(false);
+                        setAppreciationSearchTerm("");
+                      }}
+                      className="p-1 hover:bg-gray-100 rounded-full"
+                    >
+                      <X className="h-4 w-4 text-gray-400" />
+                    </button>
+                  </div>
+                ) : (
+                  <h3 className="p-0 text-base pl-0">Meeting Appreciation</h3>
+                )}
+
+                <div className="flex gap-2 items-center">
+                  {!isAppreciationSearching && (
+                    <Search
+                      className="w-5 h-5 text-gray-500 cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => setIsAppreciationSearching(true)}
+                    />
+                  )}
                   <X
                     className="w-5 h-5 text-gray-500 cursor-pointer"
                     onClick={() => setIsCardVisible(false)}
-                  />
-                </div>
-              </div>
-              <div className="px-3 mb-2">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                  <Input
-                    type="search"
-                    placeholder="Search appreciation..."
-                    className="pl-9 h-9 bg-white border-gray-200"
-                    value={appreciationSearchTerm}
-                    onChange={(e) => setAppreciationSearchTerm(e.target.value)}
                   />
                 </div>
               </div>
