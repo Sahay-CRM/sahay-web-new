@@ -38,14 +38,14 @@ export default function GroupKpisCreate() {
     (acc, item) => {
       if (!item.kpiId) return acc;
 
-      const masterId = item.KPIMasterId || "undefined-group";
+      const masterId = item.coreParameterId || "undefined-group";
       if (!acc[masterId]) {
         acc[masterId] = [];
       }
       acc[masterId].push(item as KpiAllList);
       return acc;
     },
-    {} as Record<string, KPIFormData[]>
+    {} as Record<string, KPIFormData[]>,
   );
 
   const isGroupSelected = (masterId: string) => {
@@ -75,7 +75,7 @@ export default function GroupKpisCreate() {
       if (groupedData) {
         const allItems = Object.values(groupedData).flat();
         const newSelectedData = allItems.filter((item) =>
-          newSelection.includes(item.kpiId!)
+          newSelection.includes(item.kpiId!),
         );
         setSelectedKpiData(newSelectedData);
       }
@@ -153,7 +153,7 @@ export default function GroupKpisCreate() {
                     >
                       <div className="flex justify-between items-center">
                         <div>
-                          {groupItems[0]?.KPIName || "Unnamed Group"}
+                          {groupItems[0]?.coreParameterName || "Unnamed Group"}
                           {isGroupSelected(masterId) && (
                             <span className="ml-2 text-sm text-green-600">
                               (Selected)

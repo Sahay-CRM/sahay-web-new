@@ -189,7 +189,7 @@ export default function GroupKpis() {
                     >
                       <div className="flex justify-between items-center">
                         <div>
-                          {groupItems[0]?.KPIName || "Unnamed Group"}
+                          {groupItems[0]?.coreParameterName || "Unnamed Group"}
                           {isGroupSelected(masterId) && (
                             <span className="ml-2 text-sm text-green-600">
                               (Selected)
