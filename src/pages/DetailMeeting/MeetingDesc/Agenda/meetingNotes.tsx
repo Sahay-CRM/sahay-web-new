@@ -512,14 +512,11 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                     : true,
                 )
                 .sort((a, b) => {
-                  if (meetingStatus === "ENDED") {
-                    // DESC — newest first
-                    return (
-                      new Date(a.createdAt).getTime() -
-                      new Date(b.createdAt).getTime()
-                    );
-                  }
-                  return 0; // keep original order for all other statuses
+                  // DESC — newest first
+                  return (
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime()
+                  );
                 });
 
               // Group notes by date (without time)

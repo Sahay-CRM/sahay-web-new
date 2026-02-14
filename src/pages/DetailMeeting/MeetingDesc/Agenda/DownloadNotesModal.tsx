@@ -134,21 +134,26 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
       .filter(([, val]) => val)
       .map(([key]) => key as keyof SelectedFilters["types"]);
 
-    return notesData.filter((note: MeetingNotesRes) => {
-      const noteDate = formatUTCDateToLocal(note.createdAt).split(", ")[0]; // Extract only the date part
-      const matchesDate = !dateFilter || noteDate === dateFilter;
-      const matchesTag =
-        activeTags.length === 0 ||
-        (note.noteTag &&
-          activeTags.includes(note.noteTag as keyof SelectedFilters["tags"]));
-      const matchesType =
-        activeTypes.length === 0 ||
-        (note.noteType &&
-          activeTypes.includes(
-            note.noteType as keyof SelectedFilters["types"],
-          ));
-      return matchesDate && matchesTag && matchesType;
-    });
+    return notesData
+      .filter((note: MeetingNotesRes) => {
+        const noteDate = formatUTCDateToLocal(note.createdAt).split(", ")[0]; // Extract only the date part
+        const matchesDate = !dateFilter || noteDate === dateFilter;
+        const matchesTag =
+          activeTags.length === 0 ||
+          (note.noteTag &&
+            activeTags.includes(note.noteTag as keyof SelectedFilters["tags"]));
+        const matchesType =
+          activeTypes.length === 0 ||
+          (note.noteType &&
+            activeTypes.includes(
+              note.noteType as keyof SelectedFilters["types"],
+            ));
+        return matchesDate && matchesTag && matchesType;
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
   }, [meetingNotes?.data, selectedFilters, dateFilter]);
 
   const handleDownload = async () => {
@@ -195,8 +200,13 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
               }
 
               if (note.createdAt) {
-                const localDateTime = formatUTCDateToLocal(note.createdAt);
-                const [datePart, timePart] = localDateTime.split(", ");
+                const date = new Date(note.createdAt);
+                const datePart = date.toLocaleDateString("en-GB");
+                const timePart = date.toLocaleTimeString("en-GB", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: true,
+                });
                 if (selectedFields.date) metadata.push(datePart);
                 if (selectedFields.time) metadata.push(timePart);
               }
