@@ -35,7 +35,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { formatUTCDateToLocal, getInitials } from "@/features/utils/app.utils";
+import {
+  formatToLocalDateTimeIntl,
+  formatUTCDateToLocal,
+  getInitials,
+} from "@/features/utils/app.utils";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import {
   DropdownMenu,
@@ -981,7 +985,7 @@ export default function MeetingDesc() {
             meetingName={meetingTiming?.meetingName || ""}
             meetingDate={
               meetingTiming?.meetingDateTime
-                ? formatUTCDateToLocal(meetingTiming.meetingDateTime)
+                ? formatToLocalDateTimeIntl(meetingTiming.meetingDateTime)
                 : ""
             }
             joiners={(meetingTiming?.joiners as Joiners[]) || []}
