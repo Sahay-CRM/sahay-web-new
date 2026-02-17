@@ -7,16 +7,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SpinnerIcon } from "@/components/shared/Icons";
-import { Fragment, useEffect, useState, useRef } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { TableTooltip } from "@/components/shared/DataTable/tableTooltip";
 import { Button } from "@/components/ui/button";
 import GroupKpisFormModal from "./GroupKPIsFormModal";
 import { useDdAllKpiList } from "@/features/api/KpiList";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { Edit, PlusCircle, Trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { addUpdateKpiMergeMutation } from "@/features/api/companyDatapoint";
-import { Link } from "react-router-dom";
-import useGetAvailableKpis from "@/features/api/companyDatapoint/useGetAvailableKpis";
 
 export default function GroupKpis() {
   const { data: datpointData, isLoading } = useDdAllKpiList({
@@ -31,37 +29,10 @@ export default function GroupKpis() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { mutate: addUpdateKpiGroup } = addUpdateKpiMergeMutation();
-  const { mutate: addGetAvailableKpi } = useGetAvailableKpis();
-
-  // State to store dropdown options by group masterId
-  const [dropdownOptions, setDropdownOptions] = useState<
-    Record<string, KPIFormData[]>
-  >({});
-
-  // Track which dropdown is open
-  const [openDropdownKey, setOpenDropdownKey] = useState<string | null>(null);
-
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setBreadcrumbs([{ label: "KPI Group", href: "" }]);
   }, [setBreadcrumbs]);
-
-  // Close dropdown if clicked outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setOpenDropdownKey(null);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   const groupedData = datpointData?.data?.reduce(
     (acc, item) => {
@@ -109,45 +80,18 @@ export default function GroupKpis() {
     addUpdateKpiGroup(payload);
   };
 
-  const handlePlusClick = (kpiMergeId: string, kpiMasterId: string) => {
-    const payload = {
-      kpiMergeId,
-      kpiMasterId,
-    };
-
-    addGetAvailableKpi(payload, {
-      onSuccess: (res) => {
-        setDropdownOptions((prev) => ({
-          ...prev,
-          [kpiMergeId]: res.data || [],
-        }));
-        setOpenDropdownKey(kpiMergeId);
-      },
-    });
-  };
-  const handleDropdownSelect = (option: KPIFormData) => {
-    if (!openDropdownKey) return;
-
-    const currentItems = groupedData?.[openDropdownKey] || [];
-    const existingIds = currentItems.map((item) => item.kpiId);
-
-    const payload = {
-      kpiMergeId: openDropdownKey,
-      kpiIds: [...existingIds, option.kpiId]
-        .filter((v, i, a) => a.indexOf(v) === i)
-        .filter((v): v is string => typeof v === "string"),
-    };
-
-    addUpdateKpiGroup(payload);
-    setOpenDropdownKey(null);
-  };
-
   return (
     <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
       <div>
-        <Link to="/dashboard/kpi/group-create">
-          <Button className="py-2 w-fit mb-5">Create Group KPIs</Button>
-        </Link>
+        <Button
+          className="py-2 w-fit mb-5"
+          onClick={() => {
+            setSelectedGroupId(null);
+            setIsModalOpen(true);
+          }}
+        >
+          Create Group KPIs
+        </Button>
       </div>
 
       <div className="flex h-[calc(100vh-195px)] flex-col overflow-hidden">
@@ -197,62 +141,6 @@ export default function GroupKpis() {
                           )}
                         </div>
                         <div className="relative flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-                          <PlusCircle
-                            size={16}
-                            className="cursor-pointer"
-                            onClick={() =>
-                              handlePlusClick(
-                                masterId,
-                                groupItems[0]?.KPIMasterId ?? "",
-                              )
-                            }
-                          />
-
-                          {/* Dropdown */}
-                          {openDropdownKey === masterId &&
-                            dropdownOptions[masterId] && (
-                              <div
-                                ref={dropdownRef}
-                                className="absolute top-full right-0 z-10 mt-1 max-h-60 w-80 overflow-auto rounded border bg-white shadow-lg"
-                              >
-                                {dropdownOptions[masterId].length ? (
-                                  <>
-                                    {/* Header Row */}
-                                    {/* Header Row */}
-                                    <div className="flex items-center font-semibold text-sm text-white px-3 py-2 border-b bg-primary sticky top-0 z-10">
-                                      <span className="w-1/2">KPI Name</span>
-                                      <span className="w-1/2">KPI Label</span>
-                                    </div>
-
-                                    {/* Option Rows */}
-                                    {dropdownOptions[masterId].map(
-                                      (option, idx) => (
-                                        <div
-                                          key={idx}
-                                          className="flex items-center cursor-pointer px-3 py-2 hover:bg-gray-100 border-b text-sm text-gray-800"
-                                          onClick={() =>
-                                            handleDropdownSelect(option)
-                                          }
-                                          title={`${option.KPIName} - ${option.KPILabel}`}
-                                        >
-                                          <span className="truncate w-1/2">
-                                            {option.KPIName}
-                                          </span>
-                                          <span className="truncate w-1/2 text-gray-500">
-                                            {option.KPILabel}
-                                          </span>
-                                        </div>
-                                      ),
-                                    )}
-                                  </>
-                                ) : (
-                                  <div className="p-3 text-center text-gray-500">
-                                    No options available
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
                           <Edit
                             size={16}
                             className="cursor-pointer"

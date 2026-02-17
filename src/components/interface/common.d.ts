@@ -953,6 +953,7 @@ interface KPIFormData {
   value1: string;
   value2: string;
   tag: string;
+  kpiMergeName?: string;
   coreParameterId?: string;
   hasData?: boolean;
   employeeName?: string;
@@ -1239,10 +1240,12 @@ interface KpiAllList {
   dataPointName?: string;
   dataPointLabel?: string;
   KPIMasterId?: string;
+  kpiMergeName?: string;
   kpiId: string;
   KPIName?: string;
   kpiName?: string;
   KPILabel?: string;
+  coreParameterName?: string;
   kpiLabel?: string;
   validationType: string;
   frequencyType: string;
@@ -1416,6 +1419,8 @@ interface KpiMergeRes {
   kpiIds: string;
   kpiMergeName: string;
   tag: string;
+  unit?: string;
+  frequencyType?: string;
   companyId: string;
   value1: string;
   value2: string;

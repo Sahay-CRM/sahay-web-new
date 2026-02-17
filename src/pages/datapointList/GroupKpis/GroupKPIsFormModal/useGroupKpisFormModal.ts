@@ -1,5 +1,6 @@
 import { addUpdateKpiMergeMutation } from "@/features/api/companyDatapoint";
-import { useEffect } from "react";
+import { useDdAllKpiList } from "@/features/api/KpiList";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 
 const frequenceOptions = [
@@ -10,6 +11,16 @@ const frequenceOptions = [
   { value: "HALFYEARLY", label: "Half-Yearly" },
   { value: "YEARLY", label: "Yearly" },
 ];
+
+export interface GroupKpiFormValues {
+  kpiIds: string[];
+  frequencyType: string;
+  visualFrequencyTypes: string[];
+  visualFrequencyAggregate: string;
+  unit: string;
+  tag: string;
+  kpiMergeName: string;
+}
 
 const sumAveOptions = [
   { value: "sum", label: "Sum" },
@@ -31,22 +42,53 @@ const frequencyOrder = [
 export default function useGroupKpisFormModal({
   modalClose,
   selectedKpiData,
-  selectedKpisIds,
   groupId,
 }: GroupKpisProps) {
-  const {
-    handleSubmit,
-    register,
-    control,
-    formState: { errors },
-    reset,
-    watch,
-    setValue,
-  } = useForm();
+  const methods = useForm<GroupKpiFormValues>({
+    defaultValues: {
+      kpiIds: [],
+      frequencyType: "",
+      visualFrequencyTypes: [],
+      visualFrequencyAggregate: "sum",
+      unit: "",
+      tag: "",
+      kpiMergeName: "",
+    },
+  });
+
+  const { handleSubmit, watch, setValue, reset } = methods;
 
   const selectedFrequency = watch("frequencyType");
 
-  const { mutate: addUpdateKpiGroup } = addUpdateKpiMergeMutation();
+  const { data: kpiListData, isLoading: isKpisLoading } = useDdAllKpiList({
+    filter: { frequencyType: selectedFrequency },
+    enable: !!selectedFrequency,
+  });
+
+  const kpiOptions = useMemo(() => {
+    return (
+      kpiListData?.data?.map((item) => ({
+        value: item.kpiId,
+        label: `${item.KPIName} (${item.KPILabel}) (${item.coreParameterName})`,
+      })) || []
+    );
+  }, [kpiListData]);
+
+  const addUpdateKpiGroupMutation = addUpdateKpiMergeMutation();
+
+  const prevFrequency = useRef(selectedFrequency);
+
+  // Reset KPIs when frequency changes
+  useEffect(() => {
+    if (
+      selectedFrequency &&
+      prevFrequency.current &&
+      selectedFrequency !== prevFrequency.current
+    ) {
+      setValue("kpiIds", []);
+    }
+    prevFrequency.current = selectedFrequency;
+  }, [selectedFrequency, setValue]);
 
   useEffect(() => {
     if (!selectedKpiData || selectedKpiData.length === 0) return;
@@ -64,36 +106,30 @@ export default function useGroupKpisFormModal({
         : highest;
     }, frequencies[0]);
     setValue("frequencyType", highestFrequency);
-    const highestFreqKpis = selectedKpiData.filter(
-      (kpi) => kpi.frequencyType === highestFrequency,
-    );
-    const aggregate = highestFreqKpis[0]?.visualFrequencyAggregate || "sum";
-    setValue("visualFrequencyAggregate", aggregate);
-    const visualFreqTypes = highestFreqKpis[0]?.visualFrequencyTypes;
-    const visualFrequencies =
-      typeof visualFreqTypes === "string"
-        ? visualFreqTypes.split(",")
-        : visualFreqTypes || [];
-    setValue("visualFrequencyTypes", visualFrequencies);
-    const unit = highestFreqKpis.find((kpi) => kpi.unit)?.unit || "";
-    setValue("unit", unit);
-    const tag = highestFreqKpis.find((kpi) => kpi.tag)?.tag || "";
-    setValue("tag", tag);
-  }, [selectedKpiData, setValue]);
+
+    if (!groupId) {
+      setValue(
+        "kpiIds",
+        selectedKpiData
+          .map((item) => item.kpiId)
+          .filter((id): id is string => !!id),
+      );
+    }
+  }, [selectedKpiData, setValue, groupId]);
 
   const onSubmit = handleSubmit(async (data) => {
-    if (selectedKpisIds) {
-      const payload = {
-        kpiMergeId: groupId ?? undefined,
-        kpiIds: selectedKpisIds,
-        unit: data.unit,
-        tag: data.tag,
-        visualFrequencyTypes: data.visualFrequencyTypes,
-        visualFrequencyAggregate: data.visualFrequencyAggregate,
-      };
-      addUpdateKpiGroup(payload);
-      modalClose();
-    }
+    const payload = {
+      kpiMergeId: groupId ?? undefined,
+      kpiIds: data.kpiIds,
+      unit: data.unit,
+      tag: data.tag,
+      kpiMergeName: data.kpiMergeName,
+      visualFrequencyTypes: data.visualFrequencyTypes.join(","),
+      visualFrequencyAggregate: data.visualFrequencyAggregate,
+      frequencyType: data.frequencyType,
+    };
+    addUpdateKpiGroupMutation.mutate(payload);
+    modalClose();
   });
 
   const handleModalClose = () => {
@@ -114,17 +150,15 @@ export default function useGroupKpisFormModal({
   const shouldShowVisualFrequency = selectedFrequency !== "YEARLY";
 
   return {
-    register,
-    control,
-    setValue,
-    errors,
+    ...methods,
     onSubmit,
-    watch,
     handleModalClose,
-    isPending: false,
+    isPending: addUpdateKpiGroupMutation.isPending,
     frequenceOptions,
     shouldShowVisualFrequency,
     getFilteredVisualFrequencyOptions,
     sumAveOptions,
+    kpiOptions,
+    isKpisLoading,
   };
 }
