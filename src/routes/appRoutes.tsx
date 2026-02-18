@@ -16,6 +16,7 @@ const PrivacyPolicy = lazy(
 const TermsAndConditions = lazy(
   () => import("../pages/TermsAndConditions/TermsAndConditions"),
 );
+const ContactUs = lazy(() => import("../pages/ContactUs/ContactUs"));
 const AppRoutes = () => {
   const token = useSelector(getToken);
 
@@ -25,6 +26,7 @@ const AppRoutes = () => {
         <Routes>
           <Route path="privacy" Component={PrivacyPolicy} />
           <Route path="terms" Component={TermsAndConditions} />
+          <Route path="contact-us" Component={ContactUs} />
           {token ? (
             <Route path="/*" element={<EmployeeRoutes />} />
           ) : (
