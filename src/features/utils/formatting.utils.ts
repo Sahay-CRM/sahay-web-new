@@ -127,7 +127,7 @@ export function isValidInput(
     case "BETWEEN":
       return val >= num1 && val <= (num2 ?? num1);
     case "YES_NO":
-      return (val === 1 && value1 === "1") || (val === 0 && value1 === "0");
+      return (val === 1 && value1 === "1") || (val === 2 && value1 === "2");
     default:
       return false;
   }

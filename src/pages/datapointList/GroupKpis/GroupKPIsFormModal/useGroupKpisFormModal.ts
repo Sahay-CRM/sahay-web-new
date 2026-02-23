@@ -20,7 +20,20 @@ export interface GroupKpiFormValues {
   unit: string;
   tag: string;
   kpiMergeName: string;
+  value1: string;
+  value2: string;
+  validationType: string;
 }
+
+export const validationTypeOptions = [
+  { value: "EQUAL_TO", label: "= (Equal to)" },
+  { value: "GREATER_THAN", label: "> (Greater than)" },
+  { value: "LESS_THAN", label: "< (Less than)" },
+  { value: "GREATER_THAN_OR_EQUAL_TO", label: "≥ (Greater than or equal to)" },
+  { value: "LESS_THAN_OR_EQUAL_TO", label: "≤ (Less than or equal to)" },
+  { value: "BETWEEN", label: "Between" },
+  { value: "YES_NO", label: "Yes / No" },
+];
 
 const sumAveOptions = [
   { value: "sum", label: "Sum" },
@@ -53,6 +66,9 @@ export default function useGroupKpisFormModal({
       unit: "",
       tag: "",
       kpiMergeName: "",
+      value1: "",
+      value2: "",
+      validationType: "",
     },
   });
 
@@ -127,6 +143,9 @@ export default function useGroupKpisFormModal({
       visualFrequencyTypes: data.visualFrequencyTypes.join(","),
       visualFrequencyAggregate: data.visualFrequencyAggregate,
       frequencyType: data.frequencyType,
+      value1: data.value1,
+      value2: data.value2,
+      validationType: data.validationType,
     };
     addUpdateKpiGroupMutation.mutate(payload);
     modalClose();
@@ -158,6 +177,7 @@ export default function useGroupKpisFormModal({
     shouldShowVisualFrequency,
     getFilteredVisualFrequencyOptions,
     sumAveOptions,
+    validationTypeOptions,
     kpiOptions,
     isKpisLoading,
   };

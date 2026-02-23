@@ -33,6 +33,7 @@ export default function GroupKpisFormModal({
     shouldShowVisualFrequency,
     getFilteredVisualFrequencyOptions,
     sumAveOptions,
+    validationTypeOptions,
     kpiOptions,
     isKpisLoading,
     watch,
@@ -59,6 +60,9 @@ export default function GroupKpisFormModal({
       setValue("unit", fetchedGroupData.unit || "");
       setValue("tag", fetchedGroupData.tag || "");
       setValue("kpiMergeName", fetchedGroupData.kpiMergeName || "");
+      setValue("validationType", fetchedGroupData.validationType || "");
+      setValue("value1", fetchedGroupData.value1 || "");
+      setValue("value2", fetchedGroupData.value2 || "");
 
       // If the API returns the KPI IDs for the group, set them here
       const fetchedKpiIds = fetchedGroupData.kpiIds;
@@ -183,6 +187,54 @@ export default function GroupKpisFormModal({
               />
             </div>
           )}
+          <div className="grid gap-4 grid-cols-2 items-center">
+            <Controller
+              control={control}
+              name="validationType"
+              render={({ field }) => (
+                <FormSelect
+                  label="Validation Type"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={validationTypeOptions}
+                  error={errors.validationType}
+                  placeholder="Select validation type"
+                />
+              )}
+            />
+            {watch("validationType") === "YES_NO" ? (
+              <Controller
+                control={control}
+                name="value1"
+                render={({ field }) => (
+                  <FormSelect
+                    label="Value 1"
+                    value={field.value}
+                    onChange={field.onChange}
+                    options={[
+                      { value: "1", label: "Yes" },
+                      { value: "2", label: "No" },
+                    ]}
+                    error={errors.value1}
+                    placeholder="Select Yes/No"
+                  />
+                )}
+              />
+            ) : (
+              <FormInputField
+                label="Value 1"
+                {...register("value1")}
+                error={errors.value1}
+              />
+            )}
+            {watch("validationType") === "BETWEEN" && (
+              <FormInputField
+                label="Value 2"
+                {...register("value2")}
+                error={errors.value2}
+              />
+            )}
+          </div>
           <FormInputField label="Unit" {...register(`unit`)} />
           <FormInputField label="Tag" {...register(`tag`)} />
         </div>

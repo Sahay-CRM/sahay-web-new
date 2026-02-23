@@ -245,11 +245,16 @@ function SortableKpiRow({
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="line-clamp-2 break-words cursor-default">
-                {kpi.validationType === "YES_NO" ? (
+                {kpi.validationType === "YES_NO" ||
+                kpi.kpiName?.toLowerCase().includes("yes_no") ? (
                   <>
                     {selectedPeriod === "DAILY" ? (
                       Number(kpi.value1) === 1 ? (
                         "Yes"
+                      ) : Number(kpi.value1) === 2 ? (
+                        "No"
+                      ) : Number(kpi.goalValue) > 1 ? (
+                        formatToThreeDecimals(kpi.value1)
                       ) : (
                         "No"
                       )
@@ -1035,7 +1040,7 @@ export default function UpdatedKpiTable() {
       case "LESS_THAN_OR_EQUAL_TO":
         return `≤ ${formatted1} ${safeUnit}`;
       case "YES_NO":
-        return value1 === "1" ? "✓(Yes)" : "✗(No)";
+        return value1 === "1" ? "✓(Yes)" : value1 === "2" ? "✗(No)" : "✗(No)";
       default:
         return formatted1;
     }
@@ -1766,9 +1771,29 @@ export default function UpdatedKpiTable() {
                                                   <span className="text-black">
                                                     {inputFocused[key]
                                                       ? inputVal
-                                                      : formatCompactNumber(
-                                                          cell?.matchCount,
-                                                        )}
+                                                      : selectedPeriod ===
+                                                          "DAILY"
+                                                        ? cell?.data != null &&
+                                                          cell?.data !== ""
+                                                          ? Number(
+                                                              cell.data,
+                                                            ) === 1
+                                                            ? "Yes"
+                                                            : Number(
+                                                                  cell.data,
+                                                                ) === 2
+                                                              ? "No"
+                                                              : Number(
+                                                                    cell.goalValue,
+                                                                  ) > 1
+                                                                ? String(
+                                                                    cell.data,
+                                                                  )
+                                                                : "No"
+                                                          : ""
+                                                        : formatCompactNumber(
+                                                            cell?.data,
+                                                          )}
                                                   </span>
                                                 </div>
                                               )}
@@ -2174,13 +2199,16 @@ export default function UpdatedKpiTable() {
                         </td>
                         <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
                           <span className="line-clamp-2 break-words cursor-default">
-                            {activeItem.data.validationType === "YES_NO"
-                              ? activeItem.data.goalValue === 1
+                            {activeItem.data.validationType === "YES_NO" ||
+                            activeItem.data.kpiName
+                              ?.toLowerCase()
+                              .includes("yes_no")
+                              ? Number(activeItem.data.value1) === 1
                                 ? "Yes"
                                 : "No"
                               : getFormattedValue(
                                   activeItem.data.validationType,
-                                  activeItem.data?.value1,
+                                  String(activeItem.data?.value1),
                                   activeItem.data?.value2,
                                   activeItem.data?.unit,
                                 )}
