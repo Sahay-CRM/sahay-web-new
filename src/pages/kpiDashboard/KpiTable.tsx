@@ -1769,31 +1769,34 @@ export default function UpdatedKpiTable() {
                                               ) : (
                                                 <div className="flex flex-col items-center  justify-center h-full w-full cursor-not-allowed">
                                                   <span className="text-black">
-                                                    {inputFocused[key]
+                                                    {/* {inputFocused[key]
                                                       ? inputVal
                                                       : selectedPeriod ===
-                                                          "DAILY"
+                                                        "DAILY"
                                                         ? cell?.data != null &&
                                                           cell?.data !== ""
                                                           ? Number(
-                                                              cell.data,
-                                                            ) === 1
+                                                            cell.data,
+                                                          ) === 1
                                                             ? "Yes"
                                                             : Number(
-                                                                  cell.data,
-                                                                ) === 2
+                                                              cell.data,
+                                                            ) === 2
                                                               ? "No"
                                                               : Number(
-                                                                    cell.goalValue,
-                                                                  ) > 1
+                                                                cell.goalValue,
+                                                              ) > 1
                                                                 ? String(
-                                                                    cell.data,
-                                                                  )
+                                                                  cell.data,
+                                                                )
                                                                 : "No"
                                                           : ""
                                                         : formatCompactNumber(
-                                                            cell?.data,
-                                                          )}
+                                                          cell?.data,
+                                                        )} */}
+                                                    {formatCompactNumber(
+                                                      cell?.data,
+                                                    )}
                                                   </span>
                                                 </div>
                                               )}

@@ -81,14 +81,90 @@ export default function useGroupKpisFormModal({
     enable: !!selectedFrequency,
   });
 
-  const kpiOptions = useMemo(() => {
-    return (
-      kpiListData?.data?.map((item) => ({
-        value: item.kpiId,
-        label: `${item.KPIName} (${item.KPILabel}) (${item.coreParameterName})`,
-      })) || []
+  const selectedKpiIds = watch("kpiIds");
+  const selectedValidationType = watch("validationType");
+
+  // Determine if the first selected KPI is YES_NO type
+  const firstSelectedKpiValidationType = useMemo(() => {
+    if (!selectedKpiIds || selectedKpiIds.length === 0 || !kpiListData?.data)
+      return null;
+    const firstKpi = kpiListData.data.find(
+      (item) => item.kpiId === selectedKpiIds[0],
     );
-  }, [kpiListData]);
+    return firstKpi?.validationType || null;
+  }, [selectedKpiIds, kpiListData]);
+
+  const isYesNoGroup =
+    firstSelectedKpiValidationType === "YES_NO" ||
+    selectedValidationType === "YES_NO";
+
+  const kpiOptions = useMemo(() => {
+    if (!kpiListData?.data) return [];
+
+    let filteredData = kpiListData.data;
+
+    // Filter KPIs based on either the first selected KPI or the explicitly selected validation type
+    if (firstSelectedKpiValidationType || selectedValidationType) {
+      if (isYesNoGroup) {
+        // Only show YES_NO KPIs
+        filteredData = filteredData.filter(
+          (item) => item.validationType === "YES_NO",
+        );
+      } else {
+        // Show all non-YES_NO KPIs
+        filteredData = filteredData.filter(
+          (item) => item.validationType !== "YES_NO",
+        );
+      }
+    }
+
+    return filteredData.map((item) => ({
+      value: item.kpiId,
+      label: `${item.KPIName} (${item.KPILabel}) (${item.coreParameterName})`,
+    }));
+  }, [
+    kpiListData,
+    firstSelectedKpiValidationType,
+    isYesNoGroup,
+    selectedValidationType,
+  ]);
+
+  // Filter validation type options based on selected KPIs
+  const filteredValidationTypeOptions = useMemo(() => {
+    if (!firstSelectedKpiValidationType) return validationTypeOptions;
+    if (firstSelectedKpiValidationType === "YES_NO") {
+      return validationTypeOptions.filter((opt) => opt.value === "YES_NO");
+    }
+    return validationTypeOptions.filter((opt) => opt.value !== "YES_NO");
+  }, [firstSelectedKpiValidationType]);
+
+  // Auto-set and clear fields based on selected KPIs
+  const prevIsYesNo = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (firstSelectedKpiValidationType === null) {
+      prevIsYesNo.current = null;
+      return;
+    }
+
+    const currentlyIsYesNo = firstSelectedKpiValidationType === "YES_NO";
+
+    // If we just entered a new type group
+    if (prevIsYesNo.current !== currentlyIsYesNo) {
+      if (currentlyIsYesNo) {
+        setValue("validationType", "YES_NO");
+        setValue("value1", "");
+        setValue("value2", "");
+      } else {
+        // If we switched from YES_NO to something else, reset validation type if it was YES_NO
+        if (selectedValidationType === "YES_NO") {
+          setValue("validationType", "");
+        }
+        setValue("value1", "");
+        setValue("value2", "");
+      }
+    }
+    prevIsYesNo.current = currentlyIsYesNo;
+  }, [firstSelectedKpiValidationType, setValue, selectedValidationType]);
 
   const addUpdateKpiGroupMutation = addUpdateKpiMergeMutation();
 
@@ -177,7 +253,7 @@ export default function useGroupKpisFormModal({
     shouldShowVisualFrequency,
     getFilteredVisualFrequencyOptions,
     sumAveOptions,
-    validationTypeOptions,
+    validationTypeOptions: filteredValidationTypeOptions,
     kpiOptions,
     isKpisLoading,
   };
