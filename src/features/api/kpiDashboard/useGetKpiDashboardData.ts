@@ -17,7 +17,7 @@ export default function useGetKpiDashboardData({
       return response.data;
     },
     enabled: !!enable,
-    staleTime: 0,
+    staleTime: 1 * 60 * 1000,
   });
 
   return query;

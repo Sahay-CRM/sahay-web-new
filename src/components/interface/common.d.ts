@@ -1152,6 +1152,7 @@ interface KpiType {
   value2?: string | number | null;
   unit?: string | null;
   labels?: KpiLabels[];
+  isMurgeKpi?: boolean;
 }
 
 interface KpiLabels {

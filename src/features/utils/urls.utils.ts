@@ -3,6 +3,20 @@ export const baseUrl = import.meta.env.VITE_API_BASE;
 export const ImageBaseURL = import.meta.env.VITE_FILE_BASE_URL;
 
 const Urls = {
+  createForm: () => `${baseUrl}/company/form/create`,
+  getForms: () => `${baseUrl}/company/form/get`,
+  getForm: (id: string) => `${baseUrl}/company/form/get/${id}`,
+  updateForm: (id: string) => `${baseUrl}/company/form/update/${id}`,
+  deleteForm: (id: string) => `${baseUrl}/company/form/delete/${id}`,
+  duplicateForm: (id: string) => `${baseUrl}/company/form/duplicate/${id}`,
+  getFormMaster: (id: string) => `${baseUrl}/company/form/master/${id}`,
+  formSubmissionLogin: () => `${baseUrl}/company/form/submission/login`,
+  formSubmissionVerifyOtp: () =>
+    `${baseUrl}/company/form/submission/verify-otp`,
+  formSubmissionSubmit: () => `${baseUrl}/company/form/submission/submit`,
+  getFormResponse: (id: string) => `${baseUrl}/company/form/response/${id}`,
+  getFormSubmissionDetail: (id: string) =>
+    `${baseUrl}/company/form/submission/get/${id}`,
   loginSendOtp: () => `${baseUrl}/auth/login`,
   loginVerifyOtp: () => `${baseUrl}/auth/verify-otp`,
   loginCompany: () => `${baseUrl}/auth/select-company`,
@@ -147,6 +161,7 @@ const Urls = {
   selectCompanyList: () => `${baseUrl}/auth/switch-company`,
 
   uploadImage: () => `${baseUrl}/file/upload`,
+  uploadFormImage: () => `${baseUrl}/file/form-upload`,
 
   getAllEmployeeDd: () => `${baseUrl}/company/employee/get-all`,
 

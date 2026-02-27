@@ -258,6 +258,14 @@ export const companyNavigationData = [
   //   permission: "View",
   //   moduleKey: "ROLES_PERMISSION",
   // },
+  {
+    id: 15,
+    icon: "ListTodo",
+    label: "Forms",
+    link: "/dashboard/forms",
+    permission: "View",
+    moduleKey: "TASK",
+  },
 ];
 
 export const getRouteByLabel = (label: string): string | null => {

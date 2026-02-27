@@ -13,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import GroupKpisFormModal from "./GroupKPIsFormModal";
 import { useDdAllKpiList } from "@/features/api/KpiList";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { Edit, Trash2 } from "lucide-react";
-import { addUpdateKpiMergeMutation } from "@/features/api/companyDatapoint";
+import { Edit } from "lucide-react";
+// import { addUpdateKpiMergeMutation } from "@/features/api/companyDatapoint";
 
 export default function GroupKpis() {
   const { data: datpointData, isLoading } = useDdAllKpiList({
@@ -28,7 +28,7 @@ export default function GroupKpis() {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { mutate: addUpdateKpiGroup } = addUpdateKpiMergeMutation();
+  // const { mutate: addUpdateKpiGroup } = addUpdateKpiMergeMutation();
 
   useEffect(() => {
     setBreadcrumbs([{ label: "KPI Group", href: "" }]);
@@ -62,23 +62,23 @@ export default function GroupKpis() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (deletedItem: KPIFormData) => {
-    const masterId = deletedItem.kpiMergeId;
-    if (!masterId || !groupedData?.[masterId]) return;
+  // const handleDelete = (deletedItem: KPIFormData) => {
+  //   const masterId = deletedItem.kpiMergeId;
+  //   if (!masterId || !groupedData?.[masterId]) return;
 
-    const remainingItems = groupedData[masterId].filter(
-      (item) => item.kpiId !== deletedItem.kpiId,
-    );
-    const remainingIds = remainingItems
-      .map((item) => item.kpiId)
-      .filter((id): id is string => typeof id === "string");
+  //   const remainingItems = groupedData[masterId].filter(
+  //     (item) => item.kpiId !== deletedItem.kpiId,
+  //   );
+  //   const remainingIds = remainingItems
+  //     .map((item) => item.kpiId)
+  //     .filter((id): id is string => typeof id === "string");
 
-    const payload = {
-      kpiMergeId: masterId,
-      kpiIds: remainingIds,
-    };
-    addUpdateKpiGroup(payload);
-  };
+  //   const payload = {
+  //     kpiMergeId: masterId,
+  //     kpiIds: remainingIds,
+  //   };
+  //   addUpdateKpiGroup(payload);
+  // };
 
   return (
     <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
@@ -110,7 +110,7 @@ export default function GroupKpis() {
               <TableHead className="min-w-[100px]">Unit</TableHead>
               <TableHead className="min-w-[150px]">Value1</TableHead>
               <TableHead className="min-w-[150px]">Value2</TableHead>
-              <TableHead className="w-[60px] text-end">Delete</TableHead>
+              <TableHead className="text-end w-16">Delete</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -133,7 +133,8 @@ export default function GroupKpis() {
                     >
                       <div className="flex justify-between items-center">
                         <div>
-                          {groupItems[0]?.coreParameterName || "Unnamed Group"}
+                          {groupItems[0]?.kpiMergeName || "Unnamed Group"} - (
+                          {groupItems[0].coreParameterName})
                           {isGroupSelected(masterId) && (
                             <span className="ml-2 text-sm text-green-600">
                               (Selected)
@@ -190,7 +191,7 @@ export default function GroupKpis() {
                       <TableCell className="truncate">
                         <TableTooltip text={String(item.value2 ?? " - ")} />
                       </TableCell>
-                      <TableCell className="truncate text-end">
+                      {/* <TableCell className="truncate text-end">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -200,7 +201,7 @@ export default function GroupKpis() {
                         >
                           <Trash2 size={18} />
                         </button>
-                      </TableCell>
+                      </TableCell> */}
                     </TableRow>
                   ))}
                 </Fragment>

@@ -183,7 +183,9 @@ function SortableKpiRow({
               className="cursor-grab pl-1.5 active:cursor-grabbing opacity-0 group-hover/row:opacity-100 transition-opacity"
               {...listeners}
             >
-              <GripVertical className="w-4 h-4 text-black hover:text-black" />
+              {kpi?.isMurgeKpi !== true && (
+                <GripVertical className="w-4 h-4 text-black hover:text-black" />
+              )}
             </div>
           )}
           <Avatar className="h-5 w-5">
@@ -193,20 +195,34 @@ function SortableKpiRow({
                   <AvatarFallback
                     className={clsx(
                       "font-semibold text-sm",
-                      getColorFromName(kpi?.employeeName),
+                      getColorFromName(kpi?.employeeName || "Group"),
                     )}
                   >
                     {(() => {
+                      // ✅ If Merge KPI and no employee → show GR
+                      if (!kpi?.employeeName && kpi?.isMurgeKpi === true) {
+                        return "GK";
+                      }
+
                       if (!kpi?.employeeName) return "";
+
                       const names = kpi.employeeName.split(" ");
                       const firstInitial = names[0]?.[0] ?? "";
                       const lastInitial =
                         names.length > 1 ? names[names.length - 1][0] : "";
+
                       return (firstInitial + lastInitial).toUpperCase();
                     })()}
                   </AvatarFallback>
                 </TooltipTrigger>
-                <TooltipContent>{kpi?.employeeName}</TooltipContent>
+
+                <TooltipContent>
+                  {kpi?.employeeName
+                    ? kpi.employeeName
+                    : kpi?.isMurgeKpi === true
+                      ? "Merge Group KPI"
+                      : "N/A"}
+                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </Avatar>

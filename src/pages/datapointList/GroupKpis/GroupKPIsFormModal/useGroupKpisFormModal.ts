@@ -103,8 +103,13 @@ export default function useGroupKpisFormModal({
 
     let filteredData = kpiListData.data;
 
-    // Filter KPIs based on either the first selected KPI or the explicitly selected validation type
-    if (firstSelectedKpiValidationType || selectedValidationType) {
+    // Only filter KPIs when at least one KPI is already selected
+    // When no KPI is selected, show ALL available KPIs (default)
+    if (
+      selectedKpiIds &&
+      selectedKpiIds.length > 0 &&
+      firstSelectedKpiValidationType
+    ) {
       if (isYesNoGroup) {
         // Only show YES_NO KPIs
         filteredData = filteredData.filter(
@@ -124,23 +129,38 @@ export default function useGroupKpisFormModal({
     }));
   }, [
     kpiListData,
+    selectedKpiIds,
     firstSelectedKpiValidationType,
     isYesNoGroup,
-    selectedValidationType,
   ]);
 
   // Filter validation type options based on selected KPIs
+  // When no KPI is selected, return all validation type options (default)
   const filteredValidationTypeOptions = useMemo(() => {
-    if (!firstSelectedKpiValidationType) return validationTypeOptions;
+    if (
+      !firstSelectedKpiValidationType ||
+      !selectedKpiIds ||
+      selectedKpiIds.length === 0
+    )
+      return validationTypeOptions;
     if (firstSelectedKpiValidationType === "YES_NO") {
       return validationTypeOptions.filter((opt) => opt.value === "YES_NO");
     }
     return validationTypeOptions.filter((opt) => opt.value !== "YES_NO");
-  }, [firstSelectedKpiValidationType]);
+  }, [firstSelectedKpiValidationType, selectedKpiIds]);
 
   // Auto-set and clear fields based on selected KPIs
   const prevIsYesNo = useRef<boolean | null>(null);
   useEffect(() => {
+    // When all KPIs are deselected, reset validation fields to default
+    if (!selectedKpiIds || selectedKpiIds.length === 0) {
+      prevIsYesNo.current = null;
+      setValue("validationType", "");
+      setValue("value1", "");
+      setValue("value2", "");
+      return;
+    }
+
     if (firstSelectedKpiValidationType === null) {
       prevIsYesNo.current = null;
       return;
@@ -164,7 +184,12 @@ export default function useGroupKpisFormModal({
       }
     }
     prevIsYesNo.current = currentlyIsYesNo;
-  }, [firstSelectedKpiValidationType, setValue, selectedValidationType]);
+  }, [
+    selectedKpiIds,
+    firstSelectedKpiValidationType,
+    setValue,
+    selectedValidationType,
+  ]);
 
   const addUpdateKpiGroupMutation = addUpdateKpiMergeMutation();
 
