@@ -22,6 +22,11 @@ const FormAddEditModal = ({
     defaultValues: {
       name: "",
       description: "",
+      isActive: false,
+      visibility: "PUBLIC",
+      fields: [],
+      mobileNumbers: [],
+      formSettings: {} as unknown as FormSettings,
     },
   });
 
@@ -31,21 +36,27 @@ const FormAddEditModal = ({
   useEffect(() => {
     if (modalData) {
       methods.reset({
-        name: modalData.name,
-        description: modalData.description,
+        ...modalData,
       });
     } else {
       methods.reset({
         name: "",
         description: "",
+        isActive: false,
+        visibility: "PUBLIC",
+        fields: [],
+        mobileNumbers: [],
+        formSettings: {} as unknown as FormSettings,
       });
     }
   }, [modalData, methods]);
 
   const onSubmit = (data: Partial<FormDetails>) => {
     const payload = {
+      ...modalData,
       ...data,
-      isActive: false, // Always send isActive: false for new/edited forms via this modal
+      isActive: data.isActive ?? modalData?.isActive ?? false,
+      visibility: data.visibility ?? modalData?.visibility ?? "PUBLIC",
     };
 
     if (modalData?.id) {

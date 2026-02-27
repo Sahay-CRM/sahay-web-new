@@ -16,6 +16,7 @@ import {
   Copy,
   Eye,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { ShareModal } from "./builder/components/ShareModal";
 import FormAddEditModal from "./builder/components/FormAddEditModal";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
@@ -27,6 +28,7 @@ import {
 } from "@/components/ui/tooltip";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import useDuplicateForm from "@/features/api/Form/useDuplicateForm";
+import { formatToProjectDateTime } from "@/features/utils/formatting.utils";
 // Status filter tabs
 type StatusFilter = "ALL" | "PUBLISHED" | "DRAFT";
 
@@ -131,7 +133,7 @@ export default function FormListPage() {
           isModalOpen={isAddEditModalOpen}
           modalClose={() => setIsAddEditModalOpen(false)}
           modalData={selectedForm}
-          onSuccess={(id) => handleOpenBuilder(id)}
+          // onSuccess={(id) => handleOpenBuilder(id)}
         />
       )}
 
@@ -236,9 +238,8 @@ export default function FormListPage() {
             srNo: (currentPage - 1) * pageSize + index + 1,
 
             statusLabel: item.isActive ? "Published" : "Draft",
-            formattedDate: item.createdDatetime
-              ? new Date(item.createdDatetime).toLocaleString()
-              : "-",
+
+            formattedDate: formatToProjectDateTime(item.createdDatetime),
             notificationEmail: item.notificationEmail || "-",
           }))}
           columns={visibleColumns}
@@ -304,12 +305,18 @@ export default function FormListPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 w-8 p-0 text-blue-600 border-blue-100 hover:bg-blue-50"
+                className={cn(
+                  "h-8 w-8 p-0 border-blue-100",
+                  !row.isActive
+                    ? "text-gray-300 border-gray-100 cursor-not-allowed"
+                    : "text-blue-600 hover:bg-blue-50",
+                )}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setShareForm(row);
+                  if (row.isActive) setShareForm(row);
                 }}
-                title="Share Link"
+                disabled={!row.isActive}
+                title={!row.isActive ? "Publish form to share" : "Share Link"}
               >
                 <Link className="w-4 h-4" />
               </Button>

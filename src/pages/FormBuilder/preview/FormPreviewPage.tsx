@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { Button } from "@/components/ui/button";
 import {
   AlertCircle,
@@ -21,11 +26,6 @@ import {
 } from "@/features/api/Form";
 import { Form as UIForm } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
 import Urls from "@/features/utils/urls.utils";
 import { useFormRestrictions } from "../builder/hooks/useFormRestrictions";
 
@@ -47,21 +47,25 @@ const FormPreviewPage = () => {
   const { data: formResponse, isLoading: isLoadingForm } = useGetFormById(
     id || "",
   );
-  const form = formResponse?.data;
+  const form = formResponse?.data as FormDetails | undefined;
 
   const [responses, setResponses] = useState<ResponseData>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [accessGranted, setAccessGranted] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(0);
-  const [showDebug, setShowDebug] = useState(false);
-  // Store verified mobile number for use in form submission
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [onboardingStep, setOnboardingStep] = useState<number>(0);
+  const [hasStartedTimer, setHasStartedTimer] = useState(false);
   const [verifiedMobile, setVerifiedMobile] = useState("");
   const [verifiedName, setVerifiedName] = useState("");
   const [submissionToken, setSubmissionToken] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+  const [submissionReason, setSubmissionReason] = useState<{
+    code: string;
+    message: string;
+  } | null>(null);
   // Screen-share stream held in a ref so it's accessible in intervals/async callbacks
   const displayStreamRef = useRef<MediaStream | null>(null);
   const screenshotIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
@@ -183,9 +187,20 @@ const FormPreviewPage = () => {
         setIsUploading(false);
       }
 
-      // Add non-file responses
+      // Add non-file responses (and ensure they are valid strings/arrays, not serialization artifacts like {})
+      const fileFieldIds = new Set(
+        form.fields?.filter((f) => f.fieldType === "FILE").map((f) => f.id) ||
+          [],
+      );
+
       Object.entries(responses).forEach(([fieldId, value]) => {
-        if (!(value instanceof File || value instanceof FileList)) {
+        if (value instanceof File || value instanceof FileList) return;
+
+        // Skip if this field is a FILE type but the value isn't a File (stale/broken hydration)
+        if (fileFieldIds.has(fieldId)) return;
+
+        // Only allow strings or arrays of strings
+        if (typeof value === "string" || Array.isArray(value)) {
           textResponses.push({ fieldId, value: value as string | string[] });
         }
       });
@@ -295,6 +310,7 @@ const FormPreviewPage = () => {
   }, [form]);
   const onAutoSubmit = useCallback(
     (reason?: { code: string; message: string }) => {
+      if (reason) setSubmissionReason(reason);
       handleSubmit(true, reason?.code, reason?.message); // force=true skips required-field validation
       // Clear session on auto-submit as well
       if (id && verifiedMobile) {
@@ -310,6 +326,7 @@ const FormPreviewPage = () => {
   useEffect(() => {
     if (
       !accessGranted ||
+      !hasStartedTimer ||
       !formSettings.totalTimerEnabled ||
       !formSettings.totalTimerMinutes ||
       !id ||
@@ -323,13 +340,11 @@ const FormPreviewPage = () => {
     if (stored) {
       try {
         const { startTime, totalMin } = JSON.parse(stored);
-        // If the total timer minutes changed in settings, we should probably respect the original start
         const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
         const remaining = totalMin * 60 - elapsedSeconds;
 
         if (remaining <= 0) {
           setTimeRemaining(0);
-          // If it expired while away, we trigger auto-submit once everything is ready
           onAutoSubmit();
         } else {
           setTimeRemaining(remaining);
@@ -337,7 +352,7 @@ const FormPreviewPage = () => {
       } catch {
         localStorage.removeItem(timerKey);
       }
-    } else if (accessGranted) {
+    } else {
       const totalMin = formSettings.totalTimerMinutes;
       localStorage.setItem(
         timerKey,
@@ -350,12 +365,41 @@ const FormPreviewPage = () => {
     }
   }, [
     accessGranted,
+    hasStartedTimer,
     formSettings.totalTimerEnabled,
     formSettings.totalTimerMinutes,
     id,
     verifiedMobile,
     onAutoSubmit,
   ]);
+
+  // Handle actual timer countdown
+  useEffect(() => {
+    if (
+      !hasStartedTimer ||
+      timeRemaining === null ||
+      timeRemaining <= 0 ||
+      isSubmitted
+    )
+      return;
+
+    const interval = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev === null) return 0;
+        if (prev <= 1) {
+          clearInterval(interval);
+          onAutoSubmit({
+            code: "TIME_LIMIT_OVER",
+            message: "Time limit for the form has expired.",
+          });
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [hasStartedTimer, timeRemaining, isSubmitted, onAutoSubmit]);
 
   // ── Auto Screenshot using getDisplayMedia ──────────────────────────────────
   const captureAndUploadScreenshot = useCallback(
@@ -402,60 +446,62 @@ const FormPreviewPage = () => {
   );
 
   // Start screen-share + periodic captures when form is active and feature is on
+  const startScreenShare = useCallback(async () => {
+    if (!id) return false;
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          displaySurface: "browser",
+        },
+        preferCurrentTab: true,
+      } as DisplayMediaStreamOptions & { preferCurrentTab?: boolean });
+
+      // Check if user selected a tab
+      const label = stream.getVideoTracks()[0].label;
+      // eslint-disable-next-line no-console
+      console.log("Stream label:", label);
+
+      displayStreamRef.current = stream;
+
+      const intervalMs =
+        Math.max(2, formSettings.autoScreenshotIntervalMinutes ?? 2) *
+        60 *
+        1000;
+
+      // Take first screenshot after a short delay
+      setTimeout(() => captureAndUploadScreenshot(id), 2000);
+
+      // Periodic screenshots
+      screenshotIntervalRef.current = setInterval(() => {
+        captureAndUploadScreenshot(id);
+      }, intervalMs);
+
+      // If user stops sharing manually, cleanup
+      stream.getVideoTracks()[0]?.addEventListener("ended", () => {
+        if (screenshotIntervalRef.current)
+          clearInterval(screenshotIntervalRef.current);
+        displayStreamRef.current = null;
+      });
+      return true;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Screen share error:", err);
+      return false;
+    }
+  }, [
+    id,
+    formSettings.autoScreenshotIntervalMinutes,
+    captureAndUploadScreenshot,
+  ]);
+
   useEffect(() => {
-    if (
-      !accessGranted ||
-      !formSettings.autoScreenshotCapture ||
-      isSubmitted ||
-      !id
-    )
-      return;
-
-    const intervalMs =
-      Math.max(2, formSettings.autoScreenshotIntervalMinutes ?? 2) * 60 * 1000;
-
-    const start = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-        });
-        displayStreamRef.current = stream;
-
-        // Take first screenshot after a short delay (let stream stabilise)
-        setTimeout(() => captureAndUploadScreenshot(id), 2000);
-
-        // Periodic screenshots
-        screenshotIntervalRef.current = setInterval(() => {
-          captureAndUploadScreenshot(id);
-        }, intervalMs);
-
-        // If user stops sharing manually, cleanup
-        stream.getVideoTracks()[0]?.addEventListener("ended", () => {
-          if (screenshotIntervalRef.current)
-            clearInterval(screenshotIntervalRef.current);
-          displayStreamRef.current = null;
-        });
-      } catch {
-        // User denied screen-share — feature silently disabled
-      }
-    };
-
-    start();
-
     return () => {
       if (screenshotIntervalRef.current)
         clearInterval(screenshotIntervalRef.current);
       displayStreamRef.current?.getTracks().forEach((t) => t.stop());
       displayStreamRef.current = null;
     };
-  }, [
-    accessGranted,
-    formSettings.autoScreenshotCapture,
-    formSettings.autoScreenshotIntervalMinutes,
-    isSubmitted,
-    id,
-    captureAndUploadScreenshot,
-  ]);
+  }, []);
 
   const [statusSentOtp, setStatusSentOtp] = useState(false);
 
@@ -494,7 +540,23 @@ const FormPreviewPage = () => {
           setVerifiedName(name);
           setVerifiedMobile(mobile);
           setIsVerified(true);
-          if (storedAccess) setAccessGranted(true);
+          if (storedAccess) {
+            setAccessGranted(true);
+            setHasStartedTimer(true);
+            // Refresh counts/restrictions
+            if (id && mobile) {
+              const restrictionsKey = `form_restrictions_${id}_${mobile}`;
+              const storedRest = localStorage.getItem(restrictionsKey);
+              if (storedRest) {
+                try {
+                  // This is just to ensure the UI updates if the hook already initialized
+                  // useFormRestrictions handles its own hydration usually, but we help it here
+                } catch {
+                  /* silent */
+                }
+              }
+            }
+          }
 
           // Sync to OTP form methods just in case
           otpFormMethods.reset({ name, mobile, otp: "", userType: "" });
@@ -541,7 +603,13 @@ const FormPreviewPage = () => {
 
     // 2. Persist data on every response change
     const dataKey = `form_data_${id}_${verifiedMobile}`;
-    localStorage.setItem(dataKey, JSON.stringify(responses));
+    // Strip out File/FileList objects as they cannot be serialized
+    const persistentData = Object.fromEntries(
+      Object.entries(responses).filter(
+        ([, value]) => !(value instanceof File || value instanceof FileList),
+      ),
+    );
+    localStorage.setItem(dataKey, JSON.stringify(persistentData));
   }, [responses, id, verifiedMobile, isVerified]);
 
   const onOtpSubmit = async (data: FormAccessData) => {
@@ -603,7 +671,7 @@ const FormPreviewPage = () => {
     }
   };
 
-  const { violations, counts } = useFormRestrictions({
+  const { counts } = useFormRestrictions({
     formSettings,
     onAutoSubmit,
     enabled: accessGranted && !isSubmitted,
@@ -611,72 +679,46 @@ const FormPreviewPage = () => {
     mobileNumber: verifiedMobile,
   });
 
-  // Hardware State for Entry Card
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   const [hwStatus, setHwStatus] = useState({
     camera: "pending" as "pending" | "granted" | "denied",
     mic: "pending" as "pending" | "granted" | "denied",
   });
-  const [selectedCamera, setSelectedCamera] = useState<string>("");
-  const [selectedMic, setSelectedMic] = useState<string>("");
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  const getDevices = useCallback(async () => {
-    try {
-      const allDevices = await navigator.mediaDevices.enumerateDevices();
-      // setDevices(allDevices); // Removed unused state
-
-      // Auto-select first available if none selected
-      const videoDevices = allDevices.filter((d) => d.kind === "videoinput");
-      const audioDevices = allDevices.filter((d) => d.kind === "audioinput");
-
-      if (videoDevices.length > 0 && !selectedCamera)
-        setSelectedCamera(videoDevices[0].deviceId);
-      if (audioDevices.length > 0 && !selectedMic)
-        setSelectedMic(audioDevices[0].deviceId);
-    } catch {
-      // Silently fail or handle device enumeration error
-    }
-  }, [selectedCamera, selectedMic]);
 
   const requestCamera = useCallback(async () => {
     try {
       if (cameraStream) {
         cameraStream.getTracks().forEach((t) => t.stop());
       }
-
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: selectedCamera ? { deviceId: { exact: selectedCamera } } : true,
+        video: true,
       });
       setCameraStream(stream);
       setHwStatus((prev) => ({ ...prev, camera: "granted" }));
-      getDevices(); // Refresh labels
+      return "granted";
     } catch {
       setHwStatus((prev) => ({ ...prev, camera: "denied" }));
+      return "denied";
     }
-  }, [selectedCamera, cameraStream, getDevices]);
+  }, [cameraStream]);
 
   const requestMic = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: selectedMic ? { deviceId: { exact: selectedMic } } : true,
+        audio: true,
       });
       stream.getTracks().forEach((t) => t.stop());
       setHwStatus((prev) => ({ ...prev, mic: "granted" }));
-      getDevices(); // Refresh labels
+      return "granted";
     } catch {
       setHwStatus((prev) => ({ ...prev, mic: "denied" }));
+      return "denied";
     }
-  }, [selectedMic, getDevices]);
+  }, []);
 
-  // Initial device list check
-  useEffect(() => {
-    if (!accessGranted) {
-      getDevices();
-    }
-  }, [accessGranted, getDevices]);
-
-  // Link stream to video element once it exists
+  // Link stream to video element
   useEffect(() => {
     if (cameraStream && videoRef.current) {
       videoRef.current.srcObject = cameraStream;
@@ -692,37 +734,58 @@ const FormPreviewPage = () => {
     };
   }, [cameraStream]);
 
-  useEffect(() => {
-    if (!accessGranted || !formSettings.totalTimerEnabled || isSubmitted)
-      return;
+  const handleAccessCheck = async () => {
+    const rulesLength = getRules().length;
+    const needsCamera = !!formSettings.cameraPermissionCheck;
+    const needsMic = !!formSettings.microphonePermissionAwareness;
+    const needsScreen = !!formSettings.autoScreenshotCapture;
 
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          onAutoSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [
-    accessGranted,
-    formSettings.totalTimerEnabled,
-    isSubmitted,
-    onAutoSubmit,
-  ]);
+    const steps = [];
+    if (rulesLength > 0) steps.push("rules");
+    if (needsCamera || needsMic) steps.push("hardware");
+    if (needsScreen) steps.push("screen");
 
-  const handleAccessCheck = () => {
-    // Stop camera stream before moving to form
+    const currentStepName = steps[onboardingStep];
+
+    if (currentStepName === "rules") {
+      setOnboardingStep((prev) => prev + 1);
+    } else if (currentStepName === "hardware") {
+      let camResult = hwStatus.camera;
+      let micResult = hwStatus.mic;
+
+      if (needsCamera && hwStatus.camera !== "granted") {
+        camResult = await requestCamera();
+      }
+      if (needsMic && hwStatus.mic !== "granted") {
+        micResult = await requestMic();
+      }
+
+      const camDone = !needsCamera || camResult === "granted";
+      const micDone = !needsMic || micResult === "granted";
+
+      if (camDone && micDone) {
+        setOnboardingStep((prev) => prev + 1);
+      }
+    } else if (currentStepName === "screen") {
+      const success = await startScreenShare();
+      if (success) {
+        completeOnboarding();
+      }
+    } else {
+      completeOnboarding();
+    }
+  };
+
+  const completeOnboarding = () => {
+    // Stop camera preview
     if (cameraStream) {
       cameraStream.getTracks().forEach((track) => track.stop());
       setCameraStream(null);
     }
 
     setAccessGranted(true);
-    // Persist access granted
+    setHasStartedTimer(true);
+
     const sessionKey = `form_session_${id}`;
     const stored = localStorage.getItem(sessionKey);
     if (stored) {
@@ -737,7 +800,6 @@ const FormPreviewPage = () => {
       }
     }
 
-    // Enter fullscreen for exams if enabled
     if (formSettings.fullscreenMonitoring) {
       document.documentElement.requestFullscreen().catch(() => {});
     }
@@ -764,7 +826,8 @@ const FormPreviewPage = () => {
     return rules;
   };
 
-  const formatTime = (seconds: number) => {
+  const formatTime = (seconds: number | null) => {
+    if (seconds === null) return "--:--";
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
@@ -800,9 +863,6 @@ const FormPreviewPage = () => {
               Each mobile number can only submit one response.
             </p>
           </div>
-          <p className="text-[10px] text-gray-400">
-            © 2026 Sahay CRM • Secure Form System
-          </p>
         </div>
       </div>
     );
@@ -819,22 +879,34 @@ const FormPreviewPage = () => {
           </h1>
           <div className="space-y-2">
             <p className="text-green-700 font-semibold text-lg">
-              Your response has been submitted successfully!
+              {submissionReason
+                ? "Form Auto-Submitted"
+                : "Successfully Submitted!"}
             </p>
             <p className="text-gray-500 text-sm">
-              Thank you for filling out this form. Your response has been
-              recorded.
+              {submissionReason
+                ? "Your response was automatically recorded due to a proctoring event."
+                : "Thank you for filling out this form. Your response has been recorded."}
             </p>
           </div>
+
+          {submissionReason && (
+            <div className="bg-red-50 border border-red-100 p-4 rounded-xl space-y-2 text-left">
+              <div className="flex items-center gap-2 text-red-600 font-bold text-xs uppercase tracking-wider">
+                <AlertCircle className="w-4 h-4" />
+                Submission Reason
+              </div>
+              <p className="text-sm font-semibold text-red-700 leading-snug">
+                {submissionReason.message}
+              </p>
+            </div>
+          )}
+
           <div className="bg-green-50 border border-green-200 rounded-xl p-4">
             <p className="text-green-600 text-xs">
-              You can safely close this window now. Your response cannot be
-              changed after submission.
+              Powered by Sahay CRM Secure Proctoring
             </p>
           </div>
-          <p className="text-[10px] text-gray-400">
-            © 2026 Sahay CRM • Secure Form System
-          </p>
         </div>
       </div>
     );
@@ -853,12 +925,6 @@ const FormPreviewPage = () => {
   }
 
   if (!accessGranted) {
-    const needsCamera = !!formSettings.cameraPermissionCheck;
-    const needsMic = !!formSettings.microphonePermissionAwareness;
-    const hwReady =
-      (!needsCamera || hwStatus.camera === "granted") &&
-      (!needsMic || hwStatus.mic === "granted");
-
     return (
       <div className="min-h-screen bg-[#f8f8fb] flex flex-col items-center justify-center p-4">
         <style>{`
@@ -873,12 +939,20 @@ const FormPreviewPage = () => {
 
             <div className="text-center mb-8">
               <h1 className="text-2xl font-bold text-gray-800 mb-2">
-                {isVerified ? "Hardware Check" : "Access Form"}
+                {!isVerified
+                  ? `Access ${form.name}`
+                  : getRules().length > 0 && onboardingStep === 0
+                    ? "Form Rules"
+                    : onboardingStep === (getRules().length > 0 ? 1 : 0)
+                      ? "Hardware Check"
+                      : onboardingStep === (getRules().length > 0 ? 2 : 1)
+                        ? "Screen Permission"
+                        : "Ready to Start"}
               </h1>
               <p className="text-gray-500 text-sm">
-                {isVerified
-                  ? "Please check your camera/mic to begin."
-                  : `Enter your details to access ${form.name}`}
+                {!isVerified
+                  ? "Enter your details to begin."
+                  : "Complete the following steps to access the form."}
               </p>
             </div>
 
@@ -994,98 +1068,168 @@ const FormPreviewPage = () => {
                 </UIForm>
               ) : (
                 <div className="space-y-6">
-                  {needsCamera || needsMic ? (
-                    <div className="space-y-4">
-                      {needsCamera && (
-                        <div className="relative aspect-video bg-gray-100 rounded-xl overflow-hidden border border-gray-100">
-                          {hwStatus.camera === "granted" ? (
-                            <video
-                              ref={videoRef}
-                              autoPlay
-                              playsInline
-                              muted
-                              className="w-full h-full object-cover mirror"
-                            />
-                          ) : (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
-                              <Camera className="w-8 h-8 opacity-20 mb-2" />
-                              <p className="text-[10px] font-bold uppercase tracking-wider">
-                                Camera Request
-                              </p>
-                              <Button
-                                variant="link"
-                                size="sm"
-                                onClick={requestCamera}
-                                className="text-[#2f328e] text-[10px]"
-                              >
-                                Allow Camera
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      <div className="grid grid-cols-2 gap-3">
-                        {needsCamera && (
-                          <Button
-                            variant={
-                              hwStatus.camera === "granted"
-                                ? "outline"
-                                : "default"
-                            }
-                            onClick={requestCamera}
-                            className="h-10 text-[11px] rounded-lg"
-                          >
-                            <Camera className="w-3.5 h-3.5 mr-2" />
-                            {hwStatus.camera === "granted"
-                              ? "Rescan"
-                              : "Allow Camera"}
-                          </Button>
-                        )}
-                        {needsMic && (
-                          <Button
-                            variant={
-                              hwStatus.mic === "granted" ? "outline" : "default"
-                            }
-                            onClick={requestMic}
-                            className="h-10 text-[11px] rounded-lg"
-                          >
-                            <Mic className="w-3.5 h-3.5 mr-2" />
-                            {hwStatus.mic === "granted"
-                              ? "Active"
-                              : "Allow Mic"}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-green-50 border border-green-100 p-4 rounded-xl text-center">
-                      <Check className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                      <p className="text-green-700 text-sm font-medium">
-                        Ready to start
-                      </p>
-                    </div>
-                  )}
+                  {(() => {
+                    const rules = getRules();
+                    const needsCamera = !!formSettings.cameraPermissionCheck;
+                    const needsMic =
+                      !!formSettings.microphonePermissionAwareness;
+                    const needsScreen = !!formSettings.autoScreenshotCapture;
 
-                  <Button
-                    onClick={handleAccessCheck}
-                    disabled={!hwReady}
-                    className="w-full h-14 text-sm font-bold bg-[#2f328e] hover:bg-[#1e205e] text-white rounded-xl shadow-lg transition-all"
-                  >
-                    Proceed to Form
-                  </Button>
+                    const steps = [];
+                    if (rules.length > 0) steps.push("rules");
+                    if (needsCamera || needsMic) steps.push("hardware");
+                    if (needsScreen) steps.push("screen");
+
+                    const currentStep = steps[onboardingStep];
+
+                    if (currentStep === "rules") {
+                      return (
+                        <div className="space-y-4">
+                          <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 max-h-[300px] overflow-y-auto space-y-3">
+                            {rules.map((rule, i) => (
+                              <div key={i} className="flex items-start gap-3">
+                                <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#2f328e] shrink-0" />
+                                <span className="text-sm text-gray-700 font-medium">
+                                  {rule}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          <Button
+                            onClick={handleAccessCheck}
+                            className="w-full h-12 text-sm font-bold bg-[#2f328e] hover:bg-[#1e205e] text-white rounded-xl shadow-lg"
+                          >
+                            Agree & Continue
+                          </Button>
+                        </div>
+                      );
+                    }
+
+                    if (currentStep === "hardware") {
+                      return (
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 gap-4">
+                            {needsCamera && (
+                              <div className="relative aspect-video bg-gray-100 rounded-xl overflow-hidden border border-gray-100">
+                                {hwStatus.camera === "granted" ? (
+                                  <video
+                                    ref={videoRef}
+                                    autoPlay
+                                    playsInline
+                                    muted
+                                    className="w-full h-full object-cover mirror"
+                                  />
+                                ) : (
+                                  <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+                                    <Camera className="w-8 h-8 opacity-20 mb-2" />
+                                    <p className="text-[10px] font-bold uppercase tracking-wider">
+                                      Camera Required
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            {needsMic && (
+                              <div
+                                className={cn(
+                                  "p-4 rounded-xl border flex items-center justify-between",
+                                  hwStatus.mic === "granted"
+                                    ? "bg-green-50 border-green-100"
+                                    : "bg-gray-50 border-gray-200",
+                                )}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <Mic
+                                    className={cn(
+                                      "w-5 h-5",
+                                      hwStatus.mic === "granted"
+                                        ? "text-green-600"
+                                        : "text-gray-400",
+                                    )}
+                                  />
+                                  <span className="text-sm font-medium text-gray-700">
+                                    Microphone Access
+                                  </span>
+                                </div>
+                                {hwStatus.mic === "granted" && (
+                                  <Check className="w-4 h-4 text-green-600" />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          {(hwStatus.camera === "denied" ||
+                            hwStatus.mic === "denied") && (
+                            <p className="text-[10px] text-red-500 font-bold bg-red-50 p-2 rounded-lg border border-red-100 text-center animate-in fade-in slide-in-from-top-1">
+                              Permissions Denied. Please allow camera/mic access
+                              from your browser address bar and click again.
+                            </p>
+                          )}
+                          <Button
+                            onClick={handleAccessCheck}
+                            className="w-full h-12 text-sm font-bold bg-[#2f328e] hover:bg-[#1e205e] text-white rounded-xl shadow-lg"
+                          >
+                            {(needsCamera && hwStatus.camera !== "granted") ||
+                            (needsMic && hwStatus.mic !== "granted")
+                              ? "Grant Permissions"
+                              : "Next Step"}
+                          </Button>
+                        </div>
+                      );
+                    }
+
+                    if (currentStep === "screen") {
+                      return (
+                        <div className="space-y-4 text-center">
+                          <div className="bg-blue-50 border border-blue-100 p-6 rounded-xl">
+                            <ShieldCheck className="w-10 h-10 text-[#2f328e] mx-auto mb-3" />
+                            <p className="text-sm text-[#2f328e] font-semibold">
+                              Screen Sharing Required
+                            </p>
+                            <p className="text-xs text-[#2f328e]/70 mt-2">
+                              Please share your entire screen/tab to continue.
+                              This is used for proctoring.
+                            </p>
+                          </div>
+                          <Button
+                            onClick={handleAccessCheck}
+                            className="w-full h-12 text-sm font-bold bg-[#2f328e] hover:bg-[#1e205e] text-white rounded-xl shadow-lg"
+                          >
+                            Grant Screen Permission
+                          </Button>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-4">
+                        <div className="bg-green-50 border border-green-100 p-6 rounded-xl text-center">
+                          <Check className="w-10 h-10 text-green-500 mx-auto mb-2" />
+                          <p className="text-green-700 font-bold">
+                            Verification Complete
+                          </p>
+                          <p className="text-xs text-green-600 mt-1">
+                            You can now proceed to the form.
+                          </p>
+                        </div>
+                        <Button
+                          onClick={handleAccessCheck}
+                          className="w-full h-14 text-sm font-bold bg-[#2f328e] hover:bg-[#1e205e] text-white rounded-xl shadow-lg"
+                        >
+                          Enter Form
+                        </Button>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>
           </div>
-          <p className="text-center mt-8 text-[10px] text-gray-400 uppercase tracking-widest">
-            © 2026 Sahay CRM • Secure Session
-          </p>
         </div>
       </div>
     );
   }
 
-  if (timeRemaining <= 0 && formSettings.totalTimerEnabled && accessGranted) {
+  if (timeRemaining === 0 && formSettings.totalTimerEnabled && accessGranted) {
     return (
       <div className="min-h-screen bg-[#f0ebf8] flex flex-col items-center justify-center p-4">
         <div className="bg-white max-w-md w-full rounded-2xl shadow-lg p-10 text-center space-y-6">
@@ -1100,9 +1244,6 @@ const FormPreviewPage = () => {
           <div className="bg-red-50 border border-red-200 rounded-xl p-4">
             <p className="text-red-700 font-medium text-sm">Session Closed</p>
           </div>
-          <p className="text-[10px] text-gray-400">
-            © 2026 Sahay CRM • Secure Form System
-          </p>
         </div>
       </div>
     );
@@ -1114,93 +1255,123 @@ const FormPreviewPage = () => {
       <div className="sticky top-0 z-50 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-6">
           <div className="flex flex-col">
-            <h2 className="text-sm font-bold text-[#2f328e] flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" />
-              SECURE SESSION
+            <h2 className="text-lg font-bold text-[#2f328e] flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5" />
+              {form.name}
             </h2>
-            <div className="flex items-center gap-3 mt-1">
+            <div className="flex items-center gap-3 mt-0.5">
               {counts.tab_switch > 0 && (
                 <span className="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full font-bold">
                   {counts.tab_switch} TAB SWITCHES
                 </span>
               )}
-              {hwStatus.camera === "granted" ? (
+              {hwStatus.camera === "granted" && (
                 <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
                   <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />{" "}
-                  CAMERA ACTIVE
+                  SECURE SESSION ACTIVE
                 </span>
-              ) : (
-                formSettings.cameraPermissionCheck && (
-                  <span className="text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-bold">
-                    CAMERA BLOCKED
-                  </span>
-                )
               )}
             </div>
           </div>
         </div>
 
         {/* Big Prominent Timer */}
-        {formSettings.totalTimerEnabled && (
-          <div
-            className={cn(
-              "flex flex-col items-center justify-center min-w-[150px] transition-all duration-300",
-              timeRemaining < 60 ? "scale-110" : "",
-            )}
-          >
-            <div
-              className={cn(
-                "flex items-center gap-3 px-6 py-3 rounded-2xl border-2 transition-all duration-500 shadow-sm",
-                timeRemaining < 120
-                  ? "bg-red-50 border-red-200 text-red-600 animate-pulse"
-                  : "bg-[#2f328e]/5 border-[#2f328e]/10 text-[#2f328e]",
-              )}
-            >
-              <Timer
-                className={cn(
-                  "w-6 h-6",
-                  timeRemaining < 120 ? "text-red-500" : "text-[#2f328e]",
-                )}
-              />
-              <span className="text-3xl font-black tracking-tighter tabular-nums">
-                {formatTime(timeRemaining)}
-              </span>
-            </div>
-            <p
-              className={cn(
-                "text-[9px] font-black uppercase tracking-[0.2em] mt-1.5",
-                timeRemaining < 120 ? "text-red-500" : "text-gray-400",
-              )}
-            >
-              Time Remaining
-            </p>
-          </div>
-        )}
 
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 text-xs rounded-xl"
-            onClick={() => setShowDebug(!showDebug)}
-          >
-            {showDebug ? "Hide Audit" : "Audit Logs"}
-          </Button>
-          <Button
+          {formSettings.totalTimerEnabled && (
+            <div
+              className={cn(
+                "flex flex-col items-center justify-center min-w-[150px] transition-all duration-300",
+                timeRemaining !== null && timeRemaining < 60 ? "scale-110" : "",
+              )}
+            >
+              <div
+                className={cn(
+                  "flex items-center gap-3 px-6 py-3 rounded-2xl border-2 transition-all duration-500 shadow-sm",
+                  timeRemaining !== null && timeRemaining < 120
+                    ? "bg-red-50 border-red-200 text-red-600 animate-pulse"
+                    : "bg-[#2f328e]/5 border-[#2f328e]/10 text-[#2f328e]",
+                )}
+              >
+                <Timer
+                  className={cn(
+                    "w-6 h-6",
+                    timeRemaining !== null && timeRemaining < 120
+                      ? "text-red-500"
+                      : "text-[#2f328e]",
+                  )}
+                />
+                <span className="text-3xl font-black tracking-tighter tabular-nums">
+                  {formatTime(timeRemaining)}
+                </span>
+              </div>
+              <p
+                className={cn(
+                  "text-[9px] font-black uppercase tracking-[0.2em] mt-1.5",
+                  timeRemaining !== null && timeRemaining < 120
+                    ? "text-red-500"
+                    : "text-gray-400",
+                )}
+              >
+                Time Remaining
+              </p>
+            </div>
+          )}
+          {/* <Button
             variant="ghost"
             size="sm"
-            className="h-9 w-9 p-0 text-red-500 hover:bg-red-50 rounded-xl"
-            onClick={() =>
-              window.confirm(
-                "Are you sure you want to exit? Your progress will be saved.",
-              ) && window.close()
-            }
+            className="h-10 px-4 text-sm text-red-500 hover:bg-red-50 rounded-xl font-bold flex items-center gap-2"
+            onClick={() => {
+              // eslint-disable-next-line no-alert
+              if (window.confirm("Are you sure you want to exit? Your progress will be saved.")) {
+                window.close();
+              }
+            }}
           >
-            {/* Exit icon or text */}
             <AlertCircle className="w-5 h-5" />
-          </Button>
+            EXIT FORM
+          </Button> */}
         </div>
       </div>
+
+      {/* Refined compact violation bar */}
+      {(() => {
+        const totalViolations =
+          counts.tab_switch + counts.focus_loss + counts.fullscreen_exit;
+        if (totalViolations === 0) return null;
+
+        const alerts = [];
+        if (counts.tab_switch > 0)
+          alerts.push(`${counts.tab_switch} Tab Switches`);
+        if (counts.focus_loss > 0)
+          alerts.push(`${counts.focus_loss} Focus Losses`);
+        if (counts.fullscreen_exit > 0)
+          alerts.push(`${counts.fullscreen_exit} Fullscreen Exits`);
+
+        return (
+          <div className="bg-orange-50 border-b border-orange-200 px-6 py-2 flex items-center justify-between z-40">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-4 h-4 text-orange-600 animate-pulse" />
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-black text-orange-700 uppercase tracking-wider">
+                  Proctoring Warning:
+                </span>
+                {alerts.map((alert, idx) => (
+                  <span
+                    key={idx}
+                    className="text-[11px] font-bold text-orange-600 bg-orange-100/50 px-2 py-0.5 rounded-md"
+                  >
+                    {alert}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <p className="text-[10px] font-bold text-orange-500 italic">
+              Violation limits active. Avoid further switching.
+            </p>
+          </div>
+        );
+      })()}
 
       <div className="flex-1 flex overflow-hidden">
         {/* Rules & User Sidebar (Strictly Fixed) */}
@@ -1239,19 +1410,21 @@ const FormPreviewPage = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <div className="bg-slate-50 p-3 rounded-xl border border-gray-100 space-y-2">
-                {getRules().map((rule, i) => (
-                  <div key={i} className="flex items-start gap-2.5 group">
-                    <div className="mt-1 w-1 h-1 rounded-full bg-[#2f328e]/30 group-hover:bg-[#2f328e] transition-colors" />
-                    <p className="text-[10px] text-gray-600 font-medium leading-tight">
-                      {rule}
-                    </p>
-                  </div>
-                ))}
+              <div className="space-y-3">
+                <div className="bg-slate-50 p-4 rounded-xl border border-gray-100 space-y-3">
+                  {getRules().map((rule, i) => (
+                    <div key={i} className="flex items-start gap-3 group">
+                      <div className="mt-2 w-1.5 h-1.5 rounded-full bg-[#2f328e]/40 group-hover:bg-[#2f328e] transition-colors" />
+                      <p className="text-[13px] text-gray-700 font-semibold leading-relaxed">
+                        {rule}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[11px] text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-100 font-bold leading-relaxed text-center">
+                  Warning: Any violation will result in auto-submission.
+                </p>
               </div>
-              <p className="text-[9px] text-orange-600 bg-orange-50 p-2.5 rounded-lg border border-orange-100 font-medium leading-relaxed">
-                <b>Warning:</b> Any violation will result in auto-submission.
-              </p>
             </div>
           </div>
 
@@ -1287,39 +1460,21 @@ const FormPreviewPage = () => {
         </div>
 
         {/* Form Content (Only this scrolls) */}
-        <div className="flex-1 overflow-y-auto bg-gray-50/50 p-3 lg:p-5">
+        <div className="flex-1 overflow-y-auto bg-gray-50/50 p-3 lg:p-5 relative">
           <div className="max-w-[800px] mx-auto space-y-8 pb-20">
-            {/* Violations Warning Bar */}
-            {counts.tab_switch > 0 &&
-              counts.tab_switch < (formSettings.maxTabSwitches || 0) && (
-                <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-start gap-4 animate-in slide-in-from-top duration-500">
-                  <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-                  <div>
-                    <p className="text-xs font-bold text-red-700">
-                      Warning: Tab Switch Detected
-                    </p>
-                    <p className="text-[11px] text-red-600 font-medium">
-                      You have switched tabs {counts.tab_switch} times. The form
-                      will auto-submit after {formSettings.maxTabSwitches || 0}{" "}
-                      switches.
-                    </p>
-                  </div>
-                </div>
-              )}
-
             {/* Title Card */}
-            <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-              <h1 className="text-lg font-semibold text-black">{form.name}</h1>
-              {form.description && (
+            {/* <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+              {/* <h1 className="text-lg font-semibold text-black">{form.name}</h1> */}
+            {/* {form.description && (
                 <p className="text-gray-400 text-xs mt-1 leading-relaxed">
-                  {form.description}
+                   {form.description} 
                 </p>
               )}
-            </div>
+            </div>  */}
 
             {/* Questions */}
             <div className="space-y-2">
-              {(form.fields || []).map((question) => {
+              {(form.fields || []).map((question: Question) => {
                 const options: string[] = (() => {
                   const raw = question.options as unknown;
                   if (typeof raw === "string")
@@ -1337,7 +1492,7 @@ const FormPreviewPage = () => {
                     key={question.id}
                     className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm"
                   >
-                    <div className="text-xs font-semibold text-gray-850 mb-2 flex gap-1 leading-tight">
+                    <div className="text-[13px] font-bold text-gray-800 mb-4 flex gap-1.5 leading-tight group-hover:text-black transition-colors">
                       {question.label}
                       {question.isRequired && (
                         <span className="text-red-500 font-bold">*</span>
@@ -1374,8 +1529,8 @@ const FormPreviewPage = () => {
                                       ).includes(opt)
                                     : responses[question.id] === opt
                                 )
-                                  ? "border-[#2f328e] bg-[#2f328e]/5"
-                                  : "border-gray-200 bg-white hover:border-gray-300",
+                                  ? "border-[#2f328e] bg-[#2f328e]/5 shadow-sm"
+                                  : "border-gray-200 bg-gray-50/30 hover:bg-gray-50 hover:border-gray-300",
                               )}
                             >
                               <div
@@ -1426,7 +1581,7 @@ const FormPreviewPage = () => {
                           onChange={(e) =>
                             updateResponse(question.id, e.target.value)
                           }
-                          className="w-full h-8 bg-white border border-gray-200 rounded-lg px-3 text-sm focus:ring-1 focus:ring-[#2f328e] outline-none transition-all"
+                          className="w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:ring-1 focus:ring-[#2f328e] focus:bg-white focus:border-[#2f328e] outline-none transition-all placeholder:text-gray-400 font-medium"
                         />
                       )}
 
@@ -1442,7 +1597,7 @@ const FormPreviewPage = () => {
                           onChange={(e) =>
                             updateResponse(question.id, e.target.value)
                           }
-                          className="w-full min-h-[80px] bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-[#2f328e] outline-none transition-all"
+                          className="w-full min-h-[100px] bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-[#2f328e] focus:bg-white focus:border-[#2f328e] outline-none transition-all placeholder:text-gray-400 font-medium resize-none"
                         />
                       )}
 
@@ -1455,7 +1610,7 @@ const FormPreviewPage = () => {
                           onChange={(e) =>
                             updateResponse(question.id, e.target.value)
                           }
-                          className="w-full h-8 bg-white border border-gray-200 rounded-lg px-3 text-sm focus:ring-1 focus:ring-[#2f328e] outline-none transition-all"
+                          className="w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:ring-1 focus:ring-[#2f328e] focus:bg-white focus:border-[#2f328e] outline-none transition-all font-medium"
                         />
                       )}
 
@@ -1516,6 +1671,7 @@ const FormPreviewPage = () => {
                   variant="ghost"
                   className="h-9 px-3 text-xs text-gray-500 hover:text-red-500"
                   onClick={() =>
+                    // eslint-disable-next-line no-alert
                     window.confirm("Clear all responses?") && setResponses({})
                   }
                 >
@@ -1534,106 +1690,9 @@ const FormPreviewPage = () => {
                 </Button>
               </div>
             </div>
-
-            <p className="text-center text-[10px] text-gray-400 font-black tracking-[0.2em] uppercase">
-              © 2026 Sahay CRM Integrated proctoring System
-            </p>
           </div>
         </div>
       </div>
-
-      {/* Audit Sidebar (Hidden by default) */}
-      {showDebug && (
-        <div className="fixed top-0 right-0 w-[400px] h-full bg-slate-900 z-[100] shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 p-8">
-          <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/10">
-            <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-[#556ee6]" />
-                Audit Navigator
-              </h2>
-              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest mt-1">
-                Live Security Feed
-              </p>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-white/10"
-              onClick={() => setShowDebug(false)}
-            >
-              <AlertCircle className="w-6 h-6 rotate-45" />
-            </Button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto space-y-8 scrollbar-hide">
-            {/* Summary Metrics */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-3xl bg-white/5 border border-white/10">
-                <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">
-                  Stability
-                </p>
-                <p className="text-2xl font-black text-white">
-                  {100 - counts.tab_switch * 5}%
-                </p>
-              </div>
-              <div className="p-4 rounded-3xl bg-white/5 border border-white/10">
-                <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">
-                  Violations
-                </p>
-                <p className="text-2xl font-black text-red-500">
-                  {violations.length}
-                </p>
-              </div>
-            </div>
-
-            {/* Recent Alerts */}
-            <div className="space-y-4">
-              <h3 className="text-[10px] font-black text-[#556ee6] uppercase tracking-widest px-1">
-                Incident reports
-              </h3>
-              <div className="space-y-3">
-                {violations.length === 0 ? (
-                  <div className="p-6 rounded-3xl bg-white/5 border border-dashed border-white/10 text-center">
-                    <Check className="w-6 h-6 text-green-500 mx-auto mb-2 opacity-20" />
-                    <p className="text-[11px] text-gray-500 font-medium italic">
-                      All systems clear. No incidents reported.
-                    </p>
-                  </div>
-                ) : (
-                  [...violations].reverse().map((v, i) => (
-                    <div
-                      key={i}
-                      className="p-4 rounded-2xl bg-black/40 border border-white/5 border-l-4 border-l-red-500 space-y-1"
-                    >
-                      <div className="flex justify-between items-center text-[9px] font-black">
-                        <span className="text-red-400 uppercase tracking-tighter">
-                          {v.type.replace("_", " ")}
-                        </span>
-                        <span className="text-gray-500 font-sans tabular-nums">
-                          {new Date(v.timestamp).toLocaleTimeString()}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-gray-400 leading-tight font-medium">
-                        {v.details}
-                      </p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-8 border-t border-white/10 mt-auto">
-            <Button
-              variant="outline"
-              className="w-full h-12 rounded-2xl border-white/10 text-white font-bold text-xs hover:bg-white/5"
-              onClick={() => window.print()}
-            >
-              Export Audit log
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

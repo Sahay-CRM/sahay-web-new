@@ -28,6 +28,15 @@ interface FormError {
   updatedAt: string;
 }
 
+interface FormMedia {
+  id: string;
+  refId: string;
+  fileUrl: string;
+  fileType: string;
+  mobileNumber: string | null;
+  createdAt: string;
+}
+
 interface SubmissionDetail {
   id: string;
   formId: string;
@@ -42,6 +51,7 @@ interface SubmissionDetail {
   };
   formResponses: FormResponse[];
   formErrors: FormError[];
+  formMedia: FormMedia[];
 }
 
 interface SubmissionDetailRes {

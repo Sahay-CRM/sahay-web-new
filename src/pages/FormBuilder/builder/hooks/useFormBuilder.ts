@@ -1,10 +1,6 @@
 import { useCallback, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import {
-  useCreateForm,
-  useGetFormById,
-  useUpdateForm,
-} from "@/features/api/Form";
+import { useCreateForm, useGetForm, useUpdateForm } from "@/features/api/Form";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { queryClient } from "@/queryClient";
 
@@ -61,7 +57,7 @@ export default function useFormBuilder() {
   // Fields managed separately (react-hook-form doesn't handle nested arrays well)
   const [fields, setFields] = useState<Question[]>([]);
 
-  const { data: fetchedForm, isFetching } = useGetFormById(formId);
+  const { data: fetchedForm, isFetching } = useGetForm(formId);
   const { mutate: createForm, isPending: isCreating } = useCreateForm();
   const { mutate: updateForm, isPending: isUpdating } = useUpdateForm();
 
@@ -143,21 +139,34 @@ export default function useFormBuilder() {
     };
   };
 
+  const [triedSaving, setTriedSaving] = useState(false);
+
   const onSave = handleSubmit(() => {
+    setTriedSaving(true);
+    // Validate that all fields have labels
+    const emptyFields = fields.filter((f) => !f.label || !f.label.trim());
+    if (emptyFields.length > 0) {
+      return;
+    }
+
     const payload = buildPayload();
+
     if (formId) {
       updateForm(
         { id: formId, data: payload as unknown as Partial<FormDetails> },
         {
-          onSuccess: () =>
+          onSuccess: () => {
+            setTriedSaving(false);
             queryClient.invalidateQueries({
               queryKey: ["get-form-by-id", formId],
-            }),
+            });
+          },
         },
       );
     } else {
       createForm(payload as unknown as Partial<FormDetails>, {
         onSuccess: (res) => {
+          setTriedSaving(false);
           const newId = res?.data?.id;
           if (newId)
             navigate(`/dashboard/form-builder?id=${newId}`, { replace: true });
@@ -291,6 +300,7 @@ export default function useFormBuilder() {
     setValue,
     errors,
     onSave,
+    triedSaving,
     // Field operations
     fields,
     addQuestion,

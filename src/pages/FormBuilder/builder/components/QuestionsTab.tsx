@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { QuestionCard } from "./QuestionCard";
 // import { FloatingToolbar } from './FloatingToolbar';
@@ -22,7 +21,7 @@ import {
 
 interface QuestionsTabProps {
   form: FormDetails;
-  updateName: (name: string) => void;
+  updateName?: (name: string) => void;
   updateDescription: (description: string) => void;
   updateQuestion: (questionId: string, updates: Partial<Question>) => void;
   deleteQuestion: (questionId: string) => void;
@@ -31,11 +30,11 @@ interface QuestionsTabProps {
   addOption: (questionId: string) => void;
   updateOption: (questionId: string, optionId: string, text: string) => void;
   deleteOption: (questionId: string, optionId: string) => void;
+  triedSaving?: boolean;
 }
 
 export const QuestionsTab: React.FC<QuestionsTabProps> = ({
   form,
-  updateName,
   updateDescription,
   updateQuestion,
   deleteQuestion,
@@ -44,6 +43,7 @@ export const QuestionsTab: React.FC<QuestionsTabProps> = ({
   addOption,
   updateOption,
   deleteOption,
+  triedSaving,
 }) => {
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
   // const [toolbarStyle, setToolbarStyle] = useState<React.CSSProperties>({ top: '200px', left: '0px' });
@@ -98,14 +98,9 @@ export const QuestionsTab: React.FC<QuestionsTabProps> = ({
         onClick={() => setActiveQuestionId(null)}
       >
         <div className="space-y-4">
-          <Input
-            value={form.name}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              updateName(e.target.value)
-            }
-            className="text-3xl font-normal border-none border-b border-transparent hover:border-b-gray-200 focus:border-b-[#2f328e] bg-transparent rounded-none px-0 h-auto focus-visible:ring-0 transition-colors"
-            placeholder="Untitled form"
-          />
+          <h1 className="text-3xl font-normal py-1 px-0 text-gray-800 min-h-[44px] flex items-center outline-none">
+            {form.name || "Untitled form"}
+          </h1>
           <Textarea
             value={form.description}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
@@ -150,6 +145,7 @@ export const QuestionsTab: React.FC<QuestionsTabProps> = ({
                   updateOption(question.id, optId, text)
                 }
                 onDeleteOption={(optId) => deleteOption(question.id, optId)}
+                triedSaving={triedSaving}
               />
             </div>
           ))}

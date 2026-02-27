@@ -18,10 +18,14 @@ interface FieldTypePanelProps {
 
 const fieldTypes: { type: FieldType; label: string; icon: React.ReactNode }[] =
   [
-    { type: "TEXT", label: "Text", icon: <AlignLeft className="h-4 w-4" /> },
+    {
+      type: "TEXT",
+      label: "Short Text",
+      icon: <AlignLeft className="h-4 w-4" />,
+    },
     {
       type: "TEXTAREA",
-      label: "Paragraph",
+      label: "Long Text",
       icon: <Type className="h-4 w-4" />,
     },
     { type: "NUMBER", label: "Number", icon: <Hash className="h-4 w-4" /> },

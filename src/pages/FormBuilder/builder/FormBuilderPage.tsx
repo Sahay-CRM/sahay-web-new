@@ -1,12 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FormHeader } from "./components/Header";
 import { QuestionsTab } from "./components/QuestionsTab";
 import { ShareModal } from "./components/ShareModal";
 import { FieldTypePanel } from "./components/FieldTypePanel";
-import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import useFormBuilder from "./hooks/useFormBuilder";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 const FormBuilderPage = () => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -19,6 +18,7 @@ const FormBuilderPage = () => {
     watch,
     setValue,
     onSave,
+    triedSaving,
     fields,
     addQuestion,
     updateQuestion,
@@ -29,11 +29,18 @@ const FormBuilderPage = () => {
     updateOption,
     deleteOption,
   } = useFormBuilder();
-
+  const { setBreadcrumbs } = useBreadcrumbs();
   const name = watch("name") || "";
   const isActive = watch("isActive") ?? false;
   const visibility = watch("visibility") || "PUBLIC";
   const mobileNumbers = watch("mobileNumbers") || [];
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "Forms", href: "/dashboard/forms" },
+      { label: "Forms Field Manage", href: "" },
+    ]);
+  }, [setBreadcrumbs]);
   return (
     <div className="flex h-full  overflow-hidden">
       {/* Form Builder Area */}
@@ -45,28 +52,16 @@ const FormBuilderPage = () => {
           isSaving={isSaving}
           isSaved={!!formId}
           isSavedId={formId || undefined}
-          onSend={() => setIsShareModalOpen(true)}
+          isActive={isActive}
+          onToggleStatus={async () => {
+            const newStatus = !isActive;
+            setValue("isActive", newStatus);
+            await onSave();
+            if (newStatus) {
+              setIsShareModalOpen(true);
+            }
+          }}
         />
-
-        {/* Status bar */}
-        <div className="bg-white border-b border-gray-100 px-4 py-2 flex items-center gap-3">
-          <Label className="text-xs text-gray-500 font-medium">Status</Label>
-          <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-3 py-1">
-            <span
-              className={`text-xs font-medium ${isActive ? "text-green-600" : "text-gray-400"}`}
-            >
-              {isActive ? "Published" : "Draft"}
-            </span>
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-green-500" : "bg-gray-400"}`}
-            />
-            <Switch
-              checked={isActive}
-              onCheckedChange={(val) => setValue("isActive", val)}
-              className="data-[state=checked]:bg-[#2f328e] h-4 w-7"
-            />
-          </div>
-        </div>
 
         <main className="flex-1 overflow-auto bg-gray-50 relative">
           <ShareModal
@@ -100,6 +95,7 @@ const FormBuilderPage = () => {
               addOption={addOption}
               updateOption={updateOption}
               deleteOption={deleteOption}
+              triedSaving={triedSaving}
             />
           </div>
         </main>

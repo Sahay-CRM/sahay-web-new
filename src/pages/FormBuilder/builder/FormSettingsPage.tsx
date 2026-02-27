@@ -67,8 +67,7 @@ export default function FormSettingsPage() {
   useEffect(() => {
     setBreadcrumbs([
       { label: "Forms", href: "/dashboard/forms" },
-      { label: formName || "Form", href: "" },
-      { label: "Settings", href: "" },
+      { label: `${formName} Form Settings`, href: "" },
     ]);
   }, [setBreadcrumbs, formName]);
 
@@ -195,41 +194,45 @@ export default function FormSettingsPage() {
                     className="focus-visible:ring-[#2f328e]"
                   />
                 </div>
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">
-                    Mobile Numbers (for OTP/Notifications)
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={mobileInput}
-                      onChange={(e) => setMobileInput(e.target.value)}
-                      placeholder="Enter mobile number"
-                      onKeyDown={(e) => e.key === "Enter" && addMobileNumber()}
-                      className="focus-visible:ring-[#2f328e]"
-                    />
-                    <Button
-                      onClick={addMobileNumber}
-                      className="bg-[#2f328e] hover:bg-[#1a1c5d] text-white"
-                    >
-                      Add
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {mobileNumbers.map((num: string) => (
-                      <Badge
-                        key={num}
-                        variant="secondary"
-                        className="px-2 py-1 gap-1 border-gray-200"
+                {visibility !== "PUBLIC" && (
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">
+                      Mobile Numbers (for OTP/Notifications)
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={mobileInput}
+                        onChange={(e) => setMobileInput(e.target.value)}
+                        placeholder="Enter mobile number"
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && addMobileNumber()
+                        }
+                        className="focus-visible:ring-[#2f328e]"
+                      />
+                      <Button
+                        onClick={addMobileNumber}
+                        className="bg-[#2f328e] hover:bg-[#1a1c5d] text-white"
                       >
-                        {num}
-                        <X
-                          className="h-3 w-3 cursor-pointer hover:text-red-500"
-                          onClick={() => removeMobileNumber(num)}
-                        />
-                      </Badge>
-                    ))}
+                        Add
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {mobileNumbers.map((num: string) => (
+                        <Badge
+                          key={num}
+                          variant="secondary"
+                          className="px-2 py-1 gap-1 border-gray-200"
+                        >
+                          {num}
+                          <X
+                            className="h-3 w-3 cursor-pointer hover:text-red-500"
+                            onClick={() => removeMobileNumber(num)}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -300,13 +303,13 @@ export default function FormSettingsPage() {
                       maxKey: "maxTabSwitches",
                       maxLabel: "Max switches",
                     },
-                    {
-                      key: "focusLossDetection",
-                      label: "Window Blur / Focus Loss",
-                      desc: "Detect when browser loses focus",
-                      maxKey: "maxFocusLoss",
-                      maxLabel: "Max losses",
-                    },
+                    // {
+                    //   key: "focusLossDetection",
+                    //   label: "Window Blur / Focus Loss",
+                    //   desc: "Detect when browser loses focus",
+                    //   maxKey: "maxFocusLoss",
+                    //   maxLabel: "Max losses",
+                    // },
                     // { key: 'fullscreenMonitoring', label: 'Fullscreen Monitoring', desc: 'Warn if respondent exits fullscreen mode', maxKey: 'maxFullscreenExits', maxLabel: 'Max exits' },
                     // { key: 'windowResizeSuspicion', label: 'Window Resize Suspicion', desc: 'Log events when browser window is resized', maxKey: null, maxLabel: null },
                     // { key: 'inactivityDetection', label: 'Inactivity Detection', desc: 'Auto-submit or warn after user is idle', maxKey: 'maxInactivityMinutes', maxLabel: 'Minutes' },
@@ -349,9 +352,20 @@ export default function FormSettingsPage() {
                       )}
                       <Switch
                         checked={(fs[item.key] as boolean) ?? false}
-                        onCheckedChange={(val: boolean) =>
-                          updateSetting({ [item.key]: val })
-                        }
+                        onCheckedChange={(val: boolean) => {
+                          const updates: Record<string, unknown> = {
+                            [item.key]: val,
+                          };
+                          // If enabling and maxKey exists but has no value, set default
+                          if (
+                            val &&
+                            item.maxKey &&
+                            fs[item.maxKey] === undefined
+                          ) {
+                            updates[item.maxKey as string] = 3;
+                          }
+                          updateSetting(updates as Partial<FormSettings>);
+                        }}
                         className="data-[state=checked]:bg-[#2f328e]"
                       />
                     </div>
@@ -547,9 +561,15 @@ export default function FormSettingsPage() {
                     )}
                     <Switch
                       checked={fs.totalTimerEnabled ?? false}
-                      onCheckedChange={(val) =>
-                        updateSetting({ totalTimerEnabled: val })
-                      }
+                      onCheckedChange={(val) => {
+                        const updates: Partial<FormSettings> = {
+                          totalTimerEnabled: val,
+                        };
+                        if (val && fs.totalTimerMinutes === undefined) {
+                          updates.totalTimerMinutes = 20;
+                        }
+                        updateSetting(updates);
+                      }}
                       className="data-[state=checked]:bg-[#2f328e]"
                     />
                   </div>
@@ -657,9 +677,18 @@ export default function FormSettingsPage() {
                     )}
                     <Switch
                       checked={fs.autoScreenshotCapture ?? false}
-                      onCheckedChange={(val) =>
-                        updateSetting({ autoScreenshotCapture: val })
-                      }
+                      onCheckedChange={(val) => {
+                        const updates: Partial<FormSettings> = {
+                          autoScreenshotCapture: val,
+                        };
+                        if (
+                          val &&
+                          fs.autoScreenshotIntervalMinutes === undefined
+                        ) {
+                          updates.autoScreenshotIntervalMinutes = 2;
+                        }
+                        updateSetting(updates);
+                      }}
                       className="data-[state=checked]:bg-[#2f328e]"
                     />
                   </div>

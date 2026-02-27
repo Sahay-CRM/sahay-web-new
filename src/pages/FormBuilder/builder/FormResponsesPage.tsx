@@ -4,8 +4,10 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useGetForm, useGetFormResponse } from "@/features/api/Form";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Loader2, Eye } from "lucide-react";
+import SearchInput from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
 import TableData from "@/components/shared/DataTable/DataTable";
+import { formatToProjectDateTime } from "@/features/utils/formatting.utils";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 
 export default function FormResponsesPage() {
@@ -31,8 +33,7 @@ export default function FormResponsesPage() {
   useEffect(() => {
     setBreadcrumbs([
       { label: "Forms", href: "/dashboard/forms" },
-      { label: form?.name || "Form", href: `/dashboard/form-builder?id=${id}` },
-      { label: "Responses", href: "" },
+      { label: `${form?.name} Form Responses`, href: "" },
     ]);
   }, [setBreadcrumbs, form?.name, id]);
 
@@ -41,7 +42,7 @@ export default function FormResponsesPage() {
     name: "User Name",
     mobileNumber: "Mobile Number",
     formattedDate: "Submitted At",
-    statusLabel: "Status",
+    status: "Status",
   };
 
   if (formLoading || responsesLoading) {
@@ -71,17 +72,13 @@ export default function FormResponsesPage() {
           <p className="text-xs text-gray-500">Submissions Listing</p>
         </div>
       </div>
-
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden p-4 sm:p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-medium text-gray-800">
-            {responsesData?.totalCount || 0} Responses
-          </h2>
-          <Badge variant={form?.isActive ? "outline" : "secondary"}>
-            {form?.isActive ? "Accepting responses" : "Not accepting responses"}
-          </Badge>
-        </div>
-
+      <SearchInput
+        placeholder="Search responses..."
+        searchValue={paginationFilter?.search || ""}
+        setPaginationFilter={setPaginationFilter}
+        className="w-80 mb-6"
+      />
+      <div className="bg-white mt-5 overflow-hidden mb-6">
         <TableData
           tableData={responsesData?.data.map((submission, index) => ({
             ...submission,
@@ -99,7 +96,7 @@ export default function FormResponsesPage() {
                 </span>
               </div>
             ),
-            formattedDate: new Date(submission.createdAt).toLocaleString(),
+            formattedDate: formatToProjectDateTime(submission.createdAt),
             statusLabel: (
               <Badge
                 variant={

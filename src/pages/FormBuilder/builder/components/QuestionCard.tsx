@@ -41,6 +41,7 @@ interface QuestionCardProps {
   onAddOption: () => void;
   onUpdateOption: (optionId: string, text: string) => void;
   onDeleteOption: (optionId: string) => void;
+  triedSaving?: boolean;
 }
 
 const typeIcons: Record<FieldType, React.ReactNode> = {
@@ -49,9 +50,9 @@ const typeIcons: Record<FieldType, React.ReactNode> = {
   NUMBER: <Hash className="h-4 w-4 mr-2 text-gray-500" />,
   EMAIL: <Mail className="h-4 w-4 mr-2 text-gray-500" />,
   PHONE: <Phone className="h-4 w-4 mr-2 text-gray-500" />,
-  SELECT: <ChevronDownCircle className="h-4 w-4 mr-2 text-gray-500" />,
   RADIO: <List className="h-4 w-4 mr-2 text-gray-500" />,
   CHECKBOX: <CheckSquare className="h-4 w-4 mr-2 text-gray-500" />,
+  SELECT: <ChevronDownCircle className="h-4 w-4 mr-2 text-gray-500" />,
   DATE: <Calendar className="h-4 w-4 mr-2 text-gray-500" />,
   FILE: <Upload className="h-4 w-4 mr-2 text-gray-500" />,
 };
@@ -62,12 +63,25 @@ const typeLabels: Record<FieldType, string> = {
   NUMBER: "Number",
   EMAIL: "Email",
   PHONE: "Phone",
-  SELECT: "Dropdown",
   RADIO: "Radio",
-  CHECKBOX: "Checkboxes",
+  CHECKBOX: "Checkbox",
+  SELECT: "Dropdown",
   DATE: "Date",
-  FILE: "File Upload",
+  FILE: "File",
 };
+
+const typeOrder: FieldType[] = [
+  "TEXT",
+  "TEXTAREA",
+  "NUMBER",
+  "EMAIL",
+  "PHONE",
+  "RADIO",
+  "CHECKBOX",
+  "SELECT",
+  "DATE",
+  "FILE",
+];
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({
   question,
@@ -79,6 +93,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   onAddOption,
   onUpdateOption,
   onDeleteOption,
+  triedSaving,
 }) => {
   const {
     attributes,
@@ -119,14 +134,24 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
       {/* Main row — label + type selector always visible */}
       <div className="flex items-center gap-3 px-4 py-2.5 mt-1">
-        <Input
-          value={question.label}
-          onChange={(e) => onUpdate({ label: e.target.value })}
-          placeholder="Question label..."
-          onClick={(e) => e.stopPropagation()}
-          onFocus={onActivate}
-          className="flex-1 border-none border-b border-transparent hover:border-b-gray-200 focus:border-b-[#2f328e] bg-transparent rounded-none px-0 h-7 text-sm focus-visible:ring-0 transition-colors"
-        />
+        <div className="flex-1 flex flex-col gap-1">
+          <Input
+            value={question.label}
+            onChange={(e) => onUpdate({ label: e.target.value })}
+            placeholder="Question label..."
+            onClick={(e) => e.stopPropagation()}
+            onFocus={onActivate}
+            className={cn(
+              "flex-1 border-none border-b border-transparent hover:border-b-gray-200 focus:border-b-[#2f328e] bg-transparent rounded-none px-0 h-7 text-sm focus-visible:ring-0 transition-colors",
+              triedSaving && !question.label?.trim() && "border-b-red-500",
+            )}
+          />
+          {triedSaving && !question.label?.trim() && (
+            <span className="text-[10px] text-red-500 font-bold">
+              Label required for saving
+            </span>
+          )}
+        </div>
         <Select
           value={question.fieldType}
           onValueChange={(val) => onUpdate({ fieldType: val as FieldType })}
@@ -140,7 +165,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             </SelectValue>
           </SelectTrigger>
           <SelectContent className="w-44 p-1 rounded-lg shadow-lg border-gray-100">
-            {Object.entries(typeLabels).map(([type, label]) => (
+            {typeOrder.map((type) => (
               <SelectItem
                 key={type}
                 value={type}
@@ -148,7 +173,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               >
                 <div className="flex items-center text-sm font-medium text-gray-700">
                   {typeIcons[type as FieldType]}
-                  {label}
+                  {typeLabels[type as FieldType]}
                 </div>
               </SelectItem>
             ))}
