@@ -1,287 +1,349 @@
-import { useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useGetFormSubmissionDetail } from "@/features/api/Form";
 import { Badge } from "@/components/ui/badge";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
+import { useState, useMemo, useEffect } from "react";
 import {
   ArrowLeft,
   Loader2,
-  FileText,
   AlertCircle,
-  Calendar,
-  User,
   Phone,
-  Image as ImageIcon,
-  Eye,
+  Download,
+  Clock,
+  Maximize2,
+  X,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatToProjectDateTime } from "@/features/utils/formatting.utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { useParams } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogClose,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 export default function FormSubmissionDetailPage() {
   const { submissionId } = useParams<{ submissionId: string }>();
-  const navigate = useNavigate();
   const { setBreadcrumbs } = useBreadcrumbs();
   const { data: detailData, isLoading } = useGetFormSubmissionDetail(
     submissionId || "",
   );
   const submission = detailData?.data;
 
+  const [selectedImg, setSelectedImg] = useState<string | null>(null);
+  const [screenshotPage, setScreenshotPage] = useState(1);
+  const [isAlertExpanded, setIsAlertExpanded] = useState(false); // Toggle for errors
+  const screenshotPageSize = 8;
+
+  const screenshots = useMemo(() => {
+    return submission?.formMedia?.filter((m) => m.fileType === "4010") || [];
+  }, [submission]);
+
+  const paginatedScreenshots = useMemo(() => {
+    const start = (screenshotPage - 1) * screenshotPageSize;
+    return screenshots.slice(start, start + screenshotPageSize);
+  }, [screenshots, screenshotPage]);
+
+  const totalScreenshotPages = Math.ceil(
+    screenshots.length / screenshotPageSize,
+  );
+
   useEffect(() => {
     if (submission) {
       setBreadcrumbs([
         { label: "Forms", href: "/dashboard/forms" },
         {
-          label: "Responses",
-          href: `/dashboard/form-responses/${submission.formId}`,
+          label: submission.form.name,
+          href: `/dashboard/forms/${submission.form.id}/responses`,
         },
         { label: "Detail", href: "" },
       ]);
     }
   }, [setBreadcrumbs, submission]);
 
-  if (isLoading) {
+  if (isLoading)
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-6 w-6 animate-spin text-[#2f328e]" />
-        <span className="ml-2 text-sm text-gray-500">Loading detail...</span>
+      <div className="h-screen flex items-center justify-center bg-white">
+        <Loader2 className="animate-spin text-blue-600" />
       </div>
     );
-  }
-
-  if (!submission) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64">
-        <p className="text-gray-500">Submission not found</p>
-        <Button variant="link" onClick={() => navigate(-1)}>
-          Go Back
-        </Button>
-      </div>
-    );
-  }
+  if (!submission) return null;
 
   return (
-    <div className="w-full px-2 sm:px-4 py-4 space-y-6">
-      <div className="flex items-center gap-3 mb-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0 text-gray-500"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <div>
-          <h1 className="font-semibold text-xl text-black">
-            Submission Details
-          </h1>
-          <p className="text-xs text-gray-500">{submission.form.name}</p>
+    <div className="h-full bg-[#f1f3f5] w-full flex flex-col overflow-hidden">
+      {/* 1. Navigation Header */}
+      <nav className="bg-white border-b px-4 py-3 flex items-center justify-between shrink-0 shadow-sm z-10">
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-lg font-bold text-slate-800 leading-none">
+              {submission.name}
+            </h1>
+            <p className="text-sm text-gray-400 font-bold mt-1 uppercase">
+              {submission.mobileNumber}
+            </p>
+          </div>
         </div>
-      </div>
+        <div className="text-right">
+          <Badge className="bg-blue-600 text-xs font-black h-7 px-4 rounded-full border-none uppercase flex items-center justify-center">
+            {submission.status?.replace(/_/g, " ")}
+          </Badge>
+          <p className="text-sm font-bold mt-1 uppercase text-slate-500">
+            {formatToProjectDateTime(submission.createdAt)}
+          </p>
+        </div>
+      </nav>
 
-      {/* 1. Project-Style Info Bar - Compact */}
-      <Card className="shadow-sm border-gray-200 overflow-hidden bg-white">
-        <CardContent className="p-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-gray-100">
-            <div className="p-4 flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
-                Status
-              </span>
-              <Badge
-                variant={
-                  submission.status === "SUBMITTED" ? "default" : "destructive"
-                }
-                className={`w-fit h-5 px-2 text-[9px] font-semibold uppercase ${submission.status === "SUBMITTED" ? "bg-[#2f328e]" : ""}`}
+      {/* 2. Main Content Container */}
+      <div className="flex-1 overflow-hidden p-4 flex flex-col gap-4">
+        {/* Security Alerts with "View More" Logic */}
+        {/* Security Alerts with Bullet List Logic */}
+        {submission.formErrors && submission.formErrors.length > 0 && (
+          <div className="bg-red-50 border border-red-100 rounded-lg p-3 shrink-0">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 overflow-hidden w-full">
+                <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                <div className="flex flex-col w-full">
+                  <span className="text-sm font-black text-red-800 uppercase mb-1">
+                    Alerts ({submission.formErrors.length}):
+                  </span>
+
+                  {isAlertExpanded ? (
+                    /* Expanded: Bullet List */
+                    <ul className="list-disc list-inside space-y-1">
+                      {submission.formErrors.map((e, idx) => (
+                        <li
+                          key={idx}
+                          className="text-sm text-red-600 font-medium leading-relaxed"
+                        >
+                          {e.errorMessage}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    /* Collapsed: Single Line Truncated */
+                    <div className="text-sm text-red-600 font-medium truncate max-w-[70vw]">
+                      {submission.formErrors
+                        .map((e) => e.errorMessage)
+                        .join(" | ")}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-700 hover:bg-red-100 h-7 text-xs font-bold shrink-0 self-start"
+                onClick={() => setIsAlertExpanded(!isAlertExpanded)}
               >
-                {submission.status.replace(/_/g, " ")}
-              </Badge>
-            </div>
-            <div className="p-4 flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
-                User Name
-              </span>
-              <span className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                <User className="h-3.5 w-3.5 text-[#2f328e]/60" />
-                {submission.name || "Anonymous"}
-              </span>
-            </div>
-            <div className="p-4 flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
-                Mobile Number
-              </span>
-              <span className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                <Phone className="h-3.5 w-3.5 text-[#2f328e]/60" />
-                {submission.mobileNumber}
-              </span>
-            </div>
-            <div className="p-4 flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
-                Submitted At
-              </span>
-              <span className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                <Calendar className="h-3.5 w-3.5 text-[#2f328e]/60" />
-                {formatToProjectDateTime(submission.createdAt)}
-              </span>
+                {isAlertExpanded ? (
+                  <>
+                    <ChevronUp className="w-4 h-4 mr-1" /> Hide
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-4 h-4 mr-1" /> View All
+                  </>
+                )}
+              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        )}
 
-      {/* 2. Validation Errors - Alert Style */}
-      {submission.formErrors && submission.formErrors.length > 0 && (
-        <Card className="shadow-sm border-red-100 bg-red-50/10">
-          <CardHeader className="py-2 px-4 border-b border-red-50 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-[11px] font-bold text-red-600 flex items-center gap-2 uppercase tracking-tight">
-              <AlertCircle className="h-3.5 w-3.5" /> Validation Errors (
-              {submission.formErrors.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3">
-            <div className="max-h-[150px] overflow-y-auto space-y-2 custom-scrollbar">
-              {submission.formErrors.map((err) => (
-                <div
-                  key={err.id}
-                  className="flex items-start gap-2 text-xs text-red-600 font-medium"
-                >
-                  <div className="mt-1 h-1 w-1 rounded-full bg-red-500 shrink-0" />
-                  <span>{err.errorMessage}</span>
-                </div>
-              ))}
+        {/* --- DYNAMIC GRID LAYOUT --- */}
+        <div className="flex-1 flex gap-4 overflow-hidden min-h-0">
+          {/* LEFT COLUMN: Takes full width if screenshots are empty */}
+          <Card
+            className={cn(
+              "flex flex-col border-none shadow-sm rounded-xl overflow-hidden bg-white transition-all duration-300",
+              screenshots.length > 0 ? "flex-[0.9]" : "flex-1",
+            )}
+          >
+            <div className="bg-gray-50/80 px-4 py-3 border-b flex justify-between items-center">
+              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                Form Responses
+              </span>
+              <span className="text-sm font-bold text-slate-500 flex items-center gap-2">
+                <Phone className="w-4 h-4" /> {submission.mobileNumber}
+              </span>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <CardContent className="flex-1 overflow-y-auto p-5 custom-scrollbar">
+              <div
+                className={cn(
+                  "grid gap-x-6 gap-y-5",
+                  screenshots.length > 0 ? "grid-cols-2" : "grid-cols-3", // Expand columns if more space
+                )}
+              >
+                {submission.formResponses?.map((resp) => {
+                  const isUrl =
+                    resp.value &&
+                    (resp.value.startsWith("http") ||
+                      resp.value.includes("/media/"));
+                  const isFile = resp.field?.fieldType === "FILE" || isUrl;
 
-      {/* 3. Balanced Data Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch pb-6">
-        {/* Responses Column */}
-        <div className="h-full">
-          <Card className="shadow-sm border-gray-100 h-full flex flex-col bg-white">
-            <CardHeader className="py-3 px-4 border-b border-gray-50 bg-gray-50/30">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-[11px] font-bold text-[#2f328e] flex items-center gap-2 uppercase tracking-tight">
-                  <FileText className="h-3.5 w-3.5" /> Form Responses
-                </CardTitle>
-                <span className="text-[10px] font-medium text-gray-400">
-                  {submission.formResponses?.length || 0} Fields
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0 flex-1 overflow-hidden">
-              <div className="divide-y divide-gray-50 max-h-[600px] overflow-y-auto custom-scrollbar">
-                {(submission.formResponses?.length || 0) === 0 ? (
-                  <div className="py-10 text-center">
-                    <p className="text-gray-400 text-xs italic">
-                      No entries found.
-                    </p>
-                  </div>
-                ) : (
-                  submission.formResponses.map((resp) => (
-                    <div
-                      key={resp.id}
-                      className="p-4 hover:bg-gray-50/50 transition-colors"
-                    >
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase">
-                          {resp.field?.label}
-                        </label>
-                        <div className="text-sm">
-                          {resp.field?.fieldType === "FILE" ||
-                          (resp.value && resp.value.startsWith("/share/")) ? (
-                            <div className="mt-1 flex flex-col gap-3">
-                              <a
-                                href={`${ImageBaseURL}${resp.value}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#2f328e]/5 text-[#2f328e] rounded border border-[#2f328e]/10 hover:bg-[#2f328e]/10 transition-all text-xs font-semibold"
-                              >
-                                <FileText className="h-3.5 w-3.5" />
-                                View Document
-                              </a>
-                              {resp.value.match(
-                                /\.(jpg|jpeg|png|gif|webp)$/i,
-                              ) && (
-                                <img
-                                  src={`${ImageBaseURL}${resp.value}`}
-                                  alt="Preview"
-                                  className="max-h-[200px] w-auto rounded border border-gray-200 cursor-pointer shadow-sm"
-                                  onClick={() =>
-                                    window.open(`${ImageBaseURL}${resp.value}`)
-                                  }
-                                />
-                              )}
-                            </div>
-                          ) : (
-                            <div className="p-3 bg-gray-50/50 rounded border border-gray-100 text-gray-700 font-medium whitespace-pre-wrap">
-                              {resp.value || (
-                                <span className="text-gray-300 italic">
-                                  Empty
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                  return (
+                    <div key={resp.id} className="space-y-1.5 group">
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-tight truncate block">
+                        {resp.field?.label}
+                      </label>
+                      <div
+                        className={cn(
+                          "text-sm font-bold px-4 py-3 rounded-lg border border-gray-100 transition-all",
+                          isFile
+                            ? "bg-blue-50/30 border-blue-100 text-blue-700"
+                            : "bg-gray-50/50 text-slate-700 hover:bg-white hover:border-blue-100",
+                        )}
+                      >
+                        {isFile ? (
+                          <div className="flex items-center justify-between gap-2 overflow-hidden">
+                            <span className="truncate">
+                              {resp.value.split("/").pop() || "Attachment"}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-blue-600 hover:bg-blue-100"
+                              onClick={() =>
+                                window.open(
+                                  resp.value.startsWith("http")
+                                    ? resp.value
+                                    : `${ImageBaseURL}${resp.value}`,
+                                )
+                              }
+                            >
+                              <Download className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="truncate">
+                            {resp.value || (
+                              <span className="text-gray-300 font-normal">
+                                --
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
-                  ))
-                )}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Media Column */}
-        <div className="h-full">
-          <Card className="shadow-sm border-gray-100 h-full flex flex-col bg-white">
-            <CardHeader className="py-3 px-4 border-b border-gray-50 bg-gray-50/30">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-[11px] font-bold text-[#2f328e] flex items-center gap-2 uppercase tracking-tight">
-                  <ImageIcon className="h-3.5 w-3.5" /> Media Gallery
-                </CardTitle>
-                <span className="text-[10px] font-medium text-gray-400">
-                  {submission.formMedia?.length || 0} Items
+          {/* RIGHT COLUMN: Only rendered if screenshots exist */}
+          {screenshots.length > 0 && (
+            <Card className="flex-[0.6] flex flex-col border-none shadow-sm rounded-xl overflow-hidden bg-white animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="bg-gray-50/80 px-4 py-3 border-b flex justify-between items-center">
+                <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                  Screenshots ({screenshots.length})
                 </span>
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 flex-1 overflow-y-auto custom-scrollbar">
-              {(submission.formMedia?.length || 0) === 0 ? (
-                <div className="py-20 text-center">
-                  <p className="text-gray-400 text-xs italic">No recordings.</p>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-gray-400">
+                    PAGE {screenshotPage}/{totalScreenshotPages}
+                  </span>
+                  <div className="flex gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7 rounded-md disabled:opacity-30"
+                      onClick={() =>
+                        setScreenshotPage((p) => Math.max(1, p - 1))
+                      }
+                      disabled={screenshotPage === 1}
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7 rounded-md disabled:opacity-30"
+                      onClick={() =>
+                        setScreenshotPage((p) =>
+                          Math.min(totalScreenshotPages, p + 1),
+                        )
+                      }
+                      disabled={screenshotPage === totalScreenshotPages}
+                    >
+                      <ArrowLeft className="w-4 h-4 rotate-180" />
+                    </Button>
+                  </div>
                 </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-                  {submission.formMedia.map((media) => (
+              </div>
+              <CardContent className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-slate-900/5">
+                <div className="grid grid-cols-2 gap-4">
+                  {paginatedScreenshots.map((media) => (
                     <div
                       key={media.id}
-                      className="group relative h-fit bg-gray-50 rounded border border-gray-100 cursor-pointer transition-all hover:border-[#2f328e]/30 shadow-sm"
                       onClick={() =>
-                        window.open(`${ImageBaseURL}${media.fileUrl}`)
+                        setSelectedImg(`${ImageBaseURL}${media.fileUrl}`)
                       }
+                      className="group relative aspect-video bg-white rounded-lg overflow-hidden cursor-pointer border border-gray-100 hover:border-blue-500 transition-all shadow-sm"
                     >
-                      <div className="aspect-video relative overflow-hidden rounded-t-[3px]">
-                        <img
-                          src={`${ImageBaseURL}${media.fileUrl}`}
-                          alt="Evidence"
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-[#2f328e]/10 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
-                          <Eye className="h-5 w-5 text-[#2f328e]" />
-                        </div>
+                      <img
+                        src={`${ImageBaseURL}${media.fileUrl}`}
+                        className="w-full h-full object-cover"
+                        alt="Audit"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <Maximize2 className="w-5 h-5 text-white hover:scale-110 transition-transform" />
                       </div>
-                      <div className="p-1.5 bg-white flex flex-col border-t border-gray-100">
-                        <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">
-                          {formatToProjectDateTime(media.createdAt)}
-                        </span>
+                      <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/50 backdrop-blur-sm rounded text-[10px] font-bold text-white flex items-center gap-1.5">
+                        <Clock className="w-3 h-3 text-blue-300" />{" "}
+                        {formatToProjectDateTime(media.createdAt).split(" ")[1]}
                       </div>
                     </div>
                   ))}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
+
+      {/* 3. Landscape Preview Modal */}
+      <Dialog open={!!selectedImg} onOpenChange={() => setSelectedImg(null)}>
+        <DialogContent className="max-w-[95vw] w-full max-h-[90vh] p-0 bg-white border-none overflow-hidden rounded-2xl flex flex-col shadow-2xl">
+          <div className="px-6 py-4 border-b flex items-center justify-between shrink-0">
+            <span className="text-sm font-black text-gray-500 uppercase">
+              {submission.name} - Evidence
+            </span>
+            <DialogClose className="p-2 hover:bg-gray-100 rounded-full">
+              <X className="w-5 h-5 text-slate-500" />
+            </DialogClose>
+          </div>
+          <div className="flex-1 bg-gray-100/50 flex items-center justify-center p-4 overflow-hidden min-h-[500px]">
+            {selectedImg && (
+              <img
+                src={selectedImg}
+                className="max-w-full max-h-full object-contain rounded shadow-xl bg-white"
+                alt="Preview"
+              />
+            )}
+          </div>
+          <DialogFooter className="bg-white border-t px-6 py-4 flex items-center justify-end gap-3 shrink-0">
+            <Button
+              variant="outline"
+              className="font-bold text-sm h-10 px-6"
+              onClick={() => setSelectedImg(null)}
+            >
+              Close
+            </Button>
+            <Button
+              className="bg-blue-600 text-white font-bold text-sm h-10 px-6"
+              onClick={() => window.open(selectedImg!)}
+            >
+              <Download className="w-4 h-4 mr-2" /> Download Original
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

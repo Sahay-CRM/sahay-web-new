@@ -46,6 +46,7 @@ interface SubmissionDetail {
   updatedAt: string;
   status: string;
   form: {
+    id: string;
     name: string;
     description: string;
   };

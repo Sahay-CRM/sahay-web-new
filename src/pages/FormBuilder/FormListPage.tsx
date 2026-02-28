@@ -65,6 +65,7 @@ export default function FormListPage() {
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "name", label: "Form Name", visible: true },
+    { key: "description", label: "Description", visible: true },
     { key: "visibility", label: "Visibility", visible: true },
     { key: "statusLabel", label: "Status", visible: true },
     { key: "notificationEmail", label: "Notification Email", visible: true },

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+// import { Card } from "@/components/ui/card";
+// import { Textarea } from "@/components/ui/textarea";
 import { QuestionCard } from "./QuestionCard";
 // import { FloatingToolbar } from './FloatingToolbar';
 
@@ -35,7 +35,7 @@ interface QuestionsTabProps {
 
 export const QuestionsTab: React.FC<QuestionsTabProps> = ({
   form,
-  updateDescription,
+  // updateDescription,
   updateQuestion,
   deleteQuestion,
   duplicateQuestion,
@@ -92,12 +92,12 @@ export const QuestionsTab: React.FC<QuestionsTabProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto py-3 px-4 form-container relative">
-      <Card
+      {/* <Card
         id="title-card"
         className="p-4 mb-3 border-t-4 border-t-[#2f328e] rounded-lg shadow-sm"
         onClick={() => setActiveQuestionId(null)}
-      >
-        <div className="space-y-4">
+      > */}
+      {/* <div className="space-y-4">
           <h1 className="text-3xl font-normal py-1 px-0 text-gray-800 min-h-[44px] flex items-center outline-none">
             {form.name || "Untitled form"}
           </h1>
@@ -109,8 +109,8 @@ export const QuestionsTab: React.FC<QuestionsTabProps> = ({
             className="text-sm border-none border-b border-transparent hover:border-b-gray-200 focus:border-b-[#2f328e] bg-transparent rounded-none px-0 py-1 min-h-[40px] resize-none focus-visible:ring-0 transition-colors"
             placeholder="Form description"
           />
-        </div>
-      </Card>
+        </div> */}
+      {/* </Card> */}
 
       {/* <FloatingToolbar
                 onAddQuestion={() => addQuestion(activeQuestionId || undefined)}

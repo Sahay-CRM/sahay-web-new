@@ -124,6 +124,7 @@ interface SortableKpiRowProps {
   disabled?: boolean;
   isDragging?: boolean;
   showDragHandle?: boolean;
+  isMurgeKpi?: boolean;
   getFormattedValue: (
     validationType: string,
     value1: string | number | null,
@@ -143,6 +144,7 @@ function SortableKpiRow({
   selectedPeriod,
   // onRowClick,
   graphClick,
+  isMurgeKpi,
 }: SortableKpiRowProps) {
   const {
     attributes,
@@ -169,6 +171,7 @@ function SortableKpiRow({
         isDragging ? "pointer-events-none" : "",
         isSortableDragging ? "z-10" : "",
         "hover:outline cursor-pointer hover:outline-primary hover:outline-offset-[-1px]",
+        isMurgeKpi ? "bg-gray-100/80" : "",
       )}
       {...attributes}
       // onClick={() => {
@@ -1571,6 +1574,7 @@ export default function UpdatedKpiTable() {
                             selectedPeriod={selectedPeriod}
                             // onRowClick={handleRowClick}
                             graphClick={(id: string) => handleGraphClick(id)}
+                            isMurgeKpi={kpi?.isMurgeKpi}
                           />
                         ))}
                       </React.Fragment>
@@ -1647,7 +1651,10 @@ export default function UpdatedKpiTable() {
                             );
                           }
                           return (
-                            <tr key={kpi.kpiId} className="h-[50px]">
+                            <tr
+                              key={kpi.kpiId}
+                              className={`h-[50px] ${kpi.isMurgeKpi ? "bg-gray-100/80" : ""}`}
+                            >
                               {headers.map((_, colIdx) => {
                                 const cell = dataRow?.[colIdx];
                                 const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;

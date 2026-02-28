@@ -62,6 +62,7 @@ const FormPreviewPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+  const [isScreenActive, setIsScreenActive] = useState(false);
   const [submissionReason, setSubmissionReason] = useState<{
     code: string;
     message: string;
@@ -72,10 +73,20 @@ const FormPreviewPage = () => {
     null,
   );
   const tokenRef = useRef("");
+  const nameRef = useRef("");
+  const mobileRef = useRef("");
 
   useEffect(() => {
     tokenRef.current = submissionToken;
   }, [submissionToken]);
+
+  useEffect(() => {
+    nameRef.current = verifiedName;
+  }, [verifiedName]);
+
+  useEffect(() => {
+    mobileRef.current = verifiedMobile;
+  }, [verifiedMobile]);
 
   const { mutate: sendOtp, isPending: isSendingOtp } = useFormSendOtp();
   const { mutate: verifyOtp, isPending: isVerifyingOtp } = useFormVerifyOtp();
@@ -98,6 +109,62 @@ const FormPreviewPage = () => {
       });
     },
     [],
+  );
+
+  // ── Auto Screenshot using getDisplayMedia ──────────────────────────────────
+  const stopScreenShare = useCallback(() => {
+    if (screenshotIntervalRef.current) {
+      clearInterval(screenshotIntervalRef.current);
+      screenshotIntervalRef.current = null;
+    }
+    if (displayStreamRef.current) {
+      displayStreamRef.current.getTracks().forEach((track) => track.stop());
+      displayStreamRef.current = null;
+    }
+    setIsScreenActive(false);
+  }, []);
+
+  const captureAndUploadScreenshot = useCallback(
+    async (formId: string) => {
+      const stream = displayStreamRef.current;
+      if (!stream) return;
+      try {
+        const track = stream.getVideoTracks()[0];
+        if (!track || track.readyState !== "live") return;
+        const ImageCaptureConstructor = (
+          window as unknown as {
+            ImageCapture: new (track: MediaStreamTrack) => {
+              grabFrame: () => Promise<ImageBitmap>;
+            };
+          }
+        ).ImageCapture;
+        const imgCapture = new ImageCaptureConstructor(track);
+        const bitmap = await imgCapture.grabFrame();
+        const canvas = document.createElement("canvas");
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        canvas.getContext("2d")?.drawImage(bitmap, 0, 0);
+        canvas.toBlob(
+          async (blob) => {
+            if (!blob) return;
+            const filename = `screenshot-${Date.now()}.jpg`;
+            await uploadFormFile({
+              file: blob,
+              fileName: filename,
+              mobileNumber: verifiedMobile,
+              fileType: "4010",
+              refId: formId,
+              token: tokenRef.current,
+            }).catch(() => {});
+          },
+          "image/jpeg",
+          0.8,
+        );
+      } catch {
+        /* silent */
+      }
+    },
+    [uploadFormFile, verifiedMobile],
   );
 
   const handleSubmit = useCallback(
@@ -145,7 +212,7 @@ const FormPreviewPage = () => {
 
         fileFields.forEach(([, value]) => {
           const files = value instanceof FileList ? Array.from(value) : [value];
-          files.forEach((f) => {
+          files.forEach((f: File) => {
             const filename = f.name || `file-${Date.now()}`;
             const fileObj = new File([f], filename, { type: f.type });
             uploadData.append("file", fileObj);
@@ -189,8 +256,9 @@ const FormPreviewPage = () => {
 
       // Add non-file responses (and ensure they are valid strings/arrays, not serialization artifacts like {})
       const fileFieldIds = new Set(
-        form.fields?.filter((f) => f.fieldType === "FILE").map((f) => f.id) ||
-          [],
+        form.fields
+          ?.filter((f: Question) => f.fieldType === "FILE")
+          .map((f: Question) => f.id) || [],
       );
 
       Object.entries(responses).forEach(([fieldId, value]) => {
@@ -205,7 +273,7 @@ const FormPreviewPage = () => {
         }
       });
 
-      // Final screenshot on submit (before sending responses)
+      // Final screenshot on submit
       if (displayStreamRef.current && id) {
         try {
           const track = displayStreamRef.current.getVideoTracks()[0];
@@ -231,7 +299,7 @@ const FormPreviewPage = () => {
                     await uploadFormFile({
                       file: blob,
                       fileName: filename,
-                      mobileNumber: verifiedMobile,
+                      mobileNumber: mobileRef.current,
                       fileType: "4010",
                       refId: form?.id || id || "",
                       token: tokenRef.current,
@@ -253,39 +321,31 @@ const FormPreviewPage = () => {
       submitForm(
         {
           formId: id,
-          mobileNumber: verifiedMobile,
-          name: verifiedName,
+          mobileNumber: mobileRef.current,
+          name: nameRef.current,
           responses: textResponses,
-          token: submissionToken,
+          token: tokenRef.current,
           errorCode,
           errorMessage,
         },
         {
           onSuccess: () => {
             setIsSubmitted(true);
+            stopScreenShare(); // Stop sharing and captures immediately on success
             // Clear session and data on success
-            if (id && verifiedMobile) {
+            if (id && mobileRef.current) {
               localStorage.removeItem(`form_session_${id}`);
-              localStorage.removeItem(`form_data_${id}_${verifiedMobile}`);
-              localStorage.removeItem(`form_timer_${id}_${verifiedMobile}`);
+              localStorage.removeItem(`form_data_${id}_${mobileRef.current}`);
+              localStorage.removeItem(`form_timer_${id}_${mobileRef.current}`);
               localStorage.removeItem(
-                `form_restrictions_${id}_${verifiedMobile}`,
+                `form_restrictions_${id}_${mobileRef.current}`,
               );
             }
           },
         },
       );
     },
-    [
-      form,
-      id,
-      responses,
-      submitForm,
-      verifiedMobile,
-      verifiedName,
-      submissionToken,
-      uploadFormFile,
-    ],
+    [form, id, responses, submitForm, uploadFormFile, stopScreenShare],
   );
   // API returns formSettings as [{id, key, value}, ...] — convert to flat object
   const formSettings: FormSettings = useMemo(() => {
@@ -312,16 +372,30 @@ const FormPreviewPage = () => {
     (reason?: { code: string; message: string }) => {
       if (reason) setSubmissionReason(reason);
       handleSubmit(true, reason?.code, reason?.message); // force=true skips required-field validation
-      // Clear session on auto-submit as well
-      if (id && verifiedMobile) {
-        localStorage.removeItem(`form_session_${id}`);
-        localStorage.removeItem(`form_data_${id}_${verifiedMobile}`);
-        localStorage.removeItem(`form_timer_${id}_${verifiedMobile}`);
-        localStorage.removeItem(`form_restrictions_${id}_${verifiedMobile}`);
-      }
     },
-    [handleSubmit, id, verifiedMobile],
+    [handleSubmit],
   );
+
+  const getRules = useCallback(() => {
+    const rules = [];
+    const s = formSettings;
+    if (s.tabSwitchDetection)
+      rules.push(`Max ${s.maxTabSwitches} tab switches allowed`);
+    if (s.focusLossDetection)
+      rules.push(`Max ${s.maxFocusLoss} window focus losses`);
+    if (s.fullscreenMonitoring) rules.push("Fullscreen mode monitoring");
+    if (s.cameraPermissionCheck) rules.push("Camera proctoring active");
+    if (s.microphonePermissionAwareness)
+      rules.push("Microphone proctoring active");
+    if (s.copyProtection) rules.push("Copying text is disabled");
+    if (s.pasteProtection) rules.push("Pasting text is disabled");
+    if (s.rightClickProtection) rules.push("Right-click is restricted");
+    if (s.screenshotProtection) rules.push("Screenshots may be captured");
+    if (s.pageRefreshWarning) rules.push("Page refresh is guarded");
+    if (s.totalTimerEnabled)
+      rules.push(`Total time limit: ${s.totalTimerMinutes} mins`);
+    return rules;
+  }, [formSettings]);
   // Initialize timer from properly converted formSettings and LocalStorage
   useEffect(() => {
     if (
@@ -401,49 +475,43 @@ const FormPreviewPage = () => {
     return () => clearInterval(interval);
   }, [hasStartedTimer, timeRemaining, isSubmitted, onAutoSubmit]);
 
-  // ── Auto Screenshot using getDisplayMedia ──────────────────────────────────
-  const captureAndUploadScreenshot = useCallback(
-    async (formId: string) => {
-      const stream = displayStreamRef.current;
-      if (!stream) return;
-      try {
-        const track = stream.getVideoTracks()[0];
-        if (!track || track.readyState !== "live") return;
-        const ImageCaptureConstructor = (
-          window as unknown as {
-            ImageCapture: new (track: MediaStreamTrack) => {
-              grabFrame: () => Promise<ImageBitmap>;
-            };
-          }
-        ).ImageCapture;
-        const imgCapture = new ImageCaptureConstructor(track);
-        const bitmap = await imgCapture.grabFrame();
-        const canvas = document.createElement("canvas");
-        canvas.width = bitmap.width;
-        canvas.height = bitmap.height;
-        canvas.getContext("2d")?.drawImage(bitmap, 0, 0);
-        canvas.toBlob(
-          async (blob) => {
-            if (!blob) return;
-            const filename = `screenshot-${Date.now()}.jpg`;
-            await uploadFormFile({
-              file: blob,
-              fileName: filename,
-              mobileNumber: verifiedMobile,
-              fileType: "4010",
-              refId: formId,
-              token: tokenRef.current,
-            }).catch(() => {});
-          },
-          "image/jpeg",
-          0.8,
-        );
-      } catch {
-        /* silent */
-      }
-    },
-    [uploadFormFile, verifiedMobile],
-  );
+  // Monitor screen sharing integrity
+  useEffect(() => {
+    if (
+      accessGranted &&
+      !isSubmitted &&
+      formSettings.autoScreenshotCapture &&
+      !isScreenActive
+    ) {
+      // User manually stopped sharing while form was active
+      setAccessGranted(false);
+      const rules = getRules();
+      let targetStep = 0;
+      if (rules.length > 0) targetStep++;
+      if (
+        formSettings.cameraPermissionCheck ||
+        formSettings.microphonePermissionAwareness
+      )
+        targetStep++;
+      setOnboardingStep(targetStep);
+      // eslint-disable-next-line no-console
+      console.warn("Screen proctoring was interrupted. Re-enabling required.");
+    }
+  }, [
+    isScreenActive,
+    accessGranted,
+    isSubmitted,
+    formSettings.autoScreenshotCapture,
+    formSettings.cameraPermissionCheck,
+    formSettings.microphonePermissionAwareness,
+    getRules,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      stopScreenShare();
+    };
+  }, [stopScreenShare]);
 
   // Start screen-share + periodic captures when form is active and feature is on
   const startScreenShare = useCallback(async () => {
@@ -457,9 +525,7 @@ const FormPreviewPage = () => {
       } as DisplayMediaStreamOptions & { preferCurrentTab?: boolean });
 
       // Check if user selected a tab
-      const label = stream.getVideoTracks()[0].label;
-      // eslint-disable-next-line no-console
-      console.log("Stream label:", label);
+      // const label = stream.getVideoTracks()[0].label;
 
       displayStreamRef.current = stream;
 
@@ -476,11 +542,11 @@ const FormPreviewPage = () => {
         captureAndUploadScreenshot(id);
       }, intervalMs);
 
+      setIsScreenActive(true);
+
       // If user stops sharing manually, cleanup
       stream.getVideoTracks()[0]?.addEventListener("ended", () => {
-        if (screenshotIntervalRef.current)
-          clearInterval(screenshotIntervalRef.current);
-        displayStreamRef.current = null;
+        stopScreenShare();
       });
       return true;
     } catch (err) {
@@ -492,16 +558,8 @@ const FormPreviewPage = () => {
     id,
     formSettings.autoScreenshotIntervalMinutes,
     captureAndUploadScreenshot,
+    stopScreenShare,
   ]);
-
-  useEffect(() => {
-    return () => {
-      if (screenshotIntervalRef.current)
-        clearInterval(screenshotIntervalRef.current);
-      displayStreamRef.current?.getTracks().forEach((t) => t.stop());
-      displayStreamRef.current = null;
-    };
-  }, []);
 
   const [statusSentOtp, setStatusSentOtp] = useState(false);
 
@@ -524,7 +582,7 @@ const FormPreviewPage = () => {
   // ── Session Recovery ──
   const hasRecovered = useRef(false);
   useEffect(() => {
-    if (!id || hasRecovered.current) return;
+    if (!id || !form || hasRecovered.current) return;
     const sessionKey = `form_session_${id}`;
     const stored = localStorage.getItem(sessionKey);
     if (stored) {
@@ -540,22 +598,30 @@ const FormPreviewPage = () => {
           setVerifiedName(name);
           setVerifiedMobile(mobile);
           setIsVerified(true);
+
           if (storedAccess) {
-            setAccessGranted(true);
-            setHasStartedTimer(true);
-            // Refresh counts/restrictions
-            if (id && mobile) {
-              const restrictionsKey = `form_restrictions_${id}_${mobile}`;
-              const storedRest = localStorage.getItem(restrictionsKey);
-              if (storedRest) {
-                try {
-                  // This is just to ensure the UI updates if the hook already initialized
-                  // useFormRestrictions handles its own hydration usually, but we help it here
-                } catch {
-                  /* silent */
-                }
+            const needsCamera = !!formSettings.cameraPermissionCheck;
+            const needsMic = !!formSettings.microphonePermissionAwareness;
+            const needsScreen = !!formSettings.autoScreenshotCapture;
+
+            if (needsCamera || needsMic || needsScreen) {
+              // If proctoring is enabled, we MUST re-request permissions on refresh.
+              // Redirect to the first required proctoring step.
+              const rules = getRules();
+              let targetStep = 0;
+              if (rules.length > 0) targetStep++; // skip rules, go to hardware/screen
+
+              if (needsCamera || needsMic) {
+                setOnboardingStep(targetStep);
+              } else if (needsScreen) {
+                if (needsCamera || needsMic) targetStep++;
+                setOnboardingStep(targetStep);
               }
+              setAccessGranted(false);
+            } else {
+              setAccessGranted(true);
             }
+            setHasStartedTimer(true);
           }
 
           // Sync to OTP form methods just in case
@@ -566,7 +632,7 @@ const FormPreviewPage = () => {
       }
     }
     hasRecovered.current = true;
-  }, [id, otpFormMethods]);
+  }, [id, form, otpFormMethods, formSettings, getRules]);
 
   // ── Data Persistence ──
   useEffect(() => {
@@ -805,27 +871,6 @@ const FormPreviewPage = () => {
     }
   };
 
-  const getRules = () => {
-    const rules = [];
-    const s = formSettings;
-    if (s.tabSwitchDetection)
-      rules.push(`Max ${s.maxTabSwitches} tab switches allowed`);
-    if (s.focusLossDetection)
-      rules.push(`Max ${s.maxFocusLoss} window focus losses`);
-    if (s.fullscreenMonitoring) rules.push("Fullscreen mode monitoring");
-    if (s.cameraPermissionCheck) rules.push("Camera proctoring active");
-    if (s.microphonePermissionAwareness)
-      rules.push("Microphone proctoring active");
-    if (s.copyProtection) rules.push("Copying text is disabled");
-    if (s.pasteProtection) rules.push("Pasting text is disabled");
-    if (s.rightClickProtection) rules.push("Right-click is restricted");
-    if (s.screenshotProtection) rules.push("Screenshots may be captured");
-    if (s.pageRefreshWarning) rules.push("Page refresh is guarded");
-    if (s.totalTimerEnabled)
-      rules.push(`Total time limit: ${s.totalTimerMinutes} mins`);
-    return rules;
-  };
-
   const formatTime = (seconds: number | null) => {
     if (seconds === null) return "--:--";
     const mins = Math.floor(seconds / 60);
@@ -870,7 +915,7 @@ const FormPreviewPage = () => {
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-[#f0ebf8] flex flex-col items-center justify-center p-4">
-        <div className="bg-white max-w-md w-full rounded-2xl shadow-lg p-10 text-center space-y-6 animate-in fade-in zoom-in duration-500">
+        <div className="bg-white max-w-md w-full rounded-2xl shadow-lg p-10 text-center space-y-6">
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto">
             <Check className="h-10 w-10 text-green-600" />
           </div>
@@ -931,7 +976,7 @@ const FormPreviewPage = () => {
                     .mirror { transform: scaleX(-1); }
                 `}</style>
 
-        <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
+        <div className="w-full max-w-md">
           <div className="bg-white p-8 sm:p-10 rounded-2xl shadow-xl border border-gray-100 flex flex-col items-center">
             <div className="w-16 h-16 rounded-full bg-[#2f328e]/10 flex items-center justify-center mb-6">
               <ShieldCheck className="w-8 h-8 text-[#2f328e]" />
@@ -972,7 +1017,7 @@ const FormPreviewPage = () => {
                         <input
                           placeholder="Enter your full name"
                           disabled={statusSentOtp}
-                          className="w-full h-12 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:ring-2 focus:ring-[#2f328e]/20 focus:border-[#2f328e] outline-none transition-all disabled:opacity-60"
+                          className="w-full h-12 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:border-[#2f328e] outline-none disabled:opacity-60"
                           {...register("name", {
                             required: "Please enter your name",
                           })}
@@ -998,7 +1043,7 @@ const FormPreviewPage = () => {
                             maxLength={10}
                             placeholder="Enter number"
                             disabled={statusSentOtp}
-                            className="flex-1 h-12 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:ring-2 focus:ring-[#2f328e]/20 focus:border-[#2f328e] outline-none transition-all disabled:opacity-60"
+                            className="flex-1 h-12 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:border-[#2f328e] outline-none disabled:opacity-60"
                             {...register("mobile", {
                               required: "Enter mobile number",
                               pattern: {
@@ -1017,7 +1062,7 @@ const FormPreviewPage = () => {
 
                       {statusSentOtp && (
                         <div className="space-y-3 pt-2">
-                          <div className="flex justify-center">
+                          <div className="w-full items-center">
                             <InputOTP
                               maxLength={4}
                               pattern="^[0-9]+$"
@@ -1026,21 +1071,23 @@ const FormPreviewPage = () => {
                               }
                               className="w-full"
                             >
-                              <InputOTPGroup className="flex gap-3 justify-center">
-                                {[...Array(4)].map((_, i) => (
+                              <InputOTPGroup className="flex items-center justify-between w-full gap-3 mt-2">
+                                {[0, 1, 2, 3].map((i) => (
                                   <InputOTPSlot
                                     key={i}
                                     index={i}
-                                    className="w-12 h-12 text-lg text-center border border-gray-200 rounded-lg focus:border-[#2f328e] focus:ring-0 outline-none bg-gray-50"
+                                    className="flex-1 h-12 text-xl text-center border border-gray-200 rounded-md focus:border-[#2f328e] outline-none bg-gray-50 !transition-none"
                                   />
                                 ))}
                               </InputOTPGroup>
                             </InputOTP>
                           </div>
+
                           <input
                             type="hidden"
                             {...register("otp", { required: "Enter OTP" })}
                           />
+
                           {errors.otp && (
                             <p className="text-red-500 text-[10px] text-center">
                               {errors.otp.message as string}
@@ -1052,7 +1099,7 @@ const FormPreviewPage = () => {
 
                     <Button
                       type="submit"
-                      className="w-full h-12 text-sm font-bold bg-[#2f328e] hover:bg-[#1e205e] text-white rounded-xl shadow-lg shadow-[#2f328e]/10 transition-all flex items-center justify-center gap-2"
+                      className="w-full h-12 text-sm font-bold bg-[#2f328e] hover:bg-[#1e205e] text-white rounded-xl shadow-lg shadow-[#2f328e]/10 flex items-center justify-center gap-2"
                       disabled={
                         (!statusSentOtp && isSendingOtp) ||
                         (statusSentOtp && isVerifyingOtp)
@@ -1159,7 +1206,7 @@ const FormPreviewPage = () => {
                           </div>
                           {(hwStatus.camera === "denied" ||
                             hwStatus.mic === "denied") && (
-                            <p className="text-[10px] text-red-500 font-bold bg-red-50 p-2 rounded-lg border border-red-100 text-center animate-in fade-in slide-in-from-top-1">
+                            <p className="text-[10px] text-red-500 font-bold bg-red-50 p-2 rounded-lg border border-red-100 text-center">
                               Permissions Denied. Please allow camera/mic access
                               from your browser address bar and click again.
                             </p>
@@ -1259,13 +1306,14 @@ const FormPreviewPage = () => {
               <ShieldCheck className="w-5 h-5" />
               {form.name}
             </h2>
+            <p className="text-[14px] text-gray-500">{form.description}</p>
             <div className="flex items-center gap-3 mt-0.5">
               {counts.tab_switch > 0 && (
                 <span className="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full font-bold">
                   {counts.tab_switch} TAB SWITCHES
                 </span>
               )}
-              {hwStatus.camera === "granted" && (
+              {(hwStatus.camera === "granted" || isScreenActive) && (
                 <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
                   <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />{" "}
                   SECURE SESSION ACTIVE
@@ -1281,15 +1329,15 @@ const FormPreviewPage = () => {
           {formSettings.totalTimerEnabled && (
             <div
               className={cn(
-                "flex flex-col items-center justify-center min-w-[150px] transition-all duration-300",
-                timeRemaining !== null && timeRemaining < 60 ? "scale-110" : "",
+                "flex flex-col items-center justify-center min-w-[150px]",
+                timeRemaining !== null && timeRemaining < 60 ? "scale-100" : "",
               )}
             >
               <div
                 className={cn(
-                  "flex items-center gap-3 px-6 py-3 rounded-2xl border-2 transition-all duration-500 shadow-sm",
+                  "flex items-center gap-3 px-6 py-3 rounded-2xl border-2 shadow-sm",
                   timeRemaining !== null && timeRemaining < 120
-                    ? "bg-red-50 border-red-200 text-red-600 animate-pulse"
+                    ? "bg-red-50 border-red-200 text-red-600"
                     : "bg-[#2f328e]/5 border-[#2f328e]/10 text-[#2f328e]",
                 )}
               >
@@ -1351,7 +1399,7 @@ const FormPreviewPage = () => {
         return (
           <div className="bg-orange-50 border-b border-orange-200 px-6 py-2 flex items-center justify-between z-40">
             <div className="flex items-center gap-3">
-              <AlertCircle className="w-4 h-4 text-orange-600 animate-pulse" />
+              <AlertCircle className="w-4 h-4 text-orange-600" />
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-black text-orange-700 uppercase tracking-wider">
                   Proctoring Warning:
@@ -1373,9 +1421,9 @@ const FormPreviewPage = () => {
         );
       })()}
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-auto">
         {/* Rules & User Sidebar (Strictly Fixed) */}
-        <div className="w-[280px] bg-white border-r border-gray-200 hidden lg:flex flex-col p-4 space-y-5 shadow-[1px_0_5px_rgba(0,0,0,0.02)] overflow-hidden shrink-0">
+        <div className="w-[300px] bg-white border-r border-gray-200 hidden lg:flex flex-col p-4 space-y-5 shadow-[1px_0_5px_rgba(0,0,0,0.02)] overflow-y-auto shrink-0 custom-scrollbar">
           {/* User Profile */}
           <div className="space-y-4">
             <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
@@ -1395,38 +1443,43 @@ const FormPreviewPage = () => {
               </div>
             </div>
           </div>
-
-          {/* Proctored Rules */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                Session Rules
-              </h3>
-              <div className="flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-full">
-                <Check className="w-2.5 h-2.5 text-green-600" />
-                <span className="text-[9px] text-green-600 font-bold uppercase">
-                  Active
-                </span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="space-y-3">
-                <div className="bg-slate-50 p-4 rounded-xl border border-gray-100 space-y-3">
-                  {getRules().map((rule, i) => (
-                    <div key={i} className="flex items-start gap-3 group">
-                      <div className="mt-2 w-1.5 h-1.5 rounded-full bg-[#2f328e]/40 group-hover:bg-[#2f328e] transition-colors" />
-                      <p className="text-[13px] text-gray-700 font-semibold leading-relaxed">
-                        {rule}
-                      </p>
-                    </div>
-                  ))}
+          {getRules()?.length > 0 && (
+            <>
+              {/* Proctored Rules */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    Session Rules
+                  </h3>
+                  <div className="flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-full">
+                    <Check className="w-2.5 h-2.5 text-green-600" />
+                    <span className="text-[9px] text-green-600 font-bold uppercase">
+                      Active
+                    </span>
+                  </div>
                 </div>
-                <p className="text-[11px] text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-100 font-bold leading-relaxed text-center">
-                  Warning: Any violation will result in auto-submission.
-                </p>
+
+                <div className="space-y-2">
+                  <div className="space-y-3">
+                    <div className="bg-slate-50 p-4 rounded-xl border border-gray-100 space-y-3">
+                      {getRules().map((rule, i) => (
+                        <div key={i} className="flex items-start gap-3 group">
+                          <div className="mt-2 w-1.5 h-1.5 rounded-full bg-[#2f328e]/40 group-hover:bg-[#2f328e]" />
+                          <p className="text-[13px] text-gray-700 font-semibold leading-relaxed">
+                            {rule}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <p className="text-[11px] text-orange-600 bg-orange-50 p-3 rounded-lg border border-orange-100 font-bold leading-relaxed text-center">
+                      Warning: Any violation will result in auto-submission.
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
 
           {/* Progress Stats */}
           {formSettings.showProgressBar && (
@@ -1448,7 +1501,7 @@ const FormPreviewPage = () => {
                 </div>
                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#2f328e] transition-all duration-500"
+                    className="h-full bg-[#2f328e]"
                     style={{
                       width: `${(Object.keys(responses).length / (form.fields?.length || 1)) * 100}%`,
                     }}
@@ -1492,7 +1545,7 @@ const FormPreviewPage = () => {
                     key={question.id}
                     className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm"
                   >
-                    <div className="text-[13px] font-bold text-gray-800 mb-4 flex gap-1.5 leading-tight group-hover:text-black transition-colors">
+                    <div className="text-[13px]  font-bold text-gray-800 mb-4 flex gap-1.5 leading-tight group-hover:text-black">
                       {question.label}
                       {question.isRequired && (
                         <span className="text-red-500 font-bold">*</span>
@@ -1520,7 +1573,7 @@ const FormPreviewPage = () => {
                                 }
                               }}
                               className={cn(
-                                "flex items-center gap-2 p-2 rounded-md border transition-all cursor-pointer",
+                                "flex items-center gap-2 p-2 rounded-md border cursor-pointer",
                                 (
                                   question.fieldType === "CHECKBOX"
                                     ? (
@@ -1535,7 +1588,7 @@ const FormPreviewPage = () => {
                             >
                               <div
                                 className={cn(
-                                  "w-4 h-4 rounded-full border flex items-center justify-center transition-all",
+                                  "w-4 h-4 rounded-full border flex items-center justify-center",
                                   (
                                     question.fieldType === "CHECKBOX"
                                       ? (
@@ -1581,7 +1634,7 @@ const FormPreviewPage = () => {
                           onChange={(e) =>
                             updateResponse(question.id, e.target.value)
                           }
-                          className="w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:ring-1 focus:ring-[#2f328e] focus:bg-white focus:border-[#2f328e] outline-none transition-all placeholder:text-gray-400 font-medium"
+                          className="w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:ring-1 focus:ring-[#2f328e] focus:bg-white focus:border-[#2f328e] outline-none placeholder:text-gray-400 font-medium"
                         />
                       )}
 
@@ -1597,7 +1650,7 @@ const FormPreviewPage = () => {
                           onChange={(e) =>
                             updateResponse(question.id, e.target.value)
                           }
-                          className="w-full min-h-[100px] bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-[#2f328e] focus:bg-white focus:border-[#2f328e] outline-none transition-all placeholder:text-gray-400 font-medium resize-none"
+                          className="w-full min-h-[100px] bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-[#2f328e] focus:bg-white focus:border-[#2f328e] outline-none placeholder:text-gray-400 font-medium resize-none"
                         />
                       )}
 
@@ -1610,7 +1663,7 @@ const FormPreviewPage = () => {
                           onChange={(e) =>
                             updateResponse(question.id, e.target.value)
                           }
-                          className="w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:ring-1 focus:ring-[#2f328e] focus:bg-white focus:border-[#2f328e] outline-none transition-all font-medium"
+                          className="w-full h-11 bg-white border border-gray-200 rounded-xl px-4 text-sm focus:ring-1 focus:ring-[#2f328e] focus:bg-white focus:border-[#2f328e] outline-none font-medium"
                         />
                       )}
 
@@ -1621,7 +1674,7 @@ const FormPreviewPage = () => {
                               .getElementById(`file-${question.id}`)
                               ?.click()
                           }
-                          className="w-full py-4 px-4 border border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:bg-gray-50 transition-all group"
+                          className="w-full py-4 px-4 border border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:bg-gray-50 group"
                         >
                           <input
                             type="file"
@@ -1646,7 +1699,7 @@ const FormPreviewPage = () => {
                     </div>
 
                     {fieldErrors[question.id] && (
-                      <p className="text-[10px] text-red-500 mt-3 flex items-center gap-1.5 font-bold animate-in fade-in">
+                      <p className="text-[10px] text-red-500 mt-3 flex items-center gap-1.5 font-bold">
                         <AlertCircle className="w-3 h-3" />{" "}
                         {fieldErrors[question.id]}
                       </p>

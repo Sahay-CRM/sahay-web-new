@@ -15,7 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X, Loader2, ArrowLeft } from "lucide-react";
+import { X, Loader2, ArrowLeft, FileText, Send } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Parse API settings array → flat object
 function parseApiSettings(raw: unknown): Partial<FormSettings> {
@@ -101,6 +102,23 @@ export default function FormSettingsPage() {
     });
   };
 
+  const onToggleActive = () => {
+    if (!id) return;
+    const newActive = !isActive;
+    setValue("isActive", newActive);
+    updateForm({
+      id,
+      data: {
+        name: formName,
+        isActive: newActive,
+        visibility,
+        notificationEmail,
+        mobileNumbers,
+        formSettings: settings,
+      } as Partial<FormDetails>,
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -131,13 +149,37 @@ export default function FormSettingsPage() {
             <p className="text-xs text-gray-500">Settings</p>
           </div>
         </div>
-        <Button
-          onClick={handleSave}
-          className="bg-[#2f328e] hover:bg-[#1a1c5d] text-white"
-          disabled={isUpdating}
-        >
-          {isUpdating ? "Saving..." : "Save Settings"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            className={cn(
+              "px-5 h-8 shadow-sm transition-all flex items-center gap-2",
+              isActive
+                ? "bg-white text-[#2f328e] border border-[#2f328e]/20 hover:bg-[#2f328e]/5"
+                : "bg-[#2f328e] hover:bg-[#1a1c5d] text-white",
+            )}
+            onClick={onToggleActive}
+          >
+            {isActive ? (
+              <>
+                <FileText className="h-4 w-4" />
+                Draft
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                Published
+              </>
+            )}
+          </Button>
+
+          <Button
+            onClick={handleSave}
+            className="bg-[#2f328e] hover:bg-[#1a1c5d] text-white h-8"
+            disabled={isUpdating}
+          >
+            {isUpdating ? "Saving..." : "Save Settings"}
+          </Button>
+        </div>
       </div>
 
       <div className="max-w-[770px] mx-auto py-2">
@@ -151,19 +193,36 @@ export default function FormSettingsPage() {
                 Core configuration for form visibility and notifications.
               </p>
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
+                {/* <div className="flex items-center justify-between"> */}
+                {/* <div className="space-y-0.5">
                     <Label className="text-sm font-medium">Form Status</Label>
                     <p className="text-xs text-gray-500">
                       Enable or disable the form
                     </p>
-                  </div>
-                  <Switch
-                    checked={isActive}
-                    onCheckedChange={(val) => setValue("isActive", val)}
-                    className="data-[state=checked]:bg-[#2f328e]"
-                  />
-                </div>
+                  </div> */}
+                {/* <Button
+                    size="sm"
+                    className={cn(
+                      "px-5 h-8 shadow-sm transition-all flex items-center gap-2",
+                      isActive
+                        ? "bg-white text-[#2f328e] border border-[#2f328e]/20 hover:bg-[#2f328e]/5"
+                        : "bg-[#2f328e] hover:bg-[#1a1c5d] text-white",
+                    )}
+                    onClick={onToggleActive}
+                  >
+                    {isActive ? (
+                      <>
+                        <FileText className="h-4 w-4" />
+                        Draft
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4" />
+                        Published
+                      </>
+                    )}
+                  </Button> */}
+                {/* </div> */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Visibility</Label>
                   <Select

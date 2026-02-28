@@ -104,7 +104,7 @@ export default function FormResponsesPage() {
                 }
                 className="text-[10px] font-normal"
               >
-                {submission.status.replace(/_/g, " ")}
+                {submission.status?.replace(/_/g, " ")}
               </Badge>
             ),
           }))}

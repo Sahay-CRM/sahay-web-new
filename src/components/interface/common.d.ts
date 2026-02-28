@@ -1075,6 +1075,7 @@ interface Kpi {
   goalValue?: number;
   sequence?: number;
   isSkipDay?: boolean;
+  isMurgeKpi?: boolean;
 }
 
 interface CoreParameterGroup {
@@ -1138,6 +1139,7 @@ interface KpiDataCell {
   matchCount?: number;
   validationPercentage?: number;
   goalValue: string | number;
+  isMurgeKpi?: boolean;
 }
 
 interface KpiType {
