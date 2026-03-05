@@ -63,6 +63,8 @@ const FormPreviewPage = () => {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [isScreenActive, setIsScreenActive] = useState(false);
+  // Set when user selects Tab/Window instead of Entire Screen in the sharing dialog
+  const [screenShareError, setScreenShareError] = useState<string | null>(null);
   const [submissionReason, setSubmissionReason] = useState<{
     code: string;
     message: string;
@@ -75,6 +77,12 @@ const FormPreviewPage = () => {
   const tokenRef = useRef("");
   const nameRef = useRef("");
   const mobileRef = useRef("");
+  // Ref to immediately block screenshot uploads after form submission
+  // (React state updates are async, so ref gives instant access in callbacks)
+  const isSubmittedRef = useRef(false);
+  // Track whether screen share was ever active in this session.
+  // Used to distinguish "never started" (initial mount) from "user stopped it".
+  const wasEverScreenActiveRef = useRef(false);
 
   useEffect(() => {
     tokenRef.current = submissionToken;
@@ -126,6 +134,8 @@ const FormPreviewPage = () => {
 
   const captureAndUploadScreenshot = useCallback(
     async (formId: string) => {
+      // Do not capture if already submitted
+      if (isSubmittedRef.current) return;
       const stream = displayStreamRef.current;
       if (!stream) return;
       try {
@@ -140,13 +150,16 @@ const FormPreviewPage = () => {
         ).ImageCapture;
         const imgCapture = new ImageCaptureConstructor(track);
         const bitmap = await imgCapture.grabFrame();
+        // Double-check after async grabFrame — submission may have happened by now
+        if (isSubmittedRef.current) return;
         const canvas = document.createElement("canvas");
         canvas.width = bitmap.width;
         canvas.height = bitmap.height;
         canvas.getContext("2d")?.drawImage(bitmap, 0, 0);
         canvas.toBlob(
           async (blob) => {
-            if (!blob) return;
+            // Final guard before upload
+            if (!blob || isSubmittedRef.current) return;
             const filename = `screenshot-${Date.now()}.jpg`;
             await uploadFormFile({
               file: blob,
@@ -330,8 +343,11 @@ const FormPreviewPage = () => {
         },
         {
           onSuccess: () => {
+            // Mark as submitted immediately via ref so any pending async
+            // screenshot callbacks (blob toBlob, grabFrame) bail out
+            isSubmittedRef.current = true;
+            stopScreenShare(); // Stop sharing and interval captures immediately
             setIsSubmitted(true);
-            stopScreenShare(); // Stop sharing and captures immediately on success
             // Clear session and data on success
             if (id && mobileRef.current) {
               localStorage.removeItem(`form_session_${id}`);
@@ -368,6 +384,7 @@ const FormPreviewPage = () => {
     }
     return raw as FormSettings;
   }, [form]);
+
   const onAutoSubmit = useCallback(
     (reason?: { code: string; message: string }) => {
       if (reason) setSubmissionReason(reason);
@@ -375,6 +392,18 @@ const FormPreviewPage = () => {
     },
     [handleSubmit],
   );
+
+  const { counts } = useFormRestrictions({
+    formSettings,
+    onAutoSubmit,
+    enabled: accessGranted && !isSubmitted,
+    formId: id,
+    mobileNumber: verifiedMobile,
+  });
+
+  // Ref for tabSwitchDetection so track.ended handler always reads the latest value
+  const tabSwitchDetectionRef = useRef(false);
+  tabSwitchDetectionRef.current = !!formSettings.tabSwitchDetection;
 
   const getRules = useCallback(() => {
     const rules = [];
@@ -475,27 +504,43 @@ const FormPreviewPage = () => {
     return () => clearInterval(interval);
   }, [hasStartedTimer, timeRemaining, isSubmitted, onAutoSubmit]);
 
+  // Track wasEverScreenActive whenever screen becomes active
+  useEffect(() => {
+    if (isScreenActive) {
+      wasEverScreenActiveRef.current = true;
+    }
+  }, [isScreenActive]);
+
   // Monitor screen sharing integrity
   useEffect(() => {
+    // Only trigger re-share prompt if:
+    // 1. Form is active (accessGranted && not submitted)
+    // 2. Auto screenshot is required
+    // 3. Screen WAS previously active but now stopped
+    //    → Prevents false-firing on initial page load (isScreenActive=false before sharing starts)
     if (
       accessGranted &&
       !isSubmitted &&
       formSettings.autoScreenshotCapture &&
-      !isScreenActive
+      !isScreenActive &&
+      wasEverScreenActiveRef.current // ← Only react when screen was active before
     ) {
-      // User manually stopped sharing while form was active
+      // Important: tab switch violation was already counted via enabledRef (synchronous)
+      // BEFORE this state update reaches React. So restoring setAccessGranted(false) is
+      // safe — the count has already been incremented.
       setAccessGranted(false);
+      // Navigate to the screen-share step of onboarding
       const rules = getRules();
       let targetStep = 0;
-      if (rules.length > 0) targetStep++;
+      if (rules.length > 0) targetStep++; // skip rules step
       if (
         formSettings.cameraPermissionCheck ||
         formSettings.microphonePermissionAwareness
       )
-        targetStep++;
+        targetStep++; // skip hardware step
       setOnboardingStep(targetStep);
       // eslint-disable-next-line no-console
-      console.warn("Screen proctoring was interrupted. Re-enabling required.");
+      console.warn("Screen proctoring was interrupted. Re-sharing required.");
     }
   }, [
     isScreenActive,
@@ -517,15 +562,39 @@ const FormPreviewPage = () => {
   const startScreenShare = useCallback(async () => {
     if (!id) return false;
     try {
+      // ─── KEY DESIGN DECISION ────────────────────────────────────────────────
+      // We request the ENTIRE MONITOR (not a specific tab).
+      // When sharing a specific tab with preferCurrentTab:true, Chrome keeps
+      // that tab "visible" for capture → visibilitychange NEVER fires on tab
+      // switch → tab switch detection breaks entirely.
+      //
+      // With full-screen (monitor) sharing:
+      // • visibilitychange fires normally when user switches tabs ✅
+      // • track.ended fires only when user explicitly stops sharing ✅
+      // • Screenshots capture whatever is on screen (better proctoring) ✅
+      // ────────────────────────────────────────────────────────────────────────
       const stream = await navigator.mediaDevices.getDisplayMedia({
         video: {
-          displaySurface: "browser",
+          displaySurface: "monitor", // request full screen
         },
-        preferCurrentTab: true,
-      } as DisplayMediaStreamOptions & { preferCurrentTab?: boolean });
+      });
 
-      // Check if user selected a tab
-      // const label = stream.getVideoTracks()[0].label;
+      // Validate: user MUST share entire screen, not a tab or window.
+      // getSettings().displaySurface returns: "monitor" | "window" | "browser"
+      const chosenSurface = stream
+        .getVideoTracks()[0]
+        ?.getSettings()?.displaySurface;
+      if (chosenSurface && chosenSurface !== "monitor") {
+        // User picked a tab or window — stop tracks and show clear error
+        stream.getTracks().forEach((t) => t.stop());
+        setScreenShareError(
+          chosenSurface === "browser"
+            ? 'You selected a Chrome Tab. Please select "Entire Screen" instead.'
+            : 'You selected a Window. Please select "Entire Screen" instead.',
+        );
+        return false;
+      }
+      setScreenShareError(null); // correct surface chosen — clear any previous error
 
       displayStreamRef.current = stream;
 
@@ -544,7 +613,9 @@ const FormPreviewPage = () => {
 
       setIsScreenActive(true);
 
-      // If user stops sharing manually, cleanup
+      // Only handle explicit "Stop sharing" button click here.
+      // Tab switch detection is handled via visibilitychange in useFormRestrictions
+      // (which works correctly when sharing the full screen/monitor).
       stream.getVideoTracks()[0]?.addEventListener("ended", () => {
         stopScreenShare();
       });
@@ -737,13 +808,7 @@ const FormPreviewPage = () => {
     }
   };
 
-  const { counts } = useFormRestrictions({
-    formSettings,
-    onAutoSubmit,
-    enabled: accessGranted && !isSubmitted,
-    formId: id,
-    mobileNumber: verifiedMobile,
-  });
+  // useFormRestrictions was moved up to avoid "before initialization" error
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -1230,18 +1295,58 @@ const FormPreviewPage = () => {
                           <div className="bg-blue-50 border border-blue-100 p-6 rounded-xl">
                             <ShieldCheck className="w-10 h-10 text-[#2f328e] mx-auto mb-3" />
                             <p className="text-sm text-[#2f328e] font-semibold">
-                              Screen Sharing Required
+                              Share Your Entire Screen
                             </p>
-                            <p className="text-xs text-[#2f328e]/70 mt-2">
-                              Please share your entire screen/tab to continue.
-                              This is used for proctoring.
+                            <p className="text-xs text-[#2f328e]/70 mt-2 leading-relaxed">
+                              Click the button below. In the dialog that
+                              appears, select the{" "}
+                              <strong>&ldquo;Entire Screen&rdquo;</strong> tab
+                              (not a window or browser tab). This is required
+                              for proctoring.
                             </p>
+                            <div className="mt-4 bg-white border border-blue-100 rounded-lg p-3 text-left">
+                              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+                                Steps:
+                              </p>
+                              <ol className="text-xs text-gray-600 space-y-1 list-decimal list-inside">
+                                <li>
+                                  Click{" "}
+                                  <b>&ldquo;Grant Screen Permission&rdquo;</b>{" "}
+                                  below
+                                </li>
+                                <li>
+                                  In Chrome&apos;s dialog, choose{" "}
+                                  <b>&ldquo;Entire Screen&rdquo;</b>
+                                </li>
+                                <li>
+                                  Click <b>&ldquo;Share&rdquo;</b>
+                                </li>
+                              </ol>
+                            </div>
                           </div>
+
+                          {/* Error when user picked wrong surface */}
+                          {screenShareError && (
+                            <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
+                              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                              <div className="text-left">
+                                <p className="text-[11px] font-bold text-red-700 uppercase tracking-wider">
+                                  Wrong Selection
+                                </p>
+                                <p className="text-xs text-red-600 mt-0.5">
+                                  {screenShareError}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
                           <Button
                             onClick={handleAccessCheck}
                             className="w-full h-12 text-sm font-bold bg-[#2f328e] hover:bg-[#1e205e] text-white rounded-xl shadow-lg"
                           >
-                            Grant Screen Permission
+                            {screenShareError
+                              ? "Try Again"
+                              : "Grant Screen Permission"}
                           </Button>
                         </div>
                       );
