@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useGetForm, useGetFormResponse } from "@/features/api/Form";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Eye } from "lucide-react";
+import { Loader2, Eye } from "lucide-react";
 import SearchInput from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
 import TableData from "@/components/shared/DataTable/DataTable";
@@ -57,14 +57,14 @@ export default function FormResponsesPage() {
   return (
     <div className="w-full px-2 sm:px-4 py-4">
       <div className="flex items-center gap-3 mb-5">
-        <Button
+        {/* <Button
           variant="ghost"
           size="sm"
           className="h-8 w-8 p-0 text-gray-500"
           onClick={() => navigate(`/dashboard/form-builder?id=${id}`)}
         >
           <ArrowLeft className="w-4 h-4" />
-        </Button>
+        </Button> */}
         <div>
           <h1 className="font-semibold text-xl text-black">
             {form?.name || "Form"}

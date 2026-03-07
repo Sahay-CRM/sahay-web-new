@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useGetForm, useUpdateForm } from "@/features/api/Form";
@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X, Loader2, ArrowLeft, FileText, Send } from "lucide-react";
+import { X, Loader2, FileText, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Parse API settings array → flat object
@@ -41,7 +41,7 @@ function parseApiSettings(raw: unknown): Partial<FormSettings> {
 
 export default function FormSettingsPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const { setBreadcrumbs } = useBreadcrumbs();
   const { data: formData, isLoading } = useGetForm(id || "");
   const { mutate: updateForm, isPending: isUpdating } = useUpdateForm();
@@ -134,19 +134,20 @@ export default function FormSettingsPage() {
     <div className="w-full px-2 sm:px-4 py-4">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <Button
+          {/* <Button
             variant="ghost"
             size="sm"
             className="h-8 w-8 p-0 text-gray-500"
             onClick={() => navigate(`/dashboard/form-builder?id=${id}`)}
           >
             <ArrowLeft className="w-4 h-4" />
-          </Button>
+          </Button> */}
           <div>
             <h1 className="font-semibold text-xl text-black">
-              {formName || "Form"}
+              {/* {formName || "Form"} */}
+              Settings
             </h1>
-            <p className="text-xs text-gray-500">Settings</p>
+            {/* <p className="text-xs text-gray-500">Settings</p> */}
           </div>
         </div>
         <div className="flex items-center gap-2">
