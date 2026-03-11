@@ -34,10 +34,12 @@ export default function useObjectiveFormModal({
           objectiveId: modalData.objectiveId,
           objectiveName: data.objectiveName,
           ...(data.departmentId && { departmentId: data.departmentId }),
+          ...(data.type && { type: data.type }),
         }
       : {
           objectiveName: data.objectiveName,
           ...(data.departmentId && { departmentId: data.departmentId }),
+          ...(data.type && { type: data.type }),
         };
 
     addObjective(payload, {
