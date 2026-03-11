@@ -572,6 +572,7 @@ export default function MeetingDesc() {
                       handleOpenDownloadModal={handleOpenDownloadModal}
                       isTopBarShow={true}
                       title={"Meeting Tag Notes"}
+                      isTagFilter={true}
                       // groupFlag={selectedGroupFilter}
                     />
                   </Suspense>

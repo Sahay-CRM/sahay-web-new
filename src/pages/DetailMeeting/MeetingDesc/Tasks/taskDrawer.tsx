@@ -239,6 +239,7 @@ export default function TaskDrawer({
               {
                 meetingNoteId: taskData?.meetingNoteId,
                 noteType: "TASKS",
+                noteTag: "Task",
               },
               {
                 onSuccess: () => {

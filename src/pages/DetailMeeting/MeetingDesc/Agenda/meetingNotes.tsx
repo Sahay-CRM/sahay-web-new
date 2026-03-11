@@ -58,6 +58,7 @@ interface MeetingNotesProps {
   setIsCardVisible?: (value: boolean) => void;
   isCardVisible?: boolean;
   title?: string;
+  isTagFilter?: boolean;
   // groupFlag?: boolean | null;
 }
 
@@ -79,6 +80,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   setIsCardVisible,
   // isCardVisible,
   title = "Meeting Notes",
+  isTagFilter = false,
   // groupFlag,
 }) => {
   const [noteInput, setNoteInput] = useState("");
@@ -489,14 +491,18 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
         {/* Local Search Input Removed - Moved to Header */}
 
         <div
-          className={cn("h-[calc(100vh-280px)] overflow-y-scroll", className)}
+          className={cn("h-[calc(100vh-170px)] overflow-y-scroll", className)}
         >
           {Array.isArray(meetingNotes?.data) &&
             (() => {
               // Filter and sort notes
               const filteredNotes = [...meetingNotes.data]
                 .filter((note: MeetingNotesRes) =>
-                  FilterBy ? note.noteTag !== null : note.noteTag === null,
+                  isTagFilter
+                    ? FilterBy
+                      ? note.noteTag !== null
+                      : note.noteTag === null
+                    : true,
                 )
                 .filter((note: MeetingNotesRes) =>
                   searchTerm
@@ -671,7 +677,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                         KPIs
                                       </DropdownMenuItem>
 
-                                      <DropdownMenuItem
+                                      {/* <DropdownMenuItem
                                         onClick={() =>
                                           handleMarkNotes(note, "", "Project")
                                         }
@@ -687,7 +693,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                       >
                                         <Tag className="h-4 w-4 mr-2" />
                                         Task
-                                      </DropdownMenuItem>
+                                      </DropdownMenuItem> */}
 
                                       <DropdownMenuItem
                                         onClick={() =>
@@ -770,15 +776,16 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                           </div>
 
                           {/* FOOTER TAGS */}
-                          {(note.noteTag || note.noteType) && (
+                          {((isTagFilter && note.noteTag) ||
+                            (!isTagFilter && note.noteType)) && (
                             <div className="pt-1 border-t flex items-center gap-2 flex-wrap">
-                              {note.noteTag && (
+                              {isTagFilter && note.noteTag && (
                                 <span className="px-2 py-0.5 text-[10px] rounded-full bg-primary/10 text-primary border border-primary/30">
                                   {note.noteTag}
                                 </span>
                               )}
 
-                              {note.noteType && (
+                              {!isTagFilter && note.noteType && (
                                 <span className="px-2 py-0.5 text-[10px] bg-gray-200 rounded-full text-gray-700">
                                   {note.noteType}
                                 </span>
