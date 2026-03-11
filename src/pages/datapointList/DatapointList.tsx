@@ -294,9 +294,9 @@ export default function CompanyTaskList() {
             moduleKey="DATAPOINT_LIST"
             showActiveToggle={userDetail.employeeType === "CONSULTANT"}
             onToggleActive={(item) => {
-              handleSoftDeleteRestore(item.kpiId as string, !!item.isActive);
+              handleSoftDeleteRestore(item.kpiId as string, !!item.isDelete);
             }}
-            activeToggleKey="isActive"
+            activeToggleKey="isDelete"
             activeTooltip="active KPI"
             inactiveTooltip="Inactive KPI"
             sortableColumns={[
