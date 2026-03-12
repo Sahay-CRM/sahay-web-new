@@ -15,7 +15,7 @@ import { formatToProjectDateTime } from "@/features/utils/formatting.utils";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
 import Api from "@/features/utils/api.utils";
-import Urls, { ImageBaseURL } from "@/features/utils/urls.utils";
+import Urls from "@/features/utils/urls.utils";
 import { toast } from "sonner";
 
 export default function FormResponsesPage() {
@@ -87,7 +87,9 @@ export default function FormResponsesPage() {
       }
 
       const allSubmissions = res.data;
-      const questionFields = form.fields || [];
+      const questionFields = (form.fields || []).filter(
+        (f) => f.fieldType !== "FILE",
+      );
 
       const dataToExport = allSubmissions.map(
         (submission: Submission, index: number) => {
@@ -106,13 +108,8 @@ export default function FormResponsesPage() {
               (r: FormResponseItem) =>
                 r.formFieldId === field.id || r.field?.id === field.id,
             );
-            // rowData[field.label] = response ? response.value : "";
             if (response) {
-              if (field.fieldType === "FILE" && response.value) {
-                rowData[field.label] = `${ImageBaseURL}${response.value}`;
-              } else {
-                rowData[field.label] = response.value;
-              }
+              rowData[field.label] = response.value;
             } else {
               rowData[field.label] = "";
             }
@@ -123,31 +120,6 @@ export default function FormResponsesPage() {
       );
 
       const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-
-      // Add hyperlinks for FILE fields
-      if (dataToExport.length > 0) {
-        const headers = Object.keys(dataToExport[0]);
-        const fileFields = questionFields.filter((f) => f.fieldType === "FILE");
-
-        fileFields.forEach((field) => {
-          const colIndex = headers.indexOf(field.label);
-          if (colIndex !== -1) {
-            const range = XLSX.utils.decode_range(worksheet["!ref"] || "A1");
-            for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-              const address = XLSX.utils.encode_cell({ r: R, c: colIndex });
-              const cell = worksheet[address];
-              if (
-                cell &&
-                cell.v &&
-                typeof cell.v === "string" &&
-                cell.v.startsWith("http")
-              ) {
-                cell.l = { Target: cell.v, Tooltip: "Click to open file" };
-              }
-            }
-          }
-        });
-      }
 
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Responses");
