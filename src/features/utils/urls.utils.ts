@@ -17,6 +17,7 @@ const Urls = {
   getFormResponse: (id: string) => `${baseUrl}/company/form/response/${id}`,
   getFormSubmissionDetail: (id: string) =>
     `${baseUrl}/company/form/submission/get/${id}`,
+  getAllFormSubmissions: () => `${baseUrl}/company/form/submission/get-all`,
   loginSendOtp: () => `${baseUrl}/auth/login`,
   loginVerifyOtp: () => `${baseUrl}/auth/verify-otp`,
   loginCompany: () => `${baseUrl}/auth/select-company`,

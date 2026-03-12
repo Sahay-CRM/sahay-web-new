@@ -3,13 +3,14 @@ import { FormHeader } from "./components/Header";
 import { QuestionsTab } from "./components/QuestionsTab";
 import { ShareModal } from "./components/ShareModal";
 import { FieldTypePanel } from "./components/FieldTypePanel";
+import { PublishModal } from "./components/PublishModal";
 import { Loader2 } from "lucide-react";
 import useFormBuilder from "./hooks/useFormBuilder";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 const FormBuilderPage = () => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const {
     formData,
     formId,
@@ -53,12 +54,15 @@ const FormBuilderPage = () => {
           isSaved={!!formId}
           isSavedId={formId || undefined}
           isActive={isActive}
+          formId={formId || undefined}
           onToggleStatus={async () => {
-            const newStatus = !isActive;
-            setValue("isActive", newStatus);
-            await onSave();
-            if (newStatus) {
-              setIsShareModalOpen(true);
+            if (!isActive) {
+              // Opening the publish modal when moving from Draft -> Published
+              setIsPublishModalOpen(true);
+            } else {
+              // Directly move back to Draft if currently Published
+              setValue("isActive", false);
+              await onSave();
             }
           }}
         />
@@ -70,6 +74,20 @@ const FormBuilderPage = () => {
             form={{ ...formData, fields }}
             onUpdateVisibility={(v) => setValue("visibility", v)}
             onUpdateMobileNumbers={(nums) => setValue("mobileNumbers", nums)}
+          />
+
+          <PublishModal
+            isOpen={isPublishModalOpen}
+            onClose={() => setIsPublishModalOpen(false)}
+            expireDate={watch("expireDate")}
+            onExpireDateChange={(date) => setValue("expireDate", date)}
+            isPublishing={isSaving}
+            onConfirm={async () => {
+              setValue("isActive", true);
+              await onSave();
+              setIsPublishModalOpen(false);
+              setIsShareModalOpen(true);
+            }}
           />
 
           {isFetching && (
@@ -102,7 +120,11 @@ const FormBuilderPage = () => {
       </div>
 
       {/* Right: Field Type Panel */}
-      <FieldTypePanel onAddField={(ft) => addQuestion(undefined, ft)} />
+      <FieldTypePanel
+        onAddField={(ft) => addQuestion(undefined, ft)}
+        responseMessage={watch("responseMessage")}
+        onResponseMessageChange={(val) => setValue("responseMessage", val)}
+      />
     </div>
   );
 };

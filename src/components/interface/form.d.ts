@@ -8,7 +8,9 @@ type FieldType =
   | "RADIO"
   | "CHECKBOX"
   | "DATE"
-  | "FILE";
+  | "FILE"
+  | "FILE"
+  | "QUESTION";
 
 interface Option {
   id: string;
@@ -25,6 +27,8 @@ interface Question {
   placeholder?: string; // Backend "placeholder"
   options?: Option[]; // Internal list for UI
   description?: string; // UI only? User didn't specify but good for UX
+  correctAnswer?: string | string[]; // For quiz/grading mode
+  isMcq?: boolean;
 }
 
 interface FormSettings {
@@ -138,6 +142,8 @@ interface FormDetails {
   formMedia?: FormMediaItem[];
   themeColor?: string;
   backgroundColor?: string;
+  responseMessage?: string;
+  expireDate?: string;
 }
 
 interface Violation {

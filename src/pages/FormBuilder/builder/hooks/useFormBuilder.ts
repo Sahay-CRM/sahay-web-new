@@ -47,6 +47,8 @@ const defaultFormValues: FormDetails = {
   mobileNumbers: [],
   fields: [],
   formSettings: {} as unknown as FormSettings,
+  responseMessage: "",
+  expireDate: undefined,
 };
 
 export default function useFormBuilder() {
@@ -87,8 +89,9 @@ export default function useFormBuilder() {
       });
       // Parse fields separately
       const parsedFields: Question[] = (d.fields || []).map(
-        (f: Question & { options?: unknown }) => ({
+        (f: Question & { options?: unknown; QUESTION?: string }) => ({
           ...f,
+          label: f.label || f.QUESTION || "",
           options: parseOptions(f.options),
         }),
       );
@@ -132,6 +135,7 @@ export default function useFormBuilder() {
       ...values,
       fields: fields.map((f) => ({
         ...f,
+        isMcq: f.fieldType === "QUESTION",
         options: Array.isArray(f.options)
           ? f.options.map((o: Option) => o.text).join(",")
           : f.options || "",
@@ -143,9 +147,19 @@ export default function useFormBuilder() {
 
   const onSave = handleSubmit(() => {
     setTriedSaving(true);
-    // Validate that all fields have labels
     const emptyFields = fields.filter((f) => !f.label || !f.label.trim());
     if (emptyFields.length > 0) {
+      return;
+    }
+
+    // Validate that MCQ questions have a correct answer
+    const mcqWithoutAnswer = fields.filter(
+      (f) =>
+        f.fieldType === "QUESTION" &&
+        (!f.correctAnswer ||
+          (Array.isArray(f.correctAnswer) && f.correctAnswer.length === 0)),
+    );
+    if (mcqWithoutAnswer.length > 0) {
       return;
     }
 
@@ -190,7 +204,12 @@ export default function useFormBuilder() {
         isRequired: false,
         order: 0,
         placeholder: "",
-        options: [],
+        options: ["RADIO", "CHECKBOX", "SELECT", "QUESTION"].includes(fieldType)
+          ? [
+              { id: `opt-${Date.now()}-1`, text: "" },
+              { id: `opt-${Date.now()}-2`, text: "" },
+            ]
+          : [],
       };
       setFields((prev) => {
         const idx = afterQuestionId
@@ -207,7 +226,36 @@ export default function useFormBuilder() {
   const updateQuestion = useCallback(
     (questionId: string, updates: Partial<Question>) => {
       setFields((prev) =>
-        prev.map((q) => (q.id === questionId ? { ...q, ...updates } : q)),
+        prev.map((q) => {
+          if (q.id !== questionId) return q;
+
+          const newUpdates = { ...updates };
+
+          // If changing FROM QUESTION to something else, clear correctAnswer
+          if (
+            q.fieldType === "QUESTION" &&
+            updates.fieldType &&
+            updates.fieldType !== "QUESTION"
+          ) {
+            newUpdates.correctAnswer = undefined;
+          }
+
+          // If changing TO a choice field and it has no options, add 2 defaults
+          if (
+            updates.fieldType &&
+            ["RADIO", "CHECKBOX", "SELECT", "QUESTION"].includes(
+              updates.fieldType,
+            ) &&
+            (!q.options || q.options.length === 0)
+          ) {
+            newUpdates.options = [
+              { id: `opt-${Date.now()}-1`, text: "" },
+              { id: `opt-${Date.now()}-2`, text: "" },
+            ];
+          }
+
+          return { ...q, ...newUpdates };
+        }),
       );
     },
     [],
@@ -278,9 +326,25 @@ export default function useFormBuilder() {
     setFields((prev) =>
       prev.map((q) => {
         if (q.id !== questionId) return q;
+
+        const deletedOption = q.options?.find((o) => o.id === optionId);
+        const nextOptions = (q.options || []).filter((o) => o.id !== optionId);
+
+        let nextCorrectAnswer = q.correctAnswer;
+        if (deletedOption && q.correctAnswer) {
+          if (Array.isArray(q.correctAnswer)) {
+            nextCorrectAnswer = q.correctAnswer.filter(
+              (v) => v !== deletedOption.text,
+            );
+          } else if (q.correctAnswer === deletedOption.text) {
+            nextCorrectAnswer = undefined;
+          }
+        }
+
         return {
           ...q,
-          options: (q.options || []).filter((o) => o.id !== optionId),
+          options: nextOptions,
+          correctAnswer: nextCorrectAnswer,
         };
       }),
     );

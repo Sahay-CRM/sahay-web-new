@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
@@ -14,8 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { X, Loader2, FileText, Send } from "lucide-react";
+import { X, Loader2, FileText, Send, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Parse API settings array → flat object
@@ -48,6 +47,12 @@ export default function FormSettingsPage() {
 
   const [mobileInput, setMobileInput] = useState("");
   const [mobileNumbers, setMobileNumbers] = useState<string[]>([]);
+  const [mobileSearch, setMobileSearch] = useState("");
+  const [csvImportMsg, setCsvImportMsg] = useState<{
+    text: string;
+    ok: boolean;
+  } | null>(null);
+  const csvInputRef = useRef<HTMLInputElement>(null);
   const [settings, setSettings] = useState<Partial<FormSettings>>({});
 
   const { watch, setValue, reset } = useForm<FormDetails>();
@@ -83,8 +88,46 @@ export default function FormSettingsPage() {
     }
   };
 
-  const removeMobileNumber = (num: string) => {
-    setMobileNumbers((prev) => prev.filter((n) => n !== num));
+  const removeMobileNumber = (index: number) => {
+    setMobileNumbers((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCsvImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!csvInputRef.current) return;
+    csvInputRef.current.value = "";
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      if (!text) return;
+
+      // Flatten all cells across rows, trim whitespace
+      const cells = text
+        .split(/\r?\n/)
+        .flatMap((row) => row.split(","))
+        .map((cell) => cell.replace(/["'\s]/g, ""))
+        .filter(Boolean);
+
+      // Accept any numeric string (allows country-prefixed numbers too)
+      // 1) deduplicate within the CSV itself
+      // 2) exclude numbers already in the list
+      const valid = [...new Set(cells.filter((c) => /^[0-9+]{7,15}$/.test(c)))];
+      const unique = valid.filter((n) => !mobileNumbers.includes(n));
+
+      if (unique.length === 0) {
+        setCsvImportMsg({ text: "No new numbers found in CSV.", ok: false });
+      } else {
+        setMobileNumbers((prev) => [...prev, ...unique]);
+        setCsvImportMsg({
+          text: `${unique.length} number(s) imported.`,
+          ok: true,
+        });
+      }
+      setTimeout(() => setCsvImportMsg(null), 3000);
+    };
+    reader.readAsText(file);
   };
 
   const handleSave = () => {
@@ -97,6 +140,7 @@ export default function FormSettingsPage() {
         visibility,
         notificationEmail,
         mobileNumbers,
+        expireDate: watch("expireDate"),
         formSettings: settings,
       } as Partial<FormDetails>,
     });
@@ -114,6 +158,7 @@ export default function FormSettingsPage() {
         visibility,
         notificationEmail,
         mobileNumbers,
+        expireDate: watch("expireDate"),
         formSettings: settings,
       } as Partial<FormDetails>,
     });
@@ -254,11 +299,36 @@ export default function FormSettingsPage() {
                     className="focus-visible:ring-[#2f328e]"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Expiry Date</Label>
+                  <input
+                    type="date"
+                    value={
+                      watch("expireDate")
+                        ? watch("expireDate")?.split("T")[0]
+                        : ""
+                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setValue(
+                        "expireDate",
+                        val ? new Date(val).toISOString() : undefined,
+                      );
+                    }}
+                    min={(() => {
+                      const tomorrow = new Date();
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      return tomorrow.toISOString().split("T")[0];
+                    })()}
+                    className="w-full h-9 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#2f328e] focus:border-[#2f328e]"
+                  />
+                </div>
                 {visibility !== "PUBLIC" && (
                   <div className="space-y-3">
                     <Label className="text-sm font-medium">
                       Mobile Numbers (for OTP/Notifications)
                     </Label>
+                    {/* Input row */}
                     <div className="flex gap-2">
                       <Input
                         value={mobileInput}
@@ -271,26 +341,106 @@ export default function FormSettingsPage() {
                       />
                       <Button
                         onClick={addMobileNumber}
-                        className="bg-[#2f328e] hover:bg-[#1a1c5d] text-white"
+                        className="bg-[#2f328e] hover:bg-[#1a1c5d] text-white shrink-0"
                       >
                         Add
                       </Button>
+                      <input
+                        ref={csvInputRef}
+                        type="file"
+                        accept=".csv,text/csv"
+                        className="hidden"
+                        onChange={handleCsvImport}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="border-[#2f328e]/30 text-[#2f328e] hover:bg-[#2f328e]/5 flex items-center gap-1.5 shrink-0"
+                        onClick={() => csvInputRef.current?.click()}
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        Import CSV
+                      </Button>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {mobileNumbers.map((num: string) => (
-                        <Badge
-                          key={num}
-                          variant="secondary"
-                          className="px-2 py-1 gap-1 border-gray-200"
-                        >
-                          {num}
-                          <X
-                            className="h-3 w-3 cursor-pointer hover:text-red-500"
-                            onClick={() => removeMobileNumber(num)}
+
+                    {csvImportMsg && (
+                      <p
+                        className={`text-xs font-medium ${csvImportMsg.ok ? "text-green-600" : "text-red-500"}`}
+                      >
+                        {csvImportMsg.ok ? "✓" : "✗"} {csvImportMsg.text}
+                      </p>
+                    )}
+
+                    {/* Number list */}
+                    {mobileNumbers.length > 0 && (
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        {/* List header: search + count + clear */}
+                        <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border-b border-gray-200">
+                          <input
+                            type="text"
+                            value={mobileSearch}
+                            onChange={(e) => setMobileSearch(e.target.value)}
+                            placeholder="Search numbers…"
+                            className="flex-1 text-xs bg-transparent outline-none placeholder-gray-400 text-gray-700"
                           />
-                        </Badge>
-                      ))}
-                    </div>
+                          <span className="text-[10px] font-semibold text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full shrink-0">
+                            {mobileNumbers.length} total
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMobileNumbers([]);
+                              setMobileSearch("");
+                            }}
+                            className="text-[10px] font-semibold text-red-400 hover:text-red-600 transition-colors shrink-0"
+                          >
+                            Clear all
+                          </button>
+                        </div>
+
+                        {/* Scrollable rows */}
+                        <div
+                          className="overflow-y-auto"
+                          style={{ maxHeight: 220 }}
+                        >
+                          {mobileNumbers
+                            .map((num, originalIdx) => ({ num, originalIdx }))
+                            .filter(
+                              ({ num }) =>
+                                mobileSearch.trim() === "" ||
+                                num.includes(mobileSearch.trim()),
+                            )
+                            .map(({ num, originalIdx }) => (
+                              <div
+                                key={originalIdx}
+                                className="flex items-center justify-between px-3 py-2 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
+                              >
+                                <span className="text-[13px] font-mono font-medium text-gray-700">
+                                  {num}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    removeMobileNumber(originalIdx)
+                                  }
+                                  className="text-gray-300 hover:text-red-500 transition-colors"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          {mobileNumbers.filter(
+                            (num) =>
+                              mobileSearch.trim() === "" ||
+                              num.includes(mobileSearch.trim()),
+                          ).length === 0 && (
+                            <p className="text-center text-xs text-gray-400 py-4">
+                              No numbers match your search.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

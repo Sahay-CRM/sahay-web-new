@@ -20,6 +20,9 @@ const ContactUs = lazy(() => import("../pages/ContactUs/ContactUs"));
 const FormPreview = lazy(
   () => import("../pages/FormBuilder/preview/FormPreviewPage"),
 );
+const BuilderPreview = lazy(
+  () => import("../pages/FormBuilder/builder/BuilderPreviewPage"),
+);
 const AppRoutes = () => {
   const token = useSelector(getToken);
 
@@ -31,6 +34,11 @@ const AppRoutes = () => {
           <Route path="/terms" element={<TermsAndConditions />} />
           <Route path="/contact-us" element={<ContactUs />} />
           <Route path="/form/:id" element={<FormPreview />} />
+          <Route
+            path="/form-builder-preview/:id"
+            element={<BuilderPreview />}
+          />
+
           {token ? (
             <Route path="/*" element={<EmployeeRoutes />} />
           ) : (

@@ -17,6 +17,7 @@ export const useFormRestrictions = ({
   mobileNumber,
 }: UseFormRestrictionsProps & { enabled?: boolean }) => {
   const [violations, setViolations] = useState<Violation[]>([]);
+  const [tabSwitchWarning, setTabSwitchWarning] = useState(0);
   const [counts, setCounts] = useState({
     tab_switch: 0,
     focus_loss: 0,
@@ -79,16 +80,17 @@ export const useFormRestrictions = ({
         let trigger = false;
         let reason = { code: "", message: "" };
 
-        if (
-          type === "tab_switch" &&
-          s.tabSwitchDetection &&
-          newCount >= Number(s.maxTabSwitches)
-        ) {
-          trigger = true;
-          reason = {
-            code: "TAB_SWITCH_LIMIT",
-            message: `Form auto-submitted after ${newCount} tab switches.`,
-          };
+        if (type === "tab_switch" && s.tabSwitchDetection) {
+          // Show warning modal on every tab switch
+          setTimeout(() => setTabSwitchWarning((n) => n + 1), 0);
+
+          if (newCount >= Number(s.maxTabSwitches)) {
+            trigger = true;
+            reason = {
+              code: "TAB_SWITCH_LIMIT",
+              message: `Form auto-submitted after ${newCount} tab switches.`,
+            };
+          }
         }
         if (
           type === "focus_loss" &&
@@ -343,5 +345,10 @@ export const useFormRestrictions = ({
     addViolation,
   ]);
 
-  return { violations, counts, reCheckPermissions: checkPermissions };
+  return {
+    violations,
+    counts,
+    tabSwitchWarning,
+    reCheckPermissions: checkPermissions,
+  };
 };

@@ -1,8 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Save, Send, FileText } from "lucide-react";
+import { Save, Send, FileText, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
-// import { useNavigate } from "react-router-dom";
 
 interface FormHeaderProps {
   name: string;
@@ -13,6 +12,8 @@ interface FormHeaderProps {
   isSavedId?: string;
   isActive?: boolean;
   onToggleStatus?: () => void;
+  formId?: string;
+  onPreview?: () => void;
 }
 
 export const FormHeader: React.FC<FormHeaderProps> = ({
@@ -20,12 +21,10 @@ export const FormHeader: React.FC<FormHeaderProps> = ({
   onSave,
   isSaving,
   isSaved,
-  // isSavedId,
   isActive,
   onToggleStatus,
+  formId,
 }) => {
-  // const navigate = useNavigate();
-
   return (
     <div className="sticky top-0 z-50 bg-white border-b border-gray-200">
       <div className="px-4 py-3 flex items-center justify-between">
@@ -73,6 +72,22 @@ export const FormHeader: React.FC<FormHeaderProps> = ({
                 Published
               </>
             )}
+          </Button>
+          <Button
+            variant="outline"
+            className="h-8 shadow-sm transition-all flex items-center gap-2 border-[#2f328e]/20 text-[#2f328e] hover:bg-[#2f328e]/5"
+            onClick={() =>
+              window.open(`/form-builder-preview/${formId}`, "_blank")
+            }
+            disabled={!formId}
+            title={
+              !formId
+                ? "Save the form first before previewing"
+                : "Preview form in new tab"
+            }
+          >
+            <Eye className="h-4 w-4" />
+            Preview
           </Button>
         </div>
       </div>

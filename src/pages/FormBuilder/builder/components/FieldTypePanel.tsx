@@ -10,10 +10,13 @@ import {
   Hash,
   Mail,
   Phone,
+  CheckCircle2,
 } from "lucide-react";
 
 interface FieldTypePanelProps {
   onAddField: (fieldType: FieldType) => void;
+  responseMessage?: string;
+  onResponseMessageChange?: (val: string) => void;
 }
 
 const fieldTypes: { type: FieldType; label: string; icon: React.ReactNode }[] =
@@ -44,10 +47,17 @@ const fieldTypes: { type: FieldType; label: string; icon: React.ReactNode }[] =
     },
     { type: "DATE", label: "Date", icon: <Calendar className="h-4 w-4" /> },
     { type: "FILE", label: "File", icon: <Upload className="h-4 w-4" /> },
+    {
+      type: "QUESTION",
+      label: "MCQ Question",
+      icon: <CheckCircle2 className="h-4 w-4" />,
+    },
   ];
 
 export const FieldTypePanel: React.FC<FieldTypePanelProps> = ({
   onAddField,
+  responseMessage = "",
+  onResponseMessageChange,
 }) => {
   return (
     <div className="w-[240px] shrink-0 border-l border-gray-200 bg-white flex flex-col h-full">
@@ -71,6 +81,27 @@ export const FieldTypePanel: React.FC<FieldTypePanelProps> = ({
               {label}
             </button>
           ))}
+        </div>
+      </div>
+      {/* Response Message Section */}
+      <div className="px-3 py-4 border-t border-gray-100 bg-gray-50 mt-auto">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          After Submission
+        </p>
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-gray-600">
+            Response Message
+          </label>
+          <textarea
+            value={responseMessage}
+            onChange={(e) => onResponseMessageChange?.(e.target.value)}
+            placeholder="Thank you for your response!"
+            className="w-full text-sm border border-gray-200 rounded-lg p-3 min-h-[100px] resize-none focus:outline-none focus:ring-1 focus:ring-[#2f328e] focus:border-[#2f328e] placeholder:text-gray-300"
+          />
+          <p className="text-[10px] text-gray-400 leading-tight">
+            This message will be shown to users after they successfully submit
+            the form.
+          </p>
         </div>
       </div>
     </div>
