@@ -108,7 +108,13 @@ export default function FormResponsesPage() {
             "Mobile Number": submission.mobileNumber || "",
             Submitted: formatToProjectDateTime(submission.createdAt),
             Status: submission.status?.replace(/_/g, " "),
-            score: submission.scoreString || "",
+            "Correct Fields":
+              submission.correctFields ?? submission.score?.correctFields ?? "",
+            "Total Mcq Fields":
+              submission.totalMcqFields ??
+              submission.score?.totalMcqFields ??
+              "",
+            Score: submission.scoreString ?? "",
           };
 
           // Map each question response
