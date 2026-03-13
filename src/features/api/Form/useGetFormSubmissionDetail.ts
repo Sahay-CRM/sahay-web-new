@@ -40,6 +40,7 @@ interface FormMedia {
 interface SubmissionDetail {
   id: string;
   formId: string;
+  formName: string;
   mobileNumber: string;
   name: string | null;
   createdAt: string;

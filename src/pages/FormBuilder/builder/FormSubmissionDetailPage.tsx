@@ -77,7 +77,7 @@ export default function FormSubmissionDetailPage() {
       setBreadcrumbs([
         { label: "Forms", href: "/dashboard/forms" },
         {
-          label: submission.form.name,
+          label: submission.formName,
           href: `/dashboard/forms/${submission.form.id}/responses`,
         },
         { label: "Detail", href: "" },
@@ -207,7 +207,7 @@ export default function FormSubmissionDetailPage() {
 
                   return (
                     <div key={resp.id} className="space-y-1.5 group">
-                      <label className="text-xs font-black text-gray-400 uppercase tracking-tight truncate block">
+                      <label className="text-xs font-black text-gray-400 uppercase tracking-tight block whitespace-normal leading-normal mb-1">
                         {resp.field?.label}
                       </label>
                       <div
@@ -220,7 +220,7 @@ export default function FormSubmissionDetailPage() {
                       >
                         {isFile ? (
                           <div className="flex items-center justify-between gap-2 overflow-hidden">
-                            <span className="truncate">
+                            <span className="break-words">
                               {resp.value.split("/").pop() || "Attachment"}
                             </span>
                             <Button
@@ -239,7 +239,7 @@ export default function FormSubmissionDetailPage() {
                             </Button>
                           </div>
                         ) : (
-                          <div className="truncate">
+                          <div className="break-words whitespace-normal">
                             {resp.value || (
                               <span className="text-gray-300 font-normal">
                                 --
