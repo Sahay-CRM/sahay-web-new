@@ -7,6 +7,8 @@ export interface Submission {
   formId: string;
   mobileNumber: string;
   scoreString?: string;
+  correctFields?: string;
+  totalMcqFields?: string;
   name: string | null;
   createdAt: string;
   updatedAt: string;

@@ -43,9 +43,9 @@ const FormLoginStep = ({
   return (
     <div className="min-h-screen bg-[#f8f8fb] flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white p-8 sm:p-10 rounded-2xl shadow-xl border border-gray-100 flex flex-col items-center">
+        <div className="bg-white p-6 sm:p-10 rounded-2xl shadow-xl border border-gray-100 flex flex-col items-center">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">
+            <h1 className="text-2xl font-bold text-gray-800 mb-2 break-words">
               Access {formName}
             </h1>
             <p className="text-gray-500 text-sm">
@@ -86,7 +86,7 @@ const FormLoginStep = ({
                       Mobile Number
                     </label>
                     <div className="flex gap-2">
-                      <div className="h-12 flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 text-sm text-gray-500 font-medium">
+                      <div className="h-12 flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 text-sm text-gray-500 font-medium whitespace-nowrap shrink-0">
                         +91
                       </div>
                       <input
@@ -94,7 +94,7 @@ const FormLoginStep = ({
                         maxLength={10}
                         placeholder="Enter number"
                         disabled={statusSentOtp}
-                        className="flex-1 h-12 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:border-[#2f328e] outline-none disabled:opacity-60"
+                        className="flex-1 min-w-0 h-12 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm focus:border-[#2f328e] outline-none disabled:opacity-60"
                         {...register("mobile", {
                           required: "Enter mobile number",
                           pattern: {
