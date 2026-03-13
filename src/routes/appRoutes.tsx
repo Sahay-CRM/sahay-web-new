@@ -16,6 +16,13 @@ const PrivacyPolicy = lazy(
 const TermsAndConditions = lazy(
   () => import("../pages/TermsAndConditions/TermsAndConditions"),
 );
+const ContactUs = lazy(() => import("../pages/ContactUs/ContactUs"));
+const FormPreview = lazy(
+  () => import("../pages/FormBuilder/preview/FormPreviewPage"),
+);
+const BuilderPreview = lazy(
+  () => import("../pages/FormBuilder/builder/BuilderPreviewPage"),
+);
 const AppRoutes = () => {
   const token = useSelector(getToken);
 
@@ -23,8 +30,15 @@ const AppRoutes = () => {
     <Router>
       <Suspense fallback={<div>Loading...</div>}>
         <Routes>
-          <Route path="privacy" Component={PrivacyPolicy} />
-          <Route path="terms" Component={TermsAndConditions} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsAndConditions />} />
+          <Route path="/contact-us" element={<ContactUs />} />
+          <Route path="/form/:id" element={<FormPreview />} />
+          <Route
+            path="/form-builder-preview/:id"
+            element={<BuilderPreview />}
+          />
+
           {token ? (
             <Route path="/*" element={<EmployeeRoutes />} />
           ) : (

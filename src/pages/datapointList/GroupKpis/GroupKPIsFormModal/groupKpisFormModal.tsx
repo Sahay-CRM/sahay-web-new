@@ -1,4 +1,4 @@
-import { Controller, FormProvider, useForm } from "react-hook-form";
+import { Controller, FormProvider } from "react-hook-form";
 import ModalData from "@/components/shared/Modal/ModalData";
 import useGroupKpisFormModal from "./useGroupKpisFormModal";
 import FormSelect from "@/components/shared/Form/FormSelect";
@@ -13,7 +13,14 @@ export default function GroupKpisFormModal({
   selectedKpisIds,
   groupId,
 }: GroupKpisProps) {
-  const methods = useForm();
+  const formMethods = useGroupKpisFormModal({
+    modalClose,
+    isModalOpen,
+    selectedKpiData,
+    selectedKpisIds,
+    groupId,
+  });
+
   const {
     onSubmit,
     register,
@@ -21,18 +28,17 @@ export default function GroupKpisFormModal({
     isPending,
     control,
     setValue,
-    errors,
+    formState: { errors },
     frequenceOptions,
     shouldShowVisualFrequency,
     getFilteredVisualFrequencyOptions,
     sumAveOptions,
-  } = useGroupKpisFormModal({
-    modalClose,
-    isModalOpen,
-    selectedKpiData,
-    selectedKpisIds,
-    groupId,
-  });
+    validationTypeOptions,
+    kpiOptions,
+    isKpisLoading,
+    watch,
+  } = formMethods;
+
   const { data: fetchedGroupData, isSuccess } = useGetKpiMergeById(
     groupId ?? "",
   );
@@ -53,11 +59,27 @@ export default function GroupKpisFormModal({
 
       setValue("unit", fetchedGroupData.unit || "");
       setValue("tag", fetchedGroupData.tag || "");
+      setValue("kpiMergeName", fetchedGroupData.kpiMergeName || "");
+      setValue("validationType", fetchedGroupData.validationType || "");
+      setValue("value1", fetchedGroupData.value1 || "");
+      setValue("value2", fetchedGroupData.value2 || "");
+
+      // If the API returns the KPI IDs for the group, set them here
+      const fetchedKpiIds = fetchedGroupData.kpiIds;
+      if (fetchedKpiIds) {
+        const kpiIdArray =
+          typeof fetchedKpiIds === "string"
+            ? fetchedKpiIds.split(",").filter((id) => !!id)
+            : Array.isArray(fetchedKpiIds)
+              ? fetchedKpiIds
+              : [];
+        setValue("kpiIds", kpiIdArray);
+      }
     }
   }, [isSuccess, fetchedGroupData, setValue]);
 
   return (
-    <FormProvider {...methods}>
+    <FormProvider {...formMethods}>
       <ModalData
         isModalOpen={isModalOpen}
         modalTitle={groupId ? "Update KPIs Group" : "Create KPIs Group"}
@@ -71,23 +93,30 @@ export default function GroupKpisFormModal({
           },
         ]}
       >
-        <div className="">
+        <div className="space-y-4">
+          <FormInputField
+            label="Group Name"
+            {...register(`kpiMergeName`, {
+              required: "Group name is required",
+            })}
+            isMandatory
+            error={errors.kpiMergeName}
+          />
           <div className="grid gap-4 grid-cols-2 items-center">
             <Controller
               control={control}
               name="frequencyType"
-              // rules={{ required: "Frequency is required" }}
+              rules={{ required: "Frequency is required" }}
               render={({ field }) => (
                 <FormSelect
                   label="Frequency"
                   value={field.value}
                   onChange={(value) => {
                     field.onChange(value);
-                    setValue("visualFrequencyTypes", []);
                   }}
                   options={frequenceOptions}
                   error={errors.frequencyType}
-                  disabled={true}
+                  disabled={false}
                   isMandatory
                 />
               )}
@@ -104,6 +133,32 @@ export default function GroupKpisFormModal({
                   error={errors.visualFrequencyAggregate}
                   placeholder="Select visual frequency Aggregate"
                   disabled={false}
+                />
+              )}
+            />
+          </div>
+
+          <div className="my-2">
+            <Controller
+              control={control}
+              name="kpiIds"
+              rules={{ required: "KPIs are required" }}
+              render={({ field }) => (
+                <FormSelect
+                  label="KPIs"
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  options={kpiOptions}
+                  error={errors.kpiIds}
+                  isMulti={true}
+                  placeholder={
+                    !watch("frequencyType")
+                      ? "Select frequency first"
+                      : "Select KPIs"
+                  }
+                  isSearchable={true}
+                  disabled={!watch("frequencyType") || isKpisLoading}
+                  isMandatory
                 />
               )}
             />
@@ -132,6 +187,54 @@ export default function GroupKpisFormModal({
               />
             </div>
           )}
+          <div className="grid gap-4 grid-cols-2 items-center">
+            <Controller
+              control={control}
+              name="validationType"
+              render={({ field }) => (
+                <FormSelect
+                  label="Validation Type"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={validationTypeOptions}
+                  error={errors.validationType}
+                  placeholder="Select validation type"
+                />
+              )}
+            />
+            {watch("validationType") === "YES_NO" ? (
+              <Controller
+                control={control}
+                name="value1"
+                render={({ field }) => (
+                  <FormSelect
+                    label="Value 1"
+                    value={field.value}
+                    onChange={field.onChange}
+                    options={[
+                      { value: "1", label: "Yes" },
+                      { value: "2", label: "No" },
+                    ]}
+                    error={errors.value1}
+                    placeholder="Select Yes/No"
+                  />
+                )}
+              />
+            ) : (
+              <FormInputField
+                label="Value 1"
+                {...register("value1")}
+                error={errors.value1}
+              />
+            )}
+            {watch("validationType") === "BETWEEN" && (
+              <FormInputField
+                label="Value 2"
+                {...register("value2")}
+                error={errors.value2}
+              />
+            )}
+          </div>
           <FormInputField label="Unit" {...register(`unit`)} />
           <FormInputField label="Tag" {...register(`tag`)} />
         </div>

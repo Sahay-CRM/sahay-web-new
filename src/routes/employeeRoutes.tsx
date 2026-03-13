@@ -5,7 +5,6 @@ import DashboardLayout from "@/features/layouts/DashboardLayout/dashboardLayout"
 import AddCompanyEmployee from "@/pages/companyEmployee/AddEmployeeFromModal";
 import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
 import AddCompanyMeeting from "@/pages/Meeting/AddMeetingFormModal/addMeeting";
-import GroupKpisCreate from "@/pages/datapointList/GroupKpis/groupKpisCreateGroup";
 
 const Theme = lazy(() => import("../pages/theme/Theme"));
 const Profile = lazy(() => import("../pages/profile/Profile"));
@@ -116,6 +115,19 @@ const CompanyTaskRe = lazy(
 const CompanyProjectTab = lazy(() => import("../pages/CompanyProjectsTab"));
 
 const CompanyHoliDays = lazy(() => import("../pages/CompanyHoliday"));
+const FormBuilder = lazy(
+  () => import("../pages/FormBuilder/builder/FormBuilderPage"),
+);
+const FormList = lazy(() => import("../pages/FormBuilder/FormListPage"));
+const FormResponses = lazy(
+  () => import("../pages/FormBuilder/builder/FormResponsesPage"),
+);
+const FormSettings = lazy(
+  () => import("../pages/FormBuilder/builder/FormSettingsPage"),
+);
+const FormSubmissionDetail = lazy(
+  () => import("../pages/FormBuilder/builder/FormSubmissionDetailPage"),
+);
 
 export default function EmployeeRoutes() {
   return (
@@ -184,8 +196,6 @@ export default function EmployeeRoutes() {
         <Route path="kpi/edit/:id" element={<AddCompanyDatapoint />} />
         <Route path="kpi/group-kpis" element={<GroupKpis />} />
 
-        <Route path="kpi/group-create" element={<GroupKpisCreate />} />
-
         <Route path="datapoint" Component={DatapointList} />
         <Route path="kpi-dashboard" Component={KPIDashboard} />
         {/* <Route path="kpi-visualize" Component={KPIVisualize} /> */}
@@ -208,7 +218,22 @@ export default function EmployeeRoutes() {
         <Route path="product" Component={Product} />
         {/* <Route path="user-log" Component={UserLog} /> */}
         <Route path="updates" Component={Updates} />
+        <Route path="forms" Component={FormList} />
+        <Route path="forms/:id/responses" Component={FormResponses} />
+        <Route path="forms/:id/settings" Component={FormSettings} />
+        <Route
+          path="form-submission-detail/:submissionId"
+          Component={FormSubmissionDetail}
+        />
+        <Route path="form-builder" Component={FormBuilder} />
+        <Route
+          path="form-preview"
+          Component={lazy(
+            () => import("../pages/FormBuilder/preview/FormPreviewPage"),
+          )}
+        />
       </Route>
+
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

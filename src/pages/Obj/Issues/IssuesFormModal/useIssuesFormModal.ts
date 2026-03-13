@@ -34,10 +34,12 @@ export default function useIssueFormModal({
           issueId: modalData.issueId,
           issueName: data.issueName,
           ...(data.departmentId && { departmentId: data.departmentId }),
+          ...(data.type && { type: data.type }),
         }
       : {
           issueName: data.issueName,
           ...(data.departmentId && { departmentId: data.departmentId }),
+          ...(data.type && { type: data.type }),
         };
 
     addIssue(payload, {

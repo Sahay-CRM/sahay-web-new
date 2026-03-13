@@ -6,7 +6,7 @@ export default function useGetKpiMergeById(id: string) {
   const query = useQuery({
     queryKey: ["get-kpiMerge-by-id", id],
     queryFn: async () => {
-      const { data: resData } = await Api.post<{ data: KPIFormData }>({
+      const { data: resData } = await Api.post<{ data: KpiMergeRes }>({
         url: Urls.getKpiMergeById(id),
       });
 

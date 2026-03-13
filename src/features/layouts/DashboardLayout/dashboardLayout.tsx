@@ -467,7 +467,15 @@ const DashboardLayout = () => {
             </div>
 
             <main className="flex-1 overflow-auto bg-white mr-4">
-              <Outlet />
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center h-full">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-700" />
+                  </div>
+                }
+              >
+                <Outlet />
+              </Suspense>
             </main>
           </div>
         </div>

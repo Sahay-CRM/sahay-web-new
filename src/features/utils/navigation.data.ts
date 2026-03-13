@@ -124,37 +124,37 @@ export const companyNavigationData = [
     permission: "View",
     moduleKey: "PROJECT_LIST",
   },
-  {
-    id: 8,
-    icon: "BarChart3",
-    label: "KPI List",
-    link: "/dashboard/kpi",
-    permission: "View",
-    moduleKey: "DATAPOINT_LIST",
-  },
   // {
   //   id: 8,
   //   icon: "BarChart3",
   //   label: "KPI List",
+  //   link: "/dashboard/kpi",
   //   permission: "View",
-  //   // moduleKey: "DATAPOINT_LIST",
-  //   items: [
-  //     {
-  //       id: 1,
-  //       label: "KPI List",
-  //       link: "/dashboard/kpi",
-  //       permission: "View",
-  //       moduleKey: "DATAPOINT_LIST",
-  //     },
-  //     {
-  //       id: 2,
-  //       label: "KPI Group",
-  //       link: "/dashboard/kpi/group-kpis",
-  //       permission: "View",
-  //       moduleKey: "DATAPOINT_LIST",
-  //     },
-  //   ],
+  //   moduleKey: "DATAPOINT_LIST",
   // },
+  {
+    id: 8,
+    icon: "BarChart3",
+    label: "KPI List",
+    permission: "View",
+    // moduleKey: "DATAPOINT_LIST",
+    items: [
+      {
+        id: 1,
+        label: "KPI List",
+        link: "/dashboard/kpi",
+        permission: "View",
+        moduleKey: "DATAPOINT_LIST",
+      },
+      {
+        id: 2,
+        label: "KPI Group",
+        link: "/dashboard/kpi/group-kpis",
+        permission: "View",
+        moduleKey: "DATAPOINT_LIST",
+      },
+    ],
+  },
   {
     id: 9,
     icon: "TrendingUp",
@@ -258,6 +258,14 @@ export const companyNavigationData = [
   //   permission: "View",
   //   moduleKey: "ROLES_PERMISSION",
   // },
+  {
+    id: 15,
+    icon: "ListTodo",
+    label: "Forms",
+    link: "/dashboard/forms",
+    permission: "View",
+    moduleKey: "FORM",
+  },
 ];
 
 export const getRouteByLabel = (label: string): string | null => {

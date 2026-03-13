@@ -3,6 +3,12 @@ interface Login {
   userType: string;
   otp?: string;
 }
+interface FormAccessData {
+  mobile: string;
+  userType: string;
+  otp?: string;
+  name: string;
+}
 interface SendOtp {
   mobile: string;
 }

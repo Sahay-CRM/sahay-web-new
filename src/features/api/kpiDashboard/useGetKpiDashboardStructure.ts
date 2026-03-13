@@ -19,7 +19,7 @@ export default function useGetKpiDashboardStructure({
       });
       return resData;
     },
-    staleTime: 0,
+    staleTime: 1 * 60 * 1000,
   });
   return query;
 }

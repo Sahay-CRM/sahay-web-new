@@ -124,6 +124,7 @@ interface SortableKpiRowProps {
   disabled?: boolean;
   isDragging?: boolean;
   showDragHandle?: boolean;
+  isMurgeKpi?: boolean;
   getFormattedValue: (
     validationType: string,
     value1: string | number | null,
@@ -143,6 +144,7 @@ function SortableKpiRow({
   selectedPeriod,
   // onRowClick,
   graphClick,
+  isMurgeKpi,
 }: SortableKpiRowProps) {
   const {
     attributes,
@@ -169,6 +171,7 @@ function SortableKpiRow({
         isDragging ? "pointer-events-none" : "",
         isSortableDragging ? "z-10" : "",
         "hover:outline cursor-pointer hover:outline-primary hover:outline-offset-[-1px]",
+        isMurgeKpi ? "bg-gray-100/80" : "",
       )}
       {...attributes}
       // onClick={() => {
@@ -183,7 +186,9 @@ function SortableKpiRow({
               className="cursor-grab pl-1.5 active:cursor-grabbing opacity-0 group-hover/row:opacity-100 transition-opacity"
               {...listeners}
             >
-              <GripVertical className="w-4 h-4 text-black hover:text-black" />
+              {kpi?.isMurgeKpi !== true && (
+                <GripVertical className="w-4 h-4 text-black hover:text-black" />
+              )}
             </div>
           )}
           <Avatar className="h-5 w-5">
@@ -193,20 +198,34 @@ function SortableKpiRow({
                   <AvatarFallback
                     className={clsx(
                       "font-semibold text-sm",
-                      getColorFromName(kpi?.employeeName),
+                      getColorFromName(kpi?.employeeName || "Group"),
                     )}
                   >
                     {(() => {
+                      // ✅ If Merge KPI and no employee → show GR
+                      if (!kpi?.employeeName && kpi?.isMurgeKpi === true) {
+                        return "GK";
+                      }
+
                       if (!kpi?.employeeName) return "";
+
                       const names = kpi.employeeName.split(" ");
                       const firstInitial = names[0]?.[0] ?? "";
                       const lastInitial =
                         names.length > 1 ? names[names.length - 1][0] : "";
+
                       return (firstInitial + lastInitial).toUpperCase();
                     })()}
                   </AvatarFallback>
                 </TooltipTrigger>
-                <TooltipContent>{kpi?.employeeName}</TooltipContent>
+
+                <TooltipContent>
+                  {kpi?.employeeName
+                    ? kpi.employeeName
+                    : kpi?.isMurgeKpi === true
+                      ? "Merge Group KPI"
+                      : "N/A"}
+                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </Avatar>
@@ -245,11 +264,16 @@ function SortableKpiRow({
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="line-clamp-2 break-words cursor-default">
-                {kpi.validationType === "YES_NO" ? (
+                {kpi.validationType === "YES_NO" ||
+                kpi.kpiName?.toLowerCase().includes("yes_no") ? (
                   <>
                     {selectedPeriod === "DAILY" ? (
                       Number(kpi.value1) === 1 ? (
                         "Yes"
+                      ) : Number(kpi.value1) === 2 ? (
+                        "No"
+                      ) : Number(kpi.goalValue) > 1 ? (
+                        formatToThreeDecimals(kpi.value1)
                       ) : (
                         "No"
                       )
@@ -1035,7 +1059,7 @@ export default function UpdatedKpiTable() {
       case "LESS_THAN_OR_EQUAL_TO":
         return `≤ ${formatted1} ${safeUnit}`;
       case "YES_NO":
-        return value1 === "1" ? "✓(Yes)" : "✗(No)";
+        return value1 === "1" ? "✓(Yes)" : value1 === "2" ? "✗(No)" : "✗(No)";
       default:
         return formatted1;
     }
@@ -1550,6 +1574,7 @@ export default function UpdatedKpiTable() {
                             selectedPeriod={selectedPeriod}
                             // onRowClick={handleRowClick}
                             graphClick={(id: string) => handleGraphClick(id)}
+                            isMurgeKpi={kpi?.isMurgeKpi}
                           />
                         ))}
                       </React.Fragment>
@@ -1626,7 +1651,10 @@ export default function UpdatedKpiTable() {
                             );
                           }
                           return (
-                            <tr key={kpi.kpiId} className="h-[50px]">
+                            <tr
+                              key={kpi.kpiId}
+                              className={`h-[50px] ${kpi.isMurgeKpi ? "bg-gray-100/80" : ""}`}
+                            >
                               {headers.map((_, colIdx) => {
                                 const cell = dataRow?.[colIdx];
                                 const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
@@ -1764,11 +1792,34 @@ export default function UpdatedKpiTable() {
                                               ) : (
                                                 <div className="flex flex-col items-center  justify-center h-full w-full cursor-not-allowed">
                                                   <span className="text-black">
-                                                    {inputFocused[key]
+                                                    {/* {inputFocused[key]
                                                       ? inputVal
-                                                      : formatCompactNumber(
-                                                          cell?.matchCount,
-                                                        )}
+                                                      : selectedPeriod ===
+                                                        "DAILY"
+                                                        ? cell?.data != null &&
+                                                          cell?.data !== ""
+                                                          ? Number(
+                                                            cell.data,
+                                                          ) === 1
+                                                            ? "Yes"
+                                                            : Number(
+                                                              cell.data,
+                                                            ) === 2
+                                                              ? "No"
+                                                              : Number(
+                                                                cell.goalValue,
+                                                              ) > 1
+                                                                ? String(
+                                                                  cell.data,
+                                                                )
+                                                                : "No"
+                                                          : ""
+                                                        : formatCompactNumber(
+                                                          cell?.data,
+                                                        )} */}
+                                                    {formatCompactNumber(
+                                                      cell?.data,
+                                                    )}
                                                   </span>
                                                 </div>
                                               )}
@@ -2174,13 +2225,16 @@ export default function UpdatedKpiTable() {
                         </td>
                         <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
                           <span className="line-clamp-2 break-words cursor-default">
-                            {activeItem.data.validationType === "YES_NO"
-                              ? activeItem.data.goalValue === 1
+                            {activeItem.data.validationType === "YES_NO" ||
+                            activeItem.data.kpiName
+                              ?.toLowerCase()
+                              .includes("yes_no")
+                              ? Number(activeItem.data.value1) === 1
                                 ? "Yes"
                                 : "No"
                               : getFormattedValue(
                                   activeItem.data.validationType,
-                                  activeItem.data?.value1,
+                                  String(activeItem.data?.value1),
                                   activeItem.data?.value2,
                                   activeItem.data?.unit,
                                 )}

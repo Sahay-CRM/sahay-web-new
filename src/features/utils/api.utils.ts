@@ -31,14 +31,21 @@ axiosInstance.interceptors.response.use(
       message === "Invalid jwt token" ||
       message === "Unauthorized"
     ) {
-      localStorage.clear();
-      store.dispatch(logout());
-      document.cookie.split(";").forEach(function (c) {
-        document.cookie = c
-          .replace(/^ +/, "")
-          .replace(/=.*/, "=;expires=" + new Date(0).toUTCString() + ";path=/");
-      });
-      window.location.href = "/login";
+      const isFormPublic = error.config?.url?.includes("/form/master/");
+
+      if (!isFormPublic) {
+        localStorage.clear();
+        store.dispatch(logout());
+        document.cookie.split(";").forEach(function (c) {
+          document.cookie = c
+            .replace(/^ +/, "")
+            .replace(
+              /=.*/,
+              "=;expires=" + new Date(0).toUTCString() + ";path=/",
+            );
+        });
+        window.location.href = "/login";
+      }
     }
 
     return Promise.reject(error);

@@ -240,6 +240,7 @@ export default function ProjectDrawer({
               {
                 meetingNoteId: projectData?.meetingNoteId,
                 noteType: "PROJECT",
+                noteTag: "Project",
               },
               {
                 onSuccess: () => {

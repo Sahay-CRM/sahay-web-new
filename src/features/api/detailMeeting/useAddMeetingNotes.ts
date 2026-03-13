@@ -12,6 +12,7 @@ interface MeetingNoteAdd {
   note?: string;
   meetingNoteId?: string;
   noteType?: string | null;
+  noteTag?: string | null;
 }
 
 type DatePaging = CommonResponse<MeetingNotesRes>;

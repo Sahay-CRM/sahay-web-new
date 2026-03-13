@@ -953,6 +953,7 @@ interface KPIFormData {
   value1: string;
   value2: string;
   tag: string;
+  kpiMergeName?: string;
   coreParameterId?: string;
   hasData?: boolean;
   employeeName?: string;
@@ -1074,6 +1075,7 @@ interface Kpi {
   goalValue?: number;
   sequence?: number;
   isSkipDay?: boolean;
+  isMurgeKpi?: boolean;
 }
 
 interface CoreParameterGroup {
@@ -1137,6 +1139,7 @@ interface KpiDataCell {
   matchCount?: number;
   validationPercentage?: number;
   goalValue: string | number;
+  isMurgeKpi?: boolean;
 }
 
 interface KpiType {
@@ -1151,6 +1154,7 @@ interface KpiType {
   value2?: string | number | null;
   unit?: string | null;
   labels?: KpiLabels[];
+  isMurgeKpi?: boolean;
 }
 
 interface KpiLabels {
@@ -1239,10 +1243,12 @@ interface KpiAllList {
   dataPointName?: string;
   dataPointLabel?: string;
   KPIMasterId?: string;
+  kpiMergeName?: string;
   kpiId: string;
   KPIName?: string;
   kpiName?: string;
   KPILabel?: string;
+  coreParameterName?: string;
   kpiLabel?: string;
   validationType: string;
   frequencyType: string;
@@ -1416,6 +1422,8 @@ interface KpiMergeRes {
   kpiIds: string;
   kpiMergeName: string;
   tag: string;
+  unit?: string;
+  frequencyType?: string;
   companyId: string;
   value1: string;
   value2: string;

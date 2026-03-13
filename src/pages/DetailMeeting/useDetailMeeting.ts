@@ -16,7 +16,7 @@ import { queryClient } from "@/queryClient";
 import { getUTCEndOfDay, getUTCStartOfDay } from "@/features/utils/app.utils";
 
 export default function useDetailMeeting() {
-  const permission = useSelector(getUserPermission).LIVE_MEETING;
+  const permission = useSelector(getUserPermission);
 
   // LocalStorage key for persisting live meeting date range
   const LIVE_MEETINGS_DATE_RANGE_KEY = "LiveMeetingsDateRange";
@@ -372,7 +372,8 @@ export default function useDetailMeeting() {
     isDeleteModalOpen,
     setIsImportExportModalOpen,
     isChildData,
-    permission,
+    permission: permission.LIVE_MEETING,
+    cloneMeetingPermission: permission.CLONE_MEETING,
     statusOptions,
     handleRowsModalOpen,
     isViewModalOpen,

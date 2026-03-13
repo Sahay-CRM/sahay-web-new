@@ -10,6 +10,14 @@ export function formatToDateOnly(date?: string | Date | null): string {
     : parsedDate.toISOString().split("T")[0];
 }
 
+export function formatToProjectDateTime(date?: string | Date | null): string {
+  if (!date) return "";
+  const parsedDate = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(parsedDate.getTime())) return "";
+
+  return format(parsedDate, "d/M/yyyy h:mm:ss a").toLowerCase();
+}
+
 interface KpiDataEntry {
   startDate: string;
   endDate: string;
@@ -127,7 +135,7 @@ export function isValidInput(
     case "BETWEEN":
       return val >= num1 && val <= (num2 ?? num1);
     case "YES_NO":
-      return (val === 1 && value1 === "1") || (val === 0 && value1 === "0");
+      return (val === 1 && value1 === "1") || (val === 2 && value1 === "2");
     default:
       return false;
   }

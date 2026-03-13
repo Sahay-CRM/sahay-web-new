@@ -69,6 +69,7 @@ export default function DetailMeetingList() {
     setIsDataFilter,
     isDataFilter,
     handleDateRangeReset,
+    cloneMeetingPermission,
   } = useDetailMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -250,14 +251,22 @@ export default function DetailMeetingList() {
               return (
                 <>
                   {(userData.employeeType === "CONSULTANT" ||
-                    userData.employeeType === "OWNER") && (
+                    userData.employeeType === "OWNER" ||
+                    cloneMeetingPermission.View ||
+                    cloneMeetingPermission.Add ||
+                    cloneMeetingPermission.Edit) && (
                     <Button
                       size="sm"
                       variant="outline"
                       className="py-1 w-[40px] bg-transparent text-primary px-3 cursor-pointer"
                       onClick={() => {
-                        setSelectedMeeting(row);
-                        setIsDuplicateModalOpen(true);
+                        if (
+                          cloneMeetingPermission.Add ||
+                          cloneMeetingPermission.Edit
+                        ) {
+                          setSelectedMeeting(row);
+                          setIsDuplicateModalOpen(true);
+                        }
                       }}
                     >
                       <CopyPlus className="block !w-5 !h-5" />

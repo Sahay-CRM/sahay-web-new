@@ -3,6 +3,7 @@ import ModalData from "@/components/shared/Modal/ModalData";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import useIssuesFormModal from "./useIssuesFormModal";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import FormSelect from "@/components/shared/Form/FormSelect";
 
 export default function IssueFormModal({
   isModalOpen,
@@ -24,6 +25,11 @@ export default function IssueFormModal({
     modalClose,
     modalData,
   });
+
+  const typeOptions = [
+    { label: "RESOLVED", value: "RESOLVED" },
+    { label: "UNRESOLVED", value: "UNRESOLVED" },
+  ];
 
   return (
     <ModalData
@@ -72,6 +78,23 @@ export default function IssueFormModal({
             containerClass="mt-0 tb:mt-0"
             className="text-lg"
             isMandatory={true}
+          />
+        </div>
+        <div>
+          <Controller
+            name="type"
+            control={control}
+            render={({ field }) => (
+              <FormSelect
+                label="Select Type"
+                value={field.value ?? undefined}
+                onChange={field.onChange}
+                options={typeOptions}
+                error={errors.type}
+                placeholder="Select Type"
+                isMandatory
+              />
+            )}
           />
         </div>
       </div>
