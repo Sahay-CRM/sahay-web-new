@@ -3,6 +3,9 @@ import { useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useGetForm, useUpdateForm } from "@/features/api/Form";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+import PageNotAccess from "../../PageNoAccess";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +79,12 @@ export default function FormSettingsPage() {
       { label: `${formName} Form Settings`, href: "" },
     ]);
   }, [setBreadcrumbs, formName]);
+
+  const permission = useSelector(getUserPermission).FORM;
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   const updateSetting = (updates: Partial<FormSettings>) => {
     setSettings((prev) => ({ ...prev, ...updates }));

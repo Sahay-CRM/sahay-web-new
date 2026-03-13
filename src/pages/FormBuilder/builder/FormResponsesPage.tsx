@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useGetForm, useGetFormResponse } from "@/features/api/Form";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+import PageNotAccess from "../../PageNoAccess";
 import {
   Submission,
   FormResponseItem,
@@ -58,6 +61,12 @@ export default function FormResponsesPage() {
       { label: `${form?.name} Form Responses`, href: "" },
     ]);
   }, [setBreadcrumbs, form?.name, id]);
+
+  const permission = useSelector(getUserPermission).FORM;
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   const visibleColumns = {
     srNo: "No.",
@@ -201,7 +210,7 @@ export default function FormResponsesPage() {
           columns={visibleColumns}
           primaryKey="id"
           isLoading={responsesLoading}
-          moduleKey="FORM_RESPONSE"
+          moduleKey="FORM"
           isActionButton={() => false}
           actionColumnWidth="w-[120px]"
           setPaginationFilter={setPaginationFilter}

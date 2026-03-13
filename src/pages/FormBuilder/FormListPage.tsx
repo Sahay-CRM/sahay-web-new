@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+import PageNotAccess from "../PageNoAccess";
 import { Button } from "@/components/ui/button";
 import TableData from "@/components/shared/DataTable/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
@@ -57,6 +60,8 @@ export default function FormListPage() {
   const [shareForm, setShareForm] = useState<FormDetails | null>(null);
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false);
   const [selectedForm, setSelectedForm] = useState<FormDetails | null>(null);
+
+  const permission = useSelector(getUserPermission).FORM;
 
   useEffect(() => {
     setBreadcrumbs([{ label: "Forms", href: "" }]);
@@ -126,6 +131,10 @@ export default function FormListPage() {
       );
   }, [allForms, statusFilter, paginationFilter]);
 
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
+
   return (
     <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
       {/* Form Add/Edit Modal (Name/Description only) */}
@@ -157,13 +166,15 @@ export default function FormListPage() {
         <h1 className="font-semibold capitalize text-xl text-black">
           Forms List
         </h1>
-        <Button
-          className="py-2 w-fit bg-[#2f328e] hover:bg-[#1e205e]"
-          onClick={handleCreateNew}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Create Form
-        </Button>
+        {permission?.Add && (
+          <Button
+            className="py-2 w-fit bg-[#2f328e] hover:bg-[#1e205e]"
+            onClick={handleCreateNew}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Form
+          </Button>
+        )}
       </div>
 
       {/* Search + Status Filter */}
@@ -246,7 +257,7 @@ export default function FormListPage() {
           columns={visibleColumns}
           primaryKey="id"
           isLoading={isLoading}
-          moduleKey="TASK"
+          moduleKey="FORM"
           isActionButton={() => false}
           actionColumnWidth="w-[280px] overflow-hidden "
           setPaginationFilter={setPaginationFilter}

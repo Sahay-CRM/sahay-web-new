@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useGetFormById } from "@/features/api/Form";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+import PageNotAccess from "../../PageNoAccess";
 import FormHeader from "../preview/components/FormHeader";
 import FormSidebar from "../preview/components/FormSidebar";
 import FormQuestions from "../preview/components/FormQuestions";
@@ -21,6 +24,12 @@ const BuilderPreviewPage = () => {
   const [responses, setResponses] = useState<
     Record<string, string | string[] | File | FileList>
   >({});
+
+  const permission = useSelector(getUserPermission).FORM;
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   if (isLoading) return <LoadingScreen />;
   if (!form) return <FormNotFoundScreen />;

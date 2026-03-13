@@ -1,5 +1,8 @@
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useGetFormSubmissionDetail } from "@/features/api/Form";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+import PageNotAccess from "../../PageNoAccess";
 import { Badge } from "@/components/ui/badge";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import { useState, useMemo, useEffect } from "react";
@@ -84,6 +87,12 @@ export default function FormSubmissionDetailPage() {
       ]);
     }
   }, [setBreadcrumbs, submission]);
+
+  const permission = useSelector(getUserPermission).FORM;
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   if (isLoading)
     return (

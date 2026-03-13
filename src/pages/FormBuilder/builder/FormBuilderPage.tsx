@@ -7,6 +7,9 @@ import { PublishModal } from "./components/PublishModal";
 import { Loader2 } from "lucide-react";
 import useFormBuilder from "./hooks/useFormBuilder";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+import PageNotAccess from "../../PageNoAccess";
 
 const FormBuilderPage = () => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -36,12 +39,18 @@ const FormBuilderPage = () => {
   const visibility = watch("visibility") || "PUBLIC";
   const mobileNumbers = watch("mobileNumbers") || [];
 
+  const permission = useSelector(getUserPermission).FORM;
+
   useEffect(() => {
     setBreadcrumbs([
       { label: "Forms", href: "/dashboard/forms" },
       { label: "Forms Field Manage", href: "" },
     ]);
   }, [setBreadcrumbs]);
+
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
   return (
     <div className="flex h-full  overflow-hidden">
       {/* Form Builder Area */}

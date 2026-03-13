@@ -264,7 +264,7 @@ export const companyNavigationData = [
     label: "Forms",
     link: "/dashboard/forms",
     permission: "View",
-    moduleKey: "TASK",
+    moduleKey: "FORM",
   },
 ];
 
