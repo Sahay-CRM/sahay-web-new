@@ -11,6 +11,8 @@ import {
 import Urls from "@/features/utils/urls.utils";
 import { useFormRestrictions } from "../../builder/hooks/useFormRestrictions";
 
+import { decodeFormId } from "@/features/utils/id.utils";
+
 type ResponseValue = string | string[] | File | FileList;
 export type ResponseData = Record<string, ResponseValue>;
 
@@ -25,7 +27,9 @@ interface UploadApiResponse {
 }
 
 export const useFormPreviewPage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: rawId } = useParams<{ id: string }>();
+  const id = decodeFormId(rawId || "");
+
   const { data: formResponse, isLoading: isLoadingForm } = useGetFormById(
     id || "",
   );

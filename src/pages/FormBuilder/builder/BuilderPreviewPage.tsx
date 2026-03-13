@@ -10,8 +10,11 @@ import {
 } from "../preview/components/FormStatusScreens";
 import type { ResponseData } from "../preview/hooks/useFormPreviewPage";
 
+import { decodeFormId } from "@/features/utils/id.utils";
+
 const BuilderPreviewPage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: rawId } = useParams<{ id: string }>();
+  const id = decodeFormId(rawId || "");
   const { data: formResponse, isLoading } = useGetFormById(id || "");
   const form = formResponse?.data as FormDetails | undefined;
 

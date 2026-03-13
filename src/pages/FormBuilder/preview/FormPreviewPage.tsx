@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useFormPreviewPage } from "./hooks/useFormPreviewPage";
 import {
   LoadingScreen,
@@ -13,7 +12,6 @@ import FormHeader from "./components/FormHeader";
 import ViolationBar from "./components/ViolationBar";
 import FormSidebar from "./components/FormSidebar";
 import FormQuestions from "./components/FormQuestions";
-import TabSwitchWarningModal from "./components/TabSwitchWarningModal";
 
 const FormPreviewPage = () => {
   const {
@@ -53,16 +51,16 @@ const FormPreviewPage = () => {
     verifiedMobile,
     videoRef,
     hwStatus,
-    tabSwitchWarning,
+    // tabSwitchWarning,
     scoreString,
     submissionMessage,
   } = useFormPreviewPage();
 
   // Show warning modal on each new tab switch event
-  const [showTabWarning, setShowTabWarning] = useState(false);
-  useEffect(() => {
-    if (tabSwitchWarning > 0) setShowTabWarning(true);
-  }, [tabSwitchWarning]);
+  // const [showTabWarning, setShowTabWarning] = useState(false);
+  // useEffect(() => {
+  //   if (tabSwitchWarning > 0) setShowTabWarning(true);
+  // }, [tabSwitchWarning]);
 
   // ── Status Screens ───────────────────────────────────────────────────────
   if (isLoadingForm) return <LoadingScreen />;
@@ -117,13 +115,13 @@ const FormPreviewPage = () => {
   // ── Main Form ────────────────────────────────────────────────────────────
   return (
     <div className="h-screen bg-[#f8f9fc] flex flex-col overflow-hidden">
-      {showTabWarning && formSettings.tabSwitchDetection && (
+      {/* {showTabWarning && formSettings.tabSwitchDetection && (
         <TabSwitchWarningModal
           count={counts.tab_switch}
           maxSwitches={Number(formSettings.maxTabSwitches) || 3}
           onClose={() => setShowTabWarning(false)}
         />
-      )}
+      )} */}
       <FormHeader
         formName={form.name}
         formDescription={form.description}

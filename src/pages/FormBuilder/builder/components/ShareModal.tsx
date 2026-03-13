@@ -14,6 +14,8 @@ import { Link2, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
+import { encodeFormId } from "@/features/utils/id.utils";
+
 interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -29,7 +31,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
 
-  const publicUrl = `${window.location.origin}/form/${form.id}`;
+  const encodedId = encodeFormId(form.id);
+  const publicUrl = `${window.location.origin}/form/${encodedId}`;
   const isPrivate = form.visibility === "PRIVATE";
   const isDraft = !form.isActive;
 

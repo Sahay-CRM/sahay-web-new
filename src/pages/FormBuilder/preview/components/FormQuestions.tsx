@@ -21,7 +21,9 @@ interface FormQuestionsProps {
 
 // ── Inline field-level validation helpers ─────────────────────────────────────
 const validatePhone = (val: string) =>
-  /^[0-9]{10}$/.test(val.trim()) ? "" : "Enter a valid 10-digit mobile number";
+  /^[6-9][0-9]{9}$/.test(val.trim())
+    ? ""
+    : "Enter a valid 10-digit mobile number starting with 6-9";
 
 const validateEmail = (val: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim())
@@ -319,7 +321,8 @@ const FormQuestions = ({
                       onChange={(e) =>
                         updateResponse(question.id, e.target.value)
                       }
-                      className="w-full h-11 bg-white border border-gray-200 rounded-xl px-4 text-sm focus:ring-1 focus:ring-[#2f328e] focus:bg-white focus:border-[#2f328e] outline-none font-medium"
+                      onKeyDown={(e) => e.preventDefault()}
+                      className="w-full h-11 bg-white border border-gray-200 rounded-xl px-4 text-sm focus:ring-1 focus:ring-[#2f328e] focus:bg-white focus:border-[#2f328e] outline-none font-medium cursor-pointer"
                     />
                   )}
 

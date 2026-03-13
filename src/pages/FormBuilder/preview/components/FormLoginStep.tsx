@@ -98,8 +98,8 @@ const FormLoginStep = ({
                         {...register("mobile", {
                           required: "Enter mobile number",
                           pattern: {
-                            value: /^[0-9]{10}$/,
-                            message: "Invalid number",
+                            value: /^[6-9][0-9]{9}$/,
+                            message: "Enter valid 10-digit number",
                           },
                         })}
                       />

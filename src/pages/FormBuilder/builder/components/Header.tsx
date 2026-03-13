@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Save, Send, FileText, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { encodeFormId } from "@/features/utils/id.utils";
 
 interface FormHeaderProps {
   name: string;
@@ -77,7 +78,10 @@ export const FormHeader: React.FC<FormHeaderProps> = ({
             variant="outline"
             className="h-8 shadow-sm transition-all flex items-center gap-2 border-[#2f328e]/20 text-[#2f328e] hover:bg-[#2f328e]/5"
             onClick={() =>
-              window.open(`/form-builder-preview/${formId}`, "_blank")
+              window.open(
+                `/form-builder-preview/${encodeFormId(formId || "")}`,
+                "_blank",
+              )
             }
             disabled={!formId}
             title={
