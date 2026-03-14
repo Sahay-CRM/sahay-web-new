@@ -50,6 +50,7 @@ export const useFormPreviewPage = () => {
     null,
   );
   const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [isScreenActive, setIsScreenActive] = useState(false);
@@ -59,6 +60,16 @@ export const useFormPreviewPage = () => {
     message: string;
   } | null>(null);
   const [statusSentOtp, setStatusSentOtp] = useState(false);
+  const otpFormMethods = useForm<FormAccessData>({
+    defaultValues: { mobile: "", userType: "", otp: "", name: "" },
+  });
+
+  const {
+    register,
+    handleSubmit: handleOtpSubmit,
+    setValue,
+    formState: { errors },
+  } = otpFormMethods;
 
   // Hardware check state
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -77,6 +88,8 @@ export const useFormPreviewPage = () => {
   const nameRef = useRef("");
   const mobileRef = useRef("");
   const isSubmittedRef = useRef(false);
+  const isSubmittingRef = useRef(false);
+  const responsesRef = useRef<ResponseData>({});
   const wasEverScreenActiveRef = useRef(false);
   const hasRecovered = useRef(false);
 
@@ -98,7 +111,11 @@ export const useFormPreviewPage = () => {
 
   const updateResponse = useCallback(
     (fieldId: string, value: ResponseValue) => {
-      setResponses((prev) => ({ ...prev, [fieldId]: value }));
+      setResponses((prev) => {
+        const next = { ...prev, [fieldId]: value };
+        responsesRef.current = next;
+        return next;
+      });
       setFieldErrors((prev) => {
         if (!prev[fieldId]) return prev;
         const next = { ...prev };
@@ -215,11 +232,21 @@ export const useFormPreviewPage = () => {
     async (force = false, errorCode?: string, errorMessage?: string) => {
       if (!form || !id) return;
 
+      if (isSubmittingRef.current || isSubmittedRef.current) {
+        return;
+      }
+
+      // LOCK IMMEDIATELY to prevent any race condition during validation/async work
+      isSubmittingRef.current = true;
+      setIsSubmitting(true);
+
+      const currentResponses = responsesRef.current;
+
       if (!force) {
         const errors: Record<string, string> = {};
         form.fields?.forEach((field) => {
           if (!field.isRequired) return;
-          const val = responses[field.id];
+          const val = currentResponses[field.id];
           if (field.fieldType === "CHECKBOX") {
             if (!val || !Array.isArray(val) || val.length === 0) {
               errors[field.id] = `${field.label} is required`;
@@ -236,7 +263,7 @@ export const useFormPreviewPage = () => {
         // Format validation — PHONE and EMAIL (even if not required, validate when filled)
         form.fields?.forEach((field) => {
           if (errors[field.id]) return; // already has a required error
-          const val = responses[field.id];
+          const val = currentResponses[field.id];
           if (!val || typeof val !== "string" || val.trim() === "") return;
           if (field.fieldType === "PHONE" && !/^[0-9]{10}$/.test(val.trim())) {
             errors[field.id] = "Enter a valid 10-digit mobile number";
@@ -252,6 +279,9 @@ export const useFormPreviewPage = () => {
 
         if (Object.keys(errors).length > 0) {
           setFieldErrors(errors);
+          // RELEASE LOCK if validation fails so user can try again
+          isSubmittingRef.current = false;
+          setIsSubmitting(false);
           return;
         }
         setFieldErrors({});
@@ -260,7 +290,7 @@ export const useFormPreviewPage = () => {
       const textResponses: { fieldId: string; value: string | string[] }[] = [];
 
       // Batch upload for file fields
-      const fileFields = Object.entries(responses).filter(
+      const fileFields = Object.entries(currentResponses).filter(
         (item): item is [string, File | FileList] =>
           item[1] instanceof File || item[1] instanceof FileList,
       );
@@ -318,7 +348,7 @@ export const useFormPreviewPage = () => {
           .map((f: Question) => f.id) || [],
       );
 
-      Object.entries(responses).forEach(([fieldId, value]) => {
+      Object.entries(currentResponses).forEach(([fieldId, value]) => {
         if (value instanceof File || value instanceof FileList) return;
         if (fileFieldIds.has(fieldId)) return;
         if (typeof value === "string" || Array.isArray(value)) {
@@ -400,24 +430,36 @@ export const useFormPreviewPage = () => {
               );
             }
           },
+          onError: () => {
+            // Allow retry if it failed (e.g. network error), but only if not already successfully submitted
+            if (!isSubmittedRef.current) {
+              setIsSubmitting(false);
+              isSubmittingRef.current = false;
+            }
+          },
         },
       );
     },
-    [form, id, responses, submitForm, uploadFormFile, stopScreenShare],
+    [form, id, submitForm, uploadFormFile, stopScreenShare],
   );
 
   const onAutoSubmit = useCallback(
     (reason?: { code: string; message: string }) => {
+      if (isSubmittingRef.current || isSubmittedRef.current) return;
       if (reason) setSubmissionReason(reason);
       handleSubmit(true, reason?.code, reason?.message);
     },
     [handleSubmit],
   );
 
+  // Stable ref for onAutoSubmit to avoid useEffect dependency cascade in timer logic
+  const onAutoSubmitRef = useRef(onAutoSubmit);
+  onAutoSubmitRef.current = onAutoSubmit;
+
   const { counts, tabSwitchWarning } = useFormRestrictions({
     formSettings,
     onAutoSubmit,
-    enabled: accessGranted && !isSubmitted,
+    enabled: accessGranted && !isSubmitted && !isSubmitting,
     formId: id,
     mobileNumber: verifiedMobile,
   });
@@ -425,6 +467,91 @@ export const useFormPreviewPage = () => {
   // Ref for tabSwitchDetection so track.ended handler always reads the latest value
   const tabSwitchDetectionRef = useRef(false);
   tabSwitchDetectionRef.current = !!formSettings.tabSwitchDetection;
+
+  // ── Session Recovery ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!id || !form || hasRecovered.current) return;
+    const sessionKey = `form_session_${id}`;
+    const stored = localStorage.getItem(sessionKey);
+    if (stored) {
+      try {
+        const {
+          token,
+          name,
+          mobile,
+          accessGranted: storedAccess,
+        } = JSON.parse(stored);
+        if (token && name && mobile) {
+          setSubmissionToken(token);
+          setVerifiedName(name);
+          setVerifiedMobile(mobile);
+          setIsVerified(true);
+          if (storedAccess) {
+            const needsCamera = !!formSettings.cameraPermissionCheck;
+            const needsMic = !!formSettings.microphonePermissionAwareness;
+            const needsScreen = !!formSettings.autoScreenshotCapture;
+            if (needsCamera || needsMic || needsScreen) {
+              const rules = getRules();
+              let targetStep = 0;
+              if (rules.length > 0) targetStep++;
+              if (needsCamera || needsMic) setOnboardingStep(targetStep);
+              else if (needsScreen) {
+                if (needsCamera || needsMic) targetStep++;
+                setOnboardingStep(targetStep);
+              }
+              setAccessGranted(false);
+            } else {
+              setAccessGranted(true);
+            }
+            setHasStartedTimer(true);
+          }
+          otpFormMethods.reset({ name, mobile, otp: "", userType: "" });
+        }
+      } catch {
+        localStorage.removeItem(sessionKey);
+      }
+    }
+    hasRecovered.current = true;
+  }, [id, form, otpFormMethods, formSettings, getRules]);
+
+  // ── Data Persistence ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!id || !verifiedMobile || !isVerified) return;
+    const dataKey = `form_data_${id}_${verifiedMobile}`;
+    const storedData = localStorage.getItem(dataKey);
+    if (storedData) {
+      try {
+        const parsed = JSON.parse(storedData);
+        if (
+          Object.keys(responses).length === 0 &&
+          Object.keys(parsed).length > 0
+        ) {
+          setResponses(parsed);
+          responsesRef.current = parsed;
+        }
+      } catch {
+        localStorage.removeItem(dataKey);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, verifiedMobile, isVerified]);
+
+  useEffect(() => {
+    if (
+      !id ||
+      !verifiedMobile ||
+      !isVerified ||
+      Object.keys(responses).length === 0
+    )
+      return;
+    const dataKey = `form_data_${id}_${verifiedMobile}`;
+    const persistentData = Object.fromEntries(
+      Object.entries(responses).filter(
+        ([, value]) => !(value instanceof File || value instanceof FileList),
+      ),
+    );
+    localStorage.setItem(dataKey, JSON.stringify(persistentData));
+  }, [responses, id, verifiedMobile, isVerified]);
 
   // ── Timer ─────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -434,7 +561,9 @@ export const useFormPreviewPage = () => {
       !formSettings.totalTimerEnabled ||
       !formSettings.totalTimerMinutes ||
       !id ||
-      !verifiedMobile
+      !verifiedMobile ||
+      isSubmitted ||
+      isSubmitting
     )
       return;
 
@@ -448,7 +577,10 @@ export const useFormPreviewPage = () => {
         const remaining = totalMin * 60 - elapsedSeconds;
         if (remaining <= 0) {
           setTimeRemaining(0);
-          onAutoSubmit();
+          onAutoSubmitRef.current?.({
+            code: "TIME_LIMIT_OVER",
+            message: "Time limit for the form has expired.",
+          });
         } else {
           setTimeRemaining(remaining);
         }
@@ -463,6 +595,7 @@ export const useFormPreviewPage = () => {
       );
       setTimeRemaining(totalMin * 60);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     accessGranted,
     hasStartedTimer,
@@ -470,15 +603,16 @@ export const useFormPreviewPage = () => {
     formSettings.totalTimerMinutes,
     id,
     verifiedMobile,
-    onAutoSubmit,
+    // onAutoSubmit removed from deps to prevent loop
   ]);
 
   useEffect(() => {
     if (
       !hasStartedTimer ||
       timeRemaining === null ||
-      timeRemaining <= 0 ||
-      isSubmitted
+      (timeRemaining ?? 0) <= 0 ||
+      isSubmitted ||
+      isSubmitting
     )
       return;
     const interval = setInterval(() => {
@@ -486,7 +620,7 @@ export const useFormPreviewPage = () => {
         if (prev === null) return 0;
         if (prev <= 1) {
           clearInterval(interval);
-          onAutoSubmit({
+          onAutoSubmitRef.current?.({
             code: "TIME_LIMIT_OVER",
             message: "Time limit for the form has expired.",
           });
@@ -496,7 +630,14 @@ export const useFormPreviewPage = () => {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [hasStartedTimer, timeRemaining, isSubmitted, onAutoSubmit]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    hasStartedTimer,
+    timeRemaining === null,
+    (timeRemaining ?? 0) <= 0,
+    isSubmitted,
+    isSubmitting,
+  ]);
 
   // Track wasEverScreenActive
   useEffect(() => {
@@ -588,18 +729,6 @@ export const useFormPreviewPage = () => {
     stopScreenShare,
   ]);
 
-  // ── OTP Form ──────────────────────────────────────────────────────────────
-  const otpFormMethods = useForm<FormAccessData>({
-    defaultValues: { mobile: "", userType: "", otp: "", name: "" },
-  });
-
-  const {
-    register,
-    handleSubmit: handleOtpSubmit,
-    setValue,
-    formState: { errors },
-  } = otpFormMethods;
-
   const onOtpSubmit = async (data: FormAccessData) => {
     if (!id) return;
     if (!statusSentOtp) {
@@ -646,90 +775,6 @@ export const useFormPreviewPage = () => {
       );
     }
   };
-
-  // ── Session Recovery ──────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!id || !form || hasRecovered.current) return;
-    const sessionKey = `form_session_${id}`;
-    const stored = localStorage.getItem(sessionKey);
-    if (stored) {
-      try {
-        const {
-          token,
-          name,
-          mobile,
-          accessGranted: storedAccess,
-        } = JSON.parse(stored);
-        if (token && name && mobile) {
-          setSubmissionToken(token);
-          setVerifiedName(name);
-          setVerifiedMobile(mobile);
-          setIsVerified(true);
-          if (storedAccess) {
-            const needsCamera = !!formSettings.cameraPermissionCheck;
-            const needsMic = !!formSettings.microphonePermissionAwareness;
-            const needsScreen = !!formSettings.autoScreenshotCapture;
-            if (needsCamera || needsMic || needsScreen) {
-              const rules = getRules();
-              let targetStep = 0;
-              if (rules.length > 0) targetStep++;
-              if (needsCamera || needsMic) setOnboardingStep(targetStep);
-              else if (needsScreen) {
-                if (needsCamera || needsMic) targetStep++;
-                setOnboardingStep(targetStep);
-              }
-              setAccessGranted(false);
-            } else {
-              setAccessGranted(true);
-            }
-            setHasStartedTimer(true);
-          }
-          otpFormMethods.reset({ name, mobile, otp: "", userType: "" });
-        }
-      } catch {
-        localStorage.removeItem(sessionKey);
-      }
-    }
-    hasRecovered.current = true;
-  }, [id, form, otpFormMethods, formSettings, getRules]);
-
-  // ── Data Persistence ──────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!id || !verifiedMobile || !isVerified) return;
-    const dataKey = `form_data_${id}_${verifiedMobile}`;
-    const storedData = localStorage.getItem(dataKey);
-    if (storedData) {
-      try {
-        const parsed = JSON.parse(storedData);
-        if (
-          Object.keys(responses).length === 0 &&
-          Object.keys(parsed).length > 0
-        ) {
-          setResponses(parsed);
-        }
-      } catch {
-        localStorage.removeItem(dataKey);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, verifiedMobile, isVerified]);
-
-  useEffect(() => {
-    if (
-      !id ||
-      !verifiedMobile ||
-      !isVerified ||
-      Object.keys(responses).length === 0
-    )
-      return;
-    const dataKey = `form_data_${id}_${verifiedMobile}`;
-    const persistentData = Object.fromEntries(
-      Object.entries(responses).filter(
-        ([, value]) => !(value instanceof File || value instanceof FileList),
-      ),
-    );
-    localStorage.setItem(dataKey, JSON.stringify(persistentData));
-  }, [responses, id, verifiedMobile, isVerified]);
 
   // ── Camera / Mic ──────────────────────────────────────────────────────────
   const requestCamera = useCallback(async () => {
@@ -853,6 +898,7 @@ export const useFormPreviewPage = () => {
     accessGranted,
     alreadySubmitted,
     isUploading,
+    isSubmitting,
     isSubmittingForm,
     isSendingOtp,
     isVerifyingOtp,

@@ -95,7 +95,9 @@ export default function FormResponsesPage() {
         return;
       }
 
-      const allSubmissions = res.data;
+      const allSubmissions = (res.data || []).filter(
+        (s) => s.status !== "NOT_SUBMITTED",
+      );
       const questionFields = (form.fields || []).filter(
         (f) => f.fieldType !== "FILE",
       );

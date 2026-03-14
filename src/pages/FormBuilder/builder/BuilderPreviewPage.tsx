@@ -6,7 +6,6 @@ import { getUserPermission } from "@/features/selectors/auth.selector";
 import PageNotAccess from "../../PageNoAccess";
 import FormHeader from "../preview/components/FormHeader";
 import FormSidebar from "../preview/components/FormSidebar";
-import FormQuestions from "../preview/components/FormQuestions";
 import {
   LoadingScreen,
   FormNotFoundScreen,
@@ -14,6 +13,7 @@ import {
 import type { ResponseData } from "../preview/hooks/useFormPreviewPage";
 
 import { decodeFormId } from "@/features/utils/id.utils";
+import FormQuestions from "../preview/components/FormQuestions";
 
 const BuilderPreviewPage = () => {
   const { id: rawId } = useParams<{ id: string }>();
@@ -113,6 +113,7 @@ const BuilderPreviewPage = () => {
           setResponses={(data) => setResponses(data as ResponseData)}
           handleSubmit={() => {}}
           isUploading={false}
+          isSubmitting={false}
           isSubmittingForm={false}
           isPreview={true}
         />

@@ -27,6 +27,7 @@ const FormPreviewPage = () => {
     accessGranted,
     alreadySubmitted,
     isUploading,
+    isSubmitting,
     isSubmittingForm,
     isSendingOtp,
     isVerifyingOtp,
@@ -75,7 +76,13 @@ const FormPreviewPage = () => {
       />
     );
   if (!form) return <FormNotFoundScreen />;
-  if (timeRemaining === 0 && formSettings.totalTimerEnabled && accessGranted)
+  if (
+    timeRemaining === 0 &&
+    formSettings.totalTimerEnabled &&
+    accessGranted &&
+    !isSubmitting &&
+    !isSubmitted
+  )
     return <TimerOverScreen />;
 
   // ── Login (OTP) ──────────────────────────────────────────────────────────
@@ -153,6 +160,7 @@ const FormPreviewPage = () => {
           setResponses={setResponses}
           handleSubmit={handleSubmit}
           isUploading={isUploading}
+          isSubmitting={isSubmitting}
           isSubmittingForm={isSubmittingForm}
         />
       </div>

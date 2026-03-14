@@ -15,6 +15,7 @@ interface FormQuestionsProps {
   setResponses: (data: ResponseData) => void;
   handleSubmit: () => void;
   isUploading: boolean;
+  isSubmitting: boolean;
   isSubmittingForm: boolean;
   isPreview?: boolean;
 }
@@ -39,6 +40,7 @@ const FormQuestions = ({
   setResponses,
   handleSubmit,
   isUploading,
+  isSubmitting,
   isSubmittingForm,
   isPreview,
 }: FormQuestionsProps) => {
@@ -391,9 +393,11 @@ const FormQuestions = ({
             <Button
               className="h-9 px-5 text-sm bg-[#2f328e] hover:bg-[#1a1c5d] text-white rounded-lg shadow-sm"
               onClick={() => handleSubmit()}
-              disabled={isUploading || isSubmittingForm || isPreview}
+              disabled={
+                isUploading || isSubmitting || isSubmittingForm || isPreview
+              }
             >
-              {isUploading || isSubmittingForm ? (
+              {isUploading || isSubmitting || isSubmittingForm ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : (
                 "Submit Response"
