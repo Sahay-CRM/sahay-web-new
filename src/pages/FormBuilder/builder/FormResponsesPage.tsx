@@ -150,7 +150,7 @@ export default function FormResponsesPage() {
     }
   };
 
-  if (formLoading || responsesLoading) {
+  if (formLoading && responsesLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-6 w-6 animate-spin text-[#2f328e]" />
