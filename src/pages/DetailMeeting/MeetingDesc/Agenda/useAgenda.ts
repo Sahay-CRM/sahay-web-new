@@ -618,6 +618,7 @@ export const useAgenda = ({
         ref(db, `meetings/${meetingId}/timers/objectives/${isSelectedAgenda}`),
         {
           actualTime: newActualTime,
+          totalActualTime: newActualTime,
           updatedAt: now,
         },
       );
@@ -796,10 +797,14 @@ export const useAgenda = ({
       const currentActualTime =
         meetingResponse?.timers.objectives?.[ioId!]?.actualTime || 0;
 
+      const newActualTime = currentActualTime + prevElapsedSeconds;
+
       // Create updates object for multi-path update
       await update(ref(db), {
         [`meetings/${meetingId}/timers/objectives/${ioId}/actualTime`]:
-          currentActualTime + prevElapsedSeconds,
+          newActualTime,
+        [`meetings/${meetingId}/timers/objectives/${ioId}/totalActualTime`]:
+          newActualTime,
         [`meetings/${meetingId}/timers/objectives/${ioId}/lastSwitchTimestamp`]:
           now,
         [`meetings/${meetingId}/state/lastSwitchTimestamp`]: now,
