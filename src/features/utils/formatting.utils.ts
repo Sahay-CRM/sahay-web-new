@@ -10,12 +10,20 @@ export function formatToDateOnly(date?: string | Date | null): string {
     : parsedDate.toISOString().split("T")[0];
 }
 
-export function formatToProjectDateTime(date?: string | Date | null): string {
+export function formatToDateTime(date?: string | Date | null): string {
   if (!date) return "";
   const parsedDate = typeof date === "string" ? new Date(date) : date;
   if (isNaN(parsedDate.getTime())) return "";
 
   return format(parsedDate, "d/M/yyyy h:mm:ss a").toLowerCase();
+}
+
+export function formatToProjectDateTime(date?: string | Date | null): string {
+  if (!date) return "";
+  const parsedDate = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(parsedDate.getTime())) return "";
+
+  return format(parsedDate, "d/M/yyyy").toLowerCase();
 }
 
 interface KpiDataEntry {
