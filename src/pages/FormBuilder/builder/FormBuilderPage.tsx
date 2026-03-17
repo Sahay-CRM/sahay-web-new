@@ -48,7 +48,14 @@ const FormBuilderPage = () => {
     ]);
   }, [setBreadcrumbs]);
 
-  if (permission && permission.View === false) {
+  if (!permission || permission.View === false) {
+    return <PageNotAccess />;
+  }
+
+  // Check if user has permission to edit (or add if it's a new form)
+  const hasActionPermission = formId ? permission.Edit : permission.Add;
+
+  if (!hasActionPermission) {
     return <PageNotAccess />;
   }
   return (
