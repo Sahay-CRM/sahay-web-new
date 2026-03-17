@@ -10,6 +10,8 @@ import {
 } from "@/features/api/Form";
 import Urls from "@/features/utils/urls.utils";
 import { useFormRestrictions } from "../../builder/hooks/useFormRestrictions";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { toJpeg } from "html-to-image";
 
 import { decodeFormId } from "@/features/utils/id.utils";
 
@@ -29,6 +31,7 @@ interface UploadApiResponse {
 export const useFormPreviewPage = () => {
   const { id: rawId } = useParams<{ id: string }>();
   const id = decodeFormId(rawId || "");
+  const isMobile = useIsMobile();
 
   const { data: formResponse, isLoading: isLoadingForm } = useGetFormById(
     id || "",
@@ -142,6 +145,55 @@ export const useFormPreviewPage = () => {
   const captureAndUploadScreenshot = useCallback(
     async (formId: string) => {
       if (isSubmittedRef.current) return;
+
+      // On Mobile, capture DOM of the entire body to include Header/Timer/Fields
+      if (isMobile) {
+        try {
+          const scrollEl = document.getElementById("form-questions-container");
+          const scrollTop = scrollEl ? scrollEl.scrollTop : 0;
+          const innerEl = scrollEl?.firstElementChild as HTMLElement;
+
+          const el = document.body;
+          if (!el) return;
+
+          // Temporarily shift the internal content to match scroll in the clone
+          if (innerEl) {
+            innerEl.style.transform = `translateY(-${scrollTop}px)`;
+          }
+
+          const dataUrl = await toJpeg(el, {
+            quality: 0.8,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            pixelRatio: 1.2,
+            backgroundColor: "#f8f8fb",
+          });
+
+          // Restore
+          if (innerEl) {
+            innerEl.style.transform = "";
+          }
+
+          const blob = await (await fetch(dataUrl)).blob();
+          if (isSubmittedRef.current) return;
+
+          const filename = `form-screenshot-${Date.now()}.jpg`;
+          await uploadFormFile({
+            file: blob,
+            fileName: filename,
+            mobileNumber: verifiedMobile,
+            fileType: "4010",
+            refId: formId,
+            token: tokenRef.current,
+          }).catch(() => {});
+          return;
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error("Full body capture failed:", err);
+          return;
+        }
+      }
+
       const stream = displayStreamRef.current;
       if (!stream) return;
       try {
@@ -161,27 +213,31 @@ export const useFormPreviewPage = () => {
         canvas.width = bitmap.width;
         canvas.height = bitmap.height;
         canvas.getContext("2d")?.drawImage(bitmap, 0, 0);
-        canvas.toBlob(
-          async (blob) => {
-            if (!blob || isSubmittedRef.current) return;
-            const filename = `screenshot-${Date.now()}.jpg`;
-            await uploadFormFile({
-              file: blob,
-              fileName: filename,
-              mobileNumber: verifiedMobile,
-              fileType: "4010",
-              refId: formId,
-              token: tokenRef.current,
-            }).catch(() => {});
-          },
-          "image/jpeg",
-          0.8,
-        );
+        await new Promise<void>((resolve) => {
+          canvas.toBlob(
+            async (blob) => {
+              if (blob && !isSubmittedRef.current) {
+                const filename = `screenshot-${Date.now()}.jpg`;
+                await uploadFormFile({
+                  file: blob,
+                  fileName: filename,
+                  mobileNumber: verifiedMobile,
+                  fileType: "4010",
+                  refId: formId,
+                  token: tokenRef.current,
+                }).catch(() => {});
+              }
+              resolve();
+            },
+            "image/jpeg",
+            0.8,
+          );
+        });
       } catch {
         /* silent */
       }
     },
-    [uploadFormFile, verifiedMobile],
+    [uploadFormFile, verifiedMobile, isMobile],
   );
 
   // API returns formSettings as [{id, key, value}, ...] — convert to flat object
@@ -357,7 +413,48 @@ export const useFormPreviewPage = () => {
       });
 
       // Final screenshot on submit
-      if (displayStreamRef.current && id) {
+      if (isMobile) {
+        try {
+          const scrollEl = document.getElementById("form-questions-container");
+          const scrollTop = scrollEl ? scrollEl.scrollTop : 0;
+          const innerEl = scrollEl?.firstElementChild as HTMLElement;
+
+          const el = document.body;
+          if (el) {
+            // Temporarily shift
+            if (innerEl) {
+              innerEl.style.transform = `translateY(-${scrollTop}px)`;
+            }
+
+            const dataUrl = await toJpeg(el, {
+              quality: 0.8,
+              width: window.innerWidth,
+              height: window.innerHeight,
+              pixelRatio: 1.2,
+              backgroundColor: "#f8f8fb",
+            });
+
+            // Restore
+            if (innerEl) {
+              innerEl.style.transform = "";
+            }
+
+            const blob = await (await fetch(dataUrl)).blob();
+            const filename = `form-submit-${Date.now()}.jpg`;
+            await uploadFormFile({
+              file: blob,
+              fileName: filename,
+              mobileNumber: mobileRef.current,
+              fileType: "4010",
+              refId: form?.id || id || "",
+              token: tokenRef.current,
+            }).catch(() => {});
+          }
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error("Final Full body capture failed:", err);
+        }
+      } else if (displayStreamRef.current && id) {
         try {
           const track = displayStreamRef.current.getVideoTracks()[0];
           if (track && track.readyState === "live") {
@@ -440,7 +537,7 @@ export const useFormPreviewPage = () => {
         },
       );
     },
-    [form, id, submitForm, uploadFormFile, stopScreenShare],
+    [form, id, submitForm, uploadFormFile, stopScreenShare, isMobile],
   );
 
   const onAutoSubmit = useCallback(
@@ -606,15 +703,19 @@ export const useFormPreviewPage = () => {
     // onAutoSubmit removed from deps to prevent loop
   ]);
 
+  const isTimerEnded = (timeRemaining ?? 0) <= 0;
+  const isTimerLoading = timeRemaining === null;
+
   useEffect(() => {
     if (
       !hasStartedTimer ||
-      timeRemaining === null ||
-      (timeRemaining ?? 0) <= 0 ||
+      isTimerLoading ||
+      isTimerEnded ||
       isSubmitted ||
       isSubmitting
-    )
+    ) {
       return;
+    }
     const interval = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev === null) return 0;
@@ -629,12 +730,12 @@ export const useFormPreviewPage = () => {
         return prev - 1;
       });
     }, 1000);
+
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     hasStartedTimer,
-    timeRemaining === null,
-    (timeRemaining ?? 0) <= 0,
+    isTimerLoading,
+    isTimerEnded,
     isSubmitted,
     isSubmitting,
   ]);
@@ -679,6 +780,53 @@ export const useFormPreviewPage = () => {
       stopScreenShare();
     };
   }, [stopScreenShare]);
+
+  // ── Mobile Screenshot Interval ────────────────────────────────────────────
+  useEffect(() => {
+    if (
+      isMobile &&
+      accessGranted &&
+      !isSubmitted &&
+      !isSubmitting &&
+      formSettings.autoScreenshotCapture &&
+      id
+    ) {
+      setIsScreenActive(true);
+
+      const intervalMs =
+        Math.max(2, formSettings.autoScreenshotIntervalMinutes ?? 2) *
+        60 *
+        1000;
+
+      // Initial screenshot after 5 seconds
+      const initialTimeout = setTimeout(() => {
+        captureAndUploadScreenshot(id);
+      }, 5000);
+
+      const interval = setInterval(() => {
+        captureAndUploadScreenshot(id);
+      }, intervalMs);
+
+      screenshotIntervalRef.current = interval;
+
+      return () => {
+        clearTimeout(initialTimeout);
+        clearInterval(interval);
+        if (screenshotIntervalRef.current === interval) {
+          screenshotIntervalRef.current = null;
+        }
+      };
+    }
+  }, [
+    isMobile,
+    accessGranted,
+    isSubmitted,
+    isSubmitting,
+    formSettings.autoScreenshotCapture,
+    formSettings.autoScreenshotIntervalMinutes,
+    id,
+    captureAndUploadScreenshot,
+  ]);
 
   // ── Start Screen Share ────────────────────────────────────────────────────
   const startScreenShare = useCallback(async () => {
@@ -817,8 +965,14 @@ export const useFormPreviewPage = () => {
   // ── Onboarding ────────────────────────────────────────────────────────────
   const completeOnboarding = () => {
     if (cameraStream) {
-      cameraStream.getTracks().forEach((track) => track.stop());
-      setCameraStream(null);
+      // Keep camera stream active on mobile if screenshot capture is enabled
+      const keepCamForProctoring =
+        isMobile && !!formSettings.autoScreenshotCapture;
+
+      if (!keepCamForProctoring) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+        setCameraStream(null);
+      }
     }
     setAccessGranted(true);
     setHasStartedTimer(true);
@@ -866,8 +1020,13 @@ export const useFormPreviewPage = () => {
       const micDone = !needsMic || micResult === "granted";
       if (camDone && micDone) setOnboardingStep((prev) => prev + 1);
     } else if (currentStepName === "screen") {
-      const success = await startScreenShare();
-      if (success) completeOnboarding();
+      if (isMobile) {
+        // Skip screen sharing on mobile but ensure proctoring starts with camera
+        completeOnboarding();
+      } else {
+        const success = await startScreenShare();
+        if (success) completeOnboarding();
+      }
     } else {
       completeOnboarding();
     }
@@ -934,5 +1093,6 @@ export const useFormPreviewPage = () => {
     // hardware
     videoRef,
     hwStatus,
+    isMobile,
   };
 };

@@ -59,7 +59,10 @@ const FormQuestions = ({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gray-50/50 p-3 lg:p-5 relative">
+    <div
+      id="form-questions-container"
+      className="flex-1 overflow-y-auto bg-gray-50/50 p-3 lg:p-5 relative"
+    >
       <div className="max-w-[800px] mx-auto space-y-8 pb-20">
         {/* Questions */}
         <div className="space-y-2">

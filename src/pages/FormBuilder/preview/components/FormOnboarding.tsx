@@ -1,4 +1,11 @@
-import { AlertCircle, Camera, Check, Mic, ShieldCheck } from "lucide-react";
+import {
+  AlertCircle,
+  Camera,
+  Check,
+  Layout,
+  Mic,
+  ShieldCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RefObject, useState } from "react";
@@ -15,6 +22,7 @@ interface FormOnboardingProps {
     mic: "pending" | "granted" | "denied";
   };
   screenShareError: string | null;
+  isMobile: boolean;
 }
 
 const FormOnboarding = ({
@@ -26,6 +34,7 @@ const FormOnboarding = ({
   videoRef,
   hwStatus,
   screenShareError,
+  isMobile,
 }: FormOnboardingProps) => {
   const [isAgreed, setIsAgreed] = useState(false);
   const rules = getRules();
@@ -44,7 +53,7 @@ const FormOnboarding = ({
     if (rules.length > 0 && onboardingStep === 0) return "Form Rules";
     if (onboardingStep === (rules.length > 0 ? 1 : 0)) return "Hardware Check";
     if (onboardingStep === (rules.length > 0 ? 2 : 1))
-      return "Screen Permission";
+      return isMobile ? "Proctoring Ready" : "Screen Permission";
     return "Ready to Start";
   };
 
@@ -197,35 +206,61 @@ const FormOnboarding = ({
             {currentStep === "screen" && (
               <div className="space-y-4 text-center">
                 <div className="bg-blue-50 border border-blue-100 p-6 rounded-xl">
-                  <ShieldCheck className="w-10 h-10 text-[#2f328e] mx-auto mb-3" />
-                  <p className="text-sm text-[#2f328e] font-semibold">
-                    Share Your Entire Screen
-                  </p>
-                  <p className="text-xs text-[#2f328e]/70 mt-2 leading-relaxed">
-                    Click the button below. In the dialog that appears, select
-                    the <strong>&ldquo;Entire Screen&rdquo;</strong> tab (not a
-                    window or browser tab). This is required for proctoring.
-                  </p>
-                  <div className="mt-4 bg-white border border-blue-100 rounded-lg p-3 text-left">
-                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
-                      Steps:
-                    </p>
-                    <ol className="text-xs text-gray-600 space-y-1 list-decimal list-inside">
-                      <li>
-                        Click <b>&ldquo;Grant Screen Permission&rdquo;</b> below
-                      </li>
-                      <li>
-                        In Chrome&apos;s dialog, choose{" "}
-                        <b>&ldquo;Entire Screen&rdquo;</b>
-                      </li>
-                      <li>
-                        Click <b>&ldquo;Share&rdquo;</b>
-                      </li>
-                    </ol>
-                  </div>
+                  {isMobile ? (
+                    <>
+                      <Layout className="w-10 h-10 text-[#2f328e] mx-auto mb-3" />
+                      <p className="text-sm text-[#2f328e] font-semibold">
+                        Form Field Monitoring Active
+                      </p>
+                      <p className="text-xs text-[#2f328e]/70 mt-2 leading-relaxed">
+                        Proctoring will use periodic snapshots of your form
+                        fields to ensure submission integrity.
+                      </p>
+                      <div className="mt-4 bg-white border border-blue-100 rounded-lg p-3 text-left">
+                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+                          Monitoring Details:
+                        </p>
+                        <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                          <li>Stay on this page while answering</li>
+                          <li>Automatic field snapshots will be captured</li>
+                        </ul>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-10 h-10 text-[#2f328e] mx-auto mb-3" />
+                      <p className="text-sm text-[#2f328e] font-semibold">
+                        Share Your Entire Screen
+                      </p>
+                      <p className="text-xs text-[#2f328e]/70 mt-2 leading-relaxed">
+                        Click the button below. In the dialog that appears,
+                        select the <strong>&ldquo;Entire Screen&rdquo;</strong>{" "}
+                        tab (not a window or browser tab). This is required for
+                        proctoring.
+                      </p>
+                      <div className="mt-4 bg-white border border-blue-100 rounded-lg p-3 text-left">
+                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+                          Steps:
+                        </p>
+                        <ol className="text-xs text-gray-600 space-y-1 list-decimal list-inside">
+                          <li>
+                            Click <b>&ldquo;Grant Screen Permission&rdquo;</b>{" "}
+                            below
+                          </li>
+                          <li>
+                            In Chrome&apos;s dialog, choose{" "}
+                            <b>&ldquo;Entire Screen&rdquo;</b>
+                          </li>
+                          <li>
+                            Click <b>&ldquo;Share&rdquo;</b>
+                          </li>
+                        </ol>
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                {screenShareError && (
+                {!isMobile && screenShareError && (
                   <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
                     <div className="text-left">
@@ -243,7 +278,11 @@ const FormOnboarding = ({
                   onClick={handleAccessCheck}
                   className="w-full h-12 text-sm font-bold bg-[#2f328e] hover:bg-[#1e205e] text-white rounded-xl shadow-lg"
                 >
-                  {screenShareError ? "Try Again" : "Grant Screen Permission"}
+                  {isMobile
+                    ? "Verify & Continue"
+                    : screenShareError
+                      ? "Try Again"
+                      : "Grant Screen Permission"}
                 </Button>
               </div>
             )}
