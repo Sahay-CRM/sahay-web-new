@@ -140,13 +140,42 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
         const matchesDate = !dateFilter || noteDate === dateFilter;
         const matchesTag =
           activeTags.length === 0 ||
-          (note.noteTag &&
-            activeTags.includes(note.noteTag as keyof SelectedFilters["tags"]));
+          activeTags.some((tag) => {
+            const tagLower = tag.toLowerCase();
+            const noteTagLower = note.noteTag?.toLowerCase().trim() || "";
+            const noteTypeLower = note.noteType?.toLowerCase().trim() || "";
+
+            // Special handling for Task
+            if (tag === "Task") {
+              return (
+                noteTagLower.includes("task") || noteTypeLower.includes("task")
+              );
+            }
+
+            // Special handling for Project
+            if (tag === "Project") {
+              return (
+                noteTagLower.includes("project") ||
+                noteTypeLower.includes("project")
+              );
+            }
+
+            // Special handling for KPI
+            if (tag === "Kpi") {
+              return (
+                noteTagLower.includes("kpi") || noteTypeLower.includes("kpi")
+              );
+            }
+
+            // Default exact match for other tags (like Reminder)
+            return noteTagLower.includes(tagLower);
+          });
+
         const matchesType =
           activeTypes.length === 0 ||
           (note.noteType &&
             activeTypes.includes(
-              note.noteType as keyof SelectedFilters["types"],
+              note.noteType.toLowerCase() as keyof SelectedFilters["types"],
             ));
         return matchesDate && matchesTag && matchesType;
       })
@@ -306,12 +335,12 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
               </div>
             </section>
 
-            {/* Tags Section */}
+            {/* Tags and Types Filter Section */}
             <section>
-              <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider ">
-                Filter by Tag
+              <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">
+                Filter
               </h4>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 mb-4">
                 {(
                   Object.keys(TAG_LABELS) as Array<
                     keyof SelectedFilters["tags"]
@@ -336,10 +365,36 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
                   </div>
                 ))}
               </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                {(
+                  Object.keys(TYPE_LABELS) as Array<
+                    keyof SelectedFilters["types"]
+                  >
+                ).map((type) => (
+                  <div
+                    key={type}
+                    className="flex items-center p-2 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all"
+                  >
+                    <FormCheckbox
+                      id={`type-${type}`}
+                      checked={selectedFilters.types[type]}
+                      onChange={() => toggleType(type)}
+                      containerClass="mt-0"
+                    />
+                    <label
+                      htmlFor={`type-${type}`}
+                      className="ml-2 text-sm font-medium cursor-pointer flex-grow"
+                    >
+                      {TYPE_LABELS[type]}
+                    </label>
+                  </div>
+                ))}
+              </div>
             </section>
 
             {/* Types Section */}
-            <section>
+            {/* <section>
               <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
                 Filter by Type
               </h4>
@@ -368,7 +423,7 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
                   </div>
                 ))}
               </div>
-            </section>
+            </section> */}
 
             {isLoading ? (
               <p className="text-center text-sm text-gray-400 py-4">

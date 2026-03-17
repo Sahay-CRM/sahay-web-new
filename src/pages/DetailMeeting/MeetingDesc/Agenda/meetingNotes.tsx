@@ -568,7 +568,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                       (note: MeetingNotesRes, idx: number) => (
                         <div
                           key={note.meetingNoteId || idx}
-                          className="bg-white border rounded-lg px-1.5 py-2.5 shadow-sm space-y-2"
+                          className="bg-white border rounded-lg px-1.5 py-1 shadow-sm space-y-2"
                         >
                           {/* TOP ROW */}
                           <div className="flex h-3.5 justify-between items-start">
@@ -677,7 +677,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                         KPIs
                                       </DropdownMenuItem>
 
-                                      {/* <DropdownMenuItem
+                                      <DropdownMenuItem
                                         onClick={() =>
                                           handleMarkNotes(note, "", "Project")
                                         }
@@ -693,7 +693,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                       >
                                         <Tag className="h-4 w-4 mr-2" />
                                         Task
-                                      </DropdownMenuItem> */}
+                                      </DropdownMenuItem>
 
                                       <DropdownMenuItem
                                         onClick={() =>
@@ -777,19 +777,25 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
 
                           {/* FOOTER TAGS */}
                           {((isTagFilter && note.noteTag) ||
-                            (!isTagFilter && note.noteType)) && (
+                            (!isTagFilter &&
+                              (note.noteType || note.noteTag))) && (
                             <div className="pt-1 border-t flex items-center gap-2 flex-wrap">
                               {isTagFilter && note.noteTag && (
-                                <span className="px-2 py-0.5 text-[10px] rounded-full bg-primary/10 text-primary border border-primary/30">
+                                <span className="px-2 py-0.5 text-[11px] rounded-full bg-primary/10 text-primary border border-primary/30 flex items-center gap-1">
+                                  <Tag className="w-3 h-3" />
                                   {note.noteTag}
                                 </span>
                               )}
 
-                              {!isTagFilter && note.noteType && (
-                                <span className="px-2 py-0.5 text-[10px] bg-gray-200 rounded-full text-gray-700">
-                                  {note.noteType}
-                                </span>
-                              )}
+                              {!isTagFilter &&
+                                (note.noteType || note.noteTag) && (
+                                  <span className="px-2 py-0.5 text-[11px] bg-gray-200 rounded-full text-gray-700 flex items-center gap-1">
+                                    {note.noteTag && !note.noteType && (
+                                      <Tag className="w-3 h-3" />
+                                    )}
+                                    {note.noteType || note.noteTag}
+                                  </span>
+                                )}
                             </div>
                           )}
                         </div>
