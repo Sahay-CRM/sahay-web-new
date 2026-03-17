@@ -131,7 +131,7 @@ export default function FormListPage() {
       );
   }, [allForms, statusFilter, paginationFilter]);
 
-  if (permission && permission.View === false) {
+  if (!permission || permission.View === false) {
     return <PageNotAccess />;
   }
 
@@ -266,96 +266,110 @@ export default function FormListPage() {
           onRowClick={(row) => handleOpenBuilder(row.id as string)}
           customActions={(row: FormDetails) => (
             <div className="flex gap-1 justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0 text-indigo-600 border-indigo-100 hover:bg-indigo-50"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleOpenBuilder(row.id);
-                }}
-                title="View/Edit Fields"
-              >
-                <Eye className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0 text-blue-600 border-blue-100 hover:bg-blue-50"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditBasicInfo(row);
-                }}
-                title="Edit Basic Info"
-              >
-                <Pencil className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0 text-[#2f328e] border-[#2f328e]/20 hover:bg-[#2f328e]/5"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSettings(row.id);
-                }}
-                title="Settings"
-              >
-                <Settings className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0 text-green-600 border-green-100 hover:bg-green-50"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleResponses(row.id);
-                }}
-                title="Responses"
-              >
-                <BarChart2 className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "h-8 w-8 p-0 border-blue-100",
-                  !row.isActive
-                    ? "text-gray-300 border-gray-100 cursor-not-allowed"
-                    : "text-blue-600 hover:bg-blue-50",
-                )}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (row.isActive) setShareForm(row);
-                }}
-                disabled={!row.isActive}
-                title={!row.isActive ? "Publish form to share" : "Share Link"}
-              >
-                <Link className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0 text-blue-600 border-red-100 hover:bg-red-50"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDuplicate(row.id);
-                }}
-                title="Duplicate Form"
-              >
-                <Copy className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0 text-red-600 border-red-100 hover:bg-red-50"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(row.id);
-                }}
-                title="Delete Form"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              {permission?.Edit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-indigo-600 border-indigo-100 hover:bg-indigo-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenBuilder(row.id);
+                  }}
+                  title="View/Edit Fields"
+                >
+                  <Eye className="w-4 h-4" />
+                </Button>
+              )}
+              {permission?.Edit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-blue-600 border-blue-100 hover:bg-blue-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditBasicInfo(row);
+                  }}
+                  title="Edit Basic Info"
+                >
+                  <Pencil className="w-4 h-4" />
+                </Button>
+              )}
+              {permission?.Edit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-[#2f328e] border-[#2f328e]/20 hover:bg-[#2f328e]/5"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSettings(row.id);
+                  }}
+                  title="Settings"
+                >
+                  <Settings className="w-4 h-4" />
+                </Button>
+              )}
+              {permission?.View && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-green-600 border-green-100 hover:bg-green-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleResponses(row.id);
+                  }}
+                  title="Responses"
+                >
+                  <BarChart2 className="w-4 h-4" />
+                </Button>
+              )}
+              {permission?.Edit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "h-8 w-8 p-0 border-blue-100",
+                    !row.isActive
+                      ? "text-gray-300 border-gray-100 cursor-not-allowed"
+                      : "text-blue-600 hover:bg-blue-50",
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (row.isActive) setShareForm(row);
+                  }}
+                  disabled={!row.isActive}
+                  title={!row.isActive ? "Publish form to share" : "Share Link"}
+                >
+                  <Link className="w-4 h-4" />
+                </Button>
+              )}
+              {permission?.Add && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-blue-600 border-red-100 hover:bg-red-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDuplicate(row.id);
+                  }}
+                  title="Duplicate Form"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              )}
+              {permission?.Delete && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-red-600 border-red-100 hover:bg-red-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(row.id);
+                  }}
+                  title="Delete Form"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
             </div>
           )}
         />

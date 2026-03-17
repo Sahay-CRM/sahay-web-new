@@ -64,7 +64,7 @@ export default function FormResponsesPage() {
 
   const permission = useSelector(getUserPermission).FORM;
 
-  if (permission && permission.View === false) {
+  if (!permission || permission.View === false) {
     return <PageNotAccess />;
   }
 
@@ -95,7 +95,9 @@ export default function FormResponsesPage() {
         return;
       }
 
-      const allSubmissions = res.data;
+      const allSubmissions = (res.data || []).filter(
+        (s) => s.status !== "NOT_SUBMITTED",
+      );
       const questionFields = (form.fields || []).filter(
         (f) => f.fieldType !== "FILE",
       );
@@ -148,7 +150,7 @@ export default function FormResponsesPage() {
     }
   };
 
-  if (formLoading || responsesLoading) {
+  if (formLoading && responsesLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-6 w-6 animate-spin text-[#2f328e]" />

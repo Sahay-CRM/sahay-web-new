@@ -82,7 +82,7 @@ export default function FormSettingsPage() {
 
   const permission = useSelector(getUserPermission).FORM;
 
-  if (permission && permission.View === false) {
+  if (!permission || permission.View === false || permission.Edit === false) {
     return <PageNotAccess />;
   }
 

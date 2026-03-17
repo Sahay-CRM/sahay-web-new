@@ -10,6 +10,7 @@ import {
   Check,
   Download,
   Search,
+  Trash,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,6 +24,7 @@ import TaskDrawer from "../Tasks/taskDrawer";
 import ProjectDrawer from "../Projects/projectDrawer";
 import {
   addMeetingNotesMutation,
+  deleteCompanyMeetingMutation,
   // deleteCompanyMeetingMutation,
   useGetMeetingNotes,
 } from "@/features/api/detailMeeting";
@@ -39,6 +41,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useSelector } from "react-redux";
+import { getUserDetail } from "@/features/selectors/auth.selector";
 // import NotesGroupModal from "./notesGroupModal";
 // import ConfirmUnGroupModal from "./confirmUnGroupModal";
 // import { removeGroupMutation } from "@/features/api/detailMeeting/NoteGroup";
@@ -103,7 +107,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
   const [selectedProject, setSelectedProject] = useState<
     CompanyProjectDataProps | TaskData
   >();
-
+  const empData = useSelector(getUserDetail);
   // const userId = useSelector(getUserId);
 
   // New states for editing notes
@@ -125,31 +129,31 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
     });
   const { mutate: addNote } = addMeetingNotesMutation();
   // const { mutate: removeGroupFromNote } = removeGroupMutation();
-  // const deleteNoteMutation = deleteCompanyMeetingMutation();
+  const deleteNoteMutation = deleteCompanyMeetingMutation();
 
   // Toggle dropdown function
   const toggleDropdown = (noteId: string) => {
     setDropdownOpen(dropdownOpen === noteId ? null : noteId);
   };
 
-  // const handleDelete = (id: string) => {
-  //   deleteNoteMutation.mutate(id, {
-  //     onSuccess: async () => {
-  //       const meetingSnapshot = await get(meetingRef);
-  //       if (!meetingSnapshot.exists()) {
-  //         queryClient.invalidateQueries({
-  //           queryKey: ["get-meeting-notes"],
-  //         });
-  //         return;
-  //       } else {
-  //         update(ref(db, `meetings/${meetingId}/state`), {
-  //           updatedAt: Date.now(),
-  //         });
-  //       }
-  //     },
-  //   });
-  //   setDropdownOpen(null); // Close dropdown after action
-  // };
+  const handleDelete = (id: string) => {
+    deleteNoteMutation.mutate(id, {
+      onSuccess: async () => {
+        const meetingSnapshot = await get(meetingRef);
+        if (!meetingSnapshot.exists()) {
+          queryClient.invalidateQueries({
+            queryKey: ["get-meeting-notes"],
+          });
+          return;
+        } else {
+          update(ref(db, `meetings/${meetingId}/state`), {
+            updatedAt: Date.now(),
+          });
+        }
+      },
+    });
+    setDropdownOpen(null); // Close dropdown after action
+  };
 
   const handleAddTask = (data: MeetingNotesRes) => {
     const deadline = new Date();
@@ -568,7 +572,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                       (note: MeetingNotesRes, idx: number) => (
                         <div
                           key={note.meetingNoteId || idx}
-                          className="bg-white border rounded-lg px-1.5 py-2.5 shadow-sm space-y-2"
+                          className="bg-white border rounded-lg px-1.5 py-1 shadow-sm space-y-2"
                         >
                           {/* TOP ROW */}
                           <div className="flex h-3.5 justify-between items-start">
@@ -581,17 +585,45 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
 
                             {/* RIGHT: TIME + MENU (removed date since it's in the header) */}
                             <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-[11px] text-gray-400">
-                                {note?.createdAt
-                                  ? new Date(note.createdAt).toLocaleTimeString(
-                                      [],
-                                      {
+                              <div className="flex items-center gap-2">
+                                <span className="text-[11px] text-gray-400">
+                                  {note?.createdAt
+                                    ? new Date(
+                                        note.createdAt,
+                                      ).toLocaleTimeString([], {
                                         hour: "2-digit",
                                         minute: "2-digit",
-                                      },
-                                    )
-                                  : ""}
-                              </span>
+                                      })
+                                    : ""}
+                                </span>
+                                {empData.employeeType === "CONSULTANT" && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          className="text-[11px] text-gray-400"
+                                          onClick={() =>
+                                            handleDelete(note.meetingNoteId)
+                                          }
+                                        >
+                                          <Trash className="h-4 w-4 cursor-pointer" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="right">
+                                        <p>Delete Meeting Notes</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </div>
+                              {/* <DropdownMenuItem
+                                onClick={() =>
+                                  handleDelete(note.meetingNoteId)
+                                }
+                              >
+                                <Trash className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem> */}
 
                               {/* MENU */}
                               <DropdownMenu
@@ -602,17 +634,26 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                   )
                                 }
                               >
-                                <DropdownMenuTrigger asChild>
-                                  <button
-                                    className="text-gray-500 p-1 hover:bg-gray-100 rounded-md"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      toggleDropdown(note.meetingNoteId);
-                                    }}
-                                  >
-                                    <EllipsisVertical className="h-4 w-4" />
-                                  </button>
-                                </DropdownMenuTrigger>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <DropdownMenuTrigger asChild>
+                                        <button
+                                          className="text-gray-500 hover:bg-gray-100 rounded-md"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            toggleDropdown(note.meetingNoteId);
+                                          }}
+                                        >
+                                          <EllipsisVertical className="h-4 w-4" />
+                                        </button>
+                                      </DropdownMenuTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right">
+                                      <p>More Actions</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
 
                                 <DropdownMenuContent
                                   align="end"
@@ -625,7 +666,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                     Update Notes
                                   </DropdownMenuItem>
 
-                                  {FilterBy === "noteTag" && (
+                                  {note.noteTag && (
                                     <DropdownMenuItem
                                       onClick={() => handleDeleteTag(note)}
                                     >
@@ -677,7 +718,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                         KPIs
                                       </DropdownMenuItem>
 
-                                      {/* <DropdownMenuItem
+                                      <DropdownMenuItem
                                         onClick={() =>
                                           handleMarkNotes(note, "", "Project")
                                         }
@@ -693,7 +734,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                       >
                                         <Tag className="h-4 w-4 mr-2" />
                                         Task
-                                      </DropdownMenuItem> */}
+                                      </DropdownMenuItem>
 
                                       <DropdownMenuItem
                                         onClick={() =>
@@ -777,19 +818,25 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
 
                           {/* FOOTER TAGS */}
                           {((isTagFilter && note.noteTag) ||
-                            (!isTagFilter && note.noteType)) && (
+                            (!isTagFilter &&
+                              (note.noteType || note.noteTag))) && (
                             <div className="pt-1 border-t flex items-center gap-2 flex-wrap">
                               {isTagFilter && note.noteTag && (
-                                <span className="px-2 py-0.5 text-[10px] rounded-full bg-primary/10 text-primary border border-primary/30">
+                                <span className="px-2 py-0.5 text-[11px] rounded-full bg-primary/10 text-primary border border-primary/30 flex items-center gap-1">
+                                  <Tag className="w-3 h-3" />
                                   {note.noteTag}
                                 </span>
                               )}
 
-                              {!isTagFilter && note.noteType && (
-                                <span className="px-2 py-0.5 text-[10px] bg-gray-200 rounded-full text-gray-700">
-                                  {note.noteType}
-                                </span>
-                              )}
+                              {!isTagFilter &&
+                                (note.noteType || note.noteTag) && (
+                                  <span className="px-2 py-0.5 text-[11px] bg-gray-200 rounded-full text-gray-700 flex items-center gap-1">
+                                    {note.noteTag && !note.noteType && (
+                                      <Tag className="w-3 h-3" />
+                                    )}
+                                    {note.noteType || note.noteTag}
+                                  </span>
+                                )}
                             </div>
                           )}
                         </div>
