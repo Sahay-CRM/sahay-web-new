@@ -19,3 +19,4 @@ export { default as useGetTaskComments } from "./useGetTaskComments";
 
 export { default as useGetRepeatAllTask } from "./useGetRepeatAllTask";
 export { default as updateRepeatTaskIdMutation } from "./useUpdateRepeatTask";
+export { default as addUpdateRepeatTaskStatusMutation } from "./useAddUpdateRepeatTaskStatus";

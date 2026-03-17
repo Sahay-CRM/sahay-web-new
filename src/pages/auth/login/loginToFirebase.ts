@@ -1,5 +1,5 @@
 import { auth } from "@/firebaseConfig";
-import { onAuthStateChanged, signInWithCustomToken } from "firebase/auth";
+import { signInWithCustomToken } from "firebase/auth";
 
 const decodeJwt = (token: string) => {
   const payload = token.split(".")[1];
@@ -7,24 +7,35 @@ const decodeJwt = (token: string) => {
 };
 
 export const loginToFirebase = async (firebaseToken: string) => {
-  const decoded = decodeJwt(firebaseToken);
-  const newUid = decoded?.uid || decoded?.sub;
+  try {
+    const decoded = decodeJwt(firebaseToken);
+    const newUid = decoded?.uid || decoded?.sub;
 
-  if (!newUid) throw new Error("UID not found in token");
+    if (!newUid) {
+      // eslint-disable-next-line no-console
+      console.error("UID not found in token");
+      return null;
+    }
 
-  if (auth.currentUser) {
-    await signInWithCustomToken(auth, firebaseToken);
-  } else {
-    await signInWithCustomToken(auth, firebaseToken);
+    const userCredential = await signInWithCustomToken(auth, firebaseToken);
+
+    return userCredential.user.uid;
+  } catch (error) {
+    const firebaseError = error as { code?: string; message?: string };
+    // eslint-disable-next-line no-console
+    console.error(
+      "Firebase Auth failed. Error Code:",
+      firebaseError?.code,
+      "Message:",
+      firebaseError?.message,
+    );
+
+    if (firebaseError?.code === "auth/invalid-custom-token") {
+      // eslint-disable-next-line no-console
+      console.error(
+        "The custom token is invalid. This often happens if the token was issued for a different Firebase project or has expired.",
+      );
+    }
+    return null;
   }
-
-  return new Promise((resolve) => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        resolve(user.uid);
-      } else {
-        resolve(null);
-      }
-    });
-  });
 };

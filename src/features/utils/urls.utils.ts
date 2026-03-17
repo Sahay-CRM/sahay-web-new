@@ -282,6 +282,8 @@ const Urls = {
   getAllRepeatCompanyTaskByPage: () => `${baseUrl}/company/repetitive-task/get`,
   getRepeatCompanyTaskById: (id: string) =>
     `${baseUrl}/company/repetitive-task/get/${id}`,
+  updateRepeatCompanyTaskStatus: (id: string) =>
+    `${baseUrl}/company/repetitive-task/update-status/${id}`,
 
   createIo: () => `${baseUrl}/company/detail-meeting/agenda/io/create-add`,
 

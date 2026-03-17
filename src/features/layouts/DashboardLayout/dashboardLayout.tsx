@@ -67,7 +67,7 @@ import SidebarControlContext from "./SidebarControlContext";
 import ModalData from "@/components/shared/Modal/ModalData";
 import { ExclamationRoundIcon } from "@/components/shared/Icons";
 import { useGetCompanyList } from "@/features/api/SelectCompany";
-// import { loginToFirebase } from "@/pages/auth/login/loginToFirebase";
+import { loginToFirebase } from "@/pages/auth/login/loginToFirebase";
 import { useGetCompanyId } from "@/features/api/CompanyProfile";
 import {
   Tooltip,
@@ -216,7 +216,7 @@ const DashboardLayout = () => {
   };
 
   const handleLogin = (company: Company) => {
-    setIsLoading(true);
+    // setIsLoading(true);
     companyVerifyOtp(
       {
         selectedCompanyId: company.companyId,
@@ -225,8 +225,9 @@ const DashboardLayout = () => {
       {
         onSuccess: async (response) => {
           if (response?.status) {
-            // await loginToFirebase(response.data.fbToken!);
-
+            if (response.data.fbToken) {
+              await loginToFirebase(response.data.fbToken);
+            }
             dispatch(
               setAuth({
                 userId: response.data.employeeId,
@@ -256,14 +257,27 @@ const DashboardLayout = () => {
                         queryKey: ["get-employee-by-id", userId],
                       });
                       setCompanyModalOpen(false);
+                      setIsLoading(false);
+                      navigate("/");
                     },
                   },
                 );
+              } else {
+                queryClient.invalidateQueries({
+                  queryKey: ["get-company-list"],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ["userPermission"],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ["get-employee-by-id", userId],
+                });
+                setCompanyModalOpen(false);
+                setIsLoading(false);
+                navigate("/");
+                window.location.reload();
               }
             });
-            setIsLoading(false);
-            navigate("/");
-            window.location.reload();
           }
         },
       },
