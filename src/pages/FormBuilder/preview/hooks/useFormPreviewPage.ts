@@ -52,6 +52,7 @@ export const useFormPreviewPage = () => {
   const [submissionMessage, setSubmissionMessage] = useState<string | null>(
     null,
   );
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -88,6 +89,7 @@ export const useFormPreviewPage = () => {
     null,
   );
   const tokenRef = useRef("");
+  const submissionIdRef = useRef("");
   const nameRef = useRef("");
   const mobileRef = useRef("");
   const isSubmittedRef = useRef(false);
@@ -100,6 +102,9 @@ export const useFormPreviewPage = () => {
   useEffect(() => {
     tokenRef.current = submissionToken;
   }, [submissionToken]);
+  useEffect(() => {
+    submissionIdRef.current = submissionId || "";
+  }, [submissionId]);
   useEffect(() => {
     nameRef.current = verifiedName;
   }, [verifiedName]);
@@ -144,7 +149,7 @@ export const useFormPreviewPage = () => {
 
   const captureAndUploadScreenshot = useCallback(
     async (formId: string) => {
-      if (isSubmittedRef.current) return;
+      if (isSubmittedRef.current && formId) return;
 
       // On Mobile, capture DOM of the entire body to include Header/Timer/Fields
       if (isMobile) {
@@ -183,7 +188,7 @@ export const useFormPreviewPage = () => {
             fileName: filename,
             mobileNumber: verifiedMobile,
             fileType: "4010",
-            refId: formId,
+            refId: submissionId || "",
             token: tokenRef.current,
           }).catch(() => {});
           return;
@@ -218,12 +223,13 @@ export const useFormPreviewPage = () => {
             async (blob) => {
               if (blob && !isSubmittedRef.current) {
                 const filename = `screenshot-${Date.now()}.jpg`;
+
                 await uploadFormFile({
                   file: blob,
                   fileName: filename,
                   mobileNumber: verifiedMobile,
                   fileType: "4010",
-                  refId: formId,
+                  refId: submissionId || "",
                   token: tokenRef.current,
                 }).catch(() => {});
               }
@@ -237,7 +243,7 @@ export const useFormPreviewPage = () => {
         /* silent */
       }
     },
-    [uploadFormFile, verifiedMobile, isMobile],
+    [uploadFormFile, verifiedMobile, isMobile, submissionId],
   );
 
   // API returns formSettings as [{id, key, value}, ...] — convert to flat object
@@ -355,7 +361,7 @@ export const useFormPreviewPage = () => {
         setIsUploading(true);
         const uploadData = new FormData();
         uploadData.append("fileType", "4000");
-        uploadData.append("refId", form?.id || id || "");
+        uploadData.append("refId", submissionId || "");
 
         fileFields.forEach(([, value]) => {
           const files = value instanceof FileList ? Array.from(value) : [value];
@@ -446,7 +452,7 @@ export const useFormPreviewPage = () => {
               fileName: filename,
               mobileNumber: mobileRef.current,
               fileType: "4010",
-              refId: form?.id || id || "",
+              refId: submissionId || "",
               token: tokenRef.current,
             }).catch(() => {});
           }
@@ -481,7 +487,7 @@ export const useFormPreviewPage = () => {
                       fileName: filename,
                       mobileNumber: mobileRef.current,
                       fileType: "4010",
-                      refId: form?.id || id || "",
+                      refId: submissionId || "",
                       token: tokenRef.current,
                     }).catch(() => {});
                   }
@@ -537,7 +543,15 @@ export const useFormPreviewPage = () => {
         },
       );
     },
-    [form, id, submitForm, uploadFormFile, stopScreenShare, isMobile],
+    [
+      form,
+      id,
+      submitForm,
+      uploadFormFile,
+      stopScreenShare,
+      isMobile,
+      submissionId,
+    ],
   );
 
   const onAutoSubmit = useCallback(
@@ -574,12 +588,14 @@ export const useFormPreviewPage = () => {
       try {
         const {
           token,
+          submissionId: storedSubmissionId,
           name,
           mobile,
           accessGranted: storedAccess,
         } = JSON.parse(stored);
         if (token && name && mobile) {
           setSubmissionToken(token);
+          setSubmissionId(storedSubmissionId || null);
           setVerifiedName(name);
           setVerifiedMobile(mobile);
           setIsVerified(true);
@@ -908,11 +924,13 @@ export const useFormPreviewPage = () => {
               setVerifiedMobile(data.mobile);
               setVerifiedName(data.name);
               setSubmissionToken(response.data?.token || "");
+              setSubmissionId(response.data?.submissionId || null);
               setIsVerified(true);
               localStorage.setItem(
                 `form_session_${id}`,
                 JSON.stringify({
                   token: response.data?.token,
+                  submissionId: response.data?.submissionId,
                   name: data.name,
                   mobile: data.mobile,
                 }),
