@@ -20,7 +20,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatToProjectDateTime } from "@/features/utils/formatting.utils";
+import { formatToDateTime } from "@/features/utils/formatting.utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { useParams } from "react-router-dom";
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
@@ -121,7 +121,7 @@ export default function FormSubmissionDetailPage() {
             {submission.status?.replace(/_/g, " ")}
           </Badge>
           <p className="text-sm font-bold mt-1 uppercase text-slate-500">
-            {formatToProjectDateTime(submission.createdAt)}
+            {formatToDateTime(submission.updatedAt)}
           </p>
         </div>
       </nav>
@@ -322,7 +322,7 @@ export default function FormSubmissionDetailPage() {
                       </div>
                       <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/50 backdrop-blur-sm rounded text-[10px] font-bold text-white flex items-center gap-1.5">
                         <Clock className="w-3 h-3 text-blue-300" />{" "}
-                        {formatToProjectDateTime(media.createdAt).split(" ")[1]}
+                        {formatToDateTime(media.createdAt).split(" ")[1]}
                       </div>
                     </div>
                   ))}
@@ -347,7 +347,7 @@ export default function FormSubmissionDetailPage() {
               {selectedMedia && (
                 <span className="text-[10px] font-bold text-gray-400 uppercase">
                   Screenshot {currentIndex + 1} of {screenshots.length} •{" "}
-                  {formatToProjectDateTime(selectedMedia.createdAt)}
+                  {formatToDateTime(selectedMedia.createdAt)}
                 </span>
               )}
             </div>

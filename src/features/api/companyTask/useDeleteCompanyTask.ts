@@ -21,6 +21,7 @@ export default function useDeleteCompanyTask() {
     onSuccess: (response) => {
       toast.success(response?.message);
       queryClient.resetQueries({ queryKey: ["get-task-list"] });
+      queryClient.resetQueries({ queryKey: ["get-allRepeatTaskList"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

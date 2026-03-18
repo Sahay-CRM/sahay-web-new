@@ -52,6 +52,7 @@ const FormPreviewPage = () => {
     verifiedMobile,
     videoRef,
     hwStatus,
+    isMobile,
     // tabSwitchWarning,
     scoreString,
     submissionMessage,
@@ -115,6 +116,7 @@ const FormPreviewPage = () => {
         videoRef={videoRef}
         hwStatus={hwStatus}
         screenShareError={screenShareError}
+        isMobile={isMobile}
       />
     );
   }

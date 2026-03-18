@@ -39,6 +39,16 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+// Validate config presence
+const missingKeys = Object.entries(firebaseConfig)
+  .filter(([key, value]) => !key || !value)
+  .map(([key]) => key);
+
+if (missingKeys.length > 0) {
+  // eslint-disable-next-line no-console
+  console.warn("Missing Firebase configuration keys:", missingKeys.join(", "));
+}
+
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const isMessagingSupported = () =>
@@ -51,11 +61,28 @@ export const messaging = isMessagingSupported() ? getMessaging(app) : undefined;
 // Request permission and get token
 export const requestFirebaseNotificationPermission = async () => {
   if (!isMessagingSupported() || !messaging) return null;
-  const token = await getToken(messaging, {
-    vapidKey:
-      "BJpCqAZmB7SKd965C9duzsmn8w9ubGMFsKlhe5oQgDk9EDXHKbn243LkjKEFIc771lNoQ4_hmhMqXJS8w2-UEoQ",
-  });
-  return token;
+  if (window.Notification && Notification.permission === "denied") {
+    return null;
+  }
+  try {
+    const token = await getToken(messaging, {
+      vapidKey:
+        "BJpCqAZmB7SKd965C9duzsmn8w9ubGMFsKlhe5oQgDk9EDXHKbn243LkjKEFIc771lNoQ4_hmhMqXJS8w2-UEoQ",
+    });
+    return token;
+  } catch (error) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "messaging/permission-blocked"
+    ) {
+      return null;
+    }
+    // eslint-disable-next-line no-console
+    console.error("An error occurred while retrieving token. ", error);
+    return null;
+  }
 };
 
 // Delete FCM token

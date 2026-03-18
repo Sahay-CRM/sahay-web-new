@@ -5,26 +5,20 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-type DatePaging = BaseResponse<TaskGetPaging>;
+type EmpRes = CommonResponse<TaskGetPaging>;
 
-export default function useAddUpdateRepeatCompanyTask() {
-  const addUpdateRepeatCompanyTaskMutation = useMutation({
-    mutationKey: ["add-or-update-task-list"],
-    mutationFn: async (data: AddUpdateTask) => {
-      const config = {
-        url: data.repetitiveTaskId
-          ? Urls.updateRepeatCompanyTask(data.repetitiveTaskId!)
-          : Urls.addRepeatCompanyTask(),
-        data: data,
-      };
-      const { data: resData } = data.repetitiveTaskId
-        ? await Api.post<DatePaging>(config)
-        : await Api.post<DatePaging>(config);
+export default function useAddUpdateRepeatTaskStatus() {
+  const addUpdateRepeatTaskStatusMutation = useMutation({
+    mutationKey: ["add-or-update-repeatTask-status"],
+    mutationFn: async (repetitiveTaskId: string) => {
+      const { data: resData } = await Api.post<EmpRes>({
+        url: Urls.updateRepeatCompanyTaskStatus(repetitiveTaskId),
+      });
 
       return resData;
     },
     onSuccess: (res) => {
-      toast.success(res.message || "Operation successful");
+      toast.success(res.message || "successful");
       queryClient.resetQueries({ queryKey: ["get-task-listrepeat"] });
       queryClient.resetQueries({ queryKey: ["get-repeattask-by-id"] });
       queryClient.resetQueries({ queryKey: ["dd-task-type"] });
@@ -34,5 +28,5 @@ export default function useAddUpdateRepeatCompanyTask() {
       toast.error(error.response?.data?.message);
     },
   });
-  return addUpdateRepeatCompanyTaskMutation;
+  return addUpdateRepeatTaskStatusMutation;
 }

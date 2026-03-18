@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
 
 import {
+  addUpdateRepeatTaskStatusMutation,
   deleteRepeatCompanyTaskMutation,
   useGetAllTaskStatus,
 } from "@/features/api/companyTask";
@@ -34,6 +35,7 @@ export default function useCompanyTaskList() {
 
   const { mutate: updateCompanyTask } = useAddUpdateRepeatCompanyTask();
   const { mutate: deleteTaskById } = deleteRepeatCompanyTaskMutation();
+  const { mutate: updateTaskStatus } = addUpdateRepeatTaskStatusMutation();
 
   // Pagination Details and Filter
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
@@ -158,12 +160,13 @@ export default function useCompanyTaskList() {
   };
 
   const handleStopRepeat = (data: TaskGetPaging) => {
-    const payload = {
-      isActive: !data.isActive,
-      repetitiveTaskId: data.repetitiveTaskId,
-      isStatusChange: true,
-    };
-    updateCompanyTask(payload);
+    // const payload = {
+    //   isActive: !data.isActive,
+    //   repetitiveTaskId: data.repetitiveTaskId,
+    //   isStatusChange: true,
+    // };
+    // updateCompanyTask(payload);
+    updateTaskStatus(data.repetitiveTaskId!);
   };
 
   return {

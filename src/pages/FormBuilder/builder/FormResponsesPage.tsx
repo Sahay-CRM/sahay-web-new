@@ -14,7 +14,7 @@ import SearchInput from "@/components/shared/SearchInput";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import TableData from "@/components/shared/DataTable/DataTable";
-import { formatToProjectDateTime } from "@/features/utils/formatting.utils";
+import { formatToDateTime } from "@/features/utils/formatting.utils";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
 import Api from "@/features/utils/api.utils";
@@ -108,7 +108,7 @@ export default function FormResponsesPage() {
             "Sr. No.": index + 1,
             "User Name": submission.name || "Anonymous",
             "Mobile Number": submission.mobileNumber || "",
-            Submitted: formatToProjectDateTime(submission.createdAt),
+            Submitted: formatToDateTime(submission.updatedAt),
             Status: submission.status?.replace(/_/g, " "),
             "Correct Fields":
               submission.correctFields ?? submission.score?.correctFields ?? "",
@@ -212,7 +212,7 @@ export default function FormResponsesPage() {
                 index +
                 1,
               score: submission?.score?.scoreString,
-              formattedDate: formatToProjectDateTime(submission.createdAt),
+              formattedDate: formatToDateTime(submission.updatedAt),
             }),
           )}
           columns={visibleColumns}

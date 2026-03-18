@@ -75,6 +75,7 @@ export default function FormListPage() {
     { key: "statusLabel", label: "Status", visible: true },
     { key: "notificationEmail", label: "Notification Email", visible: true },
     { key: "formattedDate", label: "Created At", visible: true },
+    { key: "expireDate", label: "Expire Date", visible: true },
   ]);
 
   // Filter visible columns
@@ -252,6 +253,7 @@ export default function FormListPage() {
             statusLabel: item.isActive ? "Published" : "Draft",
 
             formattedDate: formatToProjectDateTime(item.createdDatetime),
+            expireDate: formatToProjectDateTime(item.expireDate),
             notificationEmail: item.notificationEmail || "-",
           }))}
           columns={visibleColumns}
