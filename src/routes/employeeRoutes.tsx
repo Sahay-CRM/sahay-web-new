@@ -129,6 +129,8 @@ const FormSubmissionDetail = lazy(
   () => import("../pages/FormBuilder/builder/FormSubmissionDetailPage"),
 );
 
+const Reports = lazy(() => import("../pages/Reports"));
+
 export default function EmployeeRoutes() {
   return (
     <Routes>
@@ -232,6 +234,7 @@ export default function EmployeeRoutes() {
             () => import("../pages/FormBuilder/preview/FormPreviewPage"),
           )}
         />
+        <Route path="reports" Component={Reports} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
