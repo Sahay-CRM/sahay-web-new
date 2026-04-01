@@ -528,9 +528,9 @@ interface EmployeeDetails {
   designationId: string;
   isSuperAdmin: false;
   sahayEmId: null;
-  departmentName: null;
-  designationName: null;
-  reportingManagerId: null;
+  departmentName: string | null;
+  designationName: string | null;
+  reportingManagerId: string | null;
   companyAdminName: string;
   reportingManager: null;
   isDeactivated?: boolean;

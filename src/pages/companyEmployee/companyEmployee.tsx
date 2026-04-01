@@ -70,7 +70,7 @@ export default function CompanyDesignation() {
       visible: true,
     },
     { key: "employeeMobile", label: "Employee Mobile", visible: true },
-    { key: "employeeType", label: "Employee Type", visible: true },
+    { key: "designationName", label: "Designation", visible: true },
   ]);
 
   // Filter visible columns
@@ -154,6 +154,7 @@ export default function CompanyDesignation() {
                 (employeeData.currentPage - 1) * employeeData.pageSize +
                 index +
                 1,
+              designationName: item.designationName || item.employeeType,
             }))}
             columns={visibleColumns}
             primaryKey="employeeId"
@@ -183,7 +184,7 @@ export default function CompanyDesignation() {
             searchValue={paginationFilter?.search}
             permissionKey="employeeId"
             moduleKey="EMPLOYEE"
-            sortableColumns={["employeeName", "employeeType"]}
+            sortableColumns={["employeeName"]}
             showActiveToggle={true}
             onToggleActive={(item) => {
               handleInactive(item);
