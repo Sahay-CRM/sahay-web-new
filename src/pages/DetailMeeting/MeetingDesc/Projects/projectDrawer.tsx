@@ -351,6 +351,9 @@ export default function ProjectDrawer({
                       field.onChange(utcDate);
                     }}
                     error={errors.projectDeadline}
+                    disablePastDays={
+                      Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                    }
                   />
                 );
               }}

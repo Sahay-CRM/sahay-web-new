@@ -72,7 +72,8 @@ export default function MeetingList() {
       label: "Meeting Description",
       visible: true,
     },
-    { key: "meetingDateTime", label: "Meeting TIme", visible: true },
+    { key: "meetingDateTime", label: "Start Date", visible: true },
+    { key: "endDate", label: "End Date", visible: true },
     { key: "joinerNames", label: "Joiners", visible: true },
     { key: "meetingStatus", label: "Status", visible: true }, // <-- add this line
   ]);
@@ -201,6 +202,10 @@ export default function MeetingList() {
                 1,
               status: item.meetingStatusId,
               meetingDateTime: format(
+                new Date(item.meetingDateTime ?? 0),
+                "dd/MM/yyyy hh:mm a",
+              ),
+              endDate: format(
                 new Date(item.meetingDateTime ?? 0),
                 "dd/MM/yyyy hh:mm a",
               ),

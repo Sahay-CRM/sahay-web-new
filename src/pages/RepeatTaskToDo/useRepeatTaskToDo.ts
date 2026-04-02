@@ -147,7 +147,7 @@ export function useRepeatTaskToDo() {
       startDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : undefined,
       endDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : undefined,
     },
-    enable: !!isEmployeeId || !!selectedDate,
+    enable: !!employeeIds && !!selectedDate,
   });
 
   const toggleComplete = (taskId: string, isCompleted: boolean) => {

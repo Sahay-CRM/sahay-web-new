@@ -173,6 +173,7 @@ interface MeetingData {
   meetingName: string;
   meetingDescription?: string;
   meetingDateTime: string;
+  endDate?: string;
   companyId?: string;
   meetingTypeId: string;
   meetingTypeName?: string;
@@ -384,6 +385,7 @@ interface CompanyMeetingDataProps {
   meetingName?: string;
   meetingDescription?: string;
   meetingDateTime?: string;
+  endDate?: string;
   meetingTypeId?: string;
   parentType?: string;
   meetingStatusId?: string;

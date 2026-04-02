@@ -593,6 +593,9 @@ export default function useAddEmployee() {
                       value={field.value}
                       onChange={field.onChange}
                       error={errors.taskStartDate}
+                      disablePastDays={
+                        Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                      }
                     />
                   )}
                 />

@@ -230,6 +230,9 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
                 value={field.value}
                 onChange={field.onChange}
                 error={errors.taskDeadline}
+                disablePastDays={
+                  Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                }
               />
             )}
           />

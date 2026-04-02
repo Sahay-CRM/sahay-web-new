@@ -171,7 +171,7 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
+      <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4 h-fit border">
         <FormInputField
           label="Meeting Name"
           placeholder="Enter an Meeting Name"
@@ -197,12 +197,34 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
 
             return (
               <FormDateTimePicker
-                label="Meeting Date & Time"
+                label="Meeting Start Date"
                 value={localDate}
                 onChange={(date) => {
                   field.onChange(date?.toISOString());
                 }}
                 error={errors.meetingDateTime}
+                disablePastDates={true}
+              />
+            );
+          }}
+        />
+
+        <Controller
+          control={control}
+          name="endDate"
+          // rules={{ required: "Date & Time is required" }}
+          render={({ field }) => {
+            const localDate = field.value ? new Date(field.value) : null;
+
+            return (
+              <FormDateTimePicker
+                label="Meeting End Date"
+                value={localDate}
+                onChange={(date) => {
+                  field.onChange(date?.toISOString());
+                }}
+                error={errors.endDate}
+                disablePastDates={true}
               />
             );
           }}
@@ -242,7 +264,7 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
                   field.onChange(value.value);
                   setValue("meetingStatusId", value.value);
                 }}
-                className="h-10 mt-0.5"
+                className="mt-0.5"
                 onSearchChange={setIsStatusSearch}
               />
             )}

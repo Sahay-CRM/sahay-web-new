@@ -13,6 +13,7 @@ interface Props {
   timeZone?: string;
   disableDaysFromToday?: number;
   disablePastDates?: boolean;
+  disablePastDays?: number;
   labelClass?: string;
   hideTime?: boolean;
 }
@@ -25,6 +26,7 @@ export default function FormDateTimePicker({
   isMandatory,
   disableDaysFromToday = 0,
   disablePastDates = false,
+  disablePastDays = 0,
   labelClass,
   hideTime = false,
 }: Props) {
@@ -36,6 +38,16 @@ export default function FormDateTimePicker({
 
     const compareDate = new Date(date);
     compareDate.setHours(0, 0, 0, 0);
+
+    // Allow selection of past N days, disable older past dates
+    if (disablePastDays > 0) {
+      const allowPastUntilDate = new Date(today);
+      allowPastUntilDate.setDate(today.getDate() - disablePastDays);
+
+      if (compareDate.getTime() < allowPastUntilDate.getTime()) {
+        return false;
+      }
+    }
 
     if (disablePastDates && compareDate.getTime() < today.getTime()) {
       return false;

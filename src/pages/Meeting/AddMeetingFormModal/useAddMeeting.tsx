@@ -38,6 +38,7 @@ export default function useAddMeeting() {
         meetingDateTime: data.meetingDateTime
           ? new Date(data.meetingDateTime).toISOString()
           : null,
+        endDate: data.endDate ? new Date(data.endDate).toISOString() : null,
         meetingStatusId: data.meetingStatus?.meetingStatusId || undefined,
         meetingTypeId: data.meetingType || undefined,
         employeeId: data.joiners,
@@ -71,6 +72,10 @@ export default function useAddMeeting() {
         data.meetingDateTime instanceof Date
           ? data.meetingDateTime.toISOString()
           : data.meetingDateTime,
+      endDate:
+        data.endDate instanceof Date
+          ? data.endDate.toISOString()
+          : data.endDate,
       meetingTypeId: data?.meetingTypeId?.meetingTypeId,
       meetingStatusId:
         data?.meetingStatusId?.meetingStatusId || data?.meetingStatusId,
