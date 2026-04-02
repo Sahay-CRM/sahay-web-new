@@ -483,8 +483,13 @@ const AddDetailMeeting = () => {
 
   const stepNames = ["Meeting Type", "Meeting Info", "Joiners"];
 
-  if (permission && (permission.Add === false || permission.Edit === false)) {
-    return <PageNotAccess />;
+  if (!permission) {
+    if (!companyMeetingId && permission.Add === false) {
+      return <PageNotAccess />;
+    }
+    if (companyMeetingId && permission.Edit === false) {
+      return <PageNotAccess />;
+    }
   }
 
   return (

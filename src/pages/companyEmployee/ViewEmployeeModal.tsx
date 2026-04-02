@@ -63,12 +63,11 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
             {modalData.departmentName}
           </div>
         )}
-        {modalData?.designationName && (
+        {(modalData?.designationName || modalData?.employeeType) && (
           <div>
-            <span className="font-medium text-primary">
-              Designation Name :{" "}
-            </span>
-            {modalData.designationName}
+            <span className="font-medium text-primary">Designation : </span>
+            {modalData.designationName ||
+              capitalizeFirstLetter(modalData?.employeeType || "")}
           </div>
         )}
         {modalData?.employeeEmail && (
@@ -81,12 +80,6 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
           <div>
             <span className="font-medium text-primary">Employee Mobile : </span>
             {modalData.employeeMobile}
-          </div>
-        )}
-        {modalData?.employeeType && (
-          <div>
-            <span className="font-medium text-primary">Employee Type : </span>
-            {capitalizeFirstLetter(modalData.employeeType)}
           </div>
         )}
       </div>

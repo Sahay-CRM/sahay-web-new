@@ -204,6 +204,9 @@ export default function RoutineTaskDrawer({
                       field.onChange(utcDate);
                     }}
                     error={errors.taskDeadline}
+                    disablePastDays={
+                      Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                    }
                   />
                 );
               }}

@@ -56,9 +56,17 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
         {modalData?.meetingDateTime && (
           <div>
             <span className="font-medium text-primary">
-              Meeting Date & Time:{" "}
+              Meeting Start Date Time:{" "}
             </span>
             {modalData.meetingDateTime}
+          </div>
+        )}
+        {modalData?.endDate && (
+          <div>
+            <span className="font-medium text-primary">
+              Meeting End Date Time:{" "}
+            </span>
+            {modalData.endDate}
           </div>
         )}
         {modalData?.meetingStatus && (

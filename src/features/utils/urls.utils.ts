@@ -401,6 +401,7 @@ const Urls = {
   getBothMeeting: () => `${baseUrl}/company/meeting/get-both`,
   kpiNewValidation: () => `${baseUrl}/company/kpi/kpi-new-validation`,
   kpiResetValidation: () => `${baseUrl}/company/kpi/kpi-new-reset`,
+  getReports: () => `${baseUrl}/company/reports/get-report`,
 };
 
 export default Urls;

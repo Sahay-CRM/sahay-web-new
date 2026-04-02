@@ -86,6 +86,9 @@ const ProjectInfo = () => {
                   field.onChange(utcDate);
                 }}
                 error={errors.projectDeadline}
+                disablePastDays={
+                  Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                }
               />
             );
           }}

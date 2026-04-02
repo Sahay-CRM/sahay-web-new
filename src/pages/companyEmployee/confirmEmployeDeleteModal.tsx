@@ -89,15 +89,6 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
               </div>
             )}
 
-            {modalData?.employeeType && (
-              <div>
-                <span className="font-medium text-primary">
-                  Employee Type :{" "}
-                </span>
-                {modalData.employeeType}
-              </div>
-            )}
-
             {modalData?.departmentName && (
               <div>
                 <span className="font-medium text-primary">Department : </span>
@@ -105,10 +96,10 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
               </div>
             )}
 
-            {modalData?.designationName && (
+            {(modalData?.designationName || modalData?.employeeType) && (
               <div>
                 <span className="font-medium text-primary">Designation : </span>
-                {modalData.designationName}
+                {modalData.designationName || modalData.employeeType}
               </div>
             )}
 

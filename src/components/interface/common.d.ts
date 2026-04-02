@@ -173,6 +173,7 @@ interface MeetingData {
   meetingName: string;
   meetingDescription?: string;
   meetingDateTime: string;
+  endDate?: string;
   companyId?: string;
   meetingTypeId: string;
   meetingTypeName?: string;
@@ -384,6 +385,7 @@ interface CompanyMeetingDataProps {
   meetingName?: string;
   meetingDescription?: string;
   meetingDateTime?: string;
+  endDate?: string;
   meetingTypeId?: string;
   parentType?: string;
   meetingStatusId?: string;
@@ -528,9 +530,9 @@ interface EmployeeDetails {
   designationId: string;
   isSuperAdmin: false;
   sahayEmId: null;
-  departmentName: null;
-  designationName: null;
-  reportingManagerId: null;
+  departmentName: string | null;
+  designationName: string | null;
+  reportingManagerId: string | null;
   companyAdminName: string;
   reportingManager: null;
   isDeactivated?: boolean;

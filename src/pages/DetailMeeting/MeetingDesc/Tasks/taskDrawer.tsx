@@ -409,6 +409,9 @@ export default function TaskDrawer({
                   value={field.value ?? null}
                   onChange={field.onChange}
                   error={errors.taskDeadline}
+                  disablePastDays={
+                    Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                  }
                 />
               )}
             />
