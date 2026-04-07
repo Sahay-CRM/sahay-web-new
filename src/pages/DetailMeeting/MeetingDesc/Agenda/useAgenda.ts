@@ -1078,8 +1078,9 @@ export const useAgenda = ({
         {
           issueId: data.issueId,
           issueName: data.name,
-          type: data.type === "PARKED" ? null : "PARKED",
+          type: "PARKED",
           meetingId: meetingId,
+          isResolved: false,
         },
         {
           onSuccess: () => {
@@ -1101,8 +1102,9 @@ export const useAgenda = ({
         {
           objectiveId: data.objectiveId,
           objectiveName: data.name,
-          type: data.type === "PARKED" ? null : "PARKED",
+          type: "PARKED",
           meetingId: meetingId,
+          isResolved: false,
         },
         {
           onSuccess: () => {

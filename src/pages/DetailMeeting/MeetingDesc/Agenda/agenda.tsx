@@ -1059,7 +1059,7 @@ export default function Agenda({
               </div>
             ) : meetingStatus === "STARTED" ? (
               <div className="h-full flex items-center justify-center">
-                <div className="flex flex-wrap gap-8 text-center justify-center">
+                <div className="flex flex-wrap gap-4 text-center justify-center">
                   {joiners &&
                     joiners.map((item) => {
                       return (
@@ -1067,10 +1067,10 @@ export default function Agenda({
                           key={item.employeeId}
                           className="flex items-center"
                         >
-                          <div className="flex gap-2 w-40">
-                            <div className="relative">
+                          <div className="flex gap-2 w-fit border px-4 py-2 rounded-md">
+                            <div className="relative flex gap-2">
                               {item.isTeamLeader && (
-                                <span className="absolute -top-2 right-3 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                                <span className="absolute -top-2 left-5 z-10 bg-white shadow-2xl rounded-full p-0.5">
                                   <Crown className="w-3 h-3 text-[#303290] drop-shadow" />
                                 </span>
                               )}
@@ -1080,7 +1080,7 @@ export default function Agenda({
                                     <TooltipTrigger asChild>
                                       {item.employeeImage !== null ? (
                                         <img
-                                          src={`${ImageBaseURL}/share/company/profilePics/${item.employeeImage}`}
+                                          src={`${ImageBaseURL}/share/profilePics/${item.employeeImage}`}
                                           alt={item.employeeName}
                                           className="w-full h-full object-cover outline-2 outline-blue-400 bg-black"
                                         />
@@ -1096,6 +1096,9 @@ export default function Agenda({
                                   </Tooltip>
                                 </TooltipProvider>
                               </div>
+                              <div className="text-sm font-medium text-gray-800 mt-2">
+                                {item.employeeName}
+                              </div>
                               <div>
                                 <FormCheckbox
                                   id={`${item.employeeId}-checkbox`}
@@ -1109,10 +1112,6 @@ export default function Agenda({
                                   disabled={!(isTeamLeader || isSuperAdmin)}
                                 />
                               </div>
-                            </div>
-
-                            <div className="text-sm font-medium text-gray-800 mt-2">
-                              {item.employeeName}
                             </div>
                           </div>
                         </div>
