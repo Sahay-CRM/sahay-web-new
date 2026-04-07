@@ -76,7 +76,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useZoom } from "@/features/context/ZoomContext";
-import { Minus, Plus, Settings } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 
 const CompanyModal = lazy(() => import("@/pages/auth/login/CompanyModal"));
 const NotificationDropdown = lazy(() => import("./notificationDropdown"));
@@ -104,9 +104,7 @@ const DashboardLayout = () => {
 
   const [isCompanyModalOpen, setCompanyModalOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [isZoomControlsOpen, setIsZoomControlsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const zoomControlsRef = useRef<HTMLDivElement>(null);
 
   const user = useSelector(getUserDetail, shallowEqual);
   const userId = useSelector(getUserId);
@@ -189,22 +187,6 @@ const DashboardLayout = () => {
         document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isNotificationOpen]);
-
-  useEffect(() => {
-    if (isZoomControlsOpen) {
-      const handleClickOutside = (e: MouseEvent) => {
-        if (
-          zoomControlsRef.current &&
-          !zoomControlsRef.current.contains(e.target as Node)
-        ) {
-          setIsZoomControlsOpen(false);
-        }
-      };
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [isZoomControlsOpen]);
 
   const toggleDrawer = useCallback(() => setOpen((prev) => !prev), []);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
@@ -425,6 +407,56 @@ const DashboardLayout = () => {
                   )}
                 </div>
 
+                {/* Zoom Controls */}
+                <div className="flex items-center gap-x-1 bg-white border border-gray-200 rounded-lg p-1 h-[40px]">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-[32px] w-[32px] border border-gray-200"
+                          onClick={zoomOut}
+                          disabled={!canZoomOut}
+                        >
+                          <Minus size={16} className="size-[16px]" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Zoom Out</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-[32px] min-w-[45px] px-1 !text-[12px]"
+                          onClick={resetZoom}
+                          style={{ fontSize: "12px" }}
+                        >
+                          <span className="font-bold">{zoom}%</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Reset Zoom</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-[32px] w-[32px] border border-gray-200"
+                          onClick={zoomIn}
+                          disabled={!canZoomIn}
+                        >
+                          <Plus size={16} className="size-[16px]" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Zoom In</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
                 {(companies?.length ?? 0) > 0 && (
                   <Button
                     variant="outline"
@@ -513,80 +545,6 @@ const DashboardLayout = () => {
                 <Outlet />
               </Suspense>
             </main>
-          </div>
-        </div>
-
-        {/* Floating Zoom Controls Capsule */}
-        <div
-          ref={zoomControlsRef}
-          className={`fixed bottom-6 right-0 z-50 flex items-center bg-white shadow-lg transition-all duration-300 ease-in-out overflow-hidden h-12 ${
-            isZoomControlsOpen
-              ? "max-w-[250px] border border-gray-200"
-              : "max-w-[48px] border-transparent"
-          }`}
-        >
-          <Button
-            size="icon"
-            className="w-10 h-10 flex-shrink-0 bg-primary hover:bg-primary/90 p-0 text-primary-foreground"
-            onClick={() => setIsZoomControlsOpen((prev) => !prev)}
-          >
-            <Settings
-              className={`transition-transform duration-300 flex-shrink-0 ${isZoomControlsOpen ? "rotate-90" : ""}`}
-            />
-          </Button>
-
-          <div
-            className={`flex items-center gap-x-1 pr-2 shrink-0 transition-opacity duration-300 ${
-              isZoomControlsOpen
-                ? "opacity-100"
-                : "opacity-0 pointer-events-none"
-            }`}
-          >
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 rounded-full"
-                    onClick={zoomOut}
-                    disabled={!canZoomOut}
-                  >
-                    <Minus size={24} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Zoom Out</TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 px-0 rounded-full"
-                    onClick={resetZoom}
-                  >
-                    <span className="text-[10px] font-bold">{zoom}%</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Reset Zoom</TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 rounded-full"
-                    onClick={zoomIn}
-                    disabled={!canZoomIn}
-                  >
-                    <Plus size={16} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Zoom In</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
         </div>
       </SidebarControlContext.Provider>
