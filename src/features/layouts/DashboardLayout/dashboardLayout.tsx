@@ -75,6 +75,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useZoom } from "@/features/context/ZoomContext";
+import { Minus, Plus } from "lucide-react";
 
 const CompanyModal = lazy(() => import("@/pages/auth/login/CompanyModal"));
 const NotificationDropdown = lazy(() => import("./notificationDropdown"));
@@ -127,6 +129,7 @@ const DashboardLayout = () => {
 
   const { data: companies } = useGetCompanyList();
   const { bgColor } = useSidebarTheme();
+  const { zoom, zoomIn, zoomOut, resetZoom, canZoomIn, canZoomOut } = useZoom();
 
   useEffect(() => {
     if (permission) {
@@ -346,6 +349,7 @@ const DashboardLayout = () => {
               </div>
 
               <div className="flex items-center justify-end gap-x-4 pt-1 relative">
+                {/* Updates/Info */}
                 <div className="relative">
                   <TooltipProvider>
                     <Tooltip>
@@ -368,6 +372,55 @@ const DashboardLayout = () => {
                       <TooltipContent side="bottom">
                         {showDot ? "New Updates" : "Updates"}
                       </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
+                {/* Zoom Controls */}
+                <div className="flex items-center gap-x-1 border rounded-lg p-1 bg-white/50 backdrop-blur-sm">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={zoomOut}
+                          disabled={!canZoomOut}
+                        >
+                          <Minus size={16} />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Zoom Out</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 px-0"
+                          onClick={resetZoom}
+                        >
+                          <span className="text-[10px] font-bold">{zoom}%</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Reset Zoom</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={zoomIn}
+                          disabled={!canZoomIn}
+                        >
+                          <Plus size={16} />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Zoom In</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </div>

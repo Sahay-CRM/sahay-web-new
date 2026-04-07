@@ -66,14 +66,19 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
     <div className="flex flex-col w-[260px] h-screen bg-white border-r">
       <Link to="/">
         <div className="flex items-center px-4 py-4 shadow-sm mt-auto cursor-pointer mb-4">
-          <div className="flex w-[70px] h-[50px]">
+          <div className="flex w-[70px] h-[50px] shrink-0">
             <img
               src={user?.companyLogo ? user?.companyLogo : companyLogo}
               alt="profile"
               className="w-full rounded-full object-cover"
             />
           </div>
-          <span className="ml-2 mr-1">{user?.companyName}</span>
+          <span
+            style={{ fontSize: "var(--fs-sidebar)" }}
+            className="ml-2 mr-1 font-semibold truncate"
+          >
+            {user?.companyName}
+          </span>
         </div>
       </Link>
 

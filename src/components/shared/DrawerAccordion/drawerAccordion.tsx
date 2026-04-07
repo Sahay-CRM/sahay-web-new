@@ -80,11 +80,14 @@ export default function DrawerAccordion({
         onClick={onClick}
       >
         {" "}
-        <div className="flex flex-1 items-center">
-          <div className="w-6 flex items-center justify-center mr-3">
+        <div className="flex flex-1 items-center min-w-0">
+          <div className="w-6 flex items-center justify-center mr-3 shrink-0">
             <LucideIcon name={item?.icon as IconName} className="text-xl" />
           </div>
-          <span className="whitespace-nowrap overflow-hidden text-ellipsis hover:underline">
+          <span
+            style={{ fontSize: "var(--fs-sidebar)" }}
+            className="whitespace-nowrap overflow-hidden text-ellipsis hover:underline"
+          >
             {item?.label}
           </span>
         </div>
@@ -115,7 +118,8 @@ export default function DrawerAccordion({
               return (
                 <li
                   key={`${item.label}-${index}`}
-                  className="hover:text-primary hover:underline transition-colors cursor-pointer rounded-lg px-2 pb-2"
+                  style={{ fontSize: "var(--fs-sidebar)" }}
+                  className="hover:text-primary hover:underline transition-colors cursor-pointer rounded-lg px-2 pb-2 whitespace-nowrap overflow-hidden text-ellipsis"
                   onClick={() => {
                     postOnClick();
                     navigate(child.link);
