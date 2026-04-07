@@ -9,8 +9,8 @@ import {
 } from "react";
 
 const ZOOM_STORAGE_KEY = "CRM_UI_ZOOM_LEVEL";
-const ZOOM_MIN = 80;
-const ZOOM_MAX = 120;
+const ZOOM_MIN = 50;
+const ZOOM_MAX = 150;
 const ZOOM_STEP = 5;
 const ZOOM_DEFAULT = 100;
 
