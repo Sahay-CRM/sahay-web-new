@@ -28,7 +28,7 @@ import { getInitials } from "@/features/utils/app.utils";
 import { queryClient } from "@/queryClient";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
-import { useGetCompanyMeeting } from "@/features/api/companyMeeting";
+import { useGetBothCompanyMeeting } from "@/features/api/companyMeeting";
 
 export default function ProjectTaskList() {
   const { id: projectId } = useParams();
@@ -88,7 +88,7 @@ export default function ProjectTaskList() {
     filter: { isDeactivated: false },
   });
 
-  const { data: meetingData } = useGetCompanyMeeting({
+  const { data: meetingData } = useGetBothCompanyMeeting({
     filter: {
       search: isMeetingSearch,
       pageSize: 25,
@@ -213,9 +213,9 @@ export default function ProjectTaskList() {
           taskTypeOptions={taskTypeOptions}
           taskStatusOptions={taskStatusOptions}
           employeeOption={employeeOption}
-          setMeetingSearch={setIsMeetingSearch}
-          setTypeSearch={setIsTypeSearch}
-          setStatusSearch={setIsStatusSearch}
+          handleMeetingSearch={setIsMeetingSearch}
+          handleTypeSearch={setIsTypeSearch}
+          handleStatusSearch={setIsStatusSearch}
         />
       )}
 
@@ -321,9 +321,9 @@ export default function ProjectTaskList() {
                     taskTypeOptions={taskTypeOptions}
                     taskStatusOptions={taskStatusOptions}
                     employeeOption={employeeOption}
-                    setMeetingSearch={setIsMeetingSearch}
-                    setTypeSearch={setIsTypeSearch}
-                    setStatusSearch={setIsStatusSearch}
+                    handleMeetingSearch={setIsMeetingSearch}
+                    handleTypeSearch={setIsTypeSearch}
+                    handleStatusSearch={setIsStatusSearch}
                   />
                 )}
               </div>

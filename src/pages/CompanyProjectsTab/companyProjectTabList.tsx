@@ -300,6 +300,7 @@ export default function CompanyProjectTabList() {
                     color={project.color}
                     coreParameterName={project.coreParameterName}
                     projectDocuments={project.projectDocuments}
+                    projectDuration={project.projectDuration || ""}
                     onViewDocuments={handleViewDocuments}
                   />
                 </div>

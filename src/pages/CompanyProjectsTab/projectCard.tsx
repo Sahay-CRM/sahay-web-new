@@ -1,4 +1,4 @@
-import { Calendar, Edit, Eye, Image } from "lucide-react";
+import { Clock, Edit, Eye, Image } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -13,7 +13,6 @@ interface ProjectCardProps {
   name: string;
   description: string;
   assignees: string[];
-  startDate?: string;
   endDate: string;
   priority: string;
   color: string;
@@ -22,6 +21,7 @@ interface ProjectCardProps {
     fileId: string;
     fileName: string;
   }[];
+  projectDuration: string;
   onViewDocuments?: (
     projectDocuments: { fileId: string; fileName: string }[],
     projectId: string,
@@ -33,12 +33,12 @@ export default function ProjectCard({
   name,
   description,
   assignees,
-  startDate,
   endDate,
   priority,
   color,
   coreParameterName,
   projectDocuments,
+  projectDuration,
   onViewDocuments,
 }: ProjectCardProps) {
   const navigate = useNavigate();
@@ -134,17 +134,23 @@ export default function ProjectCard({
             {coreParameterName}
           </span>
         </div>
+        <div className="mb-2 flex items-center gap-2 text-sm text-gray-600">
+          <span className="font-semibold  whitespace-nowrap">
+            Project Deadline :
+          </span>
+          <TableTooltip text={`${endDate || ""}`} />
+        </div>
       </div>
 
       {/* Bottom section */}
       <div className="flex items-center justify-between right-0 border-t pt-2 mt-auto">
         {/* Date (smaller font) */}
         <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Calendar className="w-4 h-4" />
-          <div className="max-w-[150px]">
-            <TableTooltip
-              text={`${startDate ? `${startDate} - ` : ""}${endDate || ""}`}
-            />
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Clock className="w-4 h-4" />
+            <div className="max-w-[150px]">
+              <TableTooltip text={projectDuration} />
+            </div>
           </div>
         </div>
 

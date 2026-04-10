@@ -336,6 +336,7 @@ interface CompanyProjectDataProps {
   ProjectTasks?: ProjectTask[];
   createdBy?: CreatedBy;
   projectStatusId: string;
+  projectDuration?: string;
   projectStatus?: ProjectStatusRes;
   otherProjectEmployees?: string[];
   detailMeetingProjectId?: string;
@@ -344,6 +345,7 @@ interface CompanyProjectDataProps {
   subParameters?: SubParameter[];
   coreParameterId?: string;
   coreParameterName?: string;
+  otherEmployee?: Employee[];
   detailMeetingProjectId?: string;
   meetingNoteId?: string;
   ioType?: string;
