@@ -22,6 +22,7 @@ import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
+import { useGetCompanyMeetingSearch } from "@/features/api/companyMeeting";
 
 interface MeetingInfoProps {
   isUpdateMeeting: boolean;
@@ -143,6 +144,14 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
     enable: isStatusSearch.length >= 3,
   });
 
+  const meetingNameValue = watch("meetingName") || "";
+  const { data: meetingSearchData } =
+    useGetCompanyMeetingSearch(meetingNameValue);
+  const showResults =
+    meetingNameValue.trim().length >= 5 &&
+    meetingSearchData?.data &&
+    meetingSearchData?.data?.length > 0;
+
   const meetingStatusOptions = useMemo(() => {
     return (
       meetingStatusData?.map((status) => ({
@@ -172,13 +181,30 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
   return (
     <div className="grid grid-cols-2 gap-4">
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4 h-fit border">
-        <FormInputField
-          label="Meeting Name"
-          placeholder="Enter an Meeting Name"
-          {...register("meetingName", { required: "Name is required" })}
-          error={errors.meetingName}
-          isMandatory
-        />
+        <div className="relative z-50">
+          <FormInputField
+            label="Meeting Name"
+            placeholder="Enter an Meeting Name"
+            {...register("meetingName", { required: "Name is required" })}
+            error={errors.meetingName}
+            isMandatory
+          />
+          {showResults && (
+            <div className="absolute top-[100%] mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              <div className="px-3 py-2 text-[12px]  text-gray-500 bg-gray-50 border-b border-gray-200 sticky top-0">
+                Similar Meetings Found
+              </div>
+              {meetingSearchData?.data?.map((item: MeetingSearchResponse) => (
+                <div
+                  key={item.meetingId}
+                  className="px-3 py-2 text-sm text-gray-700 border-b last:border-b-0 cursor-default hover:bg-gray-50"
+                >
+                  <span className="font-medium">{item.meetingName}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <FormInputField
           label="Meeting Description"
           placeholder="Enter an Meeting Description"

@@ -24,6 +24,16 @@ import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import { Button } from "@/components/ui/button";
 import RequestModal from "@/components/shared/Modal/RequestModal";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
+import { useGetCompanyProjectSearch } from "@/features/api/companyProject";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface SubParameterProps {
   setIsReqModalOpen: (value: boolean) => void;
@@ -34,6 +44,7 @@ const ProjectInfo = () => {
     register,
     setValue,
     control,
+    watch,
     formState: { errors },
   } = useFormContext();
   const {
@@ -43,15 +54,40 @@ const ProjectInfo = () => {
     setIsBusFuncSearch,
   } = useAddProject();
 
+  const projectNameValue = watch("projectName") || "";
+  const { data: projectSearchData } =
+    useGetCompanyProjectSearch(projectNameValue);
+  const showResults =
+    projectNameValue.trim().length >= 5 &&
+    projectSearchData?.data &&
+    projectSearchData?.data?.length > 0;
+
   return (
     <div className="grid grid-cols-2 gap-4">
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 mt-4 gap-4">
-        <FormInputField
-          label="Project Name"
-          {...register("projectName", { required: "Name is required" })}
-          error={errors.projectName}
-          placeholder="Enter Project Name"
-        />
+        <div className="relative z-50">
+          <FormInputField
+            label="Project Name"
+            {...register("projectName", { required: "Name is required" })}
+            error={errors.projectName}
+            placeholder="Enter Project Name"
+          />
+          {showResults && (
+            <div className="absolute top-[100%] mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              <div className="px-3 py-2 text-[12px]  text-gray-500 bg-gray-50 border-b border-gray-200 sticky top-0">
+                Similar Projects Found
+              </div>
+              {projectSearchData?.data?.map((item: ProjectSearchResponse) => (
+                <div
+                  key={item.projectId}
+                  className="px-3 py-2 text-sm text-gray-700 border-b last:border-b-0 cursor-default hover:bg-gray-50"
+                >
+                  <span className="font-medium">{item.projectName}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <FormInputField
           label="Project Description"
           {...register("projectDescription", {
@@ -538,8 +574,11 @@ export default function AddProject() {
     projectApiData,
     permission,
     isCoreParameterSelected,
-    // isReqModalOpen,
-    // setIsReqModalOpen,
+    isConfModalOpen,
+    setIsConfModalOpen,
+    reasons,
+    setReasons,
+    onConfirmSubmit,
   } = useAddProject();
 
   const [isReqModalOpen, setIsReqModalOpen] = useState(false);
@@ -649,6 +688,47 @@ export default function AddProject() {
         modalTitle="Request Business Function"
       />
       {/* )} */}
+
+      <Dialog open={isConfModalOpen} onOpenChange={setIsConfModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirmation Required</DialogTitle>
+            <DialogDescription>
+              The deadline has been changed. Please provide a reason to proceed
+              with the update.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="reason" className="text-sm font-medium">
+                Reason
+              </label>
+              <Textarea
+                id="reason"
+                placeholder="Enter reasons for deadline change..."
+                value={reasons}
+                onChange={(e) => setReasons(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsConfModalOpen(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={onConfirmSubmit}
+              disabled={isPending || !reasons.trim()}
+            >
+              {isPending ? "Confirming..." : "Confirm"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </FormProvider>
   );
 }

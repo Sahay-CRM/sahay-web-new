@@ -193,6 +193,7 @@ export default function useProjectTabs() {
       color: project.color || "#000000",
       coreParameterName: project.coreParameter?.coreParameterName,
       projectDuration: project.projectDuration,
+      createdBy: project.createdBy,
       projectDocuments: Array.isArray(project.files)
         ? project.files.map((f: { fileId: string; fileName: string }) => ({
             fileId: f.fileId,

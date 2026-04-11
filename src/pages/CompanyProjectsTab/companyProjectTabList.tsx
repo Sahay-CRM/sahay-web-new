@@ -301,6 +301,7 @@ export default function CompanyProjectTabList() {
                     coreParameterName={project.coreParameterName}
                     projectDocuments={project.projectDocuments}
                     projectDuration={project.projectDuration || ""}
+                    createdBy={project.createdBy!}
                     onViewDocuments={handleViewDocuments}
                   />
                 </div>

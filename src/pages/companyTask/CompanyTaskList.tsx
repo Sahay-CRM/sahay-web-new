@@ -23,6 +23,17 @@ import PageNotAccess from "../PageNoAccess";
 import { format } from "date-fns";
 import ConfirmationDeleteModal from "./ConfirmTaskDeleteModal";
 
+function getInitials(name: string) {
+  if (!name || name.trim() === "") {
+    return "-";
+  }
+  const nameParts = name.trim().split(" ");
+  if (nameParts.length > 1) {
+    return nameParts.map((word) => word.charAt(0).toUpperCase()).join("");
+  }
+  return name.charAt(0).toUpperCase();
+}
+
 export default function CompanyTaskList() {
   const {
     companyTaskData,
@@ -71,15 +82,26 @@ export default function CompanyTaskList() {
     },
     { key: "taskDeadline", label: "Task Deadline", visible: true },
     { key: "assigneeNames", label: "Assignees", visible: true },
+    {
+      key: "createdByEmployeeName",
+      label: "Created",
+      visible: true,
+      tooltipColumn: "createdByFullName",
+    },
     { key: "taskStatus", label: "Status", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          tooltipColumn: col.tooltipColumn,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; tooltipColumn?: string }>,
   );
 
   // Toggle column visibility
@@ -203,6 +225,10 @@ export default function CompanyTaskList() {
                       .filter(Boolean)
                       .join(", ")
                   : "",
+                createdByEmployeeName: getInitials(
+                  item.createdBy?.employeeName || "",
+                ),
+                createdByFullName: item.createdBy?.employeeName || "",
               }),
             )}
             columns={visibleColumns}

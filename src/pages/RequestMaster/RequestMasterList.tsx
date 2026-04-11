@@ -13,6 +13,8 @@ import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import { format } from "date-fns";
+import { Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import { UpdateStatusModal } from "./UpdateStatusModal";
 
@@ -22,7 +24,7 @@ export default function RequestMasterList() {
     isLoading,
     paginationFilter,
     setPaginationFilter,
-    onDelete,
+    // onDelete,
     isUpdateModalOpen,
     setIsUpdateModalOpen,
     selectedRequest,
@@ -154,21 +156,60 @@ export default function RequestMasterList() {
             )}
             columns={visibleColumns}
             primaryKey="requestMasterId"
-            onEdit={(row: RequestMasterData) => {
-              setSelectedRequest(row);
-              setIsUpdateModalOpen(true);
-            }}
-            onDelete={(row: RequestMasterData) => {
-              onDelete(row.requestMasterId);
-            }}
             paginationDetails={mapPaginationDetails(requestData)}
             setPaginationFilter={setPaginationFilter}
             searchValue={paginationFilter?.search}
             isLoading={isLoading}
             // moduleKey="user"
-            isActionButton={() => true}
-            actionColumnWidth="w-[120px]"
-            isEditDeleteShow={true}
+            customActions={(row: RequestMasterData) => (
+              <>
+                {row.status === "PENDING" && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedRequest(row);
+                            setIsUpdateModalOpen(true);
+                          }}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Edit</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {/* 
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-red-600 ml-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (row.requestMasterId) {
+                            onDelete(row.requestMasterId);
+                          }
+                        }}
+                      >
+                        <Trash className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider> 
+                */}
+              </>
+            )}
+            actionColumnWidth="w-[80px]"
+            isEditDeleteShow={false}
           />
         </div>
 

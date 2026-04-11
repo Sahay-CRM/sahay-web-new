@@ -7,6 +7,8 @@ import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import { useAddCompanyTask } from "./useAddCompanyTaskList";
+
+import { useGetCompanyTaskSearch } from "@/features/api/companyTask";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import SearchInput from "@/components/shared/SearchInput";
@@ -208,6 +210,7 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
     control,
     formState: { errors },
     setValue,
+    watch,
   } = useFormContext();
   const {
     taskStatusOptions,
@@ -216,10 +219,17 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
     setIsStatusSearch,
   } = useAddCompanyTask();
 
+  const taskNameValue = watch("taskName") || "";
+  const { data: taskSearchData } = useGetCompanyTaskSearch(taskNameValue);
+  const showResults =
+    taskNameValue.trim().length >= 5 &&
+    taskSearchData?.data &&
+    taskSearchData?.data?.length > 0;
+
   return (
     <div className="grid grid-cols-2 gap-4">
       <div className="col-span-2 mt-4 px-6 py-6 grid grid-cols-6 gap-4 h-[calc(100vh-250px)] content-start">
-        <div className="col-span-3">
+        <div className="col-span-3 relative z-50">
           <FormInputField
             label="Task Name"
             className="p-5 px-3"
@@ -227,6 +237,21 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
             error={errors.taskName}
             placeholder="Enter Task Name"
           />
+          {showResults && (
+            <div className="absolute top-[100%] mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              <div className="px-3 py-2 text-[12px]  text-gray-500 bg-gray-50 border-b border-gray-200 sticky top-0">
+                Similar Tasks Found
+              </div>
+              {taskSearchData?.data?.map((item: SearchResponse) => (
+                <div
+                  key={item.taskId}
+                  className="px-3 py-2 text-sm text-gray-700 border-b last:border-b-0 cursor-default hover:bg-gray-50"
+                >
+                  <span className="font-medium">{item.taskName}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="col-span-3">
           <Controller

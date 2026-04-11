@@ -21,6 +21,7 @@ import DateRangePicker from "@/components/shared/DateRange";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
 import ConfirmationDeleteModal from "./confirmMeetingDeleteModal";
+import { getInitials } from "@/features/utils/app.utils";
 // import { useSelector } from "react-redux";
 // import { getUserId } from "@/features/selectors/auth.selector";
 
@@ -75,15 +76,26 @@ export default function MeetingList() {
     { key: "meetingDateTime", label: "Start Date", visible: true },
     { key: "endDate", label: "End Date", visible: true },
     { key: "joinerNames", label: "Joiners", visible: true },
-    { key: "meetingStatus", label: "Status", visible: true }, // <-- add this line
+    {
+      key: "createdByEmployeeName",
+      label: "Created By",
+      visible: true,
+      tooltipColumn: "createdByFullName",
+    },
+    { key: "meetingStatus", label: "Status", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          tooltipColumn: col.tooltipColumn,
+        };
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, { label: string; tooltipColumn?: string }>,
   );
 
   const onToggleColumn = (key: string) => {
@@ -219,6 +231,10 @@ export default function MeetingList() {
                       : String(emp),
                   )
                   .join(", ") || "",
+              createdByEmployeeName: getInitials(
+                item.createdBy?.employeeName || "",
+              ),
+              createdByFullName: item.createdBy?.employeeName || "",
             }))}
             columns={visibleColumns}
             primaryKey="meetingId"

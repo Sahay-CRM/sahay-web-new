@@ -22,6 +22,10 @@ interface ProjectCardProps {
     fileName: string;
   }[];
   projectDuration: string;
+  createdBy?: {
+    employeeId: string;
+    employeeName: string;
+  };
   onViewDocuments?: (
     projectDocuments: { fileId: string; fileName: string }[],
     projectId: string,
@@ -39,6 +43,7 @@ export default function ProjectCard({
   coreParameterName,
   projectDocuments,
   projectDuration,
+  createdBy,
   onViewDocuments,
 }: ProjectCardProps) {
   const navigate = useNavigate();
@@ -146,10 +151,27 @@ export default function ProjectCard({
       <div className="flex items-center justify-between right-0 border-t pt-2 mt-auto">
         {/* Date (smaller font) */}
         <div className="flex items-center gap-2 text-sm text-gray-600">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Clock className="w-4 h-4" />
-            <div className="max-w-[150px]">
-              <TableTooltip text={projectDuration} />
+          <div className="flex items-center gap-3 text-sm text-gray-600">
+            {createdBy && (
+              <div className="flex items-center gap-1.5">
+                <span className="font-semibold text-xs whitespace-nowrap">
+                  By :
+                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="rounded-full h-5 w-5 bg-primary/10 text-primary text-[16px] flex items-center justify-center font-bold border border-primary/20">
+                      {getInitials(createdBy.employeeName)}
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent>{createdBy.employeeName}</TooltipContent>
+                </Tooltip>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 ">
+              <Clock className="w-4 h-4 text-gray-400" />
+              <div className="max-w-[120px]">
+                <TableTooltip text={projectDuration} />
+              </div>
             </div>
           </div>
         </div>

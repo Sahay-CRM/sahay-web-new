@@ -35,7 +35,9 @@ import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
+  TooltipProvider,
 } from "@/components/ui/tooltip";
+import { getColorFromName } from "@/features/utils/formatting.utils";
 import { isColorDark } from "@/features/utils/color.utils";
 import { TableTooltip } from "./tableTooltip";
 import { twMerge } from "tailwind-merge";
@@ -46,9 +48,15 @@ interface DetailsPermission {
   delete?: boolean;
 }
 
+interface ColumnConfig {
+  label: string;
+  tooltipColumn?: string;
+  width?: string;
+}
+
 interface TableProps<T extends Record<string, unknown>> {
   tableData?: T[];
-  columns?: Partial<Record<keyof T, string>>;
+  columns?: Partial<Record<keyof T, string | ColumnConfig>>;
   primaryKey: keyof T;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
@@ -104,6 +112,12 @@ interface TableProps<T extends Record<string, unknown>> {
   showActionsColumn?: boolean;
   actionColumnWidth?: string;
   isPermissionIcon?: (item: T) => boolean;
+  extraColumn?: {
+    label: string;
+    width?: string;
+    render: (item: T) => React.ReactNode;
+  };
+  indexColumnWidth?: string;
 }
 
 const TableData = <T extends Record<string, unknown>>({
@@ -142,6 +156,8 @@ const TableData = <T extends Record<string, unknown>>({
   actionColumnWidth,
   isPermissionIcon,
   searchValue,
+  extraColumn,
+  indexColumnWidth = "w-[80px]",
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   // Only show checkboxes if explicitly enabled with multiSelect OR if both selectedValue and handleChange are provided
@@ -149,19 +165,26 @@ const TableData = <T extends Record<string, unknown>>({
 
   const permission = useSelector(getUserPermission)?.[moduleKey];
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      handleChange?.(tableData);
+      onCheckbox?.(tableData);
+    } else {
+      handleChange?.([]);
+      onCheckbox?.([]);
+    }
+  };
+
   const handleCheckboxChange = (item: T, isChecked: boolean) => {
     const selectedItems = Array.isArray(selectedValue) ? selectedValue : [];
 
     if (multiSelect) {
       if (isChecked) {
-        // Add item to selection
         const updatedSelection = [...selectedItems, item];
         handleChange?.(updatedSelection);
         onCheckbox?.(updatedSelection);
       } else {
-        // Remove item from selection - handle both string IDs and objects
         const updatedSelection = selectedItems.filter((selected) => {
-          // Handle case where selected might be a string ID or an object
           const selectedId =
             typeof selected === "object" && selected !== null
               ? selected[primaryKey]
@@ -177,7 +200,6 @@ const TableData = <T extends Record<string, unknown>>({
         handleChange?.(item);
         onCheckbox?.([item]);
       } else {
-        // For single select, clear selection when unchecked
         handleChange?.([] as T[]);
         onCheckbox?.([]);
       }
@@ -188,7 +210,6 @@ const TableData = <T extends Record<string, unknown>>({
     if (onRowClick) {
       onRowClick(item);
     } else if (showCheckboxes) {
-      // Toggle checkbox when row is clicked and no onRowClick is provided
       const isCurrentlySelected = multiSelect
         ? Array.isArray(selectedValue) &&
           selectedValue.some((selected) => {
@@ -213,10 +234,8 @@ const TableData = <T extends Record<string, unknown>>({
     let newSortOrder: "asc" | "desc" = "asc";
 
     if (currentSortBy === columnKey) {
-      // Toggle between asc and desc for the same column
       newSortOrder = currentSortOrder === "asc" ? "desc" : "asc";
     } else {
-      // Start with asc for a new column
       newSortOrder = "asc";
     }
 
@@ -267,34 +286,77 @@ const TableData = <T extends Record<string, unknown>>({
           <TableHeader className="sticky top-0 z-10 bg-primary shadow-sm">
             <TableRow>
               {showCheckboxes && (
-                <TableHead className="w-[40px] bg-transparent sticky left-0 z-40 pl-6">
-                  {/* Checkbox Header */}
+                <TableHead
+                  className={twMerge(
+                    "w-[40px] bg-transparent sticky left-0 z-20 text-center",
+                  )}
+                >
+                  <FormCheckbox
+                    checked={
+                      tableData.length > 0 &&
+                      (Array.isArray(selectedValue)
+                        ? selectedValue.length === tableData.length
+                        : false)
+                    }
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                  />
                 </TableHead>
               )}
 
               {showIndexColumn && (
-                <TableHead className="w-[80px] bg-transparent sticky left-[40px] z-20 text-center">
+                <TableHead
+                  className={twMerge(
+                    "bg-transparent sticky z-20 text-center",
+                    showCheckboxes ? "left-[40px]" : "left-0",
+                    indexColumnWidth,
+                  )}
+                >
                   #
                 </TableHead>
               )}
 
-              {columnKeys.map((clm, index) => (
+              {columnKeys.map((clm, index) => {
+                const clmWidth =
+                  typeof columns[clm] === "object"
+                    ? (columns[clm] as ColumnConfig).width
+                    : "";
+
+                return (
+                  <TableHead
+                    key={clm + index}
+                    className={twMerge(
+                      "truncate text-left px-4",
+                      clmWidth || (clm === "srNo" ? "w-[80px]" : ""),
+                      sortableColumns.includes(clm)
+                        ? "cursor-pointer select-none"
+                        : "",
+                    )}
+                    onClick={() => handleSort(clm)}
+                  >
+                    <div className="flex items-center gap-1 truncate">
+                      <TableTooltip
+                        text={String(
+                          typeof columns[clm] === "object"
+                            ? (columns[clm] as ColumnConfig).label
+                            : (columns[clm] ?? " - "),
+                        )}
+                      />
+                      {getSortIcon(clm)}
+                    </div>
+                  </TableHead>
+                );
+              })}
+
+              {extraColumn && tableData.length > 0 && (
                 <TableHead
-                  key={clm + index}
-                  className={`
-                truncate text-left px-4
-                ${clm === "srNo" ? "w-[80px]" : ""}
-                ${sortableColumns.includes(clm) ? "cursor-pointer select-none" : ""}
-                ${showActionsColumn === false && "bg-primary"}
-              `}
-                  onClick={() => handleSort(clm)}
+                  className={twMerge(
+                    "truncate text-left px-4",
+                    extraColumn.width,
+                  )}
                 >
-                  <div className="flex items-center gap-1 truncate">
-                    <TableTooltip text={String(columns[clm] ?? " - ")} />
-                    {getSortIcon(clm)}
-                  </div>
+                  <TableTooltip text={extraColumn.label} />
                 </TableHead>
-              ))}
+              )}
 
               {showActionsColumn ? (
                 <TableHead
@@ -327,7 +389,7 @@ const TableData = <T extends Record<string, unknown>>({
                 >
                   {showCheckboxes && (
                     <TableCell
-                      className="sticky left-0  bg-inherit text-center"
+                      className="sticky left-0 bg-inherit text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <FormCheckbox
@@ -357,113 +419,155 @@ const TableData = <T extends Record<string, unknown>>({
 
                   {showIndexColumn && (
                     <TableCell
-                      className="sticky left-[40px] bg-white text-center"
+                      className={twMerge(
+                        "sticky bg-white text-center px-2",
+                        showCheckboxes ? "left-[40px]" : "left-0",
+                        indexColumnWidth,
+                      )}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="flex flex-col items-center gap-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5"
-                          onClick={() => onMoveRowUp?.(index)}
-                          disabled={index === 0}
-                        >
-                          <ChevronUp className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5"
-                          onClick={() => onMoveRowDown?.(index)}
-                          disabled={index === tableData.length - 1}
-                        >
-                          <ChevronDown className="h-3 w-3" />
-                        </Button>
+                      <div className="flex flex-col items-center gap-1">
+                        {onMoveRowUp && onMoveRowDown && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4"
+                            onClick={() => onMoveRowUp?.(index)}
+                            disabled={index === 0}
+                          >
+                            <ChevronUp className="h-3 w-3" />
+                          </Button>
+                        )}
+
+                        {onMoveRowUp && onMoveRowDown && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4"
+                            onClick={() => onMoveRowDown?.(index)}
+                            disabled={index === tableData.length - 1}
+                          >
+                            <ChevronDown className="h-3 w-3" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   )}
 
-                  {columnKeys.map((clm) => (
-                    <TableCell
-                      key={`${item[primaryKey]}_${clm}`}
-                      className={
-                        dropdownColumns[clm]
-                          ? "whitespace-nowrap px-4"
-                          : "truncate whitespace-nowrap px-4"
-                      }
-                      onClick={
-                        dropdownColumns[clm]
-                          ? (e) => e.stopPropagation()
-                          : undefined
-                      }
-                    >
-                      {dropdownColumns[clm] ? (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 min-w-[100px] justify-between"
-                              style={{
-                                backgroundColor:
-                                  dropdownColumns[clm].options.find(
-                                    (option) => option.label === item[clm],
-                                  )?.color || undefined,
-                                color: (() => {
-                                  const bg = dropdownColumns[clm].options.find(
-                                    (option) => option.label === item[clm],
-                                  )?.color;
-                                  return bg
-                                    ? isColorDark(bg)
-                                      ? "#fff"
-                                      : "#000"
-                                    : undefined;
-                                })(),
-                              }}
-                            >
-                              {String(item[clm] || "Select")}
-                              <ChevronDown className="w-4 h-4 ml-2" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start">
-                            {dropdownColumns[clm].options.map((option) => (
-                              <DropdownMenuItem
-                                key={option.value}
-                                onClick={() =>
-                                  dropdownColumns[clm].onChange(
-                                    item,
-                                    option.value,
-                                  )
-                                }
+                  {columnKeys.map((clm) => {
+                    const clmWidth =
+                      typeof columns[clm] === "object"
+                        ? (columns[clm] as ColumnConfig).width
+                        : "";
+
+                    return (
+                      <TableCell
+                        key={clm}
+                        className={twMerge(
+                          "truncate whitespace-nowrap px-4",
+                          clmWidth,
+                          dropdownColumns[clm] ? "whitespace-nowrap" : "",
+                        )}
+                        onClick={
+                          dropdownColumns[clm]
+                            ? (e) => e.stopPropagation()
+                            : undefined
+                        }
+                      >
+                        {dropdownColumns[clm] ? (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 min-w-[100px] justify-between"
+                                style={{
+                                  backgroundColor:
+                                    dropdownColumns[clm].options.find(
+                                      (option) => option.label === item[clm],
+                                    )?.color || undefined,
+                                  color: (() => {
+                                    const bg = dropdownColumns[
+                                      clm
+                                    ].options.find(
+                                      (option) => option.label === item[clm],
+                                    )?.color;
+                                    return bg
+                                      ? isColorDark(bg)
+                                        ? "#fff"
+                                        : "#000"
+                                      : undefined;
+                                  })(),
+                                }}
                               >
-                                {option.label}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      ) : (
-                        <>
-                          {/* {clm === "srNo" ? (
-                            <div className="truncate">
-                              {String(item[clm] ?? " - ")}
-                            </div>
-                          ) : (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="truncate">
-                                  {String(item[clm] ?? " - ")}
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {String(item[clm] ?? " - ")}
-                              </TooltipContent>
-                            </Tooltip>
-                          )} */}
-                          <TableTooltip text={String(item[clm] ?? " - ")} />
-                        </>
+                                {String(item[clm] || "Select")}
+                                <ChevronDown className="w-4 h-4 ml-2" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                              {dropdownColumns[clm].options.map((option) => (
+                                <DropdownMenuItem
+                                  key={option.value}
+                                  onClick={() =>
+                                    dropdownColumns[clm].onChange(
+                                      item,
+                                      option.value,
+                                    )
+                                  }
+                                >
+                                  {option.label}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ) : (
+                          (() => {
+                            const columnConfig = columns[clm] as
+                              | ColumnConfig
+                              | undefined;
+                            const cellValue = String(item[clm] ?? " - ");
+                            const tooltipValue = columnConfig?.tooltipColumn
+                              ? String(
+                                  item[columnConfig.tooltipColumn as keyof T] ??
+                                    "",
+                                )
+                              : cellValue;
+
+                            if (columnConfig?.tooltipColumn) {
+                              return (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div
+                                        className={`whitespace-normal break-words max-w-[230px] ${(clm === "employeeName" || clm === "createdByEmployeeName") && `w-7 min-w-[28px] flex flex-col items-center justify-center aspect-square rounded-full text-[16px] font-bold ${getColorFromName(cellValue)}`}`}
+                                      >
+                                        {cellValue}
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {tooltipValue}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              );
+                            }
+                            return <TableTooltip text={cellValue} />;
+                          })()
+                        )}
+                      </TableCell>
+                    );
+                  })}
+
+                  {extraColumn && tableData.length > 0 && (
+                    <TableCell
+                      className={twMerge(
+                        "truncate whitespace-nowrap px-4",
+                        extraColumn.width,
                       )}
+                    >
+                      {extraColumn.render(item)}
                     </TableCell>
-                  ))}
+                  )}
 
                   {showActionsColumn && (
                     <TableCell

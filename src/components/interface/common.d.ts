@@ -195,12 +195,6 @@ interface IProjectFormData {
   employeeIds: string[];
 
   subParameterIds: string[];
-  createdBy?: {
-    employeeId: string;
-    employeeName: string;
-    employeeEmail: string;
-    employeeMobile: string;
-  };
   ProjectEmployees?: {
     employeeId: string;
     employeeName: string;
@@ -230,6 +224,10 @@ interface IProjectFormData {
     fileId: string;
     fileName: string;
   }[];
+  createdBy?: {
+    employeeId: string;
+    employeeName: string;
+  };
 }
 
 //
@@ -356,6 +354,10 @@ interface CompanyProjectDataProps {
       fileName: string;
     },
   ];
+  createdBy?: {
+    employeeId: string;
+    employeeName: string;
+  };
 }
 
 // interface CompanyMeetingDataProps {
@@ -409,6 +411,7 @@ interface CompanyMeetingDataProps {
   meetingTimePlanned?: string;
   selectDate?: Date | string;
   repetitiveMeetingId?: string;
+  createdBy?: Employee;
 }
 
 interface ProjectParameters {
@@ -1715,4 +1718,23 @@ interface CreateRequestMaster {
   newValue: string;
   status: string;
   reasions: string;
+}
+
+interface SearchResponse {
+  taskId: string;
+  taskName: string;
+  taskDeadline?: string;
+  taskDate?: string;
+}
+
+interface MeetingSearchResponse {
+  meetingId: string;
+  meetingName: string;
+  meetingDateTime?: string;
+}
+
+interface ProjectSearchResponse {
+  projectId: string;
+  projectName: string;
+  projectDeadline?: string;
 }

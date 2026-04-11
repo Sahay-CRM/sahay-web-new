@@ -53,6 +53,7 @@ const Urls = {
     `${baseUrl}/company/meeting/delete/${id}`,
   getCompanyMeetingById: (id: string) => `${baseUrl}/company/meeting/get/${id}`,
   getAllCompanyMeetingByPage: () => `${baseUrl}/company/meeting/get`,
+  getCompanyMeetingSearch: () => `${baseUrl}/company/meeting/search`,
 
   getAllCompanyProject: () => `${baseUrl}/company/project/get-all`,
   addCompanyProject: () => `${baseUrl}/company/project/create`,
@@ -62,6 +63,7 @@ const Urls = {
     `${baseUrl}/company/project/delete/${id}`,
   getCompanyProjectById: (id: string) => `${baseUrl}/company/project/get/${id}`,
   getAllCompanyProjectByPage: () => `${baseUrl}/company/project/get`,
+  getCompanyProjectSearch: () => `${baseUrl}/company/project/search`,
 
   getAllCompanyProjectDropdown: () => `${baseUrl}/company/project/get-all`,
   getAllCorParameter: () => `${baseUrl}/core-param/get`,
@@ -75,6 +77,7 @@ const Urls = {
   deleteCompanyTask: (id: string) => `${baseUrl}/company/task/delete/${id}`,
   getCompanyTaskById: (id: string) => `${baseUrl}/company/task/get/${id}`,
   getAllCompanyTaskByPage: () => `${baseUrl}/company/task/get`,
+  getCompanyTaskSearch: () => `${baseUrl}/company/task/search`,
 
   dropdownDepartment: () => `${baseUrl}/department/get-all`,
   getDepartmentList: () => `${baseUrl}/department/get`,

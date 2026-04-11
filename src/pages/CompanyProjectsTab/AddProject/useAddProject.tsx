@@ -12,6 +12,8 @@ import { useGetCoreParameterDropdown } from "@/features/api/Business";
 // import { queryClient } from "@/queryClient";
 import { docUploadMutation } from "@/features/api/file";
 import { queryClient } from "@/queryClient";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 export default function useAddProject() {
   const { id: companyProjectId } = useParams();
@@ -25,6 +27,11 @@ export default function useAddProject() {
   const [isBusFuncSearch, setIsBusFuncSearch] = useState("");
   const { mutate: docUpload } = docUploadMutation();
   const permission = useSelector(getUserPermission).PROJECT_LIST;
+
+  const [isConfModalOpen, setIsConfModalOpen] = useState(false);
+  const [reasons, setReasons] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [savedPayload, setSavedPayload] = useState<any>(null);
 
   /** Dropdown options */
   const { data: StatusOptionsData } = useGetAllProjectStatus({
@@ -232,8 +239,73 @@ export default function useAddProject() {
         // ✅ If task/repeat task, send projectId in URL
         navigate(`${basePath}?projectId=${projectId}`);
       },
+      onError: (error: Error) => {
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+
+        if (axiosError.response?.data?.status === 417) {
+          setSavedPayload(payload);
+          setReasons(""); // Reset reasons when opening the modal
+          setIsConfModalOpen(true);
+        } else if (axiosError.response?.data.status !== 417) {
+          toast.error(
+            `Error: ${
+              axiosError.response?.data?.message || "An error occurred"
+            }`,
+          );
+        }
+      },
     });
   });
+
+  const onConfirmSubmit = () => {
+    if (!reasons.trim()) {
+      toast.error("Please provide a reason.");
+      return;
+    }
+
+    const finalPayload = {
+      ...savedPayload,
+      isForceChangeDeadline: true,
+      reasons: reasons,
+    };
+
+    addProject(finalPayload, {
+      onSuccess: (response) => {
+        setIsConfModalOpen(false);
+        const projectId = response.data.projectId;
+
+        handleModalClose();
+
+        const from = searchParams.get("from");
+        let basePath = "/dashboard/projects";
+
+        if (from === "task") {
+          basePath = "/dashboard/tasks/add";
+        } else if (from === "tasksrepeat") {
+          basePath = "/dashboard/tasksrepeat/add";
+        }
+
+        if (basePath === "/dashboard/projects") {
+          navigate(basePath);
+          return;
+        }
+
+        navigate(`${basePath}?projectId=${projectId}`);
+      },
+      onError: (error: Error) => {
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+        toast.error(
+          `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+        );
+      },
+    });
+  };
 
   const handleFileOperations = async (
     projectId: string,
@@ -312,5 +384,10 @@ export default function useAddProject() {
     isCoreParameterSelected,
     setIsStatusSearch,
     setIsBusFuncSearch,
+    isConfModalOpen,
+    setIsConfModalOpen,
+    reasons,
+    setReasons,
+    onConfirmSubmit,
   };
 }
