@@ -131,6 +131,19 @@ const DashboardLayout = () => {
   const { bgColor } = useSidebarTheme();
   const { zoom, zoomIn, zoomOut, resetZoom, canZoomIn, canZoomOut } = useZoom();
 
+  // useEffect(() => {
+  //   if (companies && companies.length > 0) {
+  //     const isModalShown = document.cookie
+  //       .split("; ")
+  //       .find((row) => row.startsWith("switchCompanyModalShown="));
+
+  //     if (!isModalShown) {
+  //       setCompanyModalOpen(true);
+  //       document.cookie = "switchCompanyModalShown=true; path=/";
+  //     }
+  //   }
+  // }, [companies]);
+
   useEffect(() => {
     if (permission) {
       dispatch(setUserPermission(permission));
@@ -196,6 +209,8 @@ const DashboardLayout = () => {
     await deleteFirebaseToken();
     dispatch(logout());
     dispatch(clearNotifications());
+    // document.cookie =
+    //   "switchCompanyModalShown=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   };
 
   const handleMarkAsRead = (notification: AppNotification) => {

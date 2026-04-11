@@ -12,4 +12,5 @@ interface ModalProps {
   containerClass?: string;
   modalTitle?: string;
   childclass?: string;
+  overlayClassName?: string;
 }

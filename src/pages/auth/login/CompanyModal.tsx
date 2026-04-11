@@ -64,6 +64,7 @@ const CompanyModal: React.FC<CompanyModalProps> = ({
         isModalOpen={isModalOpen}
         modalTitle="Select Company"
         modalClose={handleOpenChange}
+        overlayClassName="backdrop-blur-lg"
         buttons={[
           {
             btnText: "Submit",
