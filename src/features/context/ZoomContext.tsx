@@ -9,6 +9,7 @@ import {
 } from "react";
 
 const ZOOM_STORAGE_KEY = "CRM_UI_ZOOM_LEVEL";
+const ZOOM_MANUAL_FLAG = "CRM_UI_ZOOM_MANUAL";
 const ZOOM_MIN = 50;
 const ZOOM_MAX = 150;
 const ZOOM_STEP = 5;
@@ -26,63 +27,82 @@ interface ZoomContextType {
 const ZoomContext = createContext<ZoomContextType | undefined>(undefined);
 
 export function ZoomProvider({ children }: { children: ReactNode }) {
-  const [zoom, setZoom] = useState<number>(() => {
-    const stored = localStorage.getItem(ZOOM_STORAGE_KEY);
-    if (stored) {
-      const parsed = Number(stored);
-      return isNaN(parsed)
-        ? ZOOM_DEFAULT
-        : Math.min(Math.max(parsed, ZOOM_MIN), ZOOM_MAX);
-    }
-    // For first-time visitors, adjust based on screen width
-    if (typeof window !== "undefined") {
-      if (window.innerWidth < 1024) return 85;
-      if (window.innerWidth < 1280) return 90;
-    }
-    return ZOOM_DEFAULT;
-  });
+  const calculateAutoZoom = useCallback(() => {
+    if (typeof window === "undefined") return ZOOM_DEFAULT;
+    const width = window.innerWidth;
+    if (width >= 1920) return 100;
+    // Scale down proportionally base on 1920 screen size
+    const calculated = Math.round((width / 1920) * 100);
+    return Math.min(Math.max(calculated, ZOOM_MIN), ZOOM_MAX);
+  }, []);
 
-  // Handle responsive zoom out on window resize
-  useEffect(() => {
-    const handleResize = () => {
-      // We only auto-adjust if no manual zoom preference is stored or if it's currently at a default-ish level
-      // This prevents overriding users who specifically want high zoom on small screens
+  const [zoom, setZoom] = useState<number>(() => {
+    const isManual = localStorage.getItem(ZOOM_MANUAL_FLAG) === "true";
+    if (isManual) {
       const stored = localStorage.getItem(ZOOM_STORAGE_KEY);
-      if (!stored) {
-        if (window.innerWidth < 1024) {
-          setZoom(85);
-        } else if (window.innerWidth < 1280) {
-          setZoom(90);
-        } else {
-          setZoom(100);
+      if (stored) {
+        const parsed = Number(stored);
+        if (!isNaN(parsed)) {
+          return Math.min(Math.max(parsed, ZOOM_MIN), ZOOM_MAX);
         }
       }
+    }
+    return calculateAutoZoom();
+  });
+
+  // Handle auto scaling on window resize if not manually locked
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const handleResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        const isManual = localStorage.getItem(ZOOM_MANUAL_FLAG) === "true";
+        if (!isManual) {
+          setZoom(calculateAutoZoom());
+        }
+      }, 100); // 100ms debounce
     };
 
     window.addEventListener("resize", handleResize);
     // Initial check
     handleResize();
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [calculateAutoZoom]);
 
   // Apply zoom to the root font-size so rem-based spacing scales too
   useEffect(() => {
     const pct = zoom / 100;
     document.documentElement.style.fontSize = `${pct * 16}px`;
-    localStorage.setItem(ZOOM_STORAGE_KEY, String(zoom));
   }, [zoom]);
 
-  const zoomIn = useCallback(
-    () => setZoom((prev) => Math.min(prev + ZOOM_STEP, ZOOM_MAX)),
-    [],
-  );
+  const zoomIn = useCallback(() => {
+    localStorage.setItem(ZOOM_MANUAL_FLAG, "true");
+    setZoom((prev) => {
+      const newZoom = Math.min(prev + ZOOM_STEP, ZOOM_MAX);
+      localStorage.setItem(ZOOM_STORAGE_KEY, String(newZoom));
+      return newZoom;
+    });
+  }, []);
 
-  const zoomOut = useCallback(
-    () => setZoom((prev) => Math.max(prev - ZOOM_STEP, ZOOM_MIN)),
-    [],
-  );
+  const zoomOut = useCallback(() => {
+    localStorage.setItem(ZOOM_MANUAL_FLAG, "true");
+    setZoom((prev) => {
+      const newZoom = Math.max(prev - ZOOM_STEP, ZOOM_MIN);
+      localStorage.setItem(ZOOM_STORAGE_KEY, String(newZoom));
+      return newZoom;
+    });
+  }, []);
 
-  const resetZoom = useCallback(() => setZoom(ZOOM_DEFAULT), []);
+  const resetZoom = useCallback(() => {
+    // Revert back to proportional auto-scaling mode
+    localStorage.removeItem(ZOOM_MANUAL_FLAG);
+    localStorage.removeItem(ZOOM_STORAGE_KEY);
+    setZoom(calculateAutoZoom());
+  }, [calculateAutoZoom]);
 
   const value = useMemo<ZoomContextType>(
     () => ({

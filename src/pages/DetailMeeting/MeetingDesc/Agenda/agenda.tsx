@@ -127,6 +127,61 @@ function IssueModal({
   );
 }
 
+function MaxAgendaModal({
+  open,
+  onClose,
+  onStartAnyway,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onStartAnyway: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        background: "rgba(0,0,0,0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
+      }}
+    >
+      <div className="bg-white p-6 rounded-md shadow-2xl max-w-sm text-center relative border-2">
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 transition"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        <h3 className="text-lg font-semibold text-red-600 mb-2">
+          Max Agenda Reached
+        </h3>
+        <p className="text-gray-700 mb-4 text-sm mt-3">
+          You have added max agenda in this meeting. First move this to resolved
+          or parked.
+        </p>
+        <div className="flex justify-center gap-3 mt-4">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            onClick={onStartAnyway}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            Start AnyWay
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface AgendaProps {
   meetingName: string;
   meetingId: string;
@@ -231,6 +286,22 @@ export default function Agenda({
   const parkedCount = agendaList?.filter(
     (item) => item.type === "PARKED",
   ).length;
+
+  const [showMaxAgendaModal, setShowMaxAgendaModal] = useState(false);
+
+  const handleStartMeetingClick = () => {
+    const totalMinutes = Math.floor(Number(meetingTime || 0) / 60);
+    const durationPerAgenda = Number(
+      import.meta.env.VITE_DETAILMEETINGAGENDADURATION || 5,
+    );
+    const maxAgenda = Math.floor(totalMinutes / durationPerAgenda);
+
+    if (unresolvedCount !== undefined && unresolvedCount > maxAgenda) {
+      setShowMaxAgendaModal(true);
+    } else {
+      handleStartMeeting();
+    }
+  };
 
   const [contentWidth, setContentWidth] = useState("90%");
   const sensors = useSensors(useSensor(PointerSensor));
@@ -358,6 +429,14 @@ export default function Agenda({
         issue={modalIssue}
         defaultType=""
         onSubmit={handleModalSubmit}
+      />
+      <MaxAgendaModal
+        open={showMaxAgendaModal}
+        onClose={() => setShowMaxAgendaModal(false)}
+        onStartAnyway={() => {
+          setShowMaxAgendaModal(false);
+          handleStartMeeting();
+        }}
       />
       <IssueAgendaAddModal
         isModalOpen={addIssueModal}
@@ -497,7 +576,7 @@ export default function Agenda({
                     <Button
                       variant="outline"
                       className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
-                      onClick={handleStartMeeting}
+                      onClick={handleStartMeetingClick}
                       isLoading={isPending}
                     >
                       Start Meeting

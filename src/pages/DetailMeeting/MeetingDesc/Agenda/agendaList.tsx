@@ -217,7 +217,7 @@ export default function AgendaList({
           ...style,
         }}
       >
-        <div className="w-fit h-fit absolute top-0 left-0 z-10 flex items-start gap-4">
+        <div className="w-fit h-fit absolute top-0 left-0 flex items-start gap-4">
           {item.departmentName && (
             <div className="text-black text-[10px] bg-gray-200 shadow-md shadow-primary/10 py-0 px-5 rounded-br-lg">
               {item.departmentName}
