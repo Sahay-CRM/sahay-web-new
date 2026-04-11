@@ -402,6 +402,15 @@ const Urls = {
   kpiNewValidation: () => `${baseUrl}/company/kpi/kpi-new-validation`,
   kpiResetValidation: () => `${baseUrl}/company/kpi/kpi-new-reset`,
   getReports: () => `${baseUrl}/company/reports/get-report`,
+
+  // Request
+  getRequestCompany: () => `${baseUrl}/company/request-master/get`,
+  updateRequestCompany: (id: string) =>
+    `${baseUrl}/company/request-master/update/${id}`,
+  companyRequestCancle: (id: string) =>
+    `${baseUrl}/company/request-master/cancel/${id}`,
+  companyRequestDelete: (id: string) =>
+    `${baseUrl}/company/request-master/delete/${id}`,
 };
 
 export default Urls;

@@ -470,7 +470,7 @@ const TableDataKpi = <T extends Record<string, unknown>>({
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <div
-                                      className={`whitespace-normal break-words max-w-[230px] ${clm === "employeeName" && `w-7 flex flex-col items-center justify-center aspect-square rounded-full ${getColorFromName(cellValue)}`}`}
+                                      className={`whitespace-normal break-words max-w-[230px] ${(clm === "employeeName" || clm === "createdByEmployeeName") && `w-7 flex flex-col items-center justify-center aspect-square rounded-full ${getColorFromName(cellValue)}`}`}
                                     >
                                       {cellValue}
                                     </div>

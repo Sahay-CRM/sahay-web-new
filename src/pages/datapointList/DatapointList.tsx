@@ -159,6 +159,12 @@ export default function CompanyTaskList() {
       label: "Business Function Name",
       visible: true,
     },
+    {
+      key: "createdByEmployeeName",
+      label: "Created By",
+      visible: true,
+      tooltipColumn: "createdByFullName",
+    },
   ]);
 
   // Filter visible columns
@@ -263,6 +269,10 @@ export default function CompanyTaskList() {
                       : `${item.value1}`,
                 employeeName: getInitials(item.employeeName || ""), // Use initials for the display
                 employeeFullName: item.employeeName,
+                createdByEmployeeName: getInitials(
+                  item.createdBy?.employeeName || "",
+                ),
+                createdByFullName: item.createdBy?.employeeName || "",
                 isActive: !item.isDelete,
               }),
             )}

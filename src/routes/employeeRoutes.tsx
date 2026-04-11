@@ -94,6 +94,7 @@ const GroupKpis = lazy(() => import("../pages/datapointList/GroupKpis"));
 const RepeatTaskToDoList = lazy(() => import("../pages/RepeatTaskToDo"));
 
 const Request = lazy(() => import("../pages/Request"));
+const RequestMaster = lazy(() => import("../pages/RequestMaster"));
 
 // const AddCompanyTaskListRepeat = lazy(
 //   () =>
@@ -163,6 +164,7 @@ export default function EmployeeRoutes() {
         <Route path="meeting/detail/update/:id" Component={AddDetailMeeting} />
 
         <Route path="requests" Component={Request} />
+        <Route path="request-master" Component={RequestMaster} />
         <Route path="repeat-task-list" Component={RepeatTaskToDoList} />
 
         <Route path="repeat-meeting/">

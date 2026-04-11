@@ -964,6 +964,10 @@ interface KPIFormData {
   visualFrequencyAggregate: string | null;
   ioKPIId?: string;
   isDelete?: boolean;
+  createdBy?: {
+    employeeId: string;
+    employeeName: string;
+  };
   // skipDays?: string[];
 }
 
@@ -1683,4 +1687,32 @@ interface TaskPreviewData {
   taskDeadline: string;
   createDateUTC?: string;
   nextDateUTC?: string;
+}
+
+interface RequestMasterData {
+  requestMasterId: string;
+  id: string;
+  companyId: string;
+  type: string;
+  refId: string;
+  oldValue: string;
+  newValue: string;
+  status: string;
+  reasions: string;
+  createdBy: {
+    employeeId: string;
+    employeeName: string;
+  };
+  createdDatetime: string;
+  updatedDatetime: string;
+  srNo?: number;
+}
+
+interface CreateRequestMaster {
+  type: string;
+  refId: string;
+  oldValue: string;
+  newValue: string;
+  status: string;
+  reasions: string;
 }

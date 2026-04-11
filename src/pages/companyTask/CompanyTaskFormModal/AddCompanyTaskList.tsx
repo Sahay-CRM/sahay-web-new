@@ -12,6 +12,15 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import SearchInput from "@/components/shared/SearchInput";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import PageNotAccess from "@/pages/PageNoAccess";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 /* ---------------- Project Step ---------------- */
 const ProjectSelectionStep = () => {
@@ -440,6 +449,11 @@ export default function AddCompanyTask() {
     taskDataById,
     isPending,
     taskPermission,
+    isConfModalOpen,
+    setIsConfModalOpen,
+    reasons,
+    setReasons,
+    onConfirmSubmit,
   } = hookProps;
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -532,6 +546,47 @@ export default function AddCompanyTask() {
 
         {renderStepContent()}
       </div>
+
+      <Dialog open={isConfModalOpen} onOpenChange={setIsConfModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirmation Required</DialogTitle>
+            <DialogDescription>
+              The deadline has been changed. Please provide a reason to proceed
+              with the update.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="reason" className="text-sm font-medium">
+                Reason
+              </label>
+              <Textarea
+                id="reason"
+                placeholder="Enter reasons for deadline change..."
+                value={reasons}
+                onChange={(e) => setReasons(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsConfModalOpen(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={onConfirmSubmit}
+              disabled={isPending || !reasons.trim()}
+            >
+              {isPending ? "Confirming..." : "Confirm"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </FormProvider>
   );
 }

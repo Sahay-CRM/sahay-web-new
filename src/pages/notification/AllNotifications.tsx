@@ -25,18 +25,31 @@ const AllNotifications = () => {
     typeId?: string,
     notificationId?: string,
   ) => {
+    if (!typeId) return;
+
+    const navigateTo = () => {
+      const upperType = type?.toUpperCase();
+      if (upperType === "TASK") {
+        navigate(`/dashboard/tasks/view/${typeId}`);
+      } else if (upperType === "PROJECT") {
+        navigate(`/dashboard/projects/view/${typeId}`);
+      } else if (upperType === "MEETING") {
+        navigate(`/dashboard/meeting/detail/${typeId}`);
+      }
+    };
+
     if (notificationId) {
       updateNotification([notificationId], {
         onSuccess: () => {
-          if (type === "TASK" && typeId) {
-            navigate(`/dashboard/tasks/view/${typeId}`);
-          } else if (type === "PROJECT" && typeId) {
-            navigate(`/dashboard/projects/view/${typeId}`);
-          } else if (type === "MEETING" && typeId) {
-            navigate(`/dashboard/meeting/detail/${typeId}`);
-          }
+          navigateTo();
+        },
+        onError: () => {
+          // Navigate anyway if update fails? maybe better to just navigate
+          navigateTo();
         },
       });
+    } else {
+      navigateTo();
     }
   };
 
@@ -48,8 +61,7 @@ const AllNotifications = () => {
           <table className="min-w-full border text-left">
             <thead>
               <tr className="bg-gray-100">
-                <th className="py-2 px-4 border-b">Title</th>
-                <th className="py-2 px-4 border-b">Body</th>
+                <th className="py-2 px-4 border-b">Notification Details</th>
                 <th className="py-2 px-4 border-b">Date Time</th>
                 <th className="py-2 px-4 border-b">Action</th>
               </tr>
@@ -58,33 +70,54 @@ const AllNotifications = () => {
               {notifications?.data?.map((notification, index) => (
                 <tr
                   key={index}
-                  className={`border-b hover:bg-gray-50 ${
+                  className={`border-b hover:bg-gray-50 cursor-pointer ${
                     notification?.isRead
-                      ? "bg-gray-200 border-white"
+                      ? "bg-gray-100/50 border-white text-gray-500"
                       : "bg-white"
                   }`}
+                  onClick={() =>
+                    handleView(
+                      notification.data?.type,
+                      notification.data?.typeId,
+                      notification.notificationId || "",
+                    )
+                  }
                 >
-                  <td className="py-2 px-4">{notification?.title}</td>
-                  <td className="py-2 px-4">{notification?.body}</td>
-                  <td className="py-2 px-4">
-                    {notification?.data?.notifiedTime
-                      ? (() => {
-                          const date = new Date(notification.data.notifiedTime);
-                          return date.toLocaleString();
-                        })()
+                  <td className="py-3 px-4">
+                    <div className="flex flex-col gap-1">
+                      <span
+                        className={`font-semibold ${notification?.isRead ? "text-gray-600" : "text-gray-900"}`}
+                      >
+                        {notification?.title}
+                      </span>
+                      <span className="text-sm text-gray-500 line-clamp-2">
+                        {notification?.body}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-600">
+                    {notification?.data?.notifiedTime ||
+                    notification?.notifiedTime
+                      ? new Date(
+                          notification.data?.notifiedTime ||
+                            notification.notifiedTime!,
+                        ).toLocaleString()
                       : ""}
                   </td>
-                  <td className="py-2 px-4">
+                  <td className="py-3 px-4">
                     {notification?.data?.type && notification?.data?.typeId && (
                       <Button
-                        variant="outline"
-                        onClick={() =>
+                        variant="ghost"
+                        size="sm"
+                        className="text-primary hover:text-primary hover:bg-primary/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           handleView(
                             notification.data?.type,
                             notification.data?.typeId,
                             notification.notificationId || "",
-                          )
-                        }
+                          );
+                        }}
                       >
                         View
                       </Button>
