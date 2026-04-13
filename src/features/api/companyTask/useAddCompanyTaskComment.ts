@@ -14,6 +14,7 @@ interface AddUpdateTaskCommentPayload {
   taskId: string;
   comment: string;
   taskCommentId?: string;
+  tagPerson?: string[];
 }
 
 export default function useAddUpdateTaskComment() {

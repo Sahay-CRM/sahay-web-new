@@ -57,20 +57,59 @@ const ProjectInfo = () => {
   const projectNameValue = watch("projectName") || "";
   const { data: projectSearchData } =
     useGetCompanyProjectSearch(projectNameValue);
+
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const hasResults =
+      (projectSearchData?.data?.length ?? 0) > 0 &&
+      projectNameValue.trim().length >= 5;
+
+    if (hasResults) {
+      setShowDropdown(true);
+    } else {
+      setShowDropdown(false);
+    }
+  }, [projectNameValue, projectSearchData]);
+
   const showResults =
+    showDropdown &&
     projectNameValue.trim().length >= 5 &&
-    projectSearchData?.data &&
-    projectSearchData?.data?.length > 0;
+    (projectSearchData?.data?.length ?? 0) > 0;
 
   return (
     <div className="grid grid-cols-2 gap-4">
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 mt-4 gap-4">
-        <div className="relative z-50">
+        <div className="relative z-50" ref={dropdownRef}>
           <FormInputField
             label="Project Name"
             {...register("projectName", { required: "Name is required" })}
             error={errors.projectName}
             placeholder="Enter Project Name"
+            onFocus={() => {
+              if (
+                projectNameValue.trim().length >= 5 &&
+                (projectSearchData?.data?.length ?? 0) > 0
+              ) {
+                setShowDropdown(true);
+              }
+            }}
           />
           {showResults && (
             <div className="absolute top-[100%] mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">

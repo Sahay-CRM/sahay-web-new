@@ -4,11 +4,16 @@ import { format } from "date-fns";
 import useViewTask from "./useViewTask";
 import { Controller, FormProvider } from "react-hook-form";
 import FormSelect from "@/components/shared/Form/FormSelect";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "@/pages/PageNoAccess";
 import { getInitials } from "@/features/utils/app.utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverAnchor,
+} from "@/components/ui/popover";
 import {
   Tooltip,
   TooltipContent,
@@ -49,9 +54,102 @@ export default function CompanyTaskView() {
     editingText,
     newComment,
     setNewComment,
+    currentUserId,
   } = useViewTask();
 
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [showMentions, setShowMentions] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [mentionTarget, setMentionTarget] = useState<"new" | "edit">("new");
+
   const taskData = taskApiData?.data;
+  const assignees = (taskData?.assignUsers || []) as Employee[];
+
+  const filteredEmployees = mentionQuery
+    ? assignees.filter((emp: Employee) =>
+        emp.employeeName?.toLowerCase().includes(mentionQuery?.toLowerCase()),
+      )
+    : assignees;
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    target: "new" | "edit",
+  ) => {
+    const value = e.target.value;
+    const pos = e.target.selectionStart || 0;
+
+    if (target === "new") setNewComment(value);
+    else setEditingText(value);
+
+    setCursorPosition(pos);
+    setMentionTarget(target);
+
+    const textBeforeCursor = value.slice(0, pos);
+    const lastAtSymbol = textBeforeCursor.lastIndexOf("@");
+
+    if (lastAtSymbol !== -1) {
+      const query = textBeforeCursor.slice(lastAtSymbol + 1);
+      if (!query.includes(" ")) {
+        setMentionQuery(query);
+        setShowMentions(true);
+        setSelectedIndex(0);
+        return;
+      }
+    }
+    setShowMentions(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (showMentions && filteredEmployees.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev + 1) % filteredEmployees.length);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIndex(
+          (prev) =>
+            (prev - 1 + filteredEmployees.length) % filteredEmployees.length,
+        );
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        handleMentionSelect(filteredEmployees[selectedIndex]);
+      } else if (e.key === "Escape") {
+        setShowMentions(false);
+      }
+    }
+  };
+
+  const handleMentionSelect = (employee: Employee) => {
+    const currentValue = mentionTarget === "new" ? newComment : editingText;
+    const textBeforeAt = currentValue.slice(
+      0,
+      currentValue.lastIndexOf("@", cursorPosition - 1),
+    );
+    const textAfterMention = currentValue.slice(cursorPosition);
+    const updatedValue = `${textBeforeAt}@${employee.employeeName} ${textAfterMention}`;
+
+    if (mentionTarget === "new") setNewComment(updatedValue);
+    else setEditingText(updatedValue);
+
+    setShowMentions(false);
+
+    // Set focus back and move cursor
+    setTimeout(() => {
+      const activeInput =
+        mentionTarget === "new"
+          ? inputRef.current
+          : (document.activeElement as HTMLInputElement);
+      if (activeInput) {
+        activeInput.focus();
+        const newPos = textBeforeAt.length + employee.employeeName.length + 2;
+        if ("setSelectionRange" in activeInput) {
+          (activeInput as HTMLInputElement).setSelectionRange(newPos, newPos);
+        }
+      }
+    }, 0);
+  };
   const [showAll, setShowAll] = useState(false);
   if (!taskData) return null;
 
@@ -62,9 +160,6 @@ export default function CompanyTaskView() {
   return (
     <FormProvider {...methods}>
       <div className="p-6">
-        {/* <h1 className="font-semibold capitalize text-xl text-black mb-2">
-          Company Task Overview
-        </h1> */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white p-5 rounded-lg shadow-sm h-fit border text-sm">
             <div className="flex flex-col mb-3 sm:flex-row sm:justify-between sm:items-start gap-4">
@@ -186,17 +281,58 @@ export default function CompanyTaskView() {
             </div>
 
             {showCommentInput && (
-              <div className="mb-4">
-                <FormInputField
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Enter Comment .."
-                />
+              <div className="mb-4 relative">
+                <Popover open={showMentions && filteredEmployees.length > 0}>
+                  <PopoverAnchor asChild>
+                    <div className="w-full">
+                      <FormInputField
+                        ref={inputRef}
+                        value={newComment}
+                        onChange={(e) => handleInputChange(e, "new")}
+                        onKeyDown={(e) => handleKeyDown(e)}
+                        placeholder="Enter Update .. (Use @ to tag)"
+                      />
+                    </div>
+                  </PopoverAnchor>
+                  <PopoverContent
+                    className="p-1 w-64 max-h-60 overflow-y-auto"
+                    side="bottom"
+                    align="start"
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                  >
+                    <div className="flex flex-col">
+                      {filteredEmployees.map((emp: Employee, index: number) => (
+                        <button
+                          key={emp.employeeId}
+                          className={`flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
+                            index === selectedIndex
+                              ? "bg-muted"
+                              : "hover:bg-muted"
+                          }`}
+                          onClick={() => handleMentionSelect(emp)}
+                          onMouseEnter={() => setSelectedIndex(index)}
+                        >
+                          <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
+                            {getInitials(emp.employeeName)}
+                          </div>
+                          <span>{emp.employeeName}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
 
                 <Button
                   className="mt-2"
                   disabled={isPending}
-                  onClick={() => onSubmitComment()}
+                  onClick={() => {
+                    const tagPerson = assignees
+                      .filter((emp: Employee) =>
+                        newComment.includes(`@${emp.employeeName}`),
+                      )
+                      .map((emp: Employee) => emp.employeeId);
+                    onSubmitComment(tagPerson);
+                  }}
                 >
                   {isPending ? "Submitting..." : "Submit"}
                 </Button>
@@ -240,17 +376,73 @@ export default function CompanyTaskView() {
                       <div className="mt-1">
                         {editingCommentId === comment.taskCommentId ? (
                           <div className="flex gap-2 items-center">
-                            <input
-                              type="text"
-                              value={editingText}
-                              onChange={(e) => setEditingText(e.target.value)}
-                              className="flex-1 border rounded px-2 py-1 text-sm"
-                            />
+                            <Popover
+                              open={
+                                showMentions &&
+                                mentionTarget === "edit" &&
+                                filteredEmployees.length > 0
+                              }
+                            >
+                              <PopoverAnchor asChild>
+                                <div className="flex-1">
+                                  <input
+                                    type="text"
+                                    autoFocus
+                                    value={editingText}
+                                    onChange={(e) =>
+                                      handleInputChange(e, "edit")
+                                    }
+                                    onKeyDown={(e) => handleKeyDown(e)}
+                                    className="w-full border rounded px-2 py-1 text-sm focus:outline-primary"
+                                  />
+                                </div>
+                              </PopoverAnchor>
+                              <PopoverContent
+                                className="p-1 w-64 max-h-60 overflow-y-auto"
+                                side="bottom"
+                                align="start"
+                                onOpenAutoFocus={(e) => e.preventDefault()}
+                              >
+                                <div className="flex flex-col">
+                                  {filteredEmployees.map(
+                                    (emp: Employee, index: number) => (
+                                      <button
+                                        key={emp.employeeId}
+                                        className={`flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
+                                          index === selectedIndex
+                                            ? "bg-muted"
+                                            : "hover:bg-muted"
+                                        }`}
+                                        onClick={() => handleMentionSelect(emp)}
+                                        onMouseEnter={() =>
+                                          setSelectedIndex(index)
+                                        }
+                                      >
+                                        <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
+                                          {getInitials(emp.employeeName)}
+                                        </div>
+                                        <span>{emp.employeeName}</span>
+                                      </button>
+                                    ),
+                                  )}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                             <Button
                               size="sm"
-                              onClick={() =>
-                                handleSaveComment(comment.taskCommentId)
-                              }
+                              onClick={() => {
+                                const tagPerson = assignees
+                                  .filter((emp: Employee) =>
+                                    editingText.includes(
+                                      `@${emp.employeeName}`,
+                                    ),
+                                  )
+                                  .map((emp: Employee) => emp.employeeId);
+                                handleSaveComment(
+                                  comment.taskCommentId,
+                                  tagPerson,
+                                );
+                              }}
                             >
                               Save
                             </Button>
@@ -268,27 +460,32 @@ export default function CompanyTaskView() {
                               {comment.comment}
                             </p>
                             <div className="gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                type="button"
-                                className="p-1 rounded hover:bg-gray-200"
-                                onClick={() =>
-                                  handleEditComment(
-                                    comment.taskCommentId,
-                                    comment.comment,
-                                  )
-                                }
-                              >
-                                <EditIcon className="w-4 h-4 text-gray-600" />
-                              </button>
-                              <button
-                                type="button"
-                                className="p-1 rounded hover:bg-gray-200"
-                                onClick={() =>
-                                  handleDeleteComment(comment.taskCommentId)
-                                }
-                              >
-                                <TrashIcon className="w-4 h-4 text-red-500" />
-                              </button>
+                              {/* comment actions */}
+                              {comment.employeeId === currentUserId && (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="p-1 rounded hover:bg-gray-200"
+                                    onClick={() =>
+                                      handleEditComment(
+                                        comment.taskCommentId,
+                                        comment.comment,
+                                      )
+                                    }
+                                  >
+                                    <EditIcon className="w-4 h-4 text-gray-600" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="p-1 rounded hover:bg-gray-200"
+                                    onClick={() =>
+                                      handleDeleteComment(comment.taskCommentId)
+                                    }
+                                  >
+                                    <TrashIcon className="w-4 h-4 text-red-500" />
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </div>
                         )}

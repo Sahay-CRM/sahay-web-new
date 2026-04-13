@@ -147,10 +147,41 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
   const meetingNameValue = watch("meetingName") || "";
   const { data: meetingSearchData } =
     useGetCompanyMeetingSearch(meetingNameValue);
+
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const hasResults =
+      (meetingSearchData?.data?.length ?? 0) > 0 &&
+      meetingNameValue.trim().length >= 5;
+
+    if (hasResults) {
+      setShowDropdown(true);
+    } else {
+      setShowDropdown(false);
+    }
+  }, [meetingNameValue, meetingSearchData]);
+
   const showResults =
+    showDropdown &&
     meetingNameValue.trim().length >= 5 &&
-    meetingSearchData?.data &&
-    meetingSearchData?.data?.length > 0;
+    (meetingSearchData?.data?.length ?? 0) > 0;
 
   const meetingStatusOptions = useMemo(() => {
     return (
@@ -181,13 +212,21 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
   return (
     <div className="grid grid-cols-2 gap-4">
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4 h-fit border">
-        <div className="relative z-50">
+        <div className="relative z-50" ref={dropdownRef}>
           <FormInputField
             label="Meeting Name"
             placeholder="Enter an Meeting Name"
             {...register("meetingName", { required: "Name is required" })}
             error={errors.meetingName}
             isMandatory
+            onFocus={() => {
+              if (
+                meetingNameValue.trim().length >= 5 &&
+                (meetingSearchData?.data?.length ?? 0) > 0
+              ) {
+                setShowDropdown(true);
+              }
+            }}
           />
           {showResults && (
             <div className="absolute top-[100%] mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">

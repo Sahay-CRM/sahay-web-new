@@ -220,6 +220,7 @@ export default function EmployeeRoutes() {
         </Route>
         <Route path="brand" Component={Brand} />
         <Route path="product" Component={Product} />
+
         {/* <Route path="user-log" Component={UserLog} /> */}
         <Route path="updates" Component={Updates} />
         <Route path="forms" Component={FormList} />

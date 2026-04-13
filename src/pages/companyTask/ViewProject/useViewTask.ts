@@ -3,7 +3,10 @@ import {
   useGetCompanyTaskById,
 } from "@/features/api/companyTask";
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
-import { getUserPermission } from "@/features/selectors/auth.selector";
+import {
+  getUserId,
+  getUserPermission,
+} from "@/features/selectors/auth.selector";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -37,13 +40,16 @@ export default function useViewCompanyTask() {
     color: item.color || "#2e3195",
   }));
 
-  const handleSaveComment = (taskCommentId?: string) => {
+  const currentUserId = useSelector(getUserId);
+
+  const handleSaveComment = (taskCommentId?: string, tagPerson?: string[]) => {
     if (!editingText.trim()) return;
 
     addcomment({
       taskId: taskId!,
       comment: editingText,
       taskCommentId,
+      tagPerson,
     });
 
     setEditingCommentId(null);
@@ -63,12 +69,13 @@ export default function useViewCompanyTask() {
     deleteComment(id);
   };
 
-  const onSubmitComment = () => {
+  const onSubmitComment = (tagPerson?: string[]) => {
     if (!newComment.trim()) return;
 
     addcomment({
       taskId: taskId!,
       comment: newComment,
+      tagPerson,
     });
 
     setShowCommentInput(false);
@@ -115,5 +122,6 @@ export default function useViewCompanyTask() {
     editingText,
     newComment,
     setNewComment,
+    currentUserId,
   };
 }

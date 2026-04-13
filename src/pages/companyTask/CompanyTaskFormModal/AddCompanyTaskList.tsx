@@ -1,5 +1,5 @@
 import { Controller, FormProvider, useFormContext } from "react-hook-form";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -221,21 +221,60 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
 
   const taskNameValue = watch("taskName") || "";
   const { data: taskSearchData } = useGetCompanyTaskSearch(taskNameValue);
+
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const hasResults =
+      (taskSearchData?.data?.length ?? 0) > 0 &&
+      taskNameValue.trim().length >= 5;
+
+    if (hasResults) {
+      setShowDropdown(true);
+    } else {
+      setShowDropdown(false);
+    }
+  }, [taskNameValue, taskSearchData]);
+
   const showResults =
+    showDropdown &&
     taskNameValue.trim().length >= 5 &&
-    taskSearchData?.data &&
-    taskSearchData?.data?.length > 0;
+    (taskSearchData?.data?.length ?? 0) > 0;
 
   return (
     <div className="grid grid-cols-2 gap-4">
       <div className="col-span-2 mt-4 px-6 py-6 grid grid-cols-6 gap-4 h-[calc(100vh-250px)] content-start">
-        <div className="col-span-3 relative z-50">
+        <div className="col-span-3 relative z-50" ref={dropdownRef}>
           <FormInputField
             label="Task Name"
             className="p-5 px-3"
             {...register("taskName", { required: "Task Name is required" })}
             error={errors.taskName}
             placeholder="Enter Task Name"
+            onFocus={() => {
+              if (
+                taskNameValue.trim().length >= 5 &&
+                (taskSearchData?.data?.length ?? 0) > 0
+              ) {
+                setShowDropdown(true);
+              }
+            }}
           />
           {showResults && (
             <div className="absolute top-[100%] mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">

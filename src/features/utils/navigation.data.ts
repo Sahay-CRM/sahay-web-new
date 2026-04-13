@@ -266,14 +266,13 @@ export const companyNavigationData = [
     permission: "View",
     moduleKey: "FORM",
   },
-  // {
-  //   id: 16,
-  //   icon: "FileText",
-  //   label: "Reports",
-  //   link: "/dashboard/reports",
-  //   permission: "View",
-  //   moduleKey: "FORM",
-  // },
+  {
+    id: 16,
+    icon: "ListTodo",
+    label: "Request Master",
+    link: "/dashboard/request-master",
+    permission: "View",
+  },
 ];
 
 export const getRouteByLabel = (label: string): string | null => {

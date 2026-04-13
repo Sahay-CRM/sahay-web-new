@@ -54,7 +54,10 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
           ? [item.moduleKey]
           : [];
 
-      if (moduleKeys.some((key) => permissions?.[key]?.View)) {
+      if (
+        moduleKeys.length === 0 ||
+        moduleKeys.some((key) => permissions?.[key]?.View)
+      ) {
         return item;
       }
 

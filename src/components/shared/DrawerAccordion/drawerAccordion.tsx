@@ -76,13 +76,13 @@ export default function DrawerAccordion({
       className="w-full overflow-hidden py-1 px-4 text-gray-700"
     >
       <button
-        className="flex items-center justify-between w-full text-left focus:outline-none text-sm hover:text-primary font-medium py-2 rounded-lg"
+        className="flex items-center justify-between w-full text-left focus:outline-none text-sm hover:text-primary font-medium py-1.5 rounded-lg"
         onClick={onClick}
       >
         {" "}
         <div className="flex flex-1 items-center min-w-0">
-          <div className="w-6 flex items-center justify-center mr-3 shrink-0">
-            <LucideIcon name={item?.icon as IconName} className="text-xl" />
+          <div className="w-5 flex items-center justify-center mr-3 shrink-0">
+            <LucideIcon name={item?.icon as IconName} className="text-sm" />
           </div>
           <span
             style={{ fontSize: "var(--fs-sidebar)" }}

@@ -539,7 +539,7 @@ const TableData = <T extends Record<string, unknown>>({
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <div
-                                        className={`whitespace-normal break-words max-w-[230px] ${(clm === "employeeName" || clm === "createdByEmployeeName") && `w-7 min-w-[28px] flex flex-col items-center justify-center aspect-square rounded-full text-[16px] font-bold ${getColorFromName(cellValue)}`}`}
+                                        className={`whitespace-normal break-words max-w-[230px] ${(clm === "employeeName" || clm === "createdByEmployeeName") && `w-5 bg-primary text-white flex flex-col items-center justify-center aspect-square rounded-full text-[14px] font-semibold ${getColorFromName(cellValue)}`}`}
                                       >
                                         {cellValue}
                                       </div>

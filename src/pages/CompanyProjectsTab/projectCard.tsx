@@ -159,7 +159,7 @@ export default function ProjectCard({
                 </span>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <p className="rounded-full h-5 w-5 bg-primary/10 text-primary text-[16px] flex items-center justify-center font-bold border border-primary/20">
+                    <p className="rounded-full h-5 w-5 bg-primary/10 text-primary text-[12px] flex items-center justify-center font-semibold border border-primary/20">
                       {getInitials(createdBy.employeeName)}
                     </p>
                   </TooltipTrigger>
