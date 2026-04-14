@@ -130,6 +130,7 @@ const FormSubmissionDetail = lazy(
   () => import("../pages/FormBuilder/builder/FormSubmissionDetailPage"),
 );
 
+const HandOverData = lazy(() => import("../pages/HandOverData"));
 // const Reports = lazy(() => import("../pages/Reports"));
 
 export default function EmployeeRoutes() {
@@ -231,6 +232,7 @@ export default function EmployeeRoutes() {
           Component={FormSubmissionDetail}
         />
         <Route path="form-builder" Component={FormBuilder} />
+        <Route path="handover" Component={HandOverData} />
         <Route
           path="form-preview"
           Component={lazy(

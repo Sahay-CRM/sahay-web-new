@@ -273,6 +273,13 @@ export const companyNavigationData = [
     link: "/dashboard/request-master",
     permission: "View",
   },
+  {
+    id: 17,
+    icon: "ListTodo",
+    label: "Handover",
+    link: "/dashboard/handover",
+    permission: "View",
+  },
 ];
 
 export const getRouteByLabel = (label: string): string | null => {

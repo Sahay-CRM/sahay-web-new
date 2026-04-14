@@ -414,6 +414,11 @@ const Urls = {
     `${baseUrl}/company/request-master/cancel/${id}`,
   companyRequestDelete: (id: string) =>
     `${baseUrl}/company/request-master/delete/${id}`,
+
+  // Handover
+  getUserHandoverDataById: (id: string) =>
+    `${baseUrl}/company/handover/stats/${id}`,
+  getHandoverDataById: () => `${baseUrl}/company/handover/execute`,
 };
 
 export default Urls;
