@@ -279,6 +279,7 @@ export const companyNavigationData = [
     label: "Handover",
     link: "/dashboard/handover",
     permission: "View",
+    moduleKey: "HANDOVER",
   },
 ];
 

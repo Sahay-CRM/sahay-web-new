@@ -7,10 +7,14 @@ import useGetEmployeeDd from "@/features/api/companyEmployee/useGetEmployeeDd";
 import { useExecuteHandover } from "@/features/api/HandOver";
 import HandOverStatsModal from "./HandOverStatsModal";
 import { Eye } from "lucide-react";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+import PageNotAccess from "../PageNoAccess";
 
 export default function HandOverData() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+  const permission = useSelector(getUserPermission).HANDOVER;
 
   useEffect(() => {
     setBreadcrumbs([{ label: "Data Handover", href: "" }]);
@@ -102,6 +106,10 @@ export default function HandOverData() {
       },
     );
   };
+
+  if (!permission || permission.View === false) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...methods}>
