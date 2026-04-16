@@ -2,30 +2,18 @@ import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 
-export interface ReportMetric {
-  total: number;
-  completed: number;
-  status: string;
-}
-
-export interface DayReportItem {
-  date: string;
-  task: ReportMetric;
-  project: ReportMetric;
-  meeting: ReportMetric;
-}
-
 export interface ReportsResponse {
-  companyId: string;
-  companyName: string;
-  dailyReport: DayReportItem[];
+  success: boolean;
+  status: number;
+  message: string;
+  data: CompanyPerformanceReport;
 }
 
 export default function useGetReports() {
   return useQuery({
     queryKey: ["get-reports"],
     queryFn: async () => {
-      const { data: resData } = await Api.post<{ data: ReportsResponse }>({
+      const { data: resData } = await Api.post<ReportsResponse>({
         url: Urls.getReports(),
         data: {},
       });

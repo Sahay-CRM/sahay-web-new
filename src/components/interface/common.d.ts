@@ -1739,3 +1739,89 @@ interface ProjectSearchResponse {
   projectName: string;
   projectDeadline?: string;
 }
+
+interface TaskItem {
+  taskId: string;
+  taskName: string;
+  createdDatetime: string;
+  taskDeadline: string;
+  durationDays: string;
+}
+
+interface ProjectDelayItem {
+  projectId: string;
+  projectName: string;
+  projectDeadline: string;
+  delayDays: string;
+}
+
+interface ProjectDurationItem {
+  projectId: string;
+  projectName: string;
+  createdDatetime: string;
+  projectDeadline: string;
+  durationDays: string;
+}
+
+interface CompanyPerformanceReport {
+  tasks: {
+    totalTasks: number;
+    notUpdatedTasks: number;
+    delayedTasks: number;
+    longDurationTop5: TaskItem[];
+  };
+  projects: {
+    totalProjects: number;
+    activeProjects: number;
+    delayedProjects: number;
+    zeroTaskProjects: number;
+    notUpdatedProjects: number;
+    creationRate: number;
+    delayTop5: ProjectDelayItem[];
+    longDurationTop5: ProjectDurationItem[];
+  };
+  kpi: {
+    totalKpi: number;
+    fillingRate: number;
+  };
+  meetings: {
+    totalDetailed: number;
+    sahayDetailed: number;
+    missedDetailed: number;
+    normalLast30Days: number;
+    totalNormal: number;
+    creationRate: number;
+  };
+  meetingNotes: {
+    notesPerMeeting: number;
+    noteTypeDistribution: {
+      noteType: string;
+      count: number;
+    }[];
+    noteTagDistribution: {
+      noteTag: string;
+      count: number;
+    }[];
+  };
+  agenda: {
+    unresolved: number;
+    resolved: number;
+    parked: number;
+    perMonth: {
+      month: string;
+      count: number;
+    }[];
+    longestTop5: {
+      agendaId: string;
+      agendaName: string;
+      duration: string;
+    }[];
+  };
+}
+
+interface ReportApiResponse {
+  success: boolean;
+  status: number;
+  message: string;
+  data: CompanyPerformanceReport;
+}
