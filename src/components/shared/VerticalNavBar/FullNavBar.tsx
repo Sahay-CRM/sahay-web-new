@@ -66,10 +66,10 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
     .filter((i): i is NonNullable<typeof i> => i !== null);
 
   return (
-    <div className="flex flex-col w-[260px] h-screen bg-white border-r">
+    <div className="flex flex-col w-[16.25rem] h-screen bg-white border-r">
       <Link to="/">
         <div className="flex items-center px-4 py-4 shadow-sm mt-auto cursor-pointer mb-4">
-          <div className="flex w-[70px] h-[50px] shrink-0">
+          <div className="flex w-[4.375rem] h-[3.125rem] shrink-0">
             <img
               src={user?.companyLogo ? user?.companyLogo : companyLogo}
               alt="profile"
@@ -102,7 +102,7 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
       </nav>
 
       <div className="flex justify-center mb-6 border-t-4 pt-3 cursor-pointer">
-        <img src={logoImg} alt="logo" className="w-[70%]" />
+        <img src={logoImg} alt="logo" className="w-[11.25rem]" />
       </div>
     </div>
   );

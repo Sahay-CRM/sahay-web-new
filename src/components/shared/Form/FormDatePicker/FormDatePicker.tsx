@@ -129,7 +129,7 @@ export const FormDatePicker: React.FC<FormDatePickerProps> = ({
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {value ? (
-            format(value, getDisplayFormat())
+            <span>{format(value, getDisplayFormat())}</span>
           ) : (
             <span>{getPlaceholderText()}</span>
           )}

@@ -77,6 +77,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useZoom } from "@/features/context/ZoomContext";
 import { Minus, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 const CompanyModal = lazy(() => import("@/pages/auth/login/CompanyModal"));
 const NotificationDropdown = lazy(() => import("./notificationDropdown"));
@@ -234,7 +235,7 @@ const DashboardLayout = () => {
   };
 
   const handleLogin = (company: Company) => {
-    // setIsLoading(true);
+    setIsLoading(true);
     companyVerifyOtp(
       {
         selectedCompanyId: company.companyId,
@@ -242,44 +243,50 @@ const DashboardLayout = () => {
       },
       {
         onSuccess: async (response) => {
-          if (response?.status) {
-            if (response.data.fbToken) {
-              await loginToFirebase(response.data.fbToken);
-            }
-            dispatch(
-              setAuth({
-                userId: response.data.employeeId,
-                token: response.data.token ?? null,
-                isLoading: false,
-                isAuthenticated: true,
-                fbToken: response.data.fbToken,
-              }),
-            );
-            requestFirebaseNotificationPermission().then((firebaseToken) => {
+          try {
+            if (response?.status) {
+              if (response.data.fbToken) {
+                await loginToFirebase(response.data.fbToken);
+              }
+              dispatch(
+                setAuth({
+                  userId: response.data.employeeId,
+                  token: response.data.token ?? null,
+                  isLoading: false,
+                  isAuthenticated: true,
+                  fbToken: response.data.fbToken,
+                }),
+              );
+
+              const firebaseToken =
+                await requestFirebaseNotificationPermission();
+
               if (firebaseToken) {
                 dispatch(setFireBaseToken(String(firebaseToken)));
-                foreToken(
-                  {
-                    webToken: firebaseToken,
-                    employeeId: response.data.employeeId,
-                  },
-                  {
-                    onSuccess: () => {
-                      queryClient.invalidateQueries({
-                        queryKey: ["get-company-list"],
-                      });
-                      queryClient.invalidateQueries({
-                        queryKey: ["userPermission"],
-                      });
-                      queryClient.invalidateQueries({
-                        queryKey: ["get-employee-by-id", userId],
-                      });
-                      setCompanyModalOpen(false);
-                      setIsLoading(false);
-                      navigate("/");
+                await new Promise((resolve, reject) => {
+                  foreToken(
+                    {
+                      webToken: firebaseToken,
+                      employeeId: response.data.employeeId,
                     },
-                  },
-                );
+                    {
+                      onSuccess: resolve,
+                      onError: reject,
+                    },
+                  );
+                });
+
+                queryClient.invalidateQueries({
+                  queryKey: ["get-company-list"],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ["userPermission"],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ["get-employee-by-id", userId],
+                });
+                setCompanyModalOpen(false);
+                navigate("/");
               } else {
                 queryClient.invalidateQueries({
                   queryKey: ["get-company-list"],
@@ -291,12 +298,18 @@ const DashboardLayout = () => {
                   queryKey: ["get-employee-by-id", userId],
                 });
                 setCompanyModalOpen(false);
-                setIsLoading(false);
                 navigate("/");
                 window.location.reload();
               }
-            });
+            }
+          } catch (error) {
+            toast(error instanceof Error ? error.message : "An error occurred");
+          } finally {
+            setIsLoading(false);
           }
+        },
+        onError: () => {
+          setIsLoading(false);
         },
       },
     );
@@ -339,7 +352,7 @@ const DashboardLayout = () => {
       <SidebarControlContext.Provider value={{ open, setOpen }}>
         <div className="flex h-screen bg-gray-200 gap-x-4">
           <div
-            className={`${open ? "w-[260px]" : "hidden sm:block sm:w-16"} bg-white rounded-tr-2xl transition-all duration-300`}
+            className={`${open ? "w-[16.25rem]" : "hidden sm:block sm:w-16"} bg-white rounded-tr-2xl transition-all duration-300`}
           >
             <MemoSidebar
               isExpanded={open}
@@ -358,7 +371,7 @@ const DashboardLayout = () => {
                   onClick={toggleDrawer}
                   className="w-6 flex items-center justify-center mr-3 cursor-pointer"
                 >
-                  <LucideIcon name="Menu" size={24} />
+                  <LucideIcon name="Menu" size="1.5rem" />
                 </div>
                 <MemoBreadcrumbs items={breadcrumbs} />
               </div>
@@ -484,8 +497,8 @@ const DashboardLayout = () => {
                 {/* Profile dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <div className="flex items-center px-4 py-4-sm mt-auto cursor-pointer mb-1">
-                      <div className="flex w-[50px] h-[50px]">
+                    <div className="flex items-center px-4 py-4-sm cursor-pointer mb-1">
+                      <div className="flex w-[50px] h-[50px] lg:w-[50px] lg:h-[50px] sm:w-[30px] sm:h-[30px] md:w-[30px] md:h-[30px]">
                         <img
                           src={user?.photo || logoImg}
                           alt="profile"

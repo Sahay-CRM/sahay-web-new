@@ -83,11 +83,11 @@ export default function CompanyProfile() {
   return (
     <div className="bg-gray-50 py-4">
       <div className="mx-auto px-4">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex flex-col sm:flex-row items-center text-center sm:text-left space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
               <div className="relative">
-                <div className="w-20 h-20 rounded-full text-white font-bold text-2xl shadow-lg">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full text-white font-bold text-2xl shadow-lg overflow-hidden">
                   {logoPreview ? (
                     <img
                       src={logoPreview}
@@ -101,7 +101,9 @@ export default function CompanyProfile() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <Building className="w-8 h-8" />
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+                      <Building className="w-8 h-8 sm:w-10 sm:h-10" />
+                    </div>
                   )}
                 </div>
 
@@ -109,70 +111,79 @@ export default function CompanyProfile() {
                   <button
                     type="button"
                     onClick={openLogoCrop}
-                    className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-1.5 rounded-full cursor-pointer shadow-lg hover:bg-blue-700 transition-colors"
+                    className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-2 rounded-full cursor-pointer shadow-lg hover:bg-blue-700 transition-colors"
                   >
                     <Upload className="w-4 h-4" />
                   </button>
                 )}
               </div>
 
-              <div className="mx-6">
-                <h1 className="text-xl font-bold text-gray-900">
+              <div className="sm:mx-4">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
                   {companyData.companyName}
                 </h1>
                 <p className="text-gray-600 mt-1">
                   {companyData.Industry?.industryName} • {companyData.cityName}
                 </p>
-                <div className="flex items-center space-x-4 mt-2 text-sm text-black">
-                  <span>Admin Name: {companyData.companyAdminName}</span>
-                  <span>📧 {companyData.companyAdminEmail}</span>
-                  <span>📱 {companyData.companyAdminMobile}</span>
+                <div className="flex flex-col sm:flex-row sm:items-center flex-wrap gap-2 mt-3 text-sm text-gray-700">
+                  <span className="flex items-center gap-1 shrink-0">
+                    <span className="font-semibold">Admin:</span>{" "}
+                    {companyData.companyAdminName}
+                  </span>
+                  <span className="hidden sm:inline text-gray-300">|</span>
+                  <span className="flex items-center gap-1 break-all">
+                    📧 {companyData.companyAdminEmail}
+                  </span>
+                  <span className="hidden sm:inline text-gray-300">|</span>
+                  <span className="flex items-center gap-1 shrink-0">
+                    📱 {companyData.companyAdminMobile}
+                  </span>
                 </div>
               </div>
             </div>
 
             {permission.Edit && (
-              <>
+              <div className="w-full md:w-auto mt-4 md:mt-0">
                 {!isEditing ? (
                   <Button
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center bg-primary text-white rounded-lg hover:bg-primary transition-colors"
+                    className="w-full md:w-auto flex items-center justify-center gap-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors"
                   >
                     <Edit2 className="w-4 h-4" />
                     <span>Edit Profile</span>
                   </Button>
                 ) : (
-                  <div className="flex space-x-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <Button
                       onClick={handleCancel}
-                      className="flex items-center bg-gray-500 text-white px-4 py-2.5 rounded-lg hover:bg-gray-600 transition-colors"
+                      className="flex-1 sm:w-auto flex items-center justify-center gap-2 bg-gray-500 text-white px-4 py-2.5 rounded-lg hover:bg-gray-600 transition-colors"
                     >
                       <X className="w-4 h-4" />
                       <span>Cancel</span>
                     </Button>
                     <Button
                       onClick={handleSubmit(onSubmit)}
-                      className="flex items-center bg-primary text-white rounded-lg hover:bg-primary transition-colors"
+                      className="flex-1 sm:w-auto flex items-center justify-center gap-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors"
                     >
                       <Save className="w-4 h-4" />
                       <span>Save Changes</span>
                     </Button>
                   </div>
                 )}
-              </>
+              </div>
             )}
           </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-4 sm:px-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                 Company Information
               </h2>
               <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="w-1/2">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="w-full sm:w-1/2">
                     {isEditing ? (
                       <FormInputField
                         label="Company Name"
@@ -195,7 +206,7 @@ export default function CompanyProfile() {
                       </>
                     )}
                   </div>
-                  <div className="w-1/2">
+                  <div className="w-full sm:w-1/2">
                     {isEditing ? (
                       <FormInputField
                         label="Billing Name"
@@ -219,8 +230,8 @@ export default function CompanyProfile() {
                     )}
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <div className="w-1/2">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="w-full sm:w-1/2">
                     {isEditing ? (
                       <FormInputField
                         label="Website"
@@ -240,7 +251,7 @@ export default function CompanyProfile() {
                       </>
                     )}
                   </div>
-                  <div className="w-1/2">
+                  <div className="w-full sm:w-1/2">
                     {isEditing ? (
                       <Controller
                         control={control}
@@ -277,8 +288,8 @@ export default function CompanyProfile() {
                     )}
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <div className="w-1/2">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="w-full sm:w-1/2">
                     {isEditing ? (
                       <Controller
                         name="annualTurnOver"
@@ -312,7 +323,7 @@ export default function CompanyProfile() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-4 sm:px-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                 Contact Information
               </h2>
@@ -388,7 +399,7 @@ export default function CompanyProfile() {
                         <label className="block text-sm font-medium text-gray-700">
                           Account's POC Email
                         </label>
-                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg break-all">
                           {companyData.accountsPocEmail}
                         </p>
                       </>
@@ -396,8 +407,8 @@ export default function CompanyProfile() {
                   </div>
                 </div>
 
-                <div className="flex gap-4">
-                  <div className="w-1/3">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="w-full sm:w-1/3">
                     {isEditing ? (
                       <Controller
                         name="countryId"
@@ -432,7 +443,7 @@ export default function CompanyProfile() {
                       </>
                     )}
                   </div>
-                  <div className="w-1/3">
+                  <div className="w-full sm:w-1/3">
                     {isEditing ? (
                       <Controller
                         name="stateId"
@@ -468,7 +479,7 @@ export default function CompanyProfile() {
                       </>
                     )}
                   </div>
-                  <div className="w-1/3">
+                  <div className="w-full sm:w-1/3">
                     {isEditing ? (
                       <Controller
                         control={control}
@@ -519,7 +530,7 @@ export default function CompanyProfile() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     />
                   ) : (
-                    <p className="text-gray-900 bg-gray-50 px-3 py-1 rounded-lg">
+                    <p className="text-gray-900 bg-gray-50 px-3 py-1 rounded-lg break-words">
                       {companyData.companyAddress}
                     </p>
                   )}
@@ -527,13 +538,13 @@ export default function CompanyProfile() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8 md:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-4 sm:px-8 md:col-span-2">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                 Legal Information
               </h2>
-              <div className="flex gap-10 h-auto">
+              <div className="flex flex-col lg:flex-row gap-8 h-auto">
                 {/* PAN Card Section */}
-                <div className="w-1/2">
+                <div className="w-full lg:w-1/2">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       Pancard Number
@@ -566,25 +577,13 @@ export default function CompanyProfile() {
                         }}
                         error={errors.pancard}
                         acceptedFormats=".jpg,.jpeg,.png,.webp,.pdf"
-                        // onChange={(val) => {
-                        //   const oldVal = watch("gstCertificate");
-
-                        //   if (
-                        //     typeof oldVal === "string" &&
-                        //     oldVal.startsWith("http")
-                        //   ) {
-                        //     setGstFileToRemove(oldVal.split("/").pop() || null);
-                        //   }
-
-                        //   setValue("gstCertificate", val);
-                        // }}
                       />
                     ) : (
-                      <div className="h-full bg-gray-50 rounded-lg border p-1 border-gray-200 flex items-center justify-center">
+                      <div className="bg-gray-50 rounded-lg border p-1 border-gray-200 flex items-center justify-center min-h-[200px] w-full">
                         <FilePreview
                           value={watch("pancard") ?? ""}
                           fileName={watch("pancardFileName")}
-                          className="w-[400px] h-[300px]"
+                          className="w-full max-w-[400px] h-auto aspect-video"
                           placeholder="No Pan Card uploaded"
                         />
                       </div>
@@ -593,7 +592,7 @@ export default function CompanyProfile() {
                 </div>
 
                 {/* GST Section */}
-                <div className="w-1/2">
+                <div className="w-full lg:w-1/2">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       Company GST No
@@ -625,25 +624,13 @@ export default function CompanyProfile() {
                         }}
                         error={errors.gstCertificate}
                         acceptedFormats=".jpg,.jpeg,.png,.webp,.pdf"
-                        // onChange={(val) => {
-                        //   const oldVal = watch("gstCertificate");
-
-                        //   if (
-                        //     typeof oldVal === "string" &&
-                        //     oldVal.startsWith("http")
-                        //   ) {
-                        //     setGstFileToRemove(oldVal.split("/").pop() || null);
-                        //   }
-
-                        //   setValue("gstCertificate", val);
-                        // }}
                       />
                     ) : (
-                      <div className="h-full bg-gray-50 rounded-lg border p-1 border-gray-200 flex items-center justify-center">
+                      <div className="bg-gray-50 rounded-lg border p-1 border-gray-200 flex items-center justify-center min-h-[200px] w-full">
                         <FilePreview
                           value={watch("gstCertificate") ?? ""}
                           fileName={watch("gstCertificateFileName")}
-                          className="w-[400px] h-[300px]"
+                          className="w-full max-w-[400px] h-auto aspect-video"
                           placeholder="No GST certificate uploaded"
                         />
                       </div>
@@ -652,7 +639,7 @@ export default function CompanyProfile() {
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8 md:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-4 sm:px-8 md:col-span-2">
               {/* Header */}
               <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900">
@@ -662,7 +649,7 @@ export default function CompanyProfile() {
 
               {/* Content */}
               <div className="space-y-4">
-                <div className="flex flex-row items-start gap-12">
+                <div className="flex flex-wrap items-center gap-6 sm:gap-12">
                   {/* 0% Red */}
                   <div className="flex flex-col items-center">
                     <div className="w-8 h-8 rounded bg-red-100 border border-red-500" />
@@ -718,12 +705,12 @@ export default function CompanyProfile() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8 md:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-4 sm:px-8 md:col-span-2">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                 Company Skip Days
               </h2>
               <div className="space-y-4">
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                   <div className="w-full">
                     {isEditing ? (
                       <Controller
@@ -766,22 +753,25 @@ export default function CompanyProfile() {
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-8 md:col-span-2">
-              <div className="flex gap-4 justify-between mb-4 pb-2 border-b border-gray-200">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-4 sm:px-8 md:col-span-2">
+              <div className="flex flex-col sm:flex-row gap-4 justify-between mb-4 pb-2 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900">
                   Company Holidays
                 </h2>
 
                 <div>
                   {isEditing && (
-                    <Button className="py-2 px-4" onClick={handleAdd}>
+                    <Button
+                      className="w-full sm:w-auto py-2 px-4"
+                      onClick={handleAdd}
+                    >
                       Add Holiday
                     </Button>
                   )}
                 </div>
               </div>
               <div className="space-y-4">
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                   <div className="w-full">
                     <div className="flex-1 p-4  overflow-scroll">
                       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">

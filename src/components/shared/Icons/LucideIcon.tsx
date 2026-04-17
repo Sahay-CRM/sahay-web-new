@@ -4,13 +4,13 @@ import { iconMap, type IconName } from "./iconMap";
 interface LucideIconProps {
   name: IconName;
   className?: string;
-  size?: number;
+  size?: number | string;
 }
 
 const LucideIcon: React.FC<LucideIconProps> = ({
   name,
   className = "",
-  size = 20,
+  size = "1.25rem",
 }) => {
   const IconComponent = iconMap[name];
 
