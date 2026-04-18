@@ -405,6 +405,8 @@ const Urls = {
   kpiNewValidation: () => `${baseUrl}/company/kpi/kpi-new-validation`,
   kpiResetValidation: () => `${baseUrl}/company/kpi/kpi-new-reset`,
   getReports: () => `${baseUrl}/company/reports/get-report`,
+  getMonthlyReports: () => `${baseUrl}/company/reports/get-monthly-report`,
+  getDashboardReport: () => `${baseUrl}/company/reports/dashboard`,
 
   // Request
   getRequestCompany: () => `${baseUrl}/company/request-master/get`,

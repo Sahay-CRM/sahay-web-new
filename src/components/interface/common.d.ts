@@ -1755,6 +1755,9 @@ interface TaskItem {
   createdDatetime: string;
   taskDeadline: string;
   durationDays: string;
+  status?: string;
+  color?: string;
+  assignees?: { name: string }[];
 }
 
 interface ProjectDelayItem {
@@ -1788,10 +1791,23 @@ interface CompanyPerformanceReport {
     creationRate: number;
     delayTop5: ProjectDelayItem[];
     longDurationTop5: ProjectDurationItem[];
+    projectStatsPerCoreParameter?: {
+      name: string;
+      total: number;
+      active: number;
+      delayed: number;
+    }[];
+    otherCoreParameters?: string[];
   };
   kpi: {
     totalKpi: number;
     fillingRate: number;
+    kpiStatsPerCoreParameter?: {
+      name: string;
+      totalKpi: number;
+      fillingRate: number;
+    }[];
+    otherCoreParametersKpi?: string[];
   };
   meetings: {
     totalDetailed: number;
@@ -1800,9 +1816,15 @@ interface CompanyPerformanceReport {
     normalLast30Days: number;
     totalNormal: number;
     creationRate: number;
+    meetingStatsPerType?: {
+      typeName: string;
+      totalMeetings: number;
+    }[];
+    otherMeetingTypes?: string[];
   };
   meetingNotes: {
     notesPerMeeting: number;
+    notesPerMinute?: number;
     noteTypeDistribution: {
       noteType: string;
       count: number;
@@ -1821,9 +1843,11 @@ interface CompanyPerformanceReport {
       count: number;
     }[];
     longestTop5: {
-      agendaId: string;
-      agendaName: string;
-      duration: string;
+      id: string;
+      name: string;
+      type: string;
+      createdAt: string;
+      daysUnresolved: number;
     }[];
   };
 }

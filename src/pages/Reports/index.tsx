@@ -1,659 +1,583 @@
-import { useEffect } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  PieChart,
-  Pie,
-  AreaChart,
-  Area,
-} from "recharts";
+import { useEffect, useState } from "react";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import useGetReports from "@/features/api/Reports/useGetReports";
-import { format, parseISO } from "date-fns";
+// import useGetMonthlyReports from "@/features/api/Reports/useGetMonthlyReports";
 import {
-  AlertCircle,
-  Clock,
-  TrendingUp,
-  FileText,
-  Tag,
-  Briefcase,
-  Users,
-  LucideIcon,
-  Zap,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { isColorDark } from "@/features/utils/color.utils";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
+// import mockDashboardData from "./datajson";
 
-const COLORS = [
-  "#7F77DD",
-  "#1D9E75",
-  "#EF9F27",
-  "#E24B4A",
-  "#D4537E",
-  "#378ADD",
-];
+const SectionTitle = ({ title }: { title: string }) => (
+  <h3 className="text-[14px] font-bold text-slate-400 mb-4">{title}</h3>
+);
 
-const parseDurationToDays = (duration: string): number => {
-  if (!duration) return 0;
-  const parts = duration.split(" ");
-  const val = parseFloat(parts[0]);
-  if (isNaN(val)) return 0;
-  const unit = parts[1]?.toLowerCase() || "";
-  if (unit.includes("year")) return val * 365;
-  if (unit.includes("month")) return val * 30;
-  if (unit.includes("week")) return val * 7;
-  return val;
+const BusinessFunctionTable = ({
+  data,
+  type,
+  initiallyShow = 6,
+}: {
+  data: (TaskInsight | ProjectInsight)[];
+  type: "task" | "project";
+  initiallyShow?: number;
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const displayData = isExpanded ? data : data.slice(0, initiallyShow);
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-[10px] overflow-hidden">
+      <table className="w-full text-left border-collapse">
+        {/* HEADER */}
+        <thead>
+          <tr className="bg-gray-200 text-[12px] text-black">
+            <th className="px-4 py-2 font-medium">Business Functions</th>
+            <th className="px-2 py-2 text-center font-medium">Total</th>
+            <th className="px-2 py-2 text-center font-medium">
+              {type === "task" ? "Filling" : "Active"}
+            </th>
+            {type === "project" && (
+              <th className="px-2 py-2 text-center font-medium">Delayed</th>
+            )}
+          </tr>
+        </thead>
+
+        {/* BODY */}
+        <tbody className="divide-y divide-slate-100">
+          {displayData.map((item, idx) => (
+            <tr key={idx} className="hover:bg-slate-50/40">
+              <td className="px-4 py-2 text-[13px] font-medium text-slate-800">
+                {item.businessFunction}
+              </td>
+
+              <td className="px-2 py-2 text-[13px] font-semibold text-center text-slate-900">
+                {item.total}
+              </td>
+
+              <td className="px-2 py-2 text-[13px] font-semibold text-center text-slate-900">
+                {"filling" in item
+                  ? item.filling
+                  : (item as ProjectInsight).active}
+              </td>
+
+              {type === "project" && (
+                <td className="px-2 py-2 text-[13px] font-semibold text-center text-slate-900">
+                  {"delayed" in item ? item.delayed : "-"}
+                </td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* BUTTON */}
+      {data.length > initiallyShow && (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full py-2 text-[11px] font-medium text-slate-500 hover:bg-slate-50 border-t border-slate-100"
+        >
+          {isExpanded ? "View Less" : "View More"}
+        </button>
+      )}
+    </div>
+  );
 };
 
-// ─── Panel wrapper ─────────────────────────────────────────────────────────────
-const Panel = ({
+interface ListItem {
+  name: string;
+  duration: string;
+  dueDate?: string;
+  assignee?: string;
+  assignees?: { name: string }[];
+  status?: string;
+  color?: string;
+}
+
+const KPICard = ({
+  title,
+  value,
+  subtext,
   children,
-  className,
 }: {
-  children: React.ReactNode;
-  className?: string;
+  title: string;
+  value: string | number;
+  subtext?: string;
+  children?: React.ReactNode;
 }) => (
-  <div
-    className={cn(
-      "bg-white border border-slate-100 rounded-xl shadow-sm px-4 py-3",
-      className,
+  <div className="bg-white border border-slate-200 rounded-[12px] px-4 py-3 min-w-[140px] flex flex-col justify-between h-full">
+    <div>
+      <p className="text-[11px] text-slate-500 mb-1 font-medium">{title}</p>
+      <p className="text-[30px] font-bold text-slate-900 leading-none">
+        {value}
+      </p>
+    </div>
+    {subtext && !children && (
+      <p className="text-[10px] text-slate-400 mt-[2px]">{subtext}</p>
     )}
-  >
     {children}
   </div>
 );
 
-// ─── Panel title ───────────────────────────────────────────────────────────────
-const PanelTitle = ({
-  icon: Icon,
-  children,
-}: {
-  icon: LucideIcon;
-  children: React.ReactNode;
-}) => (
-  <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
-    <Icon className="w-3.5 h-3.5" />
-    {children}
-  </p>
-);
+const LongTermList = ({ items }: { items: ListItem[] }) => {
+  return (
+    <div className="bg-white border border-slate-200 rounded-[12px] overflow-hidden">
+      {/* Header */}
+      <div className="px-4 py-2 border-b border-slate-200">
+        <p className="text-[12px] font-medium text-slate-500">
+          Long Term Tasks
+        </p>
+      </div>
 
+      {/* Rows */}
+      <div>
+        {items.map((item, idx) => (
+          <div
+            key={idx}
+            className="grid grid-cols-12 items-center px-4 py-2 text-[12px]"
+          >
+            {/* Name */}
+            <div className="col-span-3 font-medium text-slate-800 truncate">
+              {item.name}
+            </div>
+
+            {/* Duration */}
+            <div className="col-span-2 text-slate-500 pl-2">
+              {item.duration}
+            </div>
+
+            {/* Date */}
+            <div className="col-span-3 text-slate-500">{item.dueDate}</div>
+
+            {/* Assignees */}
+            <div className="col-span-2 flex -space-x-1.5 overflow-hidden">
+              {item.assignees && item.assignees.length > 0 ? (
+                <>
+                  {item.assignees.slice(0, 3).map((a, i) => {
+                    const initials =
+                      a.name
+                        ?.split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2) || "?";
+
+                    return (
+                      <Tooltip key={i}>
+                        <TooltipTrigger asChild>
+                          <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#E5F7A3] border border-white text-[10px] font-bold text-slate-700 shrink-0 cursor-default">
+                            {initials}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <p className="text-[11px]">{a.name}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                  {item.assignees.length > 3 && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 border border-white text-[10px] font-bold text-slate-500 shrink-0 cursor-default">
+                          +{item.assignees.length - 3}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <div className="space-y-1">
+                          {item.assignees.slice(3).map((a, i) => (
+                            <p key={i} className="text-[11px]">
+                              {a.name}
+                            </p>
+                          ))}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </>
+              ) : (
+                <div className="text-slate-400 text-[11px]">—</div>
+              )}
+            </div>
+
+            {/* Status */}
+            <div className="col-span-2 flex justify-end">
+              <span
+                style={{
+                  backgroundColor: item.color || "#D9DE6B",
+                  color: isColorDark(item.color || "#D9DE6B")
+                    ? "#FFFFFF"
+                    : "#0f172a",
+                }}
+                className="px-2 py-[2px] rounded-md text-[12px] font-normal"
+              >
+                {item.status}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const AgendaList = ({ title, items }: { title: string; items: ListItem[] }) => {
+  return (
+    <div className="bg-white border border-slate-200 rounded-[12px] overflow-hidden">
+      {/* Header */}
+      <div className="px-4 bg-gray-200 py-2 border-b border-slate-200">
+        <p className="text-[12px] text-black font-medium">{title}</p>
+      </div>
+
+      {/* List */}
+      <div>
+        {items.map((item, idx) => {
+          const hasDate = !!item.dueDate;
+
+          return (
+            <div
+              key={idx}
+              className={`grid items-center px-4 py-2 text-[12px] ${
+                hasDate ? "grid-cols-12" : "grid-cols-9"
+              }`}
+            >
+              {/* Name */}
+              <div
+                className={`text-slate-800 font-medium truncate ${
+                  hasDate ? "col-span-6" : "col-span-6"
+                }`}
+              >
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="cursor-default">{item.name}</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-[11px]">{item.name}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+
+              {/* Duration */}
+              <div
+                className={`text-slate-500 pl-4 ${
+                  hasDate ? "col-span-3 text-left" : "col-span-3 text-right"
+                }`}
+              >
+                {item.duration}
+              </div>
+
+              {/* Date */}
+              {hasDate && (
+                <div className="col-span-3 text-slate-500 text-right">
+                  {item.dueDate}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 export default function ReportsPage() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const { data: reportsData, isLoading } = useGetReports();
+  // const [selectedMonth, setSelectedMonth] = useState("April 2026");
+  // const { data: monthlyData } = useGetMonthlyReports(selectedMonth);
 
   useEffect(() => {
     setBreadcrumbs([{ label: "Performance Insights", href: "" }]);
   }, [setBreadcrumbs]);
 
+  // const months = [
+  //   { value: "January 2026", label: "January 2026" },
+  //   { value: "February 2026", label: "February 2026" },
+  //   { value: "March 2026", label: "March 2026" },
+  //   { value: "April 2026", label: "April 2026" },
+  //   { value: "May 2026", label: "May 2026" },
+  // ];
+
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] gap-4">
+      <div className="flex flex-col items-center justify-center min-h-[500px] gap-4 bg-[#F8FAFC]">
         <div className="relative">
-          <div className="w-10 h-10 border-4 border-indigo-100 rounded-full" />
-          <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin absolute inset-0" />
+          <div className="w-16 h-16 border-4 border-indigo-50 rounded-full" />
+          <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin absolute inset-0" />
         </div>
-        <p className="text-sm text-slate-400 font-medium animate-pulse">
-          Loading report...
+        <p className="text-[14px] text-slate-400 font-bold tracking-widest uppercase">
+          Analyzing Data...
         </p>
       </div>
     );
   }
 
-  if (!reportsData) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
-        <AlertCircle className="text-slate-300" size={36} />
-        <p className="text-slate-500 text-sm">No report data available.</p>
-      </div>
-    );
-  }
+  // Use both real data and mock data for missing parts
+  // const data = mockDashboardData;
+  const realData = reportsData;
 
-  const { tasks, projects, kpi, meetings, meetingNotes, agenda } = reportsData;
-
-  const processedDelayData = projects.delayTop5.map((item) => ({
-    ...item,
-    delayDaysNumeric: parseDurationToDays(item.delayDays),
-  }));
-
-  const total = agenda.resolved + agenda.unresolved + agenda.parked || 1;
-  const closureRate = ((agenda.resolved / total) * 100).toFixed(1);
-  const SectionHeader = ({ label }: { label: string }) => (
-    <div className="flex items-center gap-2 mb-4">
-      <div className="w-1 h-4 bg-indigo-600 rounded-full" />
-      <span className="text-[12px] font-black text-slate-600 uppercase tracking-[0.15em]">
-        {label}
-      </span>
-    </div>
-  );
-  const DashboardCard = ({
-    title,
-    value,
-    icon: Icon,
-    variant = "default",
-    badge,
-  }: {
-    title: string;
-    value: string | number;
-    icon: LucideIcon;
-    variant?: "default" | "warning" | "danger" | "success";
-    badge?: string;
-  }) => {
-    const styles = {
-      default: "text-blue-600 bg-blue-50",
-      success: "text-emerald-600 bg-emerald-50",
-      warning: "text-amber-500 bg-amber-50",
-      danger: "text-rose-500 bg-rose-50",
-    };
-
-    return (
-      <div className="bg-white border border-slate-100 rounded-2xl px-4 py-3 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)] flex flex-col gap-2 relative transition-transform hover:scale-[1.01]">
-        {badge && (
-          <span className="absolute top-3 right-3 text-[9px] font-bold text-slate-400 uppercase tracking-tight bg-slate-100 rounded-md px-1.5 py-0.5">
-            {badge}
-          </span>
-        )}
-        <div
-          className={cn(
-            "w-8 h-8 rounded-lg flex items-center justify-center",
-            styles[variant],
-          )}
-        >
-          <Icon className="w-4 h-4" />
-        </div>
-        <div>
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
-            {title}
-          </p>
-          <h3 className="text-2xl font-black text-slate-800 leading-none tabular-nums">
-            {value}
-          </h3>
-        </div>
-      </div>
-    );
-  };
   return (
-    <div className="bg-[#f8fafc] min-h-screen pb-8">
-      <div className="max-w-[1600px] mx-auto px-5 pt-4 space-y-5">
-        {/* ── PROJECTS SECTION ─────────────────────────────────────── */}
-        <section>
-          <SectionHeader label="Project Ecosystem" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            <DashboardCard
-              title="Total"
-              value={projects.totalProjects}
-              icon={Briefcase}
-              variant="default"
-            />
-            <DashboardCard
-              title="Active"
-              value={projects.activeProjects}
-              icon={Zap}
-              variant="success"
-            />
-            <DashboardCard
-              title="Delayed"
-              value={projects.delayedProjects}
-              icon={Clock}
-              variant="danger"
-            />
-            <DashboardCard
-              title="Ghost"
-              value={projects.zeroTaskProjects}
-              icon={AlertCircle}
-              variant="warning"
-              badge="No Tasks"
-            />
-            <DashboardCard
-              title="Stale"
-              value={projects.notUpdatedProjects}
-              icon={FileText}
-              variant="warning"
-              badge="Old Updates"
-            />
-          </div>
-        </section>
-
-        {/* ── TASKS & PERFORMANCE ──────────────────────────────────── */}
-        <section>
-          <SectionHeader label="Task Analytics" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            <DashboardCard
-              title="Total Tasks"
-              value={tasks.totalTasks}
-              icon={FileText}
-              variant="default"
-            />
-            <DashboardCard
-              title="Delayed"
-              value={tasks.delayedTasks}
-              icon={Clock}
-              variant="danger"
-            />
-            <DashboardCard
-              title="Filing Rate"
-              value={`${(kpi.fillingRate * 100).toFixed(0)}%`}
-              icon={TrendingUp}
-              variant="success"
-            />
-            <DashboardCard
-              title="Active KPIs"
-              value={kpi.totalKpi}
-              icon={Zap}
-              variant="default"
-            />
-            <DashboardCard
-              title="Pending"
-              value={tasks.notUpdatedTasks}
-              icon={AlertCircle}
-              variant="warning"
-            />
-          </div>
-        </section>
-
-        {/* ── MEETINGS SECTION ─────────────────────────────────────── */}
-        <section>
-          <SectionHeader label="Communication" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            <DashboardCard
-              title="Total Meetings"
-              value={meetings.totalDetailed + meetings.totalNormal}
-              icon={Users}
-              variant="default"
-            />
-            <DashboardCard
-              title="Detailed"
-              value={meetings.totalDetailed}
-              icon={FileText}
-              variant="default"
-            />
-            <DashboardCard
-              title="Sahay AI"
-              value={meetings.sahayDetailed}
-              icon={Zap}
-              variant="success"
-            />
-            <DashboardCard
-              title="Missed"
-              value={meetings.missedDetailed}
-              icon={AlertCircle}
-              variant="danger"
-            />
-            <DashboardCard
-              title="Daily Rate"
-              value={meetings.creationRate}
-              icon={TrendingUp}
-              variant="default"
-            />
-          </div>
-        </section>
-
-        {/* ── ROW 4: Distributions + Agenda ───────────────────────── */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* Both pie charts in one panel */}
-          <Panel>
-            <div className="grid grid-cols-2 gap-4 divide-x divide-slate-100 h-full">
-              {/* Notes Type */}
-              <div className="pr-4">
-                <PanelTitle icon={FileText}>Notes Type</PanelTitle>
-                <div className="flex items-center gap-3">
-                  <div className="w-[90px] h-[90px] shrink-0">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={meetingNotes.noteTypeDistribution}
-                          innerRadius={28}
-                          outerRadius={42}
-                          paddingAngle={3}
-                          dataKey="count"
-                          nameKey="noteType"
-                          stroke="none"
-                        >
-                          {meetingNotes.noteTypeDistribution.map((_, i) => (
-                            <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="space-y-1.5 flex-1">
-                    {meetingNotes.noteTypeDistribution.map((item, i) => (
-                      <div
-                        key={item.noteType}
-                        className="flex items-center justify-between gap-2"
-                      >
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <div
-                            className="w-2 h-2 rounded-full shrink-0"
-                            style={{
-                              backgroundColor: COLORS[i % COLORS.length],
-                            }}
-                          />
-                          <span className="text-sm text-slate-600 truncate">
-                            {item.noteType}
-                          </span>
-                        </div>
-                        <span className="text-sm font-black text-slate-900 shrink-0">
-                          {item.count}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+    <TooltipProvider>
+      <div className="bg-[#F3F4F6] min-h-screen p-6">
+        <div className="grid grid-cols-1 bor lg:grid-cols-2 gap-8">
+          {/* LEFT COLUMN */}
+          <div className="space-y-8">
+            <section>
+              <SectionTitle title="Task Insights" />
+              <div className="flex gap-2 mb-6">
+                <KPICard
+                  title="Not Updated"
+                  value={realData?.tasks?.notUpdatedTasks ?? "0"}
+                  subtext="in last 30 days"
+                />
+                <KPICard
+                  title="Total"
+                  value={realData?.tasks?.totalTasks ?? "0"}
+                  subtext="in last 30 days"
+                />
+                <KPICard
+                  title="Delayed"
+                  value={realData?.tasks?.delayedTasks ?? "0"}
+                  subtext="till date"
+                />
               </div>
+              <LongTermList
+                items={
+                  realData?.tasks?.longDurationTop5?.map((t) => ({
+                    name: t.taskName,
+                    duration: t.durationDays,
+                    dueDate: new Date(t.taskDeadline)
+                      .toLocaleString("en-GB", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      })
+                      .replace(",", ""),
+                    assignees: t.assignees,
+                    status: t.status || "In Progress",
+                    color: t.color,
+                  })) ?? []
+                }
+              />
+            </section>
 
-              {/* Notes Tag */}
-              <div className="pl-4">
-                <PanelTitle icon={Tag}>Notes Tag</PanelTitle>
-                <div className="flex items-center gap-3">
-                  <div className="w-[90px] h-[90px] shrink-0">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={meetingNotes.noteTagDistribution}
-                          innerRadius={28}
-                          outerRadius={42}
-                          paddingAngle={3}
-                          dataKey="count"
-                          nameKey="noteTag"
-                          stroke="none"
-                        >
-                          {meetingNotes.noteTagDistribution.map((_, i) => (
-                            <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="space-y-1.5 flex-1">
-                    {meetingNotes.noteTagDistribution.map((item, i) => (
-                      <div
-                        key={item.noteTag}
-                        className="flex items-center justify-between gap-2"
-                      >
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <div
-                            className="w-2 h-2 rounded-full shrink-0"
-                            style={{
-                              backgroundColor: COLORS[i % COLORS.length],
-                            }}
-                          />
-                          <span className="text-sm text-slate-600 truncate">
-                            {item.noteTag}
-                          </span>
-                        </div>
-                        <span className="text-sm font-black text-slate-900 shrink-0">
-                          {item.count}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Panel>
-
-          {/* Agenda Resolution */}
-          <Panel>
-            <PanelTitle icon={AlertCircle}>Agenda Resolution</PanelTitle>
-            <div className="flex items-center gap-5">
-              <div className="flex gap-3">
-                <div className="text-center bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
-                  <p className="text-2xl font-black text-emerald-700">
-                    {agenda.resolved}
-                  </p>
-                  <p className="text-xs text-emerald-600 font-semibold mt-0.5">
-                    Resolved
-                  </p>
-                </div>
-                <div className="text-center bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-                  <p className="text-2xl font-black text-red-700">
-                    {agenda.unresolved}
-                  </p>
-                  <p className="text-xs text-red-600 font-semibold mt-0.5">
-                    Unresolved
-                  </p>
-                </div>
-                <div className="text-center bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-                  <p className="text-2xl font-black text-amber-800">
-                    {agenda.parked}
-                  </p>
-                  <p className="text-xs text-amber-600 font-semibold mt-0.5">
-                    Parked
-                  </p>
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between mb-1.5">
-                  <span className="text-sm text-slate-500 font-medium">
-                    Closure Rate
-                  </span>
-                  <span className="text-sm font-black text-indigo-600">
-                    {closureRate}%
-                  </span>
-                </div>
-                <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden flex">
-                  <div
-                    className="h-full bg-emerald-500"
-                    style={{ width: `${(agenda.resolved / total) * 100}%` }}
+            <div className="grid grid-cols-[4fr_6fr] gap-6">
+              <section>
+                <SectionTitle title="KPI Insights" />
+                <BusinessFunctionTable
+                  type="task"
+                  data={
+                    realData?.kpi?.kpiStatsPerCoreParameter?.map((k) => ({
+                      businessFunction: k.name,
+                      total: k.totalKpi,
+                      filling: k.fillingRate,
+                    })) ?? []
+                  }
+                />
+              </section>
+              <section>
+                <SectionTitle title="Live Meeting Insights" />
+                <div className="grid grid-cols-3 gap-3">
+                  <KPICard
+                    title="Total"
+                    value={realData?.meetings?.totalDetailed ?? "0"}
+                    subtext="live meetings"
                   />
-                  <div
-                    className="h-full bg-red-500"
-                    style={{ width: `${(agenda.unresolved / total) * 100}%` }}
+                  <KPICard
+                    title="Total Sahay"
+                    value={realData?.meetings?.sahayDetailed ?? "0"}
+                    subtext="live meeting"
                   />
-                  <div
-                    className="h-full bg-amber-400"
-                    style={{ width: `${(agenda.parked / total) * 100}%` }}
+                  <KPICard
+                    title="Missed"
+                    value={realData?.meetings?.missedDetailed ?? "0"}
+                    subtext="live meeting"
                   />
-                </div>
-                <div className="flex gap-3 mt-2">
-                  {[
-                    { label: "Resolved", color: "bg-emerald-500" },
-                    { label: "Unresolved", color: "bg-red-500" },
-                    { label: "Parked", color: "bg-amber-400" },
-                  ].map((l) => (
-                    <div key={l.label} className="flex items-center gap-1">
-                      <div className={`w-1.5 h-1.5 rounded-full ${l.color}`} />
-                      <span className="text-xs text-slate-400">{l.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </Panel>
-        </div>
-
-        {/* ── ROW 5: Longevity Lists + Delay Chart ────────────────── */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* Both longevity lists */}
-          <Panel>
-            <div className="grid grid-cols-2 gap-4 divide-x divide-slate-100">
-              <div className="pr-4">
-                <PanelTitle icon={Briefcase}>Project Longevity</PanelTitle>
-                <div className="space-y-2">
-                  {projects.longDurationTop5.map((p, i) => (
-                    <div
-                      key={p.projectId}
-                      className="flex items-center justify-between gap-2"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-xs font-bold text-slate-300 shrink-0 w-4">
-                          {i + 1}.
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-sm text-slate-700 font-semibold truncate">
-                            {p.projectName}
-                          </p>
-                          <p className="text-xs text-slate-400">
-                            {format(parseISO(p.createdDatetime), "dd MMM yy")}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-sm font-black text-blue-600 shrink-0">
-                        {p.durationDays}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="pl-4">
-                <PanelTitle icon={Clock}>Task Longevity</PanelTitle>
-                <div className="space-y-2">
-                  {tasks.longDurationTop5.map((t, i) => (
-                    <div
-                      key={t.taskId}
-                      className="flex items-center justify-between gap-2"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-xs font-bold text-slate-300 shrink-0 w-4">
-                          {i + 1}.
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-sm text-slate-700 font-semibold truncate">
-                            {t.taskName}
-                          </p>
-                          <p className="text-xs text-slate-400">
-                            {format(parseISO(t.createdDatetime), "dd MMM yy")}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-sm font-black text-emerald-600 shrink-0">
-                        {t.durationDays}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </Panel>
-
-          {/* Project Delay Bar Chart */}
-          <Panel>
-            <PanelTitle icon={Clock}>Project Delay Analysis</PanelTitle>
-            <div className="h-[175px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={processedDelayData}
-                  layout="vertical"
-                  margin={{ top: 0, right: 16, left: 8, bottom: 0 }}
-                >
-                  <XAxis type="number" hide />
-                  <YAxis
-                    dataKey="projectName"
-                    type="category"
-                    width={140}
-                    fontSize={11}
-                    tick={{ fill: "#64748b" }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(val) =>
-                      val.length > 22 ? val.substring(0, 20) + "…" : val
+                  <KPICard
+                    title="Notes"
+                    value={realData?.meetingNotes?.notesPerMinute ?? "0"}
+                    subtext="per minute"
+                  />
+                  <KPICard
+                    title="Notes/Meeting"
+                    value={realData?.meetingNotes?.notesPerMeeting ?? "0"}
+                    subtext="per meeting"
+                  />
+                  <KPICard
+                    title="Note Tags"
+                    value={
+                      realData?.meetingNotes?.noteTagDistribution?.[0]?.count ??
+                      "0"
                     }
+                    subtext="tags total"
                   />
-                  <Tooltip
-                    cursor={{ fill: "#f8fafc" }}
-                    content={({ active, payload }) => {
-                      if (active && payload?.[0]) {
-                        return (
-                          <div className="bg-slate-900 text-white px-3 py-2 rounded-lg text-xs shadow-xl">
-                            <p className="font-bold">
-                              {payload[0].payload.projectName}
-                            </p>
-                            <p className="text-red-400 font-bold">
-                              {payload[0].payload.delayDays}
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Bar
-                    dataKey="delayDaysNumeric"
-                    radius={[0, 4, 4, 0]}
-                    barSize={14}
-                  >
-                    {processedDelayData.map((_, i) => (
-                      <Cell
-                        key={i}
-                        fill={i === 0 ? "#E24B4A" : "#F09595"}
-                        opacity={1 - i * 0.12}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+                </div>
+              </section>
             </div>
-          </Panel>
-        </div>
 
-        {/* ── ROW 6: Agenda Trend (full width) ────────────────────── */}
-        <Panel>
-          <PanelTitle icon={TrendingUp}>Agenda Trends</PanelTitle>
-          <div className="h-[160px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={agenda.perMonth}
-                margin={{ top: 4, right: 10, left: -20, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7F77DD" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#7F77DD" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="#f1f5f9"
-                />
-                <XAxis
-                  dataKey="month"
-                  fontSize={11}
-                  tick={{ fill: "#94a3b8" }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(val) => {
-                    const [year, month] = val.split("-");
-                    return format(
-                      new Date(parseInt(year), parseInt(month) - 1),
-                      "MMM yy",
-                    );
-                  }}
-                />
-                <YAxis
-                  fontSize={11}
-                  tick={{ fill: "#94a3b8" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: "10px",
-                    border: "none",
-                    boxShadow: "0 4px 16px rgb(0 0 0 / 0.1)",
-                    fontSize: "12px",
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="count"
-                  stroke="#7F77DD"
-                  strokeWidth={2.5}
-                  fillOpacity={1}
-                  fill="url(#colorCount)"
-                  dot={{ fill: "#7F77DD", strokeWidth: 0, r: 3 }}
-                  activeDot={{ r: 5, strokeWidth: 0 }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <section>
+              <SectionTitle title="Meeting Insights" />
+              <div className="grid grid-cols-5 gap-3 mb-6">
+                {(realData?.meetings?.meetingStatsPerType || []).map(
+                  (m, idx) => (
+                    <KPICard
+                      key={idx}
+                      title={m.typeName}
+                      value={m.totalMeetings}
+                      subtext="total"
+                    />
+                  ),
+                )}
+              </div>
+              <div className="w-[140px]">
+                <KPICard
+                  title="Creation Rate"
+                  value={realData?.meetings?.creationRate ?? "0"}
+                  subtext={`${new Date()
+                    .toLocaleString("en-GB", {
+                      month: "long",
+                      year: "numeric",
+                    })
+                    .replace(",", "")}`}
+                >
+                  {/* <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                    <SelectTrigger className="h-6 text-[10px] border-none p-0 focus:ring-0 text-slate-400 font-medium font-bold">
+                      <SelectValue placeholder="Select Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {months.map((m) => (
+                        <SelectItem key={m.value} value={m.value} className="text-[11px]">
+                          {m.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select> */}
+                </KPICard>
+              </div>
+            </section>
           </div>
-        </Panel>
+
+          {/* RIGHT COLUMN */}
+          <div className="space-y-8">
+            <section>
+              <SectionTitle title="Project Insights" />
+              <div className="grid grid-cols-[6fr_4fr] gap-6 mb-6">
+                <BusinessFunctionTable
+                  type="project"
+                  data={
+                    realData?.projects?.projectStatsPerCoreParameter?.map(
+                      (p) => ({
+                        businessFunction: p.name,
+                        total: p.total,
+                        active: p.active,
+                        delayed: p.delayed,
+                      }),
+                    ) ?? []
+                  }
+                />
+                <div className="bg-white border border-slate-200 rounded-xl p-4">
+                  <p className="text-sm font-medium text-black mb-4">
+                    Zero Projects Business Function
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(realData?.projects?.otherCoreParameters || []).map(
+                      (item, idx) => (
+                        <p
+                          key={idx}
+                          className="text-[12px] font-medium text-slate-500"
+                        >
+                          {item}
+                        </p>
+                      ),
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mb-6">
+                <KPICard
+                  title="Zero Task"
+                  value={realData?.projects?.zeroTaskProjects ?? "0"}
+                  subtext="projects"
+                />
+                <KPICard
+                  title="Delayed"
+                  value={realData?.projects?.delayedProjects ?? "0"}
+                  subtext="till date"
+                />
+                <KPICard
+                  title="Creation Rate"
+                  value={realData?.projects?.creationRate ?? "0"}
+                  subtext="till date"
+                />
+              </div>
+
+              <div className="grid grid-cols-[6fr_4fr] gap-4">
+                <AgendaList
+                  title="Long Term Projects"
+                  items={
+                    realData?.projects?.longDurationTop5?.map((p) => ({
+                      name: p.projectName,
+                      duration: p.durationDays,
+                      dueDate: new Date(p.projectDeadline).toLocaleDateString(),
+                    })) ?? []
+                  }
+                />
+                <AgendaList
+                  title="Most Delayed Projects"
+                  items={
+                    realData?.projects?.delayTop5?.map((p) => ({
+                      name: p.projectName,
+                      duration: p.delayDays,
+                    })) ?? []
+                  }
+                />
+              </div>
+            </section>
+
+            <section>
+              <SectionTitle title="Agenda" />
+              <div className="grid grid-cols-[6fr_4fr] gap-6">
+                <AgendaList
+                  title="Most Unresolved Agenda"
+                  items={
+                    realData?.agenda?.longestTop5?.map((a) => ({
+                      name: a.name,
+                      duration: `${a.daysUnresolved} days`,
+                    })) ?? []
+                  }
+                />
+                <div className="grid grid-cols-2  gap-3">
+                  <KPICard
+                    title="Unresolved"
+                    value={realData?.agenda?.unresolved ?? "0"}
+                    subtext="total"
+                  />
+                  <KPICard
+                    title="Resolved"
+                    value={realData?.agenda?.resolved ?? "0"}
+                    subtext="total"
+                  />
+                  <KPICard
+                    title="Parked"
+                    value={realData?.agenda?.parked ?? "0"}
+                    subtext="total"
+                  />
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
