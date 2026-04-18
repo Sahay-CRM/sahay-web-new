@@ -228,6 +228,8 @@ interface IProjectFormData {
     employeeId: string;
     employeeName: string;
   };
+  deadlineRequest?: string;
+  projectDuration?: string;
 }
 
 //
@@ -358,6 +360,7 @@ interface CompanyProjectDataProps {
     employeeId: string;
     employeeName: string;
   };
+  deadlineRequest?: string;
 }
 
 // interface CompanyMeetingDataProps {
@@ -385,6 +388,7 @@ interface CompanyProjectDataProps {
 // }
 
 interface CompanyMeetingDataProps {
+  srNo?: number;
   meetingId?: string;
   meetingName?: string;
   meetingDescription?: string;
@@ -412,6 +416,8 @@ interface CompanyMeetingDataProps {
   selectDate?: Date | string;
   repetitiveMeetingId?: string;
   createdBy?: Employee;
+  deadlineRequest?: string;
+  status?: string;
 }
 
 interface ProjectParameters {
@@ -669,6 +675,7 @@ interface AddUpdateTask {
 }
 
 interface TaskGetPaging {
+  srNo?: number;
   employeeId: string;
   taskId: string;
   assigneeNames?: string;
@@ -676,7 +683,7 @@ interface TaskGetPaging {
   taskStatusId: string;
   taskDescription: string;
   taskStatus: string;
-  createdBy?: Employee;
+  createdBy?: string;
   updatedBy?: string;
   isDelete?: boolean;
   createdDatetime?: string;
@@ -707,6 +714,7 @@ interface TaskGetPaging {
   employeeName?: string;
   isActive?: boolean;
   projectName?: string;
+  deadlineRequest?: string;
 }
 
 interface RepeatTaskAllRes {
@@ -807,6 +815,7 @@ interface Task {
   customObj?: CustomObjREPT;
   repeatTime?: string;
   nextDate?: string;
+  deadlineRequest?: string;
 }
 
 interface ProjectTask {

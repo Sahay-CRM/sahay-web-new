@@ -124,7 +124,15 @@ const MeetingType = () => {
   );
 };
 
-const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
+interface MeetingInfoProps {
+  isUpdateMeeting: boolean;
+  deadlineRequest?: string;
+}
+
+const MeetingInfo = ({
+  isUpdateMeeting,
+  deadlineRequest,
+}: MeetingInfoProps) => {
   const [isStatusSearch, setIsStatusSearch] = useState("");
 
   const {
@@ -145,8 +153,31 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
   });
 
   const meetingNameValue = watch("meetingName") || "";
-  const { data: meetingSearchData } =
-    useGetCompanyMeetingSearch(meetingNameValue);
+
+  // In edit mode, track the original name so dropdown only shows when user changes it
+  const [originalName, setOriginalName] = useState<string | null>(null);
+  const [nameChanged, setNameChanged] = useState(false);
+
+  useEffect(() => {
+    if (
+      isUpdateMeeting &&
+      originalName === null &&
+      meetingNameValue.trim().length > 0
+    ) {
+      setOriginalName(meetingNameValue);
+    }
+  }, [isUpdateMeeting, originalName, meetingNameValue]);
+
+  useEffect(() => {
+    if (isUpdateMeeting && originalName !== null) {
+      setNameChanged(meetingNameValue !== originalName);
+    }
+  }, [isUpdateMeeting, originalName, meetingNameValue]);
+
+  const shouldSearch = !isUpdateMeeting || nameChanged;
+  const { data: meetingSearchData } = useGetCompanyMeetingSearch(
+    shouldSearch ? meetingNameValue : "",
+  );
 
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -167,6 +198,10 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
   }, []);
 
   useEffect(() => {
+    if (isUpdateMeeting && !nameChanged) {
+      setShowDropdown(false);
+      return;
+    }
     const hasResults =
       (meetingSearchData?.data?.length ?? 0) > 0 &&
       meetingNameValue.trim().length >= 5;
@@ -176,9 +211,10 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
     } else {
       setShowDropdown(false);
     }
-  }, [meetingNameValue, meetingSearchData]);
+  }, [meetingNameValue, meetingSearchData, isUpdateMeeting, nameChanged]);
 
   const showResults =
+    shouldSearch &&
     showDropdown &&
     meetingNameValue.trim().length >= 5 &&
     (meetingSearchData?.data?.length ?? 0) > 0;
@@ -221,6 +257,7 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
             isMandatory
             onFocus={() => {
               if (
+                shouldSearch &&
                 meetingNameValue.trim().length >= 5 &&
                 (meetingSearchData?.data?.length ?? 0) > 0
               ) {
@@ -261,15 +298,23 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
             const localDate = field.value ? new Date(field.value) : null;
 
             return (
-              <FormDateTimePicker
-                label="Meeting Start Date"
-                value={localDate}
-                onChange={(date) => {
-                  field.onChange(date?.toISOString());
-                }}
-                error={errors.meetingDateTime}
-                disablePastDates={true}
-              />
+              <div>
+                <FormDateTimePicker
+                  label="Meeting Start Date"
+                  value={localDate}
+                  onChange={(date) => {
+                    field.onChange(date?.toISOString());
+                  }}
+                  error={errors.meetingDateTime}
+                  disablePastDates={true}
+                  disabled={deadlineRequest === "PENDING"}
+                />
+                {deadlineRequest === "PENDING" && (
+                  <p className="text-xs text-primary mt-1">
+                    Deadline change request is pending approval
+                  </p>
+                )}
+              </div>
             );
           }}
         />
@@ -282,15 +327,23 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
             const localDate = field.value ? new Date(field.value) : null;
 
             return (
-              <FormDateTimePicker
-                label="Meeting End Date"
-                value={localDate}
-                onChange={(date) => {
-                  field.onChange(date?.toISOString());
-                }}
-                error={errors.endDate}
-                disablePastDates={true}
-              />
+              <div>
+                <FormDateTimePicker
+                  label="Meeting End Date"
+                  value={localDate}
+                  onChange={(date) => {
+                    field.onChange(date?.toISOString());
+                  }}
+                  error={errors.endDate}
+                  disablePastDates={true}
+                  disabled={deadlineRequest === "PENDING"}
+                />
+                {deadlineRequest === "PENDING" && (
+                  <p className="text-xs text-primary mt-1">
+                    Deadline change request is pending approval
+                  </p>
+                )}
+              </div>
             );
           }}
         />
@@ -665,7 +718,10 @@ const AddMeeting = () => {
 
   const steps = [
     <MeetingType key="meetingType" />,
-    <MeetingInfo isUpdateMeeting={companyMeetingId ? true : false} />,
+    <MeetingInfo
+      isUpdateMeeting={companyMeetingId ? true : false}
+      deadlineRequest={meetingApiData?.data?.deadlineRequest}
+    />,
     // <MeetingStatus key="meetingStatus" />,
     <Joiners key="joiners" />,
     <UploadDoc key="uploadDoc" />,

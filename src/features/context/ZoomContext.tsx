@@ -73,11 +73,11 @@ export function ZoomProvider({ children }: { children: ReactNode }) {
     };
   }, [calculateAutoZoom]);
 
-  // Apply zoom to the root font-size so rem-based spacing scales too
-  useEffect(() => {
-    const pct = zoom / 100;
-    document.documentElement.style.fontSize = `${pct * 16}px`;
-  }, [zoom]);
+  // Root font-size scaling is handled by CSS zoom in DashboardLayout
+  // useEffect(() => {
+  //   const pct = zoom / 100;
+  //   document.documentElement.style.fontSize = `${pct * 16}px`;
+  // }, [zoom]);
 
   const zoomIn = useCallback(() => {
     localStorage.setItem(ZOOM_MANUAL_FLAG, "true");

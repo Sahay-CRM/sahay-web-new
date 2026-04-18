@@ -112,11 +112,12 @@ interface TableProps<T extends Record<string, unknown>> {
   showActionsColumn?: boolean;
   actionColumnWidth?: string;
   isPermissionIcon?: (item: T) => boolean;
-  extraColumn?: {
+  extraColumns?: {
     label: string;
     width?: string;
     render: (item: T) => React.ReactNode;
-  };
+    tooltipColumn?: string;
+  }[];
   indexColumnWidth?: string;
 }
 
@@ -156,7 +157,7 @@ const TableData = <T extends Record<string, unknown>>({
   actionColumnWidth,
   isPermissionIcon,
   searchValue,
-  extraColumn,
+  extraColumns,
   indexColumnWidth = "w-[80px]",
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
@@ -281,7 +282,7 @@ const TableData = <T extends Record<string, unknown>>({
 
   return (
     <Card className="p-0 gap-0">
-      <div className="flex h-[calc(100vh-350px)] flex-col overflow-hidden">
+      <div className="flex flex-grow h-[calc(100vh-350px)] flex-col overflow-hidden">
         <Table className="min-w-full h-full table-fixed">
           <TableHeader className="sticky top-0 z-10 bg-primary shadow-sm">
             <TableRow>
@@ -347,16 +348,17 @@ const TableData = <T extends Record<string, unknown>>({
                 );
               })}
 
-              {extraColumn && tableData.length > 0 && (
-                <TableHead
-                  className={twMerge(
-                    "truncate text-left px-4",
-                    extraColumn.width,
-                  )}
-                >
-                  <TableTooltip text={extraColumn.label} />
-                </TableHead>
-              )}
+              {extraColumns &&
+                extraColumns.length > 0 &&
+                tableData.length > 0 &&
+                extraColumns.map((col, idx) => (
+                  <TableHead
+                    key={`extra-head-${idx}`}
+                    className={twMerge("truncate text-left px-4", col.width)}
+                  >
+                    <TableTooltip text={col.label} />
+                  </TableHead>
+                ))}
 
               {showActionsColumn ? (
                 <TableHead
@@ -558,16 +560,21 @@ const TableData = <T extends Record<string, unknown>>({
                     );
                   })}
 
-                  {extraColumn && tableData.length > 0 && (
-                    <TableCell
-                      className={twMerge(
-                        "truncate whitespace-nowrap px-4",
-                        extraColumn.width,
-                      )}
-                    >
-                      {extraColumn.render(item)}
-                    </TableCell>
-                  )}
+                  {extraColumns &&
+                    extraColumns.length > 0 &&
+                    tableData.length > 0 &&
+                    extraColumns.map((col, idx) => (
+                      <TableCell
+                        key={`extra-cell-${idx}`}
+                        className={twMerge(
+                          "truncate whitespace-nowrap px-4",
+                          col.width,
+                        )}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {col.render(item)}
+                      </TableCell>
+                    ))}
 
                   {showActionsColumn && (
                     <TableCell

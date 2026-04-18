@@ -8,6 +8,7 @@ import { TableTooltip } from "@/components/shared/DataTable/tableTooltip";
 import { getInitials } from "@/features/utils/app.utils";
 import { useNavigate } from "react-router-dom";
 import { isColorDark } from "@/features/utils/color.utils";
+import { useZoom } from "@/features/context/ZoomContext";
 interface ProjectCardProps {
   projectId: string;
   name: string;
@@ -26,6 +27,7 @@ interface ProjectCardProps {
     employeeId: string;
     employeeName: string;
   };
+  deadlineRequest?: string;
   onViewDocuments?: (
     projectDocuments: { fileId: string; fileName: string }[],
     projectId: string,
@@ -44,8 +46,11 @@ export default function ProjectCard({
   projectDocuments,
   projectDuration,
   createdBy,
+  deadlineRequest,
   onViewDocuments,
 }: ProjectCardProps) {
+  const { zoom } = useZoom();
+  const scale = zoom / 100;
   const navigate = useNavigate();
   const handleEdit = () => {
     navigate(`/dashboard/projects/edit/${projectId}`);
@@ -59,9 +64,27 @@ export default function ProjectCard({
     <div className="bg-white border shadow-md rounded-xl p-4 relative hover:shadow-md transition flex flex-col w-full h-full">
       <div>
         <div className="flex items-start justify-between mb-1">
-          <h3 className="text-md font-semibold text-gray-800 flex-1 pr-2 break-words">
-            {name}
-          </h3>
+          <div className="flex items-center gap-2 pr-2">
+            <h3
+              className="text-base font-semibold text-gray-800 flex-1 break-words"
+              style={{ fontSize: `${16 * scale}px` }}
+            >
+              {name}
+            </h3>
+            {deadlineRequest === "PENDING" && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex -mt-2 h-full w-full rounded-full bg-red-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full -mt-2 h-2 w-2 bg-red-500" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  Deadline change request pending
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
 
           <div className="flex ">
             <button
@@ -71,7 +94,10 @@ export default function ProjectCard({
               }}
               className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
             >
-              <Edit className="h-4 w-4" />
+              <Edit
+                className="h-4 w-4"
+                style={{ width: 16 * scale, height: 16 * scale }}
+              />
             </button>
 
             <button
@@ -81,7 +107,10 @@ export default function ProjectCard({
               }}
               className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
             >
-              <Eye className="h-4 w-4" />
+              <Eye
+                className="h-4 w-4"
+                style={{ width: 16 * scale, height: 16 * scale }}
+              />
             </button>
             {projectDocuments && projectDocuments.length > 0 && (
               <button
@@ -91,7 +120,10 @@ export default function ProjectCard({
                 }}
                 className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
               >
-                <Image className="h-4 w-4" />
+                <Image
+                  className="h-4 w-4"
+                  style={{ width: 16 * scale, height: 16 * scale }}
+                />
               </button>
             )}
           </div>
@@ -103,19 +135,30 @@ export default function ProjectCard({
         <p
           className="text-gray-500 text-sm mb-1.5 line-clamp-2"
           title={description}
+          style={{ fontSize: `${14 * scale}px` }}
         >
           {description}
         </p>
         {/* <p className="text-gray-500 text-sm mb-2">{description}</p> */}
 
-        <div className="mb-1.5 text-sm text-gray-600 flex flex-wrap items-center gap-1">
+        <div
+          className="mb-1.5 text-sm text-gray-600 flex flex-wrap items-center gap-1"
+          style={{ fontSize: `${14 * scale}px` }}
+        >
           <span className="font-semibold ">Assignees :</span>
 
           {assignees.slice(0, 7).map((name, idx) => (
             <span key={idx} className="inline-flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <p className="rounded-full h-6 w-6 bg-gray-100 text-xs flex items-center justify-center font-medium">
+                  <p
+                    className="rounded-full bg-gray-100 text-xs flex items-center justify-center font-medium"
+                    style={{
+                      width: 24 * scale,
+                      height: 24 * scale,
+                      fontSize: `${12 * scale}px`,
+                    }}
+                  >
                     {getInitials(name)}
                   </p>
                 </TooltipTrigger>
@@ -126,12 +169,22 @@ export default function ProjectCard({
 
           {/* Agar extra assignees ho to +X show karo */}
           {assignees.length > 7 && (
-            <span className="rounded-full h-6 w-6 bg-gray-200 text-xs flex items-center justify-center font-medium cursor-default">
+            <span
+              className="rounded-full bg-gray-200 text-xs flex items-center justify-center font-medium cursor-default"
+              style={{
+                width: 24 * scale,
+                height: 24 * scale,
+                fontSize: `${12 * scale}px`,
+              }}
+            >
               +{assignees.length - 7}
             </span>
           )}
         </div>
-        <div className="mb-2 text-sm text-gray-600 flex items-center gap-1">
+        <div
+          className="mb-2 text-sm text-gray-600 flex items-center gap-1"
+          style={{ fontSize: `${14 * scale}px` }}
+        >
           <span className="font-semibold  whitespace-nowrap">
             Business Function :
           </span>
@@ -139,52 +192,48 @@ export default function ProjectCard({
             {coreParameterName}
           </span>
         </div>
-        <div className="mb-2 flex items-center gap-2 text-sm text-gray-600">
-          <span className="font-semibold  whitespace-nowrap">
+        <div
+          className="mb-2 flex items-center gap-2 text-sm text-gray-600"
+          style={{ fontSize: `${14 * scale}px` }}
+        >
+          <span className="font-semibold whitespace-nowrap flex items-center gap-1">
             Project Deadline :
           </span>
           <TableTooltip text={`${endDate || ""}`} />
+        </div>
+        <div
+          className="mb-2 flex items-center gap-2 text-sm text-gray-600"
+          style={{ fontSize: `${14 * scale}px` }}
+        >
+          <span className="font-semibold  whitespace-nowrap">Created By :</span>
+          <TableTooltip text={`${createdBy?.employeeName || ""}`} />
         </div>
       </div>
 
       {/* Bottom section */}
       <div className="flex items-center justify-between right-0 border-t pt-2 mt-auto">
         {/* Date (smaller font) */}
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <div className="flex items-center gap-3 text-sm text-gray-600">
-            {createdBy && (
-              <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-xs whitespace-nowrap">
-                  By :
-                </span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <p className="rounded-full h-5 w-5 bg-primary/10 text-primary text-[12px] flex items-center justify-center font-semibold border border-primary/20">
-                      {getInitials(createdBy.employeeName)}
-                    </p>
-                  </TooltipTrigger>
-                  <TooltipContent>{createdBy.employeeName}</TooltipContent>
-                </Tooltip>
-              </div>
-            )}
-            <div className="flex items-center gap-1.5 ">
-              <Clock className="w-4 h-4 text-gray-400" />
-              <div className="max-w-[120px]">
-                <TableTooltip text={projectDuration} />
-              </div>
-            </div>
-          </div>
+        <div
+          className="flex items-center gap-2 text-sm text-gray-600"
+          style={{ fontSize: `${14 * scale}px` }}
+        >
+          <Clock
+            className="text-gray-400"
+            style={{ width: 16 * scale, height: 16 * scale }}
+          />
+          <div style={{ fontSize: `${12 * scale}px` }}>{projectDuration}</div>
         </div>
 
         {/* Priority pill bottom-right */}
         {priority && (
           <div className="absolute  mt-1 right-0 pt-1">
             <div
-              className="max-w-[200px] py-1.5 pl-6 pr-3 rounded-l-full text-sm font-semibold cursor-pointer"
+              className=" py-1.5 pl-6 pr-3 rounded-l-full font-semibold cursor-pointer"
               style={{
                 color: isColorDark(color) ? "#fff" : "#000",
                 borderRight: `2px solid ${color}`,
                 background: `${color}`,
+                fontSize: `${14 * scale}px`,
               }}
             >
               <TableTooltip text={priority} />

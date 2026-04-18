@@ -21,7 +21,16 @@ import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
 import { format } from "date-fns";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
+import { getColorFromName } from "@/features/utils/formatting.utils";
 import ConfirmationDeleteModal from "./ConfirmTaskDeleteModal";
+import { isColorDark } from "@/features/utils/color.utils";
 
 function getInitials(name: string) {
   if (!name || name.trim() === "") {
@@ -60,7 +69,6 @@ export default function CompanyTaskList() {
     isViewModalOpen,
     setIsViewModalOpen,
     viewModalData,
-    taskStatus,
     taskDateRange,
     appliedDateRange,
     handleDateRangeReset,
@@ -82,26 +90,14 @@ export default function CompanyTaskList() {
     },
     { key: "taskDeadline", label: "Task Deadline", visible: true },
     { key: "assigneeNames", label: "Assignees", visible: true },
-    {
-      key: "createdByEmployeeName",
-      label: "Created",
-      visible: true,
-      tooltipColumn: "createdByFullName",
-    },
-    { key: "taskStatus", label: "Status", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) {
-        acc[col.key] = {
-          label: col.label,
-          tooltipColumn: col.tooltipColumn,
-        };
-      }
+      if (col.visible) acc[col.key] = col.label;
       return acc;
     },
-    {} as Record<string, { label: string; tooltipColumn?: string }>,
+    {} as Record<string, string>,
   );
 
   // Toggle column visibility
@@ -124,7 +120,7 @@ export default function CompanyTaskList() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
+      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6 flex flex-col">
         <div className="flex mb-3 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             Company Task List
@@ -214,7 +210,6 @@ export default function CompanyTaskList() {
                   (companyTaskData.currentPage - 1) * companyTaskData.pageSize +
                   index +
                   1,
-                status: item.taskStatusId,
                 taskDeadline: item.taskDeadline
                   ? format(new Date(item.taskDeadline), "dd/MM/yyyy h:mm aa")
                   : "",
@@ -225,10 +220,8 @@ export default function CompanyTaskList() {
                       .filter(Boolean)
                       .join(", ")
                   : "",
-                createdByEmployeeName: getInitials(
-                  item.createdBy?.employeeName || "",
-                ),
-                createdByFullName: item.createdBy?.employeeName || "",
+                createdByEmployeeName: getInitials(item.createdBy || ""),
+                createdByFullName: item.createdBy || "",
               }),
             )}
             columns={visibleColumns}
@@ -255,21 +248,81 @@ export default function CompanyTaskList() {
             isActionButton={() => true}
             viewButton={true}
             permissionKey="users"
-            dropdownColumns={{
-              taskStatus: {
-                options: (taskStatus?.data ?? []).map((opt) => ({
-                  label: opt.taskStatus,
-                  value: opt.taskStatusId,
-                  color: opt.color || "#2e3195",
-                })),
-                onChange: (row, value) => handleStatusChange(value, row),
-              },
-            }}
             onRowClick={(row) => {
               handleRowsModalOpen(row);
             }}
             sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
-            actionColumnWidth="w-[150px]"
+            actionColumnWidth="w-[120px]"
+            extraColumns={[
+              {
+                label: "Created",
+                width: "w-[100px]",
+                render: (row: TaskGetPaging) => {
+                  const initials = getInitials(row.createdBy!);
+                  const fullName = String(row.createdBy!);
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`w-7 h-7 bg-primary text-white flex flex-col items-center justify-center aspect-square rounded-full text-[10px] font-semibold ${getColorFromName(fullName)}`}
+                          >
+                            {initials}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>{fullName}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                },
+              },
+              {
+                label: "Status",
+                width: "w-[170px]",
+                render: (row: TaskGetPaging) => {
+                  const currentStatus = statusOptions.find(
+                    (opt) => opt.value === row.taskStatusId,
+                  );
+                  return (
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 min-w-[100px] justify-between"
+                            style={{
+                              backgroundColor:
+                                currentStatus?.color || "#2e3195",
+                              color: isColorDark(
+                                currentStatus?.color || "#2e3195",
+                              )
+                                ? "#FFFFFF"
+                                : "#000000",
+                            }}
+                          >
+                            {currentStatus?.label || row.taskStatus || "Select"}
+                            <ChevronDown className="w-4 h-4 ml-2" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                          {statusOptions.map((option) => (
+                            <DropdownMenuItem
+                              key={option.value}
+                              onClick={() =>
+                                handleStatusChange(option.value, row)
+                              }
+                            >
+                              {option.label}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  );
+                },
+              },
+            ]}
           />
         </div>
 

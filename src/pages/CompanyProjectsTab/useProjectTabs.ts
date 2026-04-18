@@ -200,6 +200,7 @@ export default function useProjectTabs() {
             fileName: f.fileName,
           }))
         : [],
+      deadlineRequest: project.deadlineRequest,
     })) || [];
 
   const openDialogForAdd = () => {

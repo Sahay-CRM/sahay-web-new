@@ -39,7 +39,12 @@ interface SubParameterProps {
   setIsReqModalOpen: (value: boolean) => void;
 }
 
-const ProjectInfo = () => {
+interface ProjectInfoProps {
+  isEditMode: boolean;
+  deadlineRequest?: string;
+}
+
+const ProjectInfo = ({ isEditMode, deadlineRequest }: ProjectInfoProps) => {
   const {
     register,
     setValue,
@@ -55,8 +60,34 @@ const ProjectInfo = () => {
   } = useAddProject();
 
   const projectNameValue = watch("projectName") || "";
-  const { data: projectSearchData } =
-    useGetCompanyProjectSearch(projectNameValue);
+
+  // In edit mode, track the original name so we only search once the user changes it
+  const [originalName, setOriginalName] = useState<string | null>(null);
+  const [nameChanged, setNameChanged] = useState(false);
+
+  // Capture the original name the first time the form is populated in edit mode
+  useEffect(() => {
+    if (
+      isEditMode &&
+      originalName === null &&
+      projectNameValue.trim().length > 0
+    ) {
+      setOriginalName(projectNameValue);
+    }
+  }, [isEditMode, originalName, projectNameValue]);
+
+  // Detect if the user has changed the name from the original
+  useEffect(() => {
+    if (isEditMode && originalName !== null) {
+      setNameChanged(projectNameValue !== originalName);
+    }
+  }, [isEditMode, originalName, projectNameValue]);
+
+  // Search only when adding, OR when editing and the name has been changed
+  const shouldSearch = !isEditMode || nameChanged;
+  const { data: projectSearchData } = useGetCompanyProjectSearch(
+    shouldSearch ? projectNameValue : "",
+  );
 
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -77,6 +108,11 @@ const ProjectInfo = () => {
   }, []);
 
   useEffect(() => {
+    // In edit mode, only show dropdown if the user changed the name
+    if (isEditMode && !nameChanged) {
+      setShowDropdown(false);
+      return;
+    }
     const hasResults =
       (projectSearchData?.data?.length ?? 0) > 0 &&
       projectNameValue.trim().length >= 5;
@@ -86,9 +122,10 @@ const ProjectInfo = () => {
     } else {
       setShowDropdown(false);
     }
-  }, [projectNameValue, projectSearchData]);
+  }, [projectNameValue, projectSearchData, isEditMode, nameChanged]);
 
   const showResults =
+    shouldSearch &&
     showDropdown &&
     projectNameValue.trim().length >= 5 &&
     (projectSearchData?.data?.length ?? 0) > 0;
@@ -104,6 +141,7 @@ const ProjectInfo = () => {
             placeholder="Enter Project Name"
             onFocus={() => {
               if (
+                shouldSearch &&
                 projectNameValue.trim().length >= 5 &&
                 (projectSearchData?.data?.length ?? 0) > 0
               ) {
@@ -148,23 +186,31 @@ const ProjectInfo = () => {
               : null;
 
             return (
-              <FormDateTimePicker
-                label="Project Deadline"
-                value={localDate}
-                onChange={(date) => {
-                  // Convert back to UTC when saving
-                  const utcDate = date
-                    ? new Date(
-                        date.getTime() - date.getTimezoneOffset() * 60000,
-                      )
-                    : null;
-                  field.onChange(utcDate);
-                }}
-                error={errors.projectDeadline}
-                disablePastDays={
-                  Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
-                }
-              />
+              <div>
+                <FormDateTimePicker
+                  label="Project Deadline"
+                  value={localDate}
+                  onChange={(date) => {
+                    // Convert back to UTC when saving
+                    const utcDate = date
+                      ? new Date(
+                          date.getTime() - date.getTimezoneOffset() * 60000,
+                        )
+                      : null;
+                    field.onChange(utcDate);
+                  }}
+                  error={errors.projectDeadline}
+                  disablePastDays={
+                    Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                  }
+                  disabled={deadlineRequest === "PENDING"}
+                />
+                {deadlineRequest === "PENDING" && (
+                  <p className="text-xs text-primary mt-1">
+                    Deadline change request is pending approval
+                  </p>
+                )}
+              </div>
             );
           }}
         />
@@ -184,8 +230,8 @@ const ProjectInfo = () => {
               error={errors.projectStatusId}
               isMandatory
               {...field}
-              labelClass="mb-5"
-              className="h-10"
+              labelClass="mb-4"
+              className=""
               options={StatusOptions}
               selectedValues={field.value ? [field.value] : []} // Ensure it's an array
               onSelect={(value) => {
@@ -650,7 +696,11 @@ export default function AddProject() {
   }, [setBreadcrumbs, companyProjectId, projectApiData?.data.projectName]);
 
   const steps = [
-    <ProjectInfo key="projectInfo" />,
+    <ProjectInfo
+      key="projectInfo"
+      isEditMode={!!companyProjectId}
+      deadlineRequest={projectApiData?.data?.deadlineRequest}
+    />,
     ...(isCoreParameterSelected
       ? [
           <SubParameter

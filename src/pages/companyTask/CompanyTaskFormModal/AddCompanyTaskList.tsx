@@ -204,7 +204,15 @@ const MeetingSelectionStep = () => {
 };
 
 /* ---------------- Task Details Step ---------------- */
-const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
+const TaskDetailsStep = ({
+  taskId,
+  isEditMode,
+  deadlineRequest,
+}: {
+  taskId: string;
+  isEditMode: boolean;
+  deadlineRequest?: string;
+}) => {
   const {
     register,
     control,
@@ -220,7 +228,31 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
   } = useAddCompanyTask();
 
   const taskNameValue = watch("taskName") || "";
-  const { data: taskSearchData } = useGetCompanyTaskSearch(taskNameValue);
+
+  // In edit mode, track the original name so dropdown only shows when user changes it
+  const [originalName, setOriginalName] = useState<string | null>(null);
+  const [nameChanged, setNameChanged] = useState(false);
+
+  useEffect(() => {
+    if (
+      isEditMode &&
+      originalName === null &&
+      taskNameValue.trim().length > 0
+    ) {
+      setOriginalName(taskNameValue);
+    }
+  }, [isEditMode, originalName, taskNameValue]);
+
+  useEffect(() => {
+    if (isEditMode && originalName !== null) {
+      setNameChanged(taskNameValue !== originalName);
+    }
+  }, [isEditMode, originalName, taskNameValue]);
+
+  const shouldSearch = !isEditMode || nameChanged;
+  const { data: taskSearchData } = useGetCompanyTaskSearch(
+    shouldSearch ? taskNameValue : "",
+  );
 
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -241,6 +273,10 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
   }, []);
 
   useEffect(() => {
+    if (isEditMode && !nameChanged) {
+      setShowDropdown(false);
+      return;
+    }
     const hasResults =
       (taskSearchData?.data?.length ?? 0) > 0 &&
       taskNameValue.trim().length >= 5;
@@ -250,9 +286,10 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
     } else {
       setShowDropdown(false);
     }
-  }, [taskNameValue, taskSearchData]);
+  }, [taskNameValue, taskSearchData, isEditMode, nameChanged]);
 
   const showResults =
+    shouldSearch &&
     showDropdown &&
     taskNameValue.trim().length >= 5 &&
     (taskSearchData?.data?.length ?? 0) > 0;
@@ -269,6 +306,7 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
             placeholder="Enter Task Name"
             onFocus={() => {
               if (
+                shouldSearch &&
                 taskNameValue.trim().length >= 5 &&
                 (taskSearchData?.data?.length ?? 0) > 0
               ) {
@@ -298,15 +336,23 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
             name="taskDeadline"
             rules={{ required: "Task Deadline is required" }}
             render={({ field }) => (
-              <FormDateTimePicker
-                label="Task Deadline"
-                value={field.value}
-                onChange={field.onChange}
-                error={errors.taskDeadline}
-                disablePastDays={
-                  Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
-                }
-              />
+              <div>
+                <FormDateTimePicker
+                  label="Task Deadline"
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.taskDeadline}
+                  disablePastDays={
+                    Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                  }
+                  disabled={deadlineRequest === "PENDING"}
+                />
+                {deadlineRequest === "PENDING" && (
+                  <p className="text-xs text-primary mt-1">
+                    Deadline change request is pending approval
+                  </p>
+                )}
+              </div>
             )}
           />
         </div>
@@ -580,7 +626,14 @@ export default function AddCompanyTask() {
       case 2:
         return <MeetingSelectionStep key="meetingStep" />;
       case 3:
-        return <TaskDetailsStep key="detailsStep" taskId={taskId!} />;
+        return (
+          <TaskDetailsStep
+            key="detailsStep"
+            taskId={taskId!}
+            isEditMode={!!taskId}
+            deadlineRequest={taskDataById?.data?.deadlineRequest}
+          />
+        );
       case 4:
         return <AssignUserStep key="assignUserStep" />;
       default:

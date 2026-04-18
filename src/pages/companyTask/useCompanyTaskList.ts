@@ -458,7 +458,7 @@ export default function useCompanyTaskList() {
     setIsViewModalOpen,
     viewModalData,
     isLoading,
-    taskStatus,
+    // taskStatus,
     appliedDateRange,
   };
 }
