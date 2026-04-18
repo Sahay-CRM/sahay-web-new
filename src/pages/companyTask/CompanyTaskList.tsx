@@ -222,8 +222,11 @@ export default function CompanyTaskList() {
                   : "",
                 createdByEmployeeName: getInitials(item.createdBy || ""),
                 createdByFullName: item.createdBy || "",
+                showDoth: item.deadlineRequest === "PENDING",
               }),
             )}
+            dotsKey="showDoth"
+            dotsAnchorKey="taskName"
             columns={visibleColumns}
             primaryKey="taskId"
             onEdit={

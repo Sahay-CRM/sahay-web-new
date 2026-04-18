@@ -61,6 +61,8 @@ interface TableProps<T extends Record<string, unknown>> {
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
   onRowClick?: (item: T) => void;
+  dotsKey?: keyof T;
+  dotsAnchorKey?: keyof T;
   canDelete?: (item: T) => boolean;
   paginationDetails?: PaginationFilter & {
     sortBy?: string;
@@ -159,6 +161,8 @@ const TableData = <T extends Record<string, unknown>>({
   searchValue,
   extraColumns,
   indexColumnWidth = "w-[80px]",
+  dotsKey,
+  dotsAnchorKey,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   // Only show checkboxes if explicitly enabled with multiSelect OR if both selectedValue and handleChange are provided
@@ -311,9 +315,7 @@ const TableData = <T extends Record<string, unknown>>({
                     showCheckboxes ? "left-[40px]" : "left-0",
                     indexColumnWidth,
                   )}
-                >
-                  #
-                </TableHead>
+                ></TableHead>
               )}
 
               {columnKeys.map((clm, index) => {
@@ -541,9 +543,17 @@ const TableData = <T extends Record<string, unknown>>({
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <div
-                                        className={`whitespace-normal break-words max-w-[230px] ${(clm === "employeeName" || clm === "createdByEmployeeName") && `w-5 bg-primary text-white flex flex-col items-center justify-center aspect-square rounded-full text-[14px] font-semibold ${getColorFromName(cellValue)}`}`}
+                                        className={`whitespace-normal break-words max-w-[230px] ${(clm === "employeeName" || clm === "createdByEmployeeName") && `w-5 bg-primary text-white flex flex-col items-center justify-center aspect-square rounded-full text-[14px] font-semibold ${getColorFromName(cellValue)}`} flex items-center gap-2`}
                                       >
                                         {cellValue}
+                                        {dotsKey &&
+                                          dotsAnchorKey === clm &&
+                                          item[dotsKey] && (
+                                            <span className="relative flex h-2 w-2 ml-1">
+                                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                                              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                                            </span>
+                                          )}
                                       </div>
                                     </TooltipTrigger>
                                     <TooltipContent>
@@ -553,7 +563,19 @@ const TableData = <T extends Record<string, unknown>>({
                                 </TooltipProvider>
                               );
                             }
-                            return <TableTooltip text={cellValue} />;
+                            return (
+                              <div className="flex items-center gap-2">
+                                <TableTooltip text={cellValue} />
+                                {dotsKey &&
+                                  dotsAnchorKey === clm &&
+                                  item[dotsKey] && (
+                                    <span className="relative flex h-2 w-2 ml-1">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                                    </span>
+                                  )}
+                              </div>
+                            );
                           })()
                         )}
                       </TableCell>

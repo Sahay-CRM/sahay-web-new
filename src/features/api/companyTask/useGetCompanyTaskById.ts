@@ -15,6 +15,7 @@ export default function useGetCompanyTaskById(id: string) {
 
       return resData;
     },
+    staleTime: 0,
   });
   return query;
 }

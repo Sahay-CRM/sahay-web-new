@@ -235,7 +235,10 @@ export default function MeetingList() {
                 (typeof item.createdBy === "object"
                   ? item.createdBy?.employeeName
                   : item.createdBy) || "",
+              showDoth: item.deadlineRequest === "PENDING",
             }))}
+            dotsKey="showDoth"
+            dotsAnchorKey="meetingName"
             columns={visibleColumns}
             primaryKey="meetingId"
             actionColumnWidth="w-[90px]"
