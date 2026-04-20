@@ -272,6 +272,7 @@ export const companyNavigationData = [
     label: "Request Master",
     link: "/dashboard/request-master",
     permission: "View",
+    moduleKey: "REQUESTMASTER",
   },
   {
     id: 17,

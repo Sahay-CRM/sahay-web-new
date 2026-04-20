@@ -17,6 +17,7 @@ import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { UpdateStatusModal } from "./UpdateStatusModal";
+import PageNotAccess from "../PageNoAccess";
 
 export default function RequestMasterList() {
   const {
@@ -24,6 +25,7 @@ export default function RequestMasterList() {
     isLoading,
     paginationFilter,
     setPaginationFilter,
+    onCancel,
     // onDelete,
     isUpdateModalOpen,
     setIsUpdateModalOpen,
@@ -34,6 +36,8 @@ export default function RequestMasterList() {
     handleFilterChange,
     statusOptions,
     typeOptions,
+    permission,
+    userData,
   } = useRequestMasterList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -70,6 +74,10 @@ export default function RequestMasterList() {
   };
 
   const methods = useForm();
+
+  if (!permission || !permission.View) {
+    return <PageNotAccess />;
+  }
 
   return (
     <FormProvider {...methods}>
@@ -163,7 +171,31 @@ export default function RequestMasterList() {
             // moduleKey="user"
             customActions={(row: RequestMasterData) => (
               <>
-                {row.status === "PENDING" && (
+                {row.status === "PENDING" &&
+                  userData?.employeeId === row.createdBy?.employeeId && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 p-0 px-2 mr-2 text-red-600 border-red-600 hover:bg-red-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (row.requestMasterId) {
+                                onCancel?.(row.requestMasterId);
+                              }
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Cancel Request</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+
+                {row.status === "PENDING" && permission?.Edit && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -184,28 +216,6 @@ export default function RequestMasterList() {
                     </Tooltip>
                   </TooltipProvider>
                 )}
-                {/* 
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-red-600 ml-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (row.requestMasterId) {
-                            onDelete(row.requestMasterId);
-                          }
-                        }}
-                      >
-                        <Trash className="w-4 h-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Delete</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider> 
-                */}
               </>
             )}
             actionColumnWidth="w-[80px]"

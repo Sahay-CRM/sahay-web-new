@@ -5,8 +5,16 @@ import {
   useDeleteRequestMasterMutation,
   useUpdateRequestMasterMutation,
 } from "@/features/api/RequestMaster";
+import { useSelector } from "react-redux";
+import {
+  getUserDetail,
+  getUserPermission,
+} from "@/features/selectors/auth.selector";
 
 export const useRequestMasterList = () => {
+  const permission = useSelector(getUserPermission).REQUESTMASTER;
+  const userData = useSelector(getUserDetail);
+
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 25,
@@ -86,5 +94,7 @@ export const useRequestMasterList = () => {
     handleFilterChange,
     statusOptions,
     typeOptions,
+    permission,
+    userData,
   };
 };
