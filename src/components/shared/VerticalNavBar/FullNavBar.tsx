@@ -66,7 +66,7 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
     .filter((i): i is NonNullable<typeof i> => i !== null);
 
   return (
-    <div className="flex flex-col w-[16.25rem] h-screen bg-white border-r">
+    <div className="flex flex-col w-[16.25rem] h-full bg-white border-r">
       <Link to="/">
         <div className="flex items-center px-4 py-4 shadow-sm mt-auto cursor-pointer mb-4">
           <div className="flex w-[4.375rem] h-[3.125rem] shrink-0">

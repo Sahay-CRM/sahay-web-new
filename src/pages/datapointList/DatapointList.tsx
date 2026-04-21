@@ -21,6 +21,7 @@ import TableData from "@/components/shared/DataTable/DataTableKpi";
 import ConfirmationDeleteModal from "./ConfirmationKPIDeleteModal";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
+import { getColorFromName } from "@/features/utils/formatting.utils";
 
 const validationOptions = [
   { value: "EQUAL_TO", label: "= Equal to" },
@@ -104,6 +105,12 @@ export default function CompanyTaskList() {
     setIsEditKpiId,
     setIsEditModalOpen,
     handleSoftDeleteRestore,
+    departmentOptions,
+    employeeOptions,
+    selectedEmployees,
+    selectedDepartments,
+    handleEmployeeFilterChange,
+    handleDepartmentFilterChange,
   } = useCompanyTaskList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -158,12 +165,6 @@ export default function CompanyTaskList() {
       key: "coreParameterName",
       label: "Business Function Name",
       visible: true,
-    },
-    {
-      key: "createdByEmployeeName",
-      label: "Created By",
-      visible: true,
-      tooltipColumn: "createdByFullName",
     },
   ]);
 
@@ -221,6 +222,28 @@ export default function CompanyTaskList() {
             />
           </div>
           <div className="flex items-center gap-2">
+            <div>
+              <DropdownSearchMenu
+                label="Department Selection"
+                options={departmentOptions}
+                selected={selectedDepartments}
+                onChange={(selected) => {
+                  handleDepartmentFilterChange(selected as string[]);
+                }}
+                multiSelect
+              />
+            </div>
+            <div>
+              <DropdownSearchMenu
+                label="User Selection"
+                options={employeeOptions}
+                selected={selectedEmployees}
+                onChange={(selected) => {
+                  handleEmployeeFilterChange(selected as string[]);
+                }}
+                multiSelect
+              />
+            </div>
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>
@@ -316,7 +339,29 @@ export default function CompanyTaskList() {
               "frequencyType",
               "coreParameterName",
             ]}
-            actionColumnWidth="w-[180px] overflow-hidden "
+            actionColumnWidth="w-[150px] text-center overflow-hidden "
+            extraColumns={[
+              {
+                label: "Added",
+                width: "w-[80px]",
+                render: (row) => {
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`w-7 h-7 bg-primary text-white flex items-center justify-center aspect-square rounded-full text-[12px] font-medium ${getColorFromName(row.createdByFullName)}`}
+                          >
+                            {row.createdByEmployeeName}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>{row.createdByFullName}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                },
+              },
+            ]}
           />
         </div>
         {isDeleteModalOpen && (

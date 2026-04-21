@@ -112,6 +112,12 @@ interface TableProps<T extends Record<string, unknown>> {
   isPermissionIcon?: boolean;
   activeTooltip?: string;
   inactiveTooltip?: string;
+  extraColumns?: {
+    label: string;
+    width?: string;
+    render: (item: T) => React.ReactNode;
+    tooltipColumn?: string;
+  }[];
 }
 
 const TableDataKpi = <T extends Record<string, unknown>>({
@@ -152,6 +158,7 @@ const TableDataKpi = <T extends Record<string, unknown>>({
   searchValue,
   activeTooltip,
   inactiveTooltip,
+  extraColumns,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   const showCheckboxes =
@@ -289,6 +296,18 @@ const TableDataKpi = <T extends Record<string, unknown>>({
                   </div>
                 </TableHead>
               ))}
+
+              {extraColumns &&
+                extraColumns.length > 0 &&
+                tableData.length > 0 &&
+                extraColumns.map((col, idx) => (
+                  <TableHead
+                    key={`extra-head-${idx}`}
+                    className={twMerge("text-left px-4", col.width)}
+                  >
+                    <TableTooltip text={col.label} />
+                  </TableHead>
+                ))}
 
               {showActionsColumn && (
                 <TableHead
@@ -490,6 +509,19 @@ const TableDataKpi = <T extends Record<string, unknown>>({
                       </TableCell>
                     );
                   })}
+
+                  {extraColumns &&
+                    extraColumns.length > 0 &&
+                    tableData.length > 0 &&
+                    extraColumns.map((col, idx) => (
+                      <TableCell
+                        key={`extra-cell-${idx}`}
+                        className={twMerge("whitespace-nowrap px-4", col.width)}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {col.render(item)}
+                      </TableCell>
+                    ))}
 
                   {showActionsColumn && (
                     <TableCell

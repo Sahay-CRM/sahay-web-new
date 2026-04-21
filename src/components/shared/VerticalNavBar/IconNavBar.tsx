@@ -163,7 +163,7 @@ const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
   });
 
   return (
-    <div className="h-screen text-primary w-[4rem] p-1 z-40 flex flex-col relative">
+    <div className="h-full text-primary w-[4rem] p-1 z-40 flex flex-col relative">
       {/* Top Company Logo with Tooltip */}
 
       <Avatar className="mt-2 rounded-full w-[3.4375rem] h-[3.4375rem]">

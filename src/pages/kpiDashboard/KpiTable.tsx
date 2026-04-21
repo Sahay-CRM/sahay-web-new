@@ -29,6 +29,7 @@ import {
   ChartSpline,
   Search,
   X,
+  Calendar,
 } from "lucide-react";
 import {
   DndContext,
@@ -71,6 +72,8 @@ import SearchInput from "@/components/shared/SearchInput";
 import MultiIconSelect from "@/components/shared/Form/FormSelect/MultiIconSelect";
 // import KpiDetailsSheet from "./KpiDetailsSheet";
 import GraphModal from "./GraphModal/graphModal";
+import useGetDepartmentDropdown from "@/features/api/designation/useGetDepartmentDropdown";
+import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 
 function formatToThreeDecimals(value: string | number | null | undefined) {
   if (value === null || value === undefined || value === "") return "";
@@ -420,6 +423,7 @@ export default function UpdatedKpiTable() {
   const urlSelectedPeriod = searchParams.get("selectedType");
   const [selectedPeriod, setSelectedPeriod] = useState(urlSelectedPeriod || "");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isDateOpen, setIsDateOpen] = useState(false);
   useEffect(() => {
     if (selectedPeriod === "DAILY") {
       setIsDataFilter("default");
@@ -429,6 +433,9 @@ export default function UpdatedKpiTable() {
   //   key: "sequence",
   //   direction: "asc",
   // });
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+
   const finalFilterValue =
     selectedPeriod === "DAILY" ? "default" : isDataFilter;
   const { data: kpiStructure, isLoading: isKpiStructureLoading } =
@@ -437,6 +444,8 @@ export default function UpdatedKpiTable() {
         sortBy: "sequence",
         sortOrder: "asc",
         filter: finalFilterValue,
+        employeeId: selectedEmployees,
+        departmentId: selectedDepartments,
       },
     });
 
@@ -453,8 +462,15 @@ export default function UpdatedKpiTable() {
     new Map(employeeOptions.map((item) => [item.value, item])).values(),
   );
 
-  // const [selectOpen, setSelectOpen] = useState(false);
-  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const { data: departmentData } = useGetDepartmentDropdown({
+    filter: {},
+  });
+
+  const departmentOptions =
+    departmentData?.data?.map((item) => ({
+      value: item.departmentId ?? "",
+      label: item.departmentName ?? "",
+    })) || [];
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showWarning, setShowWarning] = useState(false);
@@ -466,10 +482,11 @@ export default function UpdatedKpiTable() {
         !searchContainerRef.current.contains(event.target as Node)
       ) {
         setIsSearchOpen(false);
+        setIsDateOpen(false);
       }
     }
 
-    if (isSearchOpen) {
+    if (isSearchOpen || isDateOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     } else {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -478,7 +495,7 @@ export default function UpdatedKpiTable() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isSearchOpen]);
+  }, [isSearchOpen, isDateOpen]);
 
   const [pendingPeriod, setPendingPeriod] = useState<string | null>(null);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(
@@ -819,9 +836,12 @@ export default function UpdatedKpiTable() {
     selectedPeriod,
     selectedDate,
     isDataFilter: finalFilterValue,
+    selectedEmployees,
+    selectedDepartments,
   });
   const hasNoKpis = useMemo(() => {
-    return !kpiStructure?.totalCount || kpiStructure.totalCount === 0;
+    if (!kpiStructure?.data) return true;
+    return kpiStructure.data.every((freq) => (freq.count ?? 0) === 0);
   }, [kpiStructure]);
 
   const filteredData = useMemo(() => {
@@ -843,12 +863,6 @@ export default function UpdatedKpiTable() {
     if (!filteredData.length || !filteredData[0].kpis) return [];
 
     const search = String(searchTerm.search ?? "").toLowerCase();
-
-    const selectedList = Array.isArray(selectedEmployees)
-      ? selectedEmployees
-      : selectedEmployees
-        ? [selectedEmployees]
-        : [];
 
     const groupsMap = new Map<
       string,
@@ -885,11 +899,7 @@ export default function UpdatedKpiTable() {
           tag.includes(search) ||
           name.includes(search);
 
-        const matchesEmployee =
-          selectedList.length === 0 ||
-          selectedList.includes(String(kpi.employeeId));
-
-        if (matchesSearch && matchesEmployee) {
+        if (matchesSearch) {
           groupsMap.get(groupId)!.kpis.push({ kpi });
         }
       });
@@ -898,7 +908,7 @@ export default function UpdatedKpiTable() {
     return Array.from(groupsMap.values()).filter(
       (group) => group.kpis.length > 0,
     );
-  }, [filteredData, searchTerm, selectedEmployees]);
+  }, [filteredData, searchTerm]);
 
   useEffect(() => {
     const syncScroll = (e: Event) => {
@@ -1302,39 +1312,58 @@ export default function UpdatedKpiTable() {
               </Button>
             )}
 
+            <div
+              className={cn(
+                "flex items-center gap-2",
+                isSearchOpen || isDateOpen
+                  ? "hidden min-[1200px]:flex"
+                  : "flex",
+              )}
+            >
+              <DropdownSearchMenu
+                label="Department Selection"
+                options={departmentOptions}
+                selected={selectedDepartments}
+                onChange={(selected) => setSelectedDepartments(selected)}
+                multiSelect
+              />
+              <DropdownSearchMenu
+                label="User Selection"
+                options={uniqueEmployeeOptions}
+                selected={selectedEmployees}
+                onChange={(selected) => setSelectedEmployees(selected)}
+                multiSelect
+              />
+            </div>
+
             {urlSelectedPeriod !== "DAILY" && (
-              <div className={cn(isSearchOpen ? "hidden" : "block")}>
+              <div
+                className={cn(
+                  isSearchOpen || isDateOpen
+                    ? "hidden min-[1200px]:block"
+                    : "block",
+                )}
+              >
                 <FormSelect
                   value={isDataFilter}
                   options={dataFilterOption}
                   onChange={(ele) => {
                     setIsDataFilter(ele as string);
                   }}
-                  className="h-9 w-24 min-[1200px]:w-32"
+                  className="w-24 min-[1200px]:w-32"
                 />
               </div>
             )}
 
             <div className="flex items-center gap-2" ref={searchContainerRef}>
-              {/* Desktop Search */}
-              <div className="hidden min-[1200px]:block">
-                <SearchInput
-                  placeholder="Search..."
-                  searchValue={searchTerm?.search || ""}
-                  setPaginationFilter={setSearchTerm}
-                  className="w-64"
-                />
-              </div>
-
-              {/* Mobile Search */}
-              <div className="min-[1200px]:hidden flex items-center">
+              <div className="flex items-center">
                 {isSearchOpen ? (
                   <div className="flex items-center gap-2 bg-white animate-in slide-in-from-right-2 duration-200">
                     <SearchInput
                       placeholder="Search..."
                       searchValue={searchTerm?.search || ""}
                       setPaginationFilter={setSearchTerm}
-                      className="w-40"
+                      className="w-40 min-[1200px]:w-64"
                     />
                     <Button
                       variant="ghost"
@@ -1346,55 +1375,89 @@ export default function UpdatedKpiTable() {
                     </Button>
                   </div>
                 ) : (
+                  <div
+                    className={cn(
+                      "flex items-center gap-2",
+                      isDateOpen ? "hidden min-[1200px]:flex" : "flex",
+                    )}
+                  >
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="py-5 px-5 -mt-1 shrink-0"
+                      onClick={() => {
+                        setIsSearchOpen(true);
+                        setIsDateOpen(false);
+                      }}
+                    >
+                      <Search className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {isDateOpen ? (
+                  <div className="flex items-center gap-2 bg-white animate-in slide-in-from-right-2 duration-200">
+                    <FormDatePicker
+                      value={selectedDate}
+                      onSubmit={(date) => {
+                        setSelectedDate(date ?? null);
+                      }}
+                      className="h-9 w-[200px]"
+                      placeholder="Date"
+                      periodType={
+                        selectedPeriod as
+                          | "DAILY"
+                          | "WEEKLY"
+                          | "MONTHLY"
+                          | "QUARTERLY"
+                          | "HALFYEARLY"
+                          | "YEARLY"
+                      }
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 shrink-0"
+                      onClick={() => setIsDateOpen(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div
+                    className={cn(
+                      "flex items-center gap-2",
+                      isSearchOpen ? "hidden min-[1200px]:flex" : "flex",
+                    )}
+                  >
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="py-5 px-5 -mt-1 shrink-0"
+                      onClick={() => {
+                        setIsDateOpen(true);
+                        setIsSearchOpen(false);
+                      }}
+                    >
+                      <Calendar className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+
+                {selectedDate && !isDateOpen && (
                   <Button
+                    onClick={() => setSelectedDate(null)}
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 shrink-0"
-                    onClick={() => setIsSearchOpen(true)}
+                    className="py-5 px-5 -mt-1"
+                    title="Reset Date"
                   >
-                    <Search className="h-4 w-4" />
+                    <RefreshCcw className="h-4 w-4" />
                   </Button>
                 )}
               </div>
-            </div>
-
-            <div
-              className={cn(
-                "items-center gap-2",
-                isSearchOpen ? "hidden min-[1200px]:flex" : "flex",
-              )}
-            >
-              <FormDatePicker
-                value={selectedDate}
-                onSubmit={(date) => {
-                  setSelectedDate(date ?? null);
-                }}
-                className={cn(
-                  "h-9",
-                  "min-[1200px]:w-[200px] w-9 p-0 min-[1200px]:p-3 [&>span]:hidden min-[1200px]:[&>span]:block [&>svg]:mr-0 min-[1200px]:[&>svg]:mr-2 justify-center min-[1200px]:justify-start",
-                )}
-                placeholder="Date"
-                periodType={
-                  selectedPeriod as
-                    | "DAILY"
-                    | "WEEKLY"
-                    | "MONTHLY"
-                    | "QUARTERLY"
-                    | "HALFYEARLY"
-                    | "YEARLY"
-                }
-              />
-              {selectedDate && (
-                <Button
-                  onClick={() => setSelectedDate(null)}
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  title="Reset Date"
-                >
-                  <RefreshCcw className="h-4 w-4" />
-                </Button>
-              )}
             </div>
           </div>
         </div>

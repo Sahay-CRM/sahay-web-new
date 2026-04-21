@@ -2,6 +2,8 @@ import {
   useDeleteDatapoint,
   useGetCompanyDatapoint,
 } from "@/features/api/companyDatapoint";
+import { useGetEmployeeDd } from "@/features/api/companyEmployee";
+import useGetDepartmentDropdown from "@/features/api/designation/useGetDepartmentDropdown";
 import { updateKPISoftDeleteMutation } from "@/features/api/KpiList";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { AxiosError } from "axios";
@@ -17,11 +19,19 @@ export default function useAdminUser() {
   const [isImport, setIsImport] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isEditKpiId, setIsEditKpiId] = useState<string>("");
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
 
   const permission = useSelector(getUserPermission).DATAPOINT_LIST;
 
   const { mutate: deleteDatapoint } = useDeleteDatapoint();
   const { mutate: softDeleteRestore } = updateKPISoftDeleteMutation();
+  const { data: employeeData } = useGetEmployeeDd({
+    filter: {},
+  });
+  const { data: departmentData } = useGetDepartmentDropdown({
+    filter: {},
+  });
 
   const handleSoftDeleteRestore = (dataPointId: string, isDeleted: boolean) => {
     softDeleteRestore({ dataPointId, isDeleted });
@@ -40,7 +50,11 @@ export default function useAdminUser() {
   });
 
   const { data: datpointData, isLoading } = useGetCompanyDatapoint({
-    filter: paginationFilter,
+    filter: {
+      ...paginationFilter,
+      employeeId: selectedEmployees,
+      departmentId: selectedDepartments,
+    },
   });
 
   const handleAdd = () => {
@@ -169,6 +183,28 @@ export default function useAdminUser() {
     setIsViewModalOpen(true);
   };
 
+  const departmentOptions =
+    departmentData?.data?.map((item) => ({
+      value: item.departmentId ?? "",
+      label: item.departmentName ?? "",
+    })) || [];
+
+  const employeeOptions =
+    employeeData?.data?.map((item) => ({
+      value: item.employeeId ?? "",
+      label: item.employeeName ?? "",
+    })) || [];
+
+  const handleEmployeeFilterChange = (selected: string[]) => {
+    setSelectedEmployees(selected);
+    setPaginationFilter((prev) => ({ ...prev, currentPage: 1 }));
+  };
+
+  const handleDepartmentFilterChange = (selected: string[]) => {
+    setSelectedDepartments(selected);
+    setPaginationFilter((prev) => ({ ...prev, currentPage: 1 }));
+  };
+
   return {
     isLoading,
     datpointData,
@@ -178,7 +214,7 @@ export default function useAdminUser() {
     onDelete,
     modalData,
     conformDelete,
-    onForceSubmit, // added
+    onForceSubmit,
     handleAdd,
     paginationFilter,
     isUserModalOpen,
@@ -199,5 +235,11 @@ export default function useAdminUser() {
     setIsEditKpiId,
     setIsEditModalOpen,
     handleSoftDeleteRestore,
+    departmentOptions,
+    employeeOptions,
+    selectedEmployees,
+    selectedDepartments,
+    handleEmployeeFilterChange,
+    handleDepartmentFilterChange,
   };
 }
