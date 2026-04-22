@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Switch } from "@/components/ui/switch";
 import useCompanyTaskList from "./useDatapointList";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
@@ -111,6 +112,7 @@ export default function CompanyTaskList() {
     selectedDepartments,
     handleEmployeeFilterChange,
     handleDepartmentFilterChange,
+    handleToggleFocus,
   } = useCompanyTaskList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -317,6 +319,25 @@ export default function CompanyTaskList() {
             onRowClick={(row: KPIFormData) => {
               handleRowsModalOpen(row);
             }}
+            customActions={(row: KPIFormData) => (
+              <div className="flex items-center gap-2 mr-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center">
+                        <Switch
+                          checked={row.isFocus || false}
+                          onCheckedChange={(checked) => {
+                            handleToggleFocus(row, checked);
+                          }}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>Focus KPI</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            )}
             isLoading={isLoading}
             isActionButton={() => true}
             paginationDetails={mapPaginationDetails(datpointData)}
@@ -339,7 +360,7 @@ export default function CompanyTaskList() {
               "frequencyType",
               "coreParameterName",
             ]}
-            actionColumnWidth="w-[150px] text-center overflow-hidden "
+            actionColumnWidth="w-[220px] text-center overflow-hidden "
             extraColumns={[
               {
                 label: "Added",

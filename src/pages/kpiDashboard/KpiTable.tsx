@@ -72,7 +72,6 @@ import SearchInput from "@/components/shared/SearchInput";
 import MultiIconSelect from "@/components/shared/Form/FormSelect/MultiIconSelect";
 // import KpiDetailsSheet from "./KpiDetailsSheet";
 import GraphModal from "./GraphModal/graphModal";
-import useGetDepartmentDropdown from "@/features/api/designation/useGetDepartmentDropdown";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 
 function formatToThreeDecimals(value: string | number | null | undefined) {
@@ -408,10 +407,6 @@ function SortableCoreParameterGroup({
   );
 }
 
-// interface SortConfig {
-//   key: string;
-//   direction: "asc" | "desc";
-// }
 export default function UpdatedKpiTable() {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -424,6 +419,7 @@ export default function UpdatedKpiTable() {
   const [selectedPeriod, setSelectedPeriod] = useState(urlSelectedPeriod || "");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isDateOpen, setIsDateOpen] = useState(false);
+  const [focusFilter, setFocusFilter] = useState("focus");
   useEffect(() => {
     if (selectedPeriod === "DAILY") {
       setIsDataFilter("default");
@@ -438,39 +434,48 @@ export default function UpdatedKpiTable() {
 
   const finalFilterValue =
     selectedPeriod === "DAILY" ? "default" : isDataFilter;
-  const { data: kpiStructure, isLoading: isKpiStructureLoading } =
+
+  const kpiFilter = useMemo(
+    () => ({
+      sortBy: "sequence",
+      sortOrder: "asc",
+      filter: finalFilterValue,
+    }),
+    [finalFilterValue],
+  );
+
+  const {
+    data: kpiStructure,
+    isLoading: isKpiStructureLoading,
+  }: { data?: BaseResponse<FrequencyData>; isLoading: boolean } =
     useGetKpiDashboardStructure({
-      filter: {
-        sortBy: "sequence",
-        sortOrder: "asc",
-        filter: finalFilterValue,
-        employeeId: selectedEmployees,
-        departmentId: selectedDepartments,
-      },
+      filter: kpiFilter,
     });
 
-  const employeeOptions =
-    kpiStructure?.data
-      ?.flatMap((item) => item.kpis?.flatMap((k) => k.kpis ?? [])) // flatten nested levels
-      ?.filter((k) => k.employeeId != null) // remove undefined/null IDs
-      ?.map((k) => ({
-        label: k.employeeName,
-        value: k.employeeId as string, // now safe
-      })) ?? [];
+  const allKpis =
+    kpiStructure?.data?.flatMap((item) =>
+      item.kpis?.flatMap((k) => k.kpis ?? []),
+    ) ?? [];
+
+  const employeeOptions = allKpis
+    .filter((k) => k.employeeId != null)
+    .map((k) => ({
+      label: k.employeeName,
+      value: k.employeeId as string,
+    }));
 
   const uniqueEmployeeOptions = Array.from(
     new Map(employeeOptions.map((item) => [item.value, item])).values(),
   );
 
-  const { data: departmentData } = useGetDepartmentDropdown({
-    filter: {},
-  });
+  const departmentOptionsList = allKpis.map((k) => ({
+    label: k.departmentName || "Unknown",
+    value: k.departmentId || "unknown",
+  }));
 
-  const departmentOptions =
-    departmentData?.data?.map((item) => ({
-      value: item.departmentId ?? "",
-      label: item.departmentName ?? "",
-    })) || [];
+  const departmentOptions = Array.from(
+    new Map(departmentOptionsList.map((item) => [item.value, item])).values(),
+  );
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showWarning, setShowWarning] = useState(false);
@@ -827,7 +832,12 @@ export default function UpdatedKpiTable() {
   }, [selectedPeriod, searchParams, setSearchParams]);
 
   useEffect(() => {
-    if (!selectedPeriod && kpiStructure?.data && kpiStructure.data.length > 0) {
+    if (
+      !selectedPeriod &&
+      kpiStructure?.data &&
+      Array.isArray(kpiStructure.data) &&
+      kpiStructure.data.length > 0
+    ) {
       setSelectedPeriod(kpiStructure.data[0].frequencyType);
     }
   }, [kpiStructure, selectedPeriod]);
@@ -836,11 +846,9 @@ export default function UpdatedKpiTable() {
     selectedPeriod,
     selectedDate,
     isDataFilter: finalFilterValue,
-    selectedEmployees,
-    selectedDepartments,
   });
   const hasNoKpis = useMemo(() => {
-    if (!kpiStructure?.data) return true;
+    if (!kpiStructure?.data || !Array.isArray(kpiStructure.data)) return true;
     return kpiStructure.data.every((freq) => (freq.count ?? 0) === 0);
   }, [kpiStructure]);
 
@@ -864,51 +872,100 @@ export default function UpdatedKpiTable() {
 
     const search = String(searchTerm.search ?? "").toLowerCase();
 
-    const groupsMap = new Map<
-      string,
-      {
-        coreParameter: {
-          coreParameterId: string;
-          coreParameterName: string;
-        };
-        kpis: { kpi: Kpi }[];
-      }
-    >();
-
-    (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
-      const groupId = coreParam.coreParameterId ?? "UNGROUPED";
-      const groupName = coreParam.coreParameterName ?? "";
-
-      if (!groupsMap.has(groupId)) {
-        groupsMap.set(groupId, {
+    const getSectionGroups = (isFocus: boolean) => {
+      const groupsMap = new Map<
+        string,
+        {
           coreParameter: {
-            coreParameterId: groupId,
-            coreParameterName: groupName,
-          },
-          kpis: [],
+            coreParameterId: string;
+            coreParameterName: string;
+          };
+          kpis: { kpi: Kpi }[];
+        }
+      >();
+
+      (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
+        const groupId = coreParam.coreParameterId ?? "UNGROUPED";
+        const groupName = coreParam.coreParameterName ?? "";
+
+        coreParam.kpis?.forEach((kpi: Kpi) => {
+          if (!!kpi.isFocus !== isFocus) return;
+
+          const coreName = groupName.toLowerCase();
+          const tag = kpi.tag?.toLowerCase() || "";
+          const name = kpi.kpiName?.toLowerCase() || "";
+
+          const matchesSearch =
+            coreName.includes(search) ||
+            tag.includes(search) ||
+            name.includes(search);
+
+          // Filter by employee
+          const matchesEmployee =
+            selectedEmployees.length === 0 ||
+            (kpi.employeeId && selectedEmployees.includes(kpi.employeeId));
+
+          // Filter by department
+          const matchesDepartment =
+            selectedDepartments.length === 0 ||
+            selectedDepartments.includes(kpi.departmentId || "unknown");
+
+          if (matchesSearch && matchesEmployee && matchesDepartment) {
+            if (!groupsMap.has(groupId)) {
+              groupsMap.set(groupId, {
+                coreParameter: {
+                  coreParameterId: groupId,
+                  coreParameterName: groupName,
+                },
+                kpis: [],
+              });
+            }
+            groupsMap.get(groupId)!.kpis.push({ kpi });
+          }
         });
-      }
+      });
 
-      coreParam.kpis?.forEach((kpi: Kpi) => {
-        const coreName = groupName.toLowerCase();
-        const tag = kpi.tag?.toLowerCase() || "";
-        const name = kpi.kpiName?.toLowerCase() || "";
+      return Array.from(groupsMap.values()).filter(
+        (group) => group.kpis.length > 0,
+      );
+    };
 
-        const matchesSearch =
-          coreName.includes(search) ||
-          tag.includes(search) ||
-          name.includes(search);
-
-        if (matchesSearch) {
-          groupsMap.get(groupId)!.kpis.push({ kpi });
+    if (focusFilter === "focus") {
+      const focusGroups = getSectionGroups(true);
+      return focusGroups.map((g) => ({ ...g, sectionPrefix: "focus" }));
+    } else if (focusFilter === "other") {
+      const otherGroups = getSectionGroups(false);
+      return otherGroups.map((g) => ({ ...g, sectionPrefix: "other" }));
+    } else {
+      const allGroups = getSectionGroups(true).concat(getSectionGroups(false));
+      const mergedGroupsMap = new Map<
+        string,
+        {
+          coreParameter: { coreParameterId: string; coreParameterName: string };
+          kpis: { kpi: Kpi }[];
+        }
+      >();
+      allGroups.forEach((g) => {
+        const id = g.coreParameter.coreParameterId;
+        const existing = mergedGroupsMap.get(id);
+        if (!existing) {
+          mergedGroupsMap.set(id, { ...g, kpis: [...g.kpis] });
+        } else {
+          existing.kpis.push(...g.kpis);
         }
       });
-    });
-
-    return Array.from(groupsMap.values()).filter(
-      (group) => group.kpis.length > 0,
-    );
-  }, [filteredData, searchTerm]);
+      return Array.from(mergedGroupsMap.values()).map((g) => ({
+        ...g,
+        sectionPrefix: "all",
+      }));
+    }
+  }, [
+    filteredData,
+    searchTerm,
+    focusFilter,
+    selectedEmployees,
+    selectedDepartments,
+  ]);
 
   useEffect(() => {
     const syncScroll = (e: Event) => {
@@ -1327,6 +1384,18 @@ export default function UpdatedKpiTable() {
                 onChange={(selected) => setSelectedDepartments(selected)}
                 multiSelect
               />
+              <div className="min-w-[100px]">
+                <FormSelect
+                  value={focusFilter}
+                  options={[
+                    { label: "All", value: "all" },
+                    { label: "Focus", value: "focus" },
+                    { label: "Other", value: "other" },
+                  ]}
+                  onChange={(val) => setFocusFilter(val as string)}
+                  className="w-full"
+                />
+              </div>
               <DropdownSearchMenu
                 label="User Selection"
                 options={uniqueEmployeeOptions}
@@ -1546,46 +1615,52 @@ export default function UpdatedKpiTable() {
                 </thead>
                 <SortableContext
                   items={[
-                    ...groupedKpiRows.map(
-                      (group) => `group:${group.coreParameter.coreParameterId}`,
-                    ),
-                    ...groupedKpiRows.flatMap((group) =>
-                      group.kpis.map(
-                        ({ kpi }) =>
-                          `kpi:${kpi.kpiId}:${group.coreParameter.coreParameterId}`,
-                      ),
-                    ),
+                    ...groupedKpiRows.flatMap((group) => {
+                      const prefix = group.sectionPrefix;
+                      return [
+                        `group:${prefix}:${group.coreParameter.coreParameterId}`,
+                        ...group.kpis.map(
+                          ({ kpi }: { kpi: Kpi }) =>
+                            `kpi:${prefix}:${kpi.kpiId}:${group.coreParameter.coreParameterId}`,
+                        ),
+                      ];
+                    }),
                   ]}
                   strategy={verticalListSortingStrategy}
                 >
                   <tbody>
-                    {groupedKpiRows.map((group) => (
-                      <React.Fragment key={group.coreParameter.coreParameterId}>
-                        <SortableCoreParameterGroup
-                          id={`group:${group.coreParameter.coreParameterId}`}
-                          isDragging={isDragging}
-                          disabled={!canDrag}
-                          showDragHandle={!!canDrag}
+                    {groupedKpiRows.map((group) => {
+                      const prefix = group.sectionPrefix;
+                      return (
+                        <React.Fragment
+                          key={`${prefix}:${group.coreParameter.coreParameterId}`}
                         >
-                          {group.coreParameter.coreParameterName}
-                        </SortableCoreParameterGroup>
-                        {group.kpis.map(({ kpi }) => (
-                          <SortableKpiRow
-                            key={kpi.kpiId}
-                            id={`kpi:${kpi.kpiId}:${group.coreParameter.coreParameterId}`}
-                            kpi={kpi}
+                          <SortableCoreParameterGroup
+                            id={`group:${prefix}:${group.coreParameter.coreParameterId}`}
                             isDragging={isDragging}
                             disabled={!canDrag}
                             showDragHandle={!!canDrag}
-                            getFormattedValue={getFormattedValue}
-                            selectedPeriod={selectedPeriod}
-                            // onRowClick={handleRowClick}
-                            graphClick={(id: string) => handleGraphClick(id)}
-                            isMurgeKpi={kpi?.isMurgeKpi}
-                          />
-                        ))}
-                      </React.Fragment>
-                    ))}
+                          >
+                            {group.coreParameter.coreParameterName}
+                          </SortableCoreParameterGroup>
+                          {group.kpis.map(({ kpi }) => (
+                            <SortableKpiRow
+                              key={kpi.kpiId}
+                              id={`kpi:${prefix}:${kpi.kpiId}:${group.coreParameter.coreParameterId}`}
+                              kpi={kpi}
+                              isDragging={isDragging}
+                              disabled={!canDrag}
+                              showDragHandle={!!canDrag}
+                              getFormattedValue={getFormattedValue}
+                              selectedPeriod={selectedPeriod}
+                              // onRowClick={handleRowClick}
+                              graphClick={(id: string) => handleGraphClick(id)}
+                              isMurgeKpi={kpi?.isMurgeKpi}
+                            />
+                          ))}
+                        </React.Fragment>
+                      );
+                    })}
                     {/* <KpiDetailsSheet
                       isOpen={isSheetOpen}
                       onOpenChange={setIsSheetOpen}
@@ -1635,66 +1710,284 @@ export default function UpdatedKpiTable() {
                     </tr>
                   </thead>
                   <tbody>
-                    {groupedKpiRows.map((group, idx) => (
-                      <React.Fragment
-                        key={(group.coreParameter.coreParameterId, idx)}
-                      >
-                        <tr className="sticky h-[39px] top-[50px] bg-blue-50 z-10">
-                          <td
-                            colSpan={headers.length}
-                            className="p-2  border text-black font-bold"
-                          >
-                            {/* {group.coreParameter.coreParameterName} */}
-                          </td>
-                        </tr>
-                        {group.kpis.map(({ kpi }) => {
-                          let dataRow: KpiDataCell[] | undefined = undefined;
-                          if (isKpiDataCellArrayArray(kpiData?.data)) {
-                            dataRow = (kpiData.data as KpiDataCell[][]).find(
-                              (cells) =>
-                                Array.isArray(cells) &&
-                                cells.length > 0 &&
-                                cells[0].kpiId === kpi.kpiId,
-                            );
-                          }
-                          return (
-                            <tr
-                              key={kpi.kpiId}
-                              className={`h-[50px] ${kpi.isMurgeKpi ? "bg-gray-100/80" : ""}`}
+                    {groupedKpiRows.map((group, idx) => {
+                      const prefix = group.sectionPrefix;
+                      return (
+                        <React.Fragment
+                          key={`${prefix}:${group.coreParameter.coreParameterId}:${idx}`}
+                        >
+                          <tr className="sticky h-[39px] top-[50px] bg-blue-50 z-10">
+                            <td
+                              colSpan={headers.length}
+                              className="p-2 border text-black font-bold"
                             >
-                              {headers.map((_, colIdx) => {
-                                const cell = dataRow?.[colIdx];
-                                const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
-                                const validationType = cell?.validationType;
-                                const value1 = cell?.value1;
-                                const value2 = cell?.value2;
-                                const inputVal =
-                                  inputValues[key] ??
-                                  cell?.data?.toString() ??
-                                  "";
-                                const inputnote =
-                                  tempValues[key]?.comment ?? cell?.note ?? "";
-                                const noteId = cell?.noteId ?? "";
+                              {group.coreParameter.coreParameterName}
+                            </td>
+                          </tr>
+                          {group.kpis.map(({ kpi }) => {
+                            let dataRow: KpiDataCell[] | undefined = undefined;
+                            if (isKpiDataCellArrayArray(kpiData?.data)) {
+                              dataRow = (kpiData.data as KpiDataCell[][]).find(
+                                (cells) =>
+                                  Array.isArray(cells) &&
+                                  cells.length > 0 &&
+                                  cells[0].kpiId === kpi.kpiId,
+                              );
+                            }
+                            return (
+                              <tr
+                                key={kpi.kpiId}
+                                className={`h-[50px] ${kpi.isMurgeKpi ? "bg-gray-100/80" : ""}`}
+                              >
+                                {headers.map((_, colIdx) => {
+                                  const cell = dataRow?.[colIdx];
+                                  const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
+                                  const validationType = cell?.validationType;
+                                  const value1 = cell?.value1;
+                                  const value2 = cell?.value2;
+                                  const inputVal =
+                                    inputValues[key] ??
+                                    cell?.data?.toString() ??
+                                    "";
+                                  const inputnote =
+                                    tempValues[key]?.comment ??
+                                    cell?.note ??
+                                    "";
+                                  const noteId = cell?.noteId ?? "";
 
-                                const isVisualized = kpi?.isVisualized;
-                                const canAdd = permission?.Add && !cell?.data;
-                                const canEdit =
-                                  permission?.Edit && !!cell?.data;
-                                const canInput =
-                                  !isVisualized && (canAdd || canEdit);
+                                  const isVisualized = kpi?.isVisualized;
+                                  const canAdd = permission?.Add && !cell?.data;
+                                  const canEdit =
+                                    permission?.Edit && !!cell?.data;
+                                  const canInput =
+                                    !isVisualized && (canAdd || canEdit);
 
-                                if (validationType == "YES_NO") {
-                                  const selectOptions = [
-                                    { value: "1", label: "Yes" },
-                                    { value: "2", label: "No" },
-                                  ];
-                                  const isValid = inputVal === String(value1);
+                                  if (validationType == "YES_NO") {
+                                    const selectOptions = [
+                                      { value: "1", label: "Yes" },
+                                      { value: "2", label: "No" },
+                                    ];
+                                    const isValid = inputVal === String(value1);
 
+                                    return (
+                                      <td
+                                        key={colIdx}
+                                        className={clsx(
+                                          "p-2 border text-center w-[80px] h-[42px]",
+                                          headers[colIdx].isSunday &&
+                                            headers[colIdx].isHoliday &&
+                                            headers[colIdx].isSkipDay
+                                            ? "bg-blue-100"
+                                            : headers[colIdx].isSunday ||
+                                                headers[colIdx].isSkipDay
+                                              ? "bg-gray-100"
+                                              : headers[colIdx].isHoliday
+                                                ? "bg-blue-100"
+                                                : "",
+                                        )}
+                                      >
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <div
+                                                className={twMerge(
+                                                  "relative border  rounded-sm text-sm w-[80px] h-[42px] bg-white group",
+                                                  cell?.data !== "-" &&
+                                                    inputVal !== "" &&
+                                                    selectedPeriod !==
+                                                      "YEARLY" &&
+                                                    (isValid
+                                                      ? "bg-green-100 "
+                                                      : "bg-red-100 "),
+                                                  cell?.data !== "-" &&
+                                                    isVisualized &&
+                                                    cell?.validationPercentage !=
+                                                      null &&
+                                                    cell?.data !== "-" &&
+                                                    isVisualized &&
+                                                    cell?.validationPercentage !=
+                                                      null &&
+                                                    (cell.validationPercentage >=
+                                                    100
+                                                      ? "bg-green-100"
+                                                      : validationKey > 0 &&
+                                                          cell.validationPercentage <
+                                                            validationKey
+                                                        ? "bg-red-100"
+                                                        : validationKey > 0 &&
+                                                            cell.validationPercentage >=
+                                                              validationKey &&
+                                                            cell.validationPercentage <
+                                                              100
+                                                          ? "bg-yellow-200"
+                                                          : "bg-red-100"),
+                                                  isVisualized &&
+                                                    "opacity-60 cursor-not-allowed",
+                                                  cell?.isSkipDay &&
+                                                    "cursor-not-allowed",
+                                                )}
+                                              >
+                                                {!isVisualized ? (
+                                                  <FormSelect
+                                                    value={inputVal}
+                                                    onChange={
+                                                      canInput
+                                                        ? (val) => {
+                                                            setInputValues(
+                                                              (prev) => ({
+                                                                ...prev,
+                                                                [key]:
+                                                                  Array.isArray(
+                                                                    val,
+                                                                  )
+                                                                    ? val.join(
+                                                                        ", ",
+                                                                      )
+                                                                    : String(
+                                                                        val,
+                                                                      ),
+                                                              }),
+                                                            );
+                                                            setTempValues(
+                                                              (prev) => ({
+                                                                ...prev,
+                                                                [key]: {
+                                                                  value:
+                                                                    Array.isArray(
+                                                                      val,
+                                                                    )
+                                                                      ? val.join(
+                                                                          ", ",
+                                                                        )
+                                                                      : String(
+                                                                          val,
+                                                                        ),
+                                                                  comment:
+                                                                    prev[key]
+                                                                      ?.comment ??
+                                                                    cell?.note ??
+                                                                    "",
+                                                                },
+                                                              }),
+                                                            );
+                                                          }
+                                                        : () => {}
+                                                    }
+                                                    options={selectOptions}
+                                                    placeholder="Select"
+                                                    disabled={!canInput}
+                                                    triggerClassName="text-sm px-1 text-center justify-center border-none"
+                                                  />
+                                                ) : (
+                                                  <div className="flex flex-col items-center  justify-center h-full w-full cursor-not-allowed">
+                                                    <span className="text-black">
+                                                      {formatCompactNumber(
+                                                        cell?.data,
+                                                      )}
+                                                    </span>
+                                                  </div>
+                                                )}
+                                                <div
+                                                  className={clsx(
+                                                    "transition-opacity",
+                                                    inputnote &&
+                                                      inputnote.trim() !== "" &&
+                                                      inputnote !== "0"
+                                                      ? "opacity-100"
+                                                      : "opacity-0 group-hover:opacity-100",
+                                                  )}
+                                                >
+                                                  <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                      {inputnote &&
+                                                      inputnote.trim() !== "" &&
+                                                      inputnote !== "0" ? (
+                                                        <span
+                                                          className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
+                                                          style={{
+                                                            background:
+                                                              inputVal !== "" &&
+                                                              validationType &&
+                                                              selectedPeriod !==
+                                                                "YEARLY"
+                                                                ? isValidInput(
+                                                                    validationType,
+                                                                    inputVal,
+                                                                    value1 ??
+                                                                      null,
+                                                                    value2 ??
+                                                                      null,
+                                                                  )
+                                                                  ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)"
+                                                                  : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)"
+                                                                : "linear-gradient(to bottom left, #2e3090 50%, white 55%)",
+                                                            borderBottomLeftRadius:
+                                                              "5px",
+                                                          }}
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setCurrentCellKey(
+                                                              key,
+                                                            );
+                                                            setCommentModalInput(
+                                                              {
+                                                                note: inputnote,
+                                                                noteId,
+                                                              },
+                                                            );
+                                                            setCommentModalOpen(
+                                                              true,
+                                                            );
+                                                          }}
+                                                        ></span>
+                                                      ) : (
+                                                        <span
+                                                          className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setCurrentCellKey(
+                                                              key,
+                                                            );
+                                                            setCommentModalInput(
+                                                              {
+                                                                note: "",
+                                                                noteId: "",
+                                                              },
+                                                            );
+
+                                                            setCommentModalOpen(
+                                                              true,
+                                                            );
+                                                          }}
+                                                        >
+                                                          <Plus className="w-3 h-3 text-gray-700" />
+                                                        </span>
+                                                      )}
+                                                    </TooltipTrigger>{" "}
+                                                    <TooltipContent>
+                                                      <span>
+                                                        {inputnote &&
+                                                        inputnote.trim() !==
+                                                          "" &&
+                                                        inputnote !== "0"
+                                                          ? "View note"
+                                                          : "Add note"}
+                                                      </span>
+                                                    </TooltipContent>
+                                                  </Tooltip>
+                                                </div>
+                                              </div>
+                                            </TooltipTrigger>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      </td>
+                                    );
+                                  }
                                   return (
                                     <td
                                       key={colIdx}
                                       className={clsx(
-                                        "p-2 border text-center w-[80px] h-[42px]",
+                                        "p-2 border text-center w-[80px] h-[42px] relative",
                                         headers[colIdx].isSunday &&
                                           headers[colIdx].isHoliday &&
                                           headers[colIdx].isSkipDay
@@ -1710,126 +2003,93 @@ export default function UpdatedKpiTable() {
                                       <TooltipProvider>
                                         <Tooltip>
                                           <TooltipTrigger asChild>
-                                            <div
-                                              className={twMerge(
-                                                "relative border  rounded-sm text-sm w-[80px] h-[42px] bg-white group",
-                                                cell?.data !== "-" &&
-                                                  inputVal !== "" &&
-                                                  selectedPeriod !== "YEARLY" &&
-                                                  (isValid
-                                                    ? "bg-green-100 "
-                                                    : "bg-red-100 "),
-                                                cell?.data !== "-" &&
-                                                  isVisualized &&
-                                                  cell?.validationPercentage !=
-                                                    null &&
+                                            <div className="relative w-full h-full group">
+                                              <input
+                                                type="text"
+                                                inputMode="decimal"
+                                                value={
+                                                  inputFocused[key]
+                                                    ? inputVal
+                                                    : formatCompactNumber(
+                                                        inputVal,
+                                                      )
+                                                }
+                                                onFocus={
+                                                  canInput
+                                                    ? (e) => handleFocus(e, key)
+                                                    : undefined
+                                                }
+                                                onBlur={
+                                                  canInput
+                                                    ? () => handleBlur(key)
+                                                    : undefined
+                                                }
+                                                onChange={
+                                                  canInput
+                                                    ? (e) =>
+                                                        handleChange(e, key)
+                                                    : undefined
+                                                }
+                                                data-cell-key={key}
+                                                onKeyDown={(e) =>
+                                                  handleInputKeyDown(e, key)
+                                                }
+                                                onKeyPress={handleKeyPress}
+                                                onPaste={handlePaste}
+                                                className={twMerge(
+                                                  "kpi-input",
+                                                  "border p-2 rounded-sm text-center text-sm w-full h-[42px] transition-all bg-white",
+                                                  "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+
                                                   cell?.data !== "-" &&
-                                                  isVisualized &&
-                                                  cell?.validationPercentage !=
-                                                    null &&
-                                                  (cell.validationPercentage >=
-                                                  100
-                                                    ? "bg-green-100"
-                                                    : validationKey > 0 &&
-                                                        cell.validationPercentage <
+                                                    inputVal !== "" &&
+                                                    validationType &&
+                                                    selectedPeriod !==
+                                                      "YEARLY" &&
+                                                    getInputValidationClass(
+                                                      validationType,
+                                                      inputVal,
+                                                      value1 ?? null,
+                                                      value2 ?? null,
+                                                    ),
+
+                                                  cell?.data !== "-" &&
+                                                    validationKey &&
+                                                    validationKey !== null &&
+                                                    selectedPeriod !==
+                                                      "YEARLY" &&
+                                                    cell?.validationPercentage !=
+                                                      null &&
+                                                    (() => {
+                                                      const percentage =
+                                                        cell.validationPercentage;
+
+                                                      if (percentage >= 100)
+                                                        return "bg-green-100";
+
+                                                      if (
+                                                        validationKey > 0 &&
+                                                        percentage <
                                                           validationKey
-                                                      ? "bg-red-100"
-                                                      : validationKey > 0 &&
-                                                          cell.validationPercentage >=
-                                                            validationKey &&
-                                                          cell.validationPercentage <
-                                                            100
-                                                        ? "bg-yellow-200"
-                                                        : "bg-red-100"),
-                                                isVisualized &&
-                                                  "opacity-60 cursor-not-allowed",
-                                                cell?.isSkipDay &&
-                                                  "cursor-not-allowed",
-                                              )}
-                                            >
-                                              {!isVisualized ? (
-                                                <FormSelect
-                                                  value={inputVal}
-                                                  onChange={
-                                                    canInput
-                                                      ? (val) => {
-                                                          setInputValues(
-                                                            (prev) => ({
-                                                              ...prev,
-                                                              [key]:
-                                                                Array.isArray(
-                                                                  val,
-                                                                )
-                                                                  ? val.join(
-                                                                      ", ",
-                                                                    )
-                                                                  : String(val),
-                                                            }),
-                                                          );
-                                                          setTempValues(
-                                                            (prev) => ({
-                                                              ...prev,
-                                                              [key]: {
-                                                                value:
-                                                                  Array.isArray(
-                                                                    val,
-                                                                  )
-                                                                    ? val.join(
-                                                                        ", ",
-                                                                      )
-                                                                    : String(
-                                                                        val,
-                                                                      ),
-                                                                comment:
-                                                                  prev[key]
-                                                                    ?.comment ??
-                                                                  cell?.note ??
-                                                                  "",
-                                                              },
-                                                            }),
-                                                          );
-                                                        }
-                                                      : () => {}
-                                                  }
-                                                  options={selectOptions}
-                                                  placeholder="Select"
-                                                  disabled={!canInput}
-                                                  triggerClassName="text-sm px-1 text-center justify-center border-none"
-                                                />
-                                              ) : (
-                                                <div className="flex flex-col items-center  justify-center h-full w-full cursor-not-allowed">
-                                                  <span className="text-black">
-                                                    {/* {inputFocused[key]
-                                                      ? inputVal
-                                                      : selectedPeriod ===
-                                                        "DAILY"
-                                                        ? cell?.data != null &&
-                                                          cell?.data !== ""
-                                                          ? Number(
-                                                            cell.data,
-                                                          ) === 1
-                                                            ? "Yes"
-                                                            : Number(
-                                                              cell.data,
-                                                            ) === 2
-                                                              ? "No"
-                                                              : Number(
-                                                                cell.goalValue,
-                                                              ) > 1
-                                                                ? String(
-                                                                  cell.data,
-                                                                )
-                                                                : "No"
-                                                          : ""
-                                                        : formatCompactNumber(
-                                                          cell?.data,
-                                                        )} */}
-                                                    {formatCompactNumber(
-                                                      cell?.data,
-                                                    )}
-                                                  </span>
-                                                </div>
-                                              )}
+                                                      )
+                                                        return "bg-red-200 border-red-500";
+
+                                                      if (
+                                                        validationKey > 0 &&
+                                                        percentage < 100 &&
+                                                        validationKey
+                                                      )
+                                                        return "bg-yellow-200 border-yellow-300";
+
+                                                      return "bg-green-200 border-green-300";
+                                                    })(),
+
+                                                  isVisualized &&
+                                                    "cursor-not-allowed",
+                                                )}
+                                                disabled={!canInput}
+                                                readOnly={!canInput}
+                                              />
                                               <div
                                                 className={clsx(
                                                   "transition-opacity",
@@ -1840,7 +2100,6 @@ export default function UpdatedKpiTable() {
                                                     : "opacity-0 group-hover:opacity-100",
                                                 )}
                                               >
-                                                {/* {canInput && !isVisualized && ( */}
                                                 <Tooltip>
                                                   <TooltipTrigger asChild>
                                                     {inputnote &&
@@ -1862,8 +2121,8 @@ export default function UpdatedKpiTable() {
                                                                   value2 ??
                                                                     null,
                                                                 )
-                                                                ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)" // valid → greenish
-                                                                : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)" // invalid → reddish
+                                                                ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)"
+                                                                : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)"
                                                               : "linear-gradient(to bottom left, #2e3090 50%, white 55%)",
                                                           borderBottomLeftRadius:
                                                             "5px",
@@ -1903,253 +2162,42 @@ export default function UpdatedKpiTable() {
                                                         <Plus className="w-3 h-3 text-gray-700" />
                                                       </span>
                                                     )}
-                                                  </TooltipTrigger>{" "}
+                                                  </TooltipTrigger>
                                                   <TooltipContent>
                                                     <span>
                                                       {inputnote &&
                                                       inputnote.trim() !== "" &&
                                                       inputnote !== "0"
-                                                        ? "View note"
+                                                        ? `View note`
                                                         : "Add note"}
                                                     </span>
                                                   </TooltipContent>
                                                 </Tooltip>
-                                                {/* )} */}
                                               </div>
                                             </div>
                                           </TooltipTrigger>
+                                          {inputVal !== "" &&
+                                            inputVal !== "0" &&
+                                            !isNaN(Number(inputVal)) && (
+                                              <TooltipContent>
+                                                <span>
+                                                  {parseFloat(inputVal)
+                                                    .toFixed(4)
+                                                    .replace(/\.?0+$/, "")}
+                                                </span>
+                                              </TooltipContent>
+                                            )}
                                         </Tooltip>
                                       </TooltipProvider>
                                     </td>
                                   );
-                                }
-                                return (
-                                  <td
-                                    key={colIdx}
-                                    className={clsx(
-                                      "p-2 border text-center w-[80px] h-[42px] relative",
-                                      headers[colIdx].isSunday &&
-                                        headers[colIdx].isHoliday &&
-                                        headers[colIdx].isSkipDay
-                                        ? "bg-blue-100"
-                                        : headers[colIdx].isSunday ||
-                                            headers[colIdx].isSkipDay
-                                          ? "bg-gray-100"
-                                          : headers[colIdx].isHoliday
-                                            ? "bg-blue-100"
-                                            : "",
-                                      // cell?.isSkipDay && "bg-gray-300"
-                                    )}
-                                  >
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <div className="relative w-full h-full group">
-                                            <input
-                                              type="text"
-                                              inputMode="decimal"
-                                              value={
-                                                inputFocused[key]
-                                                  ? inputVal
-                                                  : formatCompactNumber(
-                                                      inputVal,
-                                                    )
-                                              }
-                                              onFocus={
-                                                canInput
-                                                  ? (e) => handleFocus(e, key)
-                                                  : undefined
-                                              }
-                                              onBlur={
-                                                canInput
-                                                  ? () => handleBlur(key)
-                                                  : undefined
-                                              }
-                                              onChange={
-                                                canInput
-                                                  ? (e) => handleChange(e, key)
-                                                  : undefined
-                                              }
-                                              data-cell-key={key}
-                                              onKeyDown={(e) =>
-                                                handleInputKeyDown(e, key)
-                                              }
-                                              onKeyPress={handleKeyPress}
-                                              onPaste={handlePaste}
-                                              // className={twMerge(
-                                              //   "border p-2 rounded-sm text-center text-sm w-full h-[42px] transition-all bg-white",
-                                              //   "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                                              //   inputVal !== "" &&
-                                              //     validationType &&
-                                              //     selectedPeriod !== "YEARLY" &&
-                                              //     (isValidInput(
-                                              //       validationType,
-                                              //       inputVal,
-                                              //       value1 ?? null,
-                                              //       value2 ?? null
-                                              //     )
-                                              //       ? "bg-green-100 border-green-500"
-                                              //       : "bg-red-100 border-red-500"),
-                                              //   isVisualized &&
-                                              //     "cursor-not-allowed"
-                                              // )}
-                                              className={twMerge(
-                                                "kpi-input",
-                                                "border p-2 rounded-sm text-center text-sm w-full h-[42px] transition-all bg-white",
-                                                "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-
-                                                // ⭐ Normal validation (when input is editable)
-                                                cell?.data !== "-" &&
-                                                  inputVal !== "" &&
-                                                  validationType &&
-                                                  selectedPeriod !== "YEARLY" &&
-                                                  getInputValidationClass(
-                                                    validationType,
-                                                    inputVal,
-                                                    value1 ?? null,
-                                                    value2 ?? null,
-                                                  ),
-
-                                                // ⭐ Visualization-based color logic
-                                                cell?.data !== "-" &&
-                                                  validationKey &&
-                                                  validationKey !== null &&
-                                                  selectedPeriod !== "YEARLY" &&
-                                                  cell?.validationPercentage !=
-                                                    null &&
-                                                  (() => {
-                                                    const percentage =
-                                                      cell.validationPercentage;
-
-                                                    if (percentage >= 100)
-                                                      return "bg-green-100";
-
-                                                    if (
-                                                      validationKey > 0 &&
-                                                      percentage < validationKey
-                                                    )
-                                                      return "bg-red-200 border-red-500";
-
-                                                    if (
-                                                      validationKey > 0 &&
-                                                      percentage < 100 &&
-                                                      validationKey
-                                                    )
-                                                      return "bg-yellow-200 border-yellow-300";
-
-                                                    return "bg-green-200 border-green-300";
-                                                  })(),
-
-                                                isVisualized &&
-                                                  "cursor-not-allowed",
-                                              )}
-                                              // placeholder="0"
-                                              disabled={!canInput}
-                                              readOnly={!canInput}
-                                            />
-                                            <div
-                                              className={clsx(
-                                                "transition-opacity",
-                                                inputnote &&
-                                                  inputnote.trim() !== "" &&
-                                                  inputnote !== "0"
-                                                  ? "opacity-100" // always visible when note exists
-                                                  : "opacity-0 group-hover:opacity-100", // only on hover when no note
-                                              )}
-                                            >
-                                              {/* {canInput && ( */}
-                                              <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                  {inputnote &&
-                                                  inputnote.trim() !== "" &&
-                                                  inputnote !== "0" ? (
-                                                    <span
-                                                      className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
-                                                      style={{
-                                                        background:
-                                                          inputVal !== "" &&
-                                                          validationType &&
-                                                          selectedPeriod !==
-                                                            "YEARLY"
-                                                            ? isValidInput(
-                                                                validationType,
-                                                                inputVal,
-                                                                value1 ?? null,
-                                                                value2 ?? null,
-                                                              )
-                                                              ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)" // valid → greenish
-                                                              : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)" // invalid → reddish
-                                                            : "linear-gradient(to bottom left, #2e3090 50%, white 55%)", // default
-                                                        borderBottomLeftRadius:
-                                                          "5px",
-                                                      }}
-                                                      onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setCurrentCellKey(key);
-                                                        setCommentModalInput({
-                                                          note: inputnote,
-                                                          noteId,
-                                                        });
-                                                        setCommentModalOpen(
-                                                          true,
-                                                        );
-                                                      }}
-                                                    ></span>
-                                                  ) : (
-                                                    <span
-                                                      className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
-                                                      onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setCurrentCellKey(key);
-                                                        setCommentModalInput({
-                                                          note: "",
-                                                          noteId: "",
-                                                        });
-
-                                                        setCommentModalOpen(
-                                                          true,
-                                                        );
-                                                      }}
-                                                    >
-                                                      <Plus className="w-3 h-3 text-gray-700" />
-                                                    </span>
-                                                  )}
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                  <span>
-                                                    {inputnote &&
-                                                    inputnote.trim() !== "" &&
-                                                    inputnote !== "0"
-                                                      ? `View note`
-                                                      : "Add note"}
-                                                  </span>
-                                                </TooltipContent>
-                                              </Tooltip>
-                                              {/* )} */}
-                                            </div>
-                                          </div>
-                                        </TooltipTrigger>
-                                        {inputVal !== "" &&
-                                          inputVal !== "0" &&
-                                          !isNaN(Number(inputVal)) && (
-                                            <TooltipContent>
-                                              <span>
-                                                {parseFloat(inputVal)
-                                                  .toFixed(4)
-                                                  .replace(/\.?0+$/, "")}
-                                              </span>
-                                            </TooltipContent>
-                                          )}
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                          );
-                        })}
-                      </React.Fragment>
-                    ))}
+                                })}
+                              </tr>
+                            );
+                          })}
+                        </React.Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

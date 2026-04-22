@@ -127,6 +127,7 @@ const Urls = {
 
   getKpinonselectList: () => `${baseUrl}/kpi/get/non-select`,
   updateCompanyDatapoint: (id: string) => `${baseUrl}/company/kpi/update/${id}`,
+  updateKPIFocus: (id: string) => `${baseUrl}/company/kpi/update-focus/${id}`,
   addCompanyDatapoint: () => `${baseUrl}/company/kpi/create`,
   getKpiById: (id: string) => `${baseUrl}/company/kpi/get/${id}`,
   deleteDatapointMeeting: (id: string) => `${baseUrl}/company/kpi/delete/${id}`,

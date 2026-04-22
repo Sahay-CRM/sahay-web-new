@@ -1,6 +1,7 @@
 import {
   useDeleteDatapoint,
   useGetCompanyDatapoint,
+  useUpdateKPIFocus,
 } from "@/features/api/companyDatapoint";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import useGetDepartmentDropdown from "@/features/api/designation/useGetDepartmentDropdown";
@@ -33,8 +34,18 @@ export default function useAdminUser() {
     filter: {},
   });
 
+  const { mutate: updateKPIFocus } = useUpdateKPIFocus();
+
   const handleSoftDeleteRestore = (dataPointId: string, isDeleted: boolean) => {
     softDeleteRestore({ dataPointId, isDeleted });
+  };
+
+  const handleToggleFocus = (data: KPIFormData, isFocus: boolean) => {
+    if (!data.kpiId) return;
+    updateKPIFocus({
+      kpiId: data.kpiId,
+      isFocus,
+    });
   };
 
   const [isChildData, setIsChildData] = useState<string | undefined>();
@@ -241,5 +252,6 @@ export default function useAdminUser() {
     selectedDepartments,
     handleEmployeeFilterChange,
     handleDepartmentFilterChange,
+    handleToggleFocus,
   };
 }

@@ -976,6 +976,7 @@ interface KPIFormData {
   visualFrequencyAggregate: string | null;
   ioKPIId?: string;
   isDelete?: boolean;
+  isFocus?: boolean;
   createdBy?: {
     employeeId: string;
     employeeName: string;
@@ -1096,6 +1097,9 @@ interface Kpi {
   sequence?: number;
   isSkipDay?: boolean;
   isMurgeKpi?: boolean;
+  isFocus?: boolean;
+  departmentId?: string;
+  departmentName?: string;
 }
 
 interface CoreParameterGroup {
@@ -1175,6 +1179,7 @@ interface KpiType {
   unit?: string | null;
   labels?: KpiLabels[];
   isMurgeKpi?: boolean;
+  isFocus?: boolean;
 }
 
 interface KpiLabels {
