@@ -72,7 +72,7 @@ const DropdownSearchMenu = ({
           className={clsx(
             "flex items-center justify-center relative",
             responsive
-              ? "h-10 w-10 p-0 rounded-full min-[1200px]:h-10 min-[1200px]:w-auto min-[1200px]:px-4 min-[1200px]:rounded-md"
+              ? "h-10 w-10 p-0 rounded-full min-[1200px]:h-11 min-[1200px]:w-auto min-[1200px]:px-4 min-[1200px]:rounded-md"
               : iconOnly
                 ? "h-10 w-10 p-0 rounded-full"
                 : "h-10 px-4",

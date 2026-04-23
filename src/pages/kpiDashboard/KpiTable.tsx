@@ -1418,7 +1418,7 @@ export default function UpdatedKpiTable() {
                 />
               </div>
               <DropdownSearchMenu
-                label="User Selection"
+                label="User"
                 options={uniqueEmployeeOptions}
                 selected={selectedEmployees}
                 onChange={(selected) => setSelectedEmployees(selected)}
@@ -1427,7 +1427,7 @@ export default function UpdatedKpiTable() {
                 responsive
               />
               <DropdownSearchMenu
-                label="Department Selection"
+                label="Department"
                 options={departmentOptions}
                 selected={selectedDepartments}
                 onChange={(selected) => setSelectedDepartments(selected)}
