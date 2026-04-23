@@ -133,7 +133,6 @@ export default function CompanyProjectTabList() {
                   handleOrderChange(selected as string);
                 }}
                 className="h-10"
-                triggerClassName="py-0"
               />
             </div>
           </div>

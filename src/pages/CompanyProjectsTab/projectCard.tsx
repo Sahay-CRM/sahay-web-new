@@ -62,6 +62,21 @@ export default function ProjectCard({
 
   return (
     <div className="bg-white border shadow-md rounded-xl p-4 relative hover:shadow-md transition flex flex-col w-full h-full">
+      {deadlineRequest === "PENDING" && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="absolute top-0 left-0 w-4 h-4 overflow-hidden rounded-tl-xl cursor-help z-10">
+              <div
+                className="absolute top-0 left-0 w-full h-full bg-red-600 animate-pulse"
+                style={{ clipPath: "polygon(0% 0%, 100% 0%, 0% 100%)" }}
+              />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            Deadline change request pending
+          </TooltipContent>
+        </Tooltip>
+      )}
       <div>
         <div className="flex items-start justify-between mb-1">
           <div className="flex items-center gap-2 pr-2">
@@ -71,19 +86,6 @@ export default function ProjectCard({
             >
               {name}
             </h3>
-            {deadlineRequest === "PENDING" && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex -mt-2 h-full w-full rounded-full bg-red-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full -mt-2 h-2 w-2 bg-red-500" />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  Deadline change request pending
-                </TooltipContent>
-              </Tooltip>
-            )}
           </div>
 
           <div className="flex ">
@@ -206,7 +208,7 @@ export default function ProjectCard({
           style={{ fontSize: `${14 * scale}px` }}
         >
           <span className="font-semibold  whitespace-nowrap">Created By :</span>
-          <TableTooltip text={`${createdBy?.employeeName || ""}`} />
+          <TableTooltip text={`${createdBy || ""}`} />
         </div>
       </div>
 
@@ -221,7 +223,16 @@ export default function ProjectCard({
             className="text-gray-400"
             style={{ width: 16 * scale, height: 16 * scale }}
           />
-          <div style={{ fontSize: `${12 * scale}px` }}>{projectDuration}</div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div style={{ fontSize: `${12 * scale}px` }}>
+                {projectDuration}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Project Duration : {projectDuration}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Priority pill bottom-right */}
