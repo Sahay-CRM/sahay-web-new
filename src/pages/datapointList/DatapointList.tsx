@@ -320,7 +320,7 @@ export default function CompanyTaskList() {
               handleRowsModalOpen(row);
             }}
             customActions={(row: KPIFormData) => (
-              <div className="flex items-center gap-2 mr-2">
+              <div className="flex items-center justify-center mb-1 gap-2 mr-1 ">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -333,7 +333,7 @@ export default function CompanyTaskList() {
                         />
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent>Focus KPI</TooltipContent>
+                    <TooltipContent>Focus KPI on Dashboard</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>

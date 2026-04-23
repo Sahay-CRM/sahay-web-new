@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { useEffect, useState, useMemo } from "react";
+import { format, isValid, parseISO } from "date-fns";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import clsx from "clsx";
 import useKpiDashboard from "./useKpiDashboard";
@@ -30,6 +31,8 @@ import {
   Search,
   X,
   Calendar,
+  Building2,
+  Users,
 } from "lucide-react";
 import {
   DndContext,
@@ -69,7 +72,6 @@ import { twMerge } from "tailwind-merge";
 import { cn } from "@/lib/utils";
 import CommentModal from "./KpiCommentModal";
 import SearchInput from "@/components/shared/SearchInput";
-import MultiIconSelect from "@/components/shared/Form/FormSelect/MultiIconSelect";
 // import KpiDetailsSheet from "./KpiDetailsSheet";
 import GraphModal from "./GraphModal/graphModal";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
@@ -419,6 +421,7 @@ export default function UpdatedKpiTable() {
   const [selectedPeriod, setSelectedPeriod] = useState(urlSelectedPeriod || "");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isDateOpen, setIsDateOpen] = useState(false);
+
   const [focusFilter, setFocusFilter] = useState("focus");
   useEffect(() => {
     if (selectedPeriod === "DAILY") {
@@ -477,14 +480,39 @@ export default function UpdatedKpiTable() {
     new Map(departmentOptionsList.map((item) => [item.value, item])).values(),
   );
 
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const urlSelectedDate = searchParams.get("selectedDate");
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
+    if (urlSelectedDate) {
+      const date = parseISO(urlSelectedDate);
+      return isValid(date) ? date : null;
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams);
+    if (selectedDate && isValid(selectedDate)) {
+      newParams.set("selectedDate", format(selectedDate, "yyyy-MM-dd"));
+    } else {
+      newParams.delete("selectedDate");
+    }
+    if (newParams.toString() !== searchParams.toString()) {
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [selectedDate, searchParams, setSearchParams]);
   const [showWarning, setShowWarning] = useState(false);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
       if (
         searchContainerRef.current &&
-        !searchContainerRef.current.contains(event.target as Node)
+        !searchContainerRef.current.contains(target) &&
+        !(
+          target instanceof Element &&
+          (target.closest('[data-slot="popover-content"]') ||
+            target.closest(".react-datepicker"))
+        )
       ) {
         setIsSearchOpen(false);
         setIsDateOpen(false);
@@ -1377,13 +1405,6 @@ export default function UpdatedKpiTable() {
                   : "flex",
               )}
             >
-              <DropdownSearchMenu
-                label="Department Selection"
-                options={departmentOptions}
-                selected={selectedDepartments}
-                onChange={(selected) => setSelectedDepartments(selected)}
-                multiSelect
-              />
               <div className="min-w-[100px]">
                 <FormSelect
                   value={focusFilter}
@@ -1402,6 +1423,17 @@ export default function UpdatedKpiTable() {
                 selected={selectedEmployees}
                 onChange={(selected) => setSelectedEmployees(selected)}
                 multiSelect
+                icon={<Users className="h-4 w-4" />}
+                responsive
+              />
+              <DropdownSearchMenu
+                label="Department Selection"
+                options={departmentOptions}
+                selected={selectedDepartments}
+                onChange={(selected) => setSelectedDepartments(selected)}
+                multiSelect
+                icon={<Building2 className="h-4 w-4" />}
+                responsive
               />
             </div>
 
@@ -1471,6 +1503,7 @@ export default function UpdatedKpiTable() {
                     <FormDatePicker
                       value={selectedDate}
                       onSubmit={(date) => {
+                        console.log(">>> ON SUBMIT CALLED WITH DATE:", date);
                         setSelectedDate(date ?? null);
                       }}
                       className="h-9 w-[200px]"
@@ -1555,13 +1588,13 @@ export default function UpdatedKpiTable() {
                     >
                       <div className="flex items-center">
                         Who
-                        <MultiIconSelect
+                        {/* <MultiIconSelect
                           value={selectedEmployees}
                           options={uniqueEmployeeOptions}
                           onChange={(v) => setSelectedEmployees(v)}
                           searchable
                           className="ml-0.5"
-                        />
+                        /> */}
                       </div>
                       {/* {sortConfig.key === "employeeName" &&
                       (sortConfig.direction === "asc" ? (
@@ -1940,7 +1973,7 @@ export default function UpdatedKpiTable() {
                                                             );
                                                           }}
                                                         ></span>
-                                                      ) : (
+                                                      ) : !kpi.isMurgeKpi ? (
                                                         <span
                                                           className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
                                                           onClick={(e) => {
@@ -1962,7 +1995,7 @@ export default function UpdatedKpiTable() {
                                                         >
                                                           <Plus className="w-3 h-3 text-gray-700" />
                                                         </span>
-                                                      )}
+                                                      ) : null}
                                                     </TooltipTrigger>{" "}
                                                     <TooltipContent>
                                                       <span>
@@ -2003,7 +2036,7 @@ export default function UpdatedKpiTable() {
                                       <TooltipProvider>
                                         <Tooltip>
                                           <TooltipTrigger asChild>
-                                            <div className="relative w-full h-full group">
+                                            <div className="relative  w-full h-full group">
                                               <input
                                                 type="text"
                                                 inputMode="decimal"
@@ -2038,7 +2071,7 @@ export default function UpdatedKpiTable() {
                                                 onPaste={handlePaste}
                                                 className={twMerge(
                                                   "kpi-input",
-                                                  "border p-2 rounded-sm text-center text-sm w-full h-[42px] transition-all bg-white",
+                                                  "border p-2  w-[80px] rounded-sm text-center text-sm h-[42px] transition-all bg-white",
                                                   "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
 
                                                   cell?.data !== "-" &&
@@ -2141,7 +2174,7 @@ export default function UpdatedKpiTable() {
                                                           );
                                                         }}
                                                       ></span>
-                                                    ) : (
+                                                    ) : !kpi.isMurgeKpi ? (
                                                       <span
                                                         className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
                                                         onClick={(e) => {
@@ -2161,7 +2194,7 @@ export default function UpdatedKpiTable() {
                                                       >
                                                         <Plus className="w-3 h-3 text-gray-700" />
                                                       </span>
-                                                    )}
+                                                    ) : null}
                                                   </TooltipTrigger>
                                                   <TooltipContent>
                                                     <span>
