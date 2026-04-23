@@ -9,7 +9,7 @@ export function useCancelRequestMasterMutation() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data: resData } = await Api.delete<{ message: string }>({
+      const { data: resData } = await Api.post<{ message: string }>({
         url: Urls.companyRequestCancle(id),
       });
 

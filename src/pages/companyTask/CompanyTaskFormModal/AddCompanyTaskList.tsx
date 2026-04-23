@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
 
 /* ---------------- Project Step ---------------- */
 const ProjectSelectionStep = () => {
@@ -296,7 +297,7 @@ const TaskDetailsStep = ({
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      <div className="col-span-2 mt-4 px-6 py-6 grid grid-cols-6 gap-4 h-[calc(100vh-250px)] content-start">
+      <Card className="col-span-2 mt-4 px-6 py-6 grid grid-cols-6 gap-4 h-fit content-start">
         <div className="col-span-3 relative z-50" ref={dropdownRef}>
           <FormInputField
             label="Task Name"
@@ -445,7 +446,7 @@ const TaskDetailsStep = ({
             hidden={!!taskId}
           />
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

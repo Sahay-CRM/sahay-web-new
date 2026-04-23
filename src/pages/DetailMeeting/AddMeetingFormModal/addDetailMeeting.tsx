@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react"; // Added useState, useRef, ChangeEvent
+import { useEffect, useRef, useState } from "react"; // Added useState, useRef, ChangeEvent
 import { FormProvider, useFormContext, Controller } from "react-hook-form"; // Added useFormContext, Controller
+import { useGetDetailMeetingSearch } from "@/features/api/detailMeeting";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -112,17 +113,114 @@ const MeetingInfo = () => {
     register,
     formState: { errors },
     control,
+    watch,
   } = useFormContext();
+
+  const { companyMeetingId } = useAddDetailMeeting();
+  const meetingNameValue = watch("meetingName") || "";
+  const isEditMode = !!companyMeetingId;
+
+  // In edit mode, track the original name so dropdown only shows when user changes it
+  const [originalName, setOriginalName] = useState<string | null>(null);
+  const [nameChanged, setNameChanged] = useState(false);
+
+  useEffect(() => {
+    if (
+      isEditMode &&
+      originalName === null &&
+      meetingNameValue.trim().length > 0
+    ) {
+      setOriginalName(meetingNameValue);
+    }
+  }, [isEditMode, originalName, meetingNameValue]);
+
+  useEffect(() => {
+    if (isEditMode && originalName !== null) {
+      setNameChanged(meetingNameValue !== originalName);
+    }
+  }, [isEditMode, originalName, meetingNameValue]);
+
+  const shouldSearch = !isEditMode || nameChanged;
+  const { data: meetingSearchData } = useGetDetailMeetingSearch(
+    shouldSearch ? meetingNameValue : "",
+  );
+
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isEditMode && !nameChanged) {
+      setShowDropdown(false);
+      return;
+    }
+    const hasResults =
+      (meetingSearchData?.data?.length ?? 0) > 0 &&
+      meetingNameValue.trim().length >= 5;
+
+    if (hasResults) {
+      setShowDropdown(true);
+    } else {
+      setShowDropdown(false);
+    }
+  }, [meetingNameValue, meetingSearchData, isEditMode, nameChanged]);
+
+  const showResults =
+    shouldSearch &&
+    showDropdown &&
+    meetingNameValue.trim().length >= 5 &&
+    (meetingSearchData?.data?.length ?? 0) > 0;
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4">
-        <FormInputField
-          label="Meeting Name"
-          {...register("meetingName", { required: "Name is required" })}
-          error={errors.meetingName}
-          isMandatory
-        />
+      <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4 h-fit content-start">
+        <div className="relative z-50" ref={dropdownRef}>
+          <FormInputField
+            label="Meeting Name"
+            {...register("meetingName", { required: "Name is required" })}
+            error={errors.meetingName}
+            isMandatory
+            placeholder="Enter Meeting Name"
+            onFocus={() => {
+              if (
+                shouldSearch &&
+                meetingNameValue.trim().length >= 5 &&
+                (meetingSearchData?.data?.length ?? 0) > 0
+              ) {
+                setShowDropdown(true);
+              }
+            }}
+          />
+          {showResults && (
+            <div className="absolute top-[100%] mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              <div className="px-3 py-2 text-[12px]  text-gray-500 bg-gray-50 border-b border-gray-200 sticky top-0">
+                Similar Meetings Found
+              </div>
+              {meetingSearchData?.data?.map((item: MeetingSearchResponse) => (
+                <div
+                  key={item.meetingId}
+                  className="px-3 py-2 text-sm text-gray-700 border-b last:border-b-0 cursor-default hover:bg-gray-50"
+                >
+                  <span className="font-medium">{item.meetingName}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <FormInputField
           label="Meeting Description"
           {...register("meetingDescription", {

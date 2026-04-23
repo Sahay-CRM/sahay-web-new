@@ -247,6 +247,8 @@ const Urls = {
   getMeetingnotes: (id: string) =>
     `${baseUrl}/company/detail-meeting/note/get/${id}`,
 
+  detailMeetingSearch: () => `${baseUrl}/company/detail-meeting/search`,
+
   addIssues: () => `${baseUrl}/company/issue/create`,
   updateIssues: (id: string) => `${baseUrl}/company/issue/update/${id}`,
   getIssues: () => `${baseUrl}/company/issue/get`,
