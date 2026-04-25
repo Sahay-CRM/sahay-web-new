@@ -361,6 +361,7 @@ interface CompanyProjectDataProps {
     employeeName: string;
   };
   deadlineRequest?: string;
+  companyId?: string;
 }
 
 // interface CompanyMeetingDataProps {
@@ -817,6 +818,7 @@ interface Task {
   repeatTime?: string;
   nextDate?: string;
   deadlineRequest?: string;
+  companyId?: string;
 }
 
 interface ProjectTask {
@@ -1483,6 +1485,7 @@ interface RepeatMeeting {
   isDetailMeeting?: boolean;
   customObj?: CustomObjREPT;
   joinerNames?: string;
+  companyId?: string;
   // meetingStatusId?: string;
 }
 

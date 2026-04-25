@@ -4,6 +4,9 @@ import { useSearchParams } from "react-router-dom";
 import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import useAddCompanyTaskList from "./useAddCompanyTaskList";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import CompanyAccessGuard from "@/components/shared/CompanyAccessGuard/CompanyAccessGuard";
+import { useSelector } from "react-redux";
+import { getCompaniesList } from "@/features/selectors/company.selector";
 
 import AddRepetitiveTaskModal from "./addRepetitiveTaskModal";
 import StepProgress from "@/components/shared/StepProgress";
@@ -34,6 +37,14 @@ export default function AddRepetitiveTask() {
 
   const [searchParams] = useSearchParams();
   const { setBreadcrumbs } = useBreadcrumbs();
+
+  const companiesList = useSelector(getCompaniesList);
+  const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
+  const resourceCompanyId = taskDataById?.data?.companyId;
+  const isAuthorized =
+    !repetitiveTaskId ||
+    !resourceCompanyId ||
+    resourceCompanyId === currentCompany?.companyId;
 
   let projectId = searchParams.get("projectId") || "";
   let meetingId = searchParams.get("meetingId") || "";
@@ -93,7 +104,7 @@ export default function AddRepetitiveTask() {
           : "Add Repetition Task",
         href: "",
       },
-      ...(repetitiveTaskId
+      ...(repetitiveTaskId && isAuthorized
         ? [
             {
               label: taskDataById?.data?.taskName || "",
@@ -103,39 +114,49 @@ export default function AddRepetitiveTask() {
           ]
         : []),
     ]);
-  }, [setBreadcrumbs, taskDataById?.data?.taskName, repetitiveTaskId]);
+  }, [
+    setBreadcrumbs,
+    taskDataById?.data?.taskName,
+    repetitiveTaskId,
+    isAuthorized,
+  ]);
 
   const stepNames = ["Project", "Meeting", "Basic Info", "Assign User"];
 
   return (
-    <div className="w-full px-2 sm:px-4 py-4 overflow-x-auto">
-      <StepProgress
-        currentStep={currentStep}
-        stepNames={stepNames}
-        totalSteps={totalSteps}
-        back={back}
-        isFirstStep={isFirstStep}
-        next={next}
-        isLastStep={isLastStep}
-        isPending={isPending}
-        onFinish={onFinish}
-        isUpdate={!!repetitiveTaskId}
-      />
-
-      <div className="step-content w-full">{steps[currentStep - 1]}</div>
-
-      {isModalOpen && (
-        <AddRepetitiveTaskModal
-          modalData={employeePreview as TaskPreviewData}
-          isModalOpen={isModalOpen}
-          modalClose={handleClose}
-          onSubmit={onSubmit}
-          isLoading={isPending}
-          isChildData={isChildData}
-          onKeepAll={handleKeepAll}
-          onDeleteAll={handleDeleteAll}
+    <CompanyAccessGuard
+      companyId={repetitiveTaskId ? resourceCompanyId : undefined}
+      isLoading={repetitiveTaskId ? !taskDataById : false}
+    >
+      <div className="w-full px-2 sm:px-4 py-4 overflow-x-auto">
+        <StepProgress
+          currentStep={currentStep}
+          stepNames={stepNames}
+          totalSteps={totalSteps}
+          back={back}
+          isFirstStep={isFirstStep}
+          next={next}
+          isLastStep={isLastStep}
+          isPending={isPending}
+          onFinish={onFinish}
+          isUpdate={!!repetitiveTaskId}
         />
-      )}
-    </div>
+
+        <div className="step-content w-full">{steps[currentStep - 1]}</div>
+
+        {isModalOpen && (
+          <AddRepetitiveTaskModal
+            modalData={employeePreview as TaskPreviewData}
+            isModalOpen={isModalOpen}
+            modalClose={handleClose}
+            onSubmit={onSubmit}
+            isLoading={isPending}
+            isChildData={isChildData}
+            onKeepAll={handleKeepAll}
+            onDeleteAll={handleDeleteAll}
+          />
+        )}
+      </div>
+    </CompanyAccessGuard>
   );
 }

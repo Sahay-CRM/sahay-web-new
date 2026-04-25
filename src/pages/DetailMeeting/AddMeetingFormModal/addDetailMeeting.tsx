@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react"; // Added useState, useRef, ChangeEvent
+import CompanyAccessGuard from "@/components/shared/CompanyAccessGuard/CompanyAccessGuard";
+import { useSelector } from "react-redux";
+import { getCompaniesList } from "@/features/selectors/company.selector";
 import { FormProvider, useFormContext, Controller } from "react-hook-form"; // Added useFormContext, Controller
 import { useGetDetailMeetingSearch } from "@/features/api/detailMeeting";
 
@@ -541,6 +544,13 @@ const AddDetailMeeting = () => {
   } = useAddDetailMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
+  const companiesList = useSelector(getCompaniesList);
+  const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
+  const resourceCompanyId = meetingApiData?.companyId;
+  const isAuthorized =
+    !companyMeetingId ||
+    !resourceCompanyId ||
+    resourceCompanyId === currentCompany?.companyId;
 
   useEffect(() => {
     setBreadcrumbs([
@@ -549,7 +559,7 @@ const AddDetailMeeting = () => {
         label: companyMeetingId ? "Update Live Meeting" : "Add Live Meeting",
         href: "",
       },
-      ...(companyMeetingId
+      ...(companyMeetingId && isAuthorized
         ? [
             {
               label: `${
@@ -561,7 +571,12 @@ const AddDetailMeeting = () => {
           ]
         : []),
     ]);
-  }, [companyMeetingId, meetingApiData?.meetingName, setBreadcrumbs]);
+  }, [
+    companyMeetingId,
+    meetingApiData?.meetingName,
+    setBreadcrumbs,
+    isAuthorized,
+  ]);
 
   const steps = [
     <MeetingType key="meetingType" />,
@@ -591,34 +606,39 @@ const AddDetailMeeting = () => {
   }
 
   return (
-    <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-        <StepProgress
-          currentStep={currentStep}
-          stepNames={stepNames}
-          totalSteps={totalSteps}
-          back={back}
-          isFirstStep={isFirstStep}
-          next={next}
-          isLastStep={isLastStep}
-          isPending={isPending}
-          onFinish={onFinish}
-          isUpdate={!!companyMeetingId}
-        />
-
-        <div className="step-content w-full">{stepContent}</div>
-
-        {isModalOpen && (
-          <AddMeetingModal
-            modalData={meetingPreview as MeetingData}
-            isModalOpen={isModalOpen}
-            modalClose={handleClose}
-            onSubmit={onSubmit}
-            isLoading={isPending}
+    <CompanyAccessGuard
+      companyId={companyMeetingId ? resourceCompanyId : undefined}
+      isLoading={companyMeetingId ? !meetingApiData : false}
+    >
+      <FormProvider {...methods}>
+        <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
+          <StepProgress
+            currentStep={currentStep}
+            stepNames={stepNames}
+            totalSteps={totalSteps}
+            back={back}
+            isFirstStep={isFirstStep}
+            next={next}
+            isLastStep={isLastStep}
+            isPending={isPending}
+            onFinish={onFinish}
+            isUpdate={!!companyMeetingId}
           />
-        )}
-      </div>
-    </FormProvider>
+
+          <div className="step-content w-full">{stepContent}</div>
+
+          {isModalOpen && (
+            <AddMeetingModal
+              modalData={meetingPreview as MeetingData}
+              isModalOpen={isModalOpen}
+              modalClose={handleClose}
+              onSubmit={onSubmit}
+              isLoading={isPending}
+            />
+          )}
+        </div>
+      </FormProvider>
+    </CompanyAccessGuard>
   );
 };
 

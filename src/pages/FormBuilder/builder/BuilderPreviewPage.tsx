@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { useGetFormById } from "@/features/api/Form";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import CompanyAccessGuard from "@/components/shared/CompanyAccessGuard/CompanyAccessGuard";
 import PageNotAccess from "../../PageNoAccess";
 import FormHeader from "../preview/components/FormHeader";
 import FormSidebar from "../preview/components/FormSidebar";
@@ -24,6 +25,8 @@ const BuilderPreviewPage = () => {
   const [responses, setResponses] = useState<
     Record<string, string | string[] | File | FileList>
   >({});
+
+  const resourceCompanyId = formResponse?.data?.companyId;
 
   const permission = useSelector(getUserPermission).FORM;
 
@@ -73,52 +76,54 @@ const BuilderPreviewPage = () => {
   };
 
   return (
-    <div className="h-screen bg-[#f8f9fc] flex flex-col overflow-hidden">
-      {/* Visual indicator that this is a preview */}
-      <div className="bg-indigo-600 px-4 py-2 flex items-center justify-center shrink-0 shadow-sm">
-        <p className="text-[13px] text-white font-bold uppercase tracking-widest flex items-center gap-2">
-          <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-          Preview Mode: Visualizing Form Layout
-        </p>
-      </div>
+    <CompanyAccessGuard companyId={resourceCompanyId} isLoading={isLoading}>
+      <div className="h-screen bg-[#f8f9fc] flex flex-col overflow-hidden">
+        {/* Visual indicator that this is a preview */}
+        <div className="bg-indigo-600 px-4 py-2 flex items-center justify-center shrink-0 shadow-sm">
+          <p className="text-[13px] text-white font-bold uppercase tracking-widest flex items-center gap-2">
+            <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+            Preview Mode: Visualizing Form Layout
+          </p>
+        </div>
 
-      <FormHeader
-        formName={form.name}
-        formDescription={form.description}
-        formSettings={formSettings as unknown as FormSettings}
-        timeRemaining={null}
-        formatTime={() => "00:00"}
-        tabSwitchCount={0}
-        isScreenActive={false}
-        hwStatusCamera="granted"
-      />
-
-      <div className="flex-1 flex overflow-auto">
-        <FormSidebar
-          verifiedName="User Name"
-          verifiedMobile="----543210"
+        <FormHeader
+          formName={form.name}
+          formDescription={form.description}
           formSettings={formSettings as unknown as FormSettings}
-          form={form}
-          responses={responses as unknown as ResponseData}
-          getRules={getRules}
+          timeRemaining={null}
+          formatTime={() => "00:00"}
+          tabSwitchCount={0}
+          isScreenActive={false}
+          hwStatusCamera="granted"
         />
 
-        <FormQuestions
-          form={form}
-          responses={responses as unknown as ResponseData}
-          updateResponse={(fieldId, value) => {
-            setResponses((prev) => ({ ...prev, [fieldId]: value }));
-          }}
-          fieldErrors={{}}
-          setResponses={(data) => setResponses(data as ResponseData)}
-          handleSubmit={() => {}}
-          isUploading={false}
-          isSubmitting={false}
-          isSubmittingForm={false}
-          isPreview={true}
-        />
+        <div className="flex-1 flex overflow-auto">
+          <FormSidebar
+            verifiedName="User Name"
+            verifiedMobile="----543210"
+            formSettings={formSettings as unknown as FormSettings}
+            form={form}
+            responses={responses as unknown as ResponseData}
+            getRules={getRules}
+          />
+
+          <FormQuestions
+            form={form}
+            responses={responses as unknown as ResponseData}
+            updateResponse={(fieldId, value) => {
+              setResponses((prev) => ({ ...prev, [fieldId]: value }));
+            }}
+            fieldErrors={{}}
+            setResponses={(data) => setResponses(data as ResponseData)}
+            handleSubmit={() => {}}
+            isUploading={false}
+            isSubmitting={false}
+            isSubmittingForm={false}
+            isPreview={true}
+          />
+        </div>
       </div>
-    </div>
+    </CompanyAccessGuard>
   );
 };
 

@@ -430,7 +430,7 @@ const DashboardLayout = () => {
                           <Button
                             variant="ghost"
                             className="p-2 border relative"
-                            onClick={() => navigate("/dashboard/updates")}
+                            onClick={() => navigate("/updates")}
                           >
                             <Info />
                           </Button>

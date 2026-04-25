@@ -14,129 +14,94 @@ export default function ConfirmationTaskModal({
 }: CompanyTaskModalProps) {
   const navigate = useNavigate();
 
+  const renderRow = (label: string, value: React.ReactNode) => {
+    if (!value) return null;
+    return (
+      <div className="flex flex-col border-b border-gray-50 pb-3 last:border-0">
+        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+          {label}
+        </span>
+        <span className="text-sm font-medium text-slate-700">{value}</span>
+      </div>
+    );
+  };
+
   return (
-    <div>
-      <ModalData
-        isModalOpen={isModalOpen}
-        modalTitle="Task Details"
-        modalClose={modalClose}
-        buttons={[
-          {
-            btnText: "Cancel",
-            buttonCss: "py-1.5 px-5",
-            btnClick: modalClose,
-          },
-          {
-            btnText: "Edit",
-            buttonCss: "py-1.5 px-5",
-            btnClick: () =>
-              navigate(`/dashboard/tasks/edit/${modalData.taskId}`),
-          },
-        ]}
-      >
-        <div>
-          {/* Task Name */}
-          {modalData.taskName && (
-            <div>
-              <span className="font-semibold">Task Name:</span>{" "}
-              <span>{modalData.taskName}</span>
-            </div>
+    <ModalData
+      isModalOpen={isModalOpen}
+      modalTitle="Task Details"
+      modalClose={modalClose}
+      buttons={[
+        {
+          btnText: "Cancel",
+          buttonCss: "py-1.5 px-5 bg-gray-100 text-gray-700 hover:bg-gray-200",
+          btnClick: modalClose,
+        },
+        {
+          btnText: "Edit",
+          buttonCss: "py-1.5 px-5 bg-[#2f328e] text-white hover:bg-[#1e205e]",
+          btnClick: () => navigate(`/dashboard/tasks/edit/${modalData.taskId}`),
+        },
+      ]}
+    >
+      <div className="space-y-4 py-2">
+        {renderRow("Task Name", modalData.taskName)}
+        {renderRow("Status", modalData.taskStatus)}
+        {renderRow("Description", modalData.taskDescription)}
+        {renderRow(
+          "Deadline",
+          modalData.taskDeadline
+            ? new Date(modalData.taskDeadline).toLocaleString()
+            : null,
+        )}
+        {renderRow("Assigned Employee", modalData.employees?.employeeName)}
+        {renderRow("Employee Email", modalData.employees?.employeeEmail)}
+        {renderRow(
+          "Project Name",
+          modalData.projectDetails?.CompanyProjectMaster?.projectName,
+        )}
+
+        {/* Task Employees */}
+        {modalData.TaskEmployeeJunction &&
+          modalData.TaskEmployeeJunction.length > 0 &&
+          renderRow(
+            "Task Employees",
+            <ul className="list-disc list-inside space-y-0.5">
+              {modalData.TaskEmployeeJunction.map((emp, idx) => (
+                <li key={idx} className="text-sm">
+                  {emp.Employee?.employeeName || emp.employeeId}
+                </li>
+              ))}
+            </ul>,
           )}
 
-          {/* Task Status */}
-          {modalData.taskStatus && (
-            <div>
-              <span className="font-semibold">Task Status:</span>{" "}
-              <span>{modalData.taskStatus}</span>
-            </div>
-          )}
-
-          {/* Task Description */}
-          {modalData.taskDescription && (
-            <div>
-              <span className="font-semibold">Task Description:</span>{" "}
-              <span>{modalData.taskDescription}</span>
-            </div>
-          )}
-
-          {/* Task Deadline */}
-          {modalData.taskDeadline && (
-            <div>
-              <span className="font-semibold">Task Deadline:</span>{" "}
-              <span>{new Date(modalData.taskDeadline).toLocaleString()}</span>
-            </div>
-          )}
-
-          {/* Employee Name */}
-          {modalData.employees && (
-            <div>
-              <span className="font-semibold">Employee Name:</span>{" "}
-              <span>{modalData.employees?.employeeName}</span>
-            </div>
-          )}
-
-          {/* Employee Email */}
-          {modalData.employees?.employeeEmail && (
-            <div>
-              <span className="font-semibold">Employee Email:</span>{" "}
-              <span>{modalData.employees?.employeeEmail}</span>
-            </div>
-          )}
-
-          {/* Project Name */}
-          {modalData.projectDetails && (
-            <div>
-              <span className="font-semibold">Project Name:</span>{" "}
-              <span>
-                {modalData.projectDetails?.CompanyProjectMaster?.projectName}
-              </span>
-            </div>
-          )}
-
-          {/* Task Employees */}
-          {modalData.TaskEmployeeJunction &&
-            modalData.TaskEmployeeJunction.length > 0 && (
-              <div>
-                <span className="font-semibold">Task Employees:</span>
-                <ul className="ml-4 list-disc">
-                  {modalData.TaskEmployeeJunction.map((emp, idx) => (
-                    <li key={idx}>
-                      {emp.Employee?.employeeName || emp.employeeId}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-          {/* Task Meetings */}
-          {modalData.TaskMeetingJunction &&
-            modalData.TaskMeetingJunction.length > 0 && (
-              <div>
-                <span className="font-semibold">Meetings:</span>
-                <ul className="ml-4 list-disc">
-                  {modalData.TaskMeetingJunction.map((meet, idx) => (
-                    <li key={idx}>
-                      {meet.meetings?.meetingName && (
-                        <span>
-                          {meet.meetings.meetingName}
-                          {meet.meetings.meetingDateTime && (
-                            <span className="ml-2 text-xs text-gray-500">
-                              (
-                              {new Date(
-                                meet.meetings.meetingDateTime,
-                              ).toLocaleString()}
-                              )
-                            </span>
-                          )}
+        {/* Task Meetings */}
+        {modalData.TaskMeetingJunction &&
+          modalData.TaskMeetingJunction.length > 0 &&
+          renderRow(
+            "Meetings",
+            <ul className="list-disc list-inside space-y-1">
+              {modalData.TaskMeetingJunction.map((meet, idx) => (
+                <li key={idx} className="text-sm">
+                  {meet.meetings?.meetingName && (
+                    <span>
+                      {meet.meetings.meetingName}
+                      {meet.meetings.meetingDateTime && (
+                        <span className="ml-2 text-xs text-gray-500 font-normal">
+                          (
+                          {new Date(
+                            meet.meetings.meetingDateTime,
+                          ).toLocaleString()}
+                          )
                         </span>
                       )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-        </div>
-      </ModalData>
-    </div>
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>,
+          )}
+      </div>
+    </ModalData>
   );
 }

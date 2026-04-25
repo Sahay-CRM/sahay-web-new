@@ -129,16 +129,26 @@ export default function MeetingDesc() {
   const userDetail = useSelector(getUserDetail);
   const companiesList = useSelector(getCompaniesList);
   const isSuperAdmin = userDetail.isSuperAdmin;
+  const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
+  const isMeetingInCurrentCompany =
+    !meetingTiming || meetingTiming.companyId === currentCompany?.companyId;
+
   useEffect(() => {
-    setBreadcrumbs([
-      { label: "Detail Meeting", href: "/dashboard/meeting/detail" },
-      {
-        label: `${meetingTiming?.meetingName} `,
-        href: "",
-        isHighlight: true,
-      },
-    ]);
-  }, [meetingTiming?.meetingName, setBreadcrumbs]);
+    if (meetingTiming?.meetingName && isMeetingInCurrentCompany) {
+      setBreadcrumbs([
+        { label: "Detail Meeting", href: "/dashboard/meeting/detail" },
+        {
+          label: `${meetingTiming?.meetingName} `,
+          href: "",
+          isHighlight: true,
+        },
+      ]);
+    } else {
+      setBreadcrumbs([
+        { label: "Detail Meeting", href: "/dashboard/meeting/detail" },
+      ]);
+    }
+  }, [meetingTiming?.meetingName, isMeetingInCurrentCompany, setBreadcrumbs]);
 
   const isTeamLeader = useMemo(
     () =>
@@ -193,10 +203,6 @@ export default function MeetingDesc() {
       </div>
     );
   }
-
-  const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
-  const isMeetingInCurrentCompany =
-    !meetingTiming || meetingTiming.companyId === currentCompany?.companyId;
 
   if (meetingTiming && !isMeetingInCurrentCompany) {
     const hasMultipleCompanies = (companiesList?.length ?? 0) > 1;

@@ -14,6 +14,9 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import SearchInput from "@/components/shared/SearchInput";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import PageNotAccess from "@/pages/PageNoAccess";
+import CompanyAccessGuard from "@/components/shared/CompanyAccessGuard/CompanyAccessGuard";
+import { useSelector } from "react-redux";
+import { getCompaniesList } from "@/features/selectors/company.selector";
 import {
   Dialog,
   DialogContent,
@@ -570,6 +573,14 @@ export default function AddCompanyTask() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const [searchParams] = useSearchParams();
 
+  const companiesList = useSelector(getCompaniesList);
+  const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
+  const resourceCompanyId = taskDataById?.data?.companyId;
+  const isAuthorized =
+    !taskId ||
+    !resourceCompanyId ||
+    resourceCompanyId === currentCompany?.companyId;
+
   let projectId = searchParams.get("projectId") || "";
   let meetingId = searchParams.get("meetingId") || "";
 
@@ -583,7 +594,7 @@ export default function AddCompanyTask() {
     setBreadcrumbs([
       { label: "Company Task", href: "/dashboard/tasks" },
       { label: taskId ? "Update Task" : "Add Task", href: "" },
-      ...(taskId
+      ...(taskId && isAuthorized
         ? [
             {
               label: taskDataById?.data.taskName || "",
@@ -593,7 +604,7 @@ export default function AddCompanyTask() {
           ]
         : []),
     ]);
-  }, [setBreadcrumbs, taskDataById?.data.taskName, taskId]);
+  }, [setBreadcrumbs, taskDataById?.data.taskName, taskId, isAuthorized]);
 
   useEffect(() => {
     if (projectId) {
@@ -647,64 +658,69 @@ export default function AddCompanyTask() {
   }
 
   return (
-    <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-        <StepProgress
-          currentStep={effectiveStep}
-          totalSteps={totalSteps}
-          stepNames={stepNamesArray} // ⚡ अब slice मत करो, सारे step दिखेंगे
-          back={prevStep}
-          isFirstStep={projectId ? effectiveStep === 2 : effectiveStep === 1}
-          isLastStep={effectiveStep === totalSteps}
-          next={handleNext}
-          isPending={isPending}
-          onFinish={handleSubmit(onSubmit)}
-          isUpdate={!!taskId}
-        />
+    <CompanyAccessGuard
+      companyId={taskId ? resourceCompanyId : undefined}
+      isLoading={taskId ? !taskDataById : false}
+    >
+      <FormProvider {...methods}>
+        <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
+          <StepProgress
+            currentStep={effectiveStep}
+            totalSteps={totalSteps}
+            stepNames={stepNamesArray} // ⚡ अब slice मत करो, सारे step दिखेंगे
+            back={prevStep}
+            isFirstStep={projectId ? effectiveStep === 2 : effectiveStep === 1}
+            isLastStep={effectiveStep === totalSteps}
+            next={handleNext}
+            isPending={isPending}
+            onFinish={handleSubmit(onSubmit)}
+            isUpdate={!!taskId}
+          />
 
-        {renderStepContent()}
-      </div>
+          {renderStepContent()}
+        </div>
 
-      <Dialog open={isConfModalOpen} onOpenChange={setIsConfModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Confirmation Required</DialogTitle>
-            <DialogDescription>
-              The deadline has been changed. Please provide a reason to proceed
-              with the update.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="reason" className="text-sm font-medium">
-                Reason
-              </label>
-              <Textarea
-                id="reason"
-                placeholder="Enter reasons for deadline change..."
-                value={reasons}
-                onChange={(e) => setReasons(e.target.value)}
-                className="col-span-3"
-              />
+        <Dialog open={isConfModalOpen} onOpenChange={setIsConfModalOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Confirmation Required</DialogTitle>
+              <DialogDescription>
+                The deadline has been changed. Please provide a reason to
+                proceed with the update.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label htmlFor="reason" className="text-sm font-medium">
+                  Reason
+                </label>
+                <Textarea
+                  id="reason"
+                  placeholder="Enter reasons for deadline change..."
+                  value={reasons}
+                  onChange={(e) => setReasons(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsConfModalOpen(false)}
-              disabled={isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={onConfirmSubmit}
-              disabled={isPending || !reasons.trim()}
-            >
-              {isPending ? "Confirming..." : "Confirm"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </FormProvider>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsConfModalOpen(false)}
+                disabled={isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={onConfirmSubmit}
+                disabled={isPending || !reasons.trim()}
+              >
+                {isPending ? "Confirming..." : "Confirm"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </FormProvider>
+    </CompanyAccessGuard>
   );
 }

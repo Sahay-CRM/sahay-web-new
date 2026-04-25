@@ -5,6 +5,9 @@ import useAddEmployee from "./useAddEmployee";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import AddEmployeeModal from "./addEmployeeModal";
 import StepProgress from "@/components/shared/StepProgress";
+import CompanyAccessGuard from "@/components/shared/CompanyAccessGuard/CompanyAccessGuard";
+import { useSelector } from "react-redux";
+import { getCompaniesList } from "@/features/selectors/company.selector";
 
 export default function AddEmployee() {
   const {
@@ -26,6 +29,14 @@ export default function AddEmployee() {
 
   const { setBreadcrumbs } = useBreadcrumbs();
 
+  const companiesList = useSelector(getCompaniesList);
+  const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
+  const resourceCompanyId = employeeData?.data?.companyId;
+  const isAuthorized =
+    !companyEmployeeId ||
+    !resourceCompanyId ||
+    resourceCompanyId === currentCompany?.companyId;
+
   useEffect(() => {
     setBreadcrumbs([
       { label: "Company Employee", href: "/dashboard/company-employee" },
@@ -35,7 +46,7 @@ export default function AddEmployee() {
           : "Company Employee Add",
         href: "",
       },
-      ...(companyEmployeeId
+      ...(companyEmployeeId && isAuthorized
         ? [
             {
               label: `${
@@ -49,7 +60,12 @@ export default function AddEmployee() {
           ]
         : []),
     ]);
-  }, [setBreadcrumbs, companyEmployeeId, employeeData?.data?.employeeName]);
+  }, [
+    setBreadcrumbs,
+    companyEmployeeId,
+    employeeData?.data?.employeeName,
+    isAuthorized,
+  ]);
 
   const steps = showNextStep
     ? [
@@ -78,33 +94,38 @@ export default function AddEmployee() {
   ];
 
   return (
-    <div>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
-        <StepProgress
-          currentStep={currentStep}
-          stepNames={stepNames}
-          totalSteps={totalSteps}
-          back={back}
-          isFirstStep={isFirstStep}
-          next={next}
-          isLastStep={isLastStep}
-          isPending={isPending}
-          onFinish={onFinish}
-          isUpdate={!!companyEmployeeId}
-        />
-
-        <div className="step-content w-full">{stepContent}</div>
-
-        {isModalOpen && (
-          <AddEmployeeModal
-            modalData={employeePreview as EmployeeData}
-            isModalOpen={isModalOpen}
-            modalClose={handleClose}
-            onSubmit={onSubmit}
-            isLoading={isPending}
+    <CompanyAccessGuard
+      companyId={companyEmployeeId ? resourceCompanyId : undefined}
+      isLoading={companyEmployeeId ? !employeeData : false}
+    >
+      <div>
+        <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
+          <StepProgress
+            currentStep={currentStep}
+            stepNames={stepNames}
+            totalSteps={totalSteps}
+            back={back}
+            isFirstStep={isFirstStep}
+            next={next}
+            isLastStep={isLastStep}
+            isPending={isPending}
+            onFinish={onFinish}
+            isUpdate={!!companyEmployeeId}
           />
-        )}
+
+          <div className="step-content w-full">{stepContent}</div>
+
+          {isModalOpen && (
+            <AddEmployeeModal
+              modalData={employeePreview as EmployeeData}
+              isModalOpen={isModalOpen}
+              modalClose={handleClose}
+              onSubmit={onSubmit}
+              isLoading={isPending}
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </CompanyAccessGuard>
   );
 }
