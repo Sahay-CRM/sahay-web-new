@@ -1391,6 +1391,7 @@ interface UpdateItem {
   title: string;
   description: string;
   image: string[]; // array of image URLs
+  video?: string[]; // array of video URLs
   date: string; // ISO string
   createdBy: string;
   createdAt: string;
