@@ -7,6 +7,7 @@ import { combineReducers } from "redux";
 import authReducer from "./reducers/auth.reducer";
 import notificationReducer from "./reducers/notification.reducer";
 import meetingReducer from "./reducers/common.reducer";
+import companyReducer from "./reducers/company.reducer";
 
 const persistConfig = {
   key: "root",
@@ -18,6 +19,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   notification: notificationReducer,
   meeting: meetingReducer,
+  company: companyReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

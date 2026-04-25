@@ -418,6 +418,7 @@ interface CompanyMeetingDataProps {
   createdBy?: Employee;
   deadlineRequest?: string;
   status?: string;
+  companyId?: string;
 }
 
 interface ProjectParameters {

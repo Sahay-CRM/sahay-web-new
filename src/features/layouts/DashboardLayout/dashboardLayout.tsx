@@ -57,6 +57,7 @@ import {
   markNotificationRead,
   setNotifications,
 } from "@/features/reducers/notification.reducer";
+import { setCompaniesList } from "@/features/reducers/company.reducer";
 import { fireTokenMutation } from "@/features/api";
 import useGetUserNotification from "./useGetUserNotification";
 import {
@@ -144,6 +145,42 @@ const DashboardLayout = () => {
   //     }
   //   }
   // }, [companies]);
+
+  useEffect(() => {
+    const companiesData: {
+      companyId: string;
+      name: string;
+      isCurrentCompany: boolean;
+    }[] = [];
+
+    if (companies && companies.length > 0) {
+      companies.forEach((c) => {
+        companiesData.push({
+          companyId: c.companyId,
+          name: c.companyName,
+          isCurrentCompany: c.companyId === user?.companyId,
+        });
+      });
+    }
+
+    if (userData?.data?.company) {
+      const userCompany = userData.data.company;
+      const exists = companiesData.some(
+        (c) => c.companyId === userCompany.companyId,
+      );
+      if (!exists) {
+        companiesData.push({
+          companyId: userCompany.companyId,
+          name: userCompany.companyName,
+          isCurrentCompany: true,
+        });
+      }
+    }
+
+    if (companiesData.length > 0) {
+      dispatch(setCompaniesList(companiesData));
+    }
+  }, [companies, userData, dispatch, user?.companyId]);
 
   useEffect(() => {
     if (permission) {

@@ -18,9 +18,14 @@ import { AudioUploadMutation } from "@/features/api/file";
 import useGetTranscript from "@/features/api/detailMeeting/useGetDetailMeetingTranscript";
 import { useSelector } from "react-redux";
 import { getUserId } from "@/features/selectors/auth.selector";
+import { getCompaniesList } from "@/features/selectors/company.selector";
 
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();
+
+  const companies = useSelector(getCompaniesList);
+  console.log(companies);
+
   // const sidebarControl = useContext(SidebarControlContext);
   // const userData = useSelector(getUserDetail);
 
@@ -53,6 +58,8 @@ export default function useMeetingDesc() {
   const userId = useSelector(getUserId);
 
   const { data: meetingData, isLoading } = useGetMeetingTiming(meetingId ?? "");
+
+  console.log(meetingData);
 
   const meetingTiming = meetingData?.data as
     | CompanyMeetingDataProps
@@ -724,6 +731,7 @@ export default function useMeetingDesc() {
       isTranscriptReady ||
       meetingResponse?.state.recordingUserId
     ) {
+      // eslint-disable-next-line no-alert
       const confirmDelete = window.confirm(
         "A previous recording and transcript already exist. Starting a new recording will delete them. Do you want to continue?",
       );
