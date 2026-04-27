@@ -224,10 +224,7 @@ interface IProjectFormData {
     fileId: string;
     fileName: string;
   }[];
-  createdBy?: {
-    employeeId: string;
-    employeeName: string;
-  };
+  createdBy?: string;
   deadlineRequest?: string;
   projectDuration?: string;
 }
@@ -334,8 +331,8 @@ interface CompanyProjectDataProps {
   ProjectParameters?: ProjectParameters;
   ProjectEmployees?: Employee[];
   ProjectTasks?: ProjectTask[];
-  createdBy?: CreatedBy;
   projectStatusId: string;
+  createdBy?: string;
   projectDuration?: string;
   projectStatus?: ProjectStatusRes;
   otherProjectEmployees?: string[];
@@ -356,10 +353,6 @@ interface CompanyProjectDataProps {
       fileName: string;
     },
   ];
-  createdBy?: {
-    employeeId: string;
-    employeeName: string;
-  };
   deadlineRequest?: string;
   companyId?: string;
 }
@@ -809,7 +802,8 @@ interface Task {
   meetingId: string;
   meetings: Meeting[];
   comments: TaskComment[];
-  createdBy: CreatedBy;
+  // createdBy: string | createdBy;
+  createdBy: string;
   repeatType?: string;
   repetitiveTaskId?: string;
   employeeIds?: string | string[];

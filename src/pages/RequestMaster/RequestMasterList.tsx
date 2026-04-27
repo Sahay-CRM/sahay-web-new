@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 
 import { UpdateStatusModal } from "./UpdateStatusModal";
 import PageNotAccess from "../PageNoAccess";
+import FormSelect from "@/components/shared/Form/FormSelect";
 
 export default function RequestMasterList() {
   const {
@@ -99,25 +100,27 @@ export default function RequestMasterList() {
           </div>
           <div className="flex gap-4 flex-wrap items-center">
             <div>
-              <DropdownSearchMenu
-                label="Status"
+              <FormSelect
+                placeholder="Status"
                 options={statusOptions}
-                selected={filters.status || []}
+                value={filters.status === "all" ? "" : filters.status}
                 onChange={(selected) => {
-                  handleFilterChange("status", selected);
+                  handleFilterChange("status", selected as string);
                 }}
-                multiSelect
+                triggerClassName="h-10 py-0"
+                className="w-40"
               />
             </div>
             <div>
-              <DropdownSearchMenu
-                label="Type"
+              <FormSelect
+                placeholder="Type"
                 options={typeOptions}
-                selected={filters.type || []}
+                value={filters.type === "all" ? "" : filters.type}
                 onChange={(selected) => {
-                  handleFilterChange("type", selected);
+                  handleFilterChange("type", selected as string);
                 }}
-                multiSelect
+                triggerClassName="h-10 py-0"
+                className="w-40"
               />
             </div>
             <TooltipProvider>

@@ -50,6 +50,7 @@ interface SubmissionDetail {
     id: string;
     name: string;
     description: string;
+    companyId: string;
   };
   formResponses: FormResponse[];
   formErrors: FormError[];

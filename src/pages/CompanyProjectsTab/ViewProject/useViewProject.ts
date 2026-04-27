@@ -171,6 +171,17 @@ export default function useViewProject() {
   //     },
   //   });
   // });
+  const [filterUserId, setFilterUserId] = useState<string>("all");
+
+  const filteredComments = (commentsData.data || []).filter((comment) => {
+    if (filterUserId === "all") return true;
+    const selectedEmployee = projectApiData?.data?.otherEmployee?.find(
+      (emp) => emp.employeeId === filterUserId,
+    );
+    if (!selectedEmployee) return true;
+    return comment.comment.includes(`@${selectedEmployee.employeeName}`);
+  });
+
   return {
     projectApiData,
     projectId,
@@ -206,6 +217,9 @@ export default function useViewProject() {
     showCommentInput,
     setShowCommentInput,
     commentsData,
+    filteredComments,
+    filterUserId,
+    setFilterUserId,
     onSubmitComment,
     handleDeleteComment,
     handleCancelEdit,

@@ -300,7 +300,7 @@ export default function CompanyProjectTabList() {
                     coreParameterName={project.coreParameterName}
                     projectDocuments={project.projectDocuments}
                     projectDuration={project.projectDuration || ""}
-                    createdBy={project.createdBy!}
+                    createdBy={project.createdBy}
                     deadlineRequest={project.deadlineRequest}
                     onViewDocuments={handleViewDocuments}
                   />

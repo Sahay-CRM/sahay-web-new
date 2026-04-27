@@ -285,8 +285,8 @@ export default function useCompany() {
           fileType: string;
         }> = [];
 
-        // Add logo if present
-        if (data.logo) {
+        // Add logo if present and it's a new file (data URL)
+        if (typeof data.logo === "string" && data.logo.startsWith("data:")) {
           filesToUpload.push({ file: data.logo, fileType: "2000" });
         }
 

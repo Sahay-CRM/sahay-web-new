@@ -5,7 +5,6 @@ import { EditIcon, TrashIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import FormSelect from "@/components/shared/Form/FormSelect";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { Tooltip } from "@radix-ui/react-tooltip";
 import {
@@ -26,6 +25,8 @@ import {
   PopoverAnchor,
 } from "@/components/ui/popover";
 import { useSelector } from "react-redux";
+import FormSelect from "@/components/shared/Form/FormSelect";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown/searchDropdown";
 
 const ProjectView = () => {
   const {
@@ -44,6 +45,9 @@ const ProjectView = () => {
     showCommentInput,
     setShowCommentInput,
     commentsData,
+    filteredComments,
+    filterUserId,
+    setFilterUserId,
     onSubmitComment,
     handleDeleteComment,
     handleCancelEdit,
@@ -240,7 +244,7 @@ const ProjectView = () => {
                         Created By:
                       </span>
                       <span className="font-semibold">
-                        {project.createdBy?.employeeName || "-"}
+                        {project.createdBy || "-"}
                       </span>
                     </div>
 
@@ -334,11 +338,27 @@ const ProjectView = () => {
             <div className="bg-white p-5 h-[calc(100vh-480px)]  rounded-xl shadow-md flex flex-col">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Updates</h2>
-                {permission.Edit && (
-                  <Button onClick={() => setShowCommentInput((v) => !v)}>
-                    {showCommentInput ? "Cancel" : "Add Updates"}
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  <SearchDropdown
+                    placeholder="Filter Tagged"
+                    options={[
+                      { label: "All", value: "all" },
+                      ...(otherEmployees.map((emp: Employee) => ({
+                        label: emp.employeeName,
+                        value: emp.employeeId,
+                      })) || []),
+                    ]}
+                    selectedValues={[filterUserId]}
+                    onSelect={(item) => setFilterUserId(item.value)}
+                    onSearchChange={() => {}}
+                    className="w-48"
+                  />
+                  {permission.Edit && (
+                    <Button onClick={() => setShowCommentInput((v) => !v)}>
+                      {showCommentInput ? "Cancel" : "Add Updates"}
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {showCommentInput && (
@@ -408,8 +428,8 @@ const ProjectView = () => {
                     <p className="text-muted-foreground text-sm">
                       Loading Updates...
                     </p>
-                  ) : commentsData.data?.length ? (
-                    [...commentsData.data]
+                  ) : filteredComments?.length ? (
+                    [...filteredComments]
                       .sort(
                         (a, b) =>
                           new Date(b.createdAt).getTime() -

@@ -28,7 +28,7 @@ import { getInitials } from "@/features/utils/app.utils";
 import { queryClient } from "@/queryClient";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
-import { useGetBothCompanyMeeting } from "@/features/api/companyMeeting";
+import { useGetMeetingSearch } from "@/features/api/companyMeeting";
 
 export default function ProjectTaskList() {
   const { id: projectId } = useParams();
@@ -88,12 +88,7 @@ export default function ProjectTaskList() {
     filter: { isDeactivated: false },
   });
 
-  const { data: meetingData } = useGetBothCompanyMeeting({
-    filter: {
-      search: isMeetingSearch,
-      pageSize: 25,
-    },
-  });
+  const { data: searchMeetingData } = useGetMeetingSearch(isMeetingSearch);
 
   const employeeOption = employeedata
     ? employeedata.data.map((status) => ({
@@ -102,10 +97,22 @@ export default function ProjectTaskList() {
       }))
     : [];
 
-  const meetingDataOption = (meetingData?.data ?? []).map((item) => ({
-    label: item.meetingName ?? "",
-    value: item.meetingId ?? "",
-  }));
+  const meetingDataOption = [
+    ...(searchMeetingData?.data?.normal?.length
+      ? [{ label: "NORMAL meetings", value: "header-normal", isHeader: true }]
+      : []),
+    ...(searchMeetingData?.data?.normal ?? []).map((item) => ({
+      label: item.meetingName ?? "",
+      value: item.meetingId ?? "",
+    })),
+    ...(searchMeetingData?.data?.detail?.length
+      ? [{ label: "DETAIL meetings", value: "header-detail", isHeader: true }]
+      : []),
+    ...(searchMeetingData?.data?.detail ?? []).map((item) => ({
+      label: item.meetingName ?? "",
+      value: item.meetingId ?? "",
+    })),
+  ];
 
   const taskStatusOptions = taskStatus
     ? taskStatus.data.map((status) => ({

@@ -26,11 +26,12 @@ export const useRequestMasterList = () => {
     useState<RequestMasterData | null>(null);
 
   const [filters, setFilters] = useState({
-    status: ["PENDING"] as string[],
-    type: [] as string[],
+    status: "all",
+    type: "all",
   });
 
   const statusOptions = [
+    { label: "All", value: "all" },
     { label: "Pending", value: "PENDING" },
     { label: "Approved", value: "APPROVED" },
     { label: "Cancelled", value: "CANCELLED" },
@@ -38,11 +39,12 @@ export const useRequestMasterList = () => {
   ];
 
   const typeOptions = [
+    { label: "All", value: "all" },
     { label: "Task", value: "TASK" },
     { label: "Project", value: "PROJECT" },
   ];
 
-  const handleFilterChange = (key: string, value: string[]) => {
+  const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
     setPaginationFilter((prev) => ({ ...prev, currentPage: 1 }));
   };
@@ -50,7 +52,8 @@ export const useRequestMasterList = () => {
   const { data: requestData, isLoading } = useGetRequestMaster({
     filter: {
       ...paginationFilter,
-      ...filters,
+      status: filters.status === "all" ? "" : filters.status,
+      type: filters.type === "all" ? "" : filters.type,
     },
   });
 

@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import useViewTask from "./useViewTask";
 import { Controller, FormProvider } from "react-hook-form";
 import FormSelect from "@/components/shared/Form/FormSelect";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown/searchDropdown";
 import { useEffect, useRef, useState } from "react";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
@@ -36,6 +37,9 @@ export default function CompanyTaskView() {
     permission,
     isPending,
     commentsData,
+    filteredComments,
+    filterUserId,
+    setFilterUserId,
     editingCommentId,
     setShowCommentInput,
     onSubmitComment,
@@ -276,7 +280,7 @@ export default function CompanyTaskView() {
                       Created By
                     </p>
                     <p className="text-base font-medium">
-                      {taskData.createdBy?.employeeName || "-"}
+                      {taskData.createdBy || "-"}
                     </p>
                   </div>
 
@@ -295,11 +299,27 @@ export default function CompanyTaskView() {
             <div className=" p-5 bg-white border rounded-xl shadow-sm flex flex-col max-h-[calc(100vh-150px)] overflow-auto ">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Comments</h2>
-                {permission.Edit && (
-                  <Button onClick={() => setShowCommentInput((v) => !v)}>
-                    {showCommentInput ? "Cancel" : "Add Comment"}
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  <SearchDropdown
+                    placeholder="Filter Tagged"
+                    options={[
+                      { label: "All", value: "all" },
+                      ...(assignees.map((emp: Employee) => ({
+                        label: emp.employeeName,
+                        value: emp.employeeId,
+                      })) || []),
+                    ]}
+                    selectedValues={[filterUserId]}
+                    onSelect={(item) => setFilterUserId(item.value)}
+                    onSearchChange={() => {}}
+                    className="w-48"
+                  />
+                  {permission.Edit && (
+                    <Button onClick={() => setShowCommentInput((v) => !v)}>
+                      {showCommentInput ? "Cancel" : "Add Comment"}
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {showCommentInput && (
@@ -368,8 +388,8 @@ export default function CompanyTaskView() {
                   <div className="flex items-center animate-spin gap-2 text-sm text-muted-foreground">
                     <SpinnerIcon />
                   </div>
-                ) : commentsData.data?.length ? (
-                  [...commentsData.data]
+                ) : filteredComments?.length ? (
+                  [...filteredComments]
                     .sort(
                       (a, b) =>
                         new Date(b.createdDatetime).getTime() -

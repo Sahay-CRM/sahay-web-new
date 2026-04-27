@@ -54,6 +54,7 @@ const Urls = {
   getCompanyMeetingById: (id: string) => `${baseUrl}/company/meeting/get/${id}`,
   getAllCompanyMeetingByPage: () => `${baseUrl}/company/meeting/get`,
   getCompanyMeetingSearch: () => `${baseUrl}/company/meeting/search`,
+  getMeetingSearch: () => `${baseUrl}/company/meeting/get-search`,
 
   getAllCompanyProject: () => `${baseUrl}/company/project/get-all`,
   addCompanyProject: () => `${baseUrl}/company/project/create`,

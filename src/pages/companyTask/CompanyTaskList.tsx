@@ -258,7 +258,7 @@ export default function CompanyTaskList() {
             actionColumnWidth="w-[120px]"
             extraColumns={[
               {
-                label: "Created",
+                label: "Added",
                 width: "w-[100px]",
                 render: (row: TaskGetPaging) => {
                   const initials = getInitials(row.createdBy!);

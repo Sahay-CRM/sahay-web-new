@@ -29,6 +29,10 @@ export default function useUpdateGroupSequence() {
         queryKey: ["get-project-list"],
       });
 
+      queryClient.invalidateQueries({
+        queryKey: ["get-group-list"],
+      });
+
       toast.success("Group sequence updated successfully!");
     },
     onError: (error: AxiosError<{ message?: string }>) => {

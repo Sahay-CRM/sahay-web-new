@@ -319,25 +319,6 @@ export default function CompanyTaskList() {
             onRowClick={(row: KPIFormData) => {
               handleRowsModalOpen(row);
             }}
-            customActions={(row: KPIFormData) => (
-              <div className="flex items-center justify-center mb-1 gap-2 mr-1 ">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center">
-                        <Switch
-                          checked={row.isFocus || false}
-                          onCheckedChange={(checked) => {
-                            handleToggleFocus(row, checked);
-                          }}
-                        />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>Focus KPI on Dashboard</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            )}
             isLoading={isLoading}
             isActionButton={() => true}
             paginationDetails={mapPaginationDetails(datpointData)}
@@ -360,7 +341,7 @@ export default function CompanyTaskList() {
               "frequencyType",
               "coreParameterName",
             ]}
-            actionColumnWidth="w-[220px] text-center overflow-hidden "
+            actionColumnWidth="w-[180px] text-center overflow-hidden "
             extraColumns={[
               {
                 label: "Added",
@@ -381,6 +362,28 @@ export default function CompanyTaskList() {
                     </TooltipProvider>
                   );
                 },
+              },
+              {
+                label: "Focus",
+                render: (row) => (
+                  <div className="flex items-center justify-center">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center">
+                            <Switch
+                              checked={row.isFocus || false}
+                              onCheckedChange={(checked) => {
+                                handleToggleFocus(row, checked);
+                              }}
+                            />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>Focus KPI on Dashboard</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                ),
               },
             ]}
           />

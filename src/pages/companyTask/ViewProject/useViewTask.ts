@@ -98,6 +98,17 @@ export default function useViewCompanyTask() {
     }
   }, [taskApiData, methods]);
 
+  const [filterUserId, setFilterUserId] = useState<string>("all");
+
+  const filteredComments = (commentsData.data || []).filter((comment) => {
+    if (filterUserId === "all") return true;
+    const selectedEmployee = taskApiData?.data?.assignUsers?.find(
+      (emp) => emp.employeeId === filterUserId,
+    );
+    if (!selectedEmployee) return true;
+    return comment.comment.includes(`@${selectedEmployee.employeeName}`);
+  });
+
   return {
     taskApiData,
     navigate,
@@ -110,6 +121,9 @@ export default function useViewCompanyTask() {
     addcomment,
     isPending,
     commentsData,
+    filteredComments,
+    filterUserId,
+    setFilterUserId,
     editingCommentId,
     setShowCommentInput,
     onSubmitComment,

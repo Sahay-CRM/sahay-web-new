@@ -23,10 +23,7 @@ interface ProjectCardProps {
     fileName: string;
   }[];
   projectDuration: string;
-  createdBy?: {
-    employeeId: string;
-    employeeName: string;
-  };
+  createdBy?: string | undefined;
   deadlineRequest?: string;
   onViewDocuments?: (
     projectDocuments: { fileId: string; fileName: string }[],
@@ -59,6 +56,7 @@ export default function ProjectCard({
   const handleView = () => {
     navigate(`/dashboard/projects/view/${projectId}`);
   };
+  console.log(createdBy);
 
   return (
     <div className="bg-white border shadow-md rounded-xl p-4 relative hover:shadow-md transition flex flex-col w-full h-full">
