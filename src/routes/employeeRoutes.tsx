@@ -131,7 +131,7 @@ const FormSubmissionDetail = lazy(
 );
 
 const HandOverData = lazy(() => import("../pages/HandOverData"));
-const Reports = lazy(() => import("../pages/Reports"));
+const Reports = lazy(() => import("../pages/Reports/report"));
 
 export default function EmployeeRoutes() {
   return (

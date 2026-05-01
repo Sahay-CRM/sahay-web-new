@@ -146,6 +146,8 @@ const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
   onToggleExpanded,
 }) => {
   const permissions = useSelector(getUserPermission);
+  const user = useSelector(getUserDetail);
+  console.log("IconNavBar User:", user);
 
   const filteredMenuItems = data?.filter((item) => {
     if (item.items) {
@@ -156,6 +158,24 @@ const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
       : item.moduleKey
         ? [item.moduleKey]
         : [];
+    const isReportModule =
+      item.id === 18 ||
+      item.label === "Reports" ||
+      item.moduleKey === "REPORTS";
+    const userType = user?.employeeType?.toUpperCase()?.trim();
+    const isAuthorizedReport =
+      isReportModule &&
+      (userType === "CONSULTANT" ||
+        userType === "SAHAYTEAMMATE" ||
+        userType === "SAHAY TEAMMATE" ||
+        userType === "OWNER" ||
+        user?.isSuperAdmin === true ||
+        String(user?.isSuperAdmin) === "true");
+
+    if (isReportModule) {
+      return !!isAuthorizedReport;
+    }
+
     return (
       moduleKeys.length === 0 ||
       moduleKeys.some((key) => permissions?.[key]?.View)

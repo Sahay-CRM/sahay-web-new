@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import useGetReports from "@/features/api/Reports/useGetReports";
-// import useGetMonthlyReports from "@/features/api/Reports/useGetMonthlyReports";
 import {
   Tooltip,
   TooltipContent,
@@ -9,14 +8,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isColorDark } from "@/features/utils/color.utils";
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "@/components/ui/select";
-// import mockDashboardData from "./datajson";
+import { useSelector } from "react-redux";
+import { getUserDetail } from "@/features/selectors/auth.selector";
 
 const SectionTitle = ({ title }: { title: string }) => (
   <h3 className="text-[14px] font-bold text-slate-400 mb-4">{title}</h3>
@@ -288,21 +281,31 @@ const AgendaList = ({ title, items }: { title: string; items: ListItem[] }) => {
 };
 export default function ReportsPage() {
   const { setBreadcrumbs } = useBreadcrumbs();
+  const userDetail = useSelector(getUserDetail);
   const { data: reportsData, isLoading } = useGetReports();
-  // const [selectedMonth, setSelectedMonth] = useState("April 2026");
-  // const { data: monthlyData } = useGetMonthlyReports(selectedMonth);
+
+  const userType = userDetail?.employeeType?.toUpperCase()?.trim();
+  const isAuthorized =
+    userType === "CONSULTANT" ||
+    userType === "SAHAYTEAMMATE" ||
+    userType === "SAHAY TEAMMATE" ||
+    userType === "OWNER" ||
+    userDetail?.isSuperAdmin === true ||
+    String(userDetail?.isSuperAdmin) === "true";
 
   useEffect(() => {
     setBreadcrumbs([{ label: "Performance Insights", href: "" }]);
   }, [setBreadcrumbs]);
 
-  // const months = [
-  //   { value: "January 2026", label: "January 2026" },
-  //   { value: "February 2026", label: "February 2026" },
-  //   { value: "March 2026", label: "March 2026" },
-  //   { value: "April 2026", label: "April 2026" },
-  //   { value: "May 2026", label: "May 2026" },
-  // ];
+  if (!isAuthorized) {
+    return (
+      <div className="flex items-center justify-center min-h-[500px] bg-[#F8FAFC]">
+        <div className="text-xl font-semibold text-red-600">
+          You are Not Authorized to view this report
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -319,7 +322,6 @@ export default function ReportsPage() {
   }
 
   // Use both real data and mock data for missing parts
-  // const data = mockDashboardData;
   const realData = reportsData;
 
   return (

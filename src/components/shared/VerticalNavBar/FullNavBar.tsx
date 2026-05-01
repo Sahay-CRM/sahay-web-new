@@ -12,9 +12,10 @@ import { Link } from "react-router-dom";
 
 const FullNavBar = ({ data }: FullNavBarProps) => {
   const permissions = useSelector(getUserPermission);
-
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   const user = useSelector(getUserDetail);
+  console.log("FullNavBar User:", user);
+  console.log("FullNavBar Data Length:", data?.length);
 
   const handleAccordionToggle = (index: number) => {
     setActiveIndex((prevIndex) => (prevIndex === index ? -1 : index));
@@ -53,6 +54,30 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
         : item.moduleKey
           ? [item.moduleKey]
           : [];
+
+      const isReportModule =
+        item.id === 18 ||
+        item.label === "Reports" ||
+        item.moduleKey === "REPORTS";
+      const userType = user?.employeeType?.toUpperCase()?.trim();
+      const isAuthorizedReport =
+        isReportModule &&
+        (userType === "CONSULTANT" ||
+          userType === "SAHAYTEAMMATE" ||
+          userType === "SAHAY TEAMMATE" ||
+          userType === "OWNER" ||
+          user?.isSuperAdmin === true ||
+          String(user?.isSuperAdmin) === "true");
+
+      if (isReportModule) {
+        console.log(
+          "Found Report Module, Authorized:",
+          isAuthorizedReport,
+          "User Type:",
+          userType,
+        );
+        return isAuthorizedReport ? item : null;
+      }
 
       if (
         moduleKeys.length === 0 ||
