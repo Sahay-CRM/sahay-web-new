@@ -14,8 +14,6 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
   const permissions = useSelector(getUserPermission);
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   const user = useSelector(getUserDetail);
-  console.log("FullNavBar User:", user);
-  console.log("FullNavBar Data Length:", data?.length);
 
   const handleAccordionToggle = (index: number) => {
     setActiveIndex((prevIndex) => (prevIndex === index ? -1 : index));
@@ -70,12 +68,6 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
           String(user?.isSuperAdmin) === "true");
 
       if (isReportModule) {
-        console.log(
-          "Found Report Module, Authorized:",
-          isAuthorizedReport,
-          "User Type:",
-          userType,
-        );
         return isAuthorizedReport ? item : null;
       }
 

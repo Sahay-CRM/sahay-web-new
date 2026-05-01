@@ -147,7 +147,6 @@ const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
 }) => {
   const permissions = useSelector(getUserPermission);
   const user = useSelector(getUserDetail);
-  console.log("IconNavBar User:", user);
 
   const filteredMenuItems = data?.filter((item) => {
     if (item.items) {
