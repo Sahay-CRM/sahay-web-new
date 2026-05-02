@@ -1,4 +1,4 @@
-import { Calendar, Edit, Eye, Image } from "lucide-react";
+import { Clock, Edit, Eye, Image } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -8,12 +8,12 @@ import { TableTooltip } from "@/components/shared/DataTable/tableTooltip";
 import { getInitials } from "@/features/utils/app.utils";
 import { useNavigate } from "react-router-dom";
 import { isColorDark } from "@/features/utils/color.utils";
+import { useZoom } from "@/features/context/ZoomContext";
 interface ProjectCardProps {
   projectId: string;
   name: string;
   description: string;
   assignees: string[];
-  startDate?: string;
   endDate: string;
   priority: string;
   color: string;
@@ -22,6 +22,9 @@ interface ProjectCardProps {
     fileId: string;
     fileName: string;
   }[];
+  projectDuration: string;
+  createdBy?: string | undefined;
+  deadlineRequest?: string;
   onViewDocuments?: (
     projectDocuments: { fileId: string; fileName: string }[],
     projectId: string,
@@ -33,14 +36,18 @@ export default function ProjectCard({
   name,
   description,
   assignees,
-  startDate,
   endDate,
   priority,
   color,
   coreParameterName,
   projectDocuments,
+  projectDuration,
+  createdBy,
+  deadlineRequest,
   onViewDocuments,
 }: ProjectCardProps) {
+  const { zoom } = useZoom();
+  const scale = zoom / 100;
   const navigate = useNavigate();
   const handleEdit = () => {
     navigate(`/dashboard/projects/edit/${projectId}`);
@@ -49,14 +56,35 @@ export default function ProjectCard({
   const handleView = () => {
     navigate(`/dashboard/projects/view/${projectId}`);
   };
+  console.log(createdBy);
 
   return (
     <div className="bg-white border shadow-md rounded-xl p-4 relative hover:shadow-md transition flex flex-col w-full h-full">
+      {deadlineRequest === "PENDING" && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="absolute top-0 left-0 w-4 h-4 overflow-hidden rounded-tl-xl cursor-help z-10">
+              <div
+                className="absolute top-0 left-0 w-full h-full bg-red-600 animate-pulse"
+                style={{ clipPath: "polygon(0% 0%, 100% 0%, 0% 100%)" }}
+              />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            Deadline change request pending
+          </TooltipContent>
+        </Tooltip>
+      )}
       <div>
         <div className="flex items-start justify-between mb-1">
-          <h3 className="text-md font-semibold text-gray-800 flex-1 pr-2 break-words">
-            {name}
-          </h3>
+          <div className="flex items-center gap-2 pr-2">
+            <h3
+              className="text-base font-semibold text-gray-800 flex-1 break-words"
+              style={{ fontSize: `${16 * scale}px` }}
+            >
+              {name}
+            </h3>
+          </div>
 
           <div className="flex ">
             <button
@@ -66,7 +94,10 @@ export default function ProjectCard({
               }}
               className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
             >
-              <Edit className="h-4 w-4" />
+              <Edit
+                className="h-4 w-4"
+                style={{ width: 16 * scale, height: 16 * scale }}
+              />
             </button>
 
             <button
@@ -76,7 +107,10 @@ export default function ProjectCard({
               }}
               className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
             >
-              <Eye className="h-4 w-4" />
+              <Eye
+                className="h-4 w-4"
+                style={{ width: 16 * scale, height: 16 * scale }}
+              />
             </button>
             {projectDocuments && projectDocuments.length > 0 && (
               <button
@@ -86,7 +120,10 @@ export default function ProjectCard({
                 }}
                 className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
               >
-                <Image className="h-4 w-4" />
+                <Image
+                  className="h-4 w-4"
+                  style={{ width: 16 * scale, height: 16 * scale }}
+                />
               </button>
             )}
           </div>
@@ -98,19 +135,30 @@ export default function ProjectCard({
         <p
           className="text-gray-500 text-sm mb-1.5 line-clamp-2"
           title={description}
+          style={{ fontSize: `${14 * scale}px` }}
         >
           {description}
         </p>
         {/* <p className="text-gray-500 text-sm mb-2">{description}</p> */}
 
-        <div className="mb-1.5 text-sm text-gray-600 flex flex-wrap items-center gap-1">
+        <div
+          className="mb-1.5 text-sm text-gray-600 flex flex-wrap items-center gap-1"
+          style={{ fontSize: `${14 * scale}px` }}
+        >
           <span className="font-semibold ">Assignees :</span>
 
           {assignees.slice(0, 7).map((name, idx) => (
             <span key={idx} className="inline-flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <p className="rounded-full h-6 w-6 bg-gray-100 text-xs flex items-center justify-center font-medium">
+                  <p
+                    className="rounded-full bg-gray-100 text-xs flex items-center justify-center font-medium"
+                    style={{
+                      width: 24 * scale,
+                      height: 24 * scale,
+                      fontSize: `${12 * scale}px`,
+                    }}
+                  >
                     {getInitials(name)}
                   </p>
                 </TooltipTrigger>
@@ -121,12 +169,22 @@ export default function ProjectCard({
 
           {/* Agar extra assignees ho to +X show karo */}
           {assignees.length > 7 && (
-            <span className="rounded-full h-6 w-6 bg-gray-200 text-xs flex items-center justify-center font-medium cursor-default">
+            <span
+              className="rounded-full bg-gray-200 text-xs flex items-center justify-center font-medium cursor-default"
+              style={{
+                width: 24 * scale,
+                height: 24 * scale,
+                fontSize: `${12 * scale}px`,
+              }}
+            >
               +{assignees.length - 7}
             </span>
           )}
         </div>
-        <div className="mb-2 text-sm text-gray-600 flex items-center gap-1">
+        <div
+          className="mb-2 text-sm text-gray-600 flex items-center gap-1"
+          style={{ fontSize: `${14 * scale}px` }}
+        >
           <span className="font-semibold  whitespace-nowrap">
             Business Function :
           </span>
@@ -134,29 +192,57 @@ export default function ProjectCard({
             {coreParameterName}
           </span>
         </div>
+        <div
+          className="mb-2 flex items-center gap-2 text-sm text-gray-600"
+          style={{ fontSize: `${14 * scale}px` }}
+        >
+          <span className="font-semibold whitespace-nowrap flex items-center gap-1">
+            Project Deadline :
+          </span>
+          <TableTooltip text={`${endDate || ""}`} />
+        </div>
+        <div
+          className="mb-2 flex items-center gap-2 text-sm text-gray-600"
+          style={{ fontSize: `${14 * scale}px` }}
+        >
+          <span className="font-semibold  whitespace-nowrap">Created By :</span>
+          <TableTooltip text={`${createdBy || ""}`} />
+        </div>
       </div>
 
       {/* Bottom section */}
       <div className="flex items-center justify-between right-0 border-t pt-2 mt-auto">
         {/* Date (smaller font) */}
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Calendar className="w-4 h-4" />
-          <div className="max-w-[150px]">
-            <TableTooltip
-              text={`${startDate ? `${startDate} - ` : ""}${endDate || ""}`}
-            />
-          </div>
+        <div
+          className="flex items-center gap-2 text-sm text-gray-600"
+          style={{ fontSize: `${14 * scale}px` }}
+        >
+          <Clock
+            className="text-gray-400"
+            style={{ width: 16 * scale, height: 16 * scale }}
+          />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div style={{ fontSize: `${12 * scale}px` }}>
+                {projectDuration}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Project Duration : {projectDuration}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Priority pill bottom-right */}
         {priority && (
           <div className="absolute  mt-1 right-0 pt-1">
             <div
-              className="max-w-[200px] py-1.5 pl-6 pr-3 rounded-l-full text-sm font-semibold cursor-pointer"
+              className=" py-1.5 pl-6 pr-3 rounded-l-full font-semibold cursor-pointer"
               style={{
                 color: isColorDark(color) ? "#fff" : "#000",
                 borderRight: `2px solid ${color}`,
                 background: `${color}`,
+                fontSize: `${14 * scale}px`,
               }}
             >
               <TableTooltip text={priority} />

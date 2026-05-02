@@ -67,10 +67,10 @@ const MenuItem: React.FC<MenuItemProps> = ({
       {/* Icon Menu Item */}{" "}
       <div
         ref={iconRef}
-        className={`px-4 py-3 cursor-pointer transition-colors duration-200 text-gray-700 hover:text-primary text-center`}
+        className={`px-3 py-3 cursor-pointer transition-colors duration-200 text-gray-700 hover:text-primary text-center`}
         onClick={handleClick}
       >
-        <LucideIcon name={icon as IconName} size={24} />
+        <LucideIcon name={icon as IconName} size="1.5rem" />
       </div>
       {isHovered && (
         <div
@@ -146,6 +146,7 @@ const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
   onToggleExpanded,
 }) => {
   const permissions = useSelector(getUserPermission);
+  const user = useSelector(getUserDetail);
 
   const filteredMenuItems = data?.filter((item) => {
     if (item.items) {
@@ -156,14 +157,35 @@ const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
       : item.moduleKey
         ? [item.moduleKey]
         : [];
-    return moduleKeys.some((key) => permissions?.[key]?.View);
+    const isReportModule =
+      item.id === 18 ||
+      item.label === "Reports" ||
+      item.moduleKey === "REPORTS";
+    const userType = user?.employeeType?.toUpperCase()?.trim();
+    const isAuthorizedReport =
+      isReportModule &&
+      (userType === "CONSULTANT" ||
+        userType === "SAHAYTEAMMATE" ||
+        userType === "SAHAY TEAMMATE" ||
+        userType === "OWNER" ||
+        user?.isSuperAdmin === true ||
+        String(user?.isSuperAdmin) === "true");
+
+    if (isReportModule) {
+      return !!isAuthorizedReport;
+    }
+
+    return (
+      moduleKeys.length === 0 ||
+      moduleKeys.some((key) => permissions?.[key]?.View)
+    );
   });
 
   return (
-    <div className="h-screen text-primary w-16 p-1 z-40 flex flex-col relative">
+    <div className="h-full text-primary w-[4rem] p-1 z-40 flex flex-col relative">
       {/* Top Company Logo with Tooltip */}
 
-      <Avatar className="mt-2  rounded-full w-[55px] h-[55px]">
+      <Avatar className="mt-2 rounded-full w-[3.4375rem] h-[3.4375rem]">
         <CompanyLogo />
       </Avatar>
 
@@ -185,7 +207,7 @@ const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
 
       {/* S Logo at Bottom */}
       <div className="flex justify-center items-center p-1 mb-1 mt-auto">
-        <img src={logoImg} alt="logo" className="w-10" />
+        <img src={logoImg} alt="logo" className="w-[2.5rem]" />
       </div>
     </div>
   );

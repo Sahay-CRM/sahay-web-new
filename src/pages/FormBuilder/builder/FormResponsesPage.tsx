@@ -4,6 +4,8 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useGetForm, useGetFormResponse } from "@/features/api/Form";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import CompanyAccessGuard from "@/components/shared/CompanyAccessGuard/CompanyAccessGuard";
+import { getCompaniesList } from "@/features/selectors/company.selector";
 import PageNotAccess from "../../PageNoAccess";
 import {
   Submission,
@@ -55,12 +57,22 @@ export default function FormResponsesPage() {
 
   const form = formData?.data;
 
+  const companiesList = useSelector(getCompaniesList);
+  const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
+  const resourceCompanyId = form?.companyId;
+  const isAuthorized =
+    !id ||
+    !resourceCompanyId ||
+    resourceCompanyId === currentCompany?.companyId;
+
   useEffect(() => {
     setBreadcrumbs([
       { label: "Forms", href: "/dashboard/forms" },
-      { label: `${form?.name} Form Responses`, href: "" },
+      ...(isAuthorized && form?.name
+        ? [{ label: `${form?.name} Form Responses`, href: "" }]
+        : [{ label: `Form Responses`, href: "" }]),
     ]);
-  }, [setBreadcrumbs, form?.name, id]);
+  }, [setBreadcrumbs, form?.name, id, isAuthorized]);
 
   const permission = useSelector(getUserPermission).FORM;
 
@@ -160,87 +172,89 @@ export default function FormResponsesPage() {
   }
 
   return (
-    <div className="w-full px-2 sm:px-4 py-4">
-      <div className="flex items-center gap-3 mb-5">
-        <div>
-          <h1 className="font-semibold text-xl text-black">
-            {form?.name || "Form"}
-          </h1>
-          <p className="text-xs text-gray-500">Submissions Listing</p>
+    <CompanyAccessGuard companyId={resourceCompanyId} isLoading={formLoading}>
+      <div className="w-full px-2 sm:px-4 py-4">
+        <div className="flex items-center gap-3 mb-5">
+          <div>
+            <h1 className="font-semibold text-xl text-black">
+              {form?.name || "Form"}
+            </h1>
+            <p className="text-xs text-gray-500">Submissions Listing</p>
+          </div>
         </div>
-      </div>
-      <div className="flex justify-between gap-4 mb-6">
-        <SearchInput
-          placeholder="Search responses..."
-          searchValue={paginationFilter?.search || ""}
-          setPaginationFilter={setPaginationFilter}
-          className="w-80"
-        />
-
-        <div className="flex items-center gap-4">
-          <FormSelect
-            placeholder="Select Status"
-            options={statusOptions}
-            value={submissionStatus}
-            onChange={(val) => setSubmissionStatus(val as string)}
-            className="w-[220px]"
-            triggerClassName="h-10 py-0 border-gray-200 focus:ring-[#2f328e]/20"
+        <div className="flex justify-between gap-4 mb-6">
+          <SearchInput
+            placeholder="Search responses..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80"
           />
 
-          <Button
-            onClick={handleDownloadExcel}
-            variant="outline"
-            className="h-10 border-[#2f328e] text-[#2f328e] hover:bg-[#2f328e] hover:text-white"
-            disabled={isExporting}
-          >
-            {isExporting ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4 mr-2" />
+          <div className="flex items-center gap-4">
+            <FormSelect
+              placeholder="Select Status"
+              options={statusOptions}
+              value={submissionStatus}
+              onChange={(val) => setSubmissionStatus(val as string)}
+              className="w-[220px]"
+              triggerClassName="h-10 py-0 border-gray-200 focus:ring-[#2f328e]/20"
+            />
+
+            <Button
+              onClick={handleDownloadExcel}
+              variant="outline"
+              className="h-10 border-[#2f328e] text-[#2f328e] hover:bg-[#2f328e] hover:text-white"
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 mr-2" />
+              )}
+              {isExporting ? "Exporting..." : "Export to Excel"}
+            </Button>
+          </div>
+        </div>
+        <div className="bg-white mt-5 overflow-hidden mb-6">
+          <TableData
+            tableData={responsesData?.data.map(
+              (submission: Submission, index: number) => ({
+                ...submission,
+                srNo:
+                  (responsesData.currentPage - 1) * responsesData.pageSize +
+                  index +
+                  1,
+                score: submission?.score?.scoreString,
+                formattedDate: formatToDateTime(submission.updatedAt),
+              }),
             )}
-            {isExporting ? "Exporting..." : "Export to Excel"}
-          </Button>
+            columns={visibleColumns}
+            primaryKey="id"
+            isLoading={responsesLoading}
+            moduleKey="FORM"
+            isActionButton={() => false}
+            actionColumnWidth="w-[120px]"
+            setPaginationFilter={setPaginationFilter}
+            paginationDetails={mapPaginationDetails(responsesData)}
+            searchValue={paginationFilter.search}
+            customActions={(row) => (
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 text-[#2f328e] border-[#2f328e]/20 hover:bg-[#2f328e] hover:text-white transition-all shadow-sm"
+                  onClick={() =>
+                    navigate(`/dashboard/form-submission-detail/${row.id}`)
+                  }
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  Detail
+                </Button>
+              </div>
+            )}
+          />
         </div>
       </div>
-      <div className="bg-white mt-5 overflow-hidden mb-6">
-        <TableData
-          tableData={responsesData?.data.map(
-            (submission: Submission, index: number) => ({
-              ...submission,
-              srNo:
-                (responsesData.currentPage - 1) * responsesData.pageSize +
-                index +
-                1,
-              score: submission?.score?.scoreString,
-              formattedDate: formatToDateTime(submission.updatedAt),
-            }),
-          )}
-          columns={visibleColumns}
-          primaryKey="id"
-          isLoading={responsesLoading}
-          moduleKey="FORM"
-          isActionButton={() => false}
-          actionColumnWidth="w-[120px]"
-          setPaginationFilter={setPaginationFilter}
-          paginationDetails={mapPaginationDetails(responsesData)}
-          searchValue={paginationFilter.search}
-          customActions={(row) => (
-            <div className="flex justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 gap-1.5 text-[#2f328e] border-[#2f328e]/20 hover:bg-[#2f328e] hover:text-white transition-all shadow-sm"
-                onClick={() =>
-                  navigate(`/dashboard/form-submission-detail/${row.id}`)
-                }
-              >
-                <Eye className="w-3.5 h-3.5" />
-                Detail
-              </Button>
-            </div>
-          )}
-        />
-      </div>
-    </div>
+    </CompanyAccessGuard>
   );
 }

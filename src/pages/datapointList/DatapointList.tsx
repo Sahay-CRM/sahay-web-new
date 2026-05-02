@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Switch } from "@/components/ui/switch";
 import useCompanyTaskList from "./useDatapointList";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
@@ -21,6 +22,7 @@ import TableData from "@/components/shared/DataTable/DataTableKpi";
 import ConfirmationDeleteModal from "./ConfirmationKPIDeleteModal";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
+import { getColorFromName } from "@/features/utils/formatting.utils";
 
 const validationOptions = [
   { value: "EQUAL_TO", label: "= Equal to" },
@@ -104,6 +106,13 @@ export default function CompanyTaskList() {
     setIsEditKpiId,
     setIsEditModalOpen,
     handleSoftDeleteRestore,
+    departmentOptions,
+    employeeOptions,
+    selectedEmployees,
+    selectedDepartments,
+    handleEmployeeFilterChange,
+    handleDepartmentFilterChange,
+    handleToggleFocus,
   } = useCompanyTaskList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -215,6 +224,28 @@ export default function CompanyTaskList() {
             />
           </div>
           <div className="flex items-center gap-2">
+            <div>
+              <DropdownSearchMenu
+                label="Department Selection"
+                options={departmentOptions}
+                selected={selectedDepartments}
+                onChange={(selected) => {
+                  handleDepartmentFilterChange(selected as string[]);
+                }}
+                multiSelect
+              />
+            </div>
+            <div>
+              <DropdownSearchMenu
+                label="User Selection"
+                options={employeeOptions}
+                selected={selectedEmployees}
+                onChange={(selected) => {
+                  handleEmployeeFilterChange(selected as string[]);
+                }}
+                multiSelect
+              />
+            </div>
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>
@@ -263,6 +294,10 @@ export default function CompanyTaskList() {
                       : `${item.value1}`,
                 employeeName: getInitials(item.employeeName || ""), // Use initials for the display
                 employeeFullName: item.employeeName,
+                createdByEmployeeName: getInitials(
+                  item.createdBy?.employeeName || "",
+                ),
+                createdByFullName: item.createdBy?.employeeName || "",
                 isActive: !item.isDelete,
               }),
             )}
@@ -306,7 +341,51 @@ export default function CompanyTaskList() {
               "frequencyType",
               "coreParameterName",
             ]}
-            actionColumnWidth="w-[180px] overflow-hidden "
+            actionColumnWidth="w-[180px] text-center overflow-hidden "
+            extraColumns={[
+              {
+                label: "Added",
+                width: "w-[80px]",
+                render: (row) => {
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`w-7 h-7 bg-primary text-white flex items-center justify-center aspect-square rounded-full text-[12px] font-medium ${getColorFromName(row.createdByFullName)}`}
+                          >
+                            {row.createdByEmployeeName}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>{row.createdByFullName}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                },
+              },
+              {
+                label: "Focus",
+                render: (row) => (
+                  <div className="flex items-center justify-center">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center">
+                            <Switch
+                              checked={row.isFocus || false}
+                              onCheckedChange={(checked) => {
+                                handleToggleFocus(row, checked);
+                              }}
+                            />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>Focus KPI on Dashboard</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                ),
+              },
+            ]}
           />
         </div>
         {isDeleteModalOpen && (

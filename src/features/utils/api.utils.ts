@@ -32,8 +32,11 @@ axiosInstance.interceptors.response.use(
       message === "Unauthorized"
     ) {
       const isFormPublic = error.config?.url?.includes("/form/master/");
+      const isUpdatePublic = error.config?.url?.includes(
+        "/company/updates/get-all",
+      );
 
-      if (!isFormPublic) {
+      if (!isFormPublic && !isUpdatePublic) {
         localStorage.clear();
         store.dispatch(logout());
         document.cookie.split(";").forEach(function (c) {

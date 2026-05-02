@@ -7,7 +7,7 @@ export default function VerticalNavBar({
   onToggleDrawer,
 }: VerticalNavBarProps) {
   return (
-    <div className="">
+    <div className="h-full">
       {isExpanded ? (
         <FullNavBar data={data} />
       ) : (

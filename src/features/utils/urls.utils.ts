@@ -53,6 +53,8 @@ const Urls = {
     `${baseUrl}/company/meeting/delete/${id}`,
   getCompanyMeetingById: (id: string) => `${baseUrl}/company/meeting/get/${id}`,
   getAllCompanyMeetingByPage: () => `${baseUrl}/company/meeting/get`,
+  getCompanyMeetingSearch: () => `${baseUrl}/company/meeting/search`,
+  getMeetingSearch: () => `${baseUrl}/company/meeting/get-search`,
 
   getAllCompanyProject: () => `${baseUrl}/company/project/get-all`,
   addCompanyProject: () => `${baseUrl}/company/project/create`,
@@ -62,6 +64,7 @@ const Urls = {
     `${baseUrl}/company/project/delete/${id}`,
   getCompanyProjectById: (id: string) => `${baseUrl}/company/project/get/${id}`,
   getAllCompanyProjectByPage: () => `${baseUrl}/company/project/get`,
+  getCompanyProjectSearch: () => `${baseUrl}/company/project/search`,
 
   getAllCompanyProjectDropdown: () => `${baseUrl}/company/project/get-all`,
   getAllCorParameter: () => `${baseUrl}/core-param/get`,
@@ -75,6 +78,7 @@ const Urls = {
   deleteCompanyTask: (id: string) => `${baseUrl}/company/task/delete/${id}`,
   getCompanyTaskById: (id: string) => `${baseUrl}/company/task/get/${id}`,
   getAllCompanyTaskByPage: () => `${baseUrl}/company/task/get`,
+  getCompanyTaskSearch: () => `${baseUrl}/company/task/search`,
 
   dropdownDepartment: () => `${baseUrl}/department/get-all`,
   getDepartmentList: () => `${baseUrl}/department/get`,
@@ -124,6 +128,7 @@ const Urls = {
 
   getKpinonselectList: () => `${baseUrl}/kpi/get/non-select`,
   updateCompanyDatapoint: (id: string) => `${baseUrl}/company/kpi/update/${id}`,
+  updateKPIFocus: (id: string) => `${baseUrl}/company/kpi/update-focus/${id}`,
   addCompanyDatapoint: () => `${baseUrl}/company/kpi/create`,
   getKpiById: (id: string) => `${baseUrl}/company/kpi/get/${id}`,
   deleteDatapointMeeting: (id: string) => `${baseUrl}/company/kpi/delete/${id}`,
@@ -242,6 +247,8 @@ const Urls = {
 
   getMeetingnotes: (id: string) =>
     `${baseUrl}/company/detail-meeting/note/get/${id}`,
+
+  detailMeetingSearch: () => `${baseUrl}/company/detail-meeting/search`,
 
   addIssues: () => `${baseUrl}/company/issue/create`,
   updateIssues: (id: string) => `${baseUrl}/company/issue/update/${id}`,
@@ -402,6 +409,22 @@ const Urls = {
   kpiNewValidation: () => `${baseUrl}/company/kpi/kpi-new-validation`,
   kpiResetValidation: () => `${baseUrl}/company/kpi/kpi-new-reset`,
   getReports: () => `${baseUrl}/company/reports/get-report`,
+  getMonthlyReports: () => `${baseUrl}/company/reports/get-monthly-report`,
+  getDashboardReport: () => `${baseUrl}/company/reports/dashboard`,
+
+  // Request
+  getRequestCompany: () => `${baseUrl}/company/request-master/get`,
+  updateRequestCompany: (id: string) =>
+    `${baseUrl}/company/request-master/update/${id}`,
+  companyRequestCancle: (id: string) =>
+    `${baseUrl}/company/request-master/cancel/${id}`,
+  companyRequestDelete: (id: string) =>
+    `${baseUrl}/company/request-master/delete/${id}`,
+
+  // Handover
+  getUserHandoverDataById: (id: string) =>
+    `${baseUrl}/company/handover/stats/${id}`,
+  getHandoverDataById: () => `${baseUrl}/company/handover/execute`,
 };
 
 export default Urls;

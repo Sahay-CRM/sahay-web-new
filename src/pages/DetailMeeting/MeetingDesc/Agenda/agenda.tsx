@@ -127,6 +127,61 @@ function IssueModal({
   );
 }
 
+function MaxAgendaModal({
+  open,
+  onClose,
+  onStartAnyway,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onStartAnyway: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        background: "rgba(0,0,0,0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
+      }}
+    >
+      <div className="bg-white p-6 rounded-md shadow-2xl max-w-sm text-center relative border-2">
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 transition"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        <h3 className="text-lg font-semibold text-red-600 mb-2">
+          Max Agenda Reached
+        </h3>
+        <p className="text-gray-700 mb-4 text-sm mt-3">
+          You have added max agenda in this meeting. First move this to resolved
+          or parked.
+        </p>
+        <div className="flex justify-center gap-3 mt-4">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            onClick={onStartAnyway}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            Start AnyWay
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface AgendaProps {
   meetingName: string;
   meetingId: string;
@@ -231,6 +286,22 @@ export default function Agenda({
   const parkedCount = agendaList?.filter(
     (item) => item.type === "PARKED",
   ).length;
+
+  const [showMaxAgendaModal, setShowMaxAgendaModal] = useState(false);
+
+  const handleStartMeetingClick = () => {
+    const totalMinutes = Math.floor(Number(meetingTime || 0) / 60);
+    const durationPerAgenda = Number(
+      import.meta.env.VITE_DETAILMEETINGAGENDADURATION || 5,
+    );
+    const maxAgenda = Math.floor(totalMinutes / durationPerAgenda);
+
+    if (unresolvedCount !== undefined && unresolvedCount > maxAgenda) {
+      setShowMaxAgendaModal(true);
+    } else {
+      handleStartMeeting();
+    }
+  };
 
   const [contentWidth, setContentWidth] = useState("90%");
   const sensors = useSensors(useSensor(PointerSensor));
@@ -358,6 +429,14 @@ export default function Agenda({
         issue={modalIssue}
         defaultType=""
         onSubmit={handleModalSubmit}
+      />
+      <MaxAgendaModal
+        open={showMaxAgendaModal}
+        onClose={() => setShowMaxAgendaModal(false)}
+        onStartAnyway={() => {
+          setShowMaxAgendaModal(false);
+          handleStartMeeting();
+        }}
       />
       <IssueAgendaAddModal
         isModalOpen={addIssueModal}
@@ -497,7 +576,7 @@ export default function Agenda({
                     <Button
                       variant="outline"
                       className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
-                      onClick={handleStartMeeting}
+                      onClick={handleStartMeetingClick}
                       isLoading={isPending}
                     >
                       Start Meeting
@@ -1059,7 +1138,7 @@ export default function Agenda({
               </div>
             ) : meetingStatus === "STARTED" ? (
               <div className="h-full flex items-center justify-center">
-                <div className="flex flex-wrap gap-8 text-center justify-center">
+                <div className="flex flex-wrap gap-4 text-center justify-center">
                   {joiners &&
                     joiners.map((item) => {
                       return (
@@ -1067,10 +1146,10 @@ export default function Agenda({
                           key={item.employeeId}
                           className="flex items-center"
                         >
-                          <div className="flex gap-2 w-40">
-                            <div className="relative">
+                          <div className="flex gap-2 w-fit border px-4 py-2 rounded-md">
+                            <div className="relative flex gap-2">
                               {item.isTeamLeader && (
-                                <span className="absolute -top-2 right-3 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                                <span className="absolute -top-2 left-5 z-10 bg-white shadow-2xl rounded-full p-0.5">
                                   <Crown className="w-3 h-3 text-[#303290] drop-shadow" />
                                 </span>
                               )}
@@ -1080,7 +1159,7 @@ export default function Agenda({
                                     <TooltipTrigger asChild>
                                       {item.employeeImage !== null ? (
                                         <img
-                                          src={`${ImageBaseURL}/share/company/profilePics/${item.employeeImage}`}
+                                          src={`${ImageBaseURL}/share/profilePics/${item.employeeImage}`}
                                           alt={item.employeeName}
                                           className="w-full h-full object-cover outline-2 outline-blue-400 bg-black"
                                         />
@@ -1096,6 +1175,9 @@ export default function Agenda({
                                   </Tooltip>
                                 </TooltipProvider>
                               </div>
+                              <div className="text-sm font-medium text-gray-800 mt-2">
+                                {item.employeeName}
+                              </div>
                               <div>
                                 <FormCheckbox
                                   id={`${item.employeeId}-checkbox`}
@@ -1109,10 +1191,6 @@ export default function Agenda({
                                   disabled={!(isTeamLeader || isSuperAdmin)}
                                 />
                               </div>
-                            </div>
-
-                            <div className="text-sm font-medium text-gray-800 mt-2">
-                              {item.employeeName}
                             </div>
                           </div>
                         </div>

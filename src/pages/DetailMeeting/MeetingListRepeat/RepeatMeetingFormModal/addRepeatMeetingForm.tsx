@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react"; // Added useState, useRef, ChangeEvent
+import CompanyAccessGuard from "@/components/shared/CompanyAccessGuard/CompanyAccessGuard";
+import { useSelector } from "react-redux";
+import { getCompaniesList } from "@/features/selectors/company.selector";
 import { FormProvider, useFormContext, Controller } from "react-hook-form"; // Added useFormContext, Controller
 
 import { Button } from "@/components/ui/button";
@@ -562,6 +565,13 @@ const AddRepeatMeeting = () => {
   } = useAddRepeatMeetingForm();
 
   const { setBreadcrumbs } = useBreadcrumbs();
+  const companiesList = useSelector(getCompaniesList);
+  const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
+  const resourceCompanyId = meetingApiData?.companyId;
+  const isAuthorized =
+    !repetitiveMeetingId ||
+    !resourceCompanyId ||
+    resourceCompanyId === currentCompany?.companyId;
 
   useEffect(() => {
     setBreadcrumbs([
@@ -572,7 +582,7 @@ const AddRepeatMeeting = () => {
           : "Add Live Meeting Templates",
         href: "",
       },
-      ...(repetitiveMeetingId
+      ...(repetitiveMeetingId && isAuthorized
         ? [
             {
               label: `${
@@ -584,7 +594,12 @@ const AddRepeatMeeting = () => {
           ]
         : []),
     ]);
-  }, [repetitiveMeetingId, meetingApiData?.meetingName, setBreadcrumbs]);
+  }, [
+    repetitiveMeetingId,
+    meetingApiData?.meetingName,
+    setBreadcrumbs,
+    isAuthorized,
+  ]);
 
   const steps = [
     <MeetingType key="meetingType" />,
@@ -609,37 +624,42 @@ const AddRepeatMeeting = () => {
   }
 
   return (
-    <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-        <StepProgress
-          currentStep={currentStep}
-          stepNames={stepNames}
-          totalSteps={totalSteps}
-          back={back}
-          isFirstStep={isFirstStep}
-          next={next}
-          isLastStep={isLastStep}
-          isPending={isPending}
-          onFinish={onFinish}
-          isUpdate={!!repetitiveMeetingId}
-        />
-
-        <div className="step-content w-full">{stepContent}</div>
-
-        {isModalOpen && (
-          <AddMeetingModal
-            modalData={meetingPreview as MeetingData}
-            isModalOpen={isModalOpen}
-            modalClose={handleClose}
-            onSubmit={onSubmit}
-            isLoading={isPending}
-            isChildData={isChildData}
-            onKeepAll={handleKeepAll}
-            onDeleteAll={handleDeleteAll}
+    <CompanyAccessGuard
+      companyId={repetitiveMeetingId ? resourceCompanyId : undefined}
+      isLoading={repetitiveMeetingId ? !meetingApiData : false}
+    >
+      <FormProvider {...methods}>
+        <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
+          <StepProgress
+            currentStep={currentStep}
+            stepNames={stepNames}
+            totalSteps={totalSteps}
+            back={back}
+            isFirstStep={isFirstStep}
+            next={next}
+            isLastStep={isLastStep}
+            isPending={isPending}
+            onFinish={onFinish}
+            isUpdate={!!repetitiveMeetingId}
           />
-        )}
-      </div>
-    </FormProvider>
+
+          <div className="step-content w-full">{stepContent}</div>
+
+          {isModalOpen && (
+            <AddMeetingModal
+              modalData={meetingPreview as MeetingData}
+              isModalOpen={isModalOpen}
+              modalClose={handleClose}
+              onSubmit={onSubmit}
+              isLoading={isPending}
+              isChildData={isChildData}
+              onKeepAll={handleKeepAll}
+              onDeleteAll={handleDeleteAll}
+            />
+          )}
+        </div>
+      </FormProvider>
+    </CompanyAccessGuard>
   );
 };
 

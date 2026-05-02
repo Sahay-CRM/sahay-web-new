@@ -113,6 +113,22 @@ const SingleUpdate: React.FC = () => {
                           ))}
                         </div>
                       )}
+
+                      {/* Videos */}
+                      {update.video &&
+                        Array.isArray(update.video) &&
+                        update.video.length > 0 && (
+                          <div className="flex flex-wrap gap-3 mt-4">
+                            {update.video.map((vid: string, idx: number) => (
+                              <video
+                                key={idx}
+                                src={vid}
+                                controls
+                                className="w-[480px] max-w-full rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm"
+                              />
+                            ))}
+                          </div>
+                        )}
                     </div>
                   ))}
                 </div>

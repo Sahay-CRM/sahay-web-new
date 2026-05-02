@@ -16,6 +16,7 @@ interface Props {
   disablePastDays?: number;
   labelClass?: string;
   hideTime?: boolean;
+  disabled?: boolean;
 }
 
 export default function FormDateTimePicker({
@@ -29,6 +30,7 @@ export default function FormDateTimePicker({
   disablePastDays = 0,
   labelClass,
   hideTime = false,
+  disabled = false,
 }: Props) {
   const dateValue = typeof value === "string" ? new Date(value) : value;
 
@@ -96,7 +98,12 @@ export default function FormDateTimePicker({
           {isMandatory && <span className="text-red-500 text-[20px]">*</span>}
         </FormLabel>
       )}
-      <div className="relative w-full min-w-0">
+      <div
+        className={twMerge(
+          "relative w-full min-w-0",
+          disabled && "opacity-50 pointer-events-none",
+        )}
+      >
         <DatePicker
           selected={dateValue}
           onChange={handleChange}
@@ -108,6 +115,7 @@ export default function FormDateTimePicker({
           portalId="root"
           popperClassName="responsive-datepicker-popper"
           filterDate={filterDate}
+          disabled={disabled}
         />
         <CalendarIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
       </div>

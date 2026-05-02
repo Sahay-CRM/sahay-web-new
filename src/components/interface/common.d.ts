@@ -195,12 +195,6 @@ interface IProjectFormData {
   employeeIds: string[];
 
   subParameterIds: string[];
-  createdBy?: {
-    employeeId: string;
-    employeeName: string;
-    employeeEmail: string;
-    employeeMobile: string;
-  };
   ProjectEmployees?: {
     employeeId: string;
     employeeName: string;
@@ -230,6 +224,9 @@ interface IProjectFormData {
     fileId: string;
     fileName: string;
   }[];
+  createdBy?: string;
+  deadlineRequest?: string;
+  projectDuration?: string;
 }
 
 //
@@ -334,8 +331,9 @@ interface CompanyProjectDataProps {
   ProjectParameters?: ProjectParameters;
   ProjectEmployees?: Employee[];
   ProjectTasks?: ProjectTask[];
-  createdBy?: CreatedBy;
   projectStatusId: string;
+  createdBy?: string;
+  projectDuration?: string;
   projectStatus?: ProjectStatusRes;
   otherProjectEmployees?: string[];
   detailMeetingProjectId?: string;
@@ -344,6 +342,7 @@ interface CompanyProjectDataProps {
   subParameters?: SubParameter[];
   coreParameterId?: string;
   coreParameterName?: string;
+  otherEmployee?: Employee[];
   detailMeetingProjectId?: string;
   meetingNoteId?: string;
   ioType?: string;
@@ -354,6 +353,8 @@ interface CompanyProjectDataProps {
       fileName: string;
     },
   ];
+  deadlineRequest?: string;
+  companyId?: string;
 }
 
 // interface CompanyMeetingDataProps {
@@ -381,6 +382,7 @@ interface CompanyProjectDataProps {
 // }
 
 interface CompanyMeetingDataProps {
+  srNo?: number;
   meetingId?: string;
   meetingName?: string;
   meetingDescription?: string;
@@ -407,6 +409,10 @@ interface CompanyMeetingDataProps {
   meetingTimePlanned?: string;
   selectDate?: Date | string;
   repetitiveMeetingId?: string;
+  createdBy?: Employee;
+  deadlineRequest?: string;
+  status?: string;
+  companyId?: string;
 }
 
 interface ProjectParameters {
@@ -664,6 +670,7 @@ interface AddUpdateTask {
 }
 
 interface TaskGetPaging {
+  srNo?: number;
   employeeId: string;
   taskId: string;
   assigneeNames?: string;
@@ -671,7 +678,7 @@ interface TaskGetPaging {
   taskStatusId: string;
   taskDescription: string;
   taskStatus: string;
-  createdBy?: Employee;
+  createdBy?: string;
   updatedBy?: string;
   isDelete?: boolean;
   createdDatetime?: string;
@@ -702,6 +709,7 @@ interface TaskGetPaging {
   employeeName?: string;
   isActive?: boolean;
   projectName?: string;
+  deadlineRequest?: string;
 }
 
 interface RepeatTaskAllRes {
@@ -794,7 +802,8 @@ interface Task {
   meetingId: string;
   meetings: Meeting[];
   comments: TaskComment[];
-  createdBy: CreatedBy;
+  // createdBy: string | createdBy;
+  createdBy: string;
   repeatType?: string;
   repetitiveTaskId?: string;
   employeeIds?: string | string[];
@@ -802,6 +811,8 @@ interface Task {
   customObj?: CustomObjREPT;
   repeatTime?: string;
   nextDate?: string;
+  deadlineRequest?: string;
+  companyId?: string;
 }
 
 interface ProjectTask {
@@ -962,6 +973,11 @@ interface KPIFormData {
   visualFrequencyAggregate: string | null;
   ioKPIId?: string;
   isDelete?: boolean;
+  isFocus?: boolean;
+  createdBy?: {
+    employeeId: string;
+    employeeName: string;
+  };
   // skipDays?: string[];
 }
 
@@ -1078,6 +1094,9 @@ interface Kpi {
   sequence?: number;
   isSkipDay?: boolean;
   isMurgeKpi?: boolean;
+  isFocus?: boolean;
+  departmentId?: string;
+  departmentName?: string;
 }
 
 interface CoreParameterGroup {
@@ -1157,6 +1176,7 @@ interface KpiType {
   unit?: string | null;
   labels?: KpiLabels[];
   isMurgeKpi?: boolean;
+  isFocus?: boolean;
 }
 
 interface KpiLabels {
@@ -1365,6 +1385,7 @@ interface UpdateItem {
   title: string;
   description: string;
   image: string[]; // array of image URLs
+  video?: string[]; // array of video URLs
   date: string; // ISO string
   createdBy: string;
   createdAt: string;
@@ -1459,6 +1480,7 @@ interface RepeatMeeting {
   isDetailMeeting?: boolean;
   customObj?: CustomObjREPT;
   joinerNames?: string;
+  companyId?: string;
   // meetingStatusId?: string;
 }
 
@@ -1526,6 +1548,7 @@ interface CommentResponse {
 interface TaskCommentData {
   taskCommentId: string;
   taskId: string;
+  employeeId: string;
   employeeName: string;
   comment: string;
   createdDatetime: string;
@@ -1681,4 +1704,161 @@ interface TaskPreviewData {
   taskDeadline: string;
   createDateUTC?: string;
   nextDateUTC?: string;
+}
+
+interface RequestMasterData {
+  requestMasterId: string;
+  id: string;
+  companyId: string;
+  type: string;
+  refId: string;
+  oldValue: string;
+  newValue: string;
+  status: string;
+  reasions: string;
+  createdBy: {
+    employeeId: string;
+    employeeName: string;
+  };
+  createdDatetime: string;
+  updatedDatetime: string;
+  srNo?: number;
+}
+
+interface CreateRequestMaster {
+  type: string;
+  refId: string;
+  oldValue: string;
+  newValue: string;
+  status: string;
+  reasions: string;
+}
+
+interface SearchResponse {
+  taskId: string;
+  taskName: string;
+  taskDeadline?: string;
+  taskDate?: string;
+}
+
+interface MeetingSearchResponse {
+  meetingId: string;
+  meetingName: string;
+  meetingDateTime?: string;
+}
+
+interface ProjectSearchResponse {
+  projectId: string;
+  projectName: string;
+  projectDeadline?: string;
+}
+
+interface TaskItem {
+  taskId: string;
+  taskName: string;
+  createdDatetime: string;
+  taskDeadline: string;
+  durationDays: string;
+  status?: string;
+  color?: string;
+  assignees?: { name: string }[];
+}
+
+interface ProjectDelayItem {
+  projectId: string;
+  projectName: string;
+  projectDeadline: string;
+  delayDays: string;
+}
+
+interface ProjectDurationItem {
+  projectId: string;
+  projectName: string;
+  createdDatetime: string;
+  projectDeadline: string;
+  durationDays: string;
+}
+
+interface CompanyPerformanceReport {
+  tasks: {
+    totalTasks: number;
+    notUpdatedTasks: number;
+    delayedTasks: number;
+    longDurationTop5: TaskItem[];
+  };
+  projects: {
+    totalProjects: number;
+    activeProjects: number;
+    delayedProjects: number;
+    zeroTaskProjects: number;
+    notUpdatedProjects: number;
+    creationRate: number;
+    delayTop5: ProjectDelayItem[];
+    longDurationTop5: ProjectDurationItem[];
+    projectStatsPerCoreParameter?: {
+      name: string;
+      total: number;
+      active: number;
+      delayed: number;
+    }[];
+    otherCoreParameters?: string[];
+  };
+  kpi: {
+    totalKpi: number;
+    fillingRate: number;
+    kpiStatsPerCoreParameter?: {
+      name: string;
+      totalKpi: number;
+      fillingRate: number;
+    }[];
+    otherCoreParametersKpi?: string[];
+  };
+  meetings: {
+    totalDetailed: number;
+    sahayDetailed: number;
+    missedDetailed: number;
+    normalLast30Days: number;
+    totalNormal: number;
+    creationRate: number;
+    meetingStatsPerType?: {
+      typeName: string;
+      totalMeetings: number;
+    }[];
+    otherMeetingTypes?: string[];
+  };
+  meetingNotes: {
+    notesPerMeeting: number;
+    notesPerMinute?: number;
+    noteTypeDistribution: {
+      noteType: string;
+      count: number;
+    }[];
+    noteTagDistribution: {
+      noteTag: string;
+      count: number;
+    }[];
+  };
+  agenda: {
+    unresolved: number;
+    resolved: number;
+    parked: number;
+    perMonth: {
+      month: string;
+      count: number;
+    }[];
+    longestTop5: {
+      id: string;
+      name: string;
+      type: string;
+      createdAt: string;
+      daysUnresolved: number;
+    }[];
+  };
+}
+
+interface ReportApiResponse {
+  success: boolean;
+  status: number;
+  message: string;
+  data: CompanyPerformanceReport;
 }

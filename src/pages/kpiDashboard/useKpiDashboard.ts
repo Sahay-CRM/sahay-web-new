@@ -13,11 +13,14 @@ export default function useKpiDashboard({
   selectedDate: Date | null;
   isDataFilter?: string;
 }) {
-  const { data: kpiStructure } = useGetKpiDashboardStructure({
-    filter: {
-      filter: isDataFilter,
-    },
-  });
+  const { data: kpiStructure }: { data?: BaseResponse<FrequencyData> } =
+    useGetKpiDashboardStructure({
+      filter: {
+        sortBy: "sequence",
+        sortOrder: "asc",
+        filter: isDataFilter,
+      },
+    });
 
   const data = {
     frequencyType: selectedPeriod,

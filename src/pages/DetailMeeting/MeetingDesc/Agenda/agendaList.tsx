@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -218,27 +217,31 @@ export default function AgendaList({
           ...style,
         }}
       >
-        {item.departmentName && (
-          <div className="w-fit h-fit absolute top-0 right-2 z-10">
-            <div className="text-black text-[10px] bg-gray-200 shadow-md shadow-primary/10 py-0 px-5 rounded-b-lg">
+        <div className="w-fit h-fit absolute top-0 left-0 flex items-start gap-4">
+          {item.departmentName && (
+            <div className="text-black text-[10px] bg-gray-200 shadow-md shadow-primary/10 py-0 px-5 rounded-br-lg">
               {item.departmentName}
             </div>
+          )}
+          <div className="text-black text-[10px] bg-gray-200 shadow-md shadow-primary/10 py-0 px-5">
+            {item.ioType}
           </div>
-        )}
+        </div>
+
         <div className="flex items-center w-full h-full">
           {isTeamLeader && meetingStatus !== "ENDED" && (
             <span
               {...listeners}
               {...attributes}
               style={{ cursor: "grab" }}
-              className="w-5 text-2xl mr-2 pt-1 h-full flex flex-col items-center justify-center"
+              className="w-5 text-xl mr-2 pt-1 h-full flex flex-col items-center justify-center"
             >
               ⋮⋮
             </span>
           )}
 
           <span
-            className={`w-fit mr-3 pt-2 text-4xl text-primary text-center ${
+            className={`w-fit mr-3 pt-2 text-2xl text-primary text-center ${
               meetingStatus !== "STARTED" &&
               meetingStatus !== "NOT_STARTED" &&
               isSelectedAgenda === item.issueObjectiveId
@@ -280,7 +283,7 @@ export default function AgendaList({
               <div
                 className={`text-sm ${
                   meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED"
-                    ? "w-full pr-8 h-14 flex items-center"
+                    ? "w-full pr-2 h-14 flex items-center"
                     : "w-full min-w-48"
                 } overflow-hidden line-clamp-3 ${
                   meetingStatus !== "STARTED" &&
@@ -309,11 +312,11 @@ export default function AgendaList({
               //   meetingStatus !== "NOT_STARTED" &&
               item.issueObjectiveId && (
                 <div className="text-sm text-center ml-2 font-medium text-primary">
-                  <div className="text-xs text-center w-20 text-gray-500">
+                  {/* <div className="text-xs text-center w-20 text-gray-500">
                     <Badge variant="secondary" className="mb-1 mt-1">
                       {item.ioType}
                     </Badge>
-                  </div>
+                  </div> */}
 
                   {meetingStatus !== "STARTED" &&
                     meetingStatus !== "NOT_STARTED" && (

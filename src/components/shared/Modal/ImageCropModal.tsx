@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ModalData from "@/components/shared/Modal/ModalData";
+import { Upload } from "lucide-react";
 
 interface ImageCropModalProps {
   isOpen: boolean;
@@ -14,8 +15,9 @@ export default function ImageCropModal({
   isOpen,
   onClose,
   onApply,
-  title = "Upload & Crop Image",
+  title = "Upload & Crop Logo",
 }: ImageCropModalProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageSrc, setImageSrc] = useState<string>("");
   const [imgEl, setImgEl] = useState<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -232,79 +234,107 @@ export default function ImageCropModal({
       ]}
       childclass="py-0"
     >
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6">
+        <div className="flex flex-col items-center justify-center pt-4">
           <input
             type="file"
             accept="image/*"
             onChange={onFileChange}
-            className="border py-1 px-3 rounded border-primary"
+            ref={fileInputRef}
+            className="hidden"
           />
-        </div>
-
-        <div
-          ref={containerRef}
-          className="relative w-[240px] h-[240px] bg-gray-100 rounded-full overflow-hidden select-none object-cover border"
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onWheel={handleWheel}
-        >
-          {imageSrc && (
-            <img
-              src={imageSrc}
-              alt="to-crop"
-              ref={(el) => setImgEl(el)}
-              className="absolute left-1/2 top-1/2 will-change-transform cursor-grab"
-              style={{
-                transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) rotate(${rotation}deg) scale(${zoom})`,
-                transformOrigin: "center center",
-                maxWidth: "none",
-              }}
-              draggable={false}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all shadow-sm"
+          >
+            <Upload className="w-4 h-4" />
+            {imageSrc ? "Change Logo" : "Choose Logo"}
+          </button>
+          {!imageSrc && (
+            <p className="mt-2 text-sm text-gray-500">No file selected</p>
           )}
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-6">
-          <div className="flex-1">
-            <div className="text-sm mb-1">Zoom</div>
-            <input
-              type="range"
-              min={minZoom}
-              max={maxZoom}
-              step={0.01}
-              value={zoom}
-              onChange={(e) => {
-                const next = parseFloat(e.target.value);
-                setZoom(next);
-                setOffset((prev) => clampOffset(prev, next));
-              }}
-              className="w-full"
-            />
+        {imageSrc && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="flex justify-center">
+              <div
+                ref={containerRef}
+                className="relative w-[240px] h-[240px] bg-gray-50 rounded-full overflow-hidden select-none object-cover border-2 border-dashed border-gray-200"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onWheel={handleWheel}
+              >
+                <img
+                  src={imageSrc}
+                  alt="to-crop"
+                  ref={(el) => setImgEl(el)}
+                  className="absolute left-1/2 top-1/2 will-change-transform cursor-grab active:cursor-grabbing"
+                  style={{
+                    transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) rotate(${rotation}deg) scale(${zoom})`,
+                    transformOrigin: "center center",
+                    maxWidth: "none",
+                  }}
+                  draggable={false}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                />
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="grid grid-cols-2 gap-8 px-2">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">
+                    Zoom
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {Math.round(zoom * 100)}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={minZoom}
+                  max={maxZoom}
+                  step={0.01}
+                  value={zoom}
+                  onChange={(e) => {
+                    const next = parseFloat(e.target.value);
+                    setZoom(next);
+                    setOffset((prev) => clampOffset(prev, next));
+                  }}
+                  className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">
+                    Rotate
+                  </span>
+                  <span className="text-xs text-gray-400">{rotation}°</span>
+                </div>
+                <input
+                  type="range"
+                  min={-180}
+                  max={180}
+                  step={1}
+                  value={rotation}
+                  onChange={(e) => setRotation(parseFloat(e.target.value))}
+                  className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+                />
+              </div>
+            </div>
           </div>
-          <div className="flex-1">
-            <div className="text-sm mb-1">Rotate</div>
-            <input
-              type="range"
-              min={-180}
-              max={180}
-              step={1}
-              value={rotation}
-              onChange={(e) => setRotation(parseFloat(e.target.value))}
-              className="w-full"
-            />
-          </div>
-        </div>
+        )}
       </div>
     </ModalData>
   );

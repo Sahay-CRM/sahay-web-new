@@ -144,6 +144,7 @@ interface FormDetails {
   backgroundColor?: string;
   responseMessage?: string;
   expireDate?: string;
+  companyId?: string;
 }
 
 interface Violation {

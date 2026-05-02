@@ -20,6 +20,9 @@ interface DropdownSearchMenuProps {
   multiSelect?: boolean;
   showCount?: boolean;
   columnIcon?: boolean;
+  icon?: React.ReactNode;
+  iconOnly?: boolean;
+  responsive?: boolean;
 }
 
 interface ColumnToggleOption {
@@ -37,6 +40,9 @@ const DropdownSearchMenu = ({
   onChange,
   showCount,
   columnIcon,
+  icon,
+  iconOnly,
+  responsive,
 }: DropdownSearchMenuProps) => {
   const handleOptionToggle = (value: string) => {
     if (!onChange) return;
@@ -64,26 +70,84 @@ const DropdownSearchMenu = ({
         <Button
           variant={hasSelection ? "default" : "outline"}
           className={clsx(
-            "px-4 flex items-center",
+            "flex items-center justify-center relative",
+            responsive
+              ? "h-10 w-10 p-0 rounded-full min-[1200px]:h-11 min-[1200px]:w-auto min-[1200px]:px-4 min-[1200px]:rounded-md"
+              : iconOnly
+                ? "h-10 w-10 p-0 rounded-full"
+                : "h-10 px-4",
             hasSelection &&
               "border-blue-500 text-blue-600 bg-blue-50 hover:bg-blue-100",
           )}
         >
-          {displayLabel}
-
-          {columnIcon ? (
-            <Columns3
-              className={clsx("h-4 w-4 ml-2", hasSelection && "text-blue-500")}
-            />
+          {responsive ? (
+            <>
+              {/* Icon mode for small screens */}
+              <div className="flex min-[1200px]:hidden items-center justify-center relative">
+                {icon}
+                {hasSelection && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                    {selected.length}
+                  </span>
+                )}
+              </div>
+              {/* Text mode for large screens */}
+              <div className="hidden min-[1200px]:flex items-center">
+                {displayLabel}
+                {columnIcon ? (
+                  <Columns3
+                    className={clsx(
+                      "h-4 w-4 ml-2",
+                      hasSelection && "text-blue-500",
+                    )}
+                  />
+                ) : (
+                  <PlusCircle
+                    className={clsx(
+                      "h-4 w-4 ml-2",
+                      hasSelection && "text-blue-500",
+                    )}
+                  />
+                )}
+              </div>
+            </>
+          ) : iconOnly ? (
+            <>
+              {icon}
+              {hasSelection && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                  {selected.length}
+                </span>
+              )}
+            </>
           ) : (
-            <PlusCircle
-              className={clsx("h-4 w-4 ml-2", hasSelection && "text-blue-500")}
-            />
+            <>
+              {displayLabel}
+
+              {columnIcon ? (
+                <Columns3
+                  className={clsx(
+                    "h-4 w-4 ml-2",
+                    hasSelection && "text-blue-500",
+                  )}
+                />
+              ) : (
+                <PlusCircle
+                  className={clsx(
+                    "h-4 w-4 ml-2",
+                    hasSelection && "text-blue-500",
+                  )}
+                />
+              )}
+            </>
           )}
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="w-56">
+      <DropdownMenuContent
+        className="w-56"
+        align={iconOnly || responsive ? "end" : "start"}
+      >
         {options && options.length > 0
           ? options.map((opt, idx) => (
               <DropdownMenuCheckboxItem

@@ -14,6 +14,7 @@ export default function useGetMeetingTiming(meetingId: string) {
       return resData;
     },
     enabled: !!meetingId,
+    staleTime: 0,
   });
   return query;
 }

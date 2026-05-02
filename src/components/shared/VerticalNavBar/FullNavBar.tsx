@@ -12,7 +12,6 @@ import { Link } from "react-router-dom";
 
 const FullNavBar = ({ data }: FullNavBarProps) => {
   const permissions = useSelector(getUserPermission);
-
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   const user = useSelector(getUserDetail);
 
@@ -54,7 +53,28 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
           ? [item.moduleKey]
           : [];
 
-      if (moduleKeys.some((key) => permissions?.[key]?.View)) {
+      const isReportModule =
+        item.id === 18 ||
+        item.label === "Reports" ||
+        item.moduleKey === "REPORTS";
+      const userType = user?.employeeType?.toUpperCase()?.trim();
+      const isAuthorizedReport =
+        isReportModule &&
+        (userType === "CONSULTANT" ||
+          userType === "SAHAYTEAMMATE" ||
+          userType === "SAHAY TEAMMATE" ||
+          userType === "OWNER" ||
+          user?.isSuperAdmin === true ||
+          String(user?.isSuperAdmin) === "true");
+
+      if (isReportModule) {
+        return isAuthorizedReport ? item : null;
+      }
+
+      if (
+        moduleKeys.length === 0 ||
+        moduleKeys.some((key) => permissions?.[key]?.View)
+      ) {
         return item;
       }
 
@@ -63,17 +83,22 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
     .filter((i): i is NonNullable<typeof i> => i !== null);
 
   return (
-    <div className="flex flex-col w-[260px] h-screen bg-white border-r">
+    <div className="flex flex-col w-[16.25rem] h-full bg-white border-r">
       <Link to="/">
         <div className="flex items-center px-4 py-4 shadow-sm mt-auto cursor-pointer mb-4">
-          <div className="flex w-[70px] h-[50px]">
+          <div className="flex w-[4.375rem] h-[3.125rem] shrink-0">
             <img
               src={user?.companyLogo ? user?.companyLogo : companyLogo}
               alt="profile"
               className="w-full rounded-full object-cover"
             />
           </div>
-          <span className="ml-2 mr-1">{user?.companyName}</span>
+          <span
+            style={{ fontSize: "var(--fs-sidebar)" }}
+            className="ml-2 mr-1 font-semibold truncate"
+          >
+            {user?.companyName}
+          </span>
         </div>
       </Link>
 
@@ -94,7 +119,7 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
       </nav>
 
       <div className="flex justify-center mb-6 border-t-4 pt-3 cursor-pointer">
-        <img src={logoImg} alt="logo" className="w-[70%]" />
+        <img src={logoImg} alt="logo" className="w-[11.25rem]" />
       </div>
     </div>
   );

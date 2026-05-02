@@ -28,6 +28,7 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 import { getUserDetail } from "@/features/selectors/auth.selector";
+import { getCompaniesList } from "@/features/selectors/company.selector";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -126,17 +127,28 @@ export default function MeetingDesc() {
   };
   const { setBreadcrumbs } = useBreadcrumbs();
   const userDetail = useSelector(getUserDetail);
+  const companiesList = useSelector(getCompaniesList);
   const isSuperAdmin = userDetail.isSuperAdmin;
+  const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
+  const isMeetingInCurrentCompany =
+    !meetingTiming || meetingTiming.companyId === currentCompany?.companyId;
+
   useEffect(() => {
-    setBreadcrumbs([
-      { label: "Detail Meeting", href: "/dashboard/meeting/detail" },
-      {
-        label: `${meetingTiming?.meetingName} `,
-        href: "",
-        isHighlight: true,
-      },
-    ]);
-  }, [meetingTiming?.meetingName, setBreadcrumbs]);
+    if (meetingTiming?.meetingName && isMeetingInCurrentCompany) {
+      setBreadcrumbs([
+        { label: "Detail Meeting", href: "/dashboard/meeting/detail" },
+        {
+          label: `${meetingTiming?.meetingName} `,
+          href: "",
+          isHighlight: true,
+        },
+      ]);
+    } else {
+      setBreadcrumbs([
+        { label: "Detail Meeting", href: "/dashboard/meeting/detail" },
+      ]);
+    }
+  }, [meetingTiming?.meetingName, isMeetingInCurrentCompany, setBreadcrumbs]);
 
   const isTeamLeader = useMemo(
     () =>
@@ -176,8 +188,43 @@ export default function MeetingDesc() {
         )
     : [];
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full w-full bg-white">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-700" />
+      </div>
+    );
+  }
+
   if (meetingData?.status === 401) {
-    return <div>You are Not Authorized</div>;
+    return (
+      <div className="p-8 text-center text-xl text-red-600 font-semibold">
+        You are Not Authorized
+      </div>
+    );
+  }
+
+  if (meetingTiming && !isMeetingInCurrentCompany) {
+    const hasMultipleCompanies = (companiesList?.length ?? 0) > 1;
+
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4 bg-white w-full">
+        <div className="text-xl font-semibold text-gray-800">
+          {hasMultipleCompanies
+            ? "This meeting is not in this company. Please switch company."
+            : "This meeting belongs to another company which you do not have access to."}
+        </div>
+        {hasMultipleCompanies && (
+          <Button
+            onClick={() =>
+              document.getElementById("switch-company-btn")?.click()
+            }
+          >
+            Switch Company
+          </Button>
+        )}
+      </div>
+    );
   }
 
   return (

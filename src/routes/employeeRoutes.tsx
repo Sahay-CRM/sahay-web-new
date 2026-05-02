@@ -94,6 +94,7 @@ const GroupKpis = lazy(() => import("../pages/datapointList/GroupKpis"));
 const RepeatTaskToDoList = lazy(() => import("../pages/RepeatTaskToDo"));
 
 const Request = lazy(() => import("../pages/Request"));
+const RequestMaster = lazy(() => import("../pages/RequestMaster"));
 
 // const AddCompanyTaskListRepeat = lazy(
 //   () =>
@@ -129,7 +130,8 @@ const FormSubmissionDetail = lazy(
   () => import("../pages/FormBuilder/builder/FormSubmissionDetailPage"),
 );
 
-// const Reports = lazy(() => import("../pages/Reports"));
+const HandOverData = lazy(() => import("../pages/HandOverData"));
+const Reports = lazy(() => import("../pages/Reports/report"));
 
 export default function EmployeeRoutes() {
   return (
@@ -163,6 +165,7 @@ export default function EmployeeRoutes() {
         <Route path="meeting/detail/update/:id" Component={AddDetailMeeting} />
 
         <Route path="requests" Component={Request} />
+        <Route path="request-master" Component={RequestMaster} />
         <Route path="repeat-task-list" Component={RepeatTaskToDoList} />
 
         <Route path="repeat-meeting/">
@@ -218,6 +221,7 @@ export default function EmployeeRoutes() {
         </Route>
         <Route path="brand" Component={Brand} />
         <Route path="product" Component={Product} />
+
         {/* <Route path="user-log" Component={UserLog} /> */}
         <Route path="updates" Component={Updates} />
         <Route path="forms" Component={FormList} />
@@ -228,13 +232,14 @@ export default function EmployeeRoutes() {
           Component={FormSubmissionDetail}
         />
         <Route path="form-builder" Component={FormBuilder} />
+        <Route path="handover" Component={HandOverData} />
         <Route
           path="form-preview"
           Component={lazy(
             () => import("../pages/FormBuilder/preview/FormPreviewPage"),
           )}
         />
-        {/* <Route path="reports" Component={Reports} /> */}
+        <Route path="reports" Component={Reports} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -15,6 +15,7 @@ export default function useGetCompanyMeetingById(id: string) {
       return resData;
     },
     enabled: !!id,
+    staleTime: 0,
   });
   return query;
 }

@@ -20,11 +20,13 @@ const ModalData: React.FC<ModalProps> = ({
   containerClass,
   childclass,
   modalTitle,
+  overlayClassName,
 }) => {
   return (
     <Dialog open={isModalOpen} onOpenChange={modalClose}>
       <DialogContent
         aria-describedby={undefined}
+        overlayClassName={overlayClassName}
         className={twMerge(
           "bg-white p-0 rounded-2xl min-w-[30%] max-w-[70%] max-h-[80vh] min-h-[300px] overflow-hidden flex flex-col",
           containerClass,

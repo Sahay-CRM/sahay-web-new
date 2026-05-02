@@ -114,16 +114,56 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+:root {
+  /* Fluid typography system */
+  /* Base font size: 16px. Scales between 14px and 18px */
+  --fs-base: clamp(0.875rem, 0.8rem + 0.3vw, 1.125rem);
+
+  /* Heading sizes */
+  --fs-h1: clamp(1.5rem, 1.2rem + 1.5vw, 2.5rem);
+  --fs-h2: clamp(1.25rem, 1.1rem + 1vw, 2rem);
+  --fs-h3: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
+
+  /* UI specific sizes */
+  --fs-sidebar: clamp(0.75rem, 0.7rem + 0.2vw, 0.9375rem);
+  --fs-table: clamp(0.75rem, 0.7rem + 0.2vw, 1rem);
+  --fs-small: clamp(0.625rem, 0.6rem + 0.1vw, 0.875rem);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
-    /* font-family: "Fira Sans", sans-serif;
-    font-family: 'Montserrat', sans-serif; */
-    /* font-family: "Arapey", serif; */
     font-family: "Poppins", sans-serif;
+    font-size: var(--fs-base);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1 {
+    font-size: var(--fs-h1);
+    font-weight: 700;
+  }
+  h2 {
+    font-size: var(--fs-h2);
+    font-weight: 600;
+  }
+  h3 {
+    font-size: var(--fs-h3);
+    font-weight: 600;
+  }
+
+  /* Responsive table text */
+  table {
+    font-size: var(--fs-table);
+  }
+
+  /* Ensure text doesn't break layout */
+  .text-fluid {
+    font-size: var(--fs-base);
   }
 }
 

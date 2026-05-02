@@ -23,6 +23,8 @@ const FormPreview = lazy(
 const BuilderPreview = lazy(
   () => import("../pages/FormBuilder/builder/BuilderPreviewPage"),
 );
+const Updates = lazy(() => import("../pages/Design/Updates"));
+
 const AppRoutes = () => {
   const token = useSelector(getToken);
 
@@ -38,6 +40,7 @@ const AppRoutes = () => {
             path="/form-builder-preview/:id"
             element={<BuilderPreview />}
           />
+          <Route path="/updates" element={<Updates />} />
 
           {token ? (
             <Route path="/*" element={<EmployeeRoutes />} />

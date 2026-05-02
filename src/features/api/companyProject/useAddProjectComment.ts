@@ -14,6 +14,7 @@ export interface AddUpdateCommentPayload {
   projectId: string;
   comment: string;
   projectCommentId?: string;
+  tagPerson?: string[];
 }
 
 export default function useAddUpdateProjectComment() {

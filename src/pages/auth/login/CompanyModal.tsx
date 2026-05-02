@@ -51,10 +51,11 @@ const CompanyModal: React.FC<CompanyModalProps> = ({
       return [];
     }
 
+    const trimmedSearch = searchTerm.trim().toLowerCase();
     return companies.filter(
       (company) =>
-        company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.userType?.toLowerCase().includes(searchTerm.toLowerCase()),
+        company.companyName.toLowerCase() === trimmedSearch ||
+        company.userType?.toLowerCase() === trimmedSearch,
     );
   }, [companies, searchTerm]);
 
@@ -64,6 +65,7 @@ const CompanyModal: React.FC<CompanyModalProps> = ({
         isModalOpen={isModalOpen}
         modalTitle="Select Company"
         modalClose={handleOpenChange}
+        overlayClassName="backdrop-blur-lg"
         buttons={[
           {
             btnText: "Submit",

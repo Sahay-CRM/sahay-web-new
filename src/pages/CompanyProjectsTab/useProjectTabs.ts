@@ -128,6 +128,8 @@ export default function useProjectTabs() {
     { label: "Sort by A-Z", value: "asc" },
     { label: "Sort by Z-A", value: "desc" },
     { label: "Sort by Deadline", value: "projectDeadline" },
+    { label: "Sort by Duration ASC", value: "duration_asc" },
+    { label: "Sort by Duration DESC", value: "duration_desc" },
   ];
 
   const deleteTab = async (tab: TabItem) => {
@@ -190,12 +192,15 @@ export default function useProjectTabs() {
       projectStatusId: project.projectStatusId,
       color: project.color || "#000000",
       coreParameterName: project.coreParameter?.coreParameterName,
+      projectDuration: project.projectDuration,
+      createdBy: project.createdBy,
       projectDocuments: Array.isArray(project.files)
         ? project.files.map((f: { fileId: string; fileName: string }) => ({
             fileId: f.fileId,
             fileName: f.fileName,
           }))
         : [],
+      deadlineRequest: project.deadlineRequest,
     })) || [];
 
   const openDialogForAdd = () => {
@@ -279,6 +284,12 @@ export default function useProjectTabs() {
     } else if (selected === "asc" || selected === "desc") {
       setSelectedOrder(selected);
       setSelectedSortOrder("projectName");
+    } else if (selected === "duration_asc") {
+      setSelectedSortOrder("duration");
+      setSelectedOrder("asc");
+    } else if (selected === "duration_desc") {
+      setSelectedSortOrder("duration");
+      setSelectedOrder("desc");
     } else {
       setSelectedSortOrder(selected);
     }

@@ -21,8 +21,16 @@ import DateRangePicker from "@/components/shared/DateRange";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
 import ConfirmationDeleteModal from "./confirmMeetingDeleteModal";
-// import { useSelector } from "react-redux";
-// import { getUserId } from "@/features/selectors/auth.selector";
+import { getInitials } from "@/features/utils/app.utils";
+import { getColorFromName } from "@/features/utils/formatting.utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
+import { isColorDark } from "@/features/utils/color.utils";
 
 export default function MeetingList() {
   const {
@@ -75,7 +83,6 @@ export default function MeetingList() {
     { key: "meetingDateTime", label: "Start Date", visible: true },
     { key: "endDate", label: "End Date", visible: true },
     { key: "joinerNames", label: "Joiners", visible: true },
-    { key: "meetingStatus", label: "Status", visible: true }, // <-- add this line
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -102,7 +109,7 @@ export default function MeetingList() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
+      <div className="w-full h-full px-2 overflow-x-auto sm:px-4 py-6 flex flex-col">
         <div className="flex mb-5 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             Meeting List
@@ -219,9 +226,99 @@ export default function MeetingList() {
                       : String(emp),
                   )
                   .join(", ") || "",
+              createdByEmployeeName: getInitials(
+                (typeof item.createdBy === "object"
+                  ? item.createdBy?.employeeName
+                  : item.createdBy) || "",
+              ),
+              createdByFullName:
+                (typeof item.createdBy === "object"
+                  ? item.createdBy?.employeeName
+                  : item.createdBy) || "",
+              showDoth: item.deadlineRequest === "PENDING",
             }))}
+            dotsKey="showDoth"
+            dotsAnchorKey="meetingName"
             columns={visibleColumns}
             primaryKey="meetingId"
+            actionColumnWidth="w-[90px]"
+            extraColumns={[
+              {
+                label: "Created",
+                width: "w-[100px]",
+                render: (row) => {
+                  const initials = String(row.createdByEmployeeName ?? " - ");
+                  const fullName = String(row.createdByFullName ?? "");
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`w-7 h-7 bg-primary text-white flex flex-col items-center justify-center aspect-square rounded-full text-[10px] font-semibold ${getColorFromName(fullName)}`}
+                          >
+                            {initials}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>{fullName}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                },
+              },
+              {
+                label: "Status",
+                width: "w-[180px]",
+                render: (row) => {
+                  const currentStatus = statusOptions.find(
+                    (opt) => opt.value === row.meetingStatusId,
+                  );
+                  return (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 min-w-[100px] justify-between"
+                          style={{
+                            backgroundColor: currentStatus?.color || "#2e3195",
+                            color: isColorDark(
+                              currentStatus?.color || "#2e3195",
+                            )
+                              ? "#FFFFFF"
+                              : "#000000",
+                          }}
+                        >
+                          {currentStatus?.label ||
+                            (typeof row.meetingStatus === "object"
+                              ? row.meetingStatus?.meetingStatus
+                              : row.meetingStatus) ||
+                            "Select"}
+                          <ChevronDown className="ml-2 h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {statusOptions.map((option) => (
+                          <DropdownMenuItem
+                            key={option.value}
+                            onClick={() =>
+                              handleStatusChange(option.value, row.meetingId!)
+                            }
+                          >
+                            <div className="flex items-center">
+                              <div
+                                className="w-2 h-2 rounded-full mr-2"
+                                style={{ backgroundColor: option.color }}
+                              />
+                              {option.label}
+                            </div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                },
+              },
+            ]}
             onEdit={
               permission.Edit
                 ? (row) => {
@@ -229,91 +326,6 @@ export default function MeetingList() {
                   }
                 : undefined
             }
-            // customActions={(row) => {
-            //   if (row.parentType !== "DETAIL") return null;
-            //   const isTeamLeader = Array.isArray(row.joiners)
-            //     ? row.joiners.some(
-            //         (emp) =>
-            //           emp &&
-            //           typeof emp === "object" &&
-            //           emp.employeeId === userId &&
-            //           emp.isTeamLeader === true,
-            //       )
-            //     : false;
-
-            //   return (
-            //     <>
-            //       {row.detailMeetingStatus === "ENDED" ? (
-            //         <div>
-            //           <Button
-            //             variant="outline"
-            //             size="sm"
-            //             className="py-1 px-3 w-[150px] cursor-pointer"
-            //             onClick={(e) => {
-            //               e.stopPropagation();
-            //               navigate(
-            //                 `/dashboard/meeting/detail/${row.meetingId}`,
-            //               );
-            //             }}
-            //           >
-            //             Meeting Details
-            //           </Button>
-            //         </div>
-            //       ) : (
-            //         <div>
-            //           {isTeamLeader &&
-            //           row.detailMeetingStatus === "NOT_STARTED" ? (
-            //             <Button
-            //               variant="destructive"
-            //               size="sm"
-            //               className="py-1 w-[150px] px-3 cursor-pointer"
-            //               onClick={(e) => {
-            //                 e.stopPropagation();
-            //                 navigate(
-            //                   `/dashboard/meeting/detail/${row.meetingId}`,
-            //                 );
-            //               }}
-            //             >
-            //               Start Meeting
-            //             </Button>
-            //           ) : (
-            //             <div>
-            //               {row.detailMeetingStatus === "NOT STARTED" ? (
-            //                 <Button
-            //                   variant="outline"
-            //                   size="sm"
-            //                   className="py-1 w-[150px] px-3 cursor-pointer"
-            //                   onClick={(e) => {
-            //                     e.stopPropagation();
-            //                     navigate(
-            //                       `/dashboard/meeting/detail/${row.meetingId}`,
-            //                     );
-            //                   }}
-            //                 >
-            //                   Not Started
-            //                 </Button>
-            //               ) : (
-            //                 <Button
-            //                   variant="outline"
-            //                   size="sm"
-            //                   className="py-1 w-[150px] px-3 cursor-pointer"
-            //                   onClick={(e) => {
-            //                     e.stopPropagation();
-            //                     navigate(
-            //                       `/dashboard/meeting/detail/${row.meetingId}`,
-            //                     );
-            //                   }}
-            //                 >
-            //                   Join Meeting
-            //                 </Button>
-            //               )}
-            //             </div>
-            //           )}
-            //         </div>
-            //       )}
-            //     </>
-            //   );
-            // }}
             isActionButton={() => true}
             onDelete={(row) => {
               onDelete(row as unknown as CompanyMeetingDataProps);
@@ -328,7 +340,6 @@ export default function MeetingList() {
             permissionKey="users"
             localStorageId="MeetingList"
             moduleKey="MEETING_LIST"
-            actionColumnWidth="w-24"
             sortableColumns={[
               "meetingName",
               "meetingDateTime",

@@ -4,6 +4,9 @@ import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import useAddProject from "./useAddProject";
 import AddProjectModal from "./addProjectModal";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import CompanyAccessGuard from "@/components/shared/CompanyAccessGuard/CompanyAccessGuard";
+import { useSelector } from "react-redux";
+import { getCompaniesList } from "@/features/selectors/company.selector";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 import { Card } from "@/components/ui/card";
@@ -24,16 +27,32 @@ import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import { Button } from "@/components/ui/button";
 import RequestModal from "@/components/shared/Modal/RequestModal";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
+import { useGetCompanyProjectSearch } from "@/features/api/companyProject";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface SubParameterProps {
   setIsReqModalOpen: (value: boolean) => void;
 }
 
-const ProjectInfo = () => {
+interface ProjectInfoProps {
+  isEditMode: boolean;
+  deadlineRequest?: string;
+}
+
+const ProjectInfo = ({ isEditMode, deadlineRequest }: ProjectInfoProps) => {
   const {
     register,
     setValue,
     control,
+    watch,
     formState: { errors },
   } = useFormContext();
   const {
@@ -43,15 +62,112 @@ const ProjectInfo = () => {
     setIsBusFuncSearch,
   } = useAddProject();
 
+  const projectNameValue = watch("projectName") || "";
+
+  // In edit mode, track the original name so we only search once the user changes it
+  const [originalName, setOriginalName] = useState<string | null>(null);
+  const [nameChanged, setNameChanged] = useState(false);
+
+  // Capture the original name the first time the form is populated in edit mode
+  useEffect(() => {
+    if (
+      isEditMode &&
+      originalName === null &&
+      projectNameValue.trim().length > 0
+    ) {
+      setOriginalName(projectNameValue);
+    }
+  }, [isEditMode, originalName, projectNameValue]);
+
+  // Detect if the user has changed the name from the original
+  useEffect(() => {
+    if (isEditMode && originalName !== null) {
+      setNameChanged(projectNameValue !== originalName);
+    }
+  }, [isEditMode, originalName, projectNameValue]);
+
+  // Search only when adding, OR when editing and the name has been changed
+  const shouldSearch = !isEditMode || nameChanged;
+  const { data: projectSearchData } = useGetCompanyProjectSearch(
+    shouldSearch ? projectNameValue : "",
+  );
+
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    // In edit mode, only show dropdown if the user changed the name
+    if (isEditMode && !nameChanged) {
+      setShowDropdown(false);
+      return;
+    }
+    const hasResults =
+      (projectSearchData?.data?.length ?? 0) > 0 &&
+      projectNameValue.trim().length >= 5;
+
+    if (hasResults) {
+      setShowDropdown(true);
+    } else {
+      setShowDropdown(false);
+    }
+  }, [projectNameValue, projectSearchData, isEditMode, nameChanged]);
+
+  const showResults =
+    shouldSearch &&
+    showDropdown &&
+    projectNameValue.trim().length >= 5 &&
+    (projectSearchData?.data?.length ?? 0) > 0;
+
   return (
     <div className="grid grid-cols-2 gap-4">
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 mt-4 gap-4">
-        <FormInputField
-          label="Project Name"
-          {...register("projectName", { required: "Name is required" })}
-          error={errors.projectName}
-          placeholder="Enter Project Name"
-        />
+        <div className="relative z-50" ref={dropdownRef}>
+          <FormInputField
+            label="Project Name"
+            {...register("projectName", { required: "Name is required" })}
+            error={errors.projectName}
+            placeholder="Enter Project Name"
+            onFocus={() => {
+              if (
+                shouldSearch &&
+                projectNameValue.trim().length >= 5 &&
+                (projectSearchData?.data?.length ?? 0) > 0
+              ) {
+                setShowDropdown(true);
+              }
+            }}
+          />
+          {showResults && (
+            <div className="absolute top-[100%] mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              <div className="px-3 py-2 text-[12px]  text-gray-500 bg-gray-50 border-b border-gray-200 sticky top-0">
+                Similar Projects Found
+              </div>
+              {projectSearchData?.data?.map((item: ProjectSearchResponse) => (
+                <div
+                  key={item.projectId}
+                  className="px-3 py-2 text-sm text-gray-700 border-b last:border-b-0 cursor-default hover:bg-gray-50"
+                >
+                  <span className="font-medium">{item.projectName}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <FormInputField
           label="Project Description"
           {...register("projectDescription", {
@@ -73,23 +189,31 @@ const ProjectInfo = () => {
               : null;
 
             return (
-              <FormDateTimePicker
-                label="Project Deadline"
-                value={localDate}
-                onChange={(date) => {
-                  // Convert back to UTC when saving
-                  const utcDate = date
-                    ? new Date(
-                        date.getTime() - date.getTimezoneOffset() * 60000,
-                      )
-                    : null;
-                  field.onChange(utcDate);
-                }}
-                error={errors.projectDeadline}
-                disablePastDays={
-                  Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
-                }
-              />
+              <div>
+                <FormDateTimePicker
+                  label="Project Deadline"
+                  value={localDate}
+                  onChange={(date) => {
+                    // Convert back to UTC when saving
+                    const utcDate = date
+                      ? new Date(
+                          date.getTime() - date.getTimezoneOffset() * 60000,
+                        )
+                      : null;
+                    field.onChange(utcDate);
+                  }}
+                  error={errors.projectDeadline}
+                  disablePastDays={
+                    Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                  }
+                  disabled={deadlineRequest === "PENDING"}
+                />
+                {deadlineRequest === "PENDING" && (
+                  <p className="text-xs text-primary mt-1">
+                    Deadline change request is pending approval
+                  </p>
+                )}
+              </div>
             );
           }}
         />
@@ -109,8 +233,8 @@ const ProjectInfo = () => {
               error={errors.projectStatusId}
               isMandatory
               {...field}
-              labelClass="mb-5"
-              className="h-10"
+              labelClass="mb-4"
+              className=""
               options={StatusOptions}
               selectedValues={field.value ? [field.value] : []} // Ensure it's an array
               onSelect={(value) => {
@@ -538,13 +662,23 @@ export default function AddProject() {
     projectApiData,
     permission,
     isCoreParameterSelected,
-    // isReqModalOpen,
-    // setIsReqModalOpen,
+    isConfModalOpen,
+    setIsConfModalOpen,
+    reasons,
+    setReasons,
+    onConfirmSubmit,
   } = useAddProject();
 
   const [isReqModalOpen, setIsReqModalOpen] = useState(false);
 
   const { setBreadcrumbs } = useBreadcrumbs();
+  const companiesList = useSelector(getCompaniesList);
+  const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
+  const resourceCompanyId = projectApiData?.data?.companyId;
+  const isAuthorized =
+    !companyProjectId ||
+    !resourceCompanyId ||
+    resourceCompanyId === currentCompany?.companyId;
 
   useEffect(() => {
     setBreadcrumbs([
@@ -555,7 +689,7 @@ export default function AddProject() {
           : "Add Company Project",
         href: "",
       },
-      ...(companyProjectId
+      ...(companyProjectId && isAuthorized
         ? [
             {
               label: `${
@@ -569,10 +703,19 @@ export default function AddProject() {
           ]
         : []),
     ]);
-  }, [setBreadcrumbs, companyProjectId, projectApiData?.data.projectName]);
+  }, [
+    setBreadcrumbs,
+    companyProjectId,
+    projectApiData?.data.projectName,
+    isAuthorized,
+  ]);
 
   const steps = [
-    <ProjectInfo key="projectInfo" />,
+    <ProjectInfo
+      key="projectInfo"
+      isEditMode={!!companyProjectId}
+      deadlineRequest={projectApiData?.data?.deadlineRequest}
+    />,
     ...(isCoreParameterSelected
       ? [
           <SubParameter
@@ -609,46 +752,92 @@ export default function AddProject() {
   }
 
   return (
-    <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-        <StepProgress
-          currentStep={currentStep}
-          stepNames={stepNames}
-          totalSteps={totalSteps}
-          back={back}
-          isFirstStep={isFirstStep}
-          next={next}
-          isLastStep={isLastStep}
-          isPending={isPending}
-          onFinish={onFinish}
-          isUpdate={!!companyProjectId}
-        />
-
-        <div className="step-content w-full">{stepContent}</div>
-
-        {isModalOpen && (
-          <AddProjectModal
-            modalData={{
-              ...projectPreview,
-              projectStatusId:
-                projectPreview?.projectStatusId ??
-                methods.getValues("projectStatusId"),
-            }}
-            isModalOpen={isModalOpen}
-            modalClose={handleClose}
-            onSubmit={onSubmit}
-            isLoading={isPending}
+    <CompanyAccessGuard
+      companyId={companyProjectId ? resourceCompanyId : undefined}
+      isLoading={companyProjectId ? !projectApiData : false}
+    >
+      <FormProvider {...methods}>
+        <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
+          <StepProgress
+            currentStep={currentStep}
+            stepNames={stepNames}
+            totalSteps={totalSteps}
+            back={back}
+            isFirstStep={isFirstStep}
+            next={next}
+            isLastStep={isLastStep}
+            isPending={isPending}
+            onFinish={onFinish}
+            isUpdate={!!companyProjectId}
           />
-        )}
-      </div>
-      {/* {isReqModalOpen && ( */}
-      <RequestModal
-        type="SubParameter"
-        isModalOpen={isReqModalOpen}
-        modalClose={() => setIsReqModalOpen(false)}
-        modalTitle="Request Business Function"
-      />
-      {/* )} */}
-    </FormProvider>
+
+          <div className="step-content w-full">{stepContent}</div>
+
+          {isModalOpen && (
+            <AddProjectModal
+              modalData={{
+                ...projectPreview,
+                projectStatusId:
+                  projectPreview?.projectStatusId ??
+                  methods.getValues("projectStatusId"),
+              }}
+              isModalOpen={isModalOpen}
+              modalClose={handleClose}
+              onSubmit={onSubmit}
+              isLoading={isPending}
+            />
+          )}
+        </div>
+        {/* {isReqModalOpen && ( */}
+        <RequestModal
+          type="SubParameter"
+          isModalOpen={isReqModalOpen}
+          modalClose={() => setIsReqModalOpen(false)}
+          modalTitle="Request Business Function"
+        />
+        {/* )} */}
+
+        <Dialog open={isConfModalOpen} onOpenChange={setIsConfModalOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Confirmation Required</DialogTitle>
+              <DialogDescription>
+                The deadline has been changed. Please provide a reason to
+                proceed with the update.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label htmlFor="reason" className="text-sm font-medium">
+                  Reason
+                </label>
+                <Textarea
+                  id="reason"
+                  placeholder="Enter reasons for deadline change..."
+                  value={reasons}
+                  onChange={(e) => setReasons(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsConfModalOpen(false)}
+                disabled={isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={onConfirmSubmit}
+                disabled={isPending || !reasons.trim()}
+              >
+                {isPending ? "Confirming..." : "Confirm"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </FormProvider>
+    </CompanyAccessGuard>
   );
 }

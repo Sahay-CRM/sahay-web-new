@@ -15,6 +15,7 @@ type Option = {
   value: string;
   label: string;
   color?: string;
+  isHeader?: boolean;
 };
 
 interface SearchDropdownProps {
@@ -54,9 +55,11 @@ const SearchDropdown = ({
 
   const selectedOption = options.find((opt) => opt.value === selectedValues[0]);
 
-  const filteredOptions = options.filter((opt) =>
-    opt.label.toLowerCase().includes(query.toLowerCase()),
+  const filteredOptions = options.filter(
+    (opt) =>
+      opt.isHeader || opt.label.toLowerCase().includes(query.toLowerCase()),
   );
+
   const bg = selectedOption?.color;
   const textColor = bg ? (isColorDark(bg) ? "#fff" : "#000") : undefined;
   useEffect(() => {
@@ -122,6 +125,7 @@ const SearchDropdown = ({
         <PopoverContent
           align="start"
           className={twMerge(`p-0 pointer-events-auto ${dropdownClass}`)}
+          style={{ width: "var(--radix-popover-trigger-width)" }}
         >
           <div className="p-2">
             <Input
@@ -141,31 +145,43 @@ const SearchDropdown = ({
             onWheel={(e) => e.stopPropagation()}
           >
             {filteredOptions.length > 0 ? (
-              filteredOptions.map((item) => (
-                <div
-                  key={item.value}
-                  className="px-2 py-1"
-                  onClick={() => {
-                    onSelect(item);
-                    setQuery("");
-                    setOpen(false);
-                  }}
-                >
+              filteredOptions.map((item, index) => {
+                if (item.isHeader) {
+                  return (
+                    <div
+                      key={`header-${index}`}
+                      className="px-4 py-2 text-[12px] font-semibold text-primary uppercase tracking-wider bg-gray-50/50"
+                    >
+                      {item.label}
+                    </div>
+                  );
+                }
+                return (
                   <div
-                    className={twMerge(
-                      "cursor-pointer text-sm py-1 flex items-center justify-between rounded-sm transition-colors duration-200",
-                      selectedValues.includes(item.value)
-                        ? "bg-gray-100 px-2 text-gray-900"
-                        : "hover:bg-gray-100 px-2 hover:text-gray-900",
-                    )}
+                    key={item.value}
+                    className="px-2 py-1"
+                    onClick={() => {
+                      onSelect(item);
+                      setQuery("");
+                      setOpen(false);
+                    }}
                   >
-                    <span className="truncate">{item.label}</span>
-                    {selectedValues.includes(item.value) && (
-                      <Check className="h-4 w-4 text-primary" />
-                    )}
+                    <div
+                      className={twMerge(
+                        "cursor-pointer text-sm py-1 flex items-center justify-between rounded-sm transition-colors duration-200",
+                        selectedValues.includes(item.value)
+                          ? "bg-gray-100 px-2 text-gray-900"
+                          : "hover:bg-gray-100 px-2 hover:text-gray-900",
+                      )}
+                    >
+                      <span className="truncate">{item.label}</span>
+                      {selectedValues.includes(item.value) && (
+                        <Check className="h-4 w-4 text-primary" />
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="px-3 py-2 text-sm text-muted-foreground">
                 No results found

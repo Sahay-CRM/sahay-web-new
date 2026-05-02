@@ -6,7 +6,10 @@ import {
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { getUserPermission } from "@/features/selectors/auth.selector";
+import {
+  getUserId,
+  getUserPermission,
+} from "@/features/selectors/auth.selector";
 import useGetProjectComments from "@/features/api/companyProject/useGetProjectComments";
 import {
   addUpdateCommentMutation,
@@ -47,12 +50,16 @@ export default function useViewProject() {
     setEditingText(currentText);
   };
 
-  const handleSaveComment = (projectCommentId?: string) => {
+  const handleSaveComment = (
+    projectCommentId?: string,
+    tagPerson?: string[],
+  ) => {
     if (!editingText.trim()) return;
     addcomment({
       projectId: projectId!,
       comment: editingText,
       projectCommentId,
+      tagPerson,
     });
     setEditingCommentId(null);
     setEditingText("");
@@ -67,11 +74,12 @@ export default function useViewProject() {
     deleteComment(id);
   };
 
-  const onSubmitComment = () => {
+  const onSubmitComment = (tagPerson?: string[]) => {
     if (!newComment.trim()) return;
     addcomment({
       projectId: projectId!,
       comment: newComment,
+      tagPerson,
     });
     setShowCommentInput(false);
     setNewComment("");
@@ -163,6 +171,17 @@ export default function useViewProject() {
   //     },
   //   });
   // });
+  const [filterUserId, setFilterUserId] = useState<string>("all");
+
+  const filteredComments = (commentsData.data || []).filter((comment) => {
+    if (filterUserId === "all") return true;
+    const selectedEmployee = projectApiData?.data?.otherEmployee?.find(
+      (emp) => emp.employeeId === filterUserId,
+    );
+    if (!selectedEmployee) return true;
+    return comment.comment.includes(`@${selectedEmployee.employeeName}`);
+  });
+
   return {
     projectApiData,
     projectId,
@@ -198,11 +217,15 @@ export default function useViewProject() {
     showCommentInput,
     setShowCommentInput,
     commentsData,
+    filteredComments,
+    filterUserId,
+    setFilterUserId,
     onSubmitComment,
     handleDeleteComment,
     handleCancelEdit,
     handleSaveComment,
     handleEditComment,
     isPending,
+    currentUserId: useSelector(getUserId),
   };
 }

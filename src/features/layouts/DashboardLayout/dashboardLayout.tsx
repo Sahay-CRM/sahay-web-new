@@ -57,6 +57,7 @@ import {
   markNotificationRead,
   setNotifications,
 } from "@/features/reducers/notification.reducer";
+import { setCompaniesList } from "@/features/reducers/company.reducer";
 import { fireTokenMutation } from "@/features/api";
 import useGetUserNotification from "./useGetUserNotification";
 import {
@@ -75,6 +76,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useZoom } from "@/features/context/ZoomContext";
+import { Minus, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 const CompanyModal = lazy(() => import("@/pages/auth/login/CompanyModal"));
 const NotificationDropdown = lazy(() => import("./notificationDropdown"));
@@ -127,6 +131,56 @@ const DashboardLayout = () => {
 
   const { data: companies } = useGetCompanyList();
   const { bgColor } = useSidebarTheme();
+  const { zoom, zoomIn, zoomOut, resetZoom, canZoomIn, canZoomOut } = useZoom();
+
+  // useEffect(() => {
+  //   if (companies && companies.length > 0) {
+  //     const isModalShown = document.cookie
+  //       .split("; ")
+  //       .find((row) => row.startsWith("switchCompanyModalShown="));
+
+  //     if (!isModalShown) {
+  //       setCompanyModalOpen(true);
+  //       document.cookie = "switchCompanyModalShown=true; path=/";
+  //     }
+  //   }
+  // }, [companies]);
+
+  useEffect(() => {
+    const companiesData: {
+      companyId: string;
+      name: string;
+      isCurrentCompany: boolean;
+    }[] = [];
+
+    if (companies && companies.length > 0) {
+      companies.forEach((c) => {
+        companiesData.push({
+          companyId: c.companyId,
+          name: c.companyName,
+          isCurrentCompany: c.companyId === user?.companyId,
+        });
+      });
+    }
+
+    if (userData?.data?.company) {
+      const userCompany = userData.data.company;
+      const exists = companiesData.some(
+        (c) => c.companyId === userCompany.companyId,
+      );
+      if (!exists) {
+        companiesData.push({
+          companyId: userCompany.companyId,
+          name: userCompany.companyName,
+          isCurrentCompany: true,
+        });
+      }
+    }
+
+    if (companiesData.length > 0) {
+      dispatch(setCompaniesList(companiesData));
+    }
+  }, [companies, userData, dispatch, user?.companyId]);
 
   useEffect(() => {
     if (permission) {
@@ -193,6 +247,8 @@ const DashboardLayout = () => {
     await deleteFirebaseToken();
     dispatch(logout());
     dispatch(clearNotifications());
+    // document.cookie =
+    //   "switchCompanyModalShown=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   };
 
   const handleMarkAsRead = (notification: AppNotification) => {
@@ -216,7 +272,7 @@ const DashboardLayout = () => {
   };
 
   const handleLogin = (company: Company) => {
-    // setIsLoading(true);
+    setIsLoading(true);
     companyVerifyOtp(
       {
         selectedCompanyId: company.companyId,
@@ -224,44 +280,50 @@ const DashboardLayout = () => {
       },
       {
         onSuccess: async (response) => {
-          if (response?.status) {
-            if (response.data.fbToken) {
-              await loginToFirebase(response.data.fbToken);
-            }
-            dispatch(
-              setAuth({
-                userId: response.data.employeeId,
-                token: response.data.token ?? null,
-                isLoading: false,
-                isAuthenticated: true,
-                fbToken: response.data.fbToken,
-              }),
-            );
-            requestFirebaseNotificationPermission().then((firebaseToken) => {
+          try {
+            if (response?.status) {
+              if (response.data.fbToken) {
+                await loginToFirebase(response.data.fbToken);
+              }
+              dispatch(
+                setAuth({
+                  userId: response.data.employeeId,
+                  token: response.data.token ?? null,
+                  isLoading: false,
+                  isAuthenticated: true,
+                  fbToken: response.data.fbToken,
+                }),
+              );
+
+              const firebaseToken =
+                await requestFirebaseNotificationPermission();
+
               if (firebaseToken) {
                 dispatch(setFireBaseToken(String(firebaseToken)));
-                foreToken(
-                  {
-                    webToken: firebaseToken,
-                    employeeId: response.data.employeeId,
-                  },
-                  {
-                    onSuccess: () => {
-                      queryClient.invalidateQueries({
-                        queryKey: ["get-company-list"],
-                      });
-                      queryClient.invalidateQueries({
-                        queryKey: ["userPermission"],
-                      });
-                      queryClient.invalidateQueries({
-                        queryKey: ["get-employee-by-id", userId],
-                      });
-                      setCompanyModalOpen(false);
-                      setIsLoading(false);
-                      navigate("/");
+                await new Promise((resolve, reject) => {
+                  foreToken(
+                    {
+                      webToken: firebaseToken,
+                      employeeId: response.data.employeeId,
                     },
-                  },
-                );
+                    {
+                      onSuccess: resolve,
+                      onError: reject,
+                    },
+                  );
+                });
+
+                queryClient.invalidateQueries({
+                  queryKey: ["get-company-list"],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ["userPermission"],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ["get-employee-by-id", userId],
+                });
+                setCompanyModalOpen(false);
+                navigate("/");
               } else {
                 queryClient.invalidateQueries({
                   queryKey: ["get-company-list"],
@@ -273,12 +335,18 @@ const DashboardLayout = () => {
                   queryKey: ["get-employee-by-id", userId],
                 });
                 setCompanyModalOpen(false);
-                setIsLoading(false);
                 navigate("/");
                 window.location.reload();
               }
-            });
+            }
+          } catch (error) {
+            toast(error instanceof Error ? error.message : "An error occurred");
+          } finally {
+            setIsLoading(false);
           }
+        },
+        onError: () => {
+          setIsLoading(false);
         },
       },
     );
@@ -319,9 +387,16 @@ const DashboardLayout = () => {
   return (
     <>
       <SidebarControlContext.Provider value={{ open, setOpen }}>
-        <div className="flex h-screen bg-gray-200 gap-x-4">
+        <div
+          className="flex bg-gray-200 gap-x-4 overflow-hidden"
+          style={{
+            zoom: zoom / 100,
+            height: `${10000 / zoom}vh`,
+            width: `${10000 / zoom}vw`,
+          }}
+        >
           <div
-            className={`${open ? "w-[260px]" : "hidden sm:block sm:w-16"} bg-white rounded-tr-2xl transition-all duration-300`}
+            className={`${open ? "w-[16.25rem]" : "hidden sm:block sm:w-16"} bg-white rounded-tr-2xl transition-all duration-300`}
           >
             <MemoSidebar
               isExpanded={open}
@@ -340,12 +415,13 @@ const DashboardLayout = () => {
                   onClick={toggleDrawer}
                   className="w-6 flex items-center justify-center mr-3 cursor-pointer"
                 >
-                  <LucideIcon name="Menu" size={24} />
+                  <LucideIcon name="Menu" size="1.5rem" />
                 </div>
                 <MemoBreadcrumbs items={breadcrumbs} />
               </div>
 
               <div className="flex items-center justify-end gap-x-4 pt-1 relative">
+                {/* Updates/Info */}
                 <div className="relative">
                   <TooltipProvider>
                     <Tooltip>
@@ -354,7 +430,7 @@ const DashboardLayout = () => {
                           <Button
                             variant="ghost"
                             className="p-2 border relative"
-                            onClick={() => navigate("/dashboard/updates")}
+                            onClick={() => navigate("/updates")}
                           >
                             <Info />
                           </Button>
@@ -403,6 +479,56 @@ const DashboardLayout = () => {
                   )}
                 </div>
 
+                {/* Zoom Controls */}
+                <div className="flex items-center gap-x-1 bg-white border border-gray-200 rounded-lg p-1 h-[40px]">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-[32px] w-[32px] border border-gray-200"
+                          onClick={zoomOut}
+                          disabled={!canZoomOut}
+                        >
+                          <Minus size={16} className="size-[16px]" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Zoom Out</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-[32px] min-w-[45px] px-1 !text-[12px]"
+                          onClick={resetZoom}
+                          style={{ fontSize: "12px" }}
+                        >
+                          <span className="font-bold">{zoom}%</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Reset Zoom</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-[32px] w-[32px] border border-gray-200"
+                          onClick={zoomIn}
+                          disabled={!canZoomIn}
+                        >
+                          <Plus size={16} className="size-[16px]" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Zoom In</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
                 {(companies?.length ?? 0) > 0 && (
                   <Button
                     variant="outline"
@@ -415,8 +541,8 @@ const DashboardLayout = () => {
                 {/* Profile dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <div className="flex items-center px-4 py-4-sm mt-auto cursor-pointer mb-1">
-                      <div className="flex w-[50px] h-[50px]">
+                    <div className="flex items-center px-4 py-4-sm cursor-pointer mb-1">
+                      <div className="flex w-[50px] h-[50px] lg:w-[50px] lg:h-[50px] sm:w-[30px] sm:h-[30px] md:w-[30px] md:h-[30px]">
                         <img
                           src={user?.photo || logoImg}
                           alt="profile"

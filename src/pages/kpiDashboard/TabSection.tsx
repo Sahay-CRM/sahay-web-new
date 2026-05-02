@@ -24,7 +24,7 @@ export default function TabsSection({
       onValueChange={onSelectPeriod}
       className="w-full px-4"
     >
-      <TabsList className="bg-transparent h-auto p-0 flex flex-wrap items-start justify-start space-x-6 border-b border-gray-200">
+      <TabsList className="bg-transparent h-auto p-0 flex flex-wrap items-start justify-start space-x-6 md:space-x-4 sm:space-x-2 border-b border-gray-200">
         {kpiStructure?.data
           .filter((tab) => tab.count > 0)
           .map((tab) => {

@@ -6,6 +6,9 @@ import useStepForm from "@/components/shared/StepProgress/useStepForm";
 import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect, useState, useRef, ChangeEvent, useMemo } from "react"; // Added useState, useRef, ChangeEvent
+import CompanyAccessGuard from "@/components/shared/CompanyAccessGuard/CompanyAccessGuard";
+import { useSelector } from "react-redux";
+import { getCompaniesList } from "@/features/selectors/company.selector";
 
 // Imports for components used within step components
 import { Card } from "@/components/ui/card";
@@ -22,6 +25,7 @@ import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
+import { useGetCompanyMeetingSearch } from "@/features/api/companyMeeting";
 
 interface MeetingInfoProps {
   isUpdateMeeting: boolean;
@@ -123,7 +127,15 @@ const MeetingType = () => {
   );
 };
 
-const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
+interface MeetingInfoProps {
+  isUpdateMeeting: boolean;
+  deadlineRequest?: string;
+}
+
+const MeetingInfo = ({
+  isUpdateMeeting,
+  deadlineRequest,
+}: MeetingInfoProps) => {
   const [isStatusSearch, setIsStatusSearch] = useState("");
 
   const {
@@ -142,6 +154,73 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
     },
     enable: isStatusSearch.length >= 3,
   });
+
+  const meetingNameValue = watch("meetingName") || "";
+
+  // In edit mode, track the original name so dropdown only shows when user changes it
+  const [originalName, setOriginalName] = useState<string | null>(null);
+  const [nameChanged, setNameChanged] = useState(false);
+
+  useEffect(() => {
+    if (
+      isUpdateMeeting &&
+      originalName === null &&
+      meetingNameValue.trim().length > 0
+    ) {
+      setOriginalName(meetingNameValue);
+    }
+  }, [isUpdateMeeting, originalName, meetingNameValue]);
+
+  useEffect(() => {
+    if (isUpdateMeeting && originalName !== null) {
+      setNameChanged(meetingNameValue !== originalName);
+    }
+  }, [isUpdateMeeting, originalName, meetingNameValue]);
+
+  const shouldSearch = !isUpdateMeeting || nameChanged;
+  const { data: meetingSearchData } = useGetCompanyMeetingSearch(
+    shouldSearch ? meetingNameValue : "",
+  );
+
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isUpdateMeeting && !nameChanged) {
+      setShowDropdown(false);
+      return;
+    }
+    const hasResults =
+      (meetingSearchData?.data?.length ?? 0) > 0 &&
+      meetingNameValue.trim().length >= 5;
+
+    if (hasResults) {
+      setShowDropdown(true);
+    } else {
+      setShowDropdown(false);
+    }
+  }, [meetingNameValue, meetingSearchData, isUpdateMeeting, nameChanged]);
+
+  const showResults =
+    shouldSearch &&
+    showDropdown &&
+    meetingNameValue.trim().length >= 5 &&
+    (meetingSearchData?.data?.length ?? 0) > 0;
 
   const meetingStatusOptions = useMemo(() => {
     return (
@@ -172,13 +251,39 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
   return (
     <div className="grid grid-cols-2 gap-4">
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4 h-fit border">
-        <FormInputField
-          label="Meeting Name"
-          placeholder="Enter an Meeting Name"
-          {...register("meetingName", { required: "Name is required" })}
-          error={errors.meetingName}
-          isMandatory
-        />
+        <div className="relative z-50" ref={dropdownRef}>
+          <FormInputField
+            label="Meeting Name"
+            placeholder="Enter an Meeting Name"
+            {...register("meetingName", { required: "Name is required" })}
+            error={errors.meetingName}
+            isMandatory
+            onFocus={() => {
+              if (
+                shouldSearch &&
+                meetingNameValue.trim().length >= 5 &&
+                (meetingSearchData?.data?.length ?? 0) > 0
+              ) {
+                setShowDropdown(true);
+              }
+            }}
+          />
+          {showResults && (
+            <div className="absolute top-[100%] mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              <div className="px-3 py-2 text-[12px]  text-gray-500 bg-gray-50 border-b border-gray-200 sticky top-0">
+                Similar Meetings Found
+              </div>
+              {meetingSearchData?.data?.map((item: MeetingSearchResponse) => (
+                <div
+                  key={item.meetingId}
+                  className="px-3 py-2 text-sm text-gray-700 border-b last:border-b-0 cursor-default hover:bg-gray-50"
+                >
+                  <span className="font-medium">{item.meetingName}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <FormInputField
           label="Meeting Description"
           placeholder="Enter an Meeting Description"
@@ -196,15 +301,23 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
             const localDate = field.value ? new Date(field.value) : null;
 
             return (
-              <FormDateTimePicker
-                label="Meeting Start Date"
-                value={localDate}
-                onChange={(date) => {
-                  field.onChange(date?.toISOString());
-                }}
-                error={errors.meetingDateTime}
-                disablePastDates={true}
-              />
+              <div>
+                <FormDateTimePicker
+                  label="Meeting Start Date"
+                  value={localDate}
+                  onChange={(date) => {
+                    field.onChange(date?.toISOString());
+                  }}
+                  error={errors.meetingDateTime}
+                  disablePastDates={true}
+                  disabled={deadlineRequest === "PENDING"}
+                />
+                {deadlineRequest === "PENDING" && (
+                  <p className="text-xs text-primary mt-1">
+                    Deadline change request is pending approval
+                  </p>
+                )}
+              </div>
             );
           }}
         />
@@ -217,15 +330,23 @@ const MeetingInfo = ({ isUpdateMeeting }: MeetingInfoProps) => {
             const localDate = field.value ? new Date(field.value) : null;
 
             return (
-              <FormDateTimePicker
-                label="Meeting End Date"
-                value={localDate}
-                onChange={(date) => {
-                  field.onChange(date?.toISOString());
-                }}
-                error={errors.endDate}
-                disablePastDates={true}
-              />
+              <div>
+                <FormDateTimePicker
+                  label="Meeting End Date"
+                  value={localDate}
+                  onChange={(date) => {
+                    field.onChange(date?.toISOString());
+                  }}
+                  error={errors.endDate}
+                  disablePastDates={true}
+                  disabled={deadlineRequest === "PENDING"}
+                />
+                {deadlineRequest === "PENDING" && (
+                  <p className="text-xs text-primary mt-1">
+                    Deadline change request is pending approval
+                  </p>
+                )}
+              </div>
             );
           }}
         />
@@ -574,6 +695,13 @@ const AddMeeting = () => {
   } = useAddMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
+  const companiesList = useSelector(getCompaniesList);
+  const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
+  const resourceCompanyId = meetingApiData?.data?.companyId;
+  const isAuthorized =
+    !companyMeetingId ||
+    !resourceCompanyId ||
+    resourceCompanyId === currentCompany?.companyId;
 
   useEffect(() => {
     setBreadcrumbs([
@@ -582,7 +710,7 @@ const AddMeeting = () => {
         label: companyMeetingId ? "Update Meeting" : "Add Meeting ",
         href: "",
       },
-      ...(companyMeetingId
+      ...(companyMeetingId && isAuthorized
         ? [
             {
               label: `${
@@ -596,11 +724,19 @@ const AddMeeting = () => {
           ]
         : []),
     ]);
-  }, [companyMeetingId, meetingApiData?.data?.meetingName, setBreadcrumbs]);
+  }, [
+    companyMeetingId,
+    meetingApiData?.data?.meetingName,
+    setBreadcrumbs,
+    isAuthorized,
+  ]);
 
   const steps = [
     <MeetingType key="meetingType" />,
-    <MeetingInfo isUpdateMeeting={companyMeetingId ? true : false} />,
+    <MeetingInfo
+      isUpdateMeeting={companyMeetingId ? true : false}
+      deadlineRequest={meetingApiData?.data?.deadlineRequest}
+    />,
     // <MeetingStatus key="meetingStatus" />,
     <Joiners key="joiners" />,
     <UploadDoc key="uploadDoc" />,
@@ -624,34 +760,39 @@ const AddMeeting = () => {
   ];
 
   return (
-    <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-        <StepProgress
-          currentStep={currentStep}
-          stepNames={stepNames}
-          totalSteps={totalSteps}
-          back={back}
-          isFirstStep={isFirstStep}
-          next={next}
-          isLastStep={isLastStep}
-          isPending={isPending}
-          onFinish={onFinish}
-          isUpdate={!!companyMeetingId}
-        />
-
-        <div className="step-content w-full">{stepContent}</div>
-
-        {isModalOpen && (
-          <AddMeetingModal
-            modalData={meetingPreview as MeetingData} // Ensure correct type for modalData
-            isModalOpen={isModalOpen}
-            modalClose={handleClose}
-            onSubmit={onSubmit}
-            isLoading={isPending}
+    <CompanyAccessGuard
+      companyId={companyMeetingId ? resourceCompanyId : undefined}
+      isLoading={companyMeetingId ? !meetingApiData : false}
+    >
+      <FormProvider {...methods}>
+        <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
+          <StepProgress
+            currentStep={currentStep}
+            stepNames={stepNames}
+            totalSteps={totalSteps}
+            back={back}
+            isFirstStep={isFirstStep}
+            next={next}
+            isLastStep={isLastStep}
+            isPending={isPending}
+            onFinish={onFinish}
+            isUpdate={!!companyMeetingId}
           />
-        )}
-      </div>
-    </FormProvider>
+
+          <div className="step-content w-full">{stepContent}</div>
+
+          {isModalOpen && (
+            <AddMeetingModal
+              modalData={meetingPreview as MeetingData} // Ensure correct type for modalData
+              isModalOpen={isModalOpen}
+              modalClose={handleClose}
+              onSubmit={onSubmit}
+              isLoading={isPending}
+            />
+          )}
+        </div>
+      </FormProvider>
+    </CompanyAccessGuard>
   );
 };
 

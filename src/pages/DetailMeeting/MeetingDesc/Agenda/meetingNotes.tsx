@@ -663,7 +663,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
                                     onClick={() => handleEditNote(note)}
                                   >
                                     <Edit className="h-4 w-4 mr-2" />
-                                    Update Notes
+                                    Edit Notes
                                   </DropdownMenuItem>
 
                                   {note.noteTag && (

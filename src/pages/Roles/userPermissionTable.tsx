@@ -1,4 +1,6 @@
 import { useLocation, useParams } from "react-router-dom";
+import CompanyAccessGuard from "@/components/shared/CompanyAccessGuard/CompanyAccessGuard";
+import { getCompaniesList } from "@/features/selectors/company.selector";
 import { useState, useEffect } from "react";
 import {
   useGetUserPerById,
@@ -545,6 +547,12 @@ export default function UserPermissionTableMerged() {
     permission?.View && !permission?.Add && !permission?.Edit;
   const hasModifyPermission = permission?.Add || permission?.Edit;
 
+  const companiesList = useSelector(getCompaniesList);
+  const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
+  const resourceCompanyId = employeeApiData?.data?.companyId;
+  const isAuthorized =
+    !resourceCompanyId || resourceCompanyId === currentCompany?.companyId;
+
   useEffect(() => {
     setBreadcrumbs([
       {
@@ -552,9 +560,11 @@ export default function UserPermissionTableMerged() {
         href: "/dashboard/roles/user-permission",
       },
       { label: "Edit Permissions" },
-      { label: `${userName || ""}`, isHighlight: true },
+      ...(isAuthorized && userName
+        ? [{ label: `${userName}`, isHighlight: true }]
+        : []),
     ]);
-  }, [setBreadcrumbs, userName]);
+  }, [setBreadcrumbs, userName, isAuthorized]);
 
   useEffect(() => {
     if (userPerm?.data) {
@@ -714,64 +724,71 @@ export default function UserPermissionTableMerged() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h2 className="text-xl">
-            {hasOnlyViewPermission ? "Viewing" : "Editing"} permissions for :{" "}
-            {userName ? (
-              <span className="font-bold text-[#2e3090]">{userName}</span>
-            ) : (
-              "User"
-            )}
-          </h2>
-          <div className="text-sm text-gray-600 mt-1">
-            {hasOnlyViewPermission &&
-              "You have view-only access. You cannot modify any permissions."}
-            {hasModifyPermission &&
-              permission.Add &&
-              !permission.Edit &&
-              "You can only add new permissions (cannot remove existing ones)"}
-            {hasModifyPermission &&
-              permission.Edit &&
-              !permission.Add &&
-              "You can only remove existing permissions (cannot add new ones)"}
-            {hasModifyPermission &&
-              permission.Add &&
-              permission.Edit &&
-              "You can add and remove permissions"}
+    <CompanyAccessGuard
+      companyId={resourceCompanyId}
+      isLoading={!employeeApiData}
+    >
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h2 className="text-xl">
+              {hasOnlyViewPermission ? "Viewing" : "Editing"} permissions for :{" "}
+              {userName ? (
+                <span className="font-bold text-[#2e3090]">{userName}</span>
+              ) : (
+                "User"
+              )}
+            </h2>
+            <div className="text-sm text-gray-600 mt-1">
+              {hasOnlyViewPermission &&
+                "You have view-only access. You cannot modify any permissions."}
+              {hasModifyPermission &&
+                permission.Add &&
+                !permission.Edit &&
+                "You can only add new permissions (cannot remove existing ones)"}
+              {hasModifyPermission &&
+                permission.Edit &&
+                !permission.Add &&
+                "You can only remove existing permissions (cannot add new ones)"}
+              {hasModifyPermission &&
+                permission.Add &&
+                permission.Edit &&
+                "You can add and remove permissions"}
+            </div>
           </div>
+
+          {/* Only show Save button if user has modify permissions */}
+          {hasModifyPermission && (
+            <Button
+              onClick={handleSavePermissions}
+              disabled={
+                updatePermission.isPending ||
+                !hasChange ||
+                hasOnlyViewPermission
+              }
+            >
+              {updatePermission.isPending ? "Saving..." : "Save Permissions"}
+            </Button>
+          )}
         </div>
 
-        {/* Only show Save button if user has modify permissions */}
+        <div className="mt-8">
+          <PermissionTableInner
+            data={employeeId}
+            onChange={handlePermissionChange}
+            isReadOnly={hasOnlyViewPermission}
+          />
+        </div>
+
         {hasModifyPermission && (
-          <Button
-            onClick={handleSavePermissions}
-            disabled={
-              updatePermission.isPending || !hasChange || hasOnlyViewPermission
-            }
-          >
-            {updatePermission.isPending ? "Saving..." : "Save Permissions"}
-          </Button>
+          <WarningDialog
+            open={showWarning}
+            onSubmit={handleWarningSubmit}
+            onDiscard={handleWarningDiscard}
+            onClose={handleWarningClose}
+          />
         )}
       </div>
-
-      <div className="mt-8">
-        <PermissionTableInner
-          data={employeeId}
-          onChange={handlePermissionChange}
-          isReadOnly={hasOnlyViewPermission}
-        />
-      </div>
-
-      {hasModifyPermission && (
-        <WarningDialog
-          open={showWarning}
-          onSubmit={handleWarningSubmit}
-          onDiscard={handleWarningDiscard}
-          onClose={handleWarningClose}
-        />
-      )}
-    </div>
+    </CompanyAccessGuard>
   );
 }

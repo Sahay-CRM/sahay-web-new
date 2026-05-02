@@ -15,6 +15,7 @@ export default function useGetUpdates() {
 
       return resData;
     },
+    staleTime: 1000 * 60 * 60 * 3,
   });
 
   return query;

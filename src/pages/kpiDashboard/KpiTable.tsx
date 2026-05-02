@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { useEffect, useState, useMemo } from "react";
+import { format, isValid, parseISO } from "date-fns";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import clsx from "clsx";
 import useKpiDashboard from "./useKpiDashboard";
@@ -22,7 +23,17 @@ import { FormProvider, useForm } from "react-hook-form";
 import Loader from "@/components/shared/Loader/Loader";
 import { FormDatePicker } from "@/components/shared/Form/FormDatePicker/FormDatePicker";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, GripVertical, Plus, ChartSpline } from "lucide-react";
+import {
+  RefreshCcw,
+  GripVertical,
+  Plus,
+  ChartSpline,
+  Search,
+  X,
+  Calendar,
+  Building2,
+  Users,
+} from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -58,11 +69,12 @@ import {
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 // import CommentModal from "./KpiCommentModal";
 import { twMerge } from "tailwind-merge";
+import { cn } from "@/lib/utils";
 import CommentModal from "./KpiCommentModal";
 import SearchInput from "@/components/shared/SearchInput";
-import MultiIconSelect from "@/components/shared/Form/FormSelect/MultiIconSelect";
 // import KpiDetailsSheet from "./KpiDetailsSheet";
 import GraphModal from "./GraphModal/graphModal";
+import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 
 function formatToThreeDecimals(value: string | number | null | undefined) {
   if (value === null || value === undefined || value === "") return "";
@@ -397,19 +409,20 @@ function SortableCoreParameterGroup({
   );
 }
 
-// interface SortConfig {
-//   key: string;
-//   direction: "asc" | "desc";
-// }
 export default function UpdatedKpiTable() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const userData = useSelector(getUserDetail);
   const [isDataFilter, setIsDataFilter] = useState("default");
   const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const urlSelectedPeriod = searchParams.get("selectedType");
   const [selectedPeriod, setSelectedPeriod] = useState(urlSelectedPeriod || "");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isDateOpen, setIsDateOpen] = useState(false);
+
+  const [focusFilter, setFocusFilter] = useState("focus");
   useEffect(() => {
     if (selectedPeriod === "DAILY") {
       setIsDataFilter("default");
@@ -419,35 +432,104 @@ export default function UpdatedKpiTable() {
   //   key: "sequence",
   //   direction: "asc",
   // });
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+
   const finalFilterValue =
     selectedPeriod === "DAILY" ? "default" : isDataFilter;
-  const { data: kpiStructure, isLoading: isKpiStructureLoading } =
+
+  const kpiFilter = useMemo(
+    () => ({
+      sortBy: "sequence",
+      sortOrder: "asc",
+      filter: finalFilterValue,
+    }),
+    [finalFilterValue],
+  );
+
+  const {
+    data: kpiStructure,
+    isLoading: isKpiStructureLoading,
+  }: { data?: BaseResponse<FrequencyData>; isLoading: boolean } =
     useGetKpiDashboardStructure({
-      filter: {
-        sortBy: "sequence",
-        sortOrder: "asc",
-        filter: finalFilterValue,
-      },
+      filter: kpiFilter,
     });
 
-  const employeeOptions =
-    kpiStructure?.data
-      ?.flatMap((item) => item.kpis?.flatMap((k) => k.kpis ?? [])) // flatten nested levels
-      ?.filter((k) => k.employeeId != null) // remove undefined/null IDs
-      ?.map((k) => ({
-        label: k.employeeName,
-        value: k.employeeId as string, // now safe
-      })) ?? [];
+  const allKpis =
+    kpiStructure?.data?.flatMap((item) =>
+      item.kpis?.flatMap((k) => k.kpis ?? []),
+    ) ?? [];
+
+  const employeeOptions = allKpis
+    .filter((k) => k.employeeId != null)
+    .map((k) => ({
+      label: k.employeeName,
+      value: k.employeeId as string,
+    }));
 
   const uniqueEmployeeOptions = Array.from(
     new Map(employeeOptions.map((item) => [item.value, item])).values(),
   );
 
-  // const [selectOpen, setSelectOpen] = useState(false);
-  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const departmentOptionsList = allKpis.map((k) => ({
+    label: k.departmentName || "Unknown",
+    value: k.departmentId || "unknown",
+  }));
 
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const departmentOptions = Array.from(
+    new Map(departmentOptionsList.map((item) => [item.value, item])).values(),
+  );
+
+  const urlSelectedDate = searchParams.get("selectedDate");
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
+    if (urlSelectedDate) {
+      const date = parseISO(urlSelectedDate);
+      return isValid(date) ? date : null;
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams);
+    if (selectedDate && isValid(selectedDate)) {
+      newParams.set("selectedDate", format(selectedDate, "yyyy-MM-dd"));
+    } else {
+      newParams.delete("selectedDate");
+    }
+    if (newParams.toString() !== searchParams.toString()) {
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [selectedDate, searchParams, setSearchParams]);
   const [showWarning, setShowWarning] = useState(false);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(target) &&
+        !(
+          target instanceof Element &&
+          (target.closest('[data-slot="popover-content"]') ||
+            target.closest(".react-datepicker"))
+        )
+      ) {
+        setIsSearchOpen(false);
+        setIsDateOpen(false);
+      }
+    }
+
+    if (isSearchOpen || isDateOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isSearchOpen, isDateOpen]);
+
   const [pendingPeriod, setPendingPeriod] = useState<string | null>(null);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(
     null,
@@ -778,7 +860,12 @@ export default function UpdatedKpiTable() {
   }, [selectedPeriod, searchParams, setSearchParams]);
 
   useEffect(() => {
-    if (!selectedPeriod && kpiStructure?.data && kpiStructure.data.length > 0) {
+    if (
+      !selectedPeriod &&
+      kpiStructure?.data &&
+      Array.isArray(kpiStructure.data) &&
+      kpiStructure.data.length > 0
+    ) {
       setSelectedPeriod(kpiStructure.data[0].frequencyType);
     }
   }, [kpiStructure, selectedPeriod]);
@@ -789,7 +876,8 @@ export default function UpdatedKpiTable() {
     isDataFilter: finalFilterValue,
   });
   const hasNoKpis = useMemo(() => {
-    return !kpiStructure?.totalCount || kpiStructure.totalCount === 0;
+    if (!kpiStructure?.data || !Array.isArray(kpiStructure.data)) return true;
+    return kpiStructure.data.every((freq) => (freq.count ?? 0) === 0);
   }, [kpiStructure]);
 
   const filteredData = useMemo(() => {
@@ -807,181 +895,105 @@ export default function UpdatedKpiTable() {
     selectedPeriod,
   );
 
-  // const groupedKpiRows = useMemo(() => {
-  //   if (!filteredData.length || !filteredData[0].kpis) return [];
-
-  //   const groups: {
-  //     coreParameter: { coreParameterId: string; coreParameterName: string };
-  //     kpis: { kpi: Kpi }[];
-  //   }[] = [];
-
-  //   (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
-  //     if (coreParam.kpis && Array.isArray(coreParam.kpis)) {
-  //       const kpiRows = coreParam.kpis.map((kpi: Kpi) => ({ kpi }));
-  //       groups.push({
-  //         coreParameter: {
-  //           coreParameterId: coreParam.coreParameterId,
-  //           coreParameterName: coreParam.coreParameterName,
-  //         },
-  //         kpis: kpiRows,
-  //       });
-  //     }
-  //   });
-
-  //   return groups;
-  // }, [filteredData]);
-
-  // const groupedKpiRows = useMemo(() => {
-  //   if (!filteredData.length || !filteredData[0].kpis) return [];
-  //   const search = String(searchTerm.search ?? "").toLowerCase();
-  //   console.log(filteredData, "filteredData");
-
-  //   const groups: {
-  //     coreParameter: { coreParameterId: string; coreParameterName: string };
-  //     kpis: { kpi: Kpi }[];
-  //   }[] = [];
-
-  //   (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
-  //     if (coreParam.kpis && Array.isArray(coreParam.kpis)) {
-  //       const filteredKpis = coreParam.kpis.filter((kpi: Kpi) => {
-  //         const coreName = coreParam.coreParameterName?.toLowerCase() || "";
-  //         const tag = kpi.tag?.toLowerCase() || "";
-  //         const name = kpi.kpiName?.toLowerCase() || "";
-
-  //         const match =
-  //           coreName.includes(search) ||
-  //           tag.includes(search) ||
-  //           name.includes(search);
-
-  //         return match;
-  //       });
-
-  //       if (filteredKpis.length > 0) {
-  //         groups.push({
-  //           coreParameter: {
-  //             coreParameterId: coreParam.coreParameterId,
-  //             coreParameterName: coreParam.coreParameterName,
-  //           },
-  //           kpis: filteredKpis.map((kpi) => ({ kpi })),
-  //         });
-  //       }
-  //     }
-  //   });
-  //   return groups;
-  // }, [filteredData, searchTerm]);
-
-  // const groupedKpiRows = useMemo(() => {
-  //   if (!filteredData.length || !filteredData[0].kpis) return [];
-  //   console.log(filteredData);
-
-  //   const search = String(searchTerm.search ?? "").toLowerCase();
-
-  //   const groups: {
-  //     coreParameter: { coreParameterId: string; coreParameterName: string };
-  //     kpis: { kpi: Kpi }[];
-  //   }[] = [];
-
-  //   const selectedList = Array.isArray(selectedEmployees)
-  //     ? selectedEmployees
-  //     : selectedEmployees
-  //       ? [selectedEmployees]
-  //       : [];
-
-  //   (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
-  //     if (coreParam.kpis && Array.isArray(coreParam.kpis)) {
-  //       const filteredKpis = coreParam.kpis.filter((kpi: Kpi) => {
-  //         const coreName = coreParam.coreParameterName?.toLowerCase() || "";
-  //         const tag = kpi.tag?.toLowerCase() || "";
-  //         const name = kpi.kpiName?.toLowerCase() || "";
-
-  //         const matchesSearch =
-  //           coreName.includes(search) ||
-  //           tag.includes(search) ||
-  //           name.includes(search);
-
-  //         // ⭐ Employee Filter (supports multi + none)
-  //         const matchesEmployee =
-  //           selectedList.length === 0 ||
-  //           selectedList.includes(String(kpi.employeeId));
-
-  //         return matchesSearch && matchesEmployee;
-  //       });
-
-  //       if (filteredKpis.length > 0) {
-  //         groups.push({
-  //           coreParameter: {
-  //             coreParameterId: coreParam.coreParameterId,
-  //             coreParameterName: coreParam.coreParameterName,
-  //           },
-  //           kpis: filteredKpis.map((kpi) => ({ kpi })),
-  //         });
-  //       }
-  //     }
-  //   });
-
-  //   return groups;
-  // }, [filteredData, searchTerm, selectedEmployees]);
-
   const groupedKpiRows = useMemo(() => {
     if (!filteredData.length || !filteredData[0].kpis) return [];
 
     const search = String(searchTerm.search ?? "").toLowerCase();
 
-    const selectedList = Array.isArray(selectedEmployees)
-      ? selectedEmployees
-      : selectedEmployees
-        ? [selectedEmployees]
-        : [];
-
-    const groupsMap = new Map<
-      string,
-      {
-        coreParameter: {
-          coreParameterId: string;
-          coreParameterName: string;
-        };
-        kpis: { kpi: Kpi }[];
-      }
-    >();
-
-    (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
-      const groupId = coreParam.coreParameterId ?? "UNGROUPED";
-      const groupName = coreParam.coreParameterName ?? "";
-
-      if (!groupsMap.has(groupId)) {
-        groupsMap.set(groupId, {
+    const getSectionGroups = (isFocus: boolean) => {
+      const groupsMap = new Map<
+        string,
+        {
           coreParameter: {
-            coreParameterId: groupId,
-            coreParameterName: groupName,
-          },
-          kpis: [],
+            coreParameterId: string;
+            coreParameterName: string;
+          };
+          kpis: { kpi: Kpi }[];
+        }
+      >();
+
+      (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
+        const groupId = coreParam.coreParameterId ?? "UNGROUPED";
+        const groupName = coreParam.coreParameterName ?? "";
+
+        coreParam.kpis?.forEach((kpi: Kpi) => {
+          if (!!kpi.isFocus !== isFocus) return;
+
+          const coreName = groupName.toLowerCase();
+          const tag = kpi.tag?.toLowerCase() || "";
+          const name = kpi.kpiName?.toLowerCase() || "";
+
+          const matchesSearch =
+            coreName.includes(search) ||
+            tag.includes(search) ||
+            name.includes(search);
+
+          // Filter by employee
+          const matchesEmployee =
+            selectedEmployees.length === 0 ||
+            (kpi.employeeId && selectedEmployees.includes(kpi.employeeId));
+
+          // Filter by department
+          const matchesDepartment =
+            selectedDepartments.length === 0 ||
+            selectedDepartments.includes(kpi.departmentId || "unknown");
+
+          if (matchesSearch && matchesEmployee && matchesDepartment) {
+            if (!groupsMap.has(groupId)) {
+              groupsMap.set(groupId, {
+                coreParameter: {
+                  coreParameterId: groupId,
+                  coreParameterName: groupName,
+                },
+                kpis: [],
+              });
+            }
+            groupsMap.get(groupId)!.kpis.push({ kpi });
+          }
         });
-      }
+      });
 
-      coreParam.kpis?.forEach((kpi: Kpi) => {
-        const coreName = groupName.toLowerCase();
-        const tag = kpi.tag?.toLowerCase() || "";
-        const name = kpi.kpiName?.toLowerCase() || "";
+      return Array.from(groupsMap.values()).filter(
+        (group) => group.kpis.length > 0,
+      );
+    };
 
-        const matchesSearch =
-          coreName.includes(search) ||
-          tag.includes(search) ||
-          name.includes(search);
-
-        const matchesEmployee =
-          selectedList.length === 0 ||
-          selectedList.includes(String(kpi.employeeId));
-
-        if (matchesSearch && matchesEmployee) {
-          groupsMap.get(groupId)!.kpis.push({ kpi });
+    if (focusFilter === "focus") {
+      const focusGroups = getSectionGroups(true);
+      return focusGroups.map((g) => ({ ...g, sectionPrefix: "focus" }));
+    } else if (focusFilter === "other") {
+      const otherGroups = getSectionGroups(false);
+      return otherGroups.map((g) => ({ ...g, sectionPrefix: "other" }));
+    } else {
+      const allGroups = getSectionGroups(true).concat(getSectionGroups(false));
+      const mergedGroupsMap = new Map<
+        string,
+        {
+          coreParameter: { coreParameterId: string; coreParameterName: string };
+          kpis: { kpi: Kpi }[];
+        }
+      >();
+      allGroups.forEach((g) => {
+        const id = g.coreParameter.coreParameterId;
+        const existing = mergedGroupsMap.get(id);
+        if (!existing) {
+          mergedGroupsMap.set(id, { ...g, kpis: [...g.kpis] });
+        } else {
+          existing.kpis.push(...g.kpis);
         }
       });
-    });
-
-    return Array.from(groupsMap.values()).filter(
-      (group) => group.kpis.length > 0,
-    );
-  }, [filteredData, searchTerm, selectedEmployees]);
+      return Array.from(mergedGroupsMap.values()).map((g) => ({
+        ...g,
+        sectionPrefix: "all",
+      }));
+    }
+  }, [
+    filteredData,
+    searchTerm,
+    focusFilter,
+    selectedEmployees,
+    selectedDepartments,
+  ]);
 
   useEffect(() => {
     const syncScroll = (e: Event) => {
@@ -1183,14 +1195,6 @@ export default function UpdatedKpiTable() {
     setShowWarning(false);
   };
 
-  // const handleSort = (key: string) => {
-  //   let direction: "asc" | "desc" = "asc";
-  //   if (sortConfig.key === key && sortConfig.direction === "asc") {
-  //     direction = "desc";
-  //   }
-  //   setSortConfig({ key, direction });
-  // };
-
   const handleFocus = (
     e: React.FocusEvent<HTMLInputElement>,
     cellKey: string,
@@ -1229,24 +1233,6 @@ export default function UpdatedKpiTable() {
       }));
     }
   };
-
-  // const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-  //   const charCode = e.which ? e.which : e.keyCode;
-  //   const char = String.fromCharCode(charCode);
-
-  //   if (
-  //     !/[\d.]/.test(char) &&
-  //     charCode > 31 &&
-  //     (charCode < 48 || charCode > 57)
-  //   ) {
-  //     e.preventDefault();
-  //   }
-
-  //   // Allow only one decimal point
-  //   if (char === "." && e.currentTarget.value.includes(".")) {
-  //     e.preventDefault();
-  //   }
-  // };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const charCode = e.which ? e.which : e.keyCode;
@@ -1396,7 +1382,7 @@ export default function UpdatedKpiTable() {
     <FormProvider {...methods}>
       <div className="sticky top-0 z-30 bg-white p-4 m-0">
         <div className="flex justify-between">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between w-full items-center">
             <TabsSection
               selectedPeriod={selectedPeriod}
               onSelectPeriod={handlePeriodChange}
@@ -1404,54 +1390,177 @@ export default function UpdatedKpiTable() {
               isDataFilter={isDataFilter}
             />
           </div>
-          <div className="flex gap-4 items-center justify-end">
+          <div className="flex gap-2 items-center justify-end w-fit min-[1200px]:w-auto">
             {Object.keys(tempValues).length > 0 && (
-              <Button onClick={handleSubmit}>Submit</Button>
+              <Button onClick={handleSubmit} className="h-9 px-3 text-sm">
+                Submit
+              </Button>
             )}
 
+            <div
+              className={cn(
+                "flex items-center gap-2",
+                isSearchOpen || isDateOpen
+                  ? "hidden min-[1200px]:flex"
+                  : "flex",
+              )}
+            >
+              <div className="min-w-[100px]">
+                <FormSelect
+                  value={focusFilter}
+                  options={[
+                    { label: "All", value: "all" },
+                    { label: "Focus", value: "focus" },
+                    { label: "Other", value: "other" },
+                  ]}
+                  onChange={(val) => setFocusFilter(val as string)}
+                  className="w-full"
+                />
+              </div>
+              <DropdownSearchMenu
+                label="User"
+                options={uniqueEmployeeOptions}
+                selected={selectedEmployees}
+                onChange={(selected) => setSelectedEmployees(selected)}
+                multiSelect
+                icon={<Users className="h-4 w-4" />}
+                responsive
+              />
+              <DropdownSearchMenu
+                label="Department"
+                options={departmentOptions}
+                selected={selectedDepartments}
+                onChange={(selected) => setSelectedDepartments(selected)}
+                multiSelect
+                icon={<Building2 className="h-4 w-4" />}
+                responsive
+              />
+            </div>
+
             {urlSelectedPeriod !== "DAILY" && (
-              <div>
+              <div
+                className={cn(
+                  isSearchOpen || isDateOpen
+                    ? "hidden min-[1200px]:block"
+                    : "block",
+                )}
+              >
                 <FormSelect
                   value={isDataFilter}
                   options={dataFilterOption}
                   onChange={(ele) => {
                     setIsDataFilter(ele as string);
                   }}
-                  className="h-10"
+                  className="w-24 min-[1200px]:w-32"
                 />
               </div>
             )}
 
-            <SearchInput
-              placeholder="Search..."
-              searchValue={searchTerm?.search || ""}
-              setPaginationFilter={setSearchTerm}
-              className="w-80"
-            />
+            <div className="flex items-center gap-2" ref={searchContainerRef}>
+              <div className="flex items-center">
+                {isSearchOpen ? (
+                  <div className="flex items-center gap-2 bg-white animate-in slide-in-from-right-2 duration-200">
+                    <SearchInput
+                      placeholder="Search..."
+                      searchValue={searchTerm?.search || ""}
+                      setPaginationFilter={setSearchTerm}
+                      className="w-40 min-[1200px]:w-64"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 shrink-0"
+                      onClick={() => setIsSearchOpen(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div
+                    className={cn(
+                      "flex items-center gap-2",
+                      isDateOpen ? "hidden min-[1200px]:flex" : "flex",
+                    )}
+                  >
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="py-5 px-5 -mt-1 shrink-0"
+                      onClick={() => {
+                        setIsSearchOpen(true);
+                        setIsDateOpen(false);
+                      }}
+                    >
+                      <Search className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
 
-            <FormDatePicker
-              value={selectedDate}
-              onSubmit={(date) => {
-                setSelectedDate(date ?? null);
-              }}
-              className="w-[200px]"
-              placeholder="Choose a date"
-              periodType={
-                selectedPeriod as
-                  | "DAILY"
-                  | "WEEKLY"
-                  | "MONTHLY"
-                  | "QUARTERLY"
-                  | "HALFYEARLY"
-                  | "YEARLY"
-              }
-            />
-            {selectedDate && (
-              <Button onClick={() => setSelectedDate(null)}>
-                <RefreshCcw />
-                Reset Date
-              </Button>
-            )}
+              <div className="flex items-center gap-2">
+                {isDateOpen ? (
+                  <div className="flex items-center gap-2 bg-white animate-in slide-in-from-right-2 duration-200">
+                    <FormDatePicker
+                      value={selectedDate}
+                      onSubmit={(date) => {
+                        console.log(">>> ON SUBMIT CALLED WITH DATE:", date);
+                        setSelectedDate(date ?? null);
+                      }}
+                      className="h-9 w-[200px]"
+                      placeholder="Date"
+                      periodType={
+                        selectedPeriod as
+                          | "DAILY"
+                          | "WEEKLY"
+                          | "MONTHLY"
+                          | "QUARTERLY"
+                          | "HALFYEARLY"
+                          | "YEARLY"
+                      }
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 shrink-0"
+                      onClick={() => setIsDateOpen(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div
+                    className={cn(
+                      "flex items-center gap-2",
+                      isSearchOpen ? "hidden min-[1200px]:flex" : "flex",
+                    )}
+                  >
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="py-5 px-5 -mt-1 shrink-0"
+                      onClick={() => {
+                        setIsDateOpen(true);
+                        setIsSearchOpen(false);
+                      }}
+                    >
+                      <Calendar className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+
+                {selectedDate && !isDateOpen && (
+                  <Button
+                    onClick={() => setSelectedDate(null)}
+                    variant="outline"
+                    size="icon"
+                    className="py-5 px-5 -mt-1"
+                    title="Reset Date"
+                  >
+                    <RefreshCcw className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1479,13 +1588,13 @@ export default function UpdatedKpiTable() {
                     >
                       <div className="flex items-center">
                         Who
-                        <MultiIconSelect
+                        {/* <MultiIconSelect
                           value={selectedEmployees}
                           options={uniqueEmployeeOptions}
                           onChange={(v) => setSelectedEmployees(v)}
                           searchable
                           className="ml-0.5"
-                        />
+                        /> */}
                       </div>
                       {/* {sortConfig.key === "employeeName" &&
                       (sortConfig.direction === "asc" ? (
@@ -1539,46 +1648,52 @@ export default function UpdatedKpiTable() {
                 </thead>
                 <SortableContext
                   items={[
-                    ...groupedKpiRows.map(
-                      (group) => `group:${group.coreParameter.coreParameterId}`,
-                    ),
-                    ...groupedKpiRows.flatMap((group) =>
-                      group.kpis.map(
-                        ({ kpi }) =>
-                          `kpi:${kpi.kpiId}:${group.coreParameter.coreParameterId}`,
-                      ),
-                    ),
+                    ...groupedKpiRows.flatMap((group) => {
+                      const prefix = group.sectionPrefix;
+                      return [
+                        `group:${prefix}:${group.coreParameter.coreParameterId}`,
+                        ...group.kpis.map(
+                          ({ kpi }: { kpi: Kpi }) =>
+                            `kpi:${prefix}:${kpi.kpiId}:${group.coreParameter.coreParameterId}`,
+                        ),
+                      ];
+                    }),
                   ]}
                   strategy={verticalListSortingStrategy}
                 >
                   <tbody>
-                    {groupedKpiRows.map((group) => (
-                      <React.Fragment key={group.coreParameter.coreParameterId}>
-                        <SortableCoreParameterGroup
-                          id={`group:${group.coreParameter.coreParameterId}`}
-                          isDragging={isDragging}
-                          disabled={!canDrag}
-                          showDragHandle={!!canDrag}
+                    {groupedKpiRows.map((group) => {
+                      const prefix = group.sectionPrefix;
+                      return (
+                        <React.Fragment
+                          key={`${prefix}:${group.coreParameter.coreParameterId}`}
                         >
-                          {group.coreParameter.coreParameterName}
-                        </SortableCoreParameterGroup>
-                        {group.kpis.map(({ kpi }) => (
-                          <SortableKpiRow
-                            key={kpi.kpiId}
-                            id={`kpi:${kpi.kpiId}:${group.coreParameter.coreParameterId}`}
-                            kpi={kpi}
+                          <SortableCoreParameterGroup
+                            id={`group:${prefix}:${group.coreParameter.coreParameterId}`}
                             isDragging={isDragging}
                             disabled={!canDrag}
                             showDragHandle={!!canDrag}
-                            getFormattedValue={getFormattedValue}
-                            selectedPeriod={selectedPeriod}
-                            // onRowClick={handleRowClick}
-                            graphClick={(id: string) => handleGraphClick(id)}
-                            isMurgeKpi={kpi?.isMurgeKpi}
-                          />
-                        ))}
-                      </React.Fragment>
-                    ))}
+                          >
+                            {group.coreParameter.coreParameterName}
+                          </SortableCoreParameterGroup>
+                          {group.kpis.map(({ kpi }) => (
+                            <SortableKpiRow
+                              key={kpi.kpiId}
+                              id={`kpi:${prefix}:${kpi.kpiId}:${group.coreParameter.coreParameterId}`}
+                              kpi={kpi}
+                              isDragging={isDragging}
+                              disabled={!canDrag}
+                              showDragHandle={!!canDrag}
+                              getFormattedValue={getFormattedValue}
+                              selectedPeriod={selectedPeriod}
+                              // onRowClick={handleRowClick}
+                              graphClick={(id: string) => handleGraphClick(id)}
+                              isMurgeKpi={kpi?.isMurgeKpi}
+                            />
+                          ))}
+                        </React.Fragment>
+                      );
+                    })}
                     {/* <KpiDetailsSheet
                       isOpen={isSheetOpen}
                       onOpenChange={setIsSheetOpen}
@@ -1628,66 +1743,284 @@ export default function UpdatedKpiTable() {
                     </tr>
                   </thead>
                   <tbody>
-                    {groupedKpiRows.map((group, idx) => (
-                      <React.Fragment
-                        key={(group.coreParameter.coreParameterId, idx)}
-                      >
-                        <tr className="sticky h-[39px] top-[50px] bg-blue-50 z-10">
-                          <td
-                            colSpan={headers.length}
-                            className="p-2  border text-black font-bold"
-                          >
-                            {/* {group.coreParameter.coreParameterName} */}
-                          </td>
-                        </tr>
-                        {group.kpis.map(({ kpi }) => {
-                          let dataRow: KpiDataCell[] | undefined = undefined;
-                          if (isKpiDataCellArrayArray(kpiData?.data)) {
-                            dataRow = (kpiData.data as KpiDataCell[][]).find(
-                              (cells) =>
-                                Array.isArray(cells) &&
-                                cells.length > 0 &&
-                                cells[0].kpiId === kpi.kpiId,
-                            );
-                          }
-                          return (
-                            <tr
-                              key={kpi.kpiId}
-                              className={`h-[50px] ${kpi.isMurgeKpi ? "bg-gray-100/80" : ""}`}
+                    {groupedKpiRows.map((group, idx) => {
+                      const prefix = group.sectionPrefix;
+                      return (
+                        <React.Fragment
+                          key={`${prefix}:${group.coreParameter.coreParameterId}:${idx}`}
+                        >
+                          <tr className="sticky h-[39px] top-[50px] bg-blue-50 z-10">
+                            <td
+                              colSpan={headers.length}
+                              className="p-2 border text-black font-bold"
                             >
-                              {headers.map((_, colIdx) => {
-                                const cell = dataRow?.[colIdx];
-                                const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
-                                const validationType = cell?.validationType;
-                                const value1 = cell?.value1;
-                                const value2 = cell?.value2;
-                                const inputVal =
-                                  inputValues[key] ??
-                                  cell?.data?.toString() ??
-                                  "";
-                                const inputnote =
-                                  tempValues[key]?.comment ?? cell?.note ?? "";
-                                const noteId = cell?.noteId ?? "";
+                              {group.coreParameter.coreParameterName}
+                            </td>
+                          </tr>
+                          {group.kpis.map(({ kpi }) => {
+                            let dataRow: KpiDataCell[] | undefined = undefined;
+                            if (isKpiDataCellArrayArray(kpiData?.data)) {
+                              dataRow = (kpiData.data as KpiDataCell[][]).find(
+                                (cells) =>
+                                  Array.isArray(cells) &&
+                                  cells.length > 0 &&
+                                  cells[0].kpiId === kpi.kpiId,
+                              );
+                            }
+                            return (
+                              <tr
+                                key={kpi.kpiId}
+                                className={`h-[50px] ${kpi.isMurgeKpi ? "bg-gray-100/80" : ""}`}
+                              >
+                                {headers.map((_, colIdx) => {
+                                  const cell = dataRow?.[colIdx];
+                                  const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
+                                  const validationType = cell?.validationType;
+                                  const value1 = cell?.value1;
+                                  const value2 = cell?.value2;
+                                  const inputVal =
+                                    inputValues[key] ??
+                                    cell?.data?.toString() ??
+                                    "";
+                                  const inputnote =
+                                    tempValues[key]?.comment ??
+                                    cell?.note ??
+                                    "";
+                                  const noteId = cell?.noteId ?? "";
 
-                                const isVisualized = kpi?.isVisualized;
-                                const canAdd = permission?.Add && !cell?.data;
-                                const canEdit =
-                                  permission?.Edit && !!cell?.data;
-                                const canInput =
-                                  !isVisualized && (canAdd || canEdit);
+                                  const isVisualized = kpi?.isVisualized;
+                                  const canAdd = permission?.Add && !cell?.data;
+                                  const canEdit =
+                                    permission?.Edit && !!cell?.data;
+                                  const canInput =
+                                    !isVisualized && (canAdd || canEdit);
 
-                                if (validationType == "YES_NO") {
-                                  const selectOptions = [
-                                    { value: "1", label: "Yes" },
-                                    { value: "2", label: "No" },
-                                  ];
-                                  const isValid = inputVal === String(value1);
+                                  if (validationType == "YES_NO") {
+                                    const selectOptions = [
+                                      { value: "1", label: "Yes" },
+                                      { value: "2", label: "No" },
+                                    ];
+                                    const isValid = inputVal === String(value1);
 
+                                    return (
+                                      <td
+                                        key={colIdx}
+                                        className={clsx(
+                                          "p-2 border text-center w-[80px] h-[42px]",
+                                          headers[colIdx].isSunday &&
+                                            headers[colIdx].isHoliday &&
+                                            headers[colIdx].isSkipDay
+                                            ? "bg-blue-100"
+                                            : headers[colIdx].isSunday ||
+                                                headers[colIdx].isSkipDay
+                                              ? "bg-gray-100"
+                                              : headers[colIdx].isHoliday
+                                                ? "bg-blue-100"
+                                                : "",
+                                        )}
+                                      >
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <div
+                                                className={twMerge(
+                                                  "relative border  rounded-sm text-sm w-[80px] h-[42px] bg-white group",
+                                                  cell?.data !== "-" &&
+                                                    inputVal !== "" &&
+                                                    selectedPeriod !==
+                                                      "YEARLY" &&
+                                                    (isValid
+                                                      ? "bg-green-100 "
+                                                      : "bg-red-100 "),
+                                                  cell?.data !== "-" &&
+                                                    isVisualized &&
+                                                    cell?.validationPercentage !=
+                                                      null &&
+                                                    cell?.data !== "-" &&
+                                                    isVisualized &&
+                                                    cell?.validationPercentage !=
+                                                      null &&
+                                                    (cell.validationPercentage >=
+                                                    100
+                                                      ? "bg-green-100"
+                                                      : validationKey > 0 &&
+                                                          cell.validationPercentage <
+                                                            validationKey
+                                                        ? "bg-red-100"
+                                                        : validationKey > 0 &&
+                                                            cell.validationPercentage >=
+                                                              validationKey &&
+                                                            cell.validationPercentage <
+                                                              100
+                                                          ? "bg-yellow-200"
+                                                          : "bg-red-100"),
+                                                  isVisualized &&
+                                                    "opacity-60 cursor-not-allowed",
+                                                  cell?.isSkipDay &&
+                                                    "cursor-not-allowed",
+                                                )}
+                                              >
+                                                {!isVisualized ? (
+                                                  <FormSelect
+                                                    value={inputVal}
+                                                    onChange={
+                                                      canInput
+                                                        ? (val) => {
+                                                            setInputValues(
+                                                              (prev) => ({
+                                                                ...prev,
+                                                                [key]:
+                                                                  Array.isArray(
+                                                                    val,
+                                                                  )
+                                                                    ? val.join(
+                                                                        ", ",
+                                                                      )
+                                                                    : String(
+                                                                        val,
+                                                                      ),
+                                                              }),
+                                                            );
+                                                            setTempValues(
+                                                              (prev) => ({
+                                                                ...prev,
+                                                                [key]: {
+                                                                  value:
+                                                                    Array.isArray(
+                                                                      val,
+                                                                    )
+                                                                      ? val.join(
+                                                                          ", ",
+                                                                        )
+                                                                      : String(
+                                                                          val,
+                                                                        ),
+                                                                  comment:
+                                                                    prev[key]
+                                                                      ?.comment ??
+                                                                    cell?.note ??
+                                                                    "",
+                                                                },
+                                                              }),
+                                                            );
+                                                          }
+                                                        : () => {}
+                                                    }
+                                                    options={selectOptions}
+                                                    placeholder="Select"
+                                                    disabled={!canInput}
+                                                    triggerClassName="text-sm px-1 text-center justify-center border-none"
+                                                  />
+                                                ) : (
+                                                  <div className="flex flex-col items-center  justify-center h-full w-full cursor-not-allowed">
+                                                    <span className="text-black">
+                                                      {formatCompactNumber(
+                                                        cell?.data,
+                                                      )}
+                                                    </span>
+                                                  </div>
+                                                )}
+                                                <div
+                                                  className={clsx(
+                                                    "transition-opacity",
+                                                    inputnote &&
+                                                      inputnote.trim() !== "" &&
+                                                      inputnote !== "0"
+                                                      ? "opacity-100"
+                                                      : "opacity-0 group-hover:opacity-100",
+                                                  )}
+                                                >
+                                                  <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                      {inputnote &&
+                                                      inputnote.trim() !== "" &&
+                                                      inputnote !== "0" ? (
+                                                        <span
+                                                          className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
+                                                          style={{
+                                                            background:
+                                                              inputVal !== "" &&
+                                                              validationType &&
+                                                              selectedPeriod !==
+                                                                "YEARLY"
+                                                                ? isValidInput(
+                                                                    validationType,
+                                                                    inputVal,
+                                                                    value1 ??
+                                                                      null,
+                                                                    value2 ??
+                                                                      null,
+                                                                  )
+                                                                  ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)"
+                                                                  : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)"
+                                                                : "linear-gradient(to bottom left, #2e3090 50%, white 55%)",
+                                                            borderBottomLeftRadius:
+                                                              "5px",
+                                                          }}
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setCurrentCellKey(
+                                                              key,
+                                                            );
+                                                            setCommentModalInput(
+                                                              {
+                                                                note: inputnote,
+                                                                noteId,
+                                                              },
+                                                            );
+                                                            setCommentModalOpen(
+                                                              true,
+                                                            );
+                                                          }}
+                                                        ></span>
+                                                      ) : !kpi.isMurgeKpi ? (
+                                                        <span
+                                                          className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setCurrentCellKey(
+                                                              key,
+                                                            );
+                                                            setCommentModalInput(
+                                                              {
+                                                                note: "",
+                                                                noteId: "",
+                                                              },
+                                                            );
+
+                                                            setCommentModalOpen(
+                                                              true,
+                                                            );
+                                                          }}
+                                                        >
+                                                          <Plus className="w-3 h-3 text-gray-700" />
+                                                        </span>
+                                                      ) : null}
+                                                    </TooltipTrigger>{" "}
+                                                    <TooltipContent>
+                                                      <span>
+                                                        {inputnote &&
+                                                        inputnote.trim() !==
+                                                          "" &&
+                                                        inputnote !== "0"
+                                                          ? "View note"
+                                                          : "Add note"}
+                                                      </span>
+                                                    </TooltipContent>
+                                                  </Tooltip>
+                                                </div>
+                                              </div>
+                                            </TooltipTrigger>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      </td>
+                                    );
+                                  }
                                   return (
                                     <td
                                       key={colIdx}
                                       className={clsx(
-                                        "p-2 border text-center w-[80px] h-[42px]",
+                                        "p-2 border text-center w-[80px] h-[42px] relative",
                                         headers[colIdx].isSunday &&
                                           headers[colIdx].isHoliday &&
                                           headers[colIdx].isSkipDay
@@ -1703,126 +2036,93 @@ export default function UpdatedKpiTable() {
                                       <TooltipProvider>
                                         <Tooltip>
                                           <TooltipTrigger asChild>
-                                            <div
-                                              className={twMerge(
-                                                "relative border  rounded-sm text-sm w-[80px] h-[42px] bg-white group",
-                                                cell?.data !== "-" &&
-                                                  inputVal !== "" &&
-                                                  selectedPeriod !== "YEARLY" &&
-                                                  (isValid
-                                                    ? "bg-green-100 "
-                                                    : "bg-red-100 "),
-                                                cell?.data !== "-" &&
-                                                  isVisualized &&
-                                                  cell?.validationPercentage !=
-                                                    null &&
+                                            <div className="relative  w-full h-full group">
+                                              <input
+                                                type="text"
+                                                inputMode="decimal"
+                                                value={
+                                                  inputFocused[key]
+                                                    ? inputVal
+                                                    : formatCompactNumber(
+                                                        inputVal,
+                                                      )
+                                                }
+                                                onFocus={
+                                                  canInput
+                                                    ? (e) => handleFocus(e, key)
+                                                    : undefined
+                                                }
+                                                onBlur={
+                                                  canInput
+                                                    ? () => handleBlur(key)
+                                                    : undefined
+                                                }
+                                                onChange={
+                                                  canInput
+                                                    ? (e) =>
+                                                        handleChange(e, key)
+                                                    : undefined
+                                                }
+                                                data-cell-key={key}
+                                                onKeyDown={(e) =>
+                                                  handleInputKeyDown(e, key)
+                                                }
+                                                onKeyPress={handleKeyPress}
+                                                onPaste={handlePaste}
+                                                className={twMerge(
+                                                  "kpi-input",
+                                                  "border p-2  w-[80px] rounded-sm text-center text-sm h-[42px] transition-all bg-white",
+                                                  "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+
                                                   cell?.data !== "-" &&
-                                                  isVisualized &&
-                                                  cell?.validationPercentage !=
-                                                    null &&
-                                                  (cell.validationPercentage >=
-                                                  100
-                                                    ? "bg-green-100"
-                                                    : validationKey > 0 &&
-                                                        cell.validationPercentage <
+                                                    inputVal !== "" &&
+                                                    validationType &&
+                                                    selectedPeriod !==
+                                                      "YEARLY" &&
+                                                    getInputValidationClass(
+                                                      validationType,
+                                                      inputVal,
+                                                      value1 ?? null,
+                                                      value2 ?? null,
+                                                    ),
+
+                                                  cell?.data !== "-" &&
+                                                    validationKey &&
+                                                    validationKey !== null &&
+                                                    selectedPeriod !==
+                                                      "YEARLY" &&
+                                                    cell?.validationPercentage !=
+                                                      null &&
+                                                    (() => {
+                                                      const percentage =
+                                                        cell.validationPercentage;
+
+                                                      if (percentage >= 100)
+                                                        return "bg-green-100";
+
+                                                      if (
+                                                        validationKey > 0 &&
+                                                        percentage <
                                                           validationKey
-                                                      ? "bg-red-100"
-                                                      : validationKey > 0 &&
-                                                          cell.validationPercentage >=
-                                                            validationKey &&
-                                                          cell.validationPercentage <
-                                                            100
-                                                        ? "bg-yellow-200"
-                                                        : "bg-red-100"),
-                                                isVisualized &&
-                                                  "opacity-60 cursor-not-allowed",
-                                                cell?.isSkipDay &&
-                                                  "cursor-not-allowed",
-                                              )}
-                                            >
-                                              {!isVisualized ? (
-                                                <FormSelect
-                                                  value={inputVal}
-                                                  onChange={
-                                                    canInput
-                                                      ? (val) => {
-                                                          setInputValues(
-                                                            (prev) => ({
-                                                              ...prev,
-                                                              [key]:
-                                                                Array.isArray(
-                                                                  val,
-                                                                )
-                                                                  ? val.join(
-                                                                      ", ",
-                                                                    )
-                                                                  : String(val),
-                                                            }),
-                                                          );
-                                                          setTempValues(
-                                                            (prev) => ({
-                                                              ...prev,
-                                                              [key]: {
-                                                                value:
-                                                                  Array.isArray(
-                                                                    val,
-                                                                  )
-                                                                    ? val.join(
-                                                                        ", ",
-                                                                      )
-                                                                    : String(
-                                                                        val,
-                                                                      ),
-                                                                comment:
-                                                                  prev[key]
-                                                                    ?.comment ??
-                                                                  cell?.note ??
-                                                                  "",
-                                                              },
-                                                            }),
-                                                          );
-                                                        }
-                                                      : () => {}
-                                                  }
-                                                  options={selectOptions}
-                                                  placeholder="Select"
-                                                  disabled={!canInput}
-                                                  triggerClassName="text-sm px-1 text-center justify-center border-none"
-                                                />
-                                              ) : (
-                                                <div className="flex flex-col items-center  justify-center h-full w-full cursor-not-allowed">
-                                                  <span className="text-black">
-                                                    {/* {inputFocused[key]
-                                                      ? inputVal
-                                                      : selectedPeriod ===
-                                                        "DAILY"
-                                                        ? cell?.data != null &&
-                                                          cell?.data !== ""
-                                                          ? Number(
-                                                            cell.data,
-                                                          ) === 1
-                                                            ? "Yes"
-                                                            : Number(
-                                                              cell.data,
-                                                            ) === 2
-                                                              ? "No"
-                                                              : Number(
-                                                                cell.goalValue,
-                                                              ) > 1
-                                                                ? String(
-                                                                  cell.data,
-                                                                )
-                                                                : "No"
-                                                          : ""
-                                                        : formatCompactNumber(
-                                                          cell?.data,
-                                                        )} */}
-                                                    {formatCompactNumber(
-                                                      cell?.data,
-                                                    )}
-                                                  </span>
-                                                </div>
-                                              )}
+                                                      )
+                                                        return "bg-red-200 border-red-500";
+
+                                                      if (
+                                                        validationKey > 0 &&
+                                                        percentage < 100 &&
+                                                        validationKey
+                                                      )
+                                                        return "bg-yellow-200 border-yellow-300";
+
+                                                      return "bg-green-200 border-green-300";
+                                                    })(),
+
+                                                  isVisualized &&
+                                                    "cursor-not-allowed",
+                                                )}
+                                                disabled={!canInput}
+                                                readOnly={!canInput}
+                                              />
                                               <div
                                                 className={clsx(
                                                   "transition-opacity",
@@ -1833,7 +2133,6 @@ export default function UpdatedKpiTable() {
                                                     : "opacity-0 group-hover:opacity-100",
                                                 )}
                                               >
-                                                {/* {canInput && !isVisualized && ( */}
                                                 <Tooltip>
                                                   <TooltipTrigger asChild>
                                                     {inputnote &&
@@ -1855,8 +2154,8 @@ export default function UpdatedKpiTable() {
                                                                   value2 ??
                                                                     null,
                                                                 )
-                                                                ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)" // valid → greenish
-                                                                : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)" // invalid → reddish
+                                                                ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)"
+                                                                : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)"
                                                               : "linear-gradient(to bottom left, #2e3090 50%, white 55%)",
                                                           borderBottomLeftRadius:
                                                             "5px",
@@ -1875,7 +2174,7 @@ export default function UpdatedKpiTable() {
                                                           );
                                                         }}
                                                       ></span>
-                                                    ) : (
+                                                    ) : !kpi.isMurgeKpi ? (
                                                       <span
                                                         className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
                                                         onClick={(e) => {
@@ -1895,254 +2194,43 @@ export default function UpdatedKpiTable() {
                                                       >
                                                         <Plus className="w-3 h-3 text-gray-700" />
                                                       </span>
-                                                    )}
-                                                  </TooltipTrigger>{" "}
+                                                    ) : null}
+                                                  </TooltipTrigger>
                                                   <TooltipContent>
                                                     <span>
                                                       {inputnote &&
                                                       inputnote.trim() !== "" &&
                                                       inputnote !== "0"
-                                                        ? "View note"
+                                                        ? `View note`
                                                         : "Add note"}
                                                     </span>
                                                   </TooltipContent>
                                                 </Tooltip>
-                                                {/* )} */}
                                               </div>
                                             </div>
                                           </TooltipTrigger>
+                                          {inputVal !== "" &&
+                                            inputVal !== "0" &&
+                                            !isNaN(Number(inputVal)) && (
+                                              <TooltipContent>
+                                                <span>
+                                                  {parseFloat(inputVal)
+                                                    .toFixed(4)
+                                                    .replace(/\.?0+$/, "")}
+                                                </span>
+                                              </TooltipContent>
+                                            )}
                                         </Tooltip>
                                       </TooltipProvider>
                                     </td>
                                   );
-                                }
-                                return (
-                                  <td
-                                    key={colIdx}
-                                    className={clsx(
-                                      "p-2 border text-center w-[80px] h-[42px] relative",
-                                      headers[colIdx].isSunday &&
-                                        headers[colIdx].isHoliday &&
-                                        headers[colIdx].isSkipDay
-                                        ? "bg-blue-100"
-                                        : headers[colIdx].isSunday ||
-                                            headers[colIdx].isSkipDay
-                                          ? "bg-gray-100"
-                                          : headers[colIdx].isHoliday
-                                            ? "bg-blue-100"
-                                            : "",
-                                      // cell?.isSkipDay && "bg-gray-300"
-                                    )}
-                                  >
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <div className="relative w-full h-full group">
-                                            <input
-                                              type="text"
-                                              inputMode="decimal"
-                                              value={
-                                                inputFocused[key]
-                                                  ? inputVal
-                                                  : formatCompactNumber(
-                                                      inputVal,
-                                                    )
-                                              }
-                                              onFocus={
-                                                canInput
-                                                  ? (e) => handleFocus(e, key)
-                                                  : undefined
-                                              }
-                                              onBlur={
-                                                canInput
-                                                  ? () => handleBlur(key)
-                                                  : undefined
-                                              }
-                                              onChange={
-                                                canInput
-                                                  ? (e) => handleChange(e, key)
-                                                  : undefined
-                                              }
-                                              data-cell-key={key}
-                                              onKeyDown={(e) =>
-                                                handleInputKeyDown(e, key)
-                                              }
-                                              onKeyPress={handleKeyPress}
-                                              onPaste={handlePaste}
-                                              // className={twMerge(
-                                              //   "border p-2 rounded-sm text-center text-sm w-full h-[42px] transition-all bg-white",
-                                              //   "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                                              //   inputVal !== "" &&
-                                              //     validationType &&
-                                              //     selectedPeriod !== "YEARLY" &&
-                                              //     (isValidInput(
-                                              //       validationType,
-                                              //       inputVal,
-                                              //       value1 ?? null,
-                                              //       value2 ?? null
-                                              //     )
-                                              //       ? "bg-green-100 border-green-500"
-                                              //       : "bg-red-100 border-red-500"),
-                                              //   isVisualized &&
-                                              //     "cursor-not-allowed"
-                                              // )}
-                                              className={twMerge(
-                                                "kpi-input",
-                                                "border p-2 rounded-sm text-center text-sm w-full h-[42px] transition-all bg-white",
-                                                "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-
-                                                // ⭐ Normal validation (when input is editable)
-                                                cell?.data !== "-" &&
-                                                  inputVal !== "" &&
-                                                  validationType &&
-                                                  selectedPeriod !== "YEARLY" &&
-                                                  getInputValidationClass(
-                                                    validationType,
-                                                    inputVal,
-                                                    value1 ?? null,
-                                                    value2 ?? null,
-                                                  ),
-
-                                                // ⭐ Visualization-based color logic
-                                                cell?.data !== "-" &&
-                                                  validationKey &&
-                                                  validationKey !== null &&
-                                                  selectedPeriod !== "YEARLY" &&
-                                                  cell?.validationPercentage !=
-                                                    null &&
-                                                  (() => {
-                                                    const percentage =
-                                                      cell.validationPercentage;
-
-                                                    if (percentage >= 100)
-                                                      return "bg-green-100";
-
-                                                    if (
-                                                      validationKey > 0 &&
-                                                      percentage < validationKey
-                                                    )
-                                                      return "bg-red-200 border-red-500";
-
-                                                    if (
-                                                      validationKey > 0 &&
-                                                      percentage < 100 &&
-                                                      validationKey
-                                                    )
-                                                      return "bg-yellow-200 border-yellow-300";
-
-                                                    return "bg-green-200 border-green-300";
-                                                  })(),
-
-                                                isVisualized &&
-                                                  "cursor-not-allowed",
-                                              )}
-                                              // placeholder="0"
-                                              disabled={!canInput}
-                                              readOnly={!canInput}
-                                            />
-                                            <div
-                                              className={clsx(
-                                                "transition-opacity",
-                                                inputnote &&
-                                                  inputnote.trim() !== "" &&
-                                                  inputnote !== "0"
-                                                  ? "opacity-100" // always visible when note exists
-                                                  : "opacity-0 group-hover:opacity-100", // only on hover when no note
-                                              )}
-                                            >
-                                              {/* {canInput && ( */}
-                                              <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                  {inputnote &&
-                                                  inputnote.trim() !== "" &&
-                                                  inputnote !== "0" ? (
-                                                    <span
-                                                      className="absolute top-[1px] right-[1px] w-3 h-3 rounded-tr-sm cursor-pointer overflow-hidden"
-                                                      style={{
-                                                        background:
-                                                          inputVal !== "" &&
-                                                          validationType &&
-                                                          selectedPeriod !==
-                                                            "YEARLY"
-                                                            ? isValidInput(
-                                                                validationType,
-                                                                inputVal,
-                                                                value1 ?? null,
-                                                                value2 ?? null,
-                                                              )
-                                                              ? "linear-gradient(to bottom left, #5b8f65 50%, transparent 55%)" // valid → greenish
-                                                              : "linear-gradient(to bottom left, #fca5a5 50%, transparent 55%)" // invalid → reddish
-                                                            : "linear-gradient(to bottom left, #2e3090 50%, white 55%)", // default
-                                                        borderBottomLeftRadius:
-                                                          "5px",
-                                                      }}
-                                                      onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setCurrentCellKey(key);
-                                                        setCommentModalInput({
-                                                          note: inputnote,
-                                                          noteId,
-                                                        });
-                                                        setCommentModalOpen(
-                                                          true,
-                                                        );
-                                                      }}
-                                                    ></span>
-                                                  ) : (
-                                                    <span
-                                                      className="absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4  cursor-pointer flex items-center justify-center rounded-bl-md text-xs font-bold text-gray-600"
-                                                      onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setCurrentCellKey(key);
-                                                        setCommentModalInput({
-                                                          note: "",
-                                                          noteId: "",
-                                                        });
-
-                                                        setCommentModalOpen(
-                                                          true,
-                                                        );
-                                                      }}
-                                                    >
-                                                      <Plus className="w-3 h-3 text-gray-700" />
-                                                    </span>
-                                                  )}
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                  <span>
-                                                    {inputnote &&
-                                                    inputnote.trim() !== "" &&
-                                                    inputnote !== "0"
-                                                      ? `View note`
-                                                      : "Add note"}
-                                                  </span>
-                                                </TooltipContent>
-                                              </Tooltip>
-                                              {/* )} */}
-                                            </div>
-                                          </div>
-                                        </TooltipTrigger>
-                                        {inputVal !== "" &&
-                                          inputVal !== "0" &&
-                                          !isNaN(Number(inputVal)) && (
-                                            <TooltipContent>
-                                              <span>
-                                                {parseFloat(inputVal)
-                                                  .toFixed(4)
-                                                  .replace(/\.?0+$/, "")}
-                                              </span>
-                                            </TooltipContent>
-                                          )}
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                          );
-                        })}
-                      </React.Fragment>
-                    ))}
+                                })}
+                              </tr>
+                            );
+                          })}
+                        </React.Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

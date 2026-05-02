@@ -4,6 +4,7 @@ interface AppNotification {
   body: string;
   data?: { [key: string]: string };
   isRead?: boolean;
+  notifiedTime?: string;
 }
 
 interface NotificationState {

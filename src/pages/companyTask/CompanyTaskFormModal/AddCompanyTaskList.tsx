@@ -1,5 +1,5 @@
 import { Controller, FormProvider, useFormContext } from "react-hook-form";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -7,11 +7,26 @@ import StepProgress from "@/components/shared/StepProgress/stepProgress";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import { useAddCompanyTask } from "./useAddCompanyTaskList";
+
+import { useGetCompanyTaskSearch } from "@/features/api/companyTask";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import SearchInput from "@/components/shared/SearchInput";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import PageNotAccess from "@/pages/PageNoAccess";
+import CompanyAccessGuard from "@/components/shared/CompanyAccessGuard/CompanyAccessGuard";
+import { useSelector } from "react-redux";
+import { getCompaniesList } from "@/features/selectors/company.selector";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
 
 /* ---------------- Project Step ---------------- */
 const ProjectSelectionStep = () => {
@@ -193,12 +208,21 @@ const MeetingSelectionStep = () => {
 };
 
 /* ---------------- Task Details Step ---------------- */
-const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
+const TaskDetailsStep = ({
+  taskId,
+  isEditMode,
+  deadlineRequest,
+}: {
+  taskId: string;
+  isEditMode: boolean;
+  deadlineRequest?: string;
+}) => {
   const {
     register,
     control,
     formState: { errors },
     setValue,
+    watch,
   } = useFormContext();
   const {
     taskStatusOptions,
@@ -207,17 +231,108 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
     setIsStatusSearch,
   } = useAddCompanyTask();
 
+  const taskNameValue = watch("taskName") || "";
+
+  // In edit mode, track the original name so dropdown only shows when user changes it
+  const [originalName, setOriginalName] = useState<string | null>(null);
+  const [nameChanged, setNameChanged] = useState(false);
+
+  useEffect(() => {
+    if (
+      isEditMode &&
+      originalName === null &&
+      taskNameValue.trim().length > 0
+    ) {
+      setOriginalName(taskNameValue);
+    }
+  }, [isEditMode, originalName, taskNameValue]);
+
+  useEffect(() => {
+    if (isEditMode && originalName !== null) {
+      setNameChanged(taskNameValue !== originalName);
+    }
+  }, [isEditMode, originalName, taskNameValue]);
+
+  const shouldSearch = !isEditMode || nameChanged;
+  const { data: taskSearchData } = useGetCompanyTaskSearch(
+    shouldSearch ? taskNameValue : "",
+  );
+
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isEditMode && !nameChanged) {
+      setShowDropdown(false);
+      return;
+    }
+    const hasResults =
+      (taskSearchData?.data?.length ?? 0) > 0 &&
+      taskNameValue.trim().length >= 5;
+
+    if (hasResults) {
+      setShowDropdown(true);
+    } else {
+      setShowDropdown(false);
+    }
+  }, [taskNameValue, taskSearchData, isEditMode, nameChanged]);
+
+  const showResults =
+    shouldSearch &&
+    showDropdown &&
+    taskNameValue.trim().length >= 5 &&
+    (taskSearchData?.data?.length ?? 0) > 0;
+
   return (
     <div className="grid grid-cols-2 gap-4">
-      <div className="col-span-2 mt-4 px-6 py-6 grid grid-cols-6 gap-4 h-[calc(100vh-250px)] content-start">
-        <div className="col-span-3">
+      <Card className="col-span-2 mt-4 px-6 py-6 grid grid-cols-6 gap-4 h-fit content-start">
+        <div className="col-span-3 relative z-50" ref={dropdownRef}>
           <FormInputField
             label="Task Name"
             className="p-5 px-3"
             {...register("taskName", { required: "Task Name is required" })}
             error={errors.taskName}
             placeholder="Enter Task Name"
+            onFocus={() => {
+              if (
+                shouldSearch &&
+                taskNameValue.trim().length >= 5 &&
+                (taskSearchData?.data?.length ?? 0) > 0
+              ) {
+                setShowDropdown(true);
+              }
+            }}
           />
+          {showResults && (
+            <div className="absolute top-[100%] mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              <div className="px-3 py-2 text-[12px]  text-gray-500 bg-gray-50 border-b border-gray-200 sticky top-0">
+                Similar Tasks Found
+              </div>
+              {taskSearchData?.data?.map((item: SearchResponse) => (
+                <div
+                  key={item.taskId}
+                  className="px-3 py-2 text-sm text-gray-700 border-b last:border-b-0 cursor-default hover:bg-gray-50"
+                >
+                  <span className="font-medium">{item.taskName}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="col-span-3">
           <Controller
@@ -225,15 +340,23 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
             name="taskDeadline"
             rules={{ required: "Task Deadline is required" }}
             render={({ field }) => (
-              <FormDateTimePicker
-                label="Task Deadline"
-                value={field.value}
-                onChange={field.onChange}
-                error={errors.taskDeadline}
-                disablePastDays={
-                  Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
-                }
-              />
+              <div>
+                <FormDateTimePicker
+                  label="Task Deadline"
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.taskDeadline}
+                  disablePastDays={
+                    Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                  }
+                  disabled={deadlineRequest === "PENDING"}
+                />
+                {deadlineRequest === "PENDING" && (
+                  <p className="text-xs text-primary mt-1">
+                    Deadline change request is pending approval
+                  </p>
+                )}
+              </div>
             )}
           />
         </div>
@@ -326,7 +449,7 @@ const TaskDetailsStep = ({ taskId }: { taskId: string }) => {
             hidden={!!taskId}
           />
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
@@ -440,10 +563,23 @@ export default function AddCompanyTask() {
     taskDataById,
     isPending,
     taskPermission,
+    isConfModalOpen,
+    setIsConfModalOpen,
+    reasons,
+    setReasons,
+    onConfirmSubmit,
   } = hookProps;
 
   const { setBreadcrumbs } = useBreadcrumbs();
   const [searchParams] = useSearchParams();
+
+  const companiesList = useSelector(getCompaniesList);
+  const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
+  const resourceCompanyId = taskDataById?.data?.companyId;
+  const isAuthorized =
+    !taskId ||
+    !resourceCompanyId ||
+    resourceCompanyId === currentCompany?.companyId;
 
   let projectId = searchParams.get("projectId") || "";
   let meetingId = searchParams.get("meetingId") || "";
@@ -458,7 +594,7 @@ export default function AddCompanyTask() {
     setBreadcrumbs([
       { label: "Company Task", href: "/dashboard/tasks" },
       { label: taskId ? "Update Task" : "Add Task", href: "" },
-      ...(taskId
+      ...(taskId && isAuthorized
         ? [
             {
               label: taskDataById?.data.taskName || "",
@@ -468,7 +604,7 @@ export default function AddCompanyTask() {
           ]
         : []),
     ]);
-  }, [setBreadcrumbs, taskDataById?.data.taskName, taskId]);
+  }, [setBreadcrumbs, taskDataById?.data.taskName, taskId, isAuthorized]);
 
   useEffect(() => {
     if (projectId) {
@@ -502,7 +638,14 @@ export default function AddCompanyTask() {
       case 2:
         return <MeetingSelectionStep key="meetingStep" />;
       case 3:
-        return <TaskDetailsStep key="detailsStep" taskId={taskId!} />;
+        return (
+          <TaskDetailsStep
+            key="detailsStep"
+            taskId={taskId!}
+            isEditMode={!!taskId}
+            deadlineRequest={taskDataById?.data?.deadlineRequest}
+          />
+        );
       case 4:
         return <AssignUserStep key="assignUserStep" />;
       default:
@@ -515,23 +658,69 @@ export default function AddCompanyTask() {
   }
 
   return (
-    <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-        <StepProgress
-          currentStep={effectiveStep}
-          totalSteps={totalSteps}
-          stepNames={stepNamesArray} // ⚡ अब slice मत करो, सारे step दिखेंगे
-          back={prevStep}
-          isFirstStep={projectId ? effectiveStep === 2 : effectiveStep === 1}
-          isLastStep={effectiveStep === totalSteps}
-          next={handleNext}
-          isPending={isPending}
-          onFinish={handleSubmit(onSubmit)}
-          isUpdate={!!taskId}
-        />
+    <CompanyAccessGuard
+      companyId={taskId ? resourceCompanyId : undefined}
+      isLoading={taskId ? !taskDataById : false}
+    >
+      <FormProvider {...methods}>
+        <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
+          <StepProgress
+            currentStep={effectiveStep}
+            totalSteps={totalSteps}
+            stepNames={stepNamesArray} // ⚡ अब slice मत करो, सारे step दिखेंगे
+            back={prevStep}
+            isFirstStep={projectId ? effectiveStep === 2 : effectiveStep === 1}
+            isLastStep={effectiveStep === totalSteps}
+            next={handleNext}
+            isPending={isPending}
+            onFinish={handleSubmit(onSubmit)}
+            isUpdate={!!taskId}
+          />
 
-        {renderStepContent()}
-      </div>
-    </FormProvider>
+          {renderStepContent()}
+        </div>
+
+        <Dialog open={isConfModalOpen} onOpenChange={setIsConfModalOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Confirmation Required</DialogTitle>
+              <DialogDescription>
+                The deadline has been changed. Please provide a reason to
+                proceed with the update.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label htmlFor="reason" className="text-sm font-medium">
+                  Reason
+                </label>
+                <Textarea
+                  id="reason"
+                  placeholder="Enter reasons for deadline change..."
+                  value={reasons}
+                  onChange={(e) => setReasons(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsConfModalOpen(false)}
+                disabled={isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={onConfirmSubmit}
+                disabled={isPending || !reasons.trim()}
+              >
+                {isPending ? "Confirming..." : "Confirm"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </FormProvider>
+    </CompanyAccessGuard>
   );
 }

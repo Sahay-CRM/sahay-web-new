@@ -12,6 +12,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useGetBothCompanyMeeting } from "@/features/api/companyMeeting";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 interface FormValues {
   taskId?: string;
@@ -35,6 +37,11 @@ export const useAddCompanyTask = () => {
   const { data: taskDataById } = useGetCompanyTaskById(taskId || "");
   const permission = useSelector(getUserPermission);
   const navigate = useNavigate();
+  // const [isChildData, setIsChildData] = useState<string | undefined>();
+  const [isConfModalOpen, setIsConfModalOpen] = useState(false);
+  const [reasons, setReasons] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [savedPayload, setSavedPayload] = useState<any>(null);
 
   const [isTypeSearch, setIsTypeSearch] = useState("");
   const [isStatusSearch, setIsStatusSearch] = useState("");
@@ -264,6 +271,54 @@ export const useAddCompanyTask = () => {
       onSuccess: () => {
         navigate("/dashboard/tasks");
       },
+      onError: (error: Error) => {
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+
+        if (axiosError.response?.data?.status === 417) {
+          setSavedPayload(payload);
+          setReasons(""); // Reset reasons when opening the modal
+          setIsConfModalOpen(true);
+          // setIsChildData(axiosError.response?.data?.message);
+        } else if (axiosError.response?.data.status !== 417) {
+          toast.error(
+            `Error: ${
+              axiosError.response?.data?.message || "An error occurred"
+            }`,
+          );
+        }
+      },
+    });
+  };
+
+  const onConfirmSubmit = () => {
+    if (!reasons.trim()) {
+      toast.error("Please provide a reason.");
+      return;
+    }
+
+    const finalPayload = {
+      ...savedPayload,
+      isForceChangeDeadline: true,
+      reasons: reasons,
+    };
+
+    addUpdateTask(finalPayload, {
+      onSuccess: () => {
+        setIsConfModalOpen(false);
+        navigate("/dashboard/tasks");
+      },
+      onError: (error: Error) => {
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+        toast.error(
+          `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+        );
+      },
     });
   };
 
@@ -298,5 +353,10 @@ export const useAddCompanyTask = () => {
     taskPermission: permission.TASK,
     setIsTypeSearch,
     setIsStatusSearch,
+    isConfModalOpen,
+    setIsConfModalOpen,
+    reasons,
+    setReasons,
+    onConfirmSubmit,
   };
 };
