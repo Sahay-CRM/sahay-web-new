@@ -62,14 +62,14 @@ const SingleUpdate: React.FC = () => {
             section && (
               <div key={section.date} className="space-y-6 border-b pb-8">
                 {/* Date Header */}
-                <div className="flex gap-6 items-start">
+                <div className="flex flex-col md:flex-row gap-2 md:gap-6 items-baseline md:items-start">
                   <button
                     onClick={() =>
                       selectedDate
                         ? null
                         : setSearchParams({ date: section.date })
                     }
-                    className="w-32 text-sm text-gray-400 dark:text-gray-500 text-left hover:text-gray-600"
+                    className="w-auto md:w-32 text-sm text-gray-400 dark:text-gray-500 text-left hover:text-gray-600 font-medium"
                   >
                     {new Date(section.date).toLocaleDateString("en-US", {
                       month: "long",
@@ -77,13 +77,13 @@ const SingleUpdate: React.FC = () => {
                     })}
                   </button>
 
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {section.date} updates
                   </h2>
                 </div>
 
                 {/* Update items */}
-                <div className="pl-[8.5rem] space-y-5">
+                <div className="pl-0 md:pl-[8.5rem] space-y-5">
                   {section.items.map((update) => (
                     <div
                       key={update.updateId}
@@ -107,7 +107,7 @@ const SingleUpdate: React.FC = () => {
                               key={idx}
                               src={img}
                               alt="update"
-                              className="w-[240px] rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm cursor-pointer hover:scale-[1.02] transition"
+                              className="w-full sm:w-[calc(50%-0.5rem)] md:w-[240px] aspect-video object-cover rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm cursor-pointer hover:scale-[1.02] transition"
                               onClick={() => setSelectedImage(img)}
                             />
                           ))}
@@ -124,7 +124,7 @@ const SingleUpdate: React.FC = () => {
                                 key={idx}
                                 src={vid}
                                 controls
-                                className="w-[480px] max-w-full rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm"
+                                className="w-full md:w-[480px] aspect-video rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm"
                               />
                             ))}
                           </div>
@@ -150,9 +150,22 @@ const SingleUpdate: React.FC = () => {
               />
               <button
                 onClick={() => setSelectedImage(null)}
-                className="absolute -top-3 -right-3 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-full p-1.5 shadow-md"
+                className="absolute -top-3 -right-3 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-full p-2 shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
-                ✕
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
               </button>
             </div>
           </div>
