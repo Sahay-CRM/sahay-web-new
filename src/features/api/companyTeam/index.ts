@@ -9,3 +9,5 @@ export {
   useDeleteTeamPosition,
   useTeamPositionUserAction,
 } from "./useTeamPosition";
+
+export { default as useGetEmployeesNotInTeam } from "./useGetEmployeesNotInTeam";

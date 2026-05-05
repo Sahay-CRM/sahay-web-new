@@ -8,6 +8,8 @@ import SearchInput from "@/components/shared/SearchInput";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import TeamAddFormModal from "./TeamAddFormModal";
 
+import { format } from "date-fns";
+
 export default function TeamList() {
   const navigate = useNavigate();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -15,7 +17,7 @@ export default function TeamList() {
 
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
-    pageSize: 10,
+    pageSize: 25,
     search: "",
   });
 
@@ -54,24 +56,26 @@ export default function TeamList() {
       ...item,
       srNo:
         ((paginationFilter.currentPage || 1) - 1) *
-          (paginationFilter.pageSize || 10) +
+          (paginationFilter.pageSize || 25) +
         index +
         1,
-      createdAt: new Date(item.createdAt || "").toLocaleDateString(),
+      createdAt: item.createdAt
+        ? format(new Date(item.createdAt), "dd/MM/yyyy")
+        : "-",
     })) || [];
 
   return (
     <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
       <div className="flex mb-5 justify-between items-center">
         <h1 className="font-semibold capitalize text-xl text-black">
-          Company Teams
+          Team Organizations
         </h1>
         <div className="flex items-center space-x-5 tb:space-x-7">
           <Button
             onClick={() => handleOpenAddModal(null)}
             className="py-2 w-fit flex items-center gap-2"
           >
-            <Plus className="w-4 h-4" /> Add Team
+            <Plus className="w-4 h-4" /> Create Team Organization
           </Button>
         </div>
       </div>

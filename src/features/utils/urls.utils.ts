@@ -443,6 +443,9 @@ const Urls = {
     `${baseUrl}/company/team/position/delete/${id}`,
   teamPositionUpdate: (id: string) =>
     `${baseUrl}/company/team/position/update/${id}`,
+
+  // EmployeeGetByTeam
+  EmployeeGetByTeam: () => `${baseUrl}/company/team/not-in-team`,
 };
 
 export default Urls;

@@ -1,3 +1,7 @@
+interface Window {
+  pendingGroupSelection?: string[];
+}
+
 interface Team {
   teamId?: string;
   teamName: string;
@@ -6,10 +10,10 @@ interface Team {
   updateBy?: string;
   createdAt?: string;
   updatedAt?: string;
-  positions?: number;
   _count?: {
     positions: number;
   };
+  positions?: { positionId: string; employeeId?: string | null }[];
 }
 
 interface TeamPosition {
@@ -34,6 +38,7 @@ interface TeamPosition {
   updatedAt?: string;
   createBy?: string;
   updateBy?: string;
+  teams?: { teamId: string; teamName: string }[];
 }
 
 interface TeamNodeData {
@@ -49,6 +54,7 @@ interface TeamNodeData {
   employeeId?: string | null;
   email?: string;
   phone?: string;
+  teamIds?: string[];
   hasChildren?: boolean;
   isExpanded?: boolean;
   onToggleExpand?: (nodeId: string) => void;
@@ -57,6 +63,7 @@ interface TeamNodeData {
   [key: string]:
     | string
     | boolean
+    | string[]
     | ((nodeId: string) => void)
     | null
     | undefined;

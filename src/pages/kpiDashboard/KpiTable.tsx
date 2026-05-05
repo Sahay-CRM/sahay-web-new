@@ -422,7 +422,7 @@ export default function UpdatedKpiTable() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isDateOpen, setIsDateOpen] = useState(false);
 
-  const [focusFilter, setFocusFilter] = useState("focus");
+  const [focusFilter, setFocusFilter] = useState("all");
   useEffect(() => {
     if (selectedPeriod === "DAILY") {
       setIsDataFilter("default");
@@ -1503,7 +1503,6 @@ export default function UpdatedKpiTable() {
                     <FormDatePicker
                       value={selectedDate}
                       onSubmit={(date) => {
-                        console.log(">>> ON SUBMIT CALLED WITH DATE:", date);
                         setSelectedDate(date ?? null);
                       }}
                       className="h-9 w-[200px]"

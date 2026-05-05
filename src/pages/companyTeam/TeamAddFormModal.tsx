@@ -5,6 +5,8 @@ import { useAddUpdateTeam } from "@/features/api/companyTeam";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
 
+import { useNavigate } from "react-router-dom";
+
 interface TeamAddFormModalProps {
   isModalOpen: boolean;
   modalClose: () => void;
@@ -16,6 +18,7 @@ export default function TeamAddFormModal({
   modalClose,
   modalData,
 }: TeamAddFormModalProps) {
+  const navigate = useNavigate();
   const methods = useForm<Team>({
     defaultValues: {
       teamName: modalData?.teamName || "",
@@ -35,9 +38,12 @@ export default function TeamAddFormModal({
       ...(modalData?.teamId && { teamId: modalData.teamId }),
     };
     addUpdateTeam.mutate(payload, {
-      onSuccess: () => {
+      onSuccess: (res) => {
         methods.reset();
         modalClose();
+        if (res.data?.teamId && !modalData?.teamId) {
+          navigate(`/dashboard/company-team/${res.data.teamId}`);
+        }
       },
     });
   };
@@ -46,14 +52,18 @@ export default function TeamAddFormModal({
     <FormProvider {...methods}>
       <ModalData
         isModalOpen={isModalOpen}
-        modalTitle={modalData?.teamId ? "Edit Team" : "Create New Team"}
+        modalTitle={
+          modalData?.teamId ? "Edit Organization" : "Create Team Organization"
+        }
         modalClose={() => {
           methods.reset();
           modalClose();
         }}
         buttons={[
           {
-            btnText: modalData?.teamId ? "Update Team" : "Create Team",
+            btnText: modalData?.teamId
+              ? "Update Organization"
+              : "Create Organization",
             buttonCss: "py-1.5 px-5",
             btnClick: methods.handleSubmit(submitHandler),
             isLoading: addUpdateTeam.isPending,
