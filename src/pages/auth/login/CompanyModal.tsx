@@ -51,11 +51,8 @@ const CompanyModal: React.FC<CompanyModalProps> = ({
       return [];
     }
 
-    const trimmedSearch = searchTerm.trim().toLowerCase();
-    return companies.filter(
-      (company) =>
-        company.companyName.toLowerCase() === trimmedSearch ||
-        company.userType?.toLowerCase() === trimmedSearch,
+    return companies.filter((company) =>
+      company.companyName.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [companies, searchTerm]);
 
