@@ -1796,22 +1796,24 @@ export default function UpdatedKpiTable() {
                     <RefreshCcw className="h-4 w-4" />
                   </Button>
                 )}
-                <Button
-                  variant="default"
-                  className="bg-primary hover:bg-primary/90 text-white px-4 shrink-0 skip-nav-warning flex items-center gap-2 h-9"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (Object.keys(tempValues).length > 0) {
-                      setPendingDownload(true);
-                      setShowWarning(true);
-                    } else {
-                      setIsDownloadDateModalOpen(true);
-                    }
-                  }}
-                >
-                  Download Excel
-                  <Download className="h-4 w-4" />
-                </Button>
+                {groupedKpiRows.length > 0 && (
+                  <Button
+                    variant="default"
+                    className="bg-primary hover:bg-primary/90 text-white px-4 shrink-0 skip-nav-warning flex items-center gap-2 h-9"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (Object.keys(tempValues).length > 0) {
+                        setPendingDownload(true);
+                        setShowWarning(true);
+                      } else {
+                        setIsDownloadDateModalOpen(true);
+                      }
+                    }}
+                  >
+                    Download Excel
+                    <Download className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
           </div>
