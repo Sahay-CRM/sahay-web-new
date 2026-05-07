@@ -17,7 +17,7 @@ interface DateRangePickerProps {
   onChange?: (range: DateRange | undefined) => void;
   onApply?: (range: DateRange | undefined) => void;
   onSaveApply?: (range: DateRange | undefined) => void;
-  value?: { from: Date | undefined; to: Date | undefined };
+  value?: DateRange;
   isClear?: boolean;
   handleClear?: () => void;
   defaultDate?: { startDate: Date | undefined; deadline: Date | undefined };

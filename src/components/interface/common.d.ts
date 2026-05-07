@@ -1862,3 +1862,11 @@ interface ReportApiResponse {
   message: string;
   data: CompanyPerformanceReport;
 }
+interface KpiHeader {
+  label: string;
+  year: string;
+  data: object;
+  isSunday?: boolean;
+  isHoliday?: boolean;
+  isSkipDay?: boolean;
+}

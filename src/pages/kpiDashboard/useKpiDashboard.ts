@@ -28,7 +28,11 @@ export default function useKpiDashboard({
     filter: isDataFilter,
   };
 
-  const { data: kpiData } = useGetKpiDashboardData({
+  const {
+    data: kpiData,
+    isLoading,
+    isFetching,
+  } = useGetKpiDashboardData({
     filter: data,
     enable: !!kpiStructure?.data?.length && !!selectedPeriod,
   });
@@ -38,5 +42,6 @@ export default function useKpiDashboard({
   return {
     frequencyArray,
     kpiData,
+    isLoading: isLoading || isFetching,
   };
 }

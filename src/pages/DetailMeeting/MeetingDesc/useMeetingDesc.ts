@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { get, onValue, ref, remove, update } from "firebase/database";
@@ -18,17 +17,9 @@ import { AudioUploadMutation } from "@/features/api/file";
 import useGetTranscript from "@/features/api/detailMeeting/useGetDetailMeetingTranscript";
 import { useSelector } from "react-redux";
 import { getUserId } from "@/features/selectors/auth.selector";
-import { getCompaniesList } from "@/features/selectors/company.selector";
 
 export default function useMeetingDesc() {
   const { id: meetingId } = useParams();
-
-  const companies = useSelector(getCompaniesList);
-  console.log(companies);
-
-  // const sidebarControl = useContext(SidebarControlContext);
-  // const userData = useSelector(getUserDetail);
-
   const [meetingResponse, setMeetingResponse] = useState<MeetingResFire | null>(
     null,
   );
@@ -58,8 +49,6 @@ export default function useMeetingDesc() {
   const userId = useSelector(getUserId);
 
   const { data: meetingData, isLoading } = useGetMeetingTiming(meetingId ?? "");
-
-  console.log(meetingData);
 
   const meetingTiming = meetingData?.data as
     | CompanyMeetingDataProps
