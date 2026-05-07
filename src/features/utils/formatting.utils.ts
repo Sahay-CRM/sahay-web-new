@@ -33,15 +33,6 @@ interface KpiDataEntry {
   isSkipDay?: boolean;
 }
 
-interface KpiHeader {
-  label: string;
-  year: string;
-  data: object;
-  isSunday?: boolean;
-  isHoliday?: boolean;
-  isSkipDay?: boolean;
-}
-
 export function getKpiHeadersFromData(
   data: KpiDataEntry[][],
   selectedPeriod: string,

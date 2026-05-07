@@ -7,16 +7,12 @@ export default function useCompanyVerifyOtp() {
   const verifyCompanyOtpMutation = useMutation({
     mutationKey: ["company-verify-otp"],
     mutationFn: async (data: SwitchCompanyType) => {
-      console.log(data);
-
       const { data: resData } = await Api.post<VerifyOtpResponse>({
         url: Urls.loginCompany(),
         data: {
           ...data,
         },
       });
-      console.log(resData);
-
       return resData;
     },
   });

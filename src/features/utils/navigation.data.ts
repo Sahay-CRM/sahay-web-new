@@ -290,6 +290,14 @@ export const companyNavigationData = [
     permission: "View",
     // moduleKey: "REPORTS",
   },
+  {
+    id: 18,
+    icon: "ListTodo",
+    label: "Team Organization",
+    link: "/dashboard/team-organization",
+    permission: "View",
+    // moduleKey: "TEAM_ORGANIZATION",
+  },
 ];
 
 export const getRouteByLabel = (label: string): string | null => {

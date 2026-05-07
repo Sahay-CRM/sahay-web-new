@@ -213,22 +213,7 @@ export const useFormRestrictions = ({
   useEffect(() => {
     if (!enabled) return;
 
-    // eslint-disable-next-line no-console
-    console.log(
-      "[TabDetect] Listeners registered. enabled:",
-      enabled,
-      "| tabSwitchDetection:",
-      formSettings.tabSwitchDetection,
-    );
-
     const handleVisibilityChange = () => {
-      // eslint-disable-next-line no-console
-      console.log(
-        "[TabDetect] visibilitychange →",
-        document.visibilityState,
-        "| tabSwitchDetection:",
-        formSettings.tabSwitchDetection,
-      );
       if (
         document.visibilityState === "hidden" &&
         formSettings.tabSwitchDetection

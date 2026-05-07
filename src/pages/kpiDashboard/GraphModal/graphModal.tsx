@@ -134,13 +134,7 @@ export default function GraphModal({
     return `${startYear}-${endYear}`;
   };
 
-  const getFormattedDate = (item: KpiDataCell, index: number): string => {
-    // If labels are available in kpiData, use them
-    if (kpiData?.labels && kpiData.labels[index]) {
-      const labelData = kpiData.labels[index];
-      return `${labelData.label} - ${labelData.year}`;
-    }
-
+  const getFormattedDate = (item: KpiDataCell): string => {
     const validationType = kpiData?.validationType || item.validationType;
 
     switch (validationType) {
@@ -182,6 +176,7 @@ export default function GraphModal({
   const { data: chartApiData } = useGetKpiChartData({
     filter: {
       frequencyType: selectedPeriod,
+      datapointId: kpiData?.kpiId,
       startDate: selectedRange.from
         ? getUTCStartOfDay(selectedRange.from)
         : null,
@@ -192,14 +187,36 @@ export default function GraphModal({
 
   /** ====================== CHART DATA ====================== **/
   const apiList = useMemo((): KpiDataCell[] => {
+    let list: KpiDataCell[] = [];
     if (chartApiData?.data?.[0] && Array.isArray(chartApiData.data[0])) {
-      return chartApiData.data[0] as KpiDataCell[];
+      list = [...(chartApiData.data[0] as KpiDataCell[])];
+    } else {
+      list = [...(modalData || [])];
     }
-    return modalData || [];
-  }, [chartApiData, modalData]);
 
-  const chartData = apiList.map((item, idx) => ({
-    date: getFormattedDate(item, idx),
+    // Filter by selected range on the frontend to ensure accuracy
+    if (selectedRange.from && selectedRange.to) {
+      const fromTime = new Date(
+        getUTCStartOfDay(selectedRange.from)!,
+      ).getTime();
+      const toTime = new Date(getUTCEndOfDay(selectedRange.to)!).getTime();
+
+      list = list.filter((item) => {
+        const itemTime = new Date(item.startDate).getTime();
+        return itemTime >= fromTime && itemTime <= toTime;
+      });
+    }
+
+    // Explicitly sort by date ascending for the chart
+    return list.sort((a, b) => {
+      const dateA = new Date(a.startDate).getTime();
+      const dateB = new Date(b.startDate).getTime();
+      return dateA - dateB;
+    });
+  }, [chartApiData, modalData, selectedRange.from, selectedRange.to]);
+
+  const chartData = apiList.map((item) => ({
+    date: getFormattedDate(item),
     actual: item.data ? Number(item.data) : 0,
     goal: Number(item.goalValue || 0),
   }));

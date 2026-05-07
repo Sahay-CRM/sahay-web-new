@@ -159,7 +159,6 @@ export const useAgenda = ({
   // ]);
 
   // const unFollowByUser = meetingResponse?.state.unfollow?.[userId] ?? false;
-  // console.log(ioType, "io", meetingResponse?.state, selectedItem);
 
   const isSameIo =
     meetingResponse?.state.currentAgendaItemId === isSelectedAgenda;
@@ -1173,9 +1172,6 @@ export const useAgenda = ({
       return;
     }
 
-    // console.log(meetingResponse?.state.currentAgendaItemId, isSelectedAgenda);
-    // console.log("ffff");
-
     const db = database;
     const objectiveRef = ref(
       db,
@@ -1188,8 +1184,6 @@ export const useAgenda = ({
         meetingResponse?.state.currentAgendaItemId !== isSelectedAgenda
       )
         return;
-
-      // console.log(meetingResponse, isSelectedAgenda);
 
       queryClient.invalidateQueries({
         queryKey: ["get-detailMeetingAgendaIssue"],

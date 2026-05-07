@@ -531,6 +531,7 @@ const DashboardLayout = () => {
 
                 {(companies?.length ?? 0) > 0 && (
                   <Button
+                    id="switch-company-btn"
                     variant="outline"
                     onClick={() => setCompanyModalOpen(true)}
                   >

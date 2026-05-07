@@ -18,6 +18,12 @@ const importantDate = lazy(
 const companyEmployee = lazy(
   () => import("../pages/companyEmployee/companyEmployee"),
 );
+const TeamOrganization = lazy(() =>
+  import("../pages/companyTeam").then((m) => ({ default: m.TeamOrganization })),
+);
+const TeamList = lazy(() =>
+  import("../pages/companyTeam").then((m) => ({ default: m.TeamList })),
+);
 const CompanyImportantDates = lazy(
   () => import("../pages/companyImportantDates/CompanyImportantDates"),
 );
@@ -151,6 +157,8 @@ export default function EmployeeRoutes() {
         <Route path="settings" Component={Theme} />
         <Route path="company-designation" Component={companydesignation} />
         <Route path="company-employee" Component={companyEmployee} />
+        <Route path="team-list" Component={TeamList} />
+        <Route path="team-organization" Component={TeamOrganization} />
         <Route path="employees/add" element={<AddCompanyEmployee />} />
         <Route path="employees/edit/:id" element={<AddCompanyEmployee />} />
         <Route path="calendar" Component={CompanyImportantDates} />
