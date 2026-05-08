@@ -30,6 +30,7 @@ const Login: React.FC = () => {
     loginDetails,
     isSendingOtp,
     isVerifyingOtp,
+    isCompanyVerifying,
   } = useLogin();
 
   const REGEXP_ONLY_DIGITS = "^[0-9]+$";
@@ -140,6 +141,7 @@ const Login: React.FC = () => {
           <CompanyModal
             companies={companies}
             isModalOpen={isCompanyModalOpen}
+            isLoading={isCompanyVerifying}
             onSelect={(company) => {
               if (loginDetails) {
                 handleLogin({ ...company, ...loginDetails });

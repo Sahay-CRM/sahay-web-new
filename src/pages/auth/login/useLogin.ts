@@ -28,6 +28,7 @@ const useLogin = () => {
   const [countryCode, setCountryCode] = useState("+91");
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isCompanyVerifying, setIsCompanyVerifying] = useState(false);
 
   const {
     register,
@@ -54,6 +55,7 @@ const useLogin = () => {
       userType: data.userType,
     };
 
+    setIsCompanyVerifying(true);
     companyVerifyOtp(verifyCompanyData, {
       onSuccess: async (response) => {
         if (response?.status) {
@@ -94,7 +96,12 @@ const useLogin = () => {
               setLoginDetails(null);
             }
           });
+        } else {
+          setIsCompanyVerifying(false);
         }
+      },
+      onError: () => {
+        setIsCompanyVerifying(false);
       },
     });
   };
@@ -201,6 +208,7 @@ const useLogin = () => {
     loginDetails,
     isSendingOtp,
     isVerifyingOtp,
+    isCompanyVerifying,
   };
 };
 

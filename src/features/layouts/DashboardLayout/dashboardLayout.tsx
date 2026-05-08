@@ -313,27 +313,30 @@ const DashboardLayout = () => {
                   );
                 });
 
-                queryClient.invalidateQueries({
-                  queryKey: ["get-company-list"],
-                });
-                queryClient.invalidateQueries({
-                  queryKey: ["userPermission"],
-                });
-                queryClient.invalidateQueries({
-                  queryKey: ["get-employee-by-id", userId],
-                });
+                await Promise.all([
+                  queryClient.refetchQueries({
+                    queryKey: ["get-company-list"],
+                  }),
+                  queryClient.refetchQueries({ queryKey: ["userPermission"] }),
+                  queryClient.refetchQueries({
+                    queryKey: ["get-employee-by-id", userId],
+                  }),
+                ]);
+
                 setCompanyModalOpen(false);
                 navigate("/");
+                window.location.reload();
               } else {
-                queryClient.invalidateQueries({
-                  queryKey: ["get-company-list"],
-                });
-                queryClient.invalidateQueries({
-                  queryKey: ["userPermission"],
-                });
-                queryClient.invalidateQueries({
-                  queryKey: ["get-employee-by-id", userId],
-                });
+                await Promise.all([
+                  queryClient.refetchQueries({
+                    queryKey: ["get-company-list"],
+                  }),
+                  queryClient.refetchQueries({ queryKey: ["userPermission"] }),
+                  queryClient.refetchQueries({
+                    queryKey: ["get-employee-by-id", userId],
+                  }),
+                ]);
+
                 setCompanyModalOpen(false);
                 navigate("/");
                 window.location.reload();

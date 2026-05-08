@@ -1,5 +1,6 @@
 import React, { Suspense, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
+import { useSwitchCompany } from "@/features/hooks/useSwitchCompany";
 import {
   CircleCheckBig,
   Crown,
@@ -17,6 +18,7 @@ import {
   DownloadIcon,
   Loader2,
   Search,
+  ShieldAlert,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -130,8 +132,14 @@ export default function MeetingDesc() {
   const companiesList = useSelector(getCompaniesList);
   const isSuperAdmin = userDetail.isSuperAdmin;
   const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
+  const targetCompany = useMemo(() => {
+    return companiesList?.find((c) => c.companyId === meetingTiming?.companyId);
+  }, [companiesList, meetingTiming?.companyId]);
+
   const isMeetingInCurrentCompany =
     !meetingTiming || meetingTiming.companyId === currentCompany?.companyId;
+
+  const { switchCompany, isSwitching } = useSwitchCompany();
 
   useEffect(() => {
     if (meetingTiming?.meetingName && isMeetingInCurrentCompany) {
@@ -205,23 +213,39 @@ export default function MeetingDesc() {
   }
 
   if (meetingTiming && !isMeetingInCurrentCompany) {
-    const hasMultipleCompanies = (companiesList?.length ?? 0) > 1;
-
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-4 bg-white w-full">
-        <div className="text-xl font-semibold text-gray-800">
-          {hasMultipleCompanies
-            ? "This meeting is not in this company. Please switch company."
-            : "This meeting belongs to another company which you do not have access to."}
+      <div className="flex flex-col items-center justify-center h-full gap-6 bg-white w-full p-8 text-center animate-in fade-in duration-500">
+        <div className="flex flex-col items-center gap-4 max-w-md">
+          <div className="bg-red-50 p-5 rounded-full ring-8 ring-red-50/50">
+            <ShieldAlert className="w-12 h-12 text-red-500" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-gray-900">Access Denied</h2>
+            <p className="text-gray-600 leading-relaxed">
+              This meeting is not part of your company so you can't access it.
+            </p>
+          </div>
         </div>
-        {hasMultipleCompanies && (
-          <Button
-            onClick={() =>
-              document.getElementById("switch-company-btn")?.click()
-            }
-          >
-            Switch Company
-          </Button>
+
+        {isSwitching ? (
+          <div className="flex flex-col items-center gap-3">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+            <p className="text-sm text-gray-500 font-medium">
+              Switching to {targetCompany?.name}...
+            </p>
+          </div>
+        ) : (
+          targetCompany && (
+            <Button
+              size="lg"
+              className="px-10 shadow-lg hover:shadow-xl transition-all"
+              onClick={() =>
+                switchCompany(targetCompany.companyId, targetCompany.name)
+              }
+            >
+              Switch Company
+            </Button>
+          )
         )}
       </div>
     );
