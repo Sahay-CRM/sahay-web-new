@@ -1,0 +1,715 @@
+{
+  "version": "1.0.0",
+  "_ref": "registry/dashboard-builder-registry",
+
+  "steps": [
+    {
+      "step": 1,
+      "key": "module",
+      "label": "Select Module",
+      "selectionType": "single",
+      "required": true,
+      "dependsOn": []
+    },
+    {
+      "step": 2,
+      "key": "metric",
+      "label": "Select Metric",
+      "selectionType": "single",
+      "required": true,
+      "dependsOn": ["module"]
+    },
+    {
+      "step": 3,
+      "key": "filters",
+      "label": "Select Filters",
+      "selectionType": "multiple",
+      "required": false,
+      "dependsOn": ["module", "metric"]
+    },
+    {
+      "step": 4,
+      "key": "dateField",
+      "label": "Select Date Field",
+      "selectionType": "single",
+      "required": false,
+      "dependsOn": ["module", "metric"]
+    },
+    {
+      "step": 5,
+      "key": "groupBy",
+      "label": "Group By (optional)",
+      "selectionType": "single",
+      "required": false,
+      "dependsOn": ["module", "metric"]
+    },
+    {
+      "step": 6,
+      "key": "visualization",
+      "label": "Select Visualization",
+      "selectionType": "single",
+      "required": true,
+      "dependsOn": ["metric", "groupBy"]
+    },
+    {
+      "step": 7,
+      "key": "save",
+      "label": "Save Widget",
+      "selectionType": "none",
+      "required": true,
+      "dependsOn": ["visualization"]
+    }
+  ],
+
+  "modules": [
+    {
+      "moduleKey": "TASK",
+      "label": "Tasks",
+      "table": "company_task_master",
+      "allowedMetrics": [
+        "TOTAL_TASKS",
+        "ACTIVE_TASKS",
+        "COMPLETED_TASKS",
+        "FAILED_TASKS",
+        "IN_PROGRESS_TASKS",
+        "OVERDUE_TASKS",
+        "TASK_COMPLETION_RATE",
+        "OVERDUE_RATE",
+        "AVG_CLOSURE_TIME_DAYS",
+        "TASKS_BY_STATUS",
+        "TASKS_BY_TYPE",
+        "TASKS_BY_EMPLOYEE"
+      ],
+      "defaultMetric": "TOTAL_TASKS",
+      "defaultChart": "card",
+      "supportedCharts": [
+        "card",
+        "table",
+        "bar",
+        "stacked-bar",
+        "line",
+        "area",
+        "pie",
+        "donut",
+        "gauge",
+        "funnel",
+        "gantt"
+      ],
+      "dateFields": [
+        "createdDatetime",
+        "taskDeadline",
+        "taskStartDate",
+        "taskActualEndDate",
+        "updatedDatetime"
+      ],
+      "defaultDateField": "createdDatetime",
+      "groupByFields": [
+        "taskStatusId",
+        "taskTypeId",
+        "companyId",
+        "employeeId",
+        "createdMonth"
+      ],
+      "defaultFilters": ["companyId", "isDeleted", "overDue", "taskStatusName", "search"],
+      "searchable": true
+    }
+  ],
+
+  "metrics": {
+    "TOTAL_TASKS": {
+      "module": "TASK",
+      "label": "Total Tasks",
+      "aggregation": "COUNT",
+      "fieldHint": "taskId",
+      "complexity": "simple",
+      "requiredDateField": false,
+      "supportsRealtime": true,
+      "supportedGroupBy": [
+        "taskStatusId",
+        "taskTypeId",
+        "companyId",
+        "employeeId",
+        "createdMonth"
+      ],
+      "supportedCharts": ["card", "table", "bar", "pie", "donut", "line"]
+    },
+    "ACTIVE_TASKS": {
+      "module": "TASK",
+      "label": "Active Tasks",
+      "aggregation": "COUNT",
+      "fieldHint": "taskId",
+      "complexity": "simple",
+      "requiredDateField": false,
+      "supportsRealtime": true,
+      "supportedGroupBy": [
+        "taskStatusId",
+        "taskTypeId",
+        "companyId",
+        "employeeId"
+      ],
+      "supportedCharts": ["card", "table", "bar", "pie"]
+    },
+    "COMPLETED_TASKS": {
+      "module": "TASK",
+      "label": "Completed Tasks",
+      "aggregation": "COUNT",
+      "joinHint": "task_status",
+      "complexity": "relational",
+      "requiredDateField": false,
+      "supportsRealtime": false,
+      "supportedGroupBy": [
+        "companyId",
+        "employeeId",
+        "taskTypeId",
+        "createdMonth"
+      ],
+      "supportedCharts": ["card", "table", "bar", "line", "area"]
+    },
+    "FAILED_TASKS": {
+      "module": "TASK",
+      "label": "Failed Tasks",
+      "aggregation": "COUNT",
+      "joinHint": "task_status",
+      "complexity": "relational",
+      "requiredDateField": false,
+      "supportsRealtime": false,
+      "supportedGroupBy": ["companyId", "employeeId", "taskTypeId"],
+      "supportedCharts": ["card", "table", "bar", "pie"]
+    },
+    "IN_PROGRESS_TASKS": {
+      "module": "TASK",
+      "label": "In-Progress Tasks",
+      "aggregation": "COUNT",
+      "joinHint": "task_status",
+      "complexity": "relational",
+      "requiredDateField": false,
+      "supportsRealtime": true,
+      "supportedGroupBy": ["companyId", "employeeId", "taskTypeId"],
+      "supportedCharts": ["card", "table", "bar", "gauge"]
+    },
+    "OVERDUE_TASKS": {
+      "module": "TASK",
+      "label": "Overdue Tasks",
+      "aggregation": "COUNT",
+      "fieldHint": "taskDeadline",
+      "complexity": "computed",
+      "requiredDateField": false,
+      "supportsRealtime": true,
+      "supportedGroupBy": ["companyId", "employeeId", "taskTypeId"],
+      "supportedCharts": ["card", "table", "bar", "gauge"]
+    },
+    "TASK_COMPLETION_RATE": {
+      "module": "TASK",
+      "label": "Task Completion Rate (%)",
+      "aggregation": "COMPUTED",
+      "fieldHint": null,
+      "complexity": "computed",
+      "requiredDateField": false,
+      "supportsRealtime": false,
+      "supportedGroupBy": ["companyId"],
+      "supportedCharts": ["card", "gauge", "bar"]
+    },
+    "OVERDUE_RATE": {
+      "module": "TASK",
+      "label": "Overdue Rate (%)",
+      "aggregation": "COMPUTED",
+      "fieldHint": null,
+      "complexity": "computed",
+      "requiredDateField": false,
+      "supportsRealtime": false,
+      "supportedGroupBy": ["companyId"],
+      "supportedCharts": ["card", "gauge"]
+    },
+    "AVG_CLOSURE_TIME_DAYS": {
+      "module": "TASK",
+      "label": "Avg Closure Time (Days)",
+      "aggregation": "AVG",
+      "fieldHint": "taskActualEndDate",
+      "complexity": "computed",
+      "requiredDateField": true,
+      "supportsRealtime": false,
+      "supportedGroupBy": ["companyId", "employeeId", "taskTypeId"],
+      "supportedCharts": ["card", "bar", "table"]
+    },
+    "TASKS_BY_STATUS": {
+      "module": "TASK",
+      "label": "Tasks by Status",
+      "aggregation": "COUNT",
+      "joinHint": "task_status",
+      "complexity": "relational",
+      "requiredDateField": false,
+      "supportsRealtime": false,
+      "supportedGroupBy": ["taskStatusId"],
+      "supportedCharts": ["bar", "stacked-bar", "pie", "donut", "table"],
+      "defaultGroupBy": "taskStatusId"
+    },
+    "TASKS_BY_TYPE": {
+      "module": "TASK",
+      "label": "Tasks by Type",
+      "aggregation": "COUNT",
+      "joinHint": "task_type",
+      "complexity": "relational",
+      "requiredDateField": false,
+      "supportsRealtime": false,
+      "supportedGroupBy": ["taskTypeId"],
+      "supportedCharts": ["bar", "pie", "donut", "table"],
+      "defaultGroupBy": "taskTypeId"
+    },
+    "TASKS_BY_EMPLOYEE": {
+      "module": "TASK",
+      "label": "Tasks by Employee",
+      "aggregation": "COUNT",
+      "joinHint": "task_employee_junction",
+      "complexity": "relational",
+      "requiredDateField": false,
+      "supportsRealtime": false,
+      "supportedGroupBy": ["employeeId"],
+      "supportedCharts": ["bar", "table", "heatmap"],
+      "defaultGroupBy": "employeeId"
+    }
+  },
+
+  "filters": {
+    "companyId": {
+      "label": "Company",
+      "type": "async-search",
+      "sourceTable": "company",
+      "valueField": "companyId",
+      "labelField": "companyName",
+      "multiSelect": true,
+      "searchable": true,
+      "availableForModules": ["TASK"]
+    },
+    "employeeId": {
+      "label": "Employee",
+      "type": "async-search",
+      "sourceTable": "company_employee",
+      "valueField": "employeeId",
+      "labelField": "name",
+      "multiSelect": true,
+      "searchable": true,
+      "dependsOn": ["companyId"],
+      "availableForModules": ["TASK"]
+    },
+    "taskStatusId": {
+      "label": "Task Status (ID)",
+      "type": "multi-select",
+      "sourceTable": "task_status",
+      "valueField": "taskStatusId",
+      "labelField": "taskStatusName",
+      "multiSelect": true,
+      "searchable": false,
+      "availableForModules": ["TASK"]
+    },
+    "taskTypeId": {
+      "label": "Task Type",
+      "type": "multi-select",
+      "sourceTable": "task_type",
+      "valueField": "taskTypeId",
+      "labelField": "taskTypeName",
+      "multiSelect": true,
+      "searchable": false,
+      "availableForModules": ["TASK"]
+    },
+    "isDeleted": {
+      "label": "Include Deleted",
+      "type": "toggle",
+      "fieldHint": "isDelete",
+      "default": false,
+      "multiSelect": false,
+      "searchable": false,
+      "availableForModules": ["TASK"]
+    },
+    "overDue": {
+      "label": "Overdue Only",
+      "type": "toggle",
+      "default": false,
+      "multiSelect": false,
+      "availableForModules": ["TASK"]
+    },
+    "taskStatusName": {
+      "label": "Task Status",
+      "type": "multi-select",
+      "sourceTable": "task_status",
+      "valueField": "taskStatus",
+      "labelField": "taskStatus",
+      "multiSelect": true,
+      "searchable": true,
+      "availableForModules": ["TASK"]
+    },
+    "search": {
+      "label": "Search",
+      "type": "text",
+      "availableForModules": ["TASK"]
+    }
+  },
+
+  "dateFields": {
+    "createdDatetime": {
+      "label": "Created Date",
+      "fieldType": "datetime",
+      "availableForModules": ["TASK"]
+    },
+    "updatedDatetime": {
+      "label": "Updated Date",
+      "fieldType": "datetime",
+      "availableForModules": ["TASK"]
+    },
+    "taskDeadline": {
+      "label": "Task Deadline",
+      "fieldType": "datetime",
+      "availableForModules": ["TASK"]
+    },
+    "taskStartDate": {
+      "label": "Task Start Date",
+      "fieldType": "datetime",
+      "availableForModules": ["TASK"]
+    },
+    "taskActualEndDate": {
+      "label": "Task Actual End Date",
+      "fieldType": "datetime",
+      "availableForModules": ["TASK"]
+    }
+  },
+
+  "groupBy": {
+    "taskStatusId": {
+      "label": "Task Status",
+      "availableForModules": ["TASK"],
+      "sourceTable": "task_status",
+      "labelField": "taskStatusName",
+      "requiresChart": ["bar", "stacked-bar", "pie", "donut"]
+    },
+    "taskTypeId": {
+      "label": "Task Type",
+      "availableForModules": ["TASK"],
+      "sourceTable": "task_type",
+      "labelField": "taskTypeName",
+      "requiresChart": ["bar", "pie", "donut"]
+    },
+    "companyId": {
+      "label": "Company",
+      "availableForModules": ["TASK"],
+      "sourceTable": "company",
+      "labelField": "companyName",
+      "requiresChart": ["bar", "table"]
+    },
+    "employeeId": {
+      "label": "Employee",
+      "availableForModules": ["TASK"],
+      "sourceTable": "company_employee",
+      "labelField": "name",
+      "requiresChart": ["bar", "table", "heatmap"]
+    },
+    "createdMonth": {
+      "label": "Month (Created)",
+      "availableForModules": ["TASK"],
+      "computed": true,
+      "granularity": "MONTH",
+      "requiresChart": ["line", "area", "bar"]
+    }
+  },
+
+  "visualizations": {
+    "card": {
+      "requiresGroupBy": false,
+      "supportsTimeSeries": false,
+      "maxMetrics": 1,
+      "allowedAggregations": ["COUNT", "SUM", "AVG", "MIN", "MAX", "COMPUTED"],
+      "blockedFor": []
+    },
+    "table": {
+      "requiresGroupBy": false,
+      "supportsTimeSeries": true,
+      "maxMetrics": null,
+      "allowedAggregations": ["COUNT", "SUM", "AVG", "MIN", "MAX", "COMPUTED"],
+      "blockedFor": []
+    },
+    "bar": {
+      "requiresGroupBy": true,
+      "supportsTimeSeries": true,
+      "maxMetrics": 3,
+      "allowedAggregations": ["COUNT", "SUM", "AVG", "PERCENT_OF_TOTAL"],
+      "blockedFor": []
+    },
+    "stacked-bar": {
+      "requiresGroupBy": true,
+      "supportsTimeSeries": true,
+      "maxMetrics": 1,
+      "allowedAggregations": ["COUNT", "SUM", "PERCENT_OF_TOTAL"],
+      "blockedFor": []
+    },
+    "line": {
+      "requiresGroupBy": true,
+      "supportsTimeSeries": true,
+      "maxMetrics": 5,
+      "allowedAggregations": ["COUNT", "SUM", "AVG"],
+      "blockedFor": []
+    },
+    "area": {
+      "requiresGroupBy": true,
+      "supportsTimeSeries": true,
+      "maxMetrics": 3,
+      "allowedAggregations": ["COUNT", "SUM", "AVG"],
+      "blockedFor": []
+    },
+    "pie": {
+      "requiresGroupBy": true,
+      "supportsTimeSeries": false,
+      "maxMetrics": 1,
+      "allowedAggregations": ["COUNT", "SUM", "PERCENT_OF_TOTAL"],
+      "blockedFor": ["AVG_CLOSURE_TIME_DAYS", "TASK_COMPLETION_RATE"]
+    },
+    "donut": {
+      "requiresGroupBy": true,
+      "supportsTimeSeries": false,
+      "maxMetrics": 1,
+      "allowedAggregations": ["COUNT", "SUM", "PERCENT_OF_TOTAL"],
+      "blockedFor": ["AVG_CLOSURE_TIME_DAYS", "TASK_COMPLETION_RATE"]
+    },
+    "gauge": {
+      "requiresGroupBy": false,
+      "supportsTimeSeries": false,
+      "maxMetrics": 1,
+      "allowedAggregations": ["AVG", "COMPUTED", "PERCENT_OF_TOTAL"],
+      "blockedFor": ["TOTAL_TASKS"]
+    },
+    "heatmap": {
+      "requiresGroupBy": true,
+      "supportsTimeSeries": true,
+      "maxMetrics": 1,
+      "allowedAggregations": ["COUNT", "SUM", "AVG"],
+      "blockedFor": []
+    },
+    "gantt": {
+      "requiresGroupBy": true,
+      "supportsTimeSeries": true,
+      "maxMetrics": null,
+      "allowedAggregations": ["COUNT"],
+      "requiredModules": ["TASK"],
+      "requiresDateField": true,
+      "requiresStartEndField": true
+    }
+  },
+
+  "dependencies": {
+    "moduleToFilters": {
+      "TASK": [
+        "companyId",
+        "employeeId",
+        "taskStatusId",
+        "taskTypeId",
+        "isDeleted",
+        "overDue",
+        "taskStatusName",
+        "search"
+      ]
+    },
+    "metricToRequiredFilters": {
+      "AVG_CLOSURE_TIME_DAYS": ["companyId"]
+    },
+    "metricToDateFieldSupport": {
+      "TOTAL_TASKS": [
+        "createdDatetime",
+        "taskDeadline",
+        "taskStartDate",
+        "taskActualEndDate"
+      ],
+      "COMPLETED_TASKS": ["taskActualEndDate", "createdDatetime"],
+      "OVERDUE_TASKS": ["taskDeadline"],
+      "AVG_CLOSURE_TIME_DAYS": ["taskActualEndDate", "taskStartDate"]
+    },
+    "chartRequiresGroupBy": [
+      "bar",
+      "stacked-bar",
+      "pie",
+      "donut",
+      "heatmap",
+      "gantt"
+    ],
+    "chartRequiresDateField": ["line", "area", "gantt"],
+    "chartRequiresTimeSeriesGroupBy": {
+      "line": ["createdMonth", "taskDeadline"],
+      "area": ["createdMonth"]
+    }
+  },
+
+  "validationRules": [
+    {
+      "id": "VR001",
+      "rule": "pie and donut charts require groupBy to be selected",
+      "condition": "chart IN [pie,donut] AND groupBy IS NULL",
+      "action": "BLOCK",
+      "message": "Pie and donut charts require a Group By field."
+    },
+    {
+      "id": "VR002",
+      "rule": "gauge chart must use a percentage or avg metric",
+      "condition": "chart = gauge AND aggregation NOT IN [AVG,COMPUTED,PERCENT_OF_TOTAL]",
+      "action": "BLOCK",
+      "message": "Gauge chart only supports average or percentage metrics."
+    },
+    {
+      "id": "VR003",
+      "rule": "gantt requires dateField to be set",
+      "condition": "chart = gantt AND dateField IS NULL",
+      "action": "BLOCK",
+      "message": "Gantt chart requires a date field (start/deadline)."
+    },
+    {
+      "id": "VR014",
+      "rule": "card widget should have only 1 metric and no groupBy",
+      "condition": "chart = card AND groupBy IS NOT NULL",
+      "action": "WARN",
+      "message": "KPI Card is a single-value widget. Group By will be ignored."
+    }
+  ],
+
+  "defaultWidgets": [
+    {
+      "widgetKey": "DW001",
+      "title": "Tasks Completed \u2014 Last 30 Days",
+      "module": "TASK",
+      "metric": "COMPLETED_TASKS",
+      "dateField": "taskActualEndDate",
+      "dateRange": "last30days",
+      "groupBy": null,
+      "filters": { "isDeleted": false },
+      "visualization": "card",
+      "size": "SM"
+    }
+  ],
+
+  "apiMappings": {
+    "queryBase": "/api/dashboard",
+    "modules": {
+      "TASK": {
+        "queryApi": "/api/dashboard/query/task",
+        "filterOptionsApi": "/api/dashboard/filter-options/task",
+        "groupByOptionsApi": "/api/dashboard/groupby-options/task"
+      }
+    },
+    "asyncFilters": {
+      "companyId": "/api/dashboard/options/companies",
+      "employeeId": "/api/dashboard/options/employees"
+    },
+    "widgetApi": {
+      "save": "/api/dashboard/widget",
+      "update": "/api/dashboard/widget/:widgetId",
+      "delete": "/api/dashboard/widget/:widgetId",
+      "list": "/api/dashboard/widgets",
+      "reorder": "/api/dashboard/widgets/reorder"
+    },
+    "dashboardApi": {
+      "save": "/api/dashboard",
+      "update": "/api/dashboard/:dashboardId",
+      "delete": "/api/dashboard/:dashboardId",
+      "list": "/api/dashboard/list"
+    }
+  },
+
+  "queryContracts": {
+    "request": {
+      "module": { "type": "string", "required": true, "example": "TASK" },
+      "metric": {
+        "type": "string",
+        "required": true,
+        "example": "COMPLETED_TASKS"
+      },
+      "filters": {
+        "type": "object",
+        "required": false,
+        "example": { "companyId": [1, 2], "isDeleted": false }
+      },
+      "dateField": {
+        "type": "string",
+        "required": false,
+        "example": "taskActualEndDate"
+      },
+      "dateRange": {
+        "type": "string",
+        "required": false,
+        "example": "last30days"
+      },
+      "groupBy": {
+        "type": "string",
+        "required": false,
+        "example": "taskStatusId"
+      },
+      "visualization": { "type": "string", "required": true, "example": "bar" }
+    },
+    "response": {
+      "success": { "type": "boolean" },
+      "data": {
+        "type": "array"
+      }
+    }
+  },
+
+  "widgetPersistence": {
+    "schema": {
+      "widgetId": { "type": "uuid", "generated": true },
+      "dashboardId": { "type": "uuid", "required": true },
+      "title": { "type": "string", "required": true, "maxLength": 100 },
+      "module": { "type": "string", "required": true },
+      "metric": { "type": "string", "required": true },
+      "filters": { "type": "object", "required": false, "default": {} },
+      "dateField": { "type": "string", "required": false },
+      "dateRange": { "type": "string", "required": false },
+      "groupBy": { "type": "string", "required": false },
+      "visualization": { "type": "string", "required": true },
+      "size": {
+        "type": "string",
+        "required": true,
+        "enum": ["XS", "SM", "MD", "LG", "XL", "FULL"],
+        "default": "MD"
+      }
+    }
+  },
+
+  "dynamicLoading": {
+    "companyId": {
+      "api": "/api/dashboard/options/companies",
+      "valueField": "companyId",
+      "labelField": "companyName",
+      "searchParam": "q",
+      "paginated": true
+    },
+    "employeeId": {
+      "api": "/api/dashboard/options/employees",
+      "valueField": "employeeId",
+      "labelField": "name",
+      "searchParam": "q",
+      "dependsOn": "companyId"
+    }
+  },
+
+  "visibilityRules": [
+    {
+      "id": "VIS001",
+      "target": "groupBy",
+      "showWhen": "visualization IN [bar,stacked-bar,pie,donut,heatmap,gantt]",
+      "hideWhen": "visualization IN [card,gauge]"
+    },
+    {
+      "id": "VIS002",
+      "target": "dateField",
+      "showWhen": "metric.requiredDateField=true OR visualization IN [line,area,gantt]",
+      "hideWhen": "metric.requiredDateField=false AND visualization NOT IN [line,area,gantt]"
+    },
+    {
+      "id": "VIS003",
+      "target": "dateRange",
+      "showWhen": "dateField IS NOT NULL",
+      "hideWhen": "dateField IS NULL"
+    }
+  ],
+
+  "invalidCombinations": [
+    {
+      "id": "IC001",
+      "combination": ["pie", "no-groupBy"],
+      "reason": "Pie chart has no categorical axis without groupBy"
+    }
+  ]
+}

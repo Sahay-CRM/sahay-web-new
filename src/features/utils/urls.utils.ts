@@ -446,6 +446,20 @@ const Urls = {
 
   // EmployeeGetByTeam
   EmployeeGetByTeam: () => `${baseUrl}/company/team/not-in-team`,
+
+  // Dashboard Registry
+  getAllDashboardRegistry: () => `${baseUrl}/company/registry/get-all`,
+  getDashboardRegistryByPage: () => `${baseUrl}/company/registry/get`,
+  getDashboardRegistryById: (id: string) =>
+    `${baseUrl}/company/registry/get/${id}`,
+  createDashboardRegistry: () => `${baseUrl}/company/registry/create`,
+  updateDashboardRegistry: (id: string) =>
+    `${baseUrl}/company/registry/update/${id}`,
+  deleteDashboardRegistry: (id: string) =>
+    `${baseUrl}/company/registry/delete/${id}`,
+  changeDashboardRegistryStatus: (id: string) =>
+    `${baseUrl}/company/registry/${id}/status`,
+  storeFullRegistry: () => `${baseUrl}/company/registry/store-registry`,
 };
 
 export default Urls;

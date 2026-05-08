@@ -1,0 +1,185 @@
+{
+  "module": "TASK",
+  "version": "1.0.0",
+  "description": "Full specification and payload examples for the Task Module",
+  "configuration": {
+    "moduleKey": "TASK",
+    "table": "company_task_master",
+    "allowedMetrics": [
+      "TOTAL_TASKS",
+      "ACTIVE_TASKS",
+      "COMPLETED_TASKS",
+      "FAILED_TASKS",
+      "IN_PROGRESS_TASKS",
+      "OVERDUE_TASKS",
+      "TASK_COMPLETION_RATE",
+      "OVERDUE_RATE",
+      "AVG_CLOSURE_TIME_DAYS",
+      "TASKS_BY_STATUS",
+      "TASKS_BY_TYPE",
+      "TASKS_BY_EMPLOYEE"
+    ],
+    "supportedCharts": [
+      "card",
+      "table",
+      "bar",
+      "stacked-bar",
+      "line",
+      "area",
+      "pie",
+      "donut",
+      "gauge",
+      "funnel",
+      "gantt"
+    ],
+    "dateFields": [
+      "createdDatetime",
+      "taskDeadline",
+      "taskStartDate",
+      "taskActualEndDate",
+      "updatedDatetime"
+    ],
+    "groupByFields": [
+      "taskStatusId",
+      "taskTypeId",
+      "companyId",
+      "employeeId",
+      "createdMonth"
+    ]
+  },
+  "metrics_definitions": {
+    "TOTAL_TASKS": {
+      "label": "Total Tasks",
+      "aggregation": "COUNT",
+      "complexity": "simple",
+      "supportsRealtime": true
+    },
+    "TASK_COMPLETION_RATE": {
+      "label": "Completion Rate (%)",
+      "aggregation": "COMPUTED",
+      "complexity": "computed",
+      "supportsRealtime": false
+    },
+    "AVG_CLOSURE_TIME_DAYS": {
+      "label": "Avg Closure Time (Days)",
+      "aggregation": "AVG",
+      "complexity": "computed",
+      "requiredDateField": true
+    }
+  },
+  "filter_options": {
+    "companyId": {
+      "label": "Company",
+      "type": "async-search",
+      "multiSelect": true
+    },
+    "employeeId": {
+      "label": "Employee",
+      "type": "async-search",
+      "multiSelect": true,
+      "dependsOn": [
+        "companyId"
+      ]
+    },
+    "taskStatusId": {
+      "label": "Task Status",
+      "type": "multi-select",
+      "multiSelect": true
+    },
+    "taskTypeId": {
+      "label": "Task Type",
+      "type": "multi-select",
+      "multiSelect": true
+    },
+    "isDeleted": {
+      "label": "Include Deleted",
+      "type": "toggle",
+      "default": false
+    }
+  },
+  "payload_examples": [
+    {
+      "name": "Total Tasks Card (Current Month)",
+      "payload": {
+        "module": "TASK",
+        "metric": "TOTAL_TASKS",
+        "visualization": "card",
+        "dateField": "createdDatetime",
+        "dateRange": "thisMonth",
+        "filters": {
+          "companyId": [
+            1
+          ],
+          "isDeleted": false
+        }
+      }
+    },
+    {
+      "name": "Tasks by Status (Donut Chart)",
+      "payload": {
+        "module": "TASK",
+        "metric": "TASKS_BY_STATUS",
+        "visualization": "donut",
+        "groupBy": "taskStatusId",
+        "filters": {
+          "companyId": [
+            1
+          ],
+          "isDeleted": false
+        }
+      }
+    },
+    {
+      "name": "Task Completion Trend (Line Chart)",
+      "payload": {
+        "module": "TASK",
+        "metric": "COMPLETED_TASKS",
+        "visualization": "line",
+        "groupBy": "createdMonth",
+        "dateField": "taskActualEndDate",
+        "dateRange": "last6months",
+        "filters": {
+          "companyId": [
+            1
+          ]
+        }
+      }
+    },
+    {
+      "name": "Employee Workload (Bar Chart)",
+      "payload": {
+        "module": "TASK",
+        "metric": "TASKS_BY_EMPLOYEE",
+        "visualization": "bar",
+        "groupBy": "employeeId",
+        "filters": {
+          "companyId": [
+            1
+          ],
+          "taskStatusId": [
+            1,
+            2
+          ]
+        }
+      }
+    },
+    {
+      "name": "Overdue Rate Gauge",
+      "payload": {
+        "module": "TASK",
+        "metric": "OVERDUE_RATE",
+        "visualization": "gauge",
+        "filters": {
+          "companyId": [
+            1
+          ]
+        }
+      }
+    }
+  ],
+  "api_contracts": {
+    "query": "POST /api/dashboard/query/task",
+    "options": "GET /api/dashboard/filter-options/task",
+    "groupBy": "GET /api/dashboard/groupby-options/task"
+  }
+}
