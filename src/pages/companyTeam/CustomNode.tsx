@@ -85,20 +85,22 @@ export default function CustomNode({ data, id, selected }: CustomNodeProps) {
     <div
       className={`relative flex flex-col items-center pb-3 w-fit min-w-64 rounded-xl border-2 transition-all duration-200 ${
         selected
-          ? "shadow-lg scale-[1.02]"
+          ? ""
           : `${theme.border} ${theme.lightBg} border-opacity-50 shadow-sm`
       } group bg-white`}
       onClick={(e) => isSelectionMode && handleToggleSelect(e)}
     >
-      <Handle type="target" position={Position.Top} className="opacity-0" />
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="!w-3 !h-3 bg-white border-2 border-gray-400 z-10"
+      />
 
       {/* Multi-Select Checkbox */}
       {isSelectionMode && (
         <div
           className={`absolute top-1 left-2 z-10 flex items-center justify-center h-4 w-4 rounded border transition-all ${
-            selected
-              ? "bg-blue-500 border-blue-500"
-              : "bg-white border-gray-300 shadow-sm"
+            selected ? "" : "bg-white border-gray-300 shadow-sm"
           }`}
           onClick={handleToggleSelect}
         >
@@ -187,7 +189,11 @@ export default function CustomNode({ data, id, selected }: CustomNodeProps) {
         <UserPlus className="h-3 w-3" />
       </button>
 
-      <Handle type="source" position={Position.Bottom} className="opacity-0" />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="!w-3 !h-3 bg-white border-2 border-gray-400 z-10"
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { DateRange } from "react-day-picker";
+import { CalendarIcon, X } from "lucide-react";
+import type { DateRange } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,7 @@ export default function DateRangePicker({
   });
   const [isOpen, setIsOpen] = React.useState(false);
 
-  // If parent gives controlled value, sync it
+  // Sync controlled value
   React.useEffect(() => {
     if (value) {
       setDate(value);
@@ -51,15 +51,10 @@ export default function DateRangePicker({
     }
   }, [value]);
 
-  // When popover opens, reset tempDate from defaultDate
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (open && defaultDate) {
-      const revert: DateRange = {
-        from: defaultDate.startDate,
-        to: defaultDate.deadline,
-      };
-      setTempDate(revert);
+      setTempDate({ from: defaultDate.startDate, to: defaultDate.deadline });
     }
   };
 
@@ -99,64 +94,122 @@ export default function DateRangePicker({
     setIsOpen(false);
   };
 
+  const hasRange = date?.from && date?.to;
+
   return (
-    <div className={cn("grid gap-2 bg-white", className)}>
+    <div className={cn("inline-flex", className)}>
       <Popover open={isOpen} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
-          <Button
-            id="date"
-            variant={"outline"}
+          <button
+            id="date-range-trigger"
             className={cn(
-              "w-auto min-w-0 px-4 justify-start text-left font-normal",
-              !date && "text-muted-foreground",
+              "inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium shadow-sm transition-all",
+              "hover:bg-accent hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/30",
+              hasRange ? "text-foreground" : "text-muted-foreground",
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
+            <CalendarIcon className="h-4 w-4 shrink-0 text-primary" />
             {date?.from ? (
               date.to ? (
-                <>
-                  {format(date.from, "dd-MM-yyyy")} -{" "}
-                  {format(date.to, "dd-MM-yyyy")}
-                </>
+                <span className="font-semibold tracking-tight">
+                  {format(date.from, "dd MMM yyyy")}
+                  <span className="mx-1.5 font-normal text-muted-foreground">
+                    →
+                  </span>
+                  {format(date.to, "dd MMM yyyy")}
+                </span>
               ) : (
-                format(date.from, "dd-MM-yyyy")
+                <span className="font-semibold">
+                  {format(date.from, "dd MMM yyyy")}
+                </span>
               )
             ) : (
-              <span>Pick a date</span>
+              <span>Pick a date range</span>
             )}
-          </Button>
+          </button>
         </PopoverTrigger>
+
         <PopoverContent
-          className="w-auto z-50 bg-white mr-8 shadow-2xl p-3 rounded-2xl border mt-2"
           align="start"
+          sideOffset={8}
+          className={cn(
+            "z-50 w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl",
+            "animate-in fade-in-0 zoom-in-95 duration-150",
+          )}
         >
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={tempDate?.from}
-            selected={tempDate}
-            onSelect={handleSelect}
-            numberOfMonths={2}
-          />
-          <div className="flex justify-between gap-2 mt-3 pt-3 border-t">
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={onClose}>
-                Close
-              </Button>
+          {/* Header */}
+          <div className="flex items-center justify-between border-b px-4 py-3">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+                <CalendarIcon className="h-4 w-4 text-primary" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  Select Date Range
+                </p>
+                {tempDate?.from ? (
+                  <p className="text-xs text-muted-foreground">
+                    {format(tempDate.from, "dd MMM yyyy")}
+                    {tempDate.to && (
+                      <> → {format(tempDate.to, "dd MMM yyyy")}</>
+                    )}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    No dates selected
+                  </p>
+                )}
+              </div>
             </div>
-            <div className="flex gap-4">
+            <button
+              onClick={onClose}
+              className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Calendar */}
+          <div className="p-3">
+            <Calendar
+              mode="range"
+              defaultMonth={tempDate?.from}
+              selected={tempDate}
+              onSelect={handleSelect}
+              numberOfMonths={2}
+            />
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between border-t bg-muted/30 px-4 py-3 rounded-b-2xl">
+            <div className="flex gap-2">
               {isClear && (
-                <Button variant="outline" size="sm" onClick={onClear}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClear}
+                  className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 text-xs"
+                >
                   Reset
                 </Button>
               )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClose}
+                className="h-8 rounded-lg text-xs"
+              >
+                Cancel
+              </Button>
               {onSaveApply && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleSave}
                   disabled={!tempDate?.from}
-                  className="border-primary"
+                  className="h-8 rounded-lg border-primary text-primary hover:bg-primary hover:text-white text-xs"
                 >
                   Save
                 </Button>
@@ -165,6 +218,7 @@ export default function DateRangePicker({
                 size="sm"
                 onClick={handleApply}
                 disabled={!tempDate?.from}
+                className="h-8 rounded-lg bg-primary text-white hover:bg-primary/90 text-xs px-4"
               >
                 Apply
               </Button>

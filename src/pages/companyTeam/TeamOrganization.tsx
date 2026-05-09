@@ -22,9 +22,10 @@ import {
 import "@xyflow/react/dist/style.css";
 import dagre from "dagre";
 import CustomNode from "./CustomNode";
-import { Plus, Users, UserPlus } from "lucide-react";
+import { Plus, Users, UserPlus, Edit2 } from "lucide-react";
 import CreateTeamModal from "./CreateTeamModal";
 import AssignToTeamModal from "./AssignToTeamModal";
+import EditTeamSidebar from "./EditTeamSidebar";
 import "./team-flow.css";
 import {
   useGetTeamPositions,
@@ -115,6 +116,7 @@ function TeamOrganizationContent() {
   const [hiddenNodes, setHiddenNodes] = useState<Set<string>>(new Set());
   const [isCreateTeamModalOpen, setIsCreateTeamModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [isEditTeamSidebarOpen, setIsEditTeamSidebarOpen] = useState(false);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [filterTeamId, setFilterTeamId] = useState<string>("all");
 
@@ -166,7 +168,16 @@ function TeamOrganizationContent() {
   }, [positionsRes, setNodes, setEdges]);
 
   const onConnect = useCallback(
-    (params: Edge | Connection) =>
+    (params: Edge | Connection) => {
+      const targetNode = nodes.find((n) => n.id === params.target);
+      if (targetNode && params.source && params.target) {
+        addUpdatePosition({
+          teamPositionId: params.target,
+          employeeId: targetNode.data.employeeId as string,
+          parentPositionId: params.source,
+        });
+      }
+
       setEdges((eds) =>
         addEdge(
           {
@@ -177,8 +188,9 @@ function TeamOrganizationContent() {
           } as Edge,
           eds,
         ),
-      ),
-    [setEdges],
+      );
+    },
+    [setEdges, nodes, addUpdatePosition],
   );
 
   const getDescendants = useCallback(
@@ -433,6 +445,7 @@ function TeamOrganizationContent() {
           nodeTypes={nodeTypes}
           connectionLineType={ConnectionLineType.SmoothStep}
           fitView
+          fitViewOptions={{ maxZoom: 0.8 }}
           minZoom={0.1}
           maxZoom={1.8}
           attributionPosition="bottom-left"
@@ -445,7 +458,7 @@ function TeamOrganizationContent() {
           />
           <Controls className="bg-white shadow-md border-gray-200 rounded-md" />
           <Panel position="top-right" className="m-4 flex gap-4">
-            <div className="bg-white rounded-md shadow-md border border-gray-200 flex items-center gap-2">
+            <div className="bg-white rounded-md shadow-md border border-gray-200 flex items-center gap-2 pr-2">
               <select
                 className="text-sm px-2 py-2 font-semibold text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer"
                 value={filterTeamId}
@@ -458,22 +471,33 @@ function TeamOrganizationContent() {
                   </option>
                 ))}
               </select>
+              {filterTeamId !== "all" && (
+                <button
+                  onClick={() => setIsEditTeamSidebarOpen(true)}
+                  className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-primary transition-colors"
+                  title="Edit Team Members"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+              )}
             </div>
+          </Panel>
+          <Panel position="top-left" className="m-4 flex gap-4">
             {isSelectionMode && hasSelection && (
               <>
-                <button
-                  onClick={() => setIsAssignModalOpen(true)}
-                  className="bg-primary text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2 hover:bg-primary/80 transition-all border-none"
-                >
-                  <UserPlus className="w-4 h-4" /> Assign to Team (
-                  {selectedNodes.length})
-                </button>
+                {(teamsRes?.data?.length ?? 0) > 0 && (
+                  <button
+                    onClick={() => setIsAssignModalOpen(true)}
+                    className="bg-white border-2 border-primary text-primary px-4 py-1 font-medium text-sm rounded-md shadow-md flex items-center gap-2  transition-all border-none"
+                  >
+                    <UserPlus className="w-4 h-4" /> Assign
+                  </button>
+                )}
                 <button
                   onClick={() => setIsCreateTeamModalOpen(true)}
-                  className="bg-emerald-600 text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2 hover:bg-emerald-700 transition-all border-none"
+                  className="bg-primary text-white px-4 py-1 font-medium text-sm rounded-md shadow-md flex items-center gap-2  transition-all border-none"
                 >
-                  <Users className="w-4 h-4" /> Create Team (
-                  {selectedNodes.length})
+                  <Users className="w-4 h-4" /> Create Team
                 </button>
               </>
             )}
@@ -487,22 +511,22 @@ function TeamOrganizationContent() {
                   );
                 }
               }}
-              className={`${isSelectionMode ? "bg-amber-600 hover:bg-amber-700" : "bg-blue-600 hover:bg-blue-700"} text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2 transition-all border-none`}
+              className={`${isSelectionMode ? "bg-white border border-primary text-primary" : "bg-primary text-white"} px-4 py-1 font-medium text-sm rounded-md shadow-md flex items-center gap-2 transition-all border-none`}
             >
               <Users className="w-4 h-4" />
-              {isSelectionMode ? "Exit Selection" : "Bulk Selection"}
+              {isSelectionMode ? "Exit" : "Selection"}
             </button>
-            {nodes.length === 0 && (
-              <button
-                onClick={() => {
-                  setAddingToParentId(null);
-                  setIsAddModalOpen(true);
-                }}
-                className="bg-primary text-primary-foreground px-4 py-2 rounded-md shadow-md flex items-center gap-2 hover:brightness-110 transition-all"
-              >
-                <Plus className="w-4 h-4" /> Add Root Member
-              </button>
-            )}
+            {/* {nodes.length === 0 && ( */}
+            <button
+              onClick={() => {
+                setAddingToParentId(null);
+                setIsAddModalOpen(true);
+              }}
+              className="bg-primary text-primary-foreground px-4 py-1 font-medium text-sm rounded-md shadow-md flex items-center gap-2 hover:brightness-110 transition-all"
+            >
+              <Plus className="w-4 h-4" /> Add Root Member
+            </button>
+            {/* )} */}
           </Panel>
         </ReactFlow>
       </div>
@@ -545,6 +569,16 @@ function TeamOrganizationContent() {
           selectedCount={selectedNodes.length}
         />
       )}
+
+      <EditTeamSidebar
+        isOpen={isEditTeamSidebarOpen}
+        onClose={() => setIsEditTeamSidebarOpen(false)}
+        teamId={filterTeamId === "all" ? "" : filterTeamId}
+        teamName={
+          teamsRes?.data?.find((t: Team) => t.teamId === filterTeamId)
+            ?.teamName || ""
+        }
+      />
     </div>
   );
 }

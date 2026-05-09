@@ -460,6 +460,9 @@ const Urls = {
   changeDashboardRegistryStatus: (id: string) =>
     `${baseUrl}/company/registry/${id}/status`,
   storeFullRegistry: () => `${baseUrl}/company/registry/store-registry`,
+
+  // Remove User Action based on condition
+  removeUserAction: () => `${baseUrl}/company/team/user-action`,
 };
 
 export default Urls;

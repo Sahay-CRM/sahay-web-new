@@ -1,12 +1,14 @@
 import {
   X,
-  Trash2,
   UserSearch,
   Mail,
   Phone,
   Briefcase,
   Building2,
   UserCheck,
+  UserMinus,
+  Trash2,
+  GitPullRequest,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -15,6 +17,7 @@ import { Loader2 } from "lucide-react";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 
 import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
+import { useUserPositionAction } from "@/features/api/companyTeam/useTeamPosition";
 
 interface SidebarDetailsProps {
   isOpen: boolean;
@@ -38,6 +41,42 @@ export default function SidebarDetails({
   });
 
   const employee = empRes?.data;
+  const { mutate: applyUserAction, isPending: isActionPending } =
+    useUserPositionAction();
+
+  const handleAction = (type: "team" | "separate") => {
+    if (!nodeId || !nodeData?.employeeId) return;
+
+    let message = "";
+    const actionData: {
+      employeeId: string;
+      positionId: string;
+      isTeamRemove?: boolean;
+      isSeprate?: boolean;
+      isRemove?: boolean;
+    } = {
+      employeeId: nodeData.employeeId,
+      positionId: nodeId,
+    };
+
+    if (type === "team") {
+      message = "Are you sure you want to remove the user from this team?";
+      actionData.isTeamRemove = true;
+    } else if (type === "separate") {
+      message =
+        "Are you sure you want to separate this user from their parent?";
+      actionData.isSeprate = true;
+    }
+
+    // eslint-disable-next-line no-alert
+    if (window.confirm(message)) {
+      applyUserAction(actionData, {
+        onSuccess: () => {
+          onClose();
+        },
+      });
+    }
+  };
 
   if (!isOpen || !nodeData) return null;
 
@@ -57,9 +96,9 @@ export default function SidebarDetails({
         </button>
       </div>
 
-      <div className="flex-1 p-6 overflow-y-auto space-y-8">
+      <div className="flex-1 p-6 overflow-y-auto">
         {/* Profile Card */}
-        <div className="flex flex-col items-center text-center p-4 border rounded-2xl shadow-sm bg-gradient-to-b from-primary/5 to-transparent relative min-h-[120px] justify-center">
+        <div className="flex flex-col">
           {isFetchingDetails ? (
             <div className="flex flex-col items-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
@@ -69,7 +108,7 @@ export default function SidebarDetails({
             <>
               <div className="flex gap-4 items-start">
                 <div>
-                  <Avatar className="h-20 w-20 border-4 border-white shadow-md">
+                  <Avatar className="h-16 w-16 border">
                     <AvatarImage
                       src={
                         employee?.photo &&
@@ -180,16 +219,38 @@ export default function SidebarDetails({
           </Button> */}
         {/* </form> */}
 
-        <div className="pt-6 border-t border-red-50">
-          <Button
-            variant="outline"
-            className="w-full flex items-center justify-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 border-red-500"
-            onClick={() => {
-              if (nodeId) onDelete(nodeId);
-            }}
-          >
-            <Trash2 className="w-4 h-4" /> Remove Position
-          </Button>
+        <div className="pt-6 border-t border-gray-100 flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              variant="outline"
+              className="flex items-center justify-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200"
+              onClick={() => {
+                if (nodeId) onDelete(nodeId);
+              }}
+            >
+              <Trash2 className="w-4 h-4" /> Remove Position
+            </Button>
+            {nodeData?.employeeId && (
+              <Button
+                variant="outline"
+                className="flex items-center justify-center gap-2 text-primary border-primary/20 hover:bg-primary/5"
+                onClick={() => handleAction("team")}
+                disabled={isActionPending}
+              >
+                <UserMinus className="w-4 h-4" /> Remove from Team
+              </Button>
+            )}
+          </div>
+          {nodeData?.employeeId && (
+            <Button
+              variant="outline"
+              className="w-full flex items-center justify-center gap-2 text-orange-500 border-orange-200 hover:bg-orange-50"
+              onClick={() => handleAction("separate")}
+              disabled={isActionPending}
+            >
+              <GitPullRequest className="w-4 h-4" /> Separate from Parent
+            </Button>
+          )}
         </div>
       </div>
     </div>
