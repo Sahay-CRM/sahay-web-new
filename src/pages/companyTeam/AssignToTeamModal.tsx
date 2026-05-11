@@ -22,6 +22,7 @@ interface AssignToTeamModalProps {
   onSubmit: (teamId: string) => void;
   teams: Team[];
   selectedCount: number;
+  isLoading?: boolean;
 }
 
 export default function AssignToTeamModal({
@@ -30,6 +31,7 @@ export default function AssignToTeamModal({
   onSubmit,
   teams,
   selectedCount,
+  isLoading,
 }: AssignToTeamModalProps) {
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
 
@@ -73,10 +75,10 @@ export default function AssignToTeamModal({
             </Button>
             <Button
               onClick={handleFormSubmit}
-              disabled={!selectedTeamId}
+              disabled={!selectedTeamId || isLoading}
               className="px-6 bg-primary text-white"
             >
-              Assign to Team
+              {isLoading ? "Assigning..." : "Assign to Team"}
             </Button>
           </DialogFooter>
         </div>

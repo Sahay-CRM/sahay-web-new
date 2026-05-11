@@ -15,6 +15,7 @@ interface CreateTeamModalProps {
   onClose: () => void;
   onSubmit: (data: { teamName: string }) => void;
   selectedCount: number;
+  isLoading?: boolean;
 }
 
 export default function CreateTeamModal({
@@ -22,6 +23,7 @@ export default function CreateTeamModal({
   onClose,
   onSubmit,
   selectedCount,
+  isLoading,
 }: CreateTeamModalProps) {
   const {
     register,
@@ -76,8 +78,12 @@ export default function CreateTeamModal({
             >
               Cancel
             </Button>
-            <Button type="submit" className="px-6 bg-primary text-white">
-              Create Team
+            <Button
+              type="submit"
+              className="px-6 bg-primary text-white"
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating..." : "Create Team"}
             </Button>
           </DialogFooter>
         </form>

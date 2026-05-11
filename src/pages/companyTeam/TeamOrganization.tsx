@@ -38,6 +38,7 @@ import {
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import SidebarDetails from "./SidebarDetails";
 import AddMemberModal from "./AddMemberModal";
+import Loader from "@/components/shared/Loader/Loader";
 
 const nodeTypes = {
   custom: CustomNode,
@@ -94,14 +95,16 @@ function TeamOrganizationContent() {
   const user = useSelector(getUserDetail);
   const teamId = paramTeamId || user?.companyId;
 
-  const { data: positionsRes } = useGetTeamPositions(teamId as string);
+  const { data: positionsRes, isLoading: isPositionsLoading } =
+    useGetTeamPositions(teamId as string);
   const { data: teamsRes } = useGetTeam({
     filter: { companyId: user?.companyId },
     enable: true,
   });
-  const { mutate: addUpdatePosition } = useAddUpdateTeamPosition();
+  const { mutate: addUpdatePosition, isPending: isAddingMember } =
+    useAddUpdateTeamPosition();
   const { mutate: deletePosition } = useDeleteTeamPosition();
-  const { mutate: createTeam } = useAddUpdateTeam();
+  const { mutate: createTeam, isPending: isCreatingTeam } = useAddUpdateTeam();
   const { fitView } = useReactFlow();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<TeamNodeData>>(
@@ -430,6 +433,14 @@ function TeamOrganizationContent() {
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
 
+  if (isPositionsLoading) {
+    return (
+      <div className="flex h-[calc(100vh-100px)] w-full items-center justify-center bg-gray-50/50">
+        <Loader />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-[calc(100vh-100px)] w-full overflow-hidden bg-gray-50/50">
       <div
@@ -457,31 +468,33 @@ function TeamOrganizationContent() {
             size={1}
           />
           <Controls className="bg-white shadow-md border-gray-200 rounded-md" />
-          <Panel position="top-right" className="m-4 flex gap-4">
-            <div className="bg-white rounded-md shadow-md border border-gray-200 flex items-center gap-2 pr-2">
-              <select
-                className="text-sm px-2 py-2 font-semibold text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer"
-                value={filterTeamId}
-                onChange={(e) => setFilterTeamId(e.target.value)}
-              >
-                <option value="all">All Members</option>
-                {teamsRes?.data?.map((team: Team) => (
-                  <option key={team.teamId} value={team.teamId}>
-                    {team.teamName}
-                  </option>
-                ))}
-              </select>
-              {filterTeamId !== "all" && (
-                <button
-                  onClick={() => setIsEditTeamSidebarOpen(true)}
-                  className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-primary transition-colors"
-                  title="Edit Team Members"
+          {nodes.length > 0 && (
+            <Panel position="top-right" className="m-4 flex gap-4">
+              <div className="bg-white rounded-md shadow-md border border-gray-200 flex items-center gap-2 pr-2">
+                <select
+                  className="text-sm px-2 py-2 font-semibold text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer"
+                  value={filterTeamId}
+                  onChange={(e) => setFilterTeamId(e.target.value)}
                 >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </Panel>
+                  <option value="all">All Members</option>
+                  {teamsRes?.data?.map((team: Team) => (
+                    <option key={team.teamId} value={team.teamId}>
+                      {team.teamName}
+                    </option>
+                  ))}
+                </select>
+                {filterTeamId !== "all" && (
+                  <button
+                    onClick={() => setIsEditTeamSidebarOpen(true)}
+                    className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-primary transition-colors"
+                    title="Edit Team Members"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </Panel>
+          )}
           <Panel position="top-left" className="m-4 flex gap-4">
             {isSelectionMode && hasSelection && (
               <>
@@ -501,21 +514,23 @@ function TeamOrganizationContent() {
                 </button>
               </>
             )}
-            <button
-              onClick={() => {
-                setIsSelectionMode(!isSelectionMode);
-                if (isSelectionMode) {
-                  // Clear selection when exiting selection mode
-                  setNodes((nds) =>
-                    nds.map((n) => ({ ...n, selected: false })),
-                  );
-                }
-              }}
-              className={`${isSelectionMode ? "bg-white border border-primary text-primary" : "bg-primary text-white"} px-4 py-1 font-medium text-sm rounded-md shadow-md flex items-center gap-2 transition-all border-none`}
-            >
-              <Users className="w-4 h-4" />
-              {isSelectionMode ? "Exit" : "Selection"}
-            </button>
+            {nodes.length > 0 && (
+              <button
+                onClick={() => {
+                  setIsSelectionMode(!isSelectionMode);
+                  if (isSelectionMode) {
+                    // Clear selection when exiting selection mode
+                    setNodes((nds) =>
+                      nds.map((n) => ({ ...n, selected: false })),
+                    );
+                  }
+                }}
+                className={`${isSelectionMode ? "bg-white border border-primary text-primary" : "bg-primary text-white"} px-4 py-1 font-medium text-sm rounded-md shadow-md flex items-center gap-2 transition-all border-none`}
+              >
+                <Users className="w-4 h-4" />
+                {isSelectionMode ? "Exit" : "Selection"}
+              </button>
+            )}
             {/* {nodes.length === 0 && ( */}
             <button
               onClick={() => {
@@ -545,6 +560,7 @@ function TeamOrganizationContent() {
           onClose={() => setIsCreateTeamModalOpen(false)}
           onSubmit={handleCreateTeamFromSelection}
           selectedCount={selectedNodes.length}
+          isLoading={isCreatingTeam}
         />
       )}
 
@@ -553,6 +569,7 @@ function TeamOrganizationContent() {
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
           onSubmit={handleAddMemberSubmit}
+          isLoading={isAddingMember}
           parentName={
             addingToParentId
               ? nodes.find((n) => n.id === addingToParentId)?.data.label
@@ -567,6 +584,7 @@ function TeamOrganizationContent() {
           onSubmit={handleAssignToTeam}
           teams={teamsRes?.data || []}
           selectedCount={selectedNodes.length}
+          isLoading={isCreatingTeam}
         />
       )}
 

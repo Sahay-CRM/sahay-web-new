@@ -1,8 +1,10 @@
+import { getUserDetail } from "@/features/selectors/auth.selector";
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { queryClient } from "@/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import { useSelector } from "react-redux";
 import { toast } from "sonner";
 
 export function useGetTeamPositions(teamId: string, enable?: boolean) {
@@ -20,6 +22,8 @@ export function useGetTeamPositions(teamId: string, enable?: boolean) {
 }
 
 export function useAddUpdateTeamPosition() {
+  const { companyId } = useSelector(getUserDetail);
+
   return useMutation({
     mutationKey: ["add-update-team-position"],
     mutationFn: async (data: {
@@ -45,6 +49,16 @@ export function useAddUpdateTeamPosition() {
     onSuccess: (res) => {
       toast.success(res.message || "Position updated successfully");
       queryClient.invalidateQueries({ queryKey: ["get-team-positions"] });
+
+      queryClient.invalidateQueries({
+        queryKey: [
+          "get-employees-not-in-team",
+          {
+            companyId,
+            search: "",
+          },
+        ],
+      });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message || "Failed to update position");

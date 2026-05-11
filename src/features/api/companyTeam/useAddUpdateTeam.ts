@@ -32,7 +32,9 @@ export default function useAddUpdateTeam() {
       queryClient.invalidateQueries({
         queryKey: ["get-team-by-id", data.companyId],
       });
-      queryClient.invalidateQueries({ queryKey: ["get-team-positions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["get-team-positions", res.data.teamId],
+      });
       queryClient.invalidateQueries({
         queryKey: ["get-employees-not-in-team"],
       });

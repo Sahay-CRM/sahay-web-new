@@ -14,7 +14,7 @@ import { getUserDetail } from "@/features/selectors/auth.selector";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 
 interface AddMemberFormData {
-  employeeIds: string[];
+  employeeId: string;
 }
 
 interface AddMemberModalProps {
@@ -22,6 +22,7 @@ interface AddMemberModalProps {
   onClose: () => void;
   onSubmit: (data: { employeeId: string }) => void;
   parentName?: string;
+  isLoading?: boolean;
 }
 
 export default function AddMemberModal({
@@ -29,6 +30,7 @@ export default function AddMemberModal({
   onClose,
   onSubmit,
   parentName,
+  isLoading,
 }: AddMemberModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const user = useSelector(getUserDetail);
@@ -49,14 +51,12 @@ export default function AddMemberModal({
 
   const { handleSubmit, control, reset } = useForm<AddMemberFormData>({
     defaultValues: {
-      employeeIds: [],
+      employeeId: "",
     },
   });
 
   const handleFormSubmit = (data: AddMemberFormData) => {
-    data.employeeIds.forEach((id) => {
-      onSubmit({ employeeId: id });
-    });
+    onSubmit({ employeeId: data.employeeId });
     reset();
   };
 
@@ -75,27 +75,17 @@ export default function AddMemberModal({
         >
           <div className="space-y-2">
             <Controller
-              name="employeeIds"
+              name="employeeId"
               control={control}
-              rules={{ required: "Select at least one employee" }}
+              rules={{ required: "Select an employee" }}
               render={({ field }) => (
                 <SearchDropdown
                   label="Select Employees"
                   placeholder="Search and select employees..."
                   options={employeeOptions}
-                  selectedValues={field.value}
+                  selectedValues={field.value ? [field.value] : []}
                   onSelect={(val) => {
-                    if (val.value === "CLEAR_ALL") {
-                      field.onChange([]);
-                    } else {
-                      const currentValues = Array.isArray(field.value)
-                        ? field.value
-                        : [];
-                      const newValues = currentValues.includes(val.value)
-                        ? currentValues.filter((v) => v !== val.value)
-                        : [...currentValues, val.value];
-                      field.onChange(newValues);
-                    }
+                    field.onChange(val.value);
                   }}
                   onSearchChange={setSearchTerm}
                   isMandatory={true}
@@ -111,8 +101,9 @@ export default function AddMemberModal({
             <Button
               type="submit"
               className="bg-black text-white hover:bg-gray-800"
+              disabled={isLoading}
             >
-              Add Member
+              {isLoading ? "Adding..." : "Add Member"}
             </Button>
           </DialogFooter>
         </form>

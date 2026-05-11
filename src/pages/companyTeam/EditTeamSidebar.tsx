@@ -198,13 +198,23 @@ export default function EditTeamSidebar({
                   <Check className="w-3 h-3" />
                 )}
               </button>
+              <button
+                onClick={() => {
+                  setEditName(teamName);
+                  setIsEditingName(false);
+                }}
+                disabled={isUpdatingTeam}
+                className="p-1.5 bg-gray-100 text-gray-500 rounded hover:bg-gray-200 disabled:opacity-50"
+              >
+                <X className="w-3 h-3" />
+              </button>
             </div>
           ) : (
             <h2 className="text-lg font-semibold truncate flex items-center gap-2 group">
               {teamName}
               <button
                 onClick={() => setIsEditingName(true)}
-                className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-primary transition-all"
+                className=" p-1 text-gray-400 hover:text-primary transition-all"
               >
                 <Pencil className="w-3.5 h-3.5" />
               </button>
@@ -213,7 +223,7 @@ export default function EditTeamSidebar({
         </div>
         <button
           onClick={onClose}
-          className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+          className="p-2 border border-primary hover:bg-gray-200 rounded-full transition-colors"
         >
           <X className="w-5 h-5 text-gray-500" />
         </button>
