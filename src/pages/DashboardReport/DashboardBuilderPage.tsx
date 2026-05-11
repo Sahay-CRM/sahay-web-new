@@ -5,7 +5,6 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useCreateDashboardRegistryReport } from "@/features/api/DashboardRegistry/useCreateDashboardRegistryReport";
 import { useUpdateDashboardRegistryReport } from "@/features/api/DashboardRegistry/useUpdateDashboardRegistryReport";
 import { useGetDashboardRegistryReportById } from "@/features/api/DashboardRegistry/useGetDashboardRegistryReportById";
-import { WidgetConfig } from "@/components/shared/DashboardBuilder/DashboardBuilderRegistry";
 
 const DashboardBuilderPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -44,22 +43,40 @@ const DashboardBuilderPage: React.FC = () => {
   };
 
   const initialConfig: WidgetConfig | undefined = editingReport
-    ? {
-        moduleKey: editingReport.module || "TASK",
-        metricKey: editingReport.metric || "",
-        filters:
-          typeof editingReport.filters === "string"
-            ? JSON.parse(editingReport.filters)
-            : editingReport.filters || {},
-        dateField: editingReport.dateField || "",
-        groupBy: editingReport.groupBy || "",
-        visualization: editingReport.visualization || "",
-        widgetName: editingReport.report_name || editingReport.widgetName || "",
-      }
+    ? (() => {
+        const isModuleObject =
+          typeof editingReport.module === "object" &&
+          editingReport.module !== null;
+        const configSource = isModuleObject
+          ? (editingReport.module as WidgetConfig)
+          : editingReport;
+
+        return {
+          moduleKey:
+            configSource.moduleKey ||
+            (typeof editingReport.module === "string"
+              ? editingReport.module
+              : "TASK"),
+          metricKey: configSource.metricKey || editingReport.metric || "",
+          filters:
+            typeof configSource.filters === "string"
+              ? JSON.parse(configSource.filters)
+              : configSource.filters || {},
+          dateField: configSource.dateField || editingReport.dateField || "",
+          groupBy: configSource.groupBy || editingReport.groupBy || "",
+          visualization:
+            configSource.visualization || editingReport.visualization || "",
+          widgetName:
+            configSource.widgetName ||
+            editingReport.report_name ||
+            editingReport.widgetName ||
+            "",
+        };
+      })()
     : undefined;
 
   return (
-    <div className="w-full h-full bg-[#f8f9fa] overflow-y-auto px-4 py-8">
+    <div className="w-full h-full bg-white overflow-y-auto ">
       {isFetching ? (
         <div className="flex-1 h-[60vh] flex flex-col items-center justify-center gap-4 text-gray-400">
           <div className="w-10 h-10 rounded-full border-4 border-[#2e3090]/10 border-t-[#2e3090] animate-spin"></div>

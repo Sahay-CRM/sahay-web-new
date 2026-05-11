@@ -1,11 +1,11 @@
+import registryData from "../../../../dashboard-builder-registry.json";
 import { useState, useCallback, useMemo } from "react";
-import { getRegistry, WidgetConfig } from "./DashboardBuilderRegistry";
 
 export const useDashboardBuilder = (
   initialModuleKey?: string,
   initialConfig?: WidgetConfig,
 ) => {
-  const registry = getRegistry();
+  const registry = registryData as unknown as Registry;
   const [currentStep, setCurrentStep] = useState(1);
   const [widgetConfig, setWidgetConfig] = useState<WidgetConfig>(
     initialConfig || {

@@ -1,7 +1,6 @@
 import { CheckMarkIcon } from "@/components/shared/Icons";
 import { Button } from "@/components/ui/button";
 import React from "react";
-import { twMerge } from "tailwind-merge";
 
 interface DashboardStepProgressProps {
   currentStep: number;
@@ -33,98 +32,84 @@ const DashboardStepProgress: React.FC<DashboardStepProgressProps> = ({
   const renderStep = (step: number) => {
     const isCompleted = step < currentStep;
     const isCurrent = step === currentStep;
-    const isLastItem = step === totalSteps;
+    const isFirstStepItem = step === 1;
+    const isLastStepItem = step === totalSteps;
 
     return (
-      <React.Fragment key={step}>
-        <div className="flex items-center gap-3 shrink-0">
+      <div
+        key={step}
+        className={`flex flex-shrink items-center relative ${
+          isFirstStepItem
+            ? "flex-1"
+            : isLastStepItem
+              ? "ml-auto flex justify-end"
+              : "flex-1"
+        }`}
+      >
+        <div className="flex items-center gap-3">
           <div
-            className={twMerge(
-              "w-7 h-7 rounded-full flex items-center justify-center border",
+            className={`text-center shadow-md rounded-full flex items-center justify-center ${
               isCurrent
-                ? "bg-black text-white border-black"
-                : isCompleted
-                  ? "bg-gray-100 border-gray-100 text-gray-500"
-                  : "bg-white border-gray-200 text-gray-400",
-            )}
+                ? "font-semibold text-white bg-black"
+                : "bg-dark-600/50 border shadow-2xl"
+            }`}
           >
             {isCompleted ? (
-              <span className="w-3.5 h-3.5">
+              <span className="block w-5">
                 <CheckMarkIcon />
               </span>
             ) : (
-              <span className="text-[10px] font-bold">{step}</span>
+              <div className="px-2 text-sm h-6 flex items-center">
+                <span>{step}</span>
+              </div>
             )}
           </div>
-          <span
-            className={twMerge(
-              "text-xs font-bold whitespace-nowrap",
-              isCurrent ? "text-black" : "text-gray-400",
-            )}
-          >
+          <p className="font-bold text-base whitespace-nowrap">
             {stepNames[step - 1]}
-          </span>
+          </p>
         </div>
-
-        {!isLastItem && (
-          <div className="flex-1 mx-4 min-w-[10px]">
-            <div
-              className={twMerge(
-                "h-[1px] w-full",
-                isCompleted ? "bg-gray-200" : "bg-gray-100",
-              )}
-            />
-          </div>
-        )}
-      </React.Fragment>
+        {!isLastStepItem && <div className="h-1 mx-2 flex-1 bg-gray-300"></div>}
+      </div>
     );
   };
 
   return (
-    <div className="w-full flex items-center justify-between gap-6 py-6 border-b border-gray-50">
+    <div className="w-full pl-3 py-4 px-2">
+      <div className="items-center">
+        {/* Steps Section */}
+        <div className="w-full flex items-center gap-10">
+          <div className="flex-1 mt-0">
+            <div className="flex justify-between">
+              {[...Array(totalSteps)].map((_, index) => renderStep(index + 1))}
+            </div>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <Button onClick={back} disabled={isFirstStep} className="w-fit">
+              Previous
+            </Button>
+
+            {!isLastStep ? (
+              <Button onClick={next} className="w-fit" disabled={isPending}>
+                Continue
+              </Button>
+            ) : (
+              <Button
+                onClick={onFinish}
+                className="w-fit"
+                disabled={isPending}
+                isLoading={isPending}
+              >
+                {isUpdate ? "Save Changes" : "Submit"}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
       {isLoading && (
         <div className="absolute inset-0 bg-white/60 z-50 flex justify-center items-center">
           <div className="w-6 h-6 rounded-full border-2 border-gray-200 border-t-black animate-spin"></div>
         </div>
       )}
-
-      {/* Steps List */}
-      <div className="flex-1 flex items-center min-w-0">
-        {stepNames.map((_, index) => renderStep(index + 1))}
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex items-center gap-3 shrink-0 ml-4">
-        {!isFirstStep && (
-          <Button
-            onClick={back}
-            disabled={isPending}
-            variant="ghost"
-            className="px-4 h-9 text-gray-400 hover:text-gray-900 font-bold rounded-lg text-xs"
-          >
-            Back
-          </Button>
-        )}
-
-        {!isLastStep ? (
-          <Button
-            onClick={next}
-            disabled={isPending}
-            className="px-6 h-9 bg-[#2e3090] hover:bg-[#2e3090]/90 text-white rounded-lg font-bold text-xs shadow-none transition-none"
-          >
-            Continue
-          </Button>
-        ) : (
-          <Button
-            onClick={onFinish}
-            disabled={isPending}
-            isLoading={isPending}
-            className="px-8 h-9 bg-black hover:bg-black/90 text-white rounded-lg font-bold text-xs shadow-none transition-none"
-          >
-            {isUpdate ? "Save Changes" : "Finish"}
-          </Button>
-        )}
-      </div>
     </div>
   );
 };

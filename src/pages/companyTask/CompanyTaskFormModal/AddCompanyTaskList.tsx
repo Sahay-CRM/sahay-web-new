@@ -308,6 +308,7 @@ const TaskDetailsStep = ({
             {...register("taskName", { required: "Task Name is required" })}
             error={errors.taskName}
             placeholder="Enter Task Name"
+            isMandatory={true}
             onFocus={() => {
               if (
                 shouldSearch &&
@@ -345,6 +346,7 @@ const TaskDetailsStep = ({
                   label="Task Deadline"
                   value={field.value}
                   onChange={field.onChange}
+                  isMandatory={true}
                   error={errors.taskDeadline}
                   disablePastDays={
                     Number(import.meta.env.VITE_DISABLEPASTDATES) || 3

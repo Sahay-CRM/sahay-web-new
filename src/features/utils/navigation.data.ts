@@ -299,6 +299,13 @@ export const companyNavigationData = [
     // moduleKey: "DASHBOARD_REPORT",
   },
   {
+    id: 21,
+    icon: "Eye",
+    label: "Dashboard Report View",
+    link: "/dashboard/report-builder/view",
+    permission: "View",
+  },
+  {
     id: 20,
     icon: "ListTodo",
     label: "Team Organization",

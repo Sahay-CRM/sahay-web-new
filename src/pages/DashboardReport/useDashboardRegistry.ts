@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useGetDashboardRegistryReports } from "@/features/api/DashboardRegistry/useGetDashboardRegistryReports";
 import { useDeleteDashboardRegistryReport } from "@/features/api/DashboardRegistry/useDeleteDashboardRegistryReport";
-import { WidgetConfig } from "@/components/shared/DashboardBuilder/DashboardBuilderRegistry";
 
 export default function useDashboardRegistry() {
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
@@ -33,15 +33,15 @@ export default function useDashboardRegistry() {
     setIsBuilderOpen(true);
   };
 
-  const openModal = useCallback((data: any) => {
+  const openModal = useCallback((data: DashboardRegistryReport) => {
     // Map report data back to WidgetConfig
     const config: WidgetConfig = {
-      moduleKey: data.module || "TASK",
-      metricKey: data.metric || "",
+      moduleKey: data.moduleKey || "TASK",
+      metricKey: data.metricKey || "",
       filters:
         typeof data.filters === "string"
           ? JSON.parse(data.filters)
-          : data.filters || {},
+          : (data.filters as Record<string, unknown>) || {},
       dateField: data.dateField || "",
       groupBy: data.groupBy || "",
       visualization: data.visualization || "",
@@ -57,7 +57,7 @@ export default function useDashboardRegistry() {
     setModalData({});
   };
 
-  const onDelete = useCallback((data: any) => {
+  const onDelete = useCallback((data: DashboardRegistryReport) => {
     setModalData(data);
     setIsDeleteModalOpen(true);
   }, []);

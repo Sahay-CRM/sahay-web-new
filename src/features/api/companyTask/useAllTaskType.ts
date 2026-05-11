@@ -6,7 +6,7 @@ export default function useAllTaskType({ filter }: FilterDataProps) {
   const query = useQuery({
     queryKey: ["get-all-taskType-list", filter],
     queryFn: async () => {
-      const { data: resData } = await Api.post<{ data: TaskTypeData }>({
+      const { data: resData } = await Api.post<{ data: TaskTypeData[] }>({
         url: Urls.AllTaskTypeList(),
         data: filter,
       });
