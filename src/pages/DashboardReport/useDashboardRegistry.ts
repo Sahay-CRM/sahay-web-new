@@ -1,15 +1,22 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useGetDashboardRegistryReports } from "@/features/api/DashboardRegistry/useGetDashboardRegistryReports";
 import { useDeleteDashboardRegistryReport } from "@/features/api/DashboardRegistry/useDeleteDashboardRegistryReport";
 
+interface ModalData {
+  id?: string;
+  config?: WidgetConfig;
+  widgetName?: string;
+  report_name?: string;
+}
+
 export default function useDashboardRegistry() {
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [modalData, setModalData] = useState<any>({});
+  const [modalData, setModalData] = useState<
+    ModalData | DashboardRegistryReport | Record<string, never>
+  >({});
 
   // Permission handling (assuming DASHBOARD_REPORT module key)
   const permission = useSelector(getUserPermission).DASHBOARD_REPORT || {
@@ -19,7 +26,7 @@ export default function useDashboardRegistry() {
     Delete: true,
   };
 
-  const [paginationFilter, setPaginationFilter] = useState<any>({
+  const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 25,
     search: "",
@@ -47,7 +54,12 @@ export default function useDashboardRegistry() {
       visualization: data.visualization || "",
       widgetName: data.report_name || data.widgetName || "",
     };
-    setModalData({ id: data.id, config });
+    setModalData({
+      id: data.id,
+      config,
+      report_name: data.report_name,
+      widgetName: data.widgetName,
+    });
     setIsBuilderOpen(true);
   }, []);
 

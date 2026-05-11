@@ -38,6 +38,7 @@ const DropdownSearchMenu = ({
   options,
   selected = [],
   onChange,
+  multiSelect = false,
   showCount,
   columnIcon,
   icon,
@@ -46,10 +47,14 @@ const DropdownSearchMenu = ({
 }: DropdownSearchMenuProps) => {
   const handleOptionToggle = (value: string) => {
     if (!onChange) return;
-    if (selected.includes(value)) {
-      onChange(selected.filter((v) => v !== value));
+    if (multiSelect) {
+      if (selected.includes(value)) {
+        onChange(selected.filter((v) => v !== value));
+      } else {
+        onChange([...selected, value]);
+      }
     } else {
-      onChange([...selected, value]);
+      onChange([value]);
     }
   };
 
@@ -148,6 +153,14 @@ const DropdownSearchMenu = ({
         className="w-56"
         align={iconOnly || responsive ? "end" : "start"}
       >
+        {multiSelect && options && options.length > 0 && (
+          <DropdownMenuCheckboxItem
+            checked={selected.length === 0}
+            onCheckedChange={() => onChange?.([])}
+          >
+            All
+          </DropdownMenuCheckboxItem>
+        )}
         {options && options.length > 0
           ? options.map((opt, idx) => (
               <DropdownMenuCheckboxItem

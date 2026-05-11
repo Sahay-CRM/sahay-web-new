@@ -223,7 +223,7 @@ export default function SidebarDetails({
           <div className="grid grid-cols-2 gap-3">
             <Button
               variant="outline"
-              className="flex items-center justify-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200"
+              className="flex items-center justify-center gap-2 text-red-500 hover:text-red-600 hover:bg-gray-100 border-red-200"
               onClick={() => {
                 if (nodeId) onDelete(nodeId);
               }}
@@ -233,7 +233,7 @@ export default function SidebarDetails({
             {nodeData?.employeeId && (
               <Button
                 variant="outline"
-                className="flex items-center justify-center gap-2 text-primary border-primary/20 hover:bg-primary/5"
+                className="flex items-center justify-center gap-2 text-primary border-primary/20 hover:bg-gray-100"
                 onClick={() => handleAction("team")}
                 disabled={isActionPending}
               >
@@ -243,8 +243,8 @@ export default function SidebarDetails({
           </div>
           {nodeData?.employeeId && (
             <Button
-              variant="outline"
-              className="w-full flex items-center justify-center gap-2 text-orange-500 border-orange-200 hover:bg-orange-50"
+              variant="destructive"
+              className="w-full flex bg-primary hover:bg-primary/90 text-white items-center justify-center gap-2"
               onClick={() => handleAction("separate")}
               disabled={isActionPending}
             >

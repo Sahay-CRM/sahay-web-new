@@ -128,7 +128,8 @@ export default function DashboardReport() {
             tableData={reports?.data?.map((item, index: number) => ({
               ...item,
               srNo:
-                (paginationFilter.currentPage - 1) * paginationFilter.pageSize +
+                ((paginationFilter?.currentPage || 1) - 1) *
+                  (paginationFilter?.pageSize || 25) +
                 index +
                 1,
               report_name: item.report_name || item.widgetName,
@@ -177,7 +178,7 @@ export default function DashboardReport() {
               <p className="text-sm text-gray-500 text-center">
                 Are you sure you want to delete{" "}
                 <span className="font-bold text-gray-900">
-                  "{modalData?.report_name || "this widget"}"
+                  {modalData?.widgetName || "this widget"}
                 </span>
                 ? This action cannot be undone.
               </p>

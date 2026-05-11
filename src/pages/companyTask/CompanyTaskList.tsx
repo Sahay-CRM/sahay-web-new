@@ -127,9 +127,19 @@ export default function CompanyTaskList() {
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
             {permission.Add && (
-              <Link to="/dashboard/tasks/add">
-                <Button className="py-2 w-fit">Add Company Task</Button>
-              </Link>
+              <div className="flex items-center space-x-2">
+                <Link to="/dashboard/tasks/board">
+                  <Button
+                    variant="outline"
+                    className="h-9 px-4 text-[11px] font-bold border-primary/30 text-primary hover:bg-primary/5 rounded-full"
+                  >
+                    View as Column
+                  </Button>
+                </Link>
+                <Link to="/dashboard/tasks/add">
+                  <Button className="py-2 w-fit">Add Company Task</Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>

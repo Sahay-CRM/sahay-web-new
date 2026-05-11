@@ -193,6 +193,10 @@ export default function EmployeeRoutes() {
         <Route path="objective" Component={Objective} />
 
         <Route path="tasks" Component={CompanyTask} />
+        <Route
+          path="tasks/board"
+          Component={lazy(() => import("../pages/companyTask/Board/TaskBoard"))}
+        />
         <Route path="tasks/add" element={<AddCompanyTaskList />} />
         <Route path="tasks/view/:id" element={<CompanyTaskView />} />
 

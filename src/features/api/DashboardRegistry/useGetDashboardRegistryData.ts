@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from "@tanstack/react-query";
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 
-type DatePaging = BaseResponse<any>;
+type DatePaging = ApiResponse<Registry>;
 
 export const useGetDashboardRegistryData = () => {
   return useQuery({

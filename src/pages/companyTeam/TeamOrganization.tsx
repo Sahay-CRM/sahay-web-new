@@ -472,7 +472,7 @@ function TeamOrganizationContent() {
             <Panel position="top-right" className="m-4 flex gap-4">
               <div className="bg-white rounded-md shadow-md border border-gray-200 flex items-center gap-2 pr-2">
                 <select
-                  className="text-sm px-2 py-2 font-semibold text-gray-700 bg-transparent border-none focus:ring-0 cursor-pointer"
+                  className="text-sm px-2 py-2 font-semibold text-gray-700 bg-transparent border-none focus:ring-0 outline-none cursor-pointer"
                   value={filterTeamId}
                   onChange={(e) => setFilterTeamId(e.target.value)}
                 >
