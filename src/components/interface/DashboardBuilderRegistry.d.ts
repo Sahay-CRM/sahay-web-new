@@ -1,6 +1,4 @@
-import registryData from "../../../../dashboard-builder-registry.json";
-
-export interface RegistryStep {
+interface RegistryStep {
   step: number;
   key: string;
   label: string;
@@ -9,7 +7,7 @@ export interface RegistryStep {
   dependsOn: string[];
 }
 
-export interface RegistryModule {
+interface RegistryModule {
   moduleKey: string;
   label: string;
   table: string;
@@ -24,7 +22,7 @@ export interface RegistryModule {
   searchable: boolean;
 }
 
-export interface RegistryMetric {
+interface RegistryMetric {
   module: string;
   label: string;
   aggregation: string;
@@ -38,7 +36,7 @@ export interface RegistryMetric {
   defaultGroupBy?: string;
 }
 
-export interface RegistryFilter {
+interface RegistryFilter {
   label: string;
   type: "async-search" | "multi-select" | "toggle" | "text" | "date-range";
   sourceTable?: string;
@@ -50,15 +48,16 @@ export interface RegistryFilter {
   dependsOn?: string[];
   availableForModules: string[];
   default?: unknown;
+  options?: { label: string; value: unknown }[];
 }
 
-export interface RegistryDateField {
+interface RegistryDateField {
   label: string;
   fieldType: string;
   availableForModules: string[];
 }
 
-export interface RegistryGroupBy {
+interface RegistryGroupBy {
   label: string;
   availableForModules: string[];
   sourceTable?: string;
@@ -69,7 +68,7 @@ export interface RegistryGroupBy {
   granularity?: string;
 }
 
-export interface RegistryVisualization {
+interface RegistryVisualization {
   requiresGroupBy: boolean;
   supportsTimeSeries: boolean;
   maxMetrics: number | null;
@@ -80,7 +79,7 @@ export interface RegistryVisualization {
   requiresStartEndField?: boolean;
 }
 
-export interface Registry {
+interface Registry {
   version: string;
   steps: RegistryStep[];
   modules: RegistryModule[];
@@ -99,8 +98,9 @@ export interface Registry {
   };
 }
 
-export interface WidgetConfig {
+interface WidgetConfig {
   moduleKey: string;
+  id?: string;
   metricKey: string;
   filters: Record<string, unknown>;
   dateField?: string;
@@ -109,7 +109,7 @@ export interface WidgetConfig {
   widgetName: string;
 }
 
-export interface DashboardRegistryReport {
+interface DashboardRegistryReport {
   srNo: number;
   id: string;
   employeeId: string;
@@ -128,11 +128,11 @@ export interface DashboardRegistryReport {
   filters?: unknown;
   // UI helper fields
   report_name?: string;
-  module?: string;
+  module?: string | (Partial<WidgetConfig> & { [key: string]: unknown });
   metric?: string;
 }
 
-export interface ApiResponse<T> {
+interface ApiResponse<T> {
   success: boolean;
   status: number;
   message: string;
@@ -144,4 +144,10 @@ export interface ApiResponse<T> {
   hasMore?: boolean;
 }
 
-export const getRegistry = () => registryData as unknown as Registry;
+interface PaginatedResponse<T> extends ApiResponse<T> {
+  totalCount: number;
+  totalPage: number;
+  currentPage: number;
+  pageSize: number;
+  hasMore: boolean;
+}

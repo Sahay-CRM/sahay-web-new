@@ -449,6 +449,7 @@ const Urls = {
 
   // Dashboard Registry
   getAllDashboardRegistry: () => `${baseUrl}/company/registry/get-all`,
+  getAllDashboardRegistryData: () => `${baseUrl}/company/registry/data`,
   getDashboardRegistryByPage: () => `${baseUrl}/company/registry/get`,
   getDashboardRegistryById: (id: string) =>
     `${baseUrl}/company/registry/get/${id}`,

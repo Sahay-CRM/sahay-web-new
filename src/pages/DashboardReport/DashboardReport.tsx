@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -139,19 +138,19 @@ export default function DashboardReport() {
             }))}
             columns={visibleColumns}
             primaryKey="id"
-            onEdit={(row) =>
+            onEdit={(row: DashboardRegistryReport) =>
               navigate(`/dashboard/report-builder/edit/${row.id}`)
             }
-            onDelete={(row) => onDelete(row)}
+            onDelete={(row: DashboardRegistryReport) => onDelete(row)}
             isActionButton={() =>
               columnToggleOptions.some((col) => col.visible)
             }
-            paginationDetails={mapPaginationDetails(reports as any)}
+            paginationDetails={mapPaginationDetails(reports)}
             setPaginationFilter={setPaginationFilter}
             searchValue={paginationFilter?.search}
             isLoading={isLoading}
             permissionKey="dashboard"
-            moduleKey="DASHBOARD_REPORT"
+            moduleKey="TASK"
             sortableColumns={[
               "report_name",
               "module",

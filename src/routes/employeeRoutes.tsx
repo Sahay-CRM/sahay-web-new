@@ -141,6 +141,9 @@ const Reports = lazy(() => import("../pages/Reports/report"));
 const DashboardReport = lazy(
   () => import("../pages/DashboardReport/DashboardReport"),
 );
+const DashboardReportView = lazy(
+  () => import("../pages/DashboardReport/DashboardReportView"),
+);
 
 export default function EmployeeRoutes() {
   return (
@@ -252,6 +255,7 @@ export default function EmployeeRoutes() {
         />
         <Route path="reports" Component={Reports} />
         <Route path="report-builder" Component={DashboardReport} />
+        <Route path="report-builder/view" Component={DashboardReportView} />
         <Route
           path="report-builder/add"
           Component={lazy(

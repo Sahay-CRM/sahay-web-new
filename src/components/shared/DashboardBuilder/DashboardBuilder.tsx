@@ -5,8 +5,8 @@ import MetricStep from "./steps/MetricStep";
 import DateFieldStep from "./steps/DateFieldStep";
 import GroupByStep from "./steps/GroupByStep";
 import VisualizationStep from "./steps/VisualizationStep";
-import { WidgetConfig } from "./DashboardBuilderRegistry";
-import { BarChart3, Settings2, CheckCircle2 } from "lucide-react";
+import FiltersStep from "./steps/FiltersStep";
+import { BarChart3, CheckCircle2 } from "lucide-react";
 import DashboardStepProgress from "./DashboardStepProgress";
 
 interface DashboardBuilderProps {
@@ -59,28 +59,12 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
         );
       case "filters":
         return (
-          <div className="flex flex-col items-center justify-center p-16 space-y-6 animate-in zoom-in-95 duration-500">
-            <div className="relative">
-              <div className="absolute -inset-4 bg-[#2e3090]/10 rounded-full blur-xl animate-pulse"></div>
-              <div className="relative w-20 h-20 rounded-2xl bg-white border border-gray-100 shadow-xl flex items-center justify-center">
-                <Settings2 className="w-10 h-10 text-[#2e3090]" />
-              </div>
-            </div>
-            <div className="text-center space-y-2">
-              <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
-                Smart Filters
-              </h3>
-              <p className="text-gray-500 max-w-sm">
-                Refine your data stream with intelligent filters tailored for{" "}
-                {currentModule?.label || "your data"}.
-              </p>
-            </div>
-            <div className="bg-blue-50/50 border border-blue-100/50 px-4 py-2 rounded-full">
-              <span className="text-xs font-medium text-[#2e3090]">
-                Configuration module coming soon
-              </span>
-            </div>
-          </div>
+          <FiltersStep
+            registry={registry}
+            config={widgetConfig}
+            currentModule={currentModule}
+            onUpdate={updateConfig}
+          />
         );
       case "dateField":
         return (
@@ -215,7 +199,7 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
       />
 
       {/* Content Area */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 px-6 py-2">
         <div className="h-full">{renderStepContent()}</div>
       </div>
     </div>

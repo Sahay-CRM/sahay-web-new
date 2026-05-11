@@ -1,7 +1,7 @@
 import * as React from "react";
 import { format } from "date-fns";
-import { CalendarIcon, X } from "lucide-react";
-import type { DateRange } from "react-day-picker";
+import { CalendarIcon } from "lucide-react";
+import { DateRange } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,9 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@radix-ui/react-popover";
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DateRangePickerProps {
   className?: string;
@@ -42,8 +43,9 @@ export default function DateRangePicker({
     to: defaultDate?.deadline,
   });
   const [isOpen, setIsOpen] = React.useState(false);
+  const isMobile = useIsMobile();
 
-  // Sync controlled value
+  // If parent gives controlled value, sync it
   React.useEffect(() => {
     if (value) {
       setDate(value);
@@ -51,10 +53,15 @@ export default function DateRangePicker({
     }
   }, [value]);
 
+  // When popover opens, reset tempDate from defaultDate
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (open && defaultDate) {
-      setTempDate({ from: defaultDate.startDate, to: defaultDate.deadline });
+      const revert: DateRange = {
+        from: defaultDate.startDate,
+        to: defaultDate.deadline,
+      };
+      setTempDate(revert);
     }
   };
 
@@ -94,134 +101,84 @@ export default function DateRangePicker({
     setIsOpen(false);
   };
 
-  const hasRange = date?.from && date?.to;
-
   return (
-    <div className={cn("inline-flex", className)}>
+    <div className={cn("grid gap-2 bg-white", className)}>
       <Popover open={isOpen} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
-          <button
-            id="date-range-trigger"
+          <Button
+            id="date"
+            variant={"outline"}
             className={cn(
-              "inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium shadow-sm transition-all",
-              "hover:bg-accent hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/30",
-              hasRange ? "text-foreground" : "text-muted-foreground",
+              "w-auto min-w-0 px-4 justify-start text-left font-normal",
+              !date && "text-muted-foreground",
             )}
           >
-            <CalendarIcon className="h-4 w-4 shrink-0 text-primary" />
+            <CalendarIcon className="mr-2 h-4 w-4" />
             {date?.from ? (
               date.to ? (
-                <span className="font-semibold tracking-tight">
-                  {format(date.from, "dd MMM yyyy")}
-                  <span className="mx-1.5 font-normal text-muted-foreground">
-                    →
-                  </span>
-                  {format(date.to, "dd MMM yyyy")}
-                </span>
+                <>
+                  {format(date.from, "dd-MM-yyyy")} -{" "}
+                  {format(date.to, "dd-MM-yyyy")}
+                </>
               ) : (
-                <span className="font-semibold">
-                  {format(date.from, "dd MMM yyyy")}
-                </span>
+                format(date.from, "dd-MM-yyyy")
               )
             ) : (
-              <span>Pick a date range</span>
+              <span>Pick a date</span>
             )}
-          </button>
+          </Button>
         </PopoverTrigger>
-
         <PopoverContent
-          align="start"
+          className="w-auto p-0 border-none shadow-none bg-transparent"
+          align={isMobile ? "center" : "end"}
           sideOffset={8}
-          className={cn(
-            "z-50 w-auto rounded-2xl border border-border bg-white p-0 shadow-2xl",
-            "animate-in fade-in-0 zoom-in-95 duration-150",
-          )}
+          collisionPadding={16}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between border-b px-4 py-3">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                <CalendarIcon className="h-4 w-4 text-primary" />
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  Select Date Range
-                </p>
-                {tempDate?.from ? (
-                  <p className="text-xs text-muted-foreground">
-                    {format(tempDate.from, "dd MMM yyyy")}
-                    {tempDate.to && (
-                      <> → {format(tempDate.to, "dd MMM yyyy")}</>
-                    )}
-                  </p>
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    No dates selected
-                  </p>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Calendar */}
-          <div className="p-3">
+          <div className="bg-white rounded-2xl border shadow-2xl p-3 animate-in fade-in zoom-in-95 duration-200">
             <Calendar
               mode="range"
               defaultMonth={tempDate?.from}
               selected={tempDate}
               onSelect={handleSelect}
-              numberOfMonths={2}
+              numberOfMonths={isMobile ? 1 : 2}
             />
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between border-t bg-muted/30 px-4 py-3 rounded-b-2xl">
-            <div className="flex gap-2">
-              {isClear && (
+            <div className="flex justify-between gap-2 mt-3 pt-3 border-t">
+              <div className="flex gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={onClear}
-                  className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 text-xs"
+                  onClick={onClose}
+                  className="text-muted-foreground hover:text-foreground"
                 >
-                  Reset
+                  Close
                 </Button>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClose}
-                className="h-8 rounded-lg text-xs"
-              >
-                Cancel
-              </Button>
-              {onSaveApply && (
+              </div>
+              <div className="flex gap-2">
+                {isClear && (
+                  <Button variant="outline" size="sm" onClick={onClear}>
+                    Reset
+                  </Button>
+                )}
+                {onSaveApply && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={!tempDate?.from}
+                    className="border-primary text-primary hover:bg-primary/5"
+                  >
+                    Save
+                  </Button>
+                )}
                 <Button
-                  variant="outline"
                   size="sm"
-                  onClick={handleSave}
+                  onClick={handleApply}
                   disabled={!tempDate?.from}
-                  className="h-8 rounded-lg border-primary text-primary hover:bg-primary hover:text-white text-xs"
+                  className="bg-primary hover:bg-primary/90"
                 >
-                  Save
+                  Apply
                 </Button>
-              )}
-              <Button
-                size="sm"
-                onClick={handleApply}
-                disabled={!tempDate?.from}
-                className="h-8 rounded-lg bg-primary text-white hover:bg-primary/90 text-xs px-4"
-              >
-                Apply
-              </Button>
+              </div>
             </div>
           </div>
         </PopoverContent>
