@@ -64,7 +64,7 @@ export default function ProjectCard({
           <TooltipTrigger asChild>
             <div className="absolute top-0 left-0 w-4 h-4 overflow-hidden rounded-tl-xl cursor-help z-10">
               <div
-                className="absolute top-0 left-0 w-full h-full bg-red-600 animate-pulse"
+                className="absolute top-0 left-0 w-full h-full bg-red-600"
                 style={{ clipPath: "polygon(0% 0%, 100% 0%, 0% 100%)" }}
               />
             </div>
@@ -180,17 +180,19 @@ export default function ProjectCard({
             </span>
           )}
         </div>
-        <div
-          className="mb-2 text-sm text-gray-600 flex items-center gap-1"
-          style={{ fontSize: `${14 * scale}px` }}
-        >
-          <span className="font-semibold  whitespace-nowrap">
-            Business Function :
-          </span>
-          <span className="truncate max-w-[300px]" title={coreParameterName}>
-            {coreParameterName}
-          </span>
-        </div>
+        {coreParameterName && (
+          <div
+            className="mb-2 text-sm text-gray-600 flex items-center gap-1"
+            style={{ fontSize: `${14 * scale}px` }}
+          >
+            <span className="font-semibold  whitespace-nowrap">
+              Business Function :
+            </span>
+            <span className="truncate max-w-[300px]" title={coreParameterName}>
+              {coreParameterName}
+            </span>
+          </div>
+        )}
         <div
           className="mb-2 flex items-center gap-2 text-sm text-gray-600"
           style={{ fontSize: `${14 * scale}px` }}

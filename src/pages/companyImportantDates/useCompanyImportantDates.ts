@@ -24,7 +24,7 @@ export default function useCalendar() {
   );
 
   const { data: importantDatesList } = useGetImportantDates();
-  const { data: companyTask } = useAllCompanyTask();
+  const { data: companyTask } = useAllCompanyTask({ filter: {} });
   const { data: meetingData } = useDdCompanyMeeting();
   const { data: holidayData } = useGetHoliday({
     filter: {
@@ -156,7 +156,7 @@ export default function useCalendar() {
       (task: TaskGetPaging) => task.taskId === taskId,
     );
 
-    setTaskModalData(taskData);
+    setTaskModalData(taskData!);
   };
   const handleMeetingModal = (meetingId: string) => {
     const meetingsArray = Array.isArray(meetingData)

@@ -32,6 +32,7 @@ interface SearchDropdownProps {
   dropdownClass?: string;
   isCrossShow?: boolean;
   disabled?: boolean;
+  multiSelect?: boolean;
 }
 
 const SearchDropdown = ({
@@ -48,6 +49,7 @@ const SearchDropdown = ({
   dropdownClass,
   isCrossShow = true,
   disabled = false,
+  multiSelect = false,
 }: SearchDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -94,11 +96,18 @@ const SearchDropdown = ({
             <span
               className={twMerge(
                 "truncate pr-10",
-                !selectedOption && "text-gray-500",
+                selectedValues.length === 0 && "text-gray-500",
               )}
-              style={{ color: selectedOption ? textColor : undefined }}
+              style={{
+                color: selectedValues.length > 0 ? textColor : undefined,
+              }}
             >
-              {selectedOption ? selectedOption.label : placeholder}
+              {selectedValues.length > 0
+                ? options
+                    .filter((opt) => selectedValues.includes(opt.value))
+                    .map((opt) => opt.label)
+                    .join(", ")
+                : placeholder}
             </span>
 
             {selectedOption && isCrossShow ? (
@@ -162,8 +171,10 @@ const SearchDropdown = ({
                     className="px-2 py-1"
                     onClick={() => {
                       onSelect(item);
-                      setQuery("");
-                      setOpen(false);
+                      if (!multiSelect) {
+                        setQuery("");
+                        setOpen(false);
+                      }
                     }}
                   >
                     <div

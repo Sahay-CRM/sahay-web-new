@@ -14,9 +14,14 @@ interface Column {
 interface BoardColumnProps {
   column: Column;
   tasks: TaskGetPaging[];
+  refetch: () => void;
 }
 
-export default function BoardColumn({ column, tasks }: BoardColumnProps) {
+export default function BoardColumn({
+  column,
+  tasks,
+  refetch,
+}: BoardColumnProps) {
   const { setNodeRef } = useDroppable({
     id: column.id,
     data: {
@@ -28,9 +33,9 @@ export default function BoardColumn({ column, tasks }: BoardColumnProps) {
   const taskIds = tasks.map((t) => t.taskId);
 
   return (
-    <div className="flex flex-col w-[420px] bg-[#f8f9fa] rounded-xl border border-gray-100 shadow-sm max-h-full">
-      <div className="p-4 flex items-center justify-between bg-white rounded-t-xl sticky top-0 z-10">
-        <div className="flex items-center gap-3">
+    <div className="flex flex-col w-[390px] bg-[#f8f9fa] rounded-xl border border-gray-100 shadow-sm max-h-full">
+      <div className="p-2 flex items-center justify-between bg-white rounded-t-xl sticky top-0 z-10">
+        <div className="flex px-4 items-center gap-3">
           <span className="font-bold text-gray-800 text-sm tracking-tight">
             {column.title}
           </span>
@@ -38,20 +43,20 @@ export default function BoardColumn({ column, tasks }: BoardColumnProps) {
             {tasks.length}
           </span>
         </div>
-        <div
+        {/* <div
           className="w-2 h-2 rounded-full ring-4 ring-primary/10"
           style={{ backgroundColor: column.color }}
-        />
+        /> */}
       </div>
 
       <div
         ref={setNodeRef}
-        className="flex-1 p-4 overflow-y-auto min-h-[200px] custom-scrollbar"
+        className="flex-1 p-2 overflow-y-auto min-h-[200px] custom-scrollbar"
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             {tasks.map((task) => (
-              <TaskCard key={task.taskId} task={task} />
+              <TaskCard key={task.taskId} task={task} refetch={refetch} />
             ))}
           </div>
         </SortableContext>

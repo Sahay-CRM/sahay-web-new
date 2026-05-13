@@ -710,6 +710,7 @@ interface TaskGetPaging {
   isActive?: boolean;
   projectName?: string;
   deadlineRequest?: string;
+  taskDuration?: string;
 }
 
 interface RepeatTaskAllRes {
@@ -1869,4 +1870,47 @@ interface KpiHeader {
   isSunday?: boolean;
   isHoliday?: boolean;
   isSkipDay?: boolean;
+}
+
+interface BoardProject {
+  projectId: string;
+  projectName: string;
+  projectDescription: string;
+  employeeIds: string[];
+  subParameterIds: string[];
+  projectDeadline: string;
+  projectStatus: string;
+  projectStatusId: string;
+  color: string;
+  coreParameterName?: string;
+  projectDuration?: string;
+  createdBy?: string;
+  projectDocuments: { fileId: string; fileName: string }[];
+  deadlineRequest?: string;
+}
+
+interface ProjectBoardProps {
+  projects: BoardProject[];
+  handleCardClick: (project: BoardProject) => void;
+  handleViewDocuments: (
+    docs: { fileId: string; fileName: string }[],
+    id: string,
+  ) => void;
+  refetch: () => void;
+}
+
+interface Column {
+  id: string;
+  title: string;
+  color: string;
+}
+
+interface BoardColumnProps {
+  column: Column;
+  projects: BoardProject[];
+  handleCardClick: (project: BoardProject) => void;
+  handleViewDocuments: (
+    docs: { fileId: string; fileName: string }[],
+    id: string,
+  ) => void;
 }

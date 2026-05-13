@@ -306,6 +306,13 @@ export const companyNavigationData = [
     permission: "View",
   },
   {
+    id: 22,
+    icon: "Network",
+    label: "Organization Chart",
+    link: "/dashboard/organization-chart",
+    permission: "View",
+  },
+  {
     id: 20,
     icon: "ListTodo",
     label: "Team Organization",

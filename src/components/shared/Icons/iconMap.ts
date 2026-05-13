@@ -19,6 +19,9 @@ import {
   ListTodo,
   CalendarRange,
   Ticket,
+  Network,
+  Eye,
+  LayoutDashboard,
 } from "lucide-react";
 
 // Icon mapping object
@@ -43,6 +46,9 @@ export const iconMap = {
   ListTodo,
   CalendarRange,
   Ticket,
+  Network,
+  Eye,
+  LayoutDashboard,
 };
 
 export type IconName = keyof typeof iconMap;

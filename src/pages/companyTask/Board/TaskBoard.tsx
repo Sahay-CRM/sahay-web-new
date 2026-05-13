@@ -250,9 +250,9 @@ export default function TaskBoard() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-90px)] overflow-hidden bg-[#fcfcfd]">
+    <div className="flex flex-col py-4 h-[calc(100vh-90px)] overflow-hidden bg-white">
       {/* Header Section */}
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6 flex flex-col">
+      <div className="w-full px-2 overflow-x-auto sm:px-4  flex flex-col">
         <div className="flex mb-3 justify-between items-center">
           <h1 className="font-semibold capitalize text-xl text-black">
             Company Task List
@@ -334,7 +334,7 @@ export default function TaskBoard() {
       </div>
 
       {/* Board Content */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-6 scrollbar-thin scrollbar-thumb-gray-200">
+      <div className="flex-1 overflow-x-auto overflow-y-hidden p-3 scrollbar-thin scrollbar-thumb-gray-200">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
@@ -354,6 +354,7 @@ export default function TaskBoard() {
                   key={col.id}
                   column={col}
                   tasks={tasks.filter((t) => t.taskStatusId === col.id)}
+                  refetch={refetch}
                 />
               ))}
           </div>
@@ -371,7 +372,7 @@ export default function TaskBoard() {
           >
             {activeTask ? (
               <div className="scale-105 rotate-3 transition-transform">
-                <TaskCard task={activeTask} />
+                <TaskCard task={activeTask} refetch={refetch} />
               </div>
             ) : null}
           </DragOverlay>
