@@ -31,6 +31,9 @@ export function useAddUpdateTeamPosition() {
       employeeId: string;
       teamId?: string;
       parentPositionId?: string | null;
+      seatTitle?: string;
+      isDeptHead?: boolean;
+      isManager?: boolean;
     }) => {
       const isUpdate = Boolean(data.teamPositionId);
       const config = {

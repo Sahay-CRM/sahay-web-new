@@ -9,6 +9,8 @@ interface OrgNodeData {
   onAddChild?: (id: string) => void;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onRemoveEmployee?: (employeeId: string) => void;
+  onSeparatePosition?: (id: string) => void;
 }
 
 interface AddSeatFormData {
@@ -16,7 +18,6 @@ interface AddSeatFormData {
   employeeId: string[];
   isDeptHead: boolean;
   isManager: boolean;
-  roles: { value: string }[];
   parentPositionId: string;
   createAnother: boolean;
 }
@@ -28,6 +29,7 @@ interface AddSeatModalProps {
   isLoading?: boolean;
   positions: TeamPosition[];
   companyId?: string;
+  initialParentId?: string;
 }
 
 interface TeamPosition {
@@ -38,6 +40,8 @@ interface TeamPosition {
   designationName?: string;
   departmentName?: string;
   employeeType?: string;
+  isDeptHead?: boolean;
+  isManager?: boolean;
 }
 
 interface EditSeatSheetProps {
@@ -56,6 +60,8 @@ interface CtxMenuProps {
   onAddChild: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onRemoveEmployee?: () => void;
+  onSeparatePosition?: () => void;
   onClose: () => void;
 }
 

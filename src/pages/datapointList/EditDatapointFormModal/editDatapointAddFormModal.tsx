@@ -1,4 +1,4 @@
-import { Controller, FormProvider, useForm } from "react-hook-form";
+import { Controller, FormProvider } from "react-hook-form";
 
 import ModalData from "@/components/shared/Modal/ModalData";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
@@ -20,8 +20,6 @@ export default function EditDatapointAddFormModal({
   modalClose,
   kpiId,
 }: UseEditDatapointFormModalProps) {
-  const methods = useForm();
-
   const {
     isPending,
     handleClose,
@@ -52,6 +50,9 @@ export default function EditDatapointAddFormModal({
     setIsEmployeeSearch,
     isChildData,
     isForceDelete,
+    setIsForceDelete,
+    methods,
+    isGoalValueChanged,
     // skipDaysOption,
   } = useEditDatapointFormModal({ modalClose, kpiId });
 
@@ -368,6 +369,46 @@ export default function EditDatapointAddFormModal({
         </div>
         <div className="mt-2">
           <span className=" w-full text-red-600 "> {isChildData}</span>
+        </div>
+      </ModalData>
+
+      <ModalData
+        isModalOpen={isForceDelete}
+        modalTitle="Confirm Historical Data Update"
+        modalClose={() => setIsForceDelete(false)}
+        containerClass="min-w-[400px]"
+        buttons={[
+          {
+            btnText: "Cancel",
+            buttonCss: "py-1.5 px-5 border",
+            btnClick: () => setIsForceDelete(false),
+          },
+          {
+            btnText: "Force Change",
+            buttonCss: "py-1.5 bg-red-700 hover:bg-red-700 text-white px-5",
+            btnClick: () => onSubmit(true),
+            isLoading: isPending,
+          },
+        ]}
+      >
+        <div className="p-4 space-y-4">
+          <p className="text-sm text-red-600 font-medium">
+            {isChildData ||
+              "Changing this value will affect historical data. Please confirm if you want to force this change."}
+          </p>
+          {isGoalValueChanged && (
+            <FormInputField
+              type="date"
+              label="Historical Update Start Date"
+              isMandatory
+              {...register("newValueUpdateDate", {
+                required: isForceDelete
+                  ? "Date is required for goal value changes"
+                  : false,
+              })}
+              error={errors?.newValueUpdateDate}
+            />
+          )}
         </div>
       </ModalData>
     </FormProvider>

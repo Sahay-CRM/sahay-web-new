@@ -5,6 +5,7 @@ import {
   useGetTeamPositions,
   useAddUpdateTeamPosition,
   useDeleteTeamPosition,
+  useTeamPositionUserAction,
 } from "@/features/api/companyTeam";
 import {
   ReactFlow,
@@ -33,8 +34,10 @@ interface OrgChartNodeData extends Record<string, unknown> {
   depth: number;
   hasChildren?: boolean;
   isExpanded?: boolean;
+  isDeptHead?: boolean;
+  isManager?: boolean;
   onToggleExpand?: (id: string) => void;
-  onAddChild?: () => void;
+  onAddChild?: (parentId?: string) => void;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
 }
@@ -49,6 +52,7 @@ export const OrganizationChartContent = () => {
   const { mutate: addUpdatePosition, isPending: isAdding } =
     useAddUpdateTeamPosition();
   const { mutate: deletePosition } = useDeleteTeamPosition();
+  const { removeUser } = useTeamPositionUserAction();
   const { fitView } = useReactFlow();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<
@@ -59,7 +63,9 @@ export const OrganizationChartContent = () => {
   const [direction, setDirection] = useState<"TB" | "LR">("TB");
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [initialParentId, setInitialParentId] = useState<string | undefined>();
   const [isEditOpen, setIsEditOpen] = useState(false);
+
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
   const [visibleLevel, setVisibleLevel] = useState(10); // Default to a high number to show all
   const [maxLevel, setMaxLevel] = useState(1);
@@ -107,7 +113,10 @@ export const OrganizationChartContent = () => {
         department: pos.departmentName || "General",
         employeeId: pos.employeeId || "",
         depth: depths[pos.positionId] || 1,
+        isDeptHead: pos.isDeptHead,
+        isManager: pos.isManager,
       },
+
       position: { x: 0, y: 0 },
     }));
 
@@ -182,16 +191,47 @@ export const OrganizationChartContent = () => {
     [deletePosition],
   );
 
+  const handleRemoveEmployee = useCallback(
+    (positionId: string, employeeId: string) => {
+      // eslint-disable-next-line no-alert
+      if (window.confirm("Remove this employee from the seat?")) {
+        removeUser.mutate({ positionId, employeeId });
+      }
+    },
+    [removeUser],
+  );
+
+  const handleSeparatePosition = useCallback((positionId: string) => {
+    console.log("Backend implementation needed for Separate Position:", {
+      action: "SEPARATE",
+      positionId,
+      expectedEndpoint: "/company/team/position/separate",
+      description:
+        "This action should remove the position and move its children up to the parent of this position.",
+    });
+    // eslint-disable-next-line no-alert
+    alert(
+      "Separate Position action triggered. Check console for backend implementation guidance.",
+    );
+  }, []);
+
   const handleAddSubmit = (data: AddSeatFormData) => {
     addUpdatePosition(
       {
+        teamPositionId: editingNodeId || undefined,
+        teamId: user?.companyId,
         employeeId: data.employeeId.join(","),
         parentPositionId: data.parentPositionId || null,
-        // Add any other fields if needed, like isManager if API supports it
+        seatTitle: data.seatTitle,
+        isDeptHead: data.isDeptHead,
+        isManager: data.isManager,
       },
+
       {
         onSuccess: () => {
           setIsAddOpen(false);
+          setIsEditOpen(false);
+          setEditingNodeId(null);
           setTimeout(() => fitView({ duration: 600 }), 300);
         },
       },
@@ -223,12 +263,19 @@ export const OrganizationChartContent = () => {
             hasChildren: children.length > 0,
             isExpanded,
             onToggleExpand: handleToggleExpand,
-            onAddChild: () => setIsAddOpen(true),
+            onAddChild: (parentId?: string) => {
+              setInitialParentId(parentId);
+              setIsAddOpen(true);
+            },
+
             onEdit: (id: string) => {
               setEditingNodeId(id);
               setIsEditOpen(true);
             },
             onDelete: handleDelete,
+            onRemoveEmployee: (empId: string) =>
+              handleRemoveEmployee(node.id, empId),
+            onSeparatePosition: (id: string) => handleSeparatePosition(id),
           },
         };
       });
@@ -239,6 +286,8 @@ export const OrganizationChartContent = () => {
     searchQuery,
     handleToggleExpand,
     handleDelete,
+    handleRemoveEmployee,
+    handleSeparatePosition,
     visibleLevel,
   ]);
 
@@ -340,11 +389,15 @@ export const OrganizationChartContent = () => {
       {/* Add Seat Modal */}
       <AddSeatModal
         isOpen={isAddOpen}
-        onClose={() => setIsAddOpen(false)}
+        onClose={() => {
+          setIsAddOpen(false);
+          setInitialParentId(undefined);
+        }}
         onSubmit={handleAddSubmit}
         isLoading={isAdding}
         positions={positionsRes?.data || []}
         companyId={user?.companyId}
+        initialParentId={initialParentId}
       />
 
       {/* Edit Seat Sheet (Right Sidebar) */}
@@ -364,13 +417,12 @@ export const OrganizationChartContent = () => {
           return {
             seatTitle: node.data.title,
             employeeId: node.data.employeeId ? [node.data.employeeId] : [],
-            roles: [{ value: "Lead and Manage" }],
             parentPositionId:
               (positionsRes?.data as TeamPosition[])?.find(
                 (p) => p.positionId === editingNodeId,
               )?.parentPositionId || "",
-            isDeptHead: false,
-            isManager: false,
+            isDeptHead: node.data.isDeptHead || false,
+            isManager: node.data.isManager || false,
             createAnother: false,
           };
         })()}

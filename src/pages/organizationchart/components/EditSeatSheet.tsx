@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
-import { Search, Maximize2, Trash2, Plus, Loader2 } from "lucide-react";
+import { useForm, Controller } from "react-hook-form";
+
+import { Search, Maximize2, Plus, Loader2 } from "lucide-react";
+
 import {
   Sheet,
   SheetContent,
@@ -45,7 +47,6 @@ export function EditSeatSheet({
       employeeId: [],
       isDeptHead: false,
       isManager: false,
-      roles: [{ value: "" }],
       parentPositionId: "",
     },
   });
@@ -55,11 +56,6 @@ export function EditSeatSheet({
       reset(initialData);
     }
   }, [initialData, reset]);
-
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "roles",
-  });
 
   const onFormSubmit = (data: AddSeatFormData) => {
     onSubmit(data);
@@ -132,46 +128,8 @@ export function EditSeatSheet({
               />
             </div>
 
-            {/* Roles Section */}
-            <div className="space-y-4">
-              <div>
-                <p className="text-[14px] font-bold text-slate-800">Roles</p>
-                <p className="text-[12px] text-slate-500 mt-1 leading-relaxed">
-                  The top roles and responsibilities written with as few words
-                  as possible. Together, they represent greater than 80% of the
-                  value this person brings in their role.
-                </p>
-              </div>
-
-              <div className="space-y-3.5">
-                {fields.map((field, index) => (
-                  <div key={field.id} className="flex items-center gap-3 group">
-                    <Input
-                      {...register(`roles.${index}.value` as const)}
-                      placeholder="Role for this position"
-                      className="h-11 bg-white border-slate-200 focus-visible:ring-primary/20 text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => remove(index)}
-                      className="p-2.5 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => append({ value: "" })}
-                className="text-primary text-[13px] font-bold flex items-center gap-2 hover:underline transition-all mt-2"
-              >
-                <Plus className="w-4 h-4" /> Add role
-              </button>
-            </div>
-
             {/* Supervisor Selection */}
+
             <div className="space-y-2.5">
               <Label className="text-[13px] font-bold text-slate-700">
                 Supervisor of seat

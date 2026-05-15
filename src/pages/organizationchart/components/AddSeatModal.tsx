@@ -1,13 +1,9 @@
-import { useState } from "react";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
-import {
-  Plus,
-  LayoutTemplate,
-  ChevronDown,
-  Trash2,
-  GripVertical,
-  Loader2,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+
+import { useForm, Controller } from "react-hook-form";
+
+import { Plus, LayoutTemplate, ChevronDown, Loader2 } from "lucide-react";
+
 import {
   Dialog,
   DialogContent,
@@ -27,6 +23,7 @@ export function AddSeatModal({
   isLoading,
   positions,
   companyId,
+  initialParentId,
 }: AddSeatModalProps) {
   const [empSearch, setEmpSearch] = useState("");
 
@@ -44,29 +41,34 @@ export function AddSeatModal({
     value: p.positionId,
   }));
 
-  const { handleSubmit, control, reset, register } = useForm<AddSeatFormData>({
-    defaultValues: {
-      seatTitle: "",
-      employeeId: [],
-      isDeptHead: false,
-      isManager: false,
-      roles: [{ value: "" }],
-      parentPositionId: "",
-      createAnother: false,
-    },
-  });
+  const { handleSubmit, control, reset, register, setValue } =
+    useForm<AddSeatFormData>({
+      defaultValues: {
+        seatTitle: "",
+        employeeId: [],
+        isDeptHead: false,
+        isManager: false,
+        parentPositionId: initialParentId || "",
+        createAnother: false,
+      },
+    });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "roles",
-  });
+  useEffect(() => {
+    if (isOpen) {
+      if (initialParentId) {
+        setValue("parentPositionId", initialParentId);
+      } else {
+        setValue("parentPositionId", "");
+      }
+    }
+  }, [initialParentId, isOpen, setValue]);
 
   const onFormSubmit = (data: AddSeatFormData) => {
     onSubmit(data);
     if (!data.createAnother) {
       onClose();
     } else {
-      reset({ ...data, seatTitle: "", employeeId: [], roles: [{ value: "" }] });
+      reset({ ...data, seatTitle: "", employeeId: [] });
     }
   };
 
@@ -166,49 +168,8 @@ export function AddSeatModal({
               </div>
             </div>
 
-            {/* Roles Section */}
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm font-bold text-slate-700">Roles</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  The top roles and responsibilities written with as few words
-                  as possible. Together, they represent greater than 80% of the
-                  value this person brings in their role.
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                {fields.map((field, index) => (
-                  <div key={field.id} className="flex items-center gap-3">
-                    <div className="p-1.5 cursor-grab text-slate-300">
-                      <GripVertical className="w-4 h-4" />
-                    </div>
-                    <Input
-                      {...register(`roles.${index}.value` as const)}
-                      placeholder="Role for this position"
-                      className="h-10 bg-white border-slate-200"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => remove(index)}
-                      className="p-2 text-slate-300 hover:text-red-500 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => append({ value: "" })}
-                className="text-primary text-sm font-bold flex items-center gap-1.5 hover:underline pl-9"
-              >
-                <Plus className="w-4 h-4" /> Add role
-              </button>
-            </div>
-
             {/* Supervisor Selection */}
+
             <div className="space-y-2">
               <Label className="text-xs font-bold text-slate-600">
                 Supervisor of seat
