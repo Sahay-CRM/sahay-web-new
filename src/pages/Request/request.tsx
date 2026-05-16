@@ -102,8 +102,8 @@ export default function Request() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
-        <div className="flex justify-between items-center">
+      <div className="w-full h-full px-2 sm:px-4 py-4 flex flex-col overflow-hidden">
+        <div className="flex justify-between items-center shrink-0">
           <h1 className="font-semibold capitalize text-xl text-black">
             My Ticket
           </h1>
@@ -152,8 +152,9 @@ export default function Request() {
           </div>
         </div>
 
-        <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
+        <div className="flex-1 bg-white overflow-hidden flex flex-col rounded-md shadow-sm mt-3 tb:mt-6 pt-2 tb:pt-4">
           <TableData
+            tableHeightClass="flex-1"
             tableData={reqData?.data.map((item, index) => ({
               ...item,
               srNo: (reqData.currentPage - 1) * reqData.pageSize + index + 1,

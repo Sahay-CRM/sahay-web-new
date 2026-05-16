@@ -128,21 +128,25 @@ export default function AddRepetitiveTask() {
       companyId={repetitiveTaskId ? resourceCompanyId : undefined}
       isLoading={repetitiveTaskId ? !taskDataById : false}
     >
-      <div className="w-full px-2 sm:px-4 py-4 overflow-x-auto">
-        <StepProgress
-          currentStep={currentStep}
-          stepNames={stepNames}
-          totalSteps={totalSteps}
-          back={back}
-          isFirstStep={isFirstStep}
-          next={next}
-          isLastStep={isLastStep}
-          isPending={isPending}
-          onFinish={onFinish}
-          isUpdate={!!repetitiveTaskId}
-        />
+      <div className="w-full h-full px-2 sm:px-4 py-4 flex flex-col overflow-hidden">
+        <div className="shrink-0">
+          <StepProgress
+            currentStep={currentStep}
+            stepNames={stepNames}
+            totalSteps={totalSteps}
+            back={back}
+            isFirstStep={isFirstStep}
+            next={next}
+            isLastStep={isLastStep}
+            isPending={isPending}
+            onFinish={onFinish}
+            isUpdate={!!repetitiveTaskId}
+          />
+        </div>
 
-        <div className="step-content w-full">{steps[currentStep - 1]}</div>
+        <div className="step-content w-full flex-1 overflow-hidden flex flex-col pt-4">
+          {steps[currentStep - 1]}
+        </div>
 
         {isModalOpen && (
           <AddRepetitiveTaskModal

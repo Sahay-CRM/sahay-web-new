@@ -312,8 +312,8 @@ export default function useAddEmployee() {
     const canToggleColumns = columnToggleOptions.length > 3;
 
     return (
-      <div>
-        <div className="mt-1 mb-4 flex items-start justify-between">
+      <div className="h-full flex flex-col overflow-hidden">
+        <div className="mt-1 mb-4 flex items-start justify-between shrink-0">
           <div className="flex items-center gap-2 mb-2">
             <SearchInput
               placeholder="Search..."
@@ -358,6 +358,7 @@ export default function useAddEmployee() {
               onCheckbox={() => true}
               isLoading={isLoading}
               showActionsColumn={false}
+              tableHeightClass="flex-1"
             />
           )}
         />
@@ -431,8 +432,8 @@ export default function useAddEmployee() {
     };
 
     return (
-      <div>
-        <div className="mt-1 mb-4 flex items-start justify-between">
+      <div className="h-full flex flex-col overflow-hidden">
+        <div className="mt-1 mb-4 flex items-start justify-between shrink-0">
           <div className="flex items-center gap-2 mb-2">
             <SearchInput
               placeholder="Search..."
@@ -485,6 +486,7 @@ export default function useAddEmployee() {
                 showActionsColumn={false}
                 onCheckbox={() => true}
                 multiSelect={false}
+                tableHeightClass="flex-1"
               />
             </>
           )}
@@ -532,8 +534,8 @@ export default function useAddEmployee() {
     const canToggleColumns = columnToggleOptions.length > 3;
 
     return (
-      <div>
-        <div className="mt-1 mb-4 flex items-start justify-between">
+      <div className="h-full flex flex-col overflow-hidden">
+        <div className="mt-1 mb-4 flex items-start justify-between shrink-0">
           <div className="flex items-center gap-2 mb-2">
             <SearchInput
               placeholder="Search..."
@@ -586,6 +588,7 @@ export default function useAddEmployee() {
               }}
               isLoading={isLoading}
               showActionsColumn={false}
+              tableHeightClass="flex-1"
             />
           )}
         />

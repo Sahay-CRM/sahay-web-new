@@ -73,13 +73,13 @@ export default function MeetingList() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-        <div className="flex mb-5 justify-between items-center">
+      <div className="w-full h-full px-2 sm:px-4 py-6 flex flex-col overflow-hidden">
+        <div className="flex mb-5 justify-between items-center shrink-0">
           <h1 className="font-semibold capitalize text-xl text-black">
             Employee List
           </h1>
         </div>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 shrink-0">
           <div>
             <SearchInput
               placeholder="Search..."
@@ -110,8 +110,9 @@ export default function MeetingList() {
           </div>
         </div>
 
-        <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
+        <div className="flex-1 bg-white overflow-hidden flex flex-col rounded-md shadow-sm mt-3 tb:mt-6 pt-2 tb:pt-4">
           <TableData
+            tableHeightClass="flex-1"
             key={employeeData?.currentPage}
             tableData={employeeData?.data.map((item, index) => ({
               ...item,

@@ -148,8 +148,8 @@ export default function useAddDataPoint() {
     const canToggleColumns = columnToggleOptions.length > 3;
 
     return (
-      <div>
-        <div className="mt-1 mb-4 flex items-center justify-between">
+      <div className="h-full flex flex-col overflow-hidden">
+        <div className="mt-1 mb-4 flex items-center justify-between shrink-0">
           {/* Search + Error Container */}
           <div className="flex items-center gap-2 mr-4">
             <SearchInput
@@ -213,6 +213,7 @@ export default function useAddDataPoint() {
               onCheckbox={() => true}
               showActionsColumn={false}
               isLoading={isLoading}
+              tableHeightClass="flex-1"
             />
           )}
         />

@@ -194,8 +194,8 @@ export default function Projects({
   };
 
   return (
-    <div>
-      <div className="flex gap-5 justify-between mb-5">
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="flex gap-5 justify-between mb-5 shrink-0">
         <div className="flex gap-5 items-center">
           {isTeamLeader && (
             <>
@@ -291,6 +291,7 @@ export default function Projects({
           );
         }}
         sortableColumns={["projectName", "projectDeadline"]}
+        tableHeightClass="flex-1"
       />
 
       {drawerOpen && (
