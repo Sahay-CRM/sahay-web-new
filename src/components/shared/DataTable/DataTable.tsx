@@ -121,6 +121,7 @@ interface TableProps<T extends Record<string, unknown>> {
     tooltipColumn?: string;
   }[];
   indexColumnWidth?: string;
+  tableHeightClass?: string;
 }
 
 const TableData = <T extends Record<string, unknown>>({
@@ -163,6 +164,7 @@ const TableData = <T extends Record<string, unknown>>({
   indexColumnWidth = "w-[80px]",
   dotsKey,
   dotsAnchorKey,
+  tableHeightClass,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   // Only show checkboxes if explicitly enabled with multiSelect OR if both selectedValue and handleChange are provided
@@ -285,8 +287,18 @@ const TableData = <T extends Record<string, unknown>>({
   }
 
   return (
-    <Card className="p-0 gap-0">
-      <div className="flex flex-grow h-[calc(100vh-350px)] flex-col overflow-hidden">
+    <Card
+      className={twMerge(
+        "p-0 gap-0",
+        tableHeightClass ? "flex flex-col flex-1 overflow-hidden" : "",
+      )}
+    >
+      <div
+        className={twMerge(
+          "flex flex-col overflow-auto",
+          tableHeightClass ?? "h-full",
+        )}
+      >
         <Table className="min-w-full h-full table-fixed">
           <TableHeader className="sticky top-0 z-10 bg-primary shadow-sm">
             <TableRow>

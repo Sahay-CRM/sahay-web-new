@@ -344,12 +344,10 @@ export default function CompanyProjectTabList() {
                 ),
               ).map(([businessFunction, functionProjects]) => (
                 <div key={businessFunction} className="space-y-6">
-                  <div className="flex items-center gap-4 py-2">
-                    <div className="flex-1 h-[1px] bg-slate-300"></div>
-                    <h2 className="text-lg font-semibold text-primary  whitespace-nowrap px-2">
+                  <div className="w-full bg-[#f0f7ff] border-y border-[#e0efff] py-1 px-6 mb-4 ">
+                    <h2 className="text-lg text-primary text-center">
                       {businessFunction}
                     </h2>
-                    <div className="flex-1 h-[1px] bg-slate-300"></div>
                   </div>
                   <div className="flex flex-wrap justify-center sm:justify-start gap-4 sm:gap-6 px-1">
                     {functionProjects.map((project) => (

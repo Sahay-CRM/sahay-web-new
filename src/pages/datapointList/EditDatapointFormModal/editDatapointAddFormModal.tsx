@@ -7,7 +7,7 @@ import useEditDatapointFormModal from "./useEditDatapointFormModal";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import { Label } from "@radix-ui/react-label";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
-import { formatIndianNumber } from "@/features/utils/app.utils";
+import { formatIndianNumberWithDecimal } from "@/features/utils/app.utils";
 
 interface UseEditDatapointFormModalProps {
   modalClose: () => void;
@@ -147,7 +147,15 @@ export default function EditDatapointAddFormModal({
               <FormSelect
                 label="Validation Type"
                 value={field.value}
-                onChange={field.onChange}
+                onChange={(val) => {
+                  field.onChange(val);
+                  if (watch("visualFrequencyTypes")?.length > 0) {
+                    setValue(
+                      "visualFrequencyAggregate",
+                      val === "BETWEEN" ? "average" : "sum",
+                    );
+                  }
+                }}
                 options={validationOptions}
                 error={errors.validationType}
                 className="rounded-md"
@@ -168,8 +176,11 @@ export default function EditDatapointAddFormModal({
                     value={field.value || []}
                     onChange={(value) => {
                       field.onChange(value);
-                      if (value?.length > 0 && validationType !== "YES_NO") {
-                        setValue("visualFrequencyAggregate", "sum");
+                      if (value?.length > 0) {
+                        setValue(
+                          "visualFrequencyAggregate",
+                          validationType === "BETWEEN" ? "average" : "sum",
+                        );
                       }
                     }}
                     options={getFilteredVisualFrequencyOptions()}
@@ -255,9 +266,11 @@ export default function EditDatapointAddFormModal({
                           //   field.onChange(formatted);
                           // }}
                           placeholder="Enter Goal Value 1"
-                          value={formatIndianNumber(field.value)}
+                          value={formatIndianNumberWithDecimal(field.value)}
                           onChange={(e) => {
-                            const raw = e.target.value.replace(/,/g, "");
+                            const raw = e.target.value
+                              .replace(/,/g, "")
+                              .replace(/[^0-9.]/g, "");
                             field.onChange(raw);
                           }}
                           error={fieldState.error}
@@ -284,9 +297,11 @@ export default function EditDatapointAddFormModal({
                             label="Goal Value 1"
                             isMandatory
                             placeholder="Enter Goal Value 1"
-                            value={formatIndianNumber(field.value)}
+                            value={formatIndianNumberWithDecimal(field.value)}
                             onChange={(e) => {
-                              const raw = e.target.value.replace(/,/g, "");
+                              const raw = e.target.value
+                                .replace(/,/g, "")
+                                .replace(/[^0-9.]/g, "");
                               field.onChange(raw);
                             }}
                             error={fieldState.error}
@@ -303,9 +318,11 @@ export default function EditDatapointAddFormModal({
                             label="Goal Value 2"
                             isMandatory
                             placeholder="Enter Goal Value 2"
-                            value={formatIndianNumber(field.value)}
+                            value={formatIndianNumberWithDecimal(field.value)}
                             onChange={(e) => {
-                              const raw = e.target.value.replace(/,/g, "");
+                              const raw = e.target.value
+                                .replace(/,/g, "")
+                                .replace(/[^0-9.]/g, "");
                               field.onChange(raw);
                             }}
                             error={fieldState.error}
@@ -339,11 +356,11 @@ export default function EditDatapointAddFormModal({
                         />
                       )}
                     />
-                    <FormInputField
+                    {/* <FormInputField
                       label="Unit"
                       placeholder="Enter Unit"
                       {...register(`unit`)}
-                    />
+                    /> */}
                   </div>
                 )}
               </div>

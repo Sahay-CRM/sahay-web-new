@@ -63,8 +63,9 @@ import {
 import { updateKPISequenceMutation } from "@/features/api/KpiList";
 import WarningDialog from "./WarningModal";
 import DownloadDateModal from "./DownloadDateModal";
-import useGetKpiChartData from "@/features/api/kpiDashboard/useGetKpiChartData";
 import { getUTCEndOfDay, getUTCStartOfDay } from "@/features/utils/app.utils";
+import Api from "@/features/utils/api.utils";
+import Urls from "@/features/utils/urls.utils";
 import { useSelector } from "react-redux";
 import { DateRange } from "react-day-picker";
 import {
@@ -632,7 +633,6 @@ export default function UpdatedKpiTable() {
   const [kpiD, setKpiD] = useState<KpiType>();
   const [pendingDownload, setPendingDownload] = useState(false);
   const [isDownloadDateModalOpen, setIsDownloadDateModalOpen] = useState(false);
-  const [exportRange, setExportRange] = useState<DateRange | undefined>();
   const [isExporting, setIsExporting] = useState(false);
 
   // Drag and drop sensors
@@ -882,23 +882,12 @@ export default function UpdatedKpiTable() {
     }
   }, [kpiStructure, selectedPeriod]);
 
-  const { kpiData, isLoading } = useKpiDashboard({
+  const { kpiData } = useKpiDashboard({
     selectedPeriod,
     selectedDate,
     isDataFilter: finalFilterValue,
   });
 
-  const { data: exportApiData, isFetching: isExportFetching } =
-    useGetKpiChartData({
-      filter: {
-        frequencyType: selectedPeriod,
-        startDate: exportRange?.from
-          ? getUTCStartOfDay(exportRange.from)
-          : null,
-        endDate: exportRange?.to ? getUTCEndOfDay(exportRange.to) : null,
-      },
-      enable: isExporting && !!exportRange?.from,
-    });
   const hasNoKpis = useMemo(() => {
     if (!kpiStructure?.data || !Array.isArray(kpiStructure.data)) return true;
     return kpiStructure.data.every((freq) => (freq.count ?? 0) === 0);
@@ -926,104 +915,127 @@ export default function UpdatedKpiTable() {
     );
   }, [filteredData]);
 
+  const getGroupedKpiRowsForFreq = useCallback(
+    (
+      coreParameterGroups: CoreParameterGroup[],
+      search: string,
+      employees: string[],
+      departments: string[],
+      focusFilter: string,
+    ) => {
+      const lowerSearch = search.toLowerCase();
+
+      const getSectionGroups = (isFocus: boolean) => {
+        const groupsMap = new Map<
+          string,
+          {
+            coreParameter: {
+              coreParameterId: string;
+              coreParameterName: string;
+            };
+            kpis: { kpi: Kpi }[];
+          }
+        >();
+
+        coreParameterGroups.forEach((coreParam) => {
+          const groupId = coreParam.coreParameterId ?? "UNGROUPED";
+          const groupName = coreParam.coreParameterName ?? "";
+
+          coreParam.kpis?.forEach((kpi: Kpi) => {
+            if (!!kpi.isFocus !== isFocus) return;
+
+            const coreName = groupName.toLowerCase();
+            const tag = kpi.tag?.toLowerCase() || "";
+            const name = kpi.kpiName?.toLowerCase() || "";
+
+            const matchesSearch =
+              coreName.includes(lowerSearch) ||
+              tag.includes(lowerSearch) ||
+              name.includes(lowerSearch);
+
+            const matchesEmployee =
+              employees.length === 0 ||
+              (kpi.employeeId && employees.includes(kpi.employeeId));
+
+            const matchesDepartment =
+              departments.length === 0 ||
+              departments.includes(kpi.departmentId || "unknown");
+
+            if (matchesSearch && matchesEmployee && matchesDepartment) {
+              if (!groupsMap.has(groupId)) {
+                groupsMap.set(groupId, {
+                  coreParameter: {
+                    coreParameterId: groupId,
+                    coreParameterName: groupName,
+                  },
+                  kpis: [],
+                });
+              }
+              groupsMap.get(groupId)!.kpis.push({ kpi });
+            }
+          });
+        });
+
+        return Array.from(groupsMap.values()).filter(
+          (group) => group.kpis.length > 0,
+        );
+      };
+
+      if (focusFilter === "focus") {
+        const focusGroups = getSectionGroups(true);
+        return focusGroups.map((g) => ({ ...g, sectionPrefix: "focus" }));
+      } else if (focusFilter === "other") {
+        const otherGroups = getSectionGroups(false);
+        return otherGroups.map((g) => ({ ...g, sectionPrefix: "other" }));
+      } else {
+        const allGroups = getSectionGroups(true).concat(
+          getSectionGroups(false),
+        );
+        const mergedGroupsMap = new Map<
+          string,
+          {
+            coreParameter: {
+              coreParameterId: string;
+              coreParameterName: string;
+            };
+            kpis: { kpi: Kpi }[];
+          }
+        >();
+        allGroups.forEach((g) => {
+          const id = g.coreParameter.coreParameterId;
+          const existing = mergedGroupsMap.get(id);
+          if (!existing) {
+            mergedGroupsMap.set(id, { ...g, kpis: [...g.kpis] });
+          } else {
+            existing.kpis.push(...g.kpis);
+          }
+        });
+        return Array.from(mergedGroupsMap.values()).map((g) => ({
+          ...g,
+          sectionPrefix: "all",
+        }));
+      }
+    },
+    [],
+  );
+
   const groupedKpiRows = useMemo(() => {
     if (!filteredData.length || !filteredData[0].kpis) return [];
 
-    const search = String(searchTerm.search ?? "").toLowerCase();
-
-    const getSectionGroups = (isFocus: boolean) => {
-      const groupsMap = new Map<
-        string,
-        {
-          coreParameter: {
-            coreParameterId: string;
-            coreParameterName: string;
-          };
-          kpis: { kpi: Kpi }[];
-        }
-      >();
-
-      (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
-        const groupId = coreParam.coreParameterId ?? "UNGROUPED";
-        const groupName = coreParam.coreParameterName ?? "";
-
-        coreParam.kpis?.forEach((kpi: Kpi) => {
-          if (!!kpi.isFocus !== isFocus) return;
-
-          const coreName = groupName.toLowerCase();
-          const tag = kpi.tag?.toLowerCase() || "";
-          const name = kpi.kpiName?.toLowerCase() || "";
-
-          const matchesSearch =
-            coreName.includes(search) ||
-            tag.includes(search) ||
-            name.includes(search);
-
-          // Filter by employee
-          const matchesEmployee =
-            selectedEmployees.length === 0 ||
-            (kpi.employeeId && selectedEmployees.includes(kpi.employeeId));
-
-          // Filter by department
-          const matchesDepartment =
-            selectedDepartments.length === 0 ||
-            selectedDepartments.includes(kpi.departmentId || "unknown");
-
-          if (matchesSearch && matchesEmployee && matchesDepartment) {
-            if (!groupsMap.has(groupId)) {
-              groupsMap.set(groupId, {
-                coreParameter: {
-                  coreParameterId: groupId,
-                  coreParameterName: groupName,
-                },
-                kpis: [],
-              });
-            }
-            groupsMap.get(groupId)!.kpis.push({ kpi });
-          }
-        });
-      });
-
-      return Array.from(groupsMap.values()).filter(
-        (group) => group.kpis.length > 0,
-      );
-    };
-
-    if (focusFilter === "focus") {
-      const focusGroups = getSectionGroups(true);
-      return focusGroups.map((g) => ({ ...g, sectionPrefix: "focus" }));
-    } else if (focusFilter === "other") {
-      const otherGroups = getSectionGroups(false);
-      return otherGroups.map((g) => ({ ...g, sectionPrefix: "other" }));
-    } else {
-      const allGroups = getSectionGroups(true).concat(getSectionGroups(false));
-      const mergedGroupsMap = new Map<
-        string,
-        {
-          coreParameter: { coreParameterId: string; coreParameterName: string };
-          kpis: { kpi: Kpi }[];
-        }
-      >();
-      allGroups.forEach((g) => {
-        const id = g.coreParameter.coreParameterId;
-        const existing = mergedGroupsMap.get(id);
-        if (!existing) {
-          mergedGroupsMap.set(id, { ...g, kpis: [...g.kpis] });
-        } else {
-          existing.kpis.push(...g.kpis);
-        }
-      });
-      return Array.from(mergedGroupsMap.values()).map((g) => ({
-        ...g,
-        sectionPrefix: "all",
-      }));
-    }
+    return getGroupedKpiRowsForFreq(
+      filteredData[0].kpis as CoreParameterGroup[],
+      searchTerm.search ?? "",
+      selectedEmployees,
+      selectedDepartments,
+      focusFilter,
+    );
   }, [
     filteredData,
-    searchTerm,
-    focusFilter,
+    searchTerm.search,
     selectedEmployees,
     selectedDepartments,
+    focusFilter,
+    getGroupedKpiRowsForFreq,
   ]);
 
   useEffect(() => {
@@ -1341,197 +1353,202 @@ export default function UpdatedKpiTable() {
   };
 
   const handleDownloadExcel = useCallback(
-    (apiCells?: KpiDataCell[], apiHeaders?: KpiHeader[]) => {
-      const activeRows = groupedKpiRows;
-      const activeHeaders = apiHeaders || headers;
-      const activeData = apiCells || (kpiData?.data as KpiDataCell[][])?.flat();
+    async (range: DateRange) => {
+      if (!kpiStructure?.data || !Array.isArray(kpiStructure.data)) return;
 
-      if (!activeRows || !activeHeaders || !activeData) return;
+      setIsExporting(true); // Reuse existing loading state if any
 
-      const workbook = XLSX.utils.book_new();
-      const worksheetData: (string | number)[][] = [];
-      const cellComments: { [key: string]: string } = {};
-      let currentRow = 0;
+      try {
+        const workbook = XLSX.utils.book_new();
+        const dateStr = format(range.from!, "yyyy-MM-dd");
 
-      // Group API cells by kpiId for easy lookup
-      const dataMap: Record<string, KpiDataCell[]> = {};
-      activeData.forEach((cell) => {
-        if (cell && cell.kpiId) {
-          if (!dataMap[cell.kpiId]) dataMap[cell.kpiId] = [];
-          dataMap[cell.kpiId].push(cell);
-        }
-      });
+        // Frequencies to export (all that have KPIs)
+        const activeFrequencies = kpiStructure.data.filter(
+          (f) => (f.count ?? 0) > 0,
+        );
 
-      // 1. Prepare Column Headers
-      const columnHeaders = [
-        "Who",
-        "KPI",
-        "Tag",
-        "Goal",
-        "Core Parameter",
-        ...activeHeaders.map((h) => `${h.label}${h.year ? ` ${h.year}` : ""}`),
-      ];
-      worksheetData.push(columnHeaders);
-      currentRow++;
+        for (const freqItem of activeFrequencies) {
+          const freq = freqItem.frequencyType;
 
-      // 2. Iterate through groups and KPIs
-      activeRows.forEach((group) => {
-        const coreParamName = group.coreParameter.coreParameterName;
+          // 1. Fetch cell data for this frequency
+          const response = await Api.post<{ data: KpiDataCell[][] }>({
+            url: Urls.kpiChartDataGet(),
+            data: {
+              frequencyType: freq,
+              startDate: getUTCStartOfDay(range.from!),
+              endDate: range.to ? getUTCEndOfDay(range.to) : null,
+            },
+          });
 
-        group.kpis.forEach(({ kpi }) => {
-          // Find data for this KPI
-          const kpiCells = dataMap[kpi.kpiId] || [];
+          const apiData = response.data.data;
+          const apiCells = apiData.flat();
 
-          // Prepare Row Data
-          const rowData = [
-            kpi.employeeName || (kpi.isMurgeKpi ? "GK" : ""),
-            kpi.kpiName,
-            kpi.tag || "",
-            // Goal Value logic matching SortableKpiRow
-            kpi.validationType === "YES_NO" ||
-            kpi.kpiName?.toLowerCase().includes("yes_no")
-              ? selectedPeriod === "DAILY"
-                ? Number(kpi.value1) === 1
-                  ? "Yes"
-                  : Number(kpi.value1) === 2
-                    ? "No"
-                    : Number(kpi.goalValue) > 1
-                      ? formatToThreeDecimals(kpi.value1)
-                      : "No"
-                : `${formatToThreeDecimals(kpi.goalValue)} - ${Number(kpi.value1) === 1 ? "Yes" : "No"}`
-              : getFormattedValue(
-                  kpi.validationType,
-                  String(kpi?.value1),
-                  kpi?.value2,
-                  kpi?.unit,
-                ),
-            coreParamName, // New First Column
-          ];
+          // 2. Generate Headers
+          const uniqueDatesMap: Record<string, KpiDataCell> = {};
+          apiCells.forEach((c) => {
+            const key = `${c.startDate}_${c.endDate}`;
+            if (!uniqueDatesMap[key]) uniqueDatesMap[key] = c;
+          });
+          const sortedDateCells = Object.values(uniqueDatesMap).sort(
+            (a, b) =>
+              new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+          );
+          const activeHeaders = getKpiHeadersFromData([sortedDateCells], freq);
 
-          // Add Date values and capture comments
-          activeHeaders.forEach((h, colIdx) => {
-            const cell = kpiCells.find(
-              (c) =>
-                c.startDate &&
-                (h.data as KpiDataCell).startDate &&
-                new Date(c.startDate).getTime() ===
-                  new Date((h.data as KpiDataCell).startDate).getTime(),
-            );
+          // 3. Compute Grouped Rows for this frequency
+          const activeRows = getGroupedKpiRowsForFreq(
+            freqItem.kpis as CoreParameterGroup[],
+            searchTerm.search ?? "",
+            selectedEmployees,
+            selectedDepartments,
+            focusFilter,
+          );
 
-            const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
-            const inputVal = inputValues[key] ?? cell?.data?.toString() ?? "";
-            const inputnote = tempValues[key]?.comment ?? cell?.note ?? "";
+          if (!activeRows.length || !activeHeaders.length) continue;
 
-            // If YES_NO, format as Yes/No
-            if (kpi.validationType === "YES_NO") {
-              rowData.push(
-                inputVal === "1" ? "Yes" : inputVal === "2" ? "No" : "-",
-              );
-            } else {
-              rowData.push(inputVal || "-");
-            }
+          // 4. Prepare Worksheet Data
+          const worksheetData: (string | number)[][] = [];
+          const cellComments: { [key: string]: string } = {};
+          let currentRow = 0;
 
-            // Capture comment
-            if (inputnote && inputnote.trim() !== "" && inputnote !== "0") {
-              const cellAddress = XLSX.utils.encode_cell({
-                r: currentRow,
-                c: 5 + colIdx, // Offset by 5 (Core, Who, KPI, Tag, Goal)
-              });
-              cellComments[cellAddress] = inputnote;
+          const dataMap: Record<string, KpiDataCell[]> = {};
+          apiCells.forEach((cell) => {
+            if (cell && cell.kpiId) {
+              if (!dataMap[cell.kpiId]) dataMap[cell.kpiId] = [];
+              dataMap[cell.kpiId].push(cell);
             }
           });
 
-          worksheetData.push(rowData);
+          // Headers
+          const columnHeaders = [
+            "Who",
+            "KPI",
+            "Tag",
+            "Goal",
+            "Core Parameter",
+            ...activeHeaders.map(
+              (h) => `${h.label}${h.year ? ` ${h.year}` : ""}`,
+            ),
+          ];
+          worksheetData.push(columnHeaders);
           currentRow++;
-        });
-      });
 
-      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+          // Data Rows
+          activeRows.forEach((group) => {
+            const coreParamName = group.coreParameter.coreParameterName;
 
-      Object.keys(cellComments).forEach((address) => {
-        if (!worksheet[address]) {
-          worksheet[address] = { v: "" };
+            group.kpis.forEach(({ kpi }) => {
+              const kpiCells = dataMap[kpi.kpiId] || [];
+              const rowData = [
+                kpi.employeeName || (kpi.isMurgeKpi ? "GK" : ""),
+                kpi.kpiName,
+                kpi.tag || "",
+                kpi.validationType === "YES_NO" ||
+                kpi.kpiName?.toLowerCase().includes("yes_no")
+                  ? freq === "DAILY"
+                    ? Number(kpi.value1) === 1
+                      ? "Yes"
+                      : Number(kpi.value1) === 2
+                        ? "No"
+                        : Number(kpi.goalValue) > 1
+                          ? formatToThreeDecimals(kpi.value1)
+                          : "No"
+                    : `${formatToThreeDecimals(kpi.goalValue)} - ${Number(kpi.value1) === 1 ? "Yes" : "No"}`
+                  : getFormattedValue(
+                      kpi.validationType,
+                      String(kpi?.value1),
+                      kpi?.value2,
+                      kpi?.unit,
+                    ),
+                coreParamName,
+              ];
+
+              activeHeaders.forEach((h, colIdx) => {
+                const cell = kpiCells.find(
+                  (c) =>
+                    c.startDate &&
+                    (h.data as KpiDataCell).startDate &&
+                    new Date(c.startDate).getTime() ===
+                      new Date((h.data as KpiDataCell).startDate).getTime(),
+                );
+
+                const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
+                // Only use inputValues/tempValues for the currently selected period
+                const inputVal =
+                  freq === selectedPeriod
+                    ? (inputValues[key] ?? cell?.data?.toString() ?? "")
+                    : (cell?.data?.toString() ?? "");
+                const inputnote =
+                  freq === selectedPeriod
+                    ? (tempValues[key]?.comment ?? cell?.note ?? "")
+                    : (cell?.note ?? "");
+
+                if (kpi.validationType === "YES_NO") {
+                  rowData.push(
+                    inputVal === "1" ? "Yes" : inputVal === "2" ? "No" : "-",
+                  );
+                } else {
+                  rowData.push(inputVal || "-");
+                }
+
+                if (inputnote && inputnote.trim() !== "" && inputnote !== "0") {
+                  const cellAddress = XLSX.utils.encode_cell({
+                    r: currentRow,
+                    c: 5 + colIdx,
+                  });
+                  cellComments[cellAddress] = inputnote;
+                }
+              });
+
+              worksheetData.push(rowData);
+              currentRow++;
+            });
+          });
+
+          const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+          Object.keys(cellComments).forEach((address) => {
+            if (!worksheet[address]) worksheet[address] = { v: "" };
+            const commentArray: XLSX.Comment[] & { hidden?: boolean } = [
+              { t: cellComments[address], a: "" },
+            ];
+            commentArray.hidden = true;
+            worksheet[address].c = commentArray;
+          });
+
+          // Name the sheet by frequency (Title Cased)
+          const sheetName =
+            freq.charAt(0) + freq.slice(1).toLowerCase().replace("_", "-");
+          XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
         }
-        const commentArray: XLSX.Comment[] & { hidden?: boolean } = [
-          { t: cellComments[address], a: "" },
-        ];
-        commentArray.hidden = true;
-        worksheet[address].c = commentArray;
-      });
 
-      // Optional: Add some basic styling or column widths if needed
-      // worksheet['!cols'] = [{ wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 15 }];
-
-      XLSX.utils.book_append_sheet(workbook, worksheet, "KPI Dashboard");
-
-      // Generate filename based on period and date
-      const dateStr = selectedDate
-        ? format(selectedDate, "yyyy-MM-dd")
-        : format(new Date(), "yyyy-MM-dd");
-      const filename = `KPI_Dashboard_${selectedPeriod}_${dateStr}.xlsx`;
-
-      XLSX.writeFile(workbook, filename);
+        const filename = `KPI_Dashboard_All_${dateStr}.xlsx`;
+        XLSX.writeFile(workbook, filename);
+      } catch (error) {
+        console.error("Export failed", error);
+      } finally {
+        setIsExporting(false);
+      }
     },
     [
-      groupedKpiRows,
-      headers,
-      kpiData,
+      kpiStructure,
+      searchTerm.search,
+      selectedEmployees,
+      selectedDepartments,
+      focusFilter,
       selectedPeriod,
-      selectedDate,
       inputValues,
       tempValues,
+      getGroupedKpiRowsForFreq,
+      getFormattedValue,
     ],
   );
 
-  useEffect(() => {
-    // Only proceed when export data is ready
-    if (
-      isExporting &&
-      exportApiData?.data &&
-      Array.isArray(exportApiData.data) &&
-      !isExportFetching &&
-      !isLoading
-    ) {
-      const apiCells = exportApiData.data.flat() as KpiDataCell[];
-
-      // Generate Headers for the export data
-      const uniqueDatesMap: Record<string, KpiDataCell> = {};
-      apiCells.forEach((c) => {
-        const key = `${c.startDate}_${c.endDate}`;
-        if (!uniqueDatesMap[key]) uniqueDatesMap[key] = c;
-      });
-
-      const sortedDateCells = Object.values(uniqueDatesMap).sort(
-        (a, b) =>
-          new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
-      );
-
-      const exportHeaders = getKpiHeadersFromData(
-        [sortedDateCells],
-        selectedPeriod,
-      );
-
-      handleDownloadExcel(apiCells, exportHeaders);
-
-      // Reset export state
-      setIsExporting(false);
-      setExportRange(undefined);
-    }
-  }, [
-    exportApiData,
-    isExporting,
-    isExportFetching,
-    handleDownloadExcel,
-    selectedPeriod,
-    isLoading,
-  ]);
-
-  const handleDownloadDateConfirm = (range: DateRange | undefined) => {
-    setIsDownloadDateModalOpen(false);
+  const handleDownloadDateConfirm = async (range: DateRange | undefined) => {
     if (range?.from) {
-      // Set the export range and trigger the export API
-      setExportRange(range);
-      setIsExporting(true);
+      await handleDownloadExcel(range);
+      setIsDownloadDateModalOpen(false);
+    } else {
+      setIsDownloadDateModalOpen(false);
     }
   };
 
@@ -2031,7 +2048,7 @@ export default function UpdatedKpiTable() {
                                 colSpan={headers.length}
                                 className="p-2 border text-black font-bold"
                               >
-                                {group.coreParameter.coreParameterName}
+                                {/* {group.coreParameter.coreParameterName} */}
                               </td>
                             </tr>
                             {group.kpis.map(({ kpi }) => {
@@ -2641,6 +2658,7 @@ export default function UpdatedKpiTable() {
         onClose={() => setIsDownloadDateModalOpen(false)}
         onConfirm={handleDownloadDateConfirm}
         currentDate={selectedDate}
+        isLoading={isExporting}
         defaultRange={(() => {
           if (!headers || headers.length === 0) return undefined;
           const dates = headers

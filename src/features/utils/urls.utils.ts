@@ -135,6 +135,7 @@ const Urls = {
   deleteDatapointForce: (id: string) =>
     `${baseUrl}/company/kpi/delete-force/${id}`, // added
 
+  duplicateCompanyDatapoint: () => `${baseUrl}/company/kpi/duplicate`,
   //CoreParameter
   getCoreParameter: () => `${baseUrl}/core-param/get`,
 

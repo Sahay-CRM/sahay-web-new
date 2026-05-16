@@ -24,7 +24,7 @@ import {
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { formatIndianNumber } from "@/features/utils/app.utils";
+import { formatIndianNumberWithDecimal } from "@/features/utils/app.utils";
 import { Button } from "@/components/ui/button";
 // import { useGetProduct } from "@/features/api/Product";
 
@@ -270,8 +270,7 @@ export default function useAddDataPoint() {
     const shouldShowVisualFrequency = selectedFrequency !== "YEARLY";
 
     // Check if sum/ave field should be shown
-    const shouldShowSumAveField =
-      validationType !== "YES_NO" && visualFrequencyTypes?.length > 0;
+    const shouldShowSumAveField = visualFrequencyTypes?.length > 0;
 
     const validationOptions = [
       { value: "EQUAL_TO", label: "= Equal to" },
@@ -295,12 +294,11 @@ export default function useAddDataPoint() {
     ];
 
     useEffect(() => {
-      if (
-        validationType !== "YES_NO" &&
-        visualFrequencyTypes?.length > 0 &&
-        !visualFrequencyAggregate
-      ) {
-        setValue("visualFrequencyAggregate", "sum");
+      if (visualFrequencyTypes?.length > 0 && !visualFrequencyAggregate) {
+        setValue(
+          "visualFrequencyAggregate",
+          validationType === "BETWEEN" ? "average" : "sum",
+        );
       }
     }, [validationType, visualFrequencyTypes, visualFrequencyAggregate]);
 
@@ -361,7 +359,15 @@ export default function useAddDataPoint() {
                   label="Validation Type"
                   triggerClassName="py-4"
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={(val) => {
+                    field.onChange(val);
+                    if (visualFrequencyTypes?.length > 0) {
+                      setValue(
+                        "visualFrequencyAggregate",
+                        val === "BETWEEN" ? "average" : "sum",
+                      );
+                    }
+                  }}
                   options={validationOptions}
                   error={errors.validationType}
                   className="rounded-md"
@@ -410,9 +416,11 @@ export default function useAddDataPoint() {
                       label="Goal Value 1"
                       placeholder="Enter Goal Value 1"
                       isMandatory
-                      value={formatIndianNumber(field.value)}
+                      value={formatIndianNumberWithDecimal(field.value)}
                       onChange={(e) => {
-                        const raw = e.target.value.replace(/,/g, "");
+                        const raw = e.target.value
+                          .replace(/,/g, "")
+                          .replace(/[^0-9.]/g, "");
                         field.onChange(raw);
                       }}
                       disabled={isGoalValueDisabled}
@@ -432,9 +440,11 @@ export default function useAddDataPoint() {
                         label="Goal Value 2"
                         placeholder="Enter Goal Value 2"
                         isMandatory
-                        value={formatIndianNumber(field.value)}
+                        value={formatIndianNumberWithDecimal(field.value)}
                         onChange={(e) => {
-                          const raw = e.target.value.replace(/,/g, "");
+                          const raw = e.target.value
+                            .replace(/,/g, "")
+                            .replace(/[^0-9.]/g, "");
                           field.onChange(raw);
                         }}
                         disabled={isGoalValueDisabled}
@@ -461,8 +471,11 @@ export default function useAddDataPoint() {
                       value={field.value || []}
                       onChange={(value) => {
                         field.onChange(value);
-                        if (value?.length > 0 && validationType !== "YES_NO") {
-                          setValue("visualFrequencyAggregate", "sum");
+                        if (value?.length > 0) {
+                          setValue(
+                            "visualFrequencyAggregate",
+                            validationType === "BETWEEN" ? "average" : "sum",
+                          );
                         }
                       }}
                       options={getFilteredVisualFrequencyOptions()}

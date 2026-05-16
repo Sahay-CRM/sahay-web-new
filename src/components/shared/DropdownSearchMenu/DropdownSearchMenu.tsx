@@ -150,7 +150,7 @@ const DropdownSearchMenu = ({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        className="w-56"
+        className="w-56 max-h-[400px] overflow-y-auto"
         align={iconOnly || responsive ? "end" : "start"}
       >
         {multiSelect && options && options.length > 0 && (

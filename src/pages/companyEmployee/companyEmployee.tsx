@@ -20,6 +20,7 @@ import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
 import ConfirmationDeleteModal from "./confirmEmployeDeleteModal";
+import { formatEmployeeType } from "@/features/utils/app.utils";
 
 export default function CompanyDesignation() {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -71,6 +72,8 @@ export default function CompanyDesignation() {
     },
     { key: "employeeMobile", label: "Employee Mobile", visible: true },
     { key: "designationName", label: "Designation", visible: true },
+    // { key: "createdByName", label: "Created By", visible: true },
+    // { key: "reportingManager", label: "Reporting Manager", visible: true },
   ]);
 
   // Filter visible columns
@@ -101,8 +104,8 @@ export default function CompanyDesignation() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-        <div className="flex mb-5 justify-between items-center">
+      <div className="w-full h-full flex flex-col px-2 sm:px-4 py-6 overflow-hidden">
+        <div className="flex mb-5 justify-between items-center shrink-0">
           <h1 className="font-semibold capitalize text-xl text-black">
             Employee List
           </h1>
@@ -114,7 +117,7 @@ export default function CompanyDesignation() {
             )}
           </div>
         </div>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 shrink-0">
           <div>
             <SearchInput
               placeholder="Search..."
@@ -146,15 +149,17 @@ export default function CompanyDesignation() {
           </div>
         </div>
 
-        <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
+        <div className="flex-1 bg-white overflow-hidden flex flex-col rounded-md shadow-sm mt-3 tb:mt-6 pt-2 tb:pt-4">
           <TableData
+            tableHeightClass="flex-1"
             tableData={employeeData?.data.map((item, index) => ({
               ...item,
               srNo:
                 (employeeData.currentPage - 1) * employeeData.pageSize +
                 index +
                 1,
-              designationName: item.designationName || item.employeeType,
+              designationName:
+                item.designationName || formatEmployeeType(item.employeeType),
             }))}
             columns={visibleColumns}
             primaryKey="employeeId"

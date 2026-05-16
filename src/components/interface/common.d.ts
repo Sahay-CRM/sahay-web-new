@@ -31,6 +31,7 @@ interface DesignationData {
   departmentName: string;
   companyName: string;
   isParentDesignation?: boolean;
+  isOwner?: boolean;
 }
 // kk
 interface DesignationAddFormProps {
@@ -461,6 +462,7 @@ interface DesignationDataProps {
   designationId: string;
   designationName: string;
   departmentName: string;
+  isOwner?: boolean;
 }
 
 interface ConsultantDataProps {
@@ -971,6 +973,7 @@ interface KPIFormData {
   coreParameterId?: string;
   hasData?: boolean;
   employeeName?: string;
+  employeeFullName?: string;
   visualFrequencyAggregate: string | null;
   ioKPIId?: string;
   isDelete?: boolean;

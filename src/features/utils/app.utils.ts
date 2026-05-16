@@ -21,6 +21,12 @@ export function capitalizeFirstLetter(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
+export function formatEmployeeType(type: string): string {
+  if (!type) return "";
+  if (type === "SAHAYTEAMMATE") return "SAHAY TeamMate";
+  return capitalizeFirstLetter(type);
+}
+
 export function formatFrequencyType(value: string) {
   if (!value) return value;
 
@@ -149,6 +155,27 @@ export function formatIndianNumber(value: string | number) {
   const num = value.toString().replace(/[^0-9]/g, "");
   if (!num) return "";
   return Number(num).toLocaleString("en-IN");
+}
+
+export function formatIndianNumberWithDecimal(value: string | number) {
+  if (value === undefined || value === null || value === "") return "";
+
+  const str = value
+    .toString()
+    .replace(/,/g, "")
+    .replace(/[^0-9.]/g, "");
+  const parts = str.split(".");
+  const integerPart = parts[0];
+  const decimalPart = parts.length > 1 ? parts.slice(1).join("") : null;
+
+  const formattedInteger =
+    integerPart !== "" ? Number(integerPart).toLocaleString("en-IN") : "";
+
+  if (decimalPart !== null) {
+    return formattedInteger + "." + decimalPart;
+  }
+
+  return formattedInteger;
 }
 
 export function handleIndianNumberInput(

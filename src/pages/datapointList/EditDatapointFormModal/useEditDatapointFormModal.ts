@@ -104,53 +104,48 @@ export default function useEditDatapointFormModal({
   }, [datapointApiData, setValue]);
 
   const onSubmit = (isForceChange?: boolean) => {
-    handleSubmit(
-      (data) => {
-        const visualFrequencyTypesStr = Array.isArray(data.visualFrequencyTypes)
-          ? data.visualFrequencyTypes.join(",")
-          : data.visualFrequencyTypes;
-        const payload = {
-          KPIMasterId: data.KPIMasterId,
-          kpiId: data.kpiId,
-          coreParameterId: data.coreParameterId,
-          employeeId: data.employeeId,
-          tag: data.tag,
-          unit: data.unit,
-          validationType: data.validationType,
-          value1: data.value1,
-          value2: data.value2,
-          frequencyType: data.frequencyType,
-          visualFrequencyTypes: visualFrequencyTypesStr,
-          visualFrequencyAggregate: data.visualFrequencyAggregate,
-          isForceChange: isForceChange,
-          newValueUpdateDate: data.newValueUpdateDate,
-        };
-        addDatapoint(payload, {
-          onSuccess: () => {
-            handleClose();
-            setIsForceDelete(false);
-          },
-          onError: (error: Error) => {
-            const axiosError = error as AxiosError<{
-              message?: string;
-              status: number;
-            }>;
+    handleSubmit((data) => {
+      const visualFrequencyTypesStr = Array.isArray(data.visualFrequencyTypes)
+        ? data.visualFrequencyTypes.join(",")
+        : data.visualFrequencyTypes;
+      const payload = {
+        KPIMasterId: data.KPIMasterId,
+        kpiId: data.kpiId,
+        coreParameterId: data.coreParameterId,
+        employeeId: data.employeeId,
+        tag: data.tag,
+        unit: data.unit,
+        validationType: data.validationType,
+        value1: data.value1,
+        value2: data.value2,
+        frequencyType: data.frequencyType,
+        visualFrequencyTypes: visualFrequencyTypesStr,
+        visualFrequencyAggregate: data.visualFrequencyAggregate,
+        isForceChange: isForceChange,
+        newValueUpdateDate: data.newValueUpdateDate,
+      };
+      addDatapoint(payload, {
+        onSuccess: () => {
+          handleClose();
+          setIsForceDelete(false);
+        },
+        onError: (error: Error) => {
+          const axiosError = error as AxiosError<{
+            message?: string;
+            status: number;
+          }>;
 
-            if (axiosError.response?.data?.status === 417) {
-              setIsChildData(axiosError.response?.data?.message);
-              setIsForceDelete(true);
-            } else if (axiosError.response?.data.status !== 417) {
-              toast.error(
-                `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
-              );
-            }
-          },
-        });
-      },
-      (errors) => {
-        console.log("Validation Errors:", errors);
-      },
-    )();
+          if (axiosError.response?.data?.status === 417) {
+            setIsChildData(axiosError.response?.data?.message);
+            setIsForceDelete(true);
+          } else if (axiosError.response?.data.status !== 417) {
+            toast.error(
+              `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+            );
+          }
+        },
+      });
+    })();
   };
 
   const handleClose = () => {
@@ -209,8 +204,7 @@ export default function useEditDatapointFormModal({
   const shouldShowVisualFrequency = selectedFrequency !== "YEARLY";
 
   // Check if sum/ave field should be shown
-  const shouldShowSumAveField =
-    validationType !== "YES_NO" && visualFrequencyTypes?.length > 0;
+  const shouldShowSumAveField = visualFrequencyTypes?.length > 0;
 
   const validationOptions = [
     { value: "EQUAL_TO", label: "= Equal to" },
@@ -273,10 +267,23 @@ export default function useEditDatapointFormModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFrequency]);
 
+  useEffect(() => {
+    if (visualFrequencyTypes?.length > 0 && !visualFrequencyAggregate) {
+      setValue(
+        "visualFrequencyAggregate",
+        validationType === "BETWEEN" ? "average" : "sum",
+      );
+    }
+  }, [
+    validationType,
+    visualFrequencyTypes,
+    visualFrequencyAggregate,
+    setValue,
+  ]);
+
   const isGoalValueChanged =
     watch("value1") !== datapointApiData?.value1 ||
     watch("value2") !== datapointApiData?.value2;
-  console.log(isGoalValueChanged);
 
   return {
     register,

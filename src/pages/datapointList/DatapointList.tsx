@@ -7,7 +7,6 @@ import SearchInput from "@/components/shared/SearchInput";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import ViewKPIDetailModal from "./ViewKPIDetailModal";
-import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import {
   Tooltip,
   TooltipContent,
@@ -16,13 +15,15 @@ import {
 } from "@/components/ui/tooltip";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
-import { formatFrequencyType } from "@/features/utils/app.utils";
+import { formatFrequencyType, getInitials } from "@/features/utils/app.utils";
 import EditDatapointAddFormModal from "./EditDatapointFormModal/editDatapointAddFormModal";
 import TableData from "@/components/shared/DataTable/DataTableKpi";
 import ConfirmationDeleteModal from "./ConfirmationKPIDeleteModal";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
 import { getColorFromName } from "@/features/utils/formatting.utils";
+import { CopyPlus } from "lucide-react";
+import DuplicateKPIModal from "./DuplicateKPIModal";
 
 const validationOptions = [
   { value: "EQUAL_TO", label: "= Equal to" },
@@ -66,23 +67,6 @@ function getValidationSymbol(value: string) {
   const symbolMatch = label.match(/^[^a-zA-Z\s]+/);
   return symbolMatch ? symbolMatch[0].trim() : label;
 }
-// Add this helper function in your file, likely near the others
-function getInitials(name: string) {
-  if (!name || name.trim() === "") {
-    return "-";
-  }
-
-  // Split the name by spaces
-  const nameParts = name.trim().split(" ");
-
-  // If there's more than one word, get the first letter of each
-  if (nameParts.length > 1) {
-    return nameParts.map((word) => word.charAt(0).toUpperCase()).join("");
-  }
-
-  // If there's only one word, return just the first letter in uppercase
-  return name.charAt(0).toUpperCase();
-}
 export default function CompanyTaskList() {
   const {
     datpointData,
@@ -110,9 +94,18 @@ export default function CompanyTaskList() {
     employeeOptions,
     selectedEmployees,
     selectedDepartments,
+    selectedBusinessFunctions,
+    bussinessFunctOptions,
     handleEmployeeFilterChange,
     handleDepartmentFilterChange,
+    handleBusinessFunctionFilterChange,
     handleToggleFocus,
+    isDuplicateModalOpen,
+    setIsDuplicateModalOpen,
+    handleDuplicate,
+    confirmDuplicate,
+    duplicateKpiData,
+    isDuplicatePending,
   } = useCompanyTaskList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -124,7 +117,7 @@ export default function CompanyTaskList() {
   }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
+    // { key: "srNo", label: "Sr No", visible: true },
     {
       key: "KPIName",
       label: "KPI Name",
@@ -163,11 +156,6 @@ export default function CompanyTaskList() {
       label: "Frequency",
       visible: true,
     },
-    {
-      key: "coreParameterName",
-      label: "Business Function Name",
-      visible: true,
-    },
   ]);
 
   // Filter visible columns
@@ -201,8 +189,8 @@ export default function CompanyTaskList() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-        <div className="flex mb-5 justify-between items-center">
+      <div className="w-full h-full flex flex-col px-2 sm:px-4 py-6 overflow-hidden">
+        <div className="flex mb-5 justify-between items-center shrink-0">
           <h1 className="font-semibold capitalize text-xl text-black">
             KPI List
           </h1>
@@ -214,7 +202,7 @@ export default function CompanyTaskList() {
             )}
           </div>
         </div>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 shrink-0">
           <div>
             <SearchInput
               placeholder="Search..."
@@ -231,6 +219,17 @@ export default function CompanyTaskList() {
                 selected={selectedDepartments}
                 onChange={(selected) => {
                   handleDepartmentFilterChange(selected as string[]);
+                }}
+                multiSelect
+              />
+            </div>
+            <div>
+              <DropdownSearchMenu
+                label="Business Function"
+                options={bussinessFunctOptions}
+                selected={selectedBusinessFunctions}
+                onChange={(selected) => {
+                  handleBusinessFunctionFilterChange(selected as string[]);
                 }}
                 multiSelect
               />
@@ -266,24 +265,50 @@ export default function CompanyTaskList() {
             )}
           </div>
         </div>
-        <div className="bg-white">
+        <div className="flex-1 bg-white overflow-hidden flex flex-col rounded-md shadow-sm">
           <TableData
-            key={datpointData?.currentPage}
-            tableData={datpointData?.data.map(
-              (item: KPIFormData, index: number) => ({
+            tableHeightClass="flex-1"
+            key={datpointData?.data?.length}
+            tableData={datpointData?.data
+              ?.slice()
+              .filter((item) => {
+                if (
+                  !selectedBusinessFunctions ||
+                  selectedBusinessFunctions.length === 0
+                )
+                  return true;
+                return selectedBusinessFunctions.includes(
+                  item.coreParameterId as string,
+                );
+              })
+              .sort((a, b) => {
+                if (paginationFilter.sortBy) {
+                  const valA = String(
+                    a[paginationFilter.sortBy as keyof typeof a] || "",
+                  );
+                  const valB = String(
+                    b[paginationFilter.sortBy as keyof typeof b] || "",
+                  );
+                  const cmp = valA.localeCompare(valB, undefined, {
+                    numeric: true,
+                  });
+                  return paginationFilter.sortOrder === "desc" ? -cmp : cmp;
+                }
+                return (a.coreParameterName || "").localeCompare(
+                  b.coreParameterName || "",
+                );
+              })
+              .map((item: KPIFormData) => ({
                 ...item,
-                srNo:
-                  (datpointData.currentPage - 1) * datpointData.pageSize +
-                  index +
-                  1,
-
+                // srNo:
+                //   (datpointData.currentPage - 1) * datpointData.pageSize +
+                //   index +
+                //   1,
                 validationType: getValidationSymbol(item.validationType),
                 validationTypeFullLabel: getValidationLabel(
                   item.validationType,
                 ),
                 frequencyType: formatFrequencyType(item.frequencyType),
-                // frequencyType: getFrequencySymbol(item.frequencyType),
-                // frequencyTypeFullName: formatFrequencyType(item.frequencyType),
                 goal:
                   item.validationType === "YES_NO"
                     ? item.value1 === "1"
@@ -299,10 +324,11 @@ export default function CompanyTaskList() {
                 ),
                 createdByFullName: item.createdBy?.employeeName || "",
                 isActive: !item.isDelete,
-              }),
-            )}
+              }))}
             columns={visibleColumns}
+            sortableColumns={["KPIName"]}
             primaryKey="kpiId"
+            groupBy="coreParameterName"
             onDelete={(row: KPIFormData) => {
               onDelete(row);
             }}
@@ -319,9 +345,33 @@ export default function CompanyTaskList() {
             onRowClick={(row: KPIFormData) => {
               handleRowsModalOpen(row);
             }}
+            customActions={(row: KPIFormData) => {
+              return (
+                permission.Add && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-primary border-primary/30 hover:bg-primary/5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDuplicate(row);
+                          }}
+                        >
+                          <CopyPlus className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Duplicate KPI</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )
+              );
+            }}
             isLoading={isLoading}
             isActionButton={() => true}
-            paginationDetails={mapPaginationDetails(datpointData)}
+            paginationDetails={paginationFilter}
             setPaginationFilter={setPaginationFilter}
             searchValue={paginationFilter?.search}
             permissionKey="users"
@@ -334,13 +384,6 @@ export default function CompanyTaskList() {
             activeToggleKey="isDelete"
             activeTooltip="active KPI"
             inactiveTooltip="Inactive KPI"
-            sortableColumns={[
-              "KPIName",
-              "KPILabel",
-              "validationType",
-              "frequencyType",
-              "coreParameterName",
-            ]}
             actionColumnWidth="w-[180px] text-center overflow-hidden "
             extraColumns={[
               {
@@ -352,12 +395,12 @@ export default function CompanyTaskList() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div
-                            className={`w-7 h-7 bg-primary text-white flex items-center justify-center aspect-square rounded-full text-[12px] font-medium ${getColorFromName(row.createdByFullName)}`}
+                            className={`w-7 h-7 bg-primary text-white flex items-center justify-center aspect-square rounded-full text-[12px] font-medium ${getColorFromName(row.employeeFullName)}`}
                           >
-                            {row.createdByEmployeeName}
+                            {row.employeeName}
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent>{row.createdByFullName}</TooltipContent>
+                        <TooltipContent>{row.employeeFullName}</TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   );
@@ -415,6 +458,13 @@ export default function CompanyTaskList() {
             setIsEditKpiId(kpiId);
             setIsEditModalOpen(true);
           }}
+        />
+        <DuplicateKPIModal
+          isOpen={isDuplicateModalOpen}
+          onClose={() => setIsDuplicateModalOpen(false)}
+          onConfirm={confirmDuplicate}
+          kpiData={duplicateKpiData}
+          isLoading={isDuplicatePending}
         />
       </div>
     </FormProvider>
