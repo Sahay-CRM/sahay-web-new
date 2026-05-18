@@ -78,7 +78,6 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import { cn } from "@/lib/utils";
 import CommentModal from "./KpiCommentModal";
-import SearchInput from "@/components/shared/SearchInput";
 // import KpiDetailsSheet from "./KpiDetailsSheet";
 import GraphModal from "./GraphModal/graphModal";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
@@ -441,6 +440,7 @@ export default function UpdatedKpiTable() {
   // });
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [selectedEmpTags, setSelectedEmpTags] = useState<string[]>([]);
 
   const finalFilterValue =
     selectedPeriod === "DAILY" ? "default" : isDataFilter;
@@ -486,6 +486,20 @@ export default function UpdatedKpiTable() {
   const departmentOptions = Array.from(
     new Map(departmentOptionsList.map((item) => [item.value, item])).values(),
   );
+
+  const allEmpTags = useMemo(() => {
+    const tagsSet = new Set<string>();
+    allKpis.forEach((k) => {
+      if (Array.isArray(k.empTags)) {
+        k.empTags.forEach(
+          (t) => typeof t === "string" && t.trim() && tagsSet.add(t.trim()),
+        );
+      } else if (typeof k.empTags === "string" && k.empTags.trim()) {
+        k.empTags.split(",").forEach((t) => t.trim() && tagsSet.add(t.trim()));
+      }
+    });
+    return Array.from(tagsSet).sort();
+  }, [allKpis]);
 
   const urlSelectedDate = searchParams.get("selectedDate");
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
@@ -602,6 +616,12 @@ export default function UpdatedKpiTable() {
   const [searchTerm, setSearchTerm] = useState<PaginationFilter>({
     search: "",
   });
+
+  useEffect(() => {
+    if (!searchTerm?.search?.startsWith("@") && selectedEmpTags.length > 0) {
+      setSelectedEmpTags([]);
+    }
+  }, [searchTerm?.search, selectedEmpTags.length]);
 
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
   const [currentCellKey, setCurrentCellKey] = useState<string>("");
@@ -921,6 +941,7 @@ export default function UpdatedKpiTable() {
       search: string,
       employees: string[],
       departments: string[],
+      empTagsFilter: string[],
       focusFilter: string,
     ) => {
       const lowerSearch = search.toLowerCase();
@@ -947,11 +968,23 @@ export default function UpdatedKpiTable() {
             const coreName = groupName.toLowerCase();
             const tag = kpi.tag?.toLowerCase() || "";
             const name = kpi.kpiName?.toLowerCase() || "";
+            const empTagsList = Array.isArray(kpi.empTags)
+              ? kpi.empTags.map((t) =>
+                  typeof t === "string" ? t.toLowerCase().trim() : String(t),
+                )
+              : typeof kpi.empTags === "string"
+                ? kpi.empTags
+                    .toLowerCase()
+                    .split(",")
+                    .map((t) => t.trim())
+                : [];
+            const isTagSearch = lowerSearch.startsWith("@");
 
-            const matchesSearch =
-              coreName.includes(lowerSearch) ||
-              tag.includes(lowerSearch) ||
-              name.includes(lowerSearch);
+            const matchesSearch = isTagSearch
+              ? true
+              : coreName.includes(lowerSearch) ||
+                tag.includes(lowerSearch) ||
+                name.includes(lowerSearch);
 
             const matchesEmployee =
               employees.length === 0 ||
@@ -961,7 +994,20 @@ export default function UpdatedKpiTable() {
               departments.length === 0 ||
               departments.includes(kpi.departmentId || "unknown");
 
-            if (matchesSearch && matchesEmployee && matchesDepartment) {
+            const matchesEmpTags =
+              empTagsFilter.length === 0 ||
+              empTagsFilter.some((selectedTag) =>
+                empTagsList.some(
+                  (t) => t.toLowerCase() === selectedTag.toLowerCase(),
+                ),
+              );
+
+            if (
+              matchesSearch &&
+              matchesEmployee &&
+              matchesDepartment &&
+              matchesEmpTags
+            ) {
               if (!groupsMap.has(groupId)) {
                 groupsMap.set(groupId, {
                   coreParameter: {
@@ -1027,6 +1073,7 @@ export default function UpdatedKpiTable() {
       searchTerm.search ?? "",
       selectedEmployees,
       selectedDepartments,
+      selectedEmpTags,
       focusFilter,
     );
   }, [
@@ -1034,6 +1081,7 @@ export default function UpdatedKpiTable() {
     searchTerm.search,
     selectedEmployees,
     selectedDepartments,
+    selectedEmpTags,
     focusFilter,
     getGroupedKpiRowsForFreq,
   ]);
@@ -1401,6 +1449,7 @@ export default function UpdatedKpiTable() {
             searchTerm.search ?? "",
             selectedEmployees,
             selectedDepartments,
+            selectedEmpTags,
             focusFilter,
           );
 
@@ -1712,23 +1761,125 @@ export default function UpdatedKpiTable() {
             )}
 
             <div className="flex items-center gap-2" ref={searchContainerRef}>
-              <div className="flex items-center">
+              <div className="flex items-center relative">
                 {isSearchOpen ? (
                   <div className="flex items-center gap-2 bg-white animate-in slide-in-from-right-2 duration-200">
-                    <SearchInput
-                      placeholder="Search..."
-                      searchValue={searchTerm?.search || ""}
-                      setPaginationFilter={setSearchTerm}
-                      className="w-40 min-[1200px]:w-64"
-                    />
+                    <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md shadow-sm pl-2.5 pr-2 h-10 w-40 min-[1200px]:w-64 overflow-x-auto pb-0.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+                      <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+                      {selectedEmpTags.length > 0 && (
+                        <div className="flex items-center gap-1 overflow-x-auto py-1 pb-1.5 shrink-0">
+                          {selectedEmpTags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="bg-blue-50 text-primary border border-blue-200 text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 shrink-0 animate-in zoom-in-95 duration-150 shadow-2xs"
+                            >
+                              @{tag}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedEmpTags((prev) =>
+                                    prev.filter((t) => t !== tag),
+                                  );
+                                }}
+                                className="hover:bg-blue-200 text-primary rounded-full p-0.5 transition-colors flex items-center justify-center"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <input
+                        type="text"
+                        placeholder={
+                          selectedEmpTags.length > 0
+                            ? "Add tag or search..."
+                            : "Search... (@ for tags)"
+                        }
+                        value={searchTerm?.search || ""}
+                        onChange={(e) =>
+                          setSearchTerm({ search: e.target.value })
+                        }
+                        className="border-none outline-none focus:ring-0 text-sm w-36 min-[1200px]:w-48 shrink-0 py-1 bg-transparent placeholder:text-gray-400"
+                      />
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-9 w-9 shrink-0"
-                      onClick={() => setIsSearchOpen(false)}
+                      onClick={() => {
+                        setIsSearchOpen(false);
+                        setSearchTerm({ search: "" });
+                        setSelectedEmpTags([]);
+                      }}
                     >
                       <X className="h-4 w-4" />
                     </Button>
+
+                    {searchTerm?.search?.startsWith("@") && (
+                      <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-md shadow-lg border border-gray-200 p-2.5 z-50 max-h-60 overflow-y-auto">
+                        <div className="text-xs font-semibold text-gray-500 mb-2 px-1 flex justify-between items-center border-b pb-1">
+                          <span>Select Employee Tags (@)</span>
+                          {selectedEmpTags.length > 0 && (
+                            <button
+                              className="text-primary hover:underline text-[10px]"
+                              onClick={() => setSelectedEmpTags([])}
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                        {(() => {
+                          const query = searchTerm.search
+                            .slice(1)
+                            .toLowerCase()
+                            .trim();
+                          const matches = query
+                            ? allEmpTags.filter((t) =>
+                                t.toLowerCase().includes(query),
+                              )
+                            : allEmpTags;
+                          if (matches.length === 0) {
+                            return (
+                              <div className="text-xs text-gray-400 p-2 text-center">
+                                No tags found
+                              </div>
+                            );
+                          }
+                          return (
+                            <div className="space-y-1">
+                              {matches.map((tag) => {
+                                const isSelected =
+                                  selectedEmpTags.includes(tag);
+                                return (
+                                  <label
+                                    key={tag}
+                                    className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer text-sm transition-colors"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => {
+                                        setSelectedEmpTags((prev) =>
+                                          isSelected
+                                            ? prev.filter((t) => t !== tag)
+                                            : [...prev, tag],
+                                        );
+                                      }}
+                                      className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                                    />
+                                    <span className="text-gray-700 font-medium line-clamp-1">
+                                      {tag}
+                                    </span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div
@@ -1988,6 +2139,38 @@ export default function UpdatedKpiTable() {
                           </React.Fragment>
                         );
                       })}
+                      {searchTerm?.search?.startsWith("@") &&
+                        selectedEmpTags.length > 0 &&
+                        groupedKpiRows.length > 0 && (
+                          <>
+                            <tr className="h-[39px] bg-blue-50 text-primary font-bold border-t-2 border-primary/20 shadow-sm">
+                              <td
+                                colSpan={5}
+                                className="p-2 border pl-4 text-xs uppercase tracking-wider font-extrabold"
+                              >
+                                Summary
+                              </td>
+                            </tr>
+
+                            <tr className="h-[50px] bg-white hover:bg-gray-50/80 transition-colors font-medium border-b border-gray-200">
+                              <td
+                                colSpan={5}
+                                className="px-3 border text-left align-middle font-bold text-gray-800 text-sm"
+                              >
+                                Average Value
+                              </td>
+                            </tr>
+
+                            <tr className="h-[50px] bg-white hover:bg-gray-50/80 transition-colors font-medium border-b-2 border-primary/20">
+                              <td
+                                colSpan={5}
+                                className="px-3 border text-left align-middle font-bold text-gray-800 text-sm"
+                              >
+                                Total (Sum)
+                              </td>
+                            </tr>
+                          </>
+                        )}
                       {/* <KpiDetailsSheet
                       isOpen={isSheetOpen}
                       onOpenChange={setIsSheetOpen}
@@ -2539,6 +2722,152 @@ export default function UpdatedKpiTable() {
                           </React.Fragment>
                         );
                       })}
+                      {searchTerm?.search?.startsWith("@") &&
+                        selectedEmpTags.length > 0 &&
+                        groupedKpiRows.length > 0 && (
+                          <>
+                            <tr className="h-[39px] bg-blue-50 z-10 border-t-2 border-primary/20 shadow-sm">
+                              <td
+                                colSpan={headers.length}
+                                className="p-2 border"
+                              ></td>
+                            </tr>
+                            <tr className="h-[50px] bg-white font-bold border-b border-gray-200 hover:bg-gray-50/80 transition-colors">
+                              {headers.map((header, colIdx) => {
+                                let total = 0;
+                                let count = 0;
+                                groupedKpiRows.forEach((g) => {
+                                  g.kpis.forEach(({ kpi }) => {
+                                    let dataRow: KpiDataCell[] | undefined =
+                                      undefined;
+                                    if (
+                                      isKpiDataCellArrayArray(kpiData?.data)
+                                    ) {
+                                      dataRow = (
+                                        kpiData.data as KpiDataCell[][]
+                                      ).find(
+                                        (cells) =>
+                                          Array.isArray(cells) &&
+                                          cells.length > 0 &&
+                                          cells[0].kpiId === kpi.kpiId,
+                                      );
+                                    }
+                                    const cell = dataRow?.[colIdx];
+                                    const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
+                                    const valStr =
+                                      inputValues[key] ??
+                                      cell?.data?.toString() ??
+                                      "";
+                                    if (valStr !== "" && valStr !== "-") {
+                                      if (cell?.validationType === "YES_NO") {
+                                        const isValid =
+                                          valStr === String(cell?.value1);
+                                        total += isValid ? 1 : -1;
+                                        count += 1;
+                                      } else {
+                                        const num = Number(valStr);
+                                        if (!isNaN(num)) {
+                                          total += num;
+                                          count += 1;
+                                        }
+                                      }
+                                    }
+                                  });
+                                });
+
+                                const avgDisplay =
+                                  count > 0 ? (total / count).toFixed(2) : "-";
+
+                                return (
+                                  <td
+                                    key={colIdx}
+                                    className={clsx(
+                                      "p-2 border text-center w-[80px] h-[42px] align-middle font-extrabold text-primary text-sm",
+                                      header.isSunday &&
+                                        header.isHoliday &&
+                                        header.isSkipDay
+                                        ? "bg-blue-100/60"
+                                        : header.isSunday || header.isSkipDay
+                                          ? "bg-gray-100/60"
+                                          : header.isHoliday
+                                            ? "bg-blue-100/60"
+                                            : "",
+                                    )}
+                                  >
+                                    {avgDisplay}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                            <tr className="h-[50px] bg-white font-bold border-b-2 border-primary/20 hover:bg-gray-50/80 transition-colors">
+                              {headers.map((header, colIdx) => {
+                                let total = 0;
+                                let count = 0;
+                                groupedKpiRows.forEach((g) => {
+                                  g.kpis.forEach(({ kpi }) => {
+                                    let dataRow: KpiDataCell[] | undefined =
+                                      undefined;
+                                    if (
+                                      isKpiDataCellArrayArray(kpiData?.data)
+                                    ) {
+                                      dataRow = (
+                                        kpiData.data as KpiDataCell[][]
+                                      ).find(
+                                        (cells) =>
+                                          Array.isArray(cells) &&
+                                          cells.length > 0 &&
+                                          cells[0].kpiId === kpi.kpiId,
+                                      );
+                                    }
+                                    const cell = dataRow?.[colIdx];
+                                    const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
+                                    const valStr =
+                                      inputValues[key] ??
+                                      cell?.data?.toString() ??
+                                      "";
+                                    if (valStr !== "" && valStr !== "-") {
+                                      if (cell?.validationType === "YES_NO") {
+                                        const isValid =
+                                          valStr === String(cell?.value1);
+                                        total += isValid ? 1 : -1;
+                                        count += 1;
+                                      } else {
+                                        const num = Number(valStr);
+                                        if (!isNaN(num)) {
+                                          total += num;
+                                          count += 1;
+                                        }
+                                      }
+                                    }
+                                  });
+                                });
+
+                                const sumDisplay =
+                                  count > 0 ? total.toFixed(2) : "-";
+
+                                return (
+                                  <td
+                                    key={colIdx}
+                                    className={clsx(
+                                      "p-2 border text-center w-[80px] h-[42px] align-middle text-primary font-extrabold  text-sm",
+                                      header.isSunday &&
+                                        header.isHoliday &&
+                                        header.isSkipDay
+                                        ? "bg-blue-100/60"
+                                        : header.isSunday || header.isSkipDay
+                                          ? "bg-gray-100/60"
+                                          : header.isHoliday
+                                            ? "bg-blue-100/60"
+                                            : "",
+                                    )}
+                                  >
+                                    {sumDisplay}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          </>
+                        )}
                     </tbody>
                   </table>
                 </div>

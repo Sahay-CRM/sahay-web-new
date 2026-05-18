@@ -69,9 +69,9 @@ export const useRequestMasterList = () => {
     deleteRequest(id);
   };
 
-  const onUpdateStatus = (id: string, status: string) => {
+  const onUpdateStatus = (id: string, status: string, remarks?: string) => {
     updateRequest(
-      { id, data: { status } },
+      { id, data: { status, remarks } },
       {
         onSuccess: () => {
           setIsUpdateModalOpen(false);

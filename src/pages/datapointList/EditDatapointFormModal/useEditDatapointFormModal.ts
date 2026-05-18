@@ -100,6 +100,23 @@ export default function useEditDatapointFormModal({
 
         setValue("visualFrequencyTypes", visualFrequencyArray);
       }
+
+      if (datapointApiData.empTags) {
+        let empTagsArray: string[];
+        if (typeof datapointApiData.empTags === "string") {
+          empTagsArray = datapointApiData.empTags
+            .split(",")
+            .map((type) => type.trim())
+            .filter(Boolean);
+        } else if (Array.isArray(datapointApiData.empTags)) {
+          empTagsArray = datapointApiData.empTags;
+        } else {
+          empTagsArray = [];
+        }
+        setValue("empTags", empTagsArray);
+      } else {
+        setValue("empTags", []);
+      }
     }
   }, [datapointApiData, setValue]);
 
@@ -108,12 +125,21 @@ export default function useEditDatapointFormModal({
       const visualFrequencyTypesStr = Array.isArray(data.visualFrequencyTypes)
         ? data.visualFrequencyTypes.join(",")
         : data.visualFrequencyTypes;
+      const empTagsArr = Array.isArray(data.empTags)
+        ? data.empTags
+        : typeof data.empTags === "string"
+          ? data.empTags
+              .split(",")
+              .map((t: string) => t.trim())
+              .filter(Boolean)
+          : [];
       const payload = {
         KPIMasterId: data.KPIMasterId,
         kpiId: data.kpiId,
         coreParameterId: data.coreParameterId,
         employeeId: data.employeeId,
         tag: data.tag,
+        empTags: empTagsArr,
         unit: data.unit,
         validationType: data.validationType,
         value1: data.value1,

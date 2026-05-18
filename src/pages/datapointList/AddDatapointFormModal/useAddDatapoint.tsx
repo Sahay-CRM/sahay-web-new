@@ -15,6 +15,7 @@ import SearchInput from "@/components/shared/SearchInput";
 
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import FormTagInput from "@/components/shared/Form/FormTagInput";
 
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import {
@@ -78,12 +79,22 @@ export default function useAddDataPoint() {
       ? data.visualFrequencyTypes.join(",")
       : data.visualFrequencyTypes;
 
+    const empTagsArr = Array.isArray(data.empTags)
+      ? data.empTags
+      : typeof data.empTags === "string"
+        ? data.empTags
+            .split(",")
+            .map((t: string) => t.trim())
+            .filter(Boolean)
+        : [];
+
     const simplePayload = {
       KPIMasterId: data.KPIMasterId.KPIMasterId,
       coreParameterId: data.coreParameterId,
       employeeId: data.employeeId,
       // frequencyType: data.frequencyType,
       tag: data.tag,
+      empTags: empTagsArr,
       unit: data.unit,
       validationType: data.validationType,
       value1: data.value1,
@@ -523,7 +534,7 @@ export default function useAddDataPoint() {
             className="h-[38px] mt-2"
           />
         </div>
-        <div className="px-4 py-4 border-t-2">
+        <div className="px-4 py-4 border-t-2 space-y-4">
           <div className="flex gap-4">
             <div className="w-1/2">
               <Controller
@@ -558,6 +569,23 @@ export default function useAddDataPoint() {
                 error={errors?.tag}
               />
             </div>
+          </div>
+
+          <div>
+            <Controller
+              control={control}
+              name="empTags"
+              render={({ field }) => (
+                <FormTagInput
+                  label="Employee Tags (@ tags)"
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  disabled={isOtherFieldsDisabled}
+                  placeholder="Type tag and press Enter or comma"
+                  error={errors?.empTags as { message?: string }}
+                />
+              )}
+            />
           </div>
         </div>
       </div>

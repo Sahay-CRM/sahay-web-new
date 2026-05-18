@@ -64,6 +64,14 @@ export default function ViewKpiDetailModal({
             {modalData.tag}
           </div>
         )}
+        {modalData?.empTags && (
+          <div className="break-words whitespace-normal">
+            <span className="font-medium text-primary">Employee Tags : </span>
+            {Array.isArray(modalData.empTags)
+              ? modalData.empTags.join(", ")
+              : modalData.empTags}
+          </div>
+        )}
         {modalData?.validationType && (
           <div className="break-words whitespace-normal">
             <span className="font-medium text-primary">Validation Type : </span>

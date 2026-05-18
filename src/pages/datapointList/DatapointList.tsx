@@ -129,6 +129,11 @@ export default function CompanyTaskList() {
       label: "Tag",
       visible: true,
     },
+    // {
+    //   key: "empTags",
+    //   label: "Employee Tags",
+    //   visible: true,
+    // },
     {
       key: "employeeName",
       label: "Assigned",
@@ -319,6 +324,7 @@ export default function CompanyTaskList() {
                       : `${item.value1}`,
                 employeeName: getInitials(item.employeeName || ""), // Use initials for the display
                 employeeFullName: item.employeeName,
+                // empTags: Array.isArray(item.empTags) ? item.empTags.join(", ") : item.empTags || "",
                 createdByEmployeeName: getInitials(
                   item.createdBy?.employeeName || "",
                 ),

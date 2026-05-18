@@ -969,6 +969,7 @@ interface KPIFormData {
   value1: string;
   value2: string;
   tag: string;
+  empTags?: string | string[] | null;
   kpiMergeName?: string;
   coreParameterId?: string;
   hasData?: boolean;
@@ -1093,6 +1094,7 @@ interface Kpi {
   value2?: string | null;
   photo?: string | null;
   tag?: string;
+  empTags?: string | string[] | null;
   detailMeetingKPIId?: string;
   goalValue?: number;
   sequence?: number;
@@ -1173,6 +1175,7 @@ interface KpiType {
   kpiLabel?: string;
   employeeName?: string;
   tag?: string;
+  empTags?: string | string[] | null;
   validationType: string;
   goalValue?: number;
   value1: string | number | null;
@@ -1292,6 +1295,7 @@ interface KpiAllList {
   value1: string;
   value2: string;
   tag: string;
+  empTags?: string | string[] | null;
   unit: string;
   isVisualized: boolean;
   visualFrequencyAggregate: string | null;
@@ -1720,6 +1724,7 @@ interface RequestMasterData {
   newValue: string;
   status: string;
   reasions: string;
+  remarks?: string;
   createdBy: {
     employeeId: string;
     employeeName: string;
@@ -1736,6 +1741,7 @@ interface CreateRequestMaster {
   newValue: string;
   status: string;
   reasions: string;
+  remarks?: string;
 }
 
 interface SearchResponse {

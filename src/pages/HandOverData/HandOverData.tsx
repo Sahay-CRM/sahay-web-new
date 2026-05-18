@@ -4,16 +4,33 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { Button } from "@/components/ui/button";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import useGetEmployeeDd from "@/features/api/companyEmployee/useGetEmployeeDd";
-import { useExecuteHandover } from "@/features/api/HandOver";
+import {
+  useExecuteHandover,
+  useExecutePartialHandover,
+} from "@/features/api/HandOver";
 import HandOverStatsModal from "./HandOverStatsModal";
 import { Eye } from "lucide-react";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import PageNotAccess from "../PageNoAccess";
+import { toast } from "sonner";
+
+const MODULE_OPTIONS = [
+  { value: "tasks", label: "Owned Tasks" },
+  { value: "assignedTasks", label: "Assigned Tasks" },
+  { value: "projects", label: "Owned Projects" },
+  { value: "assignedProjects", label: "Assigned Projects" },
+  { value: "meetings", label: "Owned Meetings" },
+  { value: "assignedMeetings", label: "Assigned Meetings" },
+  { value: "todos", label: "To-dos" },
+  { value: "requests", label: "Change Requests" },
+  { value: "subordinates", label: "Subordinates" },
+];
 
 export default function HandOverData() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+  const [isPartialMode, setIsPartialMode] = useState(false);
   const permission = useSelector(getUserPermission).HANDOVER;
 
   useEffect(() => {
@@ -24,12 +41,14 @@ export default function HandOverData() {
     defaultValues: {
       oldUserId: "",
       newUserId: "",
+      selectedModules: [] as string[],
     },
   });
 
   const { watch, setValue } = methods;
   const oldUserId = watch("oldUserId");
   const newUserId = watch("newUserId");
+  const selectedModules = watch("selectedModules") || [];
 
   // Fetch employees for dropdowns
   const { data: employeeRes } = useGetEmployeeDd({
@@ -89,22 +108,45 @@ export default function HandOverData() {
     }
   }, [oldUserId, targetUserOptions, newUserId, setValue]);
 
-  const { mutate: executeHandover, isPending: isExecuting } =
+  const { mutate: executeHandover, isPending: isExecutingFull } =
     useExecuteHandover();
+  const { mutate: executePartialHandover, isPending: isExecutingPartial } =
+    useExecutePartialHandover();
+
+  const isExecuting = isExecutingFull || isExecutingPartial;
 
   const handleExecute = () => {
     if (!oldUserId || !newUserId) return;
-    executeHandover(
-      {
-        oldUserId,
-        newUserId,
-      },
-      {
-        onSuccess: () => {
-          window.location.reload();
+    if (isPartialMode) {
+      if (selectedModules.length === 0) {
+        toast.error("Please select at least one module for partial handover");
+        return;
+      }
+      executePartialHandover(
+        {
+          oldUserId,
+          newUserId,
+          moduleKey: selectedModules,
         },
-      },
-    );
+        {
+          onSuccess: () => {
+            window.location.reload();
+          },
+        },
+      );
+    } else {
+      executeHandover(
+        {
+          oldUserId,
+          newUserId,
+        },
+        {
+          onSuccess: () => {
+            window.location.reload();
+          },
+        },
+      );
+    }
   };
 
   if (!permission || permission.View === false) {
@@ -116,11 +158,35 @@ export default function HandOverData() {
       <div className="w-full px-4 py-8 max-w-4xl mx-auto">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           {/* Header */}
-          <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100">
-            <h1 className="text-xl font-bold text-gray-900">Data Handover</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Transfer all responsibilities and data from one user to another.
-            </p>
+          <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Data Handover</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                {isPartialMode
+                  ? "Transfer specific modules and responsibilities from one user to another."
+                  : "Transfer all responsibilities and data from one user to another."}
+              </p>
+            </div>
+            <div className="flex bg-gray-200/70 p-1 rounded-lg gap-1 border border-gray-200">
+              <Button
+                type="button"
+                variant={!isPartialMode ? "default" : "ghost"}
+                size="sm"
+                className={`text-sm font-medium px-4 py-1.5 h-8 rounded-md transition-all ${!isPartialMode ? "shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
+                onClick={() => setIsPartialMode(false)}
+              >
+                Full Handover
+              </Button>
+              <Button
+                type="button"
+                variant={isPartialMode ? "default" : "ghost"}
+                size="sm"
+                className={`text-sm font-medium px-4 py-1.5 h-8 rounded-md transition-all ${isPartialMode ? "shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
+                onClick={() => setIsPartialMode(true)}
+              >
+                Partial Handover
+              </Button>
+            </div>
           </div>
 
           <div className="p-6 space-y-8">
@@ -183,18 +249,51 @@ export default function HandOverData() {
               </div>
             </div>
 
+            {/* Partial Modules Selection */}
+            {isPartialMode && (
+              <div className="space-y-3 pt-2 border-t border-gray-100">
+                <div className="flex items-end h-7 mb-3">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Select Modules to Handover
+                  </label>
+                </div>
+                <FormSelect
+                  placeholder="Select modules (e.g., Owned Tasks, Projects)..."
+                  options={MODULE_OPTIONS}
+                  value={selectedModules}
+                  isMulti
+                  onChange={(val) => {
+                    setValue("selectedModules", val as string[]);
+                  }}
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-400">
+                  Only the selected modules will be transferred to the target
+                  user.
+                </p>
+              </div>
+            )}
+
             {/* Warning Section */}
             {oldUserId && newUserId && (
               <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 flex gap-3">
                 <div className="text-amber-500 text-xl">⚠️</div>
                 <div className="text-sm text-amber-800">
                   <p className="font-bold mb-1">Important Note:</p>
-                  This action will reassign all tasks, projects, meetings, and
-                  responsibilities from <b>
-                    {selectedOldUser?.employeeName}
-                  </b>{" "}
-                  to the selected target user. This process cannot be
-                  automatically undone.
+                  {isPartialMode ? (
+                    <>
+                      This action will reassign only the selected modules from{" "}
+                      <b>{selectedOldUser?.employeeName}</b> to the selected
+                      target user. This process cannot be automatically undone.
+                    </>
+                  ) : (
+                    <>
+                      This action will reassign all tasks, projects, meetings,
+                      and responsibilities from{" "}
+                      <b>{selectedOldUser?.employeeName}</b> to the selected
+                      target user. This process cannot be automatically undone.
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -210,11 +309,18 @@ export default function HandOverData() {
               </Button>
               <Button
                 onClick={handleExecute}
-                disabled={!oldUserId || !newUserId || isExecuting}
+                disabled={
+                  !oldUserId ||
+                  !newUserId ||
+                  isExecuting ||
+                  (isPartialMode && selectedModules.length === 0)
+                }
                 isLoading={isExecuting}
                 className="px-8"
               >
-                Execute Handover
+                {isPartialMode
+                  ? "Execute Partial Handover"
+                  : "Execute Handover"}
               </Button>
             </div>
           </div>

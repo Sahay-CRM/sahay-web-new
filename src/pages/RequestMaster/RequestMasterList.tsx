@@ -54,6 +54,7 @@ export default function RequestMasterList() {
     { key: "newValue", label: "New Value", visible: true },
     { key: "status", label: "Status", visible: true },
     { key: "reasions", label: "Reasons", visible: true },
+    { key: "remarks", label: "Remarks", visible: true },
     { key: "employeeName", label: "Requested By", visible: true },
     { key: "createdDatetime", label: "Date", visible: true },
   ]);
@@ -164,6 +165,7 @@ export default function RequestMasterList() {
                 newValue: item.newValue
                   ? format(new Date(item.newValue), "dd/MM/yyyy h:mm aa")
                   : " - ",
+                remarks: item.remarks || " - ",
               }),
             )}
             columns={visibleColumns}
@@ -235,8 +237,8 @@ export default function RequestMasterList() {
               setSelectedRequest(null);
             }}
             data={selectedRequest as RequestMasterData}
-            onSubmit={(requestMasterId, status) => {
-              onUpdateStatus(requestMasterId, status);
+            onSubmit={(requestMasterId, status, remarks) => {
+              onUpdateStatus(requestMasterId, status, remarks);
             }}
           />
         )}

@@ -13,12 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 
 interface UpdateStatusModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (id: string, status: string) => void;
+  onSubmit: (id: string, status: string, remarks?: string) => void;
   data?: RequestMasterData;
 }
 
@@ -29,12 +30,20 @@ export const UpdateStatusModal = ({
   data,
 }: UpdateStatusModalProps) => {
   const [status, setStatus] = useState(data?.status || "PENDING");
+  const initialRemarks =
+    data?.remarks && data.remarks.trim() !== "-" ? data.remarks : "";
+  const [remarks, setRemarks] = useState(initialRemarks);
 
   useEffect(() => {
     if (data?.status) {
       setStatus(data.status);
     }
-  }, [data?.status]);
+    if (data?.remarks && data.remarks.trim() !== "-") {
+      setRemarks(data.remarks);
+    } else {
+      setRemarks("");
+    }
+  }, [data?.status, data?.remarks]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -59,6 +68,19 @@ export const UpdateStatusModal = ({
               </SelectContent>
             </Select>
           </div>
+
+          <div className="flex flex-col gap-2 w-full">
+            <label htmlFor="remarks" className="text-sm font-medium">
+              Remarks (Reason for Approval/Decline)
+            </label>
+            <Textarea
+              id="remarks"
+              placeholder="Enter remarks explaining why this request is approved or declined..."
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              className="resize-none h-24"
+            />
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
@@ -69,6 +91,7 @@ export const UpdateStatusModal = ({
               onSubmit(
                 data?.requestMasterId || (data as RequestMasterData)?.id,
                 status as string,
+                remarks,
               )
             }
           >

@@ -426,6 +426,7 @@ const Urls = {
   getUserHandoverDataById: (id: string) =>
     `${baseUrl}/company/handover/stats/${id}`,
   getHandoverDataById: () => `${baseUrl}/company/handover/execute`,
+  executePartialHandover: () => `${baseUrl}/company/handover/execute-partial`,
 
   // Team Organisation
   getTeam: () => `${baseUrl}/company/team/get-page`,
