@@ -1,29 +1,25 @@
-import { getUserDetail } from "@/features/selectors/auth.selector";
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { queryClient } from "@/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { useSelector } from "react-redux";
 import { toast } from "sonner";
 
-export function useGetTeamPositions(teamId: string, enable?: boolean) {
+export function useGetTeamPositions(teamId?: string, enable?: boolean) {
   return useQuery({
     queryKey: ["get-team-positions", teamId],
     queryFn: async () => {
       const { data } = await Api.get<TeamPositionsResponse>({
-        url: Urls.teamPositionByTeamId(teamId),
+        url: Urls.teamPositionByTeamId(),
       });
       return data;
     },
 
-    enabled: !!teamId && enable !== false,
+    enabled: enable !== false,
   });
 }
 
 export function useAddUpdateTeamPosition() {
-  const { companyId } = useSelector(getUserDetail);
-
   return useMutation({
     mutationKey: ["add-update-team-position"],
     mutationFn: async (data: {
@@ -36,11 +32,12 @@ export function useAddUpdateTeamPosition() {
       isManager?: boolean;
     }) => {
       const isUpdate = Boolean(data.teamPositionId);
+      const { ...sendData } = data;
       const config = {
         url: isUpdate
           ? Urls.teamPositionUpdate(data.teamPositionId!)
           : Urls.teamPositionCreate(),
-        data: data,
+        data: sendData,
       };
       const { data: resData } = isUpdate
         ? await Api.put<TeamPositionResponse>(config)
@@ -54,13 +51,7 @@ export function useAddUpdateTeamPosition() {
       queryClient.invalidateQueries({ queryKey: ["get-team-positions"] });
 
       queryClient.invalidateQueries({
-        queryKey: [
-          "get-employees-not-in-team",
-          {
-            companyId,
-            search: "",
-          },
-        ],
+        queryKey: ["get-employee-list-dd"],
       });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
@@ -84,77 +75,6 @@ export function useDeleteTeamPosition() {
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message || "Failed to delete position");
-    },
-  });
-}
-
-export function useTeamPositionUserAction() {
-  const assignUser = useMutation({
-    mutationKey: ["assign-user-to-position"],
-    mutationFn: async (data: { positionId: string; employeeId?: string }) => {
-      const { data: res } = await Api.post<DeleteRes>({
-        url: Urls.teamPositionUserAdd(),
-        data,
-      });
-      return res;
-    },
-
-    onSuccess: (res) => {
-      toast.success(res.message || "User assigned successfully");
-      queryClient.invalidateQueries({ queryKey: ["get-team-positions"] });
-      queryClient.invalidateQueries({ queryKey: ["get-team-by-id"] });
-    },
-    onError: (error: AxiosError<{ message?: string }>) => {
-      toast.error(error.response?.data?.message || "Failed to assign user");
-    },
-  });
-
-  const removeUser = useMutation({
-    mutationKey: ["remove-user-from-position"],
-    mutationFn: async (data: { positionId: string; employeeId: string }) => {
-      const { data: res } = await Api.post<DeleteRes>({
-        url: Urls.teamPositionUserRemove(),
-        data,
-      });
-      return res;
-    },
-
-    onSuccess: (res) => {
-      toast.success(res.message || "User removed successfully");
-      queryClient.invalidateQueries({ queryKey: ["get-team-positions"] });
-      queryClient.invalidateQueries({ queryKey: ["get-team-by-id"] });
-    },
-    onError: (error: AxiosError<{ message?: string }>) => {
-      toast.error(error.response?.data?.message || "Failed to remove user");
-    },
-  });
-
-  return { assignUser, removeUser };
-}
-
-export function useUserPositionAction() {
-  return useMutation({
-    mutationKey: ["user-position-action"],
-    mutationFn: async (data: {
-      employeeId: string;
-      positionId?: string;
-      isTeamRemove?: boolean;
-      isSeprate?: boolean;
-      isRemove?: boolean;
-    }) => {
-      const { data: res } = await Api.post<DeleteRes>({
-        url: Urls.removeUserAction(),
-        data,
-      });
-      return res;
-    },
-    onSuccess: (res) => {
-      toast.success(res.message || "Action applied successfully");
-      queryClient.invalidateQueries({ queryKey: ["get-team-positions"] });
-      queryClient.invalidateQueries({ queryKey: ["get-team-by-id"] });
-    },
-    onError: (error: AxiosError<{ message?: string }>) => {
-      toast.error(error.response?.data?.message || "Failed to apply action");
     },
   });
 }

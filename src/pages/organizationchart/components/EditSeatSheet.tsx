@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 
-import { Search, Maximize2, Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 
 import {
   Sheet,
@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
-import { useGetEmployeesNotInTeam } from "@/features/api/companyTeam";
+import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 
 export function EditSeatSheet({
   isOpen,
@@ -27,17 +27,49 @@ export function EditSeatSheet({
 }: EditSeatSheetProps) {
   const [empSearch, setEmpSearch] = useState("");
 
-  const { data: empRes } = useGetEmployeesNotInTeam({
-    filter: { companyId, search: empSearch },
+  const { data: empRes } = useGetEmployeeDd({
+    filter: { companyId: companyId || "", search: empSearch },
   });
 
-  const empOptions = (empRes?.data || []).map((emp) => ({
+  const currentAssignedOptions: { label: string; value: string }[] = [];
+  positions.forEach((p) => {
+    if (p.employees && Array.isArray(p.employees)) {
+      p.employees.forEach((e) => {
+        currentAssignedOptions.push({
+          label: e.employeeName || "",
+          value: e.employeeId || "",
+        });
+      });
+    } else if (p.employeeId && p.employeeName) {
+      currentAssignedOptions.push({
+        label: p.employeeName,
+        value: p.employeeId,
+      });
+    }
+  });
+
+  const apiEmpOptions = (empRes?.data || []).map((emp) => ({
     label: emp.employeeName || "",
     value: emp.employeeId || "",
   }));
 
+  const allMap = new Map<string, string>();
+  currentAssignedOptions.forEach((o) => {
+    if (o.value && o.label) allMap.set(o.value, o.label);
+  });
+  apiEmpOptions.forEach((o) => {
+    if (o.value && o.label) allMap.set(o.value, o.label);
+  });
+
+  const empOptions = Array.from(allMap.entries()).map(([value, label]) => ({
+    label,
+    value,
+  }));
+
   const supervisorOptions = positions.map((p) => ({
-    label: p.employeeName || p.designationName || "Unassigned",
+    label: p.seatTitle
+      ? `${p.seatTitle} (${p.employeeName || "Unassigned"})`
+      : p.employeeName || p.designationName || "Unassigned",
     value: p.positionId,
   }));
 
@@ -66,18 +98,12 @@ export function EditSeatSheet({
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
         side="right"
-        className="sm:max-w-[550px] p-0 flex flex-col border-l shadow-2xl"
+        className="sm:max-w-[450px] p-0 flex flex-col border-l shadow-2xl"
       >
         <SheetHeader className="px-6 py-5 border-b bg-slate-50 flex flex-row items-center justify-between space-y-0 shrink-0">
           <SheetTitle className="text-xl font-bold text-slate-800">
             Edit seat
           </SheetTitle>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <Search className="w-4 h-4 text-slate-400 cursor-pointer hover:text-slate-600" />
-              <Maximize2 className="w-4 h-4 text-slate-400 cursor-pointer hover:text-slate-600" />
-            </div>
-          </div>
         </SheetHeader>
 
         <form

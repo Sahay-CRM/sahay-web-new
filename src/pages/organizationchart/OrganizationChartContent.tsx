@@ -5,7 +5,6 @@ import {
   useGetTeamPositions,
   useAddUpdateTeamPosition,
   useDeleteTeamPosition,
-  useTeamPositionUserAction,
 } from "@/features/api/companyTeam";
 import {
   ReactFlow,
@@ -15,10 +14,19 @@ import {
   Edge,
   ConnectionLineType,
   useReactFlow,
+  useViewport,
+  Panel,
   Node,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Plus, LayoutTemplate, Loader2 } from "lucide-react";
+import {
+  Plus,
+  LayoutTemplate,
+  Loader2,
+  Minus,
+  Maximize2,
+  Layers,
+} from "lucide-react";
 
 import { OrgNode } from "./components/OrgNode";
 import { Toolbar } from "./components/Toolbar";
@@ -27,11 +35,13 @@ import { EditSeatSheet } from "./components/EditSeatSheet";
 import { getLayoutedElements } from "./utils/orgChartUtils";
 
 interface OrgChartNodeData extends Record<string, unknown> {
-  label: string;
-  title: string;
+  seatTitle: string;
   department: string;
-  employeeId: string;
+  employees: AssignedEmployee[];
   depth: number;
+  label?: string;
+  title?: string;
+  employeeId?: string;
   hasChildren?: boolean;
   isExpanded?: boolean;
   isDeptHead?: boolean;
@@ -52,8 +62,8 @@ export const OrganizationChartContent = () => {
   const { mutate: addUpdatePosition, isPending: isAdding } =
     useAddUpdateTeamPosition();
   const { mutate: deletePosition } = useDeleteTeamPosition();
-  const { removeUser } = useTeamPositionUserAction();
-  const { fitView } = useReactFlow();
+  const { fitView, zoomIn, zoomOut } = useReactFlow();
+  const { zoom } = useViewport();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<
     Node<OrgChartNodeData>
@@ -70,14 +80,24 @@ export const OrganizationChartContent = () => {
   const [visibleLevel, setVisibleLevel] = useState(10); // Default to a high number to show all
   const [maxLevel, setMaxLevel] = useState(1);
 
+  const positionsList: TeamPosition[] = useMemo(() => {
+    if (!positionsRes?.data) return [];
+    return positionsRes.data.positions || [];
+  }, [positionsRes?.data]);
+
+  const spanOfControl: SpanOfControl | null = useMemo(() => {
+    if (!positionsRes?.data) return null;
+    return positionsRes.data.spanOfControl || null;
+  }, [positionsRes?.data]);
+
   // Build graph from API
   useEffect(() => {
-    if (!positionsRes?.data) return;
+    if (positionsList.length === 0) return;
 
     // 1. First, build a map of parent -> children to calculate depths
     const childMap: Record<string, string[]> = {};
     const posMap: Record<string, TeamPosition> = {};
-    (positionsRes.data as TeamPosition[]).forEach((p) => {
+    positionsList.forEach((p) => {
       posMap[p.positionId] = p;
       if (p.parentPositionId) {
         if (!childMap[p.parentPositionId]) childMap[p.parentPositionId] = [];
@@ -86,7 +106,7 @@ export const OrganizationChartContent = () => {
     });
 
     // 2. Find root(s) - nodes with no parent or parent not in the list
-    const roots = (positionsRes.data as TeamPosition[]).filter(
+    const roots = positionsList.filter(
       (p) => !p.parentPositionId || !posMap[p.parentPositionId],
     );
 
@@ -104,23 +124,50 @@ export const OrganizationChartContent = () => {
     setMaxLevel(currentMaxLevel);
     setVisibleLevel(currentMaxLevel); // Initially show all levels
 
-    const rawNodes = (positionsRes.data as TeamPosition[]).map((pos) => ({
-      id: pos.positionId,
-      type: "org",
-      data: {
-        label: pos.employeeName || "Unassigned",
-        title: pos.designationName || pos.employeeType || "No Title",
-        department: pos.departmentName || "General",
-        employeeId: pos.employeeId || "",
-        depth: depths[pos.positionId] || 1,
-        isDeptHead: pos.isDeptHead,
-        isManager: pos.isManager,
-      },
+    const rawNodes = positionsList.map((pos) => {
+      const employees: AssignedEmployee[] =
+        pos.employees &&
+        Array.isArray(pos.employees) &&
+        pos.employees.length > 0
+          ? pos.employees.map((e) => ({
+              employeeId: e.employeeId,
+              employeeName: e.employeeName,
+              employeeEmail: e.employeeEmail,
+              employeeMobile: e.employeeMobile,
+              employeeType: e.employeeType,
+              departmentName: e.departmentName || pos.departmentName,
+              designationName: e.designationName || pos.designationName,
+              photo: e.photo,
+            }))
+          : pos.employeeId
+            ? [
+                {
+                  employeeId: pos.employeeId,
+                  employeeName: pos.employeeName || "Employee",
+                  designationName: pos.designationName,
+                  departmentName: pos.departmentName,
+                  employeeType: pos.employeeType,
+                },
+              ]
+            : [];
 
-      position: { x: 0, y: 0 },
-    }));
+      return {
+        id: pos.positionId,
+        type: "org",
+        data: {
+          seatTitle: pos.seatTitle || pos.designationName || "Position",
+          department: pos.departmentName || "",
+          employees,
+          depth: depths[pos.positionId] || 1,
+          isDeptHead: pos.isDeptHead,
+          isManager: pos.isManager,
+        },
 
-    const rawEdges = (positionsRes.data as TeamPosition[])
+        position: { x: 0, y: 0 },
+      };
+    });
+
+    const rawEdges = positionsList
       .filter(
         (p) => p.parentPositionId && typeof p.parentPositionId === "string",
       )
@@ -168,19 +215,6 @@ export const OrganizationChartContent = () => {
     [edges, getDescendants],
   );
 
-  const handleCollapseAll = useCallback(() => {
-    // Hide all non-root nodes
-    const roots = nodes
-      .filter((n) => !edges.some((e) => e.target === n.id))
-      .map((n) => n.id);
-    const toHide = nodes.filter((n) => !roots.includes(n.id)).map((n) => n.id);
-    setHiddenNodes(new Set(toHide));
-  }, [nodes, edges]);
-
-  const handleExpandAll = useCallback(() => {
-    setHiddenNodes(new Set());
-  }, []);
-
   const handleDelete = useCallback(
     (nodeId: string) => {
       // eslint-disable-next-line no-alert
@@ -193,33 +227,49 @@ export const OrganizationChartContent = () => {
 
   const handleRemoveEmployee = useCallback(
     (positionId: string, employeeId: string) => {
+      const targetPos = positionsList.find((p) => p.positionId === positionId);
+      if (!targetPos) return;
+
+      const currentEmps =
+        targetPos.employees && Array.isArray(targetPos.employees)
+          ? targetPos.employees.map((e) => e.employeeId)
+          : targetPos.employeeId
+            ? [targetPos.employeeId]
+            : [];
+
+      const remainingEmps = currentEmps.filter((id) => id !== employeeId);
+
       // eslint-disable-next-line no-alert
-      if (window.confirm("Remove this employee from the seat?")) {
-        removeUser.mutate({ positionId, employeeId });
+      if (
+        window.confirm(
+          "Are you sure you want to unassign this employee from the seat?",
+        )
+      ) {
+        addUpdatePosition(
+          {
+            teamPositionId: positionId,
+            employeeId: remainingEmps.join(","),
+            parentPositionId: targetPos.parentPositionId || null,
+            seatTitle:
+              targetPos.seatTitle || targetPos.designationName || "Position",
+            isDeptHead: targetPos.isDeptHead || false,
+            isManager: targetPos.isManager || false,
+          },
+          {
+            onSuccess: () => {
+              setTimeout(() => fitView({ duration: 600 }), 300);
+            },
+          },
+        );
       }
     },
-    [removeUser],
+    [positionsRes?.data, addUpdatePosition, fitView],
   );
-
-  const handleSeparatePosition = useCallback((positionId: string) => {
-    console.log("Backend implementation needed for Separate Position:", {
-      action: "SEPARATE",
-      positionId,
-      expectedEndpoint: "/company/team/position/separate",
-      description:
-        "This action should remove the position and move its children up to the parent of this position.",
-    });
-    // eslint-disable-next-line no-alert
-    alert(
-      "Separate Position action triggered. Check console for backend implementation guidance.",
-    );
-  }, []);
 
   const handleAddSubmit = (data: AddSeatFormData) => {
     addUpdatePosition(
       {
         teamPositionId: editingNodeId || undefined,
-        teamId: user?.companyId,
         employeeId: data.employeeId.join(","),
         parentPositionId: data.parentPositionId || null,
         seatTitle: data.seatTitle,
@@ -246,11 +296,15 @@ export const OrganizationChartContent = () => {
         const isWithinLevel = n.data.depth <= visibleLevel;
         if (!isWithinLevel) return false;
         if (!q) return true;
-        return (
-          n.data.label?.toLowerCase().includes(q) ||
-          n.data.title?.toLowerCase().includes(q) ||
-          n.data.department?.toLowerCase().includes(q)
+        const inTitle =
+          n.data.seatTitle?.toLowerCase().includes(q) ||
+          n.data.department?.toLowerCase().includes(q);
+        const inEmps = n.data.employees?.some(
+          (e: AssignedEmployee) =>
+            e.employeeName?.toLowerCase().includes(q) ||
+            e.designationName?.toLowerCase().includes(q),
         );
+        return inTitle || inEmps;
       })
       .map((node) => {
         const children = edges.filter((e) => e.source === node.id);
@@ -275,7 +329,6 @@ export const OrganizationChartContent = () => {
             onDelete: handleDelete,
             onRemoveEmployee: (empId: string) =>
               handleRemoveEmployee(node.id, empId),
-            onSeparatePosition: (id: string) => handleSeparatePosition(id),
           },
         };
       });
@@ -287,7 +340,6 @@ export const OrganizationChartContent = () => {
     handleToggleExpand,
     handleDelete,
     handleRemoveEmployee,
-    handleSeparatePosition,
     visibleLevel,
   ]);
 
@@ -327,13 +379,9 @@ export const OrganizationChartContent = () => {
         visibleLevel={visibleLevel}
         maxLevel={maxLevel}
         onLevelChange={setVisibleLevel}
-        direction={direction}
-        onDirectionChange={handleDirectionChange}
-        onCollapseAll={handleCollapseAll}
-        onExpandAll={handleExpandAll}
-        onFitView={() => fitView({ duration: 500 })}
         onSearch={setSearchQuery}
         onAddSeat={() => setIsAddOpen(true)}
+        spanOfControl={spanOfControl}
       />
 
       <div className="flex-1 relative overflow-hidden">
@@ -383,6 +431,47 @@ export const OrganizationChartContent = () => {
           maxZoom={2}
         >
           <Background color="#f1f5f9" gap={24} size={1} />
+          <Panel
+            position="bottom-left"
+            className="m-6 bg-white/95 backdrop-blur-md px-3 py-2 rounded-xl border border-gray-200 shadow-lg flex items-center gap-2 z-30 text-xs font-semibold text-gray-700"
+          >
+            <button
+              onClick={() => zoomOut()}
+              className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all shadow-2xs"
+              title="Zoom Out"
+            >
+              <Minus className="w-4 h-4" />
+            </button>
+            <span className="min-w-[50px] text-center font-bold text-gray-800">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              onClick={() => zoomIn()}
+              className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all shadow-2xs"
+              title="Zoom In"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+            <div className="w-px h-4 bg-gray-200 mx-1" />
+            <button
+              onClick={() => fitView({ duration: 500 })}
+              className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all shadow-2xs"
+              title="Fit View"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() =>
+                handleDirectionChange(direction === "TB" ? "LR" : "TB")
+              }
+              className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all shadow-2xs"
+              title="Change Orientation"
+            >
+              <Layers
+                className={`w-4 h-4 transition-transform duration-300 ${direction === "LR" ? "rotate-[-90deg]" : ""}`}
+              />
+            </button>
+          </Panel>
         </ReactFlow>
       </div>
 
@@ -395,7 +484,7 @@ export const OrganizationChartContent = () => {
         }}
         onSubmit={handleAddSubmit}
         isLoading={isAdding}
-        positions={positionsRes?.data || []}
+        positions={positionsList}
         companyId={user?.companyId}
         initialParentId={initialParentId}
       />
@@ -409,18 +498,19 @@ export const OrganizationChartContent = () => {
         }}
         onSubmit={handleAddSubmit}
         isLoading={isAdding}
-        positions={positionsRes?.data || []}
+        positions={positionsList}
         companyId={user?.companyId}
         initialData={(() => {
           const node = nodes.find((n) => n.id === editingNodeId);
           if (!node) return null;
           return {
-            seatTitle: node.data.title,
-            employeeId: node.data.employeeId ? [node.data.employeeId] : [],
+            seatTitle: node.data.seatTitle || "",
+            employeeId:
+              node.data.employees?.map((e: AssignedEmployee) => e.employeeId) ||
+              [],
             parentPositionId:
-              (positionsRes?.data as TeamPosition[])?.find(
-                (p) => p.positionId === editingNodeId,
-              )?.parentPositionId || "",
+              positionsList.find((p) => p.positionId === editingNodeId)
+                ?.parentPositionId || "",
             isDeptHead: node.data.isDeptHead || false,
             isManager: node.data.isManager || false,
             createAnother: false,

@@ -38,6 +38,11 @@ interface TeamPosition {
   updatedAt?: string;
   createBy?: string;
   updateBy?: string;
+  seatTitle?: string;
+  isDeptHead?: boolean;
+  isManager?: boolean;
+  isTeamLead?: boolean;
+  employees?: AssignedEmployee[];
   teams?: { teamId: string; teamName: string }[];
 }
 
@@ -78,6 +83,9 @@ interface PaginationFilter {
 }
 
 type PagingTeam = BaseResponse<Team>;
-type TeamPositionsResponse = CommonResponse<TeamPosition[]>;
+type TeamPositionsResponse = CommonResponse<{
+  positions: TeamPosition[];
+  spanOfControl: SpanOfControl;
+}>;
 type TeamPositionResponse = CommonResponse<TeamPosition>;
 type DeleteRes = CommonResponse<Team>;

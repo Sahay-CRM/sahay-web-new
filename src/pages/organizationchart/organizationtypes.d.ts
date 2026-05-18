@@ -1,8 +1,20 @@
+interface AssignedEmployee {
+  employeeId: string;
+  employeeName: string;
+  employeeEmail?: string;
+  employeeMobile?: string;
+  employeeType?: string;
+  departmentName?: string | null;
+  designationName?: string | null;
+  photo?: string | null;
+}
+
 interface OrgNodeData {
-  label: string;
-  title: string;
+  seatTitle: string;
   department: string;
-  employeeId?: string;
+  employees: AssignedEmployee[];
+  isManager?: boolean;
+  isDeptHead?: boolean;
   hasChildren?: boolean;
   isExpanded?: boolean;
   onToggleExpand?: (id: string) => void;
@@ -10,7 +22,6 @@ interface OrgNodeData {
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   onRemoveEmployee?: (employeeId: string) => void;
-  onSeparatePosition?: (id: string) => void;
 }
 
 interface AddSeatFormData {
@@ -34,6 +45,7 @@ interface AddSeatModalProps {
 
 interface TeamPosition {
   positionId: string;
+  seatTitle?: string;
   employeeName?: string;
   employeeId?: string;
   parentPositionId?: string | null;
@@ -42,6 +54,7 @@ interface TeamPosition {
   employeeType?: string;
   isDeptHead?: boolean;
   isManager?: boolean;
+  employees?: AssignedEmployee[];
 }
 
 interface EditSeatSheetProps {
@@ -60,9 +73,15 @@ interface CtxMenuProps {
   onAddChild: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onRemoveEmployee?: () => void;
-  onSeparatePosition?: () => void;
   onClose: () => void;
+}
+
+interface SpanOfControl {
+  totalNonManagers: number;
+  totalManagers: number;
+  ratio: number;
+  type: string;
+  description: string;
 }
 
 interface ToolbarProps {
@@ -70,11 +89,7 @@ interface ToolbarProps {
   visibleLevel: number;
   maxLevel: number;
   onLevelChange: (level: number) => void;
-  direction: "TB" | "LR";
-  onDirectionChange: (d: "TB" | "LR") => void;
-  onCollapseAll: () => void;
-  onExpandAll: () => void;
-  onFitView: () => void;
   onSearch: (q: string) => void;
   onAddSeat: () => void;
+  spanOfControl?: SpanOfControl | null;
 }

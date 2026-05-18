@@ -429,25 +429,13 @@ const Urls = {
   executePartialHandover: () => `${baseUrl}/company/handover/execute-partial`,
 
   // Team Organisation
-  getTeam: () => `${baseUrl}/company/team/get-page`,
-  teamCreate: () => `${baseUrl}/company/team/create`,
-  teamDelete: (id: string) => `${baseUrl}/company/team/delete/${id}`,
-  teamUpdate: (id: string) => `${baseUrl}/company/team/update/${id}`,
-  teamGetById: (id: string) => `${baseUrl}/company/team/get/${id}`,
 
-  teamPositionUserAdd: () => `${baseUrl}/company/team/position/assign-user`,
-  teamPositionUserRemove: () => `${baseUrl}/company/team/position/remove-user`,
-
-  teamPositionByTeamId: (id: string) =>
-    `${baseUrl}/company/team/positions/${id}`,
+  teamPositionByTeamId: () => `${baseUrl}/company/team/positions`,
   teamPositionCreate: () => `${baseUrl}/company/team/position/create`,
   teamPositionDelete: (id: string) =>
     `${baseUrl}/company/team/position/delete/${id}`,
   teamPositionUpdate: (id: string) =>
     `${baseUrl}/company/team/position/update/${id}`,
-
-  // EmployeeGetByTeam
-  EmployeeGetByTeam: () => `${baseUrl}/company/team/not-in-team`,
 
   // Dashboard Registry
   getAllDashboardRegistry: () => `${baseUrl}/company/registry/get-all`,
@@ -463,9 +451,6 @@ const Urls = {
   changeDashboardRegistryStatus: (id: string) =>
     `${baseUrl}/company/registry/${id}/status`,
   storeFullRegistry: () => `${baseUrl}/company/registry/store-registry`,
-
-  // Remove User Action based on condition
-  removeUserAction: () => `${baseUrl}/company/team/user-action`,
 };
 
 export default Urls;

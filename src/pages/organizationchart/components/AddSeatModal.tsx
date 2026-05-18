@@ -1,20 +1,19 @@
 import { useEffect, useState } from "react";
-
 import { useForm, Controller } from "react-hook-form";
-
-import { Plus, LayoutTemplate, ChevronDown, Loader2 } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
-import { useGetEmployeesNotInTeam } from "@/features/api/companyTeam";
+import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 
 export function AddSeatModal({
   isOpen,
@@ -27,41 +26,75 @@ export function AddSeatModal({
 }: AddSeatModalProps) {
   const [empSearch, setEmpSearch] = useState("");
 
-  const { data: empRes } = useGetEmployeesNotInTeam({
-    filter: { companyId, search: empSearch },
+  const { data: empRes } = useGetEmployeeDd({
+    filter: { companyId: companyId || "", search: empSearch },
   });
 
-  const empOptions = (empRes?.data || []).map((emp) => ({
+  const currentAssignedOptions: { label: string; value: string }[] = [];
+  positions.forEach((p) => {
+    if (p.employees && Array.isArray(p.employees)) {
+      p.employees.forEach((e) => {
+        currentAssignedOptions.push({
+          label: e.employeeName || "",
+          value: e.employeeId || "",
+        });
+      });
+    } else if (p.employeeId && p.employeeName) {
+      currentAssignedOptions.push({
+        label: p.employeeName,
+        value: p.employeeId,
+      });
+    }
+  });
+
+  const apiEmpOptions = (empRes?.data || []).map((emp) => ({
     label: emp.employeeName || "",
     value: emp.employeeId || "",
   }));
 
+  const allMap = new Map<string, string>();
+  currentAssignedOptions.forEach((o) => {
+    if (o.value && o.label) allMap.set(o.value, o.label);
+  });
+  apiEmpOptions.forEach((o) => {
+    if (o.value && o.label) allMap.set(o.value, o.label);
+  });
+
+  const empOptions = Array.from(allMap.entries()).map(([value, label]) => ({
+    label,
+    value,
+  }));
+
   const supervisorOptions = positions.map((p) => ({
-    label: p.employeeName || p.designationName || "Unassigned",
+    label: p.seatTitle
+      ? `${p.seatTitle} (${p.employeeName || "Unassigned"})`
+      : p.employeeName || p.designationName || "Unassigned",
     value: p.positionId,
   }));
 
-  const { handleSubmit, control, reset, register, setValue } =
-    useForm<AddSeatFormData>({
-      defaultValues: {
+  const { handleSubmit, control, reset, register } = useForm<AddSeatFormData>({
+    defaultValues: {
+      seatTitle: "",
+      employeeId: [],
+      isDeptHead: false,
+      isManager: false,
+      parentPositionId: initialParentId || "",
+      createAnother: false,
+    },
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      reset({
         seatTitle: "",
         employeeId: [],
         isDeptHead: false,
         isManager: false,
         parentPositionId: initialParentId || "",
         createAnother: false,
-      },
-    });
-
-  useEffect(() => {
-    if (isOpen) {
-      if (initialParentId) {
-        setValue("parentPositionId", initialParentId);
-      } else {
-        setValue("parentPositionId", "");
-      }
+      });
     }
-  }, [initialParentId, isOpen, setValue]);
+  }, [isOpen, initialParentId, reset]);
 
   const onFormSubmit = (data: AddSeatFormData) => {
     onSubmit(data);
@@ -73,41 +106,37 @@ export function AddSeatModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden border-none shadow-2xl">
-        <DialogHeader className="px-6 py-4 border-b bg-slate-50 flex flex-row items-center justify-between space-y-0">
-          <DialogTitle className="text-lg font-bold text-slate-800">
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent
+        side="right"
+        className="sm:max-w-[450px] p-0 flex flex-col border-l shadow-2xl bg-white"
+      >
+        <SheetHeader className="px-8 py-5 border-b bg-gray-50 flex flex-row items-center justify-between space-y-0 shrink-0">
+          <SheetTitle className="text-xl font-bold text-gray-800">
             New seat
-          </DialogTitle>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1 text-slate-500 hover:text-slate-700 cursor-pointer text-sm font-medium">
-              <LayoutTemplate className="w-4 h-4" />
-              <span>View</span>
-              <ChevronDown className="w-3 h-3" />
-            </div>
-          </div>
-        </DialogHeader>
+          </SheetTitle>
+        </SheetHeader>
 
         <form
           onSubmit={handleSubmit(onFormSubmit)}
-          className="flex flex-col max-h-[85vh]"
+          className="flex flex-col flex-1 overflow-hidden"
         >
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
+          <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8">
             {/* Seat Title */}
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-600">
+            <div className="space-y-2.5">
+              <Label className="text-[13px] font-bold text-gray-700">
                 Seat title <span className="text-red-500">*</span>
               </Label>
               <Input
                 {...register("seatTitle", { required: true })}
                 placeholder="Type a title"
-                className="h-10 bg-white border-slate-200 focus:ring-primary/20"
+                className="h-11 bg-white border-gray-200 focus-visible:ring-primary/20 text-sm"
               />
             </div>
 
             {/* Employee Selection */}
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-600">
+            <div className="space-y-2.5">
+              <Label className="text-[13px] font-bold text-gray-700">
                 Employee(s) in seat
               </Label>
               <Controller
@@ -146,7 +175,7 @@ export function AddSeatModal({
                     className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${
                       field.value
                         ? "bg-primary border-primary"
-                        : "bg-white border-slate-300"
+                        : "bg-white border-gray-300"
                     }`}
                     onClick={() => field.onChange(!field.value)}
                   >
@@ -157,10 +186,10 @@ export function AddSeatModal({
                 )}
               />
               <div className="space-y-1">
-                <p className="text-sm font-bold text-slate-700">
+                <p className="text-sm font-bold text-gray-700">
                   This seat is the head of its department
                 </p>
-                <p className="text-xs text-slate-500 leading-relaxed max-w-[480px]">
+                <p className="text-xs text-gray-500 leading-relaxed max-w-[480px]">
                   New seats will automatically be assigned to the same
                   department as their supervisor, unless they are a department
                   head themselves.
@@ -169,9 +198,8 @@ export function AddSeatModal({
             </div>
 
             {/* Supervisor Selection */}
-
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-600">
+            <div className="space-y-2.5">
+              <Label className="text-[13px] font-bold text-gray-700">
                 Supervisor of seat
               </Label>
               <Controller
@@ -200,7 +228,7 @@ export function AddSeatModal({
                     className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${
                       field.value
                         ? "bg-primary border-primary"
-                        : "bg-white border-slate-300"
+                        : "bg-white border-gray-300"
                     }`}
                     onClick={() => field.onChange(!field.value)}
                   >
@@ -211,10 +239,10 @@ export function AddSeatModal({
                 )}
               />
               <div className="space-y-1">
-                <p className="text-sm font-bold text-slate-700">
+                <p className="text-sm font-bold text-gray-700">
                   This seat is a manager
                 </p>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs text-gray-500 leading-relaxed">
                   Managers have additional permissions to view and manage their
                   team's performance and data.
                 </p>
@@ -222,14 +250,14 @@ export function AddSeatModal({
             </div>
           </div>
 
-          <div className="px-6 py-4 bg-slate-50 border-t flex items-center justify-between">
+          <SheetFooter className="px-8 py-5 bg-gray-50 border-t flex items-center justify-between shrink-0">
             <label className="flex items-center gap-2 cursor-pointer group">
               <input
                 type="checkbox"
                 {...register("createAnother")}
-                className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/20"
+                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/20"
               />
-              <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+              <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">
                 Create another seat
               </span>
             </label>
@@ -238,25 +266,25 @@ export function AddSeatModal({
                 type="button"
                 variant="ghost"
                 onClick={onClose}
-                className="text-slate-500 font-bold"
+                className="text-gray-500 font-bold hover:bg-gray-100"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-[#14b8a6] hover:bg-[#0d9488] text-white font-bold px-8 h-10 rounded-md transition-all shadow-sm"
+                className="bg-[#14b8a6] hover:bg-[#0d9488] text-white font-bold px-8 h-11 rounded-md transition-all shadow-md"
               >
                 {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
                 ) : (
                   "Save"
                 )}
               </Button>
             </div>
-          </div>
+          </SheetFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

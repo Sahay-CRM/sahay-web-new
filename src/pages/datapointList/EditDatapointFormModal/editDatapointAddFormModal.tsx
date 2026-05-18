@@ -400,9 +400,9 @@ export default function EditDatapointAddFormModal({
             )}
           /> */}
         </div>
-        <div className="mt-2">
+        {/* <div className="mt-2">
           <span className=" w-full text-red-600 "> {isChildData}</span>
-        </div>
+        </div> */}
       </ModalData>
 
       <ModalData

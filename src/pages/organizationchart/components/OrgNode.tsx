@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Handle, Position } from "@xyflow/react";
-import { MoreVertical, Minus, Plus } from "lucide-react";
+import { MoreHorizontal, Minus, Plus, UserMinus } from "lucide-react";
 import { getInitials, avatarColor } from "../utils/orgChartUtils";
 import { NodeContextMenu } from "./NodeContextMenu";
 
@@ -14,98 +14,142 @@ export const OrgNode = ({
   selected?: boolean;
 }) => {
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
-  const isUnassigned = !data.employeeId;
-  const initials = getInitials(data.label);
-  const bgColor = isUnassigned ? "#94a3b8" : avatarColor(data.label);
+
+  const employees = data.employees || [];
+  const isUnassigned = employees.length === 0;
 
   return (
     <div
-      className={`group bg-white border rounded-2xl transition-all duration-300 ${
+      className={`group relative bg-white border transition-all flex flex-col ${
         selected
-          ? "border-primary shadow-[0_0_20px_rgba(46,48,144,0.15)] ring-2 ring-primary/10"
-          : "border-slate-100 hover:border-primary/30 hover:shadow-[0_10px_30px_rgba(0,0,0,0.06)]"
+          ? "border-primary shadow-sm"
+          : "border-gray-200 hover:border-gray-300"
       }`}
-      style={{ width: 240, minHeight: 130 }}
+      style={{ width: 220, minHeight: 72, borderRadius: 10 }}
     >
+      {/* Top Handle */}
       <Handle
         type="target"
         position={Position.Top}
-        className="!w-2.5 !h-2.5 !bg-slate-200 !border-2 !border-white !top-[-5px] transition-colors group-hover:!bg-primary"
+        className="!w-2 !h-2 !bg-gray-300 !border !border-white !top-[-4px]"
       />
 
-      {/* Card Header: Department/Title */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <div className="flex flex-col min-w-0">
-          <span className="text-[10px] font-black text-primary uppercase tracking-[0.1em] truncate">
-            {data.department || "Department"}
-          </span>
+      {/* Header */}
+      <div className="flex items-center justify-between px-2.5 py-2 border-b border-gray-100">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <p
+            className="text-[11px] font-semibold text-gray-800 truncate leading-none"
+            title={data.seatTitle || "Position"}
+          >
+            {data.seatTitle || "Position"}
+          </p>
+          {data.isManager && (
+            <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-bold border border-amber-200/60 uppercase shrink-0 text-[9px] tracking-wider leading-none">
+              Manager
+            </span>
+          )}
+          {/* {data.isDeptHead && (
+            <span className="px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 font-bold border border-purple-200/60 uppercase shrink-0 text-[9px] tracking-wider leading-none">
+              Dept Head
+            </span>
+          )} */}
         </div>
+
         <button
           onClick={(e) => {
             e.stopPropagation();
             setMenuPos({ x: e.clientX, y: e.clientY });
           }}
-          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-primary transition-all"
+          className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition"
         >
-          <MoreVertical className="w-4 h-4" />
+          <MoreHorizontal className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* Card Body: Avatar + Name + Title */}
-      <div className="px-4 pb-4 flex items-center gap-3.5">
-        <div
-          className="w-11 h-11 rounded-[14px] flex items-center justify-center text-white text-sm font-black shrink-0 shadow-sm"
-          style={{
-            background: isUnassigned
-              ? "linear-gradient(135deg, #94a3b8 0%, #64748b 100%)"
-              : `linear-gradient(135deg, ${bgColor} 0%, ${bgColor}dd 100%)`,
-          }}
-        >
-          {initials}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[14px] font-bold text-slate-800 truncate leading-tight mb-0.5">
-            {data.label}
-          </p>
-          <p className="text-[11px] font-medium text-slate-500 truncate">
-            {data.title}
-          </p>
-        </div>
+      {/* Employees */}
+      <div className="p-2 space-y-1.5 flex-1">
+        {employees.map((emp) => {
+          const initials = getInitials(emp.employeeName);
+          const bgColor = avatarColor(emp.employeeName);
+
+          return (
+            <div
+              key={emp.employeeId}
+              className="group/emp flex items-center gap-2 px-1.5 py-1 rounded-md hover:bg-gray-50 transition relative"
+            >
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0"
+                style={{ backgroundColor: bgColor }}
+              >
+                {initials}
+              </div>
+
+              <div className="flex-1 min-w-0 pr-5">
+                <p
+                  className="text-[11px] font-medium text-gray-800 truncate"
+                  title={emp.employeeName}
+                >
+                  {emp.employeeName}
+                </p>
+
+                <p
+                  className="text-[10px] text-gray-500 truncate"
+                  title={emp.designationName || emp.employeeType || "Employee"}
+                >
+                  {emp.designationName || emp.employeeType || "Employee"}
+                </p>
+              </div>
+
+              {data.onRemoveEmployee && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    data.onRemoveEmployee?.(emp.employeeId);
+                  }}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/emp:opacity-100 text-red-500 hover:text-red-700 transition"
+                >
+                  <UserMinus className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Empty State */}
+        {isUnassigned && (
+          <div className="text-center py-2">
+            <span className="text-[10px] text-amber-600 font-medium">
+              Open Position
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Unassigned badge */}
-      {isUnassigned && (
-        <div className="px-4 pb-4">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100">
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            Open Position
-          </div>
-        </div>
-      )}
-
-      {/* Expand/Collapse */}
+      {/* Expand Collapse */}
       {data.hasChildren && (
         <button
           onClick={(e) => {
             e.stopPropagation();
             data.onToggleExpand?.(id);
           }}
-          className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-white border border-slate-200 shadow-sm text-slate-400 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all z-10 group/btn"
+          className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center hover:border-primary hover:text-primary transition"
         >
           {data.isExpanded ? (
-            <Minus className="w-3.5 h-3.5 stroke-[3px]" />
+            <Minus className="w-3 h-3" />
           ) : (
-            <Plus className="w-3.5 h-3.5 stroke-[3px]" />
+            <Plus className="w-3 h-3" />
           )}
         </button>
       )}
 
+      {/* Bottom Handle */}
       <Handle
         type="source"
         position={Position.Bottom}
-        className="!w-2.5 !h-2.5 !bg-slate-200 !border-2 !border-white !bottom-[-5px] transition-colors group-hover:!bg-primary"
+        className="!w-2 !h-2 !bg-gray-300 !border !border-white !bottom-[-4px]"
       />
 
+      {/* Context Menu */}
       {menuPos && (
         <NodeContextMenu
           x={menuPos.x}
@@ -113,12 +157,6 @@ export const OrgNode = ({
           onAddChild={() => data.onAddChild?.(id)}
           onEdit={() => data.onEdit?.(id)}
           onDelete={() => data.onDelete?.(id)}
-          onRemoveEmployee={
-            data.employeeId
-              ? () => data.onRemoveEmployee?.(data.employeeId!)
-              : undefined
-          }
-          onSeparatePosition={() => data.onSeparatePosition?.(id)}
           onClose={() => setMenuPos(null)}
         />
       )}
