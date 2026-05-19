@@ -210,7 +210,7 @@ export const companyNavigationData = [
     items: [
       {
         id: 1,
-        label: "User Role & Permission",
+        label: "User Permission",
         link: "/dashboard/roles/user-permission",
         permission: "View",
         moduleKey: "ROLES_PERMISSION",
