@@ -61,7 +61,7 @@ export default function useAdminUser() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   // Pagination Details and Filter
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-    isPaging: false,
+    // isPaging: false,
     search: "",
   });
   const { data: datpointData, isLoading } = useDdAllKpiList({
@@ -216,12 +216,12 @@ export default function useAdminUser() {
 
   const handleEmployeeFilterChange = (selected: string[]) => {
     setSelectedEmployees(selected);
-    setPaginationFilter((prev) => ({ ...prev, currentPage: 1 }));
+    setPaginationFilter((prev) => ({ ...prev }));
   };
 
   const handleDepartmentFilterChange = (selected: string[]) => {
     setSelectedDepartments(selected);
-    setPaginationFilter((prev) => ({ ...prev, currentPage: 1 }));
+    setPaginationFilter((prev) => ({ ...prev }));
   };
 
   const { data: coreParams } = useGetCoreParameterDropdown({
@@ -237,7 +237,7 @@ export default function useAdminUser() {
 
   const handleBusinessFunctionFilterChange = (selected: string[]) => {
     setSelectedBusinessFunctions(selected);
-    setPaginationFilter((prev) => ({ ...prev, currentPage: 1 }));
+    setPaginationFilter((prev) => ({ ...prev }));
   };
 
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);

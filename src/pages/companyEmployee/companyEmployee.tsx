@@ -73,7 +73,6 @@ export default function CompanyDesignation() {
     },
     { key: "employeeMobile", label: "Employee Mobile", visible: true },
     { key: "designationName", label: "Designation", visible: true },
-    { key: "createdByName", label: "Created By", visible: true },
     { key: "reportingManagerName", label: "Reporting Manager", visible: true },
   ]);
 
@@ -186,8 +185,8 @@ export default function CompanyDesignation() {
             }}
             extraColumns={[
               {
-                label: "Added",
-                width: "w-[100px]",
+                label: "Created By",
+                width: "w-[120px]",
                 render: (row) => {
                   return (
                     <TooltipProvider>

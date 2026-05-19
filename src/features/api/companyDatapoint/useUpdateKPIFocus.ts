@@ -25,6 +25,7 @@ export default function useUpdateKPIFocus() {
     onSuccess: (res) => {
       toast.success(res.message || "Focus updated successfully");
       queryClient.resetQueries({ queryKey: ["get-datapoint-list"] });
+      queryClient.invalidateQueries({ queryKey: ["kpi-list-dd-all"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message || "Failed to update focus");
