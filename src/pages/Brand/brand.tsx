@@ -43,8 +43,8 @@ export default function Brand() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
-        <div className="flex mb-5 justify-between items-center">
+      <div className="w-full h-full flex flex-col px-2 sm:px-4 py-4 overflow-hidden">
+        <div className="flex mb-5 justify-between items-center shrink-0">
           <h1 className="font-semibold capitalize text-xl text-black">
             Brand List
           </h1>
@@ -56,7 +56,7 @@ export default function Brand() {
             )}
           </div>
         </div>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 shrink-0">
           <div>
             <SearchInput
               placeholder="Search..."
@@ -67,8 +67,9 @@ export default function Brand() {
           </div>
         </div>
 
-        <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
+        <div className="flex-1 bg-white overflow-hidden flex flex-col  tb:pt-4">
           <TableData
+            tableHeightClass="flex-1"
             tableData={brand?.data.map((item, index) => ({
               ...item,
               srNo: (brand.currentPage - 1) * brand.pageSize + index + 1,

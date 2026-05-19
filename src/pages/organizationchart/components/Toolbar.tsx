@@ -1,0 +1,144 @@
+import {
+  ChevronUp,
+  ChevronDown,
+  Plus,
+  Search,
+  Activity,
+  Info,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+export function Toolbar({
+  // totalNodes,
+  visibleLevel,
+  maxLevel,
+  onLevelChange,
+  onSearch,
+  onAddSeat,
+  spanOfControl,
+}: ToolbarProps) {
+  return (
+    <div className="flex flex-wrap items-center justify-between px-6 py-4 border-b border-gray-200 bg-white sticky top-0 shrink-0 z-50 gap-4 shadow-xs">
+      {/* Left Section: Title & Meta */}
+      <div className="flex items-center gap-6">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-semibold text-gray-900 leading-tight">
+              Company Hierarchy
+            </h1>
+            {spanOfControl && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-primary text-xs font-semibold rounded-full border border-indigo-200 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                    <Activity className="w-3.5 h-3.5" />
+                    Span of Control: {spanOfControl.type} ({spanOfControl.ratio}
+                    )
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="start"
+                  className="w-80 p-4 bg-white rounded-xl shadow-xl border border-indigo-100 z-[9999]"
+                >
+                  <div className="flex items-center gap-2 text-primary font-bold text-sm mb-2 pb-2 border-b border-indigo-50">
+                    <Activity className="w-4 h-4 text-primary" />
+                    <span>Span of Control Analysis</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mb-3 bg-slate-50 p-2.5 rounded-lg text-xs">
+                    <div>
+                      <span className="text-slate-500 block">Type</span>
+                      <span className="font-bold text-slate-800">
+                        {spanOfControl.type}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Ratio</span>
+                      <span className="font-bold text-slate-800">
+                        {spanOfControl.ratio}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Managers</span>
+                      <span className="font-bold text-slate-800">
+                        {spanOfControl.totalManagers}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block">Non-Managers</span>
+                      <span className="font-bold text-slate-800">
+                        {spanOfControl.totalNonManagers}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-xs text-slate-600 bg-indigo-50/50 p-3 rounded-lg border border-indigo-100/50 leading-relaxed">
+                    <div className="flex items-center gap-1.5 font-semibold text-indigo-900 mb-1">
+                      <Info className="w-3.5 h-3.5 text-indigo-600 shrink-0" />{" "}
+                      Description
+                    </div>
+                    {spanOfControl.description}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
+          {/* <div className="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5 font-normal">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            {totalNodes} Total positions
+          </div> */}
+        </div>
+
+        <div className="h-6 w-px bg-gray-200" />
+
+        {/* Level Controls */}
+        <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200 text-xs font-medium text-gray-700">
+          <button
+            className="p-1 rounded text-gray-500 hover:text-gray-900 hover:bg-white transition-all disabled:opacity-30 shadow-2xs"
+            disabled={visibleLevel <= 1}
+            onClick={() => onLevelChange(visibleLevel - 1)}
+            title="Decrease Level"
+          >
+            <ChevronDown className="w-3.5 h-3.5" />
+          </button>
+          <div className="flex items-center px-2 justify-center min-w-[65px]">
+            Level: {visibleLevel}
+          </div>
+          <button
+            className="p-1 rounded text-gray-500 hover:text-gray-900 hover:bg-white transition-all disabled:opacity-30 shadow-2xs"
+            disabled={visibleLevel >= maxLevel}
+            onClick={() => onLevelChange(visibleLevel + 1)}
+            title="Increase Level"
+          >
+            <ChevronUp className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Right Section: Actions */}
+      <div className="flex items-center gap-3">
+        <div className="relative h-10 w-full max-w-sm">
+          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <Search className="w-4 h-4 text-muted-foreground" />
+          </span>
+          <Input
+            type="text"
+            placeholder="Search hierarchy..."
+            onChange={(e) => onSearch(e.target.value)}
+            className="pl-8 pr-2 w-64 lg:w-80 h-10 py-2 text-sm bg-transparent"
+          />
+        </div>
+
+        <button
+          onClick={onAddSeat}
+          className="flex items-center gap-1.5 bg-primary text-white text-xs font-medium px-4 py-2 rounded-md hover:bg-primary/90 transition-all shadow-sm h-10 whitespace-nowrap"
+        >
+          <Plus className="w-4 h-4" />
+          Add Position
+        </button>
+      </div>
+    </div>
+  );
+}

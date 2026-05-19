@@ -67,8 +67,8 @@ const MeetingType = () => {
   };
   const canToggleColumns = columnToggleOptions.length > 3;
   return (
-    <div>
-      <div className="mt-1 mb-4 flex items-start justify-between">
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="mt-1 mb-4 flex items-start justify-between shrink-0">
         <div className="flex items-center gap-2">
           <SearchInput
             placeholder="Search..."
@@ -120,6 +120,7 @@ const MeetingType = () => {
             moduleKey="type"
             showActionsColumn={false}
             isLoading={isLoading}
+            tableHeightClass="flex-1"
           />
         )}
       />
@@ -440,8 +441,8 @@ const Joiners = () => {
   const canToggleColumns = columnToggleOptions.length > 3;
 
   return (
-    <div>
-      <div className="mt-1 mb-4 flex items-start justify-between">
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="mt-1 mb-4 flex items-start justify-between shrink-0">
         <div className="flex items-center gap-2">
           <SearchInput
             placeholder="Search..."
@@ -531,6 +532,7 @@ const Joiners = () => {
               isEditDeleteShow={false}
               isLoading={isLoading}
               actionColumnWidth="w-40"
+              tableHeightClass="flex-1"
             />
           );
         }}
@@ -765,21 +767,25 @@ const AddMeeting = () => {
       isLoading={companyMeetingId ? !meetingApiData : false}
     >
       <FormProvider {...methods}>
-        <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-          <StepProgress
-            currentStep={currentStep}
-            stepNames={stepNames}
-            totalSteps={totalSteps}
-            back={back}
-            isFirstStep={isFirstStep}
-            next={next}
-            isLastStep={isLastStep}
-            isPending={isPending}
-            onFinish={onFinish}
-            isUpdate={!!companyMeetingId}
-          />
+        <div className="w-full h-full px-2 sm:px-4 py-6 flex flex-col overflow-hidden">
+          <div className="shrink-0">
+            <StepProgress
+              currentStep={currentStep}
+              stepNames={stepNames}
+              totalSteps={totalSteps}
+              back={back}
+              isFirstStep={isFirstStep}
+              next={next}
+              isLastStep={isLastStep}
+              isPending={isPending}
+              onFinish={onFinish}
+              isUpdate={!!companyMeetingId}
+            />
+          </div>
 
-          <div className="step-content w-full">{stepContent}</div>
+          <div className="step-content w-full flex-1 overflow-hidden flex flex-col pt-4">
+            {stepContent}
+          </div>
 
           {isModalOpen && (
             <AddMeetingModal

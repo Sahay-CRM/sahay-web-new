@@ -18,12 +18,10 @@ const importantDate = lazy(
 const companyEmployee = lazy(
   () => import("../pages/companyEmployee/companyEmployee"),
 );
-const TeamOrganization = lazy(() =>
-  import("../pages/companyTeam").then((m) => ({ default: m.TeamOrganization })),
+const OrganizationChart = lazy(
+  () => import("../pages/organizationchart/OrganizationChart"),
 );
-const TeamList = lazy(() =>
-  import("../pages/companyTeam").then((m) => ({ default: m.TeamList })),
-);
+
 const CompanyImportantDates = lazy(
   () => import("../pages/companyImportantDates/CompanyImportantDates"),
 );
@@ -138,6 +136,12 @@ const FormSubmissionDetail = lazy(
 
 const HandOverData = lazy(() => import("../pages/HandOverData"));
 const Reports = lazy(() => import("../pages/Reports/report"));
+const DashboardReport = lazy(
+  () => import("../pages/DashboardReport/DashboardReport"),
+);
+const DashboardReportView = lazy(
+  () => import("../pages/DashboardReport/DashboardReportView"),
+);
 
 export default function EmployeeRoutes() {
   return (
@@ -157,8 +161,7 @@ export default function EmployeeRoutes() {
         <Route path="settings" Component={Theme} />
         <Route path="company-designation" Component={companydesignation} />
         <Route path="company-employee" Component={companyEmployee} />
-        <Route path="team-list" Component={TeamList} />
-        <Route path="team-organization" Component={TeamOrganization} />
+        <Route path="organization-chart" Component={OrganizationChart} />
         <Route path="employees/add" element={<AddCompanyEmployee />} />
         <Route path="employees/edit/:id" element={<AddCompanyEmployee />} />
         <Route path="calendar" Component={CompanyImportantDates} />
@@ -187,6 +190,10 @@ export default function EmployeeRoutes() {
         <Route path="objective" Component={Objective} />
 
         <Route path="tasks" Component={CompanyTask} />
+        <Route
+          path="tasks/board"
+          Component={lazy(() => import("../pages/companyTask/Board/TaskBoard"))}
+        />
         <Route path="tasks/add" element={<AddCompanyTaskList />} />
         <Route path="tasks/view/:id" element={<CompanyTaskView />} />
 
@@ -227,6 +234,20 @@ export default function EmployeeRoutes() {
           <Route index Component={userpermissionlist} />
           <Route path="edit/:id" Component={UserPermissionEdit} />
         </Route>
+        <Route path="roles/kpi-permission">
+          <Route
+            index
+            Component={lazy(
+              () => import("../pages/KpiPermission/KpiPermissionList"),
+            )}
+          />
+          <Route
+            path="edit/:id"
+            Component={lazy(
+              () => import("../pages/KpiPermission/KpiPermissionEdit"),
+            )}
+          />
+        </Route>
         <Route path="brand" Component={Brand} />
         <Route path="product" Component={Product} />
 
@@ -248,6 +269,20 @@ export default function EmployeeRoutes() {
           )}
         />
         <Route path="reports" Component={Reports} />
+        <Route path="report-builder" Component={DashboardReport} />
+        <Route path="report-builder/view" Component={DashboardReportView} />
+        <Route
+          path="report-builder/add"
+          Component={lazy(
+            () => import("../pages/DashboardReport/DashboardBuilderPage"),
+          )}
+        />
+        <Route
+          path="report-builder/edit/:id"
+          Component={lazy(
+            () => import("../pages/DashboardReport/DashboardBuilderPage"),
+          )}
+        />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

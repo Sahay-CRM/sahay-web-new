@@ -4,13 +4,15 @@ import {
   deleteGroupMutation,
   groupMutation,
   groupSequenceMutation,
-  useGetCompanyProject,
+  useGetCompanyProjectAll,
   useGetAllProjectStatus,
 } from "@/features/api/companyProject";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useGetCoreParameterDropdown } from "@/features/api/Business";
+import { getUTCEndOfDay, getUTCStartOfDay } from "@/features/utils/app.utils";
+import { DateRange } from "react-day-picker";
 
 export default function useProjectTabs() {
   const [tabs, setTabs] = useState<TabItem[]>([{ id: "all", label: "All" }]);
@@ -64,11 +66,65 @@ export default function useProjectTabs() {
 
   const { mutateAsync: addUpdateGroup } = groupMutation();
   const { mutate: deleteGroup } = deleteGroupMutation();
+  const today = new Date();
+  const beforeMonth = new Date(today);
+  beforeMonth.setMonth(today.getMonth() - 1);
+  const afterMonth = new Date(today);
+  afterMonth.setMonth(today.getMonth() + 1);
+
+  const COMPANY_PROJECT_DATE_RANGE_KEY = "companyProjectDateRange";
+
+  const getStoredDateRange = () => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = window.localStorage.getItem(COMPANY_PROJECT_DATE_RANGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { from?: string; to?: string };
+      if (!parsed.from) return null;
+      const from = new Date(parsed.from);
+      const to = parsed.to ? new Date(parsed.to) : undefined;
+      return { projectStartDate: from, projectDeadline: to ?? from };
+    } catch {
+      return null;
+    }
+  };
+
+  const getInitialDateRange = () =>
+    getStoredDateRange() ?? {
+      projectStartDate: beforeMonth,
+      projectDeadline: afterMonth,
+    };
+
+  const [projectDateRange, setProjectDateRange] = useState<{
+    projectStartDate: Date | undefined;
+    projectDeadline: Date | undefined;
+  }>(() => getInitialDateRange());
+
+  const [appliedDateRange, setAppliedDateRange] = useState<{
+    projectStartDate: Date | undefined;
+    projectDeadline: Date | undefined;
+  }>(() => getInitialDateRange());
+
+  const saveDateRangeToStorage = (range: {
+    projectStartDate: Date | undefined;
+    projectDeadline: Date | undefined;
+  }) => {
+    if (typeof window === "undefined") return;
+    if (!range.projectStartDate) {
+      window.localStorage.removeItem(COMPANY_PROJECT_DATE_RANGE_KEY);
+      return;
+    }
+    window.localStorage.setItem(
+      COMPANY_PROJECT_DATE_RANGE_KEY,
+      JSON.stringify({
+        from: range.projectStartDate.toISOString(),
+        to: range.projectDeadline?.toISOString(),
+      }),
+    );
+  };
+
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-    currentPage: 1,
-    pageSize: 25,
-    totalPage: 1,
-    totalCount: 0,
+    search: "",
   });
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -89,14 +145,16 @@ export default function useProjectTabs() {
     data: projectListData,
     isPending: isLoadingProject,
     refetch,
-  } = useGetCompanyProject({
+  } = useGetCompanyProjectAll({
     filter: {
       groupId: filters.selected,
       statusArray: SelectedStatus.selected,
       businessFunctionIds: SelectedBussinessFunc.selected,
       sortBy: SelectedSortOrder || "projectName",
       sortOrder: SelectedOrder,
-      ...paginationFilter,
+      search: paginationFilter.search,
+      startDate: getUTCStartOfDay(appliedDateRange.projectStartDate),
+      endDate: getUTCEndOfDay(appliedDateRange.projectDeadline),
     },
     enable: true,
   });
@@ -297,6 +355,64 @@ export default function useProjectTabs() {
     setOrderBy(selected);
   };
 
+  const handleDateRangeChange: HandleDateRangeChange = (range) => {
+    if (range?.from) {
+      setProjectDateRange({
+        projectStartDate: range.from,
+        projectDeadline: range.to ?? range.from,
+      });
+    } else {
+      setProjectDateRange({
+        projectStartDate: undefined,
+        projectDeadline: undefined,
+      });
+    }
+  };
+
+  const handleDateRangeApply = (range: DateRange | undefined) => {
+    if (range?.from) {
+      const newRange = {
+        projectStartDate: range.from,
+        projectDeadline: range.to ?? range.from,
+      };
+      setProjectDateRange(newRange);
+      setAppliedDateRange(newRange);
+    } else {
+      const newRange = {
+        projectStartDate: undefined,
+        projectDeadline: undefined,
+      };
+      setProjectDateRange(newRange);
+      setAppliedDateRange(newRange);
+    }
+  };
+
+  const handleDateRangeSaveApply = (range: DateRange | undefined) => {
+    const newRange = range?.from
+      ? {
+          projectStartDate: range.from,
+          projectDeadline: range.to ?? range.from,
+        }
+      : { projectStartDate: undefined, projectDeadline: undefined };
+
+    setProjectDateRange(newRange);
+    setAppliedDateRange(newRange);
+    saveDateRangeToStorage(newRange);
+  };
+
+  const handleDateRangeReset = () => {
+    const defaultRange = {
+      projectStartDate: beforeMonth,
+      projectDeadline: afterMonth,
+    };
+    setProjectDateRange(defaultRange);
+    setAppliedDateRange(defaultRange);
+    saveDateRangeToStorage({
+      projectStartDate: undefined,
+      projectDeadline: undefined,
+    });
+  };
+
   return {
     tabs,
     activeTab,
@@ -339,9 +455,15 @@ export default function useProjectTabs() {
     SelectedStatus,
     SelectedBussinessFunc,
     sortOrder,
-    SelectedOrder,
     handleOrderChange,
     orderBy,
     bussinessFunctOptions,
+    projectDateRange,
+    appliedDateRange,
+    handleDateRangeChange,
+    handleDateRangeApply,
+    handleDateRangeSaveApply,
+    handleDateRangeReset,
+    refetch,
   };
 }

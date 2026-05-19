@@ -13,7 +13,8 @@ export default function AddEmployee() {
   const {
     companyEmployeeId,
     employeeData,
-    showNextStep,
+    isOwner,
+    employeeType,
     EmployeeStatus,
     DepartmentSelect,
     Designation,
@@ -67,14 +68,16 @@ export default function AddEmployee() {
     isAuthorized,
   ]);
 
-  const steps = showNextStep
-    ? [
-        <EmployeeStatus />,
-        <DepartmentSelect />,
-        <Designation />,
-        <ReportingManage />,
-      ]
-    : [<EmployeeStatus />];
+  const steps = isOwner
+    ? [<EmployeeStatus />, <DepartmentSelect />, <Designation />]
+    : employeeType
+      ? [
+          <EmployeeStatus />,
+          <DepartmentSelect />,
+          <Designation />,
+          <ReportingManage />,
+        ]
+      : [<EmployeeStatus />];
 
   const {
     back,
@@ -86,34 +89,37 @@ export default function AddEmployee() {
     isLastStep,
   } = useStepForm(steps, trigger);
 
-  const stepNames = [
-    "Basic Info",
-    "Department",
-    "Designation",
-    "Reporting Manager",
-  ];
+  const stepNames = isOwner
+    ? ["Basic Info", "Department", "Designation"]
+    : employeeType
+      ? ["Basic Info", "Department", "Designation", "Reporting Manager"]
+      : ["Basic Info"];
 
   return (
     <CompanyAccessGuard
       companyId={companyEmployeeId ? resourceCompanyId : undefined}
       isLoading={companyEmployeeId ? !employeeData : false}
     >
-      <div>
-        <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
-          <StepProgress
-            currentStep={currentStep}
-            stepNames={stepNames}
-            totalSteps={totalSteps}
-            back={back}
-            isFirstStep={isFirstStep}
-            next={next}
-            isLastStep={isLastStep}
-            isPending={isPending}
-            onFinish={onFinish}
-            isUpdate={!!companyEmployeeId}
-          />
+      <div className="h-full">
+        <div className="w-full h-full px-2 sm:px-4 py-4 flex flex-col overflow-hidden">
+          <div className="shrink-0">
+            <StepProgress
+              currentStep={currentStep}
+              stepNames={stepNames}
+              totalSteps={totalSteps}
+              back={back}
+              isFirstStep={isFirstStep}
+              next={next}
+              isLastStep={isLastStep}
+              isPending={isPending}
+              onFinish={onFinish}
+              isUpdate={!!companyEmployeeId}
+            />
+          </div>
 
-          <div className="step-content w-full">{stepContent}</div>
+          <div className="step-content w-full flex-1 overflow-hidden flex flex-col pt-4">
+            {stepContent}
+          </div>
 
           {isModalOpen && (
             <AddEmployeeModal

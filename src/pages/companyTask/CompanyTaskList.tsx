@@ -120,20 +120,30 @@ export default function CompanyTaskList() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6 flex flex-col">
-        <div className="flex mb-3 justify-between items-center">
+      <div className="w-full h-full px-2 sm:px-4 py-6 flex flex-col overflow-hidden">
+        <div className="flex mb-3 justify-between items-center shrink-0">
           <h1 className="font-semibold capitalize text-xl text-black">
             Company Task List
           </h1>
           <div className="flex items-center space-x-5 tb:space-x-7">
             {permission.Add && (
-              <Link to="/dashboard/tasks/add">
-                <Button className="py-2 w-fit">Add Company Task</Button>
-              </Link>
+              <div className="flex items-center space-x-2">
+                <Link to="/dashboard/tasks/board">
+                  <Button
+                    variant="outline"
+                    className="h-9 px-4 text-[11px] font-bold border-primary/30 text-primary hover:bg-primary/5 rounded-full"
+                  >
+                    View as Column
+                  </Button>
+                </Link>
+                <Link to="/dashboard/tasks/add">
+                  <Button className="py-2 w-fit">Add Company Task</Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>
-        <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-4 shrink-0">
           <div>
             <SearchInput
               placeholder="Search..."
@@ -201,8 +211,9 @@ export default function CompanyTaskList() {
           </div>
         </div>
 
-        <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
+        <div className="flex-1 bg-white overflow-hidden flex flex-col  tb:pt-4">
           <TableData
+            tableHeightClass="flex-1"
             tableData={companyTaskData?.data.map(
               (item: TaskGetPaging, index: number) => ({
                 ...item,

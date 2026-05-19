@@ -9,4 +9,5 @@ interface PaginationFilter {
   sortOrder?: "asc" | "desc";
   message?: string;
   search?: string;
+  isPaging?: boolean;
 }

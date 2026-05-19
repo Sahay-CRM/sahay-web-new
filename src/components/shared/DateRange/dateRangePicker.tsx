@@ -9,8 +9,9 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@radix-ui/react-popover";
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DateRangePickerProps {
   className?: string;
@@ -42,6 +43,7 @@ export default function DateRangePicker({
     to: defaultDate?.deadline,
   });
   const [isOpen, setIsOpen] = React.useState(false);
+  const isMobile = useIsMobile();
 
   // If parent gives controlled value, sync it
   React.useEffect(() => {
@@ -127,47 +129,56 @@ export default function DateRangePicker({
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-auto z-50 bg-white mr-8 shadow-2xl p-3 rounded-2xl border mt-2"
-          align="start"
+          className="w-auto p-0 border-none shadow-none bg-transparent"
+          align={isMobile ? "center" : "end"}
+          sideOffset={8}
+          collisionPadding={16}
         >
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={tempDate?.from}
-            selected={tempDate}
-            onSelect={handleSelect}
-            numberOfMonths={2}
-          />
-          <div className="flex justify-between gap-2 mt-3 pt-3 border-t">
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={onClose}>
-                Close
-              </Button>
-            </div>
-            <div className="flex gap-4">
-              {isClear && (
-                <Button variant="outline" size="sm" onClick={onClear}>
-                  Reset
-                </Button>
-              )}
-              {onSaveApply && (
+          <div className="bg-white rounded-2xl border shadow-2xl p-3 animate-in fade-in zoom-in-95 duration-200">
+            <Calendar
+              mode="range"
+              defaultMonth={tempDate?.from}
+              selected={tempDate}
+              onSelect={handleSelect}
+              numberOfMonths={isMobile ? 1 : 2}
+            />
+            <div className="flex justify-between gap-2 mt-3 pt-3 border-t">
+              <div className="flex gap-2">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  onClick={handleSave}
-                  disabled={!tempDate?.from}
-                  className="border-primary"
+                  onClick={onClose}
+                  className="text-muted-foreground hover:text-foreground"
                 >
-                  Save
+                  Close
                 </Button>
-              )}
-              <Button
-                size="sm"
-                onClick={handleApply}
-                disabled={!tempDate?.from}
-              >
-                Apply
-              </Button>
+              </div>
+              <div className="flex gap-2">
+                {isClear && (
+                  <Button variant="outline" size="sm" onClick={onClear}>
+                    Reset
+                  </Button>
+                )}
+                {onSaveApply && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={!tempDate?.from}
+                    className="border-primary text-primary hover:bg-primary/5"
+                  >
+                    Save
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  onClick={handleApply}
+                  disabled={!tempDate?.from}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Apply
+                </Button>
+              </div>
             </div>
           </div>
         </PopoverContent>

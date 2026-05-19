@@ -31,6 +31,7 @@ interface DesignationData {
   departmentName: string;
   companyName: string;
   isParentDesignation?: boolean;
+  isOwner?: boolean;
 }
 // kk
 interface DesignationAddFormProps {
@@ -461,6 +462,7 @@ interface DesignationDataProps {
   designationId: string;
   designationName: string;
   departmentName: string;
+  isOwner?: boolean;
 }
 
 interface ConsultantDataProps {
@@ -538,9 +540,13 @@ interface EmployeeDetails {
   sahayEmId: null;
   departmentName: string | null;
   designationName: string | null;
+  createdByName: string | null;
   reportingManagerId: string | null;
   companyAdminName: string;
-  reportingManager: null;
+  reportingManager: {
+    employeeName: string;
+    employeeId: string;
+  } | null;
   isDeactivated?: boolean;
   isTeamLeader?: boolean;
 }
@@ -710,6 +716,7 @@ interface TaskGetPaging {
   isActive?: boolean;
   projectName?: string;
   deadlineRequest?: string;
+  taskDuration?: string;
 }
 
 interface RepeatTaskAllRes {
@@ -966,10 +973,12 @@ interface KPIFormData {
   value1: string;
   value2: string;
   tag: string;
+  empTags?: string | string[] | null;
   kpiMergeName?: string;
   coreParameterId?: string;
   hasData?: boolean;
   employeeName?: string;
+  employeeFullName?: string;
   visualFrequencyAggregate: string | null;
   ioKPIId?: string;
   isDelete?: boolean;
@@ -1089,6 +1098,7 @@ interface Kpi {
   value2?: string | null;
   photo?: string | null;
   tag?: string;
+  empTags?: string | string[] | null;
   detailMeetingKPIId?: string;
   goalValue?: number;
   sequence?: number;
@@ -1169,6 +1179,7 @@ interface KpiType {
   kpiLabel?: string;
   employeeName?: string;
   tag?: string;
+  empTags?: string | string[] | null;
   validationType: string;
   goalValue?: number;
   value1: string | number | null;
@@ -1288,6 +1299,7 @@ interface KpiAllList {
   value1: string;
   value2: string;
   tag: string;
+  empTags?: string | string[] | null;
   unit: string;
   isVisualized: boolean;
   visualFrequencyAggregate: string | null;
@@ -1716,6 +1728,7 @@ interface RequestMasterData {
   newValue: string;
   status: string;
   reasions: string;
+  remarks?: string;
   createdBy: {
     employeeId: string;
     employeeName: string;
@@ -1732,6 +1745,7 @@ interface CreateRequestMaster {
   newValue: string;
   status: string;
   reasions: string;
+  remarks?: string;
 }
 
 interface SearchResponse {
@@ -1869,4 +1883,47 @@ interface KpiHeader {
   isSunday?: boolean;
   isHoliday?: boolean;
   isSkipDay?: boolean;
+}
+
+interface BoardProject {
+  projectId: string;
+  projectName: string;
+  projectDescription: string;
+  employeeIds: string[];
+  subParameterIds: string[];
+  projectDeadline: string;
+  projectStatus: string;
+  projectStatusId: string;
+  color: string;
+  coreParameterName?: string;
+  projectDuration?: string;
+  createdBy?: string;
+  projectDocuments: { fileId: string; fileName: string }[];
+  deadlineRequest?: string;
+}
+
+interface ProjectBoardProps {
+  projects: BoardProject[];
+  handleCardClick: (project: BoardProject) => void;
+  handleViewDocuments: (
+    docs: { fileId: string; fileName: string }[],
+    id: string,
+  ) => void;
+  refetch: () => void;
+}
+
+interface Column {
+  id: string;
+  title: string;
+  color: string;
+}
+
+interface BoardColumnProps {
+  column: Column;
+  projects: BoardProject[];
+  handleCardClick: (project: BoardProject) => void;
+  handleViewDocuments: (
+    docs: { fileId: string; fileName: string }[],
+    id: string,
+  ) => void;
 }

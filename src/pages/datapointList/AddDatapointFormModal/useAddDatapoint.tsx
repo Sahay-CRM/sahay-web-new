@@ -15,6 +15,7 @@ import SearchInput from "@/components/shared/SearchInput";
 
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import FormTagInput from "@/components/shared/Form/FormTagInput";
 
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import {
@@ -24,7 +25,7 @@ import {
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { formatIndianNumber } from "@/features/utils/app.utils";
+import { formatIndianNumberWithDecimal } from "@/features/utils/app.utils";
 import { Button } from "@/components/ui/button";
 // import { useGetProduct } from "@/features/api/Product";
 
@@ -78,12 +79,22 @@ export default function useAddDataPoint() {
       ? data.visualFrequencyTypes.join(",")
       : data.visualFrequencyTypes;
 
+    const empTagsArr = Array.isArray(data.empTags)
+      ? data.empTags
+      : typeof data.empTags === "string"
+        ? data.empTags
+            .split(",")
+            .map((t: string) => t.trim())
+            .filter(Boolean)
+        : [];
+
     const simplePayload = {
       KPIMasterId: data.KPIMasterId.KPIMasterId,
       coreParameterId: data.coreParameterId,
       employeeId: data.employeeId,
       // frequencyType: data.frequencyType,
       tag: data.tag,
+      empTags: empTagsArr,
       unit: data.unit,
       validationType: data.validationType,
       value1: data.value1,
@@ -148,8 +159,8 @@ export default function useAddDataPoint() {
     const canToggleColumns = columnToggleOptions.length > 3;
 
     return (
-      <div>
-        <div className="mt-1 mb-4 flex items-center justify-between">
+      <div className="h-full flex flex-col overflow-hidden">
+        <div className="mt-1 mb-4 flex items-center justify-between shrink-0">
           {/* Search + Error Container */}
           <div className="flex items-center gap-2 mr-4">
             <SearchInput
@@ -213,6 +224,7 @@ export default function useAddDataPoint() {
               onCheckbox={() => true}
               showActionsColumn={false}
               isLoading={isLoading}
+              tableHeightClass="flex-1"
             />
           )}
         />
@@ -221,6 +233,7 @@ export default function useAddDataPoint() {
   };
 
   const Details = () => {
+    const enableEmpTags = false;
     const [isEmployeeSearch, setIsEmployeeSearch] = useState("");
 
     const { data: employeeData } = useGetEmployeeDd({
@@ -270,8 +283,7 @@ export default function useAddDataPoint() {
     const shouldShowVisualFrequency = selectedFrequency !== "YEARLY";
 
     // Check if sum/ave field should be shown
-    const shouldShowSumAveField =
-      validationType !== "YES_NO" && visualFrequencyTypes?.length > 0;
+    const shouldShowSumAveField = visualFrequencyTypes?.length > 0;
 
     const validationOptions = [
       { value: "EQUAL_TO", label: "= Equal to" },
@@ -295,12 +307,11 @@ export default function useAddDataPoint() {
     ];
 
     useEffect(() => {
-      if (
-        validationType !== "YES_NO" &&
-        visualFrequencyTypes?.length > 0 &&
-        !visualFrequencyAggregate
-      ) {
-        setValue("visualFrequencyAggregate", "sum");
+      if (visualFrequencyTypes?.length > 0 && !visualFrequencyAggregate) {
+        setValue(
+          "visualFrequencyAggregate",
+          validationType === "BETWEEN" ? "average" : "sum",
+        );
       }
     }, [validationType, visualFrequencyTypes, visualFrequencyAggregate]);
 
@@ -361,7 +372,15 @@ export default function useAddDataPoint() {
                   label="Validation Type"
                   triggerClassName="py-4"
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={(val) => {
+                    field.onChange(val);
+                    if (visualFrequencyTypes?.length > 0) {
+                      setValue(
+                        "visualFrequencyAggregate",
+                        val === "BETWEEN" ? "average" : "sum",
+                      );
+                    }
+                  }}
                   options={validationOptions}
                   error={errors.validationType}
                   className="rounded-md"
@@ -410,9 +429,11 @@ export default function useAddDataPoint() {
                       label="Goal Value 1"
                       placeholder="Enter Goal Value 1"
                       isMandatory
-                      value={formatIndianNumber(field.value)}
+                      value={formatIndianNumberWithDecimal(field.value)}
                       onChange={(e) => {
-                        const raw = e.target.value.replace(/,/g, "");
+                        const raw = e.target.value
+                          .replace(/,/g, "")
+                          .replace(/[^0-9.]/g, "");
                         field.onChange(raw);
                       }}
                       disabled={isGoalValueDisabled}
@@ -432,9 +453,11 @@ export default function useAddDataPoint() {
                         label="Goal Value 2"
                         placeholder="Enter Goal Value 2"
                         isMandatory
-                        value={formatIndianNumber(field.value)}
+                        value={formatIndianNumberWithDecimal(field.value)}
                         onChange={(e) => {
-                          const raw = e.target.value.replace(/,/g, "");
+                          const raw = e.target.value
+                            .replace(/,/g, "")
+                            .replace(/[^0-9.]/g, "");
                           field.onChange(raw);
                         }}
                         disabled={isGoalValueDisabled}
@@ -461,8 +484,11 @@ export default function useAddDataPoint() {
                       value={field.value || []}
                       onChange={(value) => {
                         field.onChange(value);
-                        if (value?.length > 0 && validationType !== "YES_NO") {
-                          setValue("visualFrequencyAggregate", "sum");
+                        if (value?.length > 0) {
+                          setValue(
+                            "visualFrequencyAggregate",
+                            validationType === "BETWEEN" ? "average" : "sum",
+                          );
                         }
                       }}
                       options={getFilteredVisualFrequencyOptions()}
@@ -509,7 +535,7 @@ export default function useAddDataPoint() {
             className="h-[38px] mt-2"
           />
         </div>
-        <div className="px-4 py-4 border-t-2">
+        <div className="px-4 py-4 border-t-2 space-y-4">
           <div className="flex gap-4">
             <div className="w-1/2">
               <Controller
@@ -545,6 +571,25 @@ export default function useAddDataPoint() {
               />
             </div>
           </div>
+
+          {enableEmpTags && (
+            <div>
+              <Controller
+                control={control}
+                name="empTags"
+                render={({ field }) => (
+                  <FormTagInput
+                    label="Employee Tags (@ tags)"
+                    value={field.value || []}
+                    onChange={field.onChange}
+                    disabled={isOtherFieldsDisabled}
+                    placeholder="Type tag and press Enter or comma"
+                    error={errors?.empTags as { message?: string }}
+                  />
+                )}
+              />
+            </div>
+          )}
         </div>
       </div>
     );

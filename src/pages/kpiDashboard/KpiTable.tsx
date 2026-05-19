@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useRef } from "react";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import * as XLSX from "xlsx";
@@ -63,8 +64,9 @@ import {
 import { updateKPISequenceMutation } from "@/features/api/KpiList";
 import WarningDialog from "./WarningModal";
 import DownloadDateModal from "./DownloadDateModal";
-import useGetKpiChartData from "@/features/api/kpiDashboard/useGetKpiChartData";
 import { getUTCEndOfDay, getUTCStartOfDay } from "@/features/utils/app.utils";
+import Api from "@/features/utils/api.utils";
+import Urls from "@/features/utils/urls.utils";
 import { useSelector } from "react-redux";
 import { DateRange } from "react-day-picker";
 import {
@@ -77,7 +79,6 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import { cn } from "@/lib/utils";
 import CommentModal from "./KpiCommentModal";
-import SearchInput from "@/components/shared/SearchInput";
 // import KpiDetailsSheet from "./KpiDetailsSheet";
 import GraphModal from "./GraphModal/graphModal";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
@@ -416,6 +417,7 @@ function SortableCoreParameterGroup({
 }
 
 export default function UpdatedKpiTable() {
+  const enableEmpTags = false; // Set to true to enable @employee tag filtering
   const [searchParams, setSearchParams] = useSearchParams();
 
   const userData = useSelector(getUserDetail);
@@ -440,6 +442,7 @@ export default function UpdatedKpiTable() {
   // });
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [selectedEmpTags, setSelectedEmpTags] = useState<string[]>([]);
 
   const finalFilterValue =
     selectedPeriod === "DAILY" ? "default" : isDataFilter;
@@ -485,6 +488,20 @@ export default function UpdatedKpiTable() {
   const departmentOptions = Array.from(
     new Map(departmentOptionsList.map((item) => [item.value, item])).values(),
   );
+
+  const allEmpTags = useMemo(() => {
+    const tagsSet = new Set<string>();
+    allKpis.forEach((k) => {
+      if (Array.isArray(k.empTags)) {
+        k.empTags.forEach(
+          (t) => typeof t === "string" && t.trim() && tagsSet.add(t.trim()),
+        );
+      } else if (typeof k.empTags === "string" && k.empTags.trim()) {
+        k.empTags.split(",").forEach((t) => t.trim() && tagsSet.add(t.trim()));
+      }
+    });
+    return Array.from(tagsSet).sort();
+  }, [allKpis]);
 
   const urlSelectedDate = searchParams.get("selectedDate");
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
@@ -595,12 +612,17 @@ export default function UpdatedKpiTable() {
         setSelectedPeriod(newPeriod);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kpiStructure, isKpiStructureLoading, searchParams]);
 
   const [searchTerm, setSearchTerm] = useState<PaginationFilter>({
     search: "",
   });
+
+  useEffect(() => {
+    if (!searchTerm?.search?.startsWith("@") && selectedEmpTags.length > 0) {
+      setSelectedEmpTags([]);
+    }
+  }, [searchTerm?.search, selectedEmpTags.length]);
 
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
   const [currentCellKey, setCurrentCellKey] = useState<string>("");
@@ -632,7 +654,6 @@ export default function UpdatedKpiTable() {
   const [kpiD, setKpiD] = useState<KpiType>();
   const [pendingDownload, setPendingDownload] = useState(false);
   const [isDownloadDateModalOpen, setIsDownloadDateModalOpen] = useState(false);
-  const [exportRange, setExportRange] = useState<DateRange | undefined>();
   const [isExporting, setIsExporting] = useState(false);
 
   // Drag and drop sensors
@@ -882,23 +903,12 @@ export default function UpdatedKpiTable() {
     }
   }, [kpiStructure, selectedPeriod]);
 
-  const { kpiData, isLoading } = useKpiDashboard({
+  const { kpiData } = useKpiDashboard({
     selectedPeriod,
     selectedDate,
     isDataFilter: finalFilterValue,
   });
 
-  const { data: exportApiData, isFetching: isExportFetching } =
-    useGetKpiChartData({
-      filter: {
-        frequencyType: selectedPeriod,
-        startDate: exportRange?.from
-          ? getUTCStartOfDay(exportRange.from)
-          : null,
-        endDate: exportRange?.to ? getUTCEndOfDay(exportRange.to) : null,
-      },
-      enable: isExporting && !!exportRange?.from,
-    });
   const hasNoKpis = useMemo(() => {
     if (!kpiStructure?.data || !Array.isArray(kpiStructure.data)) return true;
     return kpiStructure.data.every((freq) => (freq.count ?? 0) === 0);
@@ -926,104 +936,155 @@ export default function UpdatedKpiTable() {
     );
   }, [filteredData]);
 
+  const getGroupedKpiRowsForFreq = useCallback(
+    (
+      coreParameterGroups: CoreParameterGroup[],
+      search: string,
+      employees: string[],
+      departments: string[],
+      empTagsFilter: string[],
+      focusFilter: string,
+    ) => {
+      const lowerSearch = search.toLowerCase();
+
+      const getSectionGroups = (isFocus: boolean) => {
+        const groupsMap = new Map<
+          string,
+          {
+            coreParameter: {
+              coreParameterId: string;
+              coreParameterName: string;
+            };
+            kpis: { kpi: Kpi }[];
+          }
+        >();
+
+        coreParameterGroups.forEach((coreParam) => {
+          const groupId = coreParam.coreParameterId ?? "UNGROUPED";
+          const groupName = coreParam.coreParameterName ?? "";
+
+          coreParam.kpis?.forEach((kpi: Kpi) => {
+            if (!!kpi.isFocus !== isFocus) return;
+
+            const coreName = groupName.toLowerCase();
+            const tag = kpi.tag?.toLowerCase() || "";
+            const name = kpi.kpiName?.toLowerCase() || "";
+            const empTagsList = Array.isArray(kpi.empTags)
+              ? kpi.empTags.map((t) =>
+                  typeof t === "string" ? t.toLowerCase().trim() : String(t),
+                )
+              : typeof kpi.empTags === "string"
+                ? kpi.empTags
+                    .toLowerCase()
+                    .split(",")
+                    .map((t) => t.trim())
+                : [];
+            const isTagSearch = enableEmpTags && lowerSearch.startsWith("@");
+
+            const matchesSearch = isTagSearch
+              ? true
+              : coreName.includes(lowerSearch) ||
+                tag.includes(lowerSearch) ||
+                name.includes(lowerSearch);
+
+            const matchesEmployee =
+              employees.length === 0 ||
+              (kpi.employeeId && employees.includes(kpi.employeeId));
+
+            const matchesDepartment =
+              departments.length === 0 ||
+              departments.includes(kpi.departmentId || "unknown");
+
+            const matchesEmpTags =
+              empTagsFilter.length === 0 ||
+              empTagsFilter.some((selectedTag) =>
+                empTagsList.some(
+                  (t) => t.toLowerCase() === selectedTag.toLowerCase(),
+                ),
+              );
+
+            if (
+              matchesSearch &&
+              matchesEmployee &&
+              matchesDepartment &&
+              matchesEmpTags
+            ) {
+              if (!groupsMap.has(groupId)) {
+                groupsMap.set(groupId, {
+                  coreParameter: {
+                    coreParameterId: groupId,
+                    coreParameterName: groupName,
+                  },
+                  kpis: [],
+                });
+              }
+              groupsMap.get(groupId)!.kpis.push({ kpi });
+            }
+          });
+        });
+
+        return Array.from(groupsMap.values()).filter(
+          (group) => group.kpis.length > 0,
+        );
+      };
+
+      if (focusFilter === "focus") {
+        const focusGroups = getSectionGroups(true);
+        return focusGroups.map((g) => ({ ...g, sectionPrefix: "focus" }));
+      } else if (focusFilter === "other") {
+        const otherGroups = getSectionGroups(false);
+        return otherGroups.map((g) => ({ ...g, sectionPrefix: "other" }));
+      } else {
+        const allGroups = getSectionGroups(true).concat(
+          getSectionGroups(false),
+        );
+        const mergedGroupsMap = new Map<
+          string,
+          {
+            coreParameter: {
+              coreParameterId: string;
+              coreParameterName: string;
+            };
+            kpis: { kpi: Kpi }[];
+          }
+        >();
+        allGroups.forEach((g) => {
+          const id = g.coreParameter.coreParameterId;
+          const existing = mergedGroupsMap.get(id);
+          if (!existing) {
+            mergedGroupsMap.set(id, { ...g, kpis: [...g.kpis] });
+          } else {
+            existing.kpis.push(...g.kpis);
+          }
+        });
+        return Array.from(mergedGroupsMap.values()).map((g) => ({
+          ...g,
+          sectionPrefix: "all",
+        }));
+      }
+    },
+    [],
+  );
+
   const groupedKpiRows = useMemo(() => {
     if (!filteredData.length || !filteredData[0].kpis) return [];
 
-    const search = String(searchTerm.search ?? "").toLowerCase();
-
-    const getSectionGroups = (isFocus: boolean) => {
-      const groupsMap = new Map<
-        string,
-        {
-          coreParameter: {
-            coreParameterId: string;
-            coreParameterName: string;
-          };
-          kpis: { kpi: Kpi }[];
-        }
-      >();
-
-      (filteredData[0].kpis as CoreParameterGroup[]).forEach((coreParam) => {
-        const groupId = coreParam.coreParameterId ?? "UNGROUPED";
-        const groupName = coreParam.coreParameterName ?? "";
-
-        coreParam.kpis?.forEach((kpi: Kpi) => {
-          if (!!kpi.isFocus !== isFocus) return;
-
-          const coreName = groupName.toLowerCase();
-          const tag = kpi.tag?.toLowerCase() || "";
-          const name = kpi.kpiName?.toLowerCase() || "";
-
-          const matchesSearch =
-            coreName.includes(search) ||
-            tag.includes(search) ||
-            name.includes(search);
-
-          // Filter by employee
-          const matchesEmployee =
-            selectedEmployees.length === 0 ||
-            (kpi.employeeId && selectedEmployees.includes(kpi.employeeId));
-
-          // Filter by department
-          const matchesDepartment =
-            selectedDepartments.length === 0 ||
-            selectedDepartments.includes(kpi.departmentId || "unknown");
-
-          if (matchesSearch && matchesEmployee && matchesDepartment) {
-            if (!groupsMap.has(groupId)) {
-              groupsMap.set(groupId, {
-                coreParameter: {
-                  coreParameterId: groupId,
-                  coreParameterName: groupName,
-                },
-                kpis: [],
-              });
-            }
-            groupsMap.get(groupId)!.kpis.push({ kpi });
-          }
-        });
-      });
-
-      return Array.from(groupsMap.values()).filter(
-        (group) => group.kpis.length > 0,
-      );
-    };
-
-    if (focusFilter === "focus") {
-      const focusGroups = getSectionGroups(true);
-      return focusGroups.map((g) => ({ ...g, sectionPrefix: "focus" }));
-    } else if (focusFilter === "other") {
-      const otherGroups = getSectionGroups(false);
-      return otherGroups.map((g) => ({ ...g, sectionPrefix: "other" }));
-    } else {
-      const allGroups = getSectionGroups(true).concat(getSectionGroups(false));
-      const mergedGroupsMap = new Map<
-        string,
-        {
-          coreParameter: { coreParameterId: string; coreParameterName: string };
-          kpis: { kpi: Kpi }[];
-        }
-      >();
-      allGroups.forEach((g) => {
-        const id = g.coreParameter.coreParameterId;
-        const existing = mergedGroupsMap.get(id);
-        if (!existing) {
-          mergedGroupsMap.set(id, { ...g, kpis: [...g.kpis] });
-        } else {
-          existing.kpis.push(...g.kpis);
-        }
-      });
-      return Array.from(mergedGroupsMap.values()).map((g) => ({
-        ...g,
-        sectionPrefix: "all",
-      }));
-    }
+    return getGroupedKpiRowsForFreq(
+      filteredData[0].kpis as CoreParameterGroup[],
+      searchTerm.search ?? "",
+      selectedEmployees,
+      selectedDepartments,
+      selectedEmpTags,
+      focusFilter,
+    );
   }, [
     filteredData,
-    searchTerm,
-    focusFilter,
+    searchTerm.search,
     selectedEmployees,
     selectedDepartments,
+    selectedEmpTags,
+    focusFilter,
+    getGroupedKpiRowsForFreq,
   ]);
 
   useEffect(() => {
@@ -1341,197 +1402,203 @@ export default function UpdatedKpiTable() {
   };
 
   const handleDownloadExcel = useCallback(
-    (apiCells?: KpiDataCell[], apiHeaders?: KpiHeader[]) => {
-      const activeRows = groupedKpiRows;
-      const activeHeaders = apiHeaders || headers;
-      const activeData = apiCells || (kpiData?.data as KpiDataCell[][])?.flat();
+    async (range: DateRange) => {
+      if (!kpiStructure?.data || !Array.isArray(kpiStructure.data)) return;
 
-      if (!activeRows || !activeHeaders || !activeData) return;
+      setIsExporting(true); // Reuse existing loading state if any
 
-      const workbook = XLSX.utils.book_new();
-      const worksheetData: (string | number)[][] = [];
-      const cellComments: { [key: string]: string } = {};
-      let currentRow = 0;
+      try {
+        const workbook = XLSX.utils.book_new();
+        const dateStr = format(range.from!, "yyyy-MM-dd");
 
-      // Group API cells by kpiId for easy lookup
-      const dataMap: Record<string, KpiDataCell[]> = {};
-      activeData.forEach((cell) => {
-        if (cell && cell.kpiId) {
-          if (!dataMap[cell.kpiId]) dataMap[cell.kpiId] = [];
-          dataMap[cell.kpiId].push(cell);
-        }
-      });
+        // Frequencies to export (all that have KPIs)
+        const activeFrequencies = kpiStructure.data.filter(
+          (f) => (f.count ?? 0) > 0,
+        );
 
-      // 1. Prepare Column Headers
-      const columnHeaders = [
-        "Who",
-        "KPI",
-        "Tag",
-        "Goal",
-        "Core Parameter",
-        ...activeHeaders.map((h) => `${h.label}${h.year ? ` ${h.year}` : ""}`),
-      ];
-      worksheetData.push(columnHeaders);
-      currentRow++;
+        for (const freqItem of activeFrequencies) {
+          const freq = freqItem.frequencyType;
 
-      // 2. Iterate through groups and KPIs
-      activeRows.forEach((group) => {
-        const coreParamName = group.coreParameter.coreParameterName;
+          // 1. Fetch cell data for this frequency
+          const response = await Api.post<{ data: KpiDataCell[][] }>({
+            url: Urls.kpiChartDataGet(),
+            data: {
+              frequencyType: freq,
+              startDate: getUTCStartOfDay(range.from!),
+              endDate: range.to ? getUTCEndOfDay(range.to) : null,
+            },
+          });
 
-        group.kpis.forEach(({ kpi }) => {
-          // Find data for this KPI
-          const kpiCells = dataMap[kpi.kpiId] || [];
+          const apiData = response.data.data;
+          const apiCells = apiData.flat();
 
-          // Prepare Row Data
-          const rowData = [
-            kpi.employeeName || (kpi.isMurgeKpi ? "GK" : ""),
-            kpi.kpiName,
-            kpi.tag || "",
-            // Goal Value logic matching SortableKpiRow
-            kpi.validationType === "YES_NO" ||
-            kpi.kpiName?.toLowerCase().includes("yes_no")
-              ? selectedPeriod === "DAILY"
-                ? Number(kpi.value1) === 1
-                  ? "Yes"
-                  : Number(kpi.value1) === 2
-                    ? "No"
-                    : Number(kpi.goalValue) > 1
-                      ? formatToThreeDecimals(kpi.value1)
-                      : "No"
-                : `${formatToThreeDecimals(kpi.goalValue)} - ${Number(kpi.value1) === 1 ? "Yes" : "No"}`
-              : getFormattedValue(
-                  kpi.validationType,
-                  String(kpi?.value1),
-                  kpi?.value2,
-                  kpi?.unit,
-                ),
-            coreParamName, // New First Column
-          ];
+          // 2. Generate Headers
+          const uniqueDatesMap: Record<string, KpiDataCell> = {};
+          apiCells.forEach((c) => {
+            const key = `${c.startDate}_${c.endDate}`;
+            if (!uniqueDatesMap[key]) uniqueDatesMap[key] = c;
+          });
+          const sortedDateCells = Object.values(uniqueDatesMap).sort(
+            (a, b) =>
+              new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+          );
+          const activeHeaders = getKpiHeadersFromData([sortedDateCells], freq);
 
-          // Add Date values and capture comments
-          activeHeaders.forEach((h, colIdx) => {
-            const cell = kpiCells.find(
-              (c) =>
-                c.startDate &&
-                (h.data as KpiDataCell).startDate &&
-                new Date(c.startDate).getTime() ===
-                  new Date((h.data as KpiDataCell).startDate).getTime(),
-            );
+          // 3. Compute Grouped Rows for this frequency
+          const activeRows = getGroupedKpiRowsForFreq(
+            freqItem.kpis as CoreParameterGroup[],
+            searchTerm.search ?? "",
+            selectedEmployees,
+            selectedDepartments,
+            selectedEmpTags,
+            focusFilter,
+          );
 
-            const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
-            const inputVal = inputValues[key] ?? cell?.data?.toString() ?? "";
-            const inputnote = tempValues[key]?.comment ?? cell?.note ?? "";
+          if (!activeRows.length || !activeHeaders.length) continue;
 
-            // If YES_NO, format as Yes/No
-            if (kpi.validationType === "YES_NO") {
-              rowData.push(
-                inputVal === "1" ? "Yes" : inputVal === "2" ? "No" : "-",
-              );
-            } else {
-              rowData.push(inputVal || "-");
-            }
+          // 4. Prepare Worksheet Data
+          const worksheetData: (string | number)[][] = [];
+          const cellComments: { [key: string]: string } = {};
+          let currentRow = 0;
 
-            // Capture comment
-            if (inputnote && inputnote.trim() !== "" && inputnote !== "0") {
-              const cellAddress = XLSX.utils.encode_cell({
-                r: currentRow,
-                c: 5 + colIdx, // Offset by 5 (Core, Who, KPI, Tag, Goal)
-              });
-              cellComments[cellAddress] = inputnote;
+          const dataMap: Record<string, KpiDataCell[]> = {};
+          apiCells.forEach((cell) => {
+            if (cell && cell.kpiId) {
+              if (!dataMap[cell.kpiId]) dataMap[cell.kpiId] = [];
+              dataMap[cell.kpiId].push(cell);
             }
           });
 
-          worksheetData.push(rowData);
+          // Headers
+          const columnHeaders = [
+            "Who",
+            "KPI",
+            "Tag",
+            "Goal",
+            "Core Parameter",
+            ...activeHeaders.map(
+              (h) => `${h.label}${h.year ? ` ${h.year}` : ""}`,
+            ),
+          ];
+          worksheetData.push(columnHeaders);
           currentRow++;
-        });
-      });
 
-      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+          // Data Rows
+          activeRows.forEach((group) => {
+            const coreParamName = group.coreParameter.coreParameterName;
 
-      Object.keys(cellComments).forEach((address) => {
-        if (!worksheet[address]) {
-          worksheet[address] = { v: "" };
+            group.kpis.forEach(({ kpi }) => {
+              const kpiCells = dataMap[kpi.kpiId] || [];
+              const rowData = [
+                kpi.employeeName || (kpi.isMurgeKpi ? "GK" : ""),
+                kpi.kpiName,
+                kpi.tag || "",
+                kpi.validationType === "YES_NO" ||
+                kpi.kpiName?.toLowerCase().includes("yes_no")
+                  ? freq === "DAILY"
+                    ? Number(kpi.value1) === 1
+                      ? "Yes"
+                      : Number(kpi.value1) === 2
+                        ? "No"
+                        : Number(kpi.goalValue) > 1
+                          ? formatToThreeDecimals(kpi.value1)
+                          : "No"
+                    : `${formatToThreeDecimals(kpi.goalValue)} - ${Number(kpi.value1) === 1 ? "Yes" : "No"}`
+                  : getFormattedValue(
+                      kpi.validationType,
+                      String(kpi?.value1),
+                      kpi?.value2,
+                      kpi?.unit,
+                    ),
+                coreParamName,
+              ];
+
+              activeHeaders.forEach((h, colIdx) => {
+                const cell = kpiCells.find(
+                  (c) =>
+                    c.startDate &&
+                    (h.data as KpiDataCell).startDate &&
+                    new Date(c.startDate).getTime() ===
+                      new Date((h.data as KpiDataCell).startDate).getTime(),
+                );
+
+                const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
+                // Only use inputValues/tempValues for the currently selected period
+                const inputVal =
+                  freq === selectedPeriod
+                    ? (inputValues[key] ?? cell?.data?.toString() ?? "")
+                    : (cell?.data?.toString() ?? "");
+                const inputnote =
+                  freq === selectedPeriod
+                    ? (tempValues[key]?.comment ?? cell?.note ?? "")
+                    : (cell?.note ?? "");
+
+                if (kpi.validationType === "YES_NO") {
+                  rowData.push(
+                    inputVal === "1" ? "Yes" : inputVal === "2" ? "No" : "-",
+                  );
+                } else {
+                  rowData.push(inputVal || "-");
+                }
+
+                if (inputnote && inputnote.trim() !== "" && inputnote !== "0") {
+                  const cellAddress = XLSX.utils.encode_cell({
+                    r: currentRow,
+                    c: 5 + colIdx,
+                  });
+                  cellComments[cellAddress] = inputnote;
+                }
+              });
+
+              worksheetData.push(rowData);
+              currentRow++;
+            });
+          });
+
+          const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+          Object.keys(cellComments).forEach((address) => {
+            if (!worksheet[address]) worksheet[address] = { v: "" };
+            const commentArray: XLSX.Comment[] & { hidden?: boolean } = [
+              { t: cellComments[address], a: "" },
+            ];
+            commentArray.hidden = true;
+            worksheet[address].c = commentArray;
+          });
+
+          // Name the sheet by frequency (Title Cased)
+          const sheetName =
+            freq.charAt(0) + freq.slice(1).toLowerCase().replace("_", "-");
+          XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
         }
-        const commentArray: XLSX.Comment[] & { hidden?: boolean } = [
-          { t: cellComments[address], a: "" },
-        ];
-        commentArray.hidden = true;
-        worksheet[address].c = commentArray;
-      });
 
-      // Optional: Add some basic styling or column widths if needed
-      // worksheet['!cols'] = [{ wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 15 }];
-
-      XLSX.utils.book_append_sheet(workbook, worksheet, "KPI Dashboard");
-
-      // Generate filename based on period and date
-      const dateStr = selectedDate
-        ? format(selectedDate, "yyyy-MM-dd")
-        : format(new Date(), "yyyy-MM-dd");
-      const filename = `KPI_Dashboard_${selectedPeriod}_${dateStr}.xlsx`;
-
-      XLSX.writeFile(workbook, filename);
+        const filename = `KPI_Dashboard_All_${dateStr}.xlsx`;
+        XLSX.writeFile(workbook, filename);
+      } catch (error) {
+        console.error("Export failed", error);
+      } finally {
+        setIsExporting(false);
+      }
     },
     [
-      groupedKpiRows,
-      headers,
-      kpiData,
+      kpiStructure,
+      searchTerm.search,
+      selectedEmployees,
+      selectedDepartments,
+      focusFilter,
       selectedPeriod,
-      selectedDate,
       inputValues,
       tempValues,
+      getGroupedKpiRowsForFreq,
+      getFormattedValue,
     ],
   );
 
-  useEffect(() => {
-    // Only proceed when export data is ready
-    if (
-      isExporting &&
-      exportApiData?.data &&
-      Array.isArray(exportApiData.data) &&
-      !isExportFetching &&
-      !isLoading
-    ) {
-      const apiCells = exportApiData.data.flat() as KpiDataCell[];
-
-      // Generate Headers for the export data
-      const uniqueDatesMap: Record<string, KpiDataCell> = {};
-      apiCells.forEach((c) => {
-        const key = `${c.startDate}_${c.endDate}`;
-        if (!uniqueDatesMap[key]) uniqueDatesMap[key] = c;
-      });
-
-      const sortedDateCells = Object.values(uniqueDatesMap).sort(
-        (a, b) =>
-          new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
-      );
-
-      const exportHeaders = getKpiHeadersFromData(
-        [sortedDateCells],
-        selectedPeriod,
-      );
-
-      handleDownloadExcel(apiCells, exportHeaders);
-
-      // Reset export state
-      setIsExporting(false);
-      setExportRange(undefined);
-    }
-  }, [
-    exportApiData,
-    isExporting,
-    isExportFetching,
-    handleDownloadExcel,
-    selectedPeriod,
-    isLoading,
-  ]);
-
-  const handleDownloadDateConfirm = (range: DateRange | undefined) => {
-    setIsDownloadDateModalOpen(false);
+  const handleDownloadDateConfirm = async (range: DateRange | undefined) => {
     if (range?.from) {
-      // Set the export range and trigger the export API
-      setExportRange(range);
-      setIsExporting(true);
+      await handleDownloadExcel(range);
+      setIsDownloadDateModalOpen(false);
+    } else {
+      setIsDownloadDateModalOpen(false);
     }
   };
 
@@ -1695,23 +1762,127 @@ export default function UpdatedKpiTable() {
             )}
 
             <div className="flex items-center gap-2" ref={searchContainerRef}>
-              <div className="flex items-center">
+              <div className="flex items-center relative">
                 {isSearchOpen ? (
                   <div className="flex items-center gap-2 bg-white animate-in slide-in-from-right-2 duration-200">
-                    <SearchInput
-                      placeholder="Search..."
-                      searchValue={searchTerm?.search || ""}
-                      setPaginationFilter={setSearchTerm}
-                      className="w-40 min-[1200px]:w-64"
-                    />
+                    <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md shadow-sm pl-2.5 pr-2 h-10 w-40 min-[1200px]:w-64 overflow-x-auto pb-0.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+                      <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+                      {enableEmpTags && selectedEmpTags.length > 0 && (
+                        <div className="flex items-center gap-1 overflow-x-auto py-1 pb-1.5 shrink-0">
+                          {selectedEmpTags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="bg-blue-50 text-primary border border-blue-200 text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 shrink-0 animate-in zoom-in-95 duration-150 shadow-2xs"
+                            >
+                              @{tag}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedEmpTags((prev) =>
+                                    prev.filter((t) => t !== tag),
+                                  );
+                                }}
+                                className="hover:bg-blue-200 text-primary rounded-full p-0.5 transition-colors flex items-center justify-center"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <input
+                        type="text"
+                        placeholder={
+                          enableEmpTags && selectedEmpTags.length > 0
+                            ? "Add tag or search..."
+                            : enableEmpTags
+                              ? "Search... (@ for tags)"
+                              : "Search..."
+                        }
+                        value={searchTerm?.search || ""}
+                        onChange={(e) =>
+                          setSearchTerm({ search: e.target.value })
+                        }
+                        className="border-none outline-none focus:ring-0 text-sm w-36 min-[1200px]:w-48 shrink-0 py-1 bg-transparent placeholder:text-gray-400"
+                      />
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-9 w-9 shrink-0"
-                      onClick={() => setIsSearchOpen(false)}
+                      onClick={() => {
+                        setIsSearchOpen(false);
+                        setSearchTerm({ search: "" });
+                        setSelectedEmpTags([]);
+                      }}
                     >
                       <X className="h-4 w-4" />
                     </Button>
+
+                    {enableEmpTags && searchTerm?.search?.startsWith("@") && (
+                      <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-md shadow-lg border border-gray-200 p-2.5 z-50 max-h-60 overflow-y-auto">
+                        <div className="text-xs font-semibold text-gray-500 mb-2 px-1 flex justify-between items-center border-b pb-1">
+                          <span>Select Employee Tags (@)</span>
+                          {selectedEmpTags.length > 0 && (
+                            <button
+                              className="text-primary hover:underline text-[10px]"
+                              onClick={() => setSelectedEmpTags([])}
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                        {(() => {
+                          const query = searchTerm.search
+                            .slice(1)
+                            .toLowerCase()
+                            .trim();
+                          const matches = query
+                            ? allEmpTags.filter((t) =>
+                                t.toLowerCase().includes(query),
+                              )
+                            : allEmpTags;
+                          if (matches.length === 0) {
+                            return (
+                              <div className="text-xs text-gray-400 p-2 text-center">
+                                No tags found
+                              </div>
+                            );
+                          }
+                          return (
+                            <div className="space-y-1">
+                              {matches.map((tag) => {
+                                const isSelected =
+                                  selectedEmpTags.includes(tag);
+                                return (
+                                  <label
+                                    key={tag}
+                                    className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer text-sm transition-colors"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => {
+                                        setSelectedEmpTags((prev) =>
+                                          isSelected
+                                            ? prev.filter((t) => t !== tag)
+                                            : [...prev, tag],
+                                        );
+                                      }}
+                                      className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                                    />
+                                    <span className="text-gray-700 font-medium line-clamp-1">
+                                      {tag}
+                                    </span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div
@@ -1797,22 +1968,30 @@ export default function UpdatedKpiTable() {
                   </Button>
                 )}
                 {groupedKpiRows.length > 0 && (
-                  <Button
-                    variant="default"
-                    className="bg-primary hover:bg-primary/90 text-white px-4 shrink-0 skip-nav-warning flex items-center gap-2 h-9"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (Object.keys(tempValues).length > 0) {
-                        setPendingDownload(true);
-                        setShowWarning(true);
-                      } else {
-                        setIsDownloadDateModalOpen(true);
-                      }
-                    }}
-                  >
-                    Download Excel
-                    <Download className="h-4 w-4" />
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="default"
+                          className="bg-primary hover:bg-primary/90 text-white px-4 shrink-0 skip-nav-warning flex items-center gap-2 h-9"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (Object.keys(tempValues).length > 0) {
+                              setPendingDownload(true);
+                              setShowWarning(true);
+                            } else {
+                              setIsDownloadDateModalOpen(true);
+                            }
+                          }}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span>Download Excel</span>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
               </div>
             </div>
@@ -1971,6 +2150,39 @@ export default function UpdatedKpiTable() {
                           </React.Fragment>
                         );
                       })}
+                      {enableEmpTags &&
+                        searchTerm?.search?.startsWith("@") &&
+                        selectedEmpTags.length > 0 &&
+                        groupedKpiRows.length > 0 && (
+                          <>
+                            <tr className="h-[39px] bg-blue-50 text-primary font-bold border-t-2 border-primary/20 shadow-sm">
+                              <td
+                                colSpan={5}
+                                className="p-2 border pl-4 text-xs uppercase tracking-wider font-extrabold"
+                              >
+                                Summary
+                              </td>
+                            </tr>
+
+                            <tr className="h-[50px] bg-white hover:bg-gray-50/80 transition-colors font-medium border-b border-gray-200">
+                              <td
+                                colSpan={5}
+                                className="px-3 border text-left align-middle font-bold text-gray-800 text-sm"
+                              >
+                                Average Value
+                              </td>
+                            </tr>
+
+                            <tr className="h-[50px] bg-white hover:bg-gray-50/80 transition-colors font-medium border-b-2 border-primary/20">
+                              <td
+                                colSpan={5}
+                                className="px-3 border text-left align-middle font-bold text-gray-800 text-sm"
+                              >
+                                Total (Sum)
+                              </td>
+                            </tr>
+                          </>
+                        )}
                       {/* <KpiDetailsSheet
                       isOpen={isSheetOpen}
                       onOpenChange={setIsSheetOpen}
@@ -2031,7 +2243,7 @@ export default function UpdatedKpiTable() {
                                 colSpan={headers.length}
                                 className="p-2 border text-black font-bold"
                               >
-                                {group.coreParameter.coreParameterName}
+                                {/* {group.coreParameter.coreParameterName} */}
                               </td>
                             </tr>
                             {group.kpis.map(({ kpi }) => {
@@ -2522,6 +2734,153 @@ export default function UpdatedKpiTable() {
                           </React.Fragment>
                         );
                       })}
+                      {enableEmpTags &&
+                        searchTerm?.search?.startsWith("@") &&
+                        selectedEmpTags.length > 0 &&
+                        groupedKpiRows.length > 0 && (
+                          <>
+                            <tr className="h-[39px] bg-blue-50 z-10 border-t-2 border-primary/20 shadow-sm">
+                              <td
+                                colSpan={headers.length}
+                                className="p-2 border"
+                              ></td>
+                            </tr>
+                            <tr className="h-[50px] bg-white font-bold border-b border-gray-200 hover:bg-gray-50/80 transition-colors">
+                              {headers.map((header, colIdx) => {
+                                let total = 0;
+                                let count = 0;
+                                groupedKpiRows.forEach((g) => {
+                                  g.kpis.forEach(({ kpi }) => {
+                                    let dataRow: KpiDataCell[] | undefined =
+                                      undefined;
+                                    if (
+                                      isKpiDataCellArrayArray(kpiData?.data)
+                                    ) {
+                                      dataRow = (
+                                        kpiData.data as KpiDataCell[][]
+                                      ).find(
+                                        (cells) =>
+                                          Array.isArray(cells) &&
+                                          cells.length > 0 &&
+                                          cells[0].kpiId === kpi.kpiId,
+                                      );
+                                    }
+                                    const cell = dataRow?.[colIdx];
+                                    const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
+                                    const valStr =
+                                      inputValues[key] ??
+                                      cell?.data?.toString() ??
+                                      "";
+                                    if (valStr !== "" && valStr !== "-") {
+                                      if (cell?.validationType === "YES_NO") {
+                                        const isValid =
+                                          valStr === String(cell?.value1);
+                                        total += isValid ? 1 : -1;
+                                        count += 1;
+                                      } else {
+                                        const num = Number(valStr);
+                                        if (!isNaN(num)) {
+                                          total += num;
+                                          count += 1;
+                                        }
+                                      }
+                                    }
+                                  });
+                                });
+
+                                const avgDisplay =
+                                  count > 0 ? (total / count).toFixed(2) : "-";
+
+                                return (
+                                  <td
+                                    key={colIdx}
+                                    className={clsx(
+                                      "p-2 border text-center w-[80px] h-[42px] align-middle font-extrabold text-primary text-sm",
+                                      header.isSunday &&
+                                        header.isHoliday &&
+                                        header.isSkipDay
+                                        ? "bg-blue-100/60"
+                                        : header.isSunday || header.isSkipDay
+                                          ? "bg-gray-100/60"
+                                          : header.isHoliday
+                                            ? "bg-blue-100/60"
+                                            : "",
+                                    )}
+                                  >
+                                    {avgDisplay}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                            <tr className="h-[50px] bg-white font-bold border-b-2 border-primary/20 hover:bg-gray-50/80 transition-colors">
+                              {headers.map((header, colIdx) => {
+                                let total = 0;
+                                let count = 0;
+                                groupedKpiRows.forEach((g) => {
+                                  g.kpis.forEach(({ kpi }) => {
+                                    let dataRow: KpiDataCell[] | undefined =
+                                      undefined;
+                                    if (
+                                      isKpiDataCellArrayArray(kpiData?.data)
+                                    ) {
+                                      dataRow = (
+                                        kpiData.data as KpiDataCell[][]
+                                      ).find(
+                                        (cells) =>
+                                          Array.isArray(cells) &&
+                                          cells.length > 0 &&
+                                          cells[0].kpiId === kpi.kpiId,
+                                      );
+                                    }
+                                    const cell = dataRow?.[colIdx];
+                                    const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
+                                    const valStr =
+                                      inputValues[key] ??
+                                      cell?.data?.toString() ??
+                                      "";
+                                    if (valStr !== "" && valStr !== "-") {
+                                      if (cell?.validationType === "YES_NO") {
+                                        const isValid =
+                                          valStr === String(cell?.value1);
+                                        total += isValid ? 1 : -1;
+                                        count += 1;
+                                      } else {
+                                        const num = Number(valStr);
+                                        if (!isNaN(num)) {
+                                          total += num;
+                                          count += 1;
+                                        }
+                                      }
+                                    }
+                                  });
+                                });
+
+                                const sumDisplay =
+                                  count > 0 ? total.toFixed(2) : "-";
+
+                                return (
+                                  <td
+                                    key={colIdx}
+                                    className={clsx(
+                                      "p-2 border text-center w-[80px] h-[42px] align-middle text-primary font-extrabold  text-sm",
+                                      header.isSunday &&
+                                        header.isHoliday &&
+                                        header.isSkipDay
+                                        ? "bg-blue-100/60"
+                                        : header.isSunday || header.isSkipDay
+                                          ? "bg-gray-100/60"
+                                          : header.isHoliday
+                                            ? "bg-blue-100/60"
+                                            : "",
+                                    )}
+                                  >
+                                    {sumDisplay}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          </>
+                        )}
                     </tbody>
                   </table>
                 </div>
@@ -2641,6 +3000,7 @@ export default function UpdatedKpiTable() {
         onClose={() => setIsDownloadDateModalOpen(false)}
         onConfirm={handleDownloadDateConfirm}
         currentDate={selectedDate}
+        isLoading={isExporting}
         defaultRange={(() => {
           if (!headers || headers.length === 0) return undefined;
           const dates = headers

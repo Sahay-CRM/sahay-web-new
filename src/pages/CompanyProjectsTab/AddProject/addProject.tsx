@@ -328,8 +328,8 @@ const SubParameter = ({ setIsReqModalOpen }: SubParameterProps) => {
   }
 
   return (
-    <div>
-      <div className="mt-1 mb-4 flex items-center justify-between">
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="mt-1 mb-4 flex items-center justify-between shrink-0">
         {/* Left side: Search + Error */}
         <div className="flex items-center space-x-2">
           <SearchInput
@@ -397,6 +397,7 @@ const SubParameter = ({ setIsReqModalOpen }: SubParameterProps) => {
             onCheckbox={() => true}
             isLoading={isLoading}
             showActionsColumn={false}
+            tableHeightClass="flex-1"
           />
         )}
       />
@@ -441,8 +442,8 @@ const Employees = () => {
   const canToggleColumns = columnToggleOptions.length > 3;
 
   return (
-    <div>
-      <div className="mt-1 mb-4 flex items-center justify-between">
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="mt-1 mb-4 flex items-center justify-between shrink-0">
         {/* Left side: Search + Error */}
         <div className="flex items-center space-x-2">
           <SearchInput
@@ -501,6 +502,7 @@ const Employees = () => {
             onCheckbox={() => true}
             isLoading={isLoading}
             showActionsColumn={false}
+            tableHeightClass="flex-1"
           />
         )}
       />
@@ -757,21 +759,25 @@ export default function AddProject() {
       isLoading={companyProjectId ? !projectApiData : false}
     >
       <FormProvider {...methods}>
-        <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-          <StepProgress
-            currentStep={currentStep}
-            stepNames={stepNames}
-            totalSteps={totalSteps}
-            back={back}
-            isFirstStep={isFirstStep}
-            next={next}
-            isLastStep={isLastStep}
-            isPending={isPending}
-            onFinish={onFinish}
-            isUpdate={!!companyProjectId}
-          />
+        <div className="w-full h-full px-2 sm:px-4 py-6 flex flex-col overflow-hidden">
+          <div className="shrink-0">
+            <StepProgress
+              currentStep={currentStep}
+              stepNames={stepNames}
+              totalSteps={totalSteps}
+              back={back}
+              isFirstStep={isFirstStep}
+              next={next}
+              isLastStep={isLastStep}
+              isPending={isPending}
+              onFinish={onFinish}
+              isUpdate={!!companyProjectId}
+            />
+          </div>
 
-          <div className="step-content w-full">{stepContent}</div>
+          <div className="step-content w-full flex-1 overflow-hidden flex flex-col pt-4">
+            {stepContent}
+          </div>
 
           {isModalOpen && (
             <AddProjectModal

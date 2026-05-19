@@ -1,6 +1,6 @@
 import ModalData from "@/components/shared/Modal/ModalData";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { capitalizeFirstLetter } from "@/features/utils/app.utils";
+import { formatEmployeeType } from "@/features/utils/app.utils";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -67,7 +67,7 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
           <div>
             <span className="font-medium text-primary">Designation : </span>
             {modalData.designationName ||
-              capitalizeFirstLetter(modalData?.employeeType || "")}
+              formatEmployeeType(modalData?.employeeType || "")}
           </div>
         )}
         {modalData?.employeeEmail && (

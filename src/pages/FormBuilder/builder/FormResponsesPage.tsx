@@ -173,8 +173,8 @@ export default function FormResponsesPage() {
 
   return (
     <CompanyAccessGuard companyId={resourceCompanyId} isLoading={formLoading}>
-      <div className="w-full px-2 sm:px-4 py-4">
-        <div className="flex items-center gap-3 mb-5">
+      <div className="w-full h-full px-2 sm:px-4 py-4 flex flex-col overflow-hidden">
+        <div className="flex items-center gap-3 mb-5 shrink-0">
           <div>
             <h1 className="font-semibold text-xl text-black">
               {form?.name || "Form"}
@@ -182,7 +182,7 @@ export default function FormResponsesPage() {
             <p className="text-xs text-gray-500">Submissions Listing</p>
           </div>
         </div>
-        <div className="flex justify-between gap-4 mb-6">
+        <div className="flex justify-between gap-4 mb-6 shrink-0 flex-wrap">
           <SearchInput
             placeholder="Search responses..."
             searchValue={paginationFilter?.search || ""}
@@ -215,8 +215,9 @@ export default function FormResponsesPage() {
             </Button>
           </div>
         </div>
-        <div className="bg-white mt-5 overflow-hidden mb-6">
+        <div className="flex-1 bg-white overflow-hidden flex flex-col rounded-md shadow-sm mt-5 mb-6 pt-2 tb:pt-4">
           <TableData
+            tableHeightClass="flex-1"
             tableData={responsesData?.data.map(
               (submission: Submission, index: number) => ({
                 ...submission,

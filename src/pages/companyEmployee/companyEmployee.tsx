@@ -20,6 +20,8 @@ import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
 import ConfirmationDeleteModal from "./confirmEmployeDeleteModal";
+import { formatEmployeeType, getInitials } from "@/features/utils/app.utils";
+import { getColorFromName } from "@/features/utils/formatting.utils";
 
 export default function CompanyDesignation() {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -101,8 +103,8 @@ export default function CompanyDesignation() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-        <div className="flex mb-5 justify-between items-center">
+      <div className="w-full h-full flex flex-col px-2 sm:px-4 py-6 overflow-hidden">
+        <div className="flex mb-5 justify-between items-center shrink-0">
           <h1 className="font-semibold capitalize text-xl text-black">
             Employee List
           </h1>
@@ -114,7 +116,7 @@ export default function CompanyDesignation() {
             )}
           </div>
         </div>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 shrink-0">
           <div>
             <SearchInput
               placeholder="Search..."
@@ -146,15 +148,27 @@ export default function CompanyDesignation() {
           </div>
         </div>
 
-        <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
+        <div className="flex-1 bg-white overflow-hidden flex flex-col  tb:pt-4">
           <TableData
+            tableHeightClass="flex-1"
             tableData={employeeData?.data.map((item, index) => ({
               ...item,
               srNo:
                 (employeeData.currentPage - 1) * employeeData.pageSize +
                 index +
                 1,
-              designationName: item.designationName || item.employeeType,
+              createdByEmployeeName: getInitials(item.createdByName || ""),
+              designationName:
+                item.employeeType === "OWNER"
+                  ? item.designationName
+                    ? `Owner / ${item.designationName}`
+                    : "Owner"
+                  : item.designationName ||
+                    formatEmployeeType(item.employeeType),
+              reportingManagerName: item?.reportingManager?.employeeName || "",
+              reportingManagerInitials: getInitials(
+                item?.reportingManager?.employeeName || "",
+              ),
             }))}
             columns={visibleColumns}
             primaryKey="employeeId"
@@ -176,6 +190,51 @@ export default function CompanyDesignation() {
                 handleRowsModalOpen(row as unknown as EmployeeData);
               }
             }}
+            extraColumns={[
+              {
+                label: "Reporting Manager",
+                width: "w-[170px]",
+                render: (row) => {
+                  if (!row.reportingManagerName) return "-";
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`w-7 h-7 bg-primary text-white flex items-center justify-center aspect-square rounded-full text-[12px] font-medium ${getColorFromName(row.reportingManagerInitials)}`}
+                          >
+                            {row.reportingManagerInitials}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {row.reportingManagerName}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                },
+              },
+              {
+                label: "Created By",
+                width: "w-[120px]",
+                render: (row) => {
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`w-7 h-7 bg-primary text-white flex items-center justify-center aspect-square rounded-full text-[12px] font-medium ${getColorFromName(row.createdByEmployeeName)}`}
+                          >
+                            {row.createdByEmployeeName}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>{row.createdByName}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                },
+              },
+            ]}
             onDelete={(row) => onDelete(row as unknown as EmployeeData)}
             canDelete={() => !!userData.isSuperAdmin}
             paginationDetails={mapPaginationDetails(employeeData)}

@@ -54,6 +54,7 @@ export default function RequestMasterList() {
     { key: "newValue", label: "New Value", visible: true },
     { key: "status", label: "Status", visible: true },
     { key: "reasions", label: "Reasons", visible: true },
+    { key: "remarks", label: "Remarks", visible: true },
     { key: "employeeName", label: "Requested By", visible: true },
     { key: "createdDatetime", label: "Date", visible: true },
   ]);
@@ -82,14 +83,14 @@ export default function RequestMasterList() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-        <div className="flex mb-3 justify-between items-center">
+      <div className="w-full h-full px-2 sm:px-4 py-6 flex flex-col overflow-hidden">
+        <div className="flex mb-3 justify-between items-center shrink-0">
           <h1 className="font-semibold capitalize text-xl text-black">
             Request Master List
           </h1>
         </div>
 
-        <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-4 shrink-0">
           <div>
             <SearchInput
               placeholder="Search..."
@@ -142,8 +143,9 @@ export default function RequestMasterList() {
           </div>
         </div>
 
-        <div className="mt-3 bg-white py-2 tb:py-4 tb:mt-6">
+        <div className="flex-1 bg-white overflow-hidden flex flex-col  tb:pt-4">
           <TableData
+            tableHeightClass="flex-1"
             tableData={requestData?.data.map(
               (item: RequestMasterData, index: number) => ({
                 ...item,
@@ -163,6 +165,7 @@ export default function RequestMasterList() {
                 newValue: item.newValue
                   ? format(new Date(item.newValue), "dd/MM/yyyy h:mm aa")
                   : " - ",
+                remarks: item.remarks || " - ",
               }),
             )}
             columns={visibleColumns}
@@ -234,8 +237,8 @@ export default function RequestMasterList() {
               setSelectedRequest(null);
             }}
             data={selectedRequest as RequestMasterData}
-            onSubmit={(requestMasterId, status) => {
-              onUpdateStatus(requestMasterId, status);
+            onSubmit={(requestMasterId, status, remarks) => {
+              onUpdateStatus(requestMasterId, status, remarks);
             }}
           />
         )}

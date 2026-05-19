@@ -17,6 +17,7 @@ interface DownloadDateModalProps {
   onConfirm: (range: DateRange | undefined) => void;
   currentDate: Date | null;
   defaultRange?: DateRange;
+  isLoading?: boolean;
 }
 
 const DownloadDateModal: React.FC<DownloadDateModalProps> = ({
@@ -25,6 +26,7 @@ const DownloadDateModal: React.FC<DownloadDateModalProps> = ({
   onConfirm,
   currentDate,
   defaultRange,
+  isLoading,
 }) => {
   const [tempRange, setTempRange] = useState<DateRange | undefined>(
     defaultRange || {
@@ -72,11 +74,21 @@ const DownloadDateModal: React.FC<DownloadDateModalProps> = ({
           </div>
         </div>
         <DialogFooter className="flex justify-end space-x-3">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button onClick={handleConfirm} disabled={!tempRange?.from}>
-            Confirm & Download
+          <Button
+            onClick={handleConfirm}
+            disabled={!tempRange?.from || isLoading}
+            className="min-w-[150px]"
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              </div>
+            ) : (
+              "Confirm & Download"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

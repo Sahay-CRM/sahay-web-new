@@ -1200,7 +1200,7 @@ export default function Agenda({
               </div>
             ) : meetingStatus === "DISCUSSION" ? (
               detailAgendaData && (
-                <div className="max-h-full h-[calc(100vh-200px)] overflow-scroll mt-5 px-2 w-full">
+                <div className="h-[calc(100vh-200px)] flex flex-col overflow-hidden mt-5 px-2 w-full">
                   <Suspense fallback={<div>Loading...</div>}>
                     {activeTab === "tasks" && (
                       <Tasks

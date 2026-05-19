@@ -43,8 +43,8 @@ const ProjectSelectionStep = () => {
   } = useAddCompanyTask();
 
   return (
-    <div className="p-0">
-      <div className="flex items-center space-x-5 tb:space-x-7 mb-4 justify-between">
+    <div className="h-full flex flex-col overflow-hidden p-0">
+      <div className="flex items-center space-x-5 tb:space-x-7 mb-4 justify-between shrink-0">
         <div className="flex gap-4">
           <SearchInput
             placeholder="Search Projects..."
@@ -109,6 +109,7 @@ const ProjectSelectionStep = () => {
             paginationDetails={projectListdata as PaginationFilter}
             setPaginationFilter={setPaginationFilterProject}
             showActionsColumn={false}
+            tableHeightClass="flex-1"
           />
         )}
       />
@@ -134,8 +135,8 @@ const MeetingSelectionStep = () => {
   const projectId = watch("project");
 
   return (
-    <div className="p-0">
-      <div className="flex items-center justify-between mb-4 space-x-5 tb:space-x-7">
+    <div className="h-full flex flex-col overflow-hidden p-0">
+      <div className="flex items-center justify-between mb-4 space-x-5 tb:space-x-7 shrink-0">
         <div className="flex items-center gap-4">
           <SearchInput
             placeholder="Search..."
@@ -200,6 +201,7 @@ const MeetingSelectionStep = () => {
             setPaginationFilter={setPaginationFilterMeeting}
             showActionsColumn={false}
             isLoading={meetingLoading}
+            tableHeightClass="flex-1"
           />
         )}
       />
@@ -308,6 +310,7 @@ const TaskDetailsStep = ({
             {...register("taskName", { required: "Task Name is required" })}
             error={errors.taskName}
             placeholder="Enter Task Name"
+            isMandatory={true}
             onFocus={() => {
               if (
                 shouldSearch &&
@@ -345,6 +348,7 @@ const TaskDetailsStep = ({
                   label="Task Deadline"
                   value={field.value}
                   onChange={field.onChange}
+                  isMandatory={true}
                   error={errors.taskDeadline}
                   disablePastDays={
                     Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
@@ -468,8 +472,8 @@ const AssignUserStep = () => {
   } = useAddCompanyTask();
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4 space-x-5 tb:space-x-7">
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="flex items-center justify-between mb-4 space-x-5 tb:space-x-7 shrink-0">
         <div className="flex items-center gap-4">
           <SearchInput
             placeholder="Search..."
@@ -524,6 +528,7 @@ const AssignUserStep = () => {
               setPaginationFilter={setPaginationFilterEmployee}
               showActionsColumn={false}
               isLoading={employeeLoading}
+              tableHeightClass="flex-1"
             />
           );
         }}
@@ -663,21 +668,27 @@ export default function AddCompanyTask() {
       isLoading={taskId ? !taskDataById : false}
     >
       <FormProvider {...methods}>
-        <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-          <StepProgress
-            currentStep={effectiveStep}
-            totalSteps={totalSteps}
-            stepNames={stepNamesArray} // ⚡ अब slice मत करो, सारे step दिखेंगे
-            back={prevStep}
-            isFirstStep={projectId ? effectiveStep === 2 : effectiveStep === 1}
-            isLastStep={effectiveStep === totalSteps}
-            next={handleNext}
-            isPending={isPending}
-            onFinish={handleSubmit(onSubmit)}
-            isUpdate={!!taskId}
-          />
+        <div className="w-full h-full px-2 sm:px-4 py-6 flex flex-col overflow-hidden">
+          <div className="shrink-0">
+            <StepProgress
+              currentStep={effectiveStep}
+              totalSteps={totalSteps}
+              stepNames={stepNamesArray} // ⚡ अब slice मत करो, सारे step दिखेंगे
+              back={prevStep}
+              isFirstStep={
+                projectId ? effectiveStep === 2 : effectiveStep === 1
+              }
+              isLastStep={effectiveStep === totalSteps}
+              next={handleNext}
+              isPending={isPending}
+              onFinish={handleSubmit(onSubmit)}
+              isUpdate={!!taskId}
+            />
+          </div>
 
-          {renderStepContent()}
+          <div className="step-content w-full flex-1 overflow-hidden flex flex-col pt-4">
+            {renderStepContent()}
+          </div>
         </div>
 
         <Dialog open={isConfModalOpen} onOpenChange={setIsConfModalOpen}>

@@ -206,9 +206,23 @@ export const companyNavigationData = [
     id: 11,
     icon: "Shield",
     label: "Role & Permission",
-    link: "/dashboard/roles/user-permission",
     permission: "View",
-    moduleKey: "ROLES_PERMISSION",
+    items: [
+      {
+        id: 1,
+        label: "User Role & Permission",
+        link: "/dashboard/roles/user-permission",
+        permission: "View",
+        moduleKey: "ROLES_PERMISSION",
+      },
+      {
+        id: 2,
+        label: "KPI Permission",
+        link: "/dashboard/roles/kpi-permission",
+        permission: "View",
+        moduleKey: "KPI_PERMISSION",
+      },
+    ],
   },
   // {
   //   id: 12,
@@ -290,14 +304,27 @@ export const companyNavigationData = [
     permission: "View",
     // moduleKey: "REPORTS",
   },
-  {
-    id: 18,
-    icon: "ListTodo",
-    label: "Team Organization",
-    link: "/dashboard/team-organization",
-    permission: "View",
-    // moduleKey: "TEAM_ORGANIZATION",
-  },
+  // {
+  //   id: 19,
+  //   icon: "LayoutDashboard",
+  //   label: "Dashboard Report",
+  //   link: "/dashboard/report-builder",
+  //   permission: "View",
+  // },
+  // {
+  //   id: 21,
+  //   icon: "Eye",
+  //   label: "Dashboard Report View",
+  //   link: "/dashboard/report-builder/view",
+  //   permission: "View",
+  // },
+  // {
+  //   id: 22,
+  //   icon: "Network",
+  //   label: "Organization Chart",
+  //   link: "/dashboard/organization-chart",
+  //   permission: "View",
+  // },
 ];
 
 export const getRouteByLabel = (label: string): string | null => {

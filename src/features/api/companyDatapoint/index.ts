@@ -9,3 +9,4 @@ export { default as addUpdateKpiMergeMutation } from "./useAddUpdateKPIMerge";
 export { default as useGetAvailableKpis } from "./useGetAvailableKpis";
 export { default as useGetKpiMergeById } from "./useGetKpimergeById";
 export { default as useUpdateKPIFocus } from "./useUpdateKPIFocus";
+export { default as useDuplicateKPI } from "./useDuplicateKPI";

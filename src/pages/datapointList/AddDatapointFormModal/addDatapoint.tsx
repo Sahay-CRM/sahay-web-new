@@ -56,8 +56,8 @@ const AddDatapoint = () => {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-2 overflow-x-auto sm:px-4 py-4">
-        <div className="flex items-center gap-5 mb-3">
+      <div className="w-full h-full px-2 sm:px-4 py-4 flex flex-col overflow-hidden">
+        <div className="flex items-center gap-5 mb-3 shrink-0">
           <StepProgress
             currentStep={currentStep}
             stepNames={stepNames}
@@ -71,7 +71,9 @@ const AddDatapoint = () => {
           />
         </div>
 
-        <div className="step-content w-full">{stepContent}</div>
+        <div className="step-content w-full flex-1 overflow-hidden flex flex-col pt-4">
+          {stepContent}
+        </div>
 
         {isModalOpen && (
           <RequestModal

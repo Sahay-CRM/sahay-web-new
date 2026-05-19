@@ -1,16 +1,19 @@
 import {
   useDeleteDatapoint,
-  useGetCompanyDatapoint,
+  useAddUpdateDatapoint,
   useUpdateKPIFocus,
 } from "@/features/api/companyDatapoint";
+import useDdAllKpiList from "@/features/api/KpiList/useDdAllKpiList";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import useGetDepartmentDropdown from "@/features/api/designation/useGetDepartmentDropdown";
 import { updateKPISoftDeleteMutation } from "@/features/api/KpiList";
+import { useGetCoreParameterDropdown } from "@/features/api/Business";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { AxiosError } from "axios";
 import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
+import { queryClient } from "@/queryClient";
 
 export default function useAdminUser() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -22,6 +25,9 @@ export default function useAdminUser() {
   const [isEditKpiId, setIsEditKpiId] = useState<string>("");
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+  const [selectedBusinessFunctions, setSelectedBusinessFunctions] = useState<
+    string[]
+  >([]);
 
   const permission = useSelector(getUserPermission).DATAPOINT_LIST;
 
@@ -55,17 +61,17 @@ export default function useAdminUser() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   // Pagination Details and Filter
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-    currentPage: 1,
-    pageSize: 25,
+    // isPaging: false,
     search: "",
   });
-
-  const { data: datpointData, isLoading } = useGetCompanyDatapoint({
+  const { data: datpointData, isLoading } = useDdAllKpiList({
     filter: {
       ...paginationFilter,
       employeeId: selectedEmployees,
       departmentId: selectedDepartments,
+      coreParameterId: selectedBusinessFunctions,
     },
+    enable: true,
   });
 
   const handleAdd = () => {
@@ -138,6 +144,7 @@ export default function useAdminUser() {
         {
           onSuccess: () => {
             closeDeleteModal();
+            queryClient.invalidateQueries({ queryKey: ["kpi-list-dd-all"] });
           },
           onError: (error: Error) => {
             const axiosError = error as AxiosError<{
@@ -165,6 +172,7 @@ export default function useAdminUser() {
         {
           onSuccess: () => {
             closeDeleteModal();
+            queryClient.invalidateQueries({ queryKey: ["kpi-list-dd-all"] });
           },
           onError: (error: Error) => {
             const axiosError = error as AxiosError<{
@@ -208,12 +216,82 @@ export default function useAdminUser() {
 
   const handleEmployeeFilterChange = (selected: string[]) => {
     setSelectedEmployees(selected);
-    setPaginationFilter((prev) => ({ ...prev, currentPage: 1 }));
+    setPaginationFilter((prev) => ({ ...prev }));
   };
 
   const handleDepartmentFilterChange = (selected: string[]) => {
     setSelectedDepartments(selected);
-    setPaginationFilter((prev) => ({ ...prev, currentPage: 1 }));
+    setPaginationFilter((prev) => ({ ...prev }));
+  };
+
+  const { data: coreParams } = useGetCoreParameterDropdown({
+    filter: {},
+  });
+
+  const bussinessFunctOptions = Array.isArray(coreParams?.data)
+    ? coreParams.data.map((item: CoreParameterDataProps) => ({
+        label: item.coreParameterName,
+        value: item.coreParameterId,
+      }))
+    : [];
+
+  const handleBusinessFunctionFilterChange = (selected: string[]) => {
+    setSelectedBusinessFunctions(selected);
+    setPaginationFilter((prev) => ({ ...prev }));
+  };
+
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+  const [duplicateKpiData, setDuplicateKpiData] = useState<KPIFormData | null>(
+    null,
+  );
+  const { mutate: duplicateKPI, isPending: isDuplicatePending } =
+    useAddUpdateDatapoint();
+
+  const handleDuplicate = (data: KPIFormData) => {
+    // Fetch original unmutated data to ensure validationType and frequencyType have backend-compatible values
+    const originalData = datpointData?.data?.find(
+      (item) => item.kpiId === data.kpiId,
+    );
+    setDuplicateKpiData(originalData || data);
+    setIsDuplicateModalOpen(true);
+  };
+
+  const confirmDuplicate = (employeeId: string) => {
+    if (!duplicateKpiData) return;
+
+    const visualFrequencyTypesStr = Array.isArray(
+      duplicateKpiData.visualFrequencyTypes,
+    )
+      ? duplicateKpiData.visualFrequencyTypes.join(",")
+      : duplicateKpiData.visualFrequencyTypes;
+
+    const newKpiData: Partial<KPIFormData> = {
+      KPIMasterId: duplicateKpiData.KPIMasterId,
+      employeeId: employeeId,
+      tag: duplicateKpiData.tag,
+      unit: duplicateKpiData.unit,
+      validationType: duplicateKpiData.validationType,
+      value1: duplicateKpiData.value1,
+      frequencyType: duplicateKpiData.frequencyType,
+      visualFrequencyTypes: visualFrequencyTypesStr,
+      visualFrequencyAggregate: duplicateKpiData.visualFrequencyAggregate,
+    };
+
+    if (duplicateKpiData.coreParameterId) {
+      newKpiData.coreParameterId = duplicateKpiData.coreParameterId;
+    }
+
+    if (duplicateKpiData.value2) {
+      newKpiData.value2 = duplicateKpiData.value2;
+    }
+
+    duplicateKPI(newKpiData as KPIFormData, {
+      onSuccess: () => {
+        setIsDuplicateModalOpen(false);
+        setDuplicateKpiData(null);
+        queryClient.invalidateQueries({ queryKey: ["kpi-list-dd-all"] });
+      },
+    });
   };
 
   return {
@@ -250,8 +328,17 @@ export default function useAdminUser() {
     employeeOptions,
     selectedEmployees,
     selectedDepartments,
+    selectedBusinessFunctions,
+    bussinessFunctOptions,
     handleEmployeeFilterChange,
     handleDepartmentFilterChange,
+    handleBusinessFunctionFilterChange,
     handleToggleFocus,
+    isDuplicateModalOpen,
+    setIsDuplicateModalOpen,
+    handleDuplicate,
+    confirmDuplicate,
+    duplicateKpiData,
+    isDuplicatePending,
   };
 }

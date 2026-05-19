@@ -304,8 +304,8 @@ export default function useAddEmployee() {
       });
 
     return (
-      <div className="p-0">
-        <div className="flex items-center space-x-5 tb:space-x-7 mb-4 justify-between">
+      <div className="h-full flex flex-col overflow-hidden p-0">
+        <div className="flex items-center space-x-5 tb:space-x-7 mb-4 justify-between shrink-0">
           <div className="flex gap-4">
             <SearchInput
               placeholder="Search Projects..."
@@ -345,7 +345,7 @@ export default function useAddEmployee() {
               }))}
               isActionButton={() => false}
               columns={{
-                srNo: "srNo",
+                srNo: "sr No",
                 projectName: "Project Name",
               }}
               isLoading={localProjectLoading}
@@ -370,6 +370,7 @@ export default function useAddEmployee() {
               paginationDetails={localProjectList as PaginationFilter}
               setPaginationFilter={setLocalPagination}
               showActionsColumn={false}
+              tableHeightClass="flex-1"
             />
           )}
         />
@@ -382,8 +383,8 @@ export default function useAddEmployee() {
     const projectId = watch("project");
 
     return (
-      <div className="p-0">
-        <div className="flex items-center justify-between mb-4 space-x-5 tb:space-x-7">
+      <div className="h-full flex flex-col overflow-hidden p-0">
+        <div className="flex items-center justify-between mb-4 space-x-5 tb:space-x-7 shrink-0">
           <div className="flex items-center gap-4">
             <SearchInput
               placeholder="Search..."
@@ -424,7 +425,7 @@ export default function useAddEmployee() {
               }))}
               isActionButton={() => false}
               columns={{
-                srNo: "srNo",
+                srNo: "sr No",
                 meetingName: "Meeting Name",
               }}
               primaryKey="meetingId"
@@ -449,6 +450,7 @@ export default function useAddEmployee() {
               setPaginationFilter={setLocalPagination}
               showActionsColumn={false}
               isLoading={meetingLoading}
+              tableHeightClass="flex-1"
             />
           )}
         />
@@ -781,8 +783,8 @@ export default function useAddEmployee() {
       });
 
     return (
-      <div className="">
-        <div className="flex items-center justify-between mb-4 space-x-5 tb:space-x-7">
+      <div className="h-full flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between mb-4 space-x-5 tb:space-x-7 shrink-0">
           <div className="flex  items-center gap-4">
             <SearchInput
               placeholder="Search..."
@@ -833,6 +835,7 @@ export default function useAddEmployee() {
                 setPaginationFilter={setLocalPagination}
                 showActionsColumn={false}
                 isLoading={localEmployeeLoading}
+                tableHeightClass="flex-1"
               />
             );
           }}

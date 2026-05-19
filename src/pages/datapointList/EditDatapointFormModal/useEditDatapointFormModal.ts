@@ -42,6 +42,7 @@ export default function useEditDatapointFormModal({
     enable: false,
   });
 
+  const methods = useForm();
   const {
     register,
     handleSubmit,
@@ -50,7 +51,7 @@ export default function useEditDatapointFormModal({
     control,
     watch,
     setValue,
-  } = useForm();
+  } = methods;
 
   useEffect(() => {
     if (datapointApiData) {
@@ -99,6 +100,23 @@ export default function useEditDatapointFormModal({
 
         setValue("visualFrequencyTypes", visualFrequencyArray);
       }
+
+      if (datapointApiData.empTags) {
+        let empTagsArray: string[];
+        if (typeof datapointApiData.empTags === "string") {
+          empTagsArray = datapointApiData.empTags
+            .split(",")
+            .map((type) => type.trim())
+            .filter(Boolean);
+        } else if (Array.isArray(datapointApiData.empTags)) {
+          empTagsArray = datapointApiData.empTags;
+        } else {
+          empTagsArray = [];
+        }
+        setValue("empTags", empTagsArray);
+      } else {
+        setValue("empTags", []);
+      }
     }
   }, [datapointApiData, setValue]);
 
@@ -107,12 +125,21 @@ export default function useEditDatapointFormModal({
       const visualFrequencyTypesStr = Array.isArray(data.visualFrequencyTypes)
         ? data.visualFrequencyTypes.join(",")
         : data.visualFrequencyTypes;
+      const empTagsArr = Array.isArray(data.empTags)
+        ? data.empTags
+        : typeof data.empTags === "string"
+          ? data.empTags
+              .split(",")
+              .map((t: string) => t.trim())
+              .filter(Boolean)
+          : [];
       const payload = {
         KPIMasterId: data.KPIMasterId,
         kpiId: data.kpiId,
         coreParameterId: data.coreParameterId,
         employeeId: data.employeeId,
         tag: data.tag,
+        empTags: empTagsArr,
         unit: data.unit,
         validationType: data.validationType,
         value1: data.value1,
@@ -121,6 +148,7 @@ export default function useEditDatapointFormModal({
         visualFrequencyTypes: visualFrequencyTypesStr,
         visualFrequencyAggregate: data.visualFrequencyAggregate,
         isForceChange: isForceChange,
+        newValueUpdateDate: data.newValueUpdateDate,
       };
       addDatapoint(payload, {
         onSuccess: () => {
@@ -145,6 +173,7 @@ export default function useEditDatapointFormModal({
       });
     })();
   };
+
   const handleClose = () => {
     reset();
     modalClose();
@@ -201,8 +230,7 @@ export default function useEditDatapointFormModal({
   const shouldShowVisualFrequency = selectedFrequency !== "YEARLY";
 
   // Check if sum/ave field should be shown
-  const shouldShowSumAveField =
-    validationType !== "YES_NO" && visualFrequencyTypes?.length > 0;
+  const shouldShowSumAveField = visualFrequencyTypes?.length > 0;
 
   const validationOptions = [
     { value: "EQUAL_TO", label: "= Equal to" },
@@ -265,6 +293,24 @@ export default function useEditDatapointFormModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFrequency]);
 
+  useEffect(() => {
+    if (visualFrequencyTypes?.length > 0 && !visualFrequencyAggregate) {
+      setValue(
+        "visualFrequencyAggregate",
+        validationType === "BETWEEN" ? "average" : "sum",
+      );
+    }
+  }, [
+    validationType,
+    visualFrequencyTypes,
+    visualFrequencyAggregate,
+    setValue,
+  ]);
+
+  const isGoalValueChanged =
+    watch("value1") !== datapointApiData?.value1 ||
+    watch("value2") !== datapointApiData?.value2;
+
   return {
     register,
     errors,
@@ -296,6 +342,10 @@ export default function useEditDatapointFormModal({
     isChildData,
     setIsEmployeeSearch,
     isForceDelete,
+    setIsForceDelete,
+    methods,
+    isGoalValueChanged,
+
     // skipDaysOption,
   };
 }

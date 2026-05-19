@@ -84,6 +84,7 @@ export default function GroupKpisFormModal({
         isModalOpen={isModalOpen}
         modalTitle={groupId ? "Update KPIs Group" : "Create KPIs Group"}
         modalClose={handleModalClose}
+        containerClass={"min-w-[40%]"}
         buttons={[
           {
             btnText: "Submit",
