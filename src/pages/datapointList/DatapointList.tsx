@@ -367,7 +367,7 @@ export default function CompanyTaskList() {
             }}
             isLoading={isLoading}
             isActionButton={() => true}
-            paginationDetails={paginationFilter}
+            // paginationDetails={paginationFilter}
             setPaginationFilter={setPaginationFilter}
             searchValue={paginationFilter?.search}
             permissionKey="users"

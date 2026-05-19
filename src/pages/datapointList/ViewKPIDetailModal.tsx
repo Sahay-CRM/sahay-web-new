@@ -118,7 +118,12 @@ export default function ViewKpiDetailModal({
         )}
         {modalData?.value1 && (
           <div className="break-words whitespace-normal">
-            <span className="font-medium text-primary">Value 1 : </span>
+            <span className="font-medium text-primary">
+              {modalData.validationType === "Between"
+                ? "Value 1 : "
+                : "Value : "}
+            </span>
+
             {modalData.validationType === "YES_NO" ||
             modalData.validationType === "Yes/No" ||
             modalData.validationType === "7"

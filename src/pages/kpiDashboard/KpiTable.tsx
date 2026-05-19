@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useRef } from "react";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import * as XLSX from "xlsx";
@@ -416,6 +417,7 @@ function SortableCoreParameterGroup({
 }
 
 export default function UpdatedKpiTable() {
+  const enableEmpTags = false; // Set to true to enable @employee tag filtering
   const [searchParams, setSearchParams] = useSearchParams();
 
   const userData = useSelector(getUserDetail);
@@ -610,7 +612,6 @@ export default function UpdatedKpiTable() {
         setSelectedPeriod(newPeriod);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kpiStructure, isKpiStructureLoading, searchParams]);
 
   const [searchTerm, setSearchTerm] = useState<PaginationFilter>({
@@ -978,7 +979,7 @@ export default function UpdatedKpiTable() {
                     .split(",")
                     .map((t) => t.trim())
                 : [];
-            const isTagSearch = lowerSearch.startsWith("@");
+            const isTagSearch = enableEmpTags && lowerSearch.startsWith("@");
 
             const matchesSearch = isTagSearch
               ? true
@@ -1766,7 +1767,7 @@ export default function UpdatedKpiTable() {
                   <div className="flex items-center gap-2 bg-white animate-in slide-in-from-right-2 duration-200">
                     <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md shadow-sm pl-2.5 pr-2 h-10 w-40 min-[1200px]:w-64 overflow-x-auto pb-0.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
                       <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-                      {selectedEmpTags.length > 0 && (
+                      {enableEmpTags && selectedEmpTags.length > 0 && (
                         <div className="flex items-center gap-1 overflow-x-auto py-1 pb-1.5 shrink-0">
                           {selectedEmpTags.map((tag) => (
                             <span
@@ -1793,9 +1794,11 @@ export default function UpdatedKpiTable() {
                       <input
                         type="text"
                         placeholder={
-                          selectedEmpTags.length > 0
+                          enableEmpTags && selectedEmpTags.length > 0
                             ? "Add tag or search..."
-                            : "Search... (@ for tags)"
+                            : enableEmpTags
+                              ? "Search... (@ for tags)"
+                              : "Search..."
                         }
                         value={searchTerm?.search || ""}
                         onChange={(e) =>
@@ -1817,7 +1820,7 @@ export default function UpdatedKpiTable() {
                       <X className="h-4 w-4" />
                     </Button>
 
-                    {searchTerm?.search?.startsWith("@") && (
+                    {enableEmpTags && searchTerm?.search?.startsWith("@") && (
                       <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-md shadow-lg border border-gray-200 p-2.5 z-50 max-h-60 overflow-y-auto">
                         <div className="text-xs font-semibold text-gray-500 mb-2 px-1 flex justify-between items-center border-b pb-1">
                           <span>Select Employee Tags (@)</span>
@@ -1965,22 +1968,30 @@ export default function UpdatedKpiTable() {
                   </Button>
                 )}
                 {groupedKpiRows.length > 0 && (
-                  <Button
-                    variant="default"
-                    className="bg-primary hover:bg-primary/90 text-white px-4 shrink-0 skip-nav-warning flex items-center gap-2 h-9"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (Object.keys(tempValues).length > 0) {
-                        setPendingDownload(true);
-                        setShowWarning(true);
-                      } else {
-                        setIsDownloadDateModalOpen(true);
-                      }
-                    }}
-                  >
-                    Download Excel
-                    <Download className="h-4 w-4" />
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="default"
+                          className="bg-primary hover:bg-primary/90 text-white px-4 shrink-0 skip-nav-warning flex items-center gap-2 h-9"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (Object.keys(tempValues).length > 0) {
+                              setPendingDownload(true);
+                              setShowWarning(true);
+                            } else {
+                              setIsDownloadDateModalOpen(true);
+                            }
+                          }}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span>Download Excel</span>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
               </div>
             </div>
@@ -2139,7 +2150,8 @@ export default function UpdatedKpiTable() {
                           </React.Fragment>
                         );
                       })}
-                      {searchTerm?.search?.startsWith("@") &&
+                      {enableEmpTags &&
+                        searchTerm?.search?.startsWith("@") &&
                         selectedEmpTags.length > 0 &&
                         groupedKpiRows.length > 0 && (
                           <>
@@ -2722,7 +2734,8 @@ export default function UpdatedKpiTable() {
                           </React.Fragment>
                         );
                       })}
-                      {searchTerm?.search?.startsWith("@") &&
+                      {enableEmpTags &&
+                        searchTerm?.search?.startsWith("@") &&
                         selectedEmpTags.length > 0 &&
                         groupedKpiRows.length > 0 && (
                           <>

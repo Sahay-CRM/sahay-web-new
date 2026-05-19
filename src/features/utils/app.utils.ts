@@ -23,7 +23,7 @@ export function capitalizeFirstLetter(str: string): string {
 
 export function formatEmployeeType(type: string): string {
   if (!type) return "";
-  if (type === "SAHAYTEAMMATE") return "SAHAY TeamMate";
+  if (type === "SAHAYTEAMMATE") return "SAHAY Teammate";
   return capitalizeFirstLetter(type);
 }
 

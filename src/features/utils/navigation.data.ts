@@ -304,28 +304,27 @@ export const companyNavigationData = [
     permission: "View",
     // moduleKey: "REPORTS",
   },
-  {
-    id: 19,
-    icon: "LayoutDashboard",
-    label: "Dashboard Report",
-    link: "/dashboard/report-builder",
-    permission: "View",
-    // moduleKey: "DASHBOARD_REPORT",
-  },
-  {
-    id: 21,
-    icon: "Eye",
-    label: "Dashboard Report View",
-    link: "/dashboard/report-builder/view",
-    permission: "View",
-  },
-  {
-    id: 22,
-    icon: "Network",
-    label: "Organization Chart",
-    link: "/dashboard/organization-chart",
-    permission: "View",
-  },
+  // {
+  //   id: 19,
+  //   icon: "LayoutDashboard",
+  //   label: "Dashboard Report",
+  //   link: "/dashboard/report-builder",
+  //   permission: "View",
+  // },
+  // {
+  //   id: 21,
+  //   icon: "Eye",
+  //   label: "Dashboard Report View",
+  //   link: "/dashboard/report-builder/view",
+  //   permission: "View",
+  // },
+  // {
+  //   id: 22,
+  //   icon: "Network",
+  //   label: "Organization Chart",
+  //   link: "/dashboard/organization-chart",
+  //   permission: "View",
+  // },
 ];
 
 export const getRouteByLabel = (label: string): string | null => {

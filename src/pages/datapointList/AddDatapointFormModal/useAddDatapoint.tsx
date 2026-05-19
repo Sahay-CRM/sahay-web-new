@@ -233,6 +233,7 @@ export default function useAddDataPoint() {
   };
 
   const Details = () => {
+    const enableEmpTags = false;
     const [isEmployeeSearch, setIsEmployeeSearch] = useState("");
 
     const { data: employeeData } = useGetEmployeeDd({
@@ -571,22 +572,24 @@ export default function useAddDataPoint() {
             </div>
           </div>
 
-          <div>
-            <Controller
-              control={control}
-              name="empTags"
-              render={({ field }) => (
-                <FormTagInput
-                  label="Employee Tags (@ tags)"
-                  value={field.value || []}
-                  onChange={field.onChange}
-                  disabled={isOtherFieldsDisabled}
-                  placeholder="Type tag and press Enter or comma"
-                  error={errors?.empTags as { message?: string }}
-                />
-              )}
-            />
-          </div>
+          {enableEmpTags && (
+            <div>
+              <Controller
+                control={control}
+                name="empTags"
+                render={({ field }) => (
+                  <FormTagInput
+                    label="Employee Tags (@ tags)"
+                    value={field.value || []}
+                    onChange={field.onChange}
+                    disabled={isOtherFieldsDisabled}
+                    placeholder="Type tag and press Enter or comma"
+                    error={errors?.empTags as { message?: string }}
+                  />
+                )}
+              />
+            </div>
+          )}
         </div>
       </div>
     );

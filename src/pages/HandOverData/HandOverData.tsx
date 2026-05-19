@@ -1,12 +1,12 @@
 import { useEffect, useState, useMemo } from "react";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, Controller } from "react-hook-form";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { Button } from "@/components/ui/button";
-import FormSelect from "@/components/shared/Form/FormSelect";
 import useGetEmployeeDd from "@/features/api/companyEmployee/useGetEmployeeDd";
 import {
   useExecuteHandover,
   useExecutePartialHandover,
+  useGetHandoverStats,
 } from "@/features/api/HandOver";
 import HandOverStatsModal from "./HandOverStatsModal";
 import { Eye } from "lucide-react";
@@ -14,6 +14,8 @@ import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import PageNotAccess from "../PageNoAccess";
 import { toast } from "sonner";
+import FormSelect from "@/components/shared/Form/FormSelect";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 
 const MODULE_OPTIONS = [
   { value: "tasks", label: "Owned Tasks" },
@@ -45,10 +47,41 @@ export default function HandOverData() {
     },
   });
 
-  const { watch, setValue } = methods;
+  const {
+    watch,
+    setValue,
+    control,
+    formState: { errors },
+  } = methods;
   const oldUserId = watch("oldUserId");
   const newUserId = watch("newUserId");
   const selectedModules = watch("selectedModules") || [];
+
+  const { data: statsRes } = useGetHandoverStats({
+    userId: oldUserId,
+    enabled: !!oldUserId,
+  });
+  const stats = statsRes?.data;
+
+  const dynamicModuleOptions = useMemo(() => {
+    if (!stats) return MODULE_OPTIONS;
+    return MODULE_OPTIONS.filter((opt) => {
+      const val = stats[opt.value as keyof typeof stats];
+      return typeof val === "number" ? val > 0 : true;
+    }).map((opt) => {
+      const val = stats[opt.value as keyof typeof stats];
+      const countSuffix = typeof val === "number" ? ` (${val})` : "";
+      return {
+        ...opt,
+        label: `${opt.label}${countSuffix}`,
+      };
+    });
+  }, [stats]);
+
+  // Reset selected modules when oldUserId changes
+  useEffect(() => {
+    setValue("selectedModules", []);
+  }, [oldUserId, setValue]);
 
   // Fetch employees for dropdowns
   const { data: employeeRes } = useGetEmployeeDd({
@@ -155,7 +188,7 @@ export default function HandOverData() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full px-4 py-8 max-w-4xl mx-auto">
+      <div className="w-full px-4 py-8 max-w-5xl mx-auto">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           {/* Header */}
           <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -210,15 +243,24 @@ export default function HandOverData() {
                     </Button>
                   )}
                 </div>
-                <FormSelect
-                  placeholder="Select source user"
-                  options={employeeOptions}
-                  value={oldUserId}
-                  isSearchable
-                  onChange={(val) => {
-                    setValue("oldUserId", val as string);
-                  }}
-                  className="w-full"
+                <Controller
+                  control={control}
+                  name="oldUserId"
+                  rules={{ required: "Please select source user" }}
+                  render={({ field }) => (
+                    <SearchDropdown
+                      options={employeeOptions}
+                      selectedValues={field.value ? [field.value] : []}
+                      onSelect={(value) => {
+                        field.onChange(value.value);
+                        setValue("oldUserId", value.value);
+                      }}
+                      placeholder="Select source user"
+                      error={errors.oldUserId}
+                      className="w-full"
+                      onSearchChange={() => {}}
+                    />
+                  )}
                 />
                 <p className="text-xs text-gray-400">
                   The user whose data will be transferred.
@@ -232,16 +274,25 @@ export default function HandOverData() {
                     Target User (Taking Over)
                   </label>
                 </div>
-                <FormSelect
-                  placeholder="Select target user"
-                  options={targetUserOptions}
-                  value={newUserId}
-                  isSearchable
-                  disabled={!oldUserId}
-                  onChange={(val) => {
-                    setValue("newUserId", val as string);
-                  }}
-                  className="w-full"
+                <Controller
+                  control={control}
+                  name="newUserId"
+                  rules={{ required: "Please select target user" }}
+                  render={({ field }) => (
+                    <SearchDropdown
+                      options={targetUserOptions}
+                      selectedValues={field.value ? [field.value] : []}
+                      onSelect={(value) => {
+                        field.onChange(value.value);
+                        setValue("newUserId", value.value);
+                      }}
+                      placeholder="Select target user"
+                      error={errors.newUserId}
+                      disabled={!oldUserId}
+                      className="w-full"
+                      onSearchChange={() => {}}
+                    />
+                  )}
                 />
                 <p className="text-xs text-gray-400">
                   The user who will receive all assigned items.
@@ -259,7 +310,7 @@ export default function HandOverData() {
                 </div>
                 <FormSelect
                   placeholder="Select modules (e.g., Owned Tasks, Projects)..."
-                  options={MODULE_OPTIONS}
+                  options={dynamicModuleOptions}
                   value={selectedModules}
                   isMulti
                   onChange={(val) => {

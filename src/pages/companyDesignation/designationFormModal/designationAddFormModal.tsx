@@ -6,9 +6,10 @@ import {
   useDesignationDropdownOptions,
   useDesignationFormSubmit,
 } from "./useDesignationFormModal";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useMemo } from "react";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
-import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 
 function DesignationAddFormModal({
   isModalOpen,
@@ -99,36 +100,23 @@ function DesignationAddFormModal({
               isMandatory={true}
             />
           </div>
-          <div className="flex flex-row items-center gap-6 mt-2">
-            <Controller
-              name="isParentDesignation"
-              control={methods.control}
-              defaultValue={Boolean(modalData?.parentId)}
-              render={({ field }) => (
-                <FormCheckbox
-                  id="designationCheckbox"
-                  label="Has Parent Designation?"
-                  checked={!!field.value}
-                  onChange={field.onChange}
-                  className="w-5 h-5"
-                  labelClass="text-md font-medium"
-                />
-              )}
-            />
-            <Controller
-              name="isOwner"
-              control={methods.control}
-              render={({ field }) => (
-                <FormCheckbox
-                  id="ownerCheckbox"
-                  label="Owner Designation?"
-                  checked={!!field.value}
-                  onChange={field.onChange}
-                  className="w-5 h-5"
-                  labelClass="text-md font-medium"
-                />
-              )}
-            />
+          <div className="space-y-2 mt-2">
+            <div className="flex flex-col items-start space-y-2">
+              <Label className="text-md" htmlFor="designationSwitch">
+                Has Parent Designation?
+              </Label>
+              <Controller
+                name="isParentDesignation"
+                control={methods.control}
+                defaultValue={Boolean(modalData?.parentId)}
+                render={({ field }) => (
+                  <Switch
+                    checked={!!field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
+              />
+            </div>
           </div>
 
           {/* Show this only if switch is ON */}

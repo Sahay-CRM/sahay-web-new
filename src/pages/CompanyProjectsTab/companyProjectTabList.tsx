@@ -116,6 +116,18 @@ export default function CompanyProjectTabList() {
                 setPaginationFilter={setPaginationFilter}
               />
 
+              <Button
+                variant="outline"
+                onClick={() =>
+                  setViewMode(viewMode === "list" ? "board" : "list")
+                }
+                className="h-9 px-4 text-[11px] font-bold border-primary/30 text-primary hover:bg-primary/5 rounded-full flex items-center gap-2"
+              >
+                {viewMode === "list" ? <>View as column</> : <>View as List</>}
+              </Button>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
               <DropdownSearchMenu
                 label="Status"
                 options={statusOptions}
@@ -143,18 +155,6 @@ export default function CompanyProjectTabList() {
                 }}
                 className="h-10"
               />
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={() =>
-                  setViewMode(viewMode === "list" ? "board" : "list")
-                }
-                className="h-9 px-4 text-[11px] font-bold border-primary/30 text-primary hover:bg-primary/5 rounded-full flex items-center gap-2"
-              >
-                {viewMode === "list" ? <>View as column</> : <>View as List</>}
-              </Button>
 
               <DateRangePicker
                 value={{
@@ -345,7 +345,7 @@ export default function CompanyProjectTabList() {
               ).map(([businessFunction, functionProjects]) => (
                 <div key={businessFunction} className="space-y-6">
                   <div className="w-full bg-[#f0f7ff] border-y border-[#e0efff] py-1 px-6 mb-4 ">
-                    <h2 className="text-lg text-primary text-center">
+                    <h2 className="text-sm text-primary text-center">
                       {businessFunction}
                     </h2>
                   </div>

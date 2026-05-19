@@ -69,7 +69,7 @@ export default function AddEmployee() {
   ]);
 
   const steps = isOwner
-    ? [<EmployeeStatus />, <Designation />]
+    ? [<EmployeeStatus />, <DepartmentSelect />, <Designation />]
     : employeeType
       ? [
           <EmployeeStatus />,
@@ -90,7 +90,7 @@ export default function AddEmployee() {
   } = useStepForm(steps, trigger);
 
   const stepNames = isOwner
-    ? ["Basic Info", "Designation"]
+    ? ["Basic Info", "Department", "Designation"]
     : employeeType
       ? ["Basic Info", "Department", "Designation", "Reporting Manager"]
       : ["Basic Info"];

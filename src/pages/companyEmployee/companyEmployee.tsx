@@ -73,7 +73,6 @@ export default function CompanyDesignation() {
     },
     { key: "employeeMobile", label: "Employee Mobile", visible: true },
     { key: "designationName", label: "Designation", visible: true },
-    { key: "reportingManagerName", label: "Reporting Manager", visible: true },
   ]);
 
   // Filter visible columns
@@ -160,8 +159,16 @@ export default function CompanyDesignation() {
                 1,
               createdByEmployeeName: getInitials(item.createdByName || ""),
               designationName:
-                item.designationName || formatEmployeeType(item.employeeType),
+                item.employeeType === "OWNER"
+                  ? item.designationName
+                    ? `Owner / ${item.designationName}`
+                    : "Owner"
+                  : item.designationName ||
+                    formatEmployeeType(item.employeeType),
               reportingManagerName: item?.reportingManager?.employeeName || "",
+              reportingManagerInitials: getInitials(
+                item?.reportingManager?.employeeName || "",
+              ),
             }))}
             columns={visibleColumns}
             primaryKey="employeeId"
@@ -184,6 +191,29 @@ export default function CompanyDesignation() {
               }
             }}
             extraColumns={[
+              {
+                label: "Reporting Manager",
+                width: "w-[170px]",
+                render: (row) => {
+                  if (!row.reportingManagerName) return "-";
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`w-7 h-7 bg-primary text-white flex items-center justify-center aspect-square rounded-full text-[12px] font-medium ${getColorFromName(row.reportingManagerInitials)}`}
+                          >
+                            {row.reportingManagerInitials}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {row.reportingManagerName}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                },
+              },
               {
                 label: "Created By",
                 width: "w-[120px]",

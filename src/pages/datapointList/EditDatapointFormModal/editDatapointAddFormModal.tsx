@@ -21,6 +21,7 @@ export default function EditDatapointAddFormModal({
   modalClose,
   kpiId,
 }: UseEditDatapointFormModalProps) {
+  const enableEmpTags = false;
   const {
     isPending,
     handleClose,
@@ -243,21 +244,23 @@ export default function EditDatapointAddFormModal({
             {...register(`tag`)}
             error={errors?.tag}
           />
-          <div className="col-span-2">
-            <Controller
-              control={control}
-              name="empTags"
-              render={({ field }) => (
-                <FormTagInput
-                  label="Employee Tags (@ tags)"
-                  value={field.value || []}
-                  onChange={field.onChange}
-                  placeholder="Type tag and press Enter or comma"
-                  error={errors?.empTags as { message?: string }}
-                />
-              )}
-            />
-          </div>
+          {enableEmpTags && (
+            <div className="col-span-2">
+              <Controller
+                control={control}
+                name="empTags"
+                render={({ field }) => (
+                  <FormTagInput
+                    label="Employee Tags (@ tags)"
+                    value={field.value || []}
+                    onChange={field.onChange}
+                    placeholder="Type tag and press Enter or comma"
+                    error={errors?.empTags as { message?: string }}
+                  />
+                )}
+              />
+            </div>
+          )}
           {employee && (
             <div className="col-span-2 flex flex-col gap-2">
               <Label className="text-[18px] mb-0">

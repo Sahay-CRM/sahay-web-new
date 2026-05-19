@@ -382,10 +382,9 @@ export default function useAddEmployee() {
     const { data: designationData, isLoading } = useGetDesignation({
       filter: {
         ...paginationFilter,
-        departmentId: isOwner ? undefined : departmentId,
-        isOwner: isOwner ? true : undefined,
+        departmentId: departmentId,
       },
-      enable: isOwner ? true : !!departmentId,
+      enable: !!departmentId,
     });
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
@@ -561,7 +560,9 @@ export default function useAddEmployee() {
         <Controller
           name="employee"
           control={control}
-          rules={{ required: "Please select a report manager" }}
+          rules={{
+            required: isOwner ? false : "Please select a report manager",
+          }}
           render={({ field }) => (
             <TableData
               {...field}
