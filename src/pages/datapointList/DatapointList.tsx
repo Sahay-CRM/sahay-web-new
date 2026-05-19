@@ -276,16 +276,6 @@ export default function CompanyTaskList() {
             key={datpointData?.data?.length}
             tableData={datpointData?.data
               ?.slice()
-              .filter((item) => {
-                if (
-                  !selectedBusinessFunctions ||
-                  selectedBusinessFunctions.length === 0
-                )
-                  return true;
-                return selectedBusinessFunctions.includes(
-                  item.coreParameterId as string,
-                );
-              })
               .sort((a, b) => {
                 if (paginationFilter.sortBy) {
                   const valA = String(

@@ -13,7 +13,8 @@ export default function AddEmployee() {
   const {
     companyEmployeeId,
     employeeData,
-    showNextStep,
+    isOwner,
+    employeeType,
     EmployeeStatus,
     DepartmentSelect,
     Designation,
@@ -67,14 +68,16 @@ export default function AddEmployee() {
     isAuthorized,
   ]);
 
-  const steps = showNextStep
-    ? [
-        <EmployeeStatus />,
-        <DepartmentSelect />,
-        <Designation />,
-        <ReportingManage />,
-      ]
-    : [<EmployeeStatus />];
+  const steps = isOwner
+    ? [<EmployeeStatus />, <Designation />]
+    : employeeType
+      ? [
+          <EmployeeStatus />,
+          <DepartmentSelect />,
+          <Designation />,
+          <ReportingManage />,
+        ]
+      : [<EmployeeStatus />];
 
   const {
     back,
@@ -86,12 +89,11 @@ export default function AddEmployee() {
     isLastStep,
   } = useStepForm(steps, trigger);
 
-  const stepNames = [
-    "Basic Info",
-    "Department",
-    "Designation",
-    "Reporting Manager",
-  ];
+  const stepNames = isOwner
+    ? ["Basic Info", "Designation"]
+    : employeeType
+      ? ["Basic Info", "Department", "Designation", "Reporting Manager"]
+      : ["Basic Info"];
 
   return (
     <CompanyAccessGuard

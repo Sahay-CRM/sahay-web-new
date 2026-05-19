@@ -451,6 +451,13 @@ const Urls = {
   changeDashboardRegistryStatus: (id: string) =>
     `${baseUrl}/company/registry/${id}/status`,
   storeFullRegistry: () => `${baseUrl}/company/registry/store-registry`,
+
+  getKpiPermission: (empId: string) =>
+    `${baseUrl}/company/employee/datapoint-permission/get/${empId}`,
+  updateKpiPermission: (empId: string) =>
+    `${baseUrl}/company/employee/datapoint-permission/update/${empId}`,
+  getKpiPermissionMaster: () =>
+    `${baseUrl}/company/employee/datapoint-permission/get`,
 };
 
 export default Urls;

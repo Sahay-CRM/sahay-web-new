@@ -69,6 +69,7 @@ export default function useAdminUser() {
       ...paginationFilter,
       employeeId: selectedEmployees,
       departmentId: selectedDepartments,
+      coreParameterId: selectedBusinessFunctions,
     },
     enable: true,
   });

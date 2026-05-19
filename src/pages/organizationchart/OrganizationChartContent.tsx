@@ -17,7 +17,9 @@ import {
   useViewport,
   Panel,
   Node,
+  Connection,
 } from "@xyflow/react";
+import { toast } from "sonner";
 import "@xyflow/react/dist/style.css";
 import {
   Plus,
@@ -239,7 +241,6 @@ export const OrganizationChartContent = () => {
 
       const remainingEmps = currentEmps.filter((id) => id !== employeeId);
 
-      // eslint-disable-next-line no-alert
       if (
         window.confirm(
           "Are you sure you want to unassign this employee from the seat?",
@@ -372,6 +373,51 @@ export const OrganizationChartContent = () => {
     setTimeout(() => fitView({ duration: 500 }), 100);
   };
 
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      const { source, target } = connection;
+      if (!source || !target) return;
+      if (source === target) return;
+
+      // Prevent circular dependency (e.g. connecting a node under its own subordinate)
+      const descOfTarget = getDescendants(target, edges);
+      if (descOfTarget.includes(source)) {
+        toast.error("Cannot connect a parent node under its own subordinate!");
+        return;
+      }
+
+      // Find the child position (target) to get its existing details
+      const targetPos = positionsList.find((p) => p.positionId === target);
+      if (!targetPos) return;
+
+      const employeeIds =
+        targetPos.employees && Array.isArray(targetPos.employees)
+          ? targetPos.employees.map((e) => e.employeeId)
+          : targetPos.employeeId
+            ? [targetPos.employeeId]
+            : [];
+
+      // Update the position with the new parentId
+      addUpdatePosition(
+        {
+          teamPositionId: target,
+          employeeId: employeeIds.join(","),
+          parentPositionId: source,
+          seatTitle:
+            targetPos.seatTitle || targetPos.designationName || "Position",
+          isDeptHead: targetPos.isDeptHead || false,
+          isManager: targetPos.isManager || false,
+        },
+        {
+          onSuccess: () => {
+            setTimeout(() => fitView({ duration: 600 }), 300);
+          },
+        },
+      );
+    },
+    [positionsList, edges, getDescendants, addUpdatePosition, fitView],
+  );
+
   return (
     <div className="flex flex-col h-[calc(100vh-85px)] w-full bg-white overflow-hidden">
       <Toolbar
@@ -423,6 +469,7 @@ export const OrganizationChartContent = () => {
           edges={displayEdges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
           nodeTypes={nodeTypes}
           connectionLineType={ConnectionLineType.Step}
           fitView

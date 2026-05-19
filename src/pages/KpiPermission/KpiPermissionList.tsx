@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { FormProvider, useForm } from "react-hook-form";
-
 import TableData from "@/components/shared/DataTable/DataTable";
-import useCompanyImportantDate from "./useCompanyImportantDate";
-import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-
-import { Button } from "@/components/ui/button";
+import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
+import useKpiPermissionList from "./useKpiPermissionList";
+import { FormProvider, useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import SearchInput from "@/components/shared/SearchInput";
-import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import {
   Tooltip,
   TooltipContent,
@@ -16,44 +13,38 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import PageNotAccess from "@/pages/PageNoAccess";
-import CalenderFormModal from "../companyImportantDates/calenderFormModal/CalenderFormModal";
-import ConfirmationDeleteModal from "./ConfirmImportantDateDeleteModal";
-import { format } from "date-fns";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
+import PageNotAccess from "../PageNoAccess";
 
-export default function CompanyImportantDate() {
+export default function KpiPermissionList() {
   const {
-    importantDatesList,
-    setPaginationFilter,
-    handleAddModal,
-    addImportantDate,
-    handleCloseModal,
-    modalData,
-    paginationFilter,
-    permission,
-    isLoading,
-    openModal,
-    onDelete,
-    isDeleteModalOpen,
-    conformDelete,
+    employeeData,
     closeDeleteModal,
-  } = useCompanyImportantDate();
+    setPaginationFilter,
+    modalData,
+    conformDelete,
+    isDeleteModalOpen,
+    isChildData,
+    paginationFilter,
+    isLoading,
+  } = useKpiPermissionList();
+
+  const permission = useSelector(getUserPermission).KPI_PERMISSION;
 
   const { setBreadcrumbs } = useBreadcrumbs();
+
   useEffect(() => {
-    setBreadcrumbs([
-      { label: "Calendar", href: "/dashboard/calendar" },
-      { label: "important Dates", href: "", isHighlight: true },
-    ]);
+    setBreadcrumbs([{ label: "KPI Permission", href: "" }]);
   }, [setBreadcrumbs]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
-    { key: "importantDateName", label: "Important Date Name", visible: true },
-    { key: "importantDateDisplay", label: "Date", visible: true },
-    { key: "importantDateRemarks", label: "Remarks", visible: true },
+    { key: "employeeName", label: "Employee Name", visible: true },
+    { key: "departmentName", label: "Department", visible: true },
+    { key: "designationName", label: "Designation", visible: true },
   ]);
-
+  // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
       if (col.visible) acc[col.key] = col.label;
@@ -61,7 +52,7 @@ export default function CompanyImportantDate() {
     },
     {} as Record<string, string>,
   );
-
+  // Toggle column visibility
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
@@ -71,7 +62,9 @@ export default function CompanyImportantDate() {
   };
   // Check if the number of columns is more than 3
   const canToggleColumns = columnToggleOptions.length > 3;
+
   const methods = useForm();
+  const navigate = useNavigate();
 
   if (permission && permission.View === false) {
     return <PageNotAccess />;
@@ -82,19 +75,9 @@ export default function CompanyImportantDate() {
       <div className="w-full h-full px-2 sm:px-4 py-6 flex flex-col overflow-hidden">
         <div className="flex mb-5 justify-between items-center shrink-0">
           <h1 className="font-semibold capitalize text-xl text-black">
-            important Date List
+            KPI Permission
           </h1>
-          <div className="flex items-center space-x-5 tb:space-x-7">
-            {permission.Add && (
-              <Link to="">
-                <Button className="py-2 w-fit" onClick={handleAddModal}>
-                  Add Important Date
-                </Button>
-              </Link>
-            )}
-          </div>
         </div>
-
         <div className="flex justify-between items-center mb-4 shrink-0">
           <div>
             <SearchInput
@@ -129,55 +112,56 @@ export default function CompanyImportantDate() {
         <div className="flex-1 bg-white overflow-hidden flex flex-col  tb:pt-4">
           <TableData
             tableHeightClass="flex-1"
-            tableData={importantDatesList?.data.map((item, index) => ({
+            key={employeeData?.currentPage}
+            tableData={employeeData?.data.map((item, index) => ({
               ...item,
               srNo:
-                (importantDatesList.currentPage - 1) *
-                  importantDatesList.pageSize +
+                (employeeData.currentPage - 1) * employeeData.pageSize +
                 index +
                 1,
-              importantDateDisplay: item?.importantDate
-                ? format(new Date(item.importantDate), "dd-MM-yyyy")
-                : "-",
             }))}
             columns={visibleColumns}
-            primaryKey="importantDateId"
-            onEdit={(row) =>
-              openModal(row as unknown as ImportantDatesDataProps)
-            }
-            onDelete={(row) =>
-              onDelete(row as unknown as ImportantDatesDataProps)
-            }
-            isActionButton={() =>
-              columnToggleOptions.some((col) => col.visible)
-            }
-            paginationDetails={mapPaginationDetails(importantDatesList)}
+            primaryKey="employeeId"
+            paginationDetails={employeeData as PaginationFilter}
             setPaginationFilter={setPaginationFilter}
             searchValue={paginationFilter?.search}
             isLoading={isLoading}
-            permissionKey="users"
-            moduleKey="IMPORTANT_DATE"
-            actionColumnWidth="w-[100px] overflow-hidden "
+            permissionKey="KPI_PERMISSION"
+            isActionButton={() => false}
+            canDelete={() => false}
+            isEditDeleteShow={false}
+            localStorageId="KpiPermissionList"
+            moduleKey="KPI_PERMISSION"
+            additionalButton={() => true}
+            isEditDelete={() => false}
+            isPermissionIcon={(item) => !item.isSuperAdmin}
+            onAdditionButton={(data) => {
+              navigate(
+                `/dashboard/roles/kpi-permission/edit/${data.employeeId}`,
+                { state: { userName: data.employeeName } },
+              );
+            }}
+            actionColumnWidth="w-[80px] overflow-hidden "
+            sortableColumns={[
+              "employeeName",
+              "departmentName",
+              "designationName",
+            ]}
           />
         </div>
+        {/* Modal Component */}
+        {isDeleteModalOpen && (
+          <ConfirmationDeleteModal
+            title={"Delete User"}
+            label={"User Name :"}
+            modalData={`${modalData?.departmentName}`}
+            isModalOpen={isDeleteModalOpen}
+            modalClose={closeDeleteModal}
+            onSubmit={conformDelete}
+            isChildData={isChildData}
+          />
+        )}
       </div>
-      {isDeleteModalOpen && (
-        <ConfirmationDeleteModal
-          title={"Delete Important Date"}
-          modalData={modalData}
-          isModalOpen={isDeleteModalOpen}
-          modalClose={closeDeleteModal}
-          onSubmit={conformDelete}
-          // isChildData={isChildData}
-        />
-      )}
-      {addImportantDate && (
-        <CalenderFormModal
-          isModalOpen={addImportantDate}
-          modalClose={handleCloseModal}
-          modalData={modalData}
-        />
-      )}
     </FormProvider>
   );
 }

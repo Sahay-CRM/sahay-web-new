@@ -20,7 +20,8 @@ import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
 import ConfirmationDeleteModal from "./confirmEmployeDeleteModal";
-import { formatEmployeeType } from "@/features/utils/app.utils";
+import { formatEmployeeType, getInitials } from "@/features/utils/app.utils";
+import { getColorFromName } from "@/features/utils/formatting.utils";
 
 export default function CompanyDesignation() {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -72,8 +73,8 @@ export default function CompanyDesignation() {
     },
     { key: "employeeMobile", label: "Employee Mobile", visible: true },
     { key: "designationName", label: "Designation", visible: true },
-    // { key: "createdByName", label: "Created By", visible: true },
-    // { key: "reportingManager", label: "Reporting Manager", visible: true },
+    { key: "createdByName", label: "Created By", visible: true },
+    { key: "reportingManagerName", label: "Reporting Manager", visible: true },
   ]);
 
   // Filter visible columns
@@ -149,7 +150,7 @@ export default function CompanyDesignation() {
           </div>
         </div>
 
-        <div className="flex-1 bg-white overflow-hidden flex flex-col rounded-md shadow-sm mt-3 tb:mt-6 pt-2 tb:pt-4">
+        <div className="flex-1 bg-white overflow-hidden flex flex-col  tb:pt-4">
           <TableData
             tableHeightClass="flex-1"
             tableData={employeeData?.data.map((item, index) => ({
@@ -158,8 +159,10 @@ export default function CompanyDesignation() {
                 (employeeData.currentPage - 1) * employeeData.pageSize +
                 index +
                 1,
+              createdByEmployeeName: getInitials(item.createdByName || ""),
               designationName:
                 item.designationName || formatEmployeeType(item.employeeType),
+              reportingManagerName: item?.reportingManager?.employeeName || "",
             }))}
             columns={visibleColumns}
             primaryKey="employeeId"
@@ -181,6 +184,28 @@ export default function CompanyDesignation() {
                 handleRowsModalOpen(row as unknown as EmployeeData);
               }
             }}
+            extraColumns={[
+              {
+                label: "Added",
+                width: "w-[100px]",
+                render: (row) => {
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`w-7 h-7 bg-primary text-white flex items-center justify-center aspect-square rounded-full text-[12px] font-medium ${getColorFromName(row.createdByEmployeeName)}`}
+                          >
+                            {row.createdByEmployeeName}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>{row.createdByName}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                },
+              },
+            ]}
             onDelete={(row) => onDelete(row as unknown as EmployeeData)}
             canDelete={() => !!userData.isSuperAdmin}
             paginationDetails={mapPaginationDetails(employeeData)}

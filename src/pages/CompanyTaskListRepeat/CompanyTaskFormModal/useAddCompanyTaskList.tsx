@@ -345,7 +345,7 @@ export default function useAddEmployee() {
               }))}
               isActionButton={() => false}
               columns={{
-                srNo: "srNo",
+                srNo: "sr No",
                 projectName: "Project Name",
               }}
               isLoading={localProjectLoading}
@@ -425,7 +425,7 @@ export default function useAddEmployee() {
               }))}
               isActionButton={() => false}
               columns={{
-                srNo: "srNo",
+                srNo: "sr No",
                 meetingName: "Meeting Name",
               }}
               primaryKey="meetingId"

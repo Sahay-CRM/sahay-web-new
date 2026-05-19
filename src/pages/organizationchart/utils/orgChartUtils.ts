@@ -36,16 +36,49 @@ export function getLayoutedElements(
   edges: Edge[],
   direction = "TB",
 ) {
+  const isHorizontal = direction === "LR";
   const g = new dagre.graphlib.Graph();
   g.setDefaultEdgeLabel(() => ({}));
   g.setGraph({ rankdir: direction, nodesep: 60, ranksep: 80 });
-  nodes.forEach((n) => g.setNode(n.id, { width: 220, height: 160 }));
+  nodes.forEach((n) => {
+    const employeesCount =
+      n.data?.employees && Array.isArray(n.data.employees)
+        ? n.data.employees.length
+        : 1;
+    const nodeHeight = 60 + Math.max(1, employeesCount) * 45;
+    g.setNode(n.id, { width: 220, height: nodeHeight });
+  });
   edges.forEach((e) => g.setEdge(e.source, e.target));
   dagre.layout(g);
+
+  const rankMap = new Map<number, number>();
+  nodes.forEach((n) => {
+    const pos = g.node(n.id);
+    const coord = Math.round(isHorizontal ? pos.x : pos.y);
+    const size = isHorizontal ? pos.width : pos.height;
+    if (!rankMap.has(coord)) {
+      rankMap.set(coord, size);
+    } else {
+      rankMap.set(coord, Math.max(rankMap.get(coord)!, size));
+    }
+  });
+
   return {
     nodes: nodes.map((n) => {
       const pos = g.node(n.id);
-      return { ...n, position: { x: pos.x - 110, y: pos.y - 80 } };
+      if (isHorizontal) {
+        const maxWidth = rankMap.get(Math.round(pos.x))!;
+        return {
+          ...n,
+          position: { x: pos.x - maxWidth / 2, y: pos.y - pos.height / 2 },
+        };
+      } else {
+        const maxHeight = rankMap.get(Math.round(pos.y))!;
+        return {
+          ...n,
+          position: { x: pos.x - 110, y: pos.y - maxHeight / 2 },
+        };
+      }
     }),
     edges,
   };

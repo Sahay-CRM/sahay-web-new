@@ -540,9 +540,13 @@ interface EmployeeDetails {
   sahayEmId: null;
   departmentName: string | null;
   designationName: string | null;
+  createdByName: string | null;
   reportingManagerId: string | null;
   companyAdminName: string;
-  reportingManager: null;
+  reportingManager: {
+    employeeName: string;
+    employeeId: string;
+  } | null;
   isDeactivated?: boolean;
   isTeamLeader?: boolean;
 }

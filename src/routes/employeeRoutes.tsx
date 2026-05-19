@@ -234,6 +234,20 @@ export default function EmployeeRoutes() {
           <Route index Component={userpermissionlist} />
           <Route path="edit/:id" Component={UserPermissionEdit} />
         </Route>
+        <Route path="roles/kpi-permission">
+          <Route
+            index
+            Component={lazy(
+              () => import("../pages/KpiPermission/KpiPermissionList"),
+            )}
+          />
+          <Route
+            path="edit/:id"
+            Component={lazy(
+              () => import("../pages/KpiPermission/KpiPermissionEdit"),
+            )}
+          />
+        </Route>
         <Route path="brand" Component={Brand} />
         <Route path="product" Component={Product} />
 

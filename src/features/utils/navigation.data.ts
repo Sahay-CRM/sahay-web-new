@@ -206,9 +206,23 @@ export const companyNavigationData = [
     id: 11,
     icon: "Shield",
     label: "Role & Permission",
-    link: "/dashboard/roles/user-permission",
     permission: "View",
-    moduleKey: "ROLES_PERMISSION",
+    items: [
+      {
+        id: 1,
+        label: "User Role & Permission",
+        link: "/dashboard/roles/user-permission",
+        permission: "View",
+        moduleKey: "ROLES_PERMISSION",
+      },
+      {
+        id: 2,
+        label: "KPI Permission",
+        link: "/dashboard/roles/kpi-permission",
+        permission: "View",
+        moduleKey: "KPI_PERMISSION",
+      },
+    ],
   },
   // {
   //   id: 12,

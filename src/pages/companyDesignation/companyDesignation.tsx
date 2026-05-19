@@ -126,7 +126,7 @@ export default function CompanyDesignation() {
           </div>
         </div>
 
-        <div className="flex-1 bg-white overflow-hidden flex flex-col rounded-md shadow-sm mt-3 tb:mt-6 pt-2 tb:pt-4">
+        <div className="flex-1 bg-white overflow-hidden flex flex-col  tb:pt-4">
           <TableData
             tableHeightClass="flex-1"
             tableData={designationList?.data.map(

@@ -58,7 +58,8 @@ export default function useAddEmployee() {
     values: upEmdData!,
   });
 
-  const showNextStep = watch("employeeType") !== "OWNER";
+  const employeeType = watch("employeeType");
+  const isOwner = employeeType === "OWNER";
   const departmentId = watch("department")?.departmentId;
 
   useEffect(() => {
@@ -381,9 +382,10 @@ export default function useAddEmployee() {
     const { data: designationData, isLoading } = useGetDesignation({
       filter: {
         ...paginationFilter,
-        departmentId: departmentId,
+        departmentId: isOwner ? undefined : departmentId,
+        isOwner: isOwner ? true : undefined,
       },
-      enable: !!departmentId,
+      enable: isOwner ? true : !!departmentId,
     });
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
@@ -599,7 +601,8 @@ export default function useAddEmployee() {
   return {
     companyEmployeeId,
     employeeData,
-    showNextStep,
+    isOwner,
+    employeeType,
     EmployeeStatus,
     DepartmentSelect,
     Designation,
