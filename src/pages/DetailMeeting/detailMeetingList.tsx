@@ -118,19 +118,6 @@ export default function DetailMeetingList() {
   return (
     <FormProvider {...methods}>
       <div className="w-full h-full px-2 sm:px-4 py-6 flex flex-col overflow-hidden">
-        <div className="flex mb-5 justify-between items-center shrink-0">
-          <h1 className="font-semibold capitalize text-xl text-black">
-            Live Meetings
-          </h1>
-          <div className="flex items-center space-x-5 tb:space-x-7">
-            {permission.Add && (
-              <Link to="/dashboard/meeting/detail/add">
-                <Button className="py-2 w-fit">Add Live Meeting</Button>
-              </Link>
-            )}
-          </div>
-        </div>
-
         <div className="flex justify-between items-center mb-4 flex-wrap gap-4 shrink-0">
           <div>
             <SearchInput
@@ -140,7 +127,7 @@ export default function DetailMeetingList() {
               className="w-80"
             />
           </div>
-          <div className="flex gap-4 flex-wrap">
+          <div className="flex gap-3 flex-wrap items-center">
             <div className="flex gap-2">
               {detailMeetingOpt.map((option) => (
                 <Button
@@ -174,17 +161,6 @@ export default function DetailMeetingList() {
                 handleClear={handleDateRangeReset}
               />
             </div>
-            {/* <div>
-              <DropdownSearchMenu
-                label="Status"
-                options={statusOptions}
-                selected={filters?.selected}
-                onChange={(selected) => {
-                  handleFilterChange(selected);
-                }}
-                multiSelect
-              />
-            </div> */}
 
             {canToggleColumns && (
               <TooltipProvider>
@@ -203,6 +179,12 @@ export default function DetailMeetingList() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
+            )}
+
+            {permission.Add && (
+              <Link to="/dashboard/meeting/detail/add">
+                <Button className="py-2 w-fit">Add Live Meeting</Button>
+              </Link>
             )}
           </div>
         </div>

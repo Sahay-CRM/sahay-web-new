@@ -103,11 +103,16 @@ export default function Request() {
   return (
     <FormProvider {...methods}>
       <div className="w-full h-full px-2 sm:px-4 py-4 flex flex-col overflow-hidden">
-        <div className="flex justify-between items-center shrink-0">
-          <h1 className="font-semibold capitalize text-xl text-black">
-            My Ticket
-          </h1>
-          <div className="flex justify-between items-center gap-4">
+        <div className="flex justify-between items-center mb-4 shrink-0 gap-4 flex-wrap">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
             <FormSelect
               value={isDataFilter}
               options={dataFilterOption}
@@ -116,39 +121,27 @@ export default function Request() {
               }}
               triggerClassName="mb-0"
             />
-            <div>
-              <SearchInput
-                placeholder="Search..."
-                searchValue={paginationFilter?.search || ""}
-                setPaginationFilter={setPaginationFilter}
-                className="w-80"
-              />
-            </div>
+            {canToggleColumns && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DropdownSearchMenu
+                        columns={columnToggleOptions}
+                        onToggleColumn={onToggleColumn}
+                        columnIcon={true}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs text-white">Toggle Visible Columns</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             <Button className="py-2 w-fit" onClick={handleRequestModalOpen}>
               New Request
             </Button>
-            <div className="flex items-center gap-2">
-              {canToggleColumns && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div>
-                        <DropdownSearchMenu
-                          columns={columnToggleOptions}
-                          onToggleColumn={onToggleColumn}
-                          columnIcon={true}
-                        />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs text-white">
-                        Toggle Visible Columns
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
           </div>
         </div>
 

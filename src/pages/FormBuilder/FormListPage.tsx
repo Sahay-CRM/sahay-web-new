@@ -163,21 +163,6 @@ export default function FormListPage() {
         />
       )}
 
-      <div className="flex mb-5 justify-between items-center shrink-0">
-        <h1 className="font-semibold capitalize text-xl text-black">
-          Forms List
-        </h1>
-        {permission?.Add && (
-          <Button
-            className="py-2 w-fit bg-[#2f328e] hover:bg-[#1e205e]"
-            onClick={handleCreateNew}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Form
-          </Button>
-        )}
-      </div>
-
       {/* Search + Status Filter */}
       <div className="flex justify-between items-center mb-4 gap-4 flex-wrap shrink-0">
         <div className="flex items-center gap-4">
@@ -206,41 +191,52 @@ export default function FormListPage() {
             </TooltipProvider>
           )}
         </div>
-        {/* Status Tabs */}
-        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-          {STATUS_TABS.map((tab) => {
-            const safeForms = allForms || [];
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Status Tabs */}
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            {STATUS_TABS.map((tab) => {
+              const safeForms = allForms || [];
 
-            const count =
-              tab.value === "ALL"
-                ? safeForms.length
-                : tab.value === "PUBLISHED"
-                  ? safeForms.filter((f) => f.isActive).length
-                  : safeForms.filter((f) => !f.isActive).length;
+              const count =
+                tab.value === "ALL"
+                  ? safeForms.length
+                  : tab.value === "PUBLISHED"
+                    ? safeForms.filter((f) => f.isActive).length
+                    : safeForms.filter((f) => !f.isActive).length;
 
-            return (
-              <button
-                key={tab.value}
-                onClick={() => setStatusFilter(tab.value)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                  statusFilter === tab.value
-                    ? "bg-white text-[#2f328e] shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {tab.label}
-                <span
-                  className={`ml-1.5 text-[10px] px-1 rounded-full ${
+              return (
+                <button
+                  key={tab.value}
+                  onClick={() => setStatusFilter(tab.value)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
                     statusFilter === tab.value
-                      ? "bg-[#2f328e]/10 text-[#2f328e]"
-                      : "bg-gray-200 text-gray-500"
+                      ? "bg-white text-[#2f328e] shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+                  {tab.label}
+                  <span
+                    className={`ml-1.5 text-[10px] px-1 rounded-full ${
+                      statusFilter === tab.value
+                        ? "bg-[#2f328e]/10 text-[#2f328e]"
+                        : "bg-gray-200 text-gray-500"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {permission?.Add && (
+            <Button
+              className="py-2 w-fit bg-[#2f328e] hover:bg-[#1e205e]"
+              onClick={handleCreateNew}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Form
+            </Button>
+          )}
         </div>
       </div>
 

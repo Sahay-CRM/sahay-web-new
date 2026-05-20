@@ -134,6 +134,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  html {
+    font-size: 90%;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: "Poppins", sans-serif;

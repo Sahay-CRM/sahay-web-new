@@ -618,12 +618,6 @@ export default function UpdatedKpiTable() {
     search: "",
   });
 
-  useEffect(() => {
-    if (!searchTerm?.search?.startsWith("@") && selectedEmpTags.length > 0) {
-      setSelectedEmpTags([]);
-    }
-  }, [searchTerm?.search, selectedEmpTags.length]);
-
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
   const [currentCellKey, setCurrentCellKey] = useState<string>("");
   const [commentModalInput, setCommentModalInput] = useState<{
@@ -980,9 +974,15 @@ export default function UpdatedKpiTable() {
                     .map((t) => t.trim())
                 : [];
             const isTagSearch = enableEmpTags && lowerSearch.startsWith("@");
+            const tagSearchQuery = isTagSearch
+              ? lowerSearch.slice(1).trim()
+              : "";
 
             const matchesSearch = isTagSearch
-              ? true
+              ? selectedEmpTags.length > 0 || tagSearchQuery === ""
+                ? true
+                : empTagsList.some((t) => t.includes(tagSearchQuery)) ||
+                  tag.includes(tagSearchQuery)
               : coreName.includes(lowerSearch) ||
                 tag.includes(lowerSearch) ||
                 name.includes(lowerSearch);
@@ -1765,10 +1765,10 @@ export default function UpdatedKpiTable() {
               <div className="flex items-center relative">
                 {isSearchOpen ? (
                   <div className="flex items-center gap-2 bg-white animate-in slide-in-from-right-2 duration-200">
-                    <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md shadow-sm pl-2.5 pr-2 h-10 w-40 min-[1200px]:w-64 overflow-x-auto pb-0.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+                    <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md shadow-sm pl-2.5 pr-2 h-10 w-40 min-[1200px]:w-64 overflow-x-auto overflow-y-hidden pb-0.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
                       <Search className="h-4 w-4 text-muted-foreground shrink-0" />
                       {enableEmpTags && selectedEmpTags.length > 0 && (
-                        <div className="flex items-center gap-1 overflow-x-auto py-1 pb-1.5 shrink-0">
+                        <div className="flex items-center gap-1 overflow-x-auto overflow-y-hidden whitespace-nowrap py-1 pb-1.5 shrink-0">
                           {selectedEmpTags.map((tag) => (
                             <span
                               key={tag}
@@ -1842,11 +1842,13 @@ export default function UpdatedKpiTable() {
                             ? allEmpTags.filter((t) =>
                                 t.toLowerCase().includes(query),
                               )
-                            : allEmpTags;
+                            : [];
                           if (matches.length === 0) {
                             return (
                               <div className="text-xs text-gray-400 p-2 text-center">
-                                No tags found
+                                {query
+                                  ? "No tags found"
+                                  : "Type to search tags"}
                               </div>
                             );
                           }
@@ -1869,6 +1871,9 @@ export default function UpdatedKpiTable() {
                                             ? prev.filter((t) => t !== tag)
                                             : [...prev, tag],
                                         );
+                                        if (!isSelected) {
+                                          setSearchTerm({ search: "@" });
+                                        }
                                       }}
                                       className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
                                     />
@@ -2151,7 +2156,6 @@ export default function UpdatedKpiTable() {
                         );
                       })}
                       {enableEmpTags &&
-                        searchTerm?.search?.startsWith("@") &&
                         selectedEmpTags.length > 0 &&
                         groupedKpiRows.length > 0 && (
                           <>
@@ -2735,7 +2739,6 @@ export default function UpdatedKpiTable() {
                         );
                       })}
                       {enableEmpTags &&
-                        searchTerm?.search?.startsWith("@") &&
                         selectedEmpTags.length > 0 &&
                         groupedKpiRows.length > 0 && (
                           <>

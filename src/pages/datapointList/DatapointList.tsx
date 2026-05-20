@@ -195,19 +195,7 @@ export default function CompanyTaskList() {
   return (
     <FormProvider {...methods}>
       <div className="w-full h-full flex flex-col px-2 sm:px-4 py-6 overflow-hidden">
-        <div className="flex mb-5 justify-between items-center shrink-0">
-          <h1 className="font-semibold capitalize text-xl text-black">
-            KPI List
-          </h1>
-          <div className="flex items-center space-x-5 tb:space-x-7">
-            {permission.Add && (
-              <Link to="/dashboard/kpi/add">
-                <Button className="py-2 w-fit">Add KPI</Button>
-              </Link>
-            )}
-          </div>
-        </div>
-        <div className="flex justify-between items-center mb-4 shrink-0">
+        <div className="flex justify-between items-center mb-4 shrink-0 gap-4 flex-wrap">
           <div>
             <SearchInput
               placeholder="Search..."
@@ -216,7 +204,7 @@ export default function CompanyTaskList() {
               className="w-80"
             />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 flex-wrap">
             <div>
               <DropdownSearchMenu
                 label="Department Selection"
@@ -267,6 +255,11 @@ export default function CompanyTaskList() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
+            )}
+            {permission.Add && (
+              <Link to="/dashboard/kpi/add">
+                <Button className="py-2 w-fit">Add KPI</Button>
+              </Link>
             )}
           </div>
         </div>
