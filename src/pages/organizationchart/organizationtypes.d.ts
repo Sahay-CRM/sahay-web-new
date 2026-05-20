@@ -65,6 +65,7 @@ interface EditSeatSheetProps {
   positions: TeamPosition[];
   companyId?: string;
   initialData: AddSeatFormData | null;
+  isRoot?: boolean;
 }
 
 interface CtxMenuProps {

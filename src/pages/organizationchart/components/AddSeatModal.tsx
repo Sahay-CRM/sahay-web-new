@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { Plus, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import {
   Sheet,
@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 
 export function AddSeatModal({
@@ -67,12 +68,12 @@ export function AddSeatModal({
 
   const supervisorOptions = positions.map((p) => ({
     label: p.seatTitle
-      ? `${p.seatTitle} (${p.employeeName || "Unassigned"})`
+      ? `${p.seatTitle} `
       : p.employeeName || p.designationName || "Unassigned",
     value: p.positionId,
   }));
 
-  const { handleSubmit, control, reset, register } = useForm<AddSeatFormData>({
+  const { handleSubmit, control, reset } = useForm<AddSeatFormData>({
     defaultValues: {
       seatTitle: "",
       employeeId: [],
@@ -98,21 +99,17 @@ export function AddSeatModal({
 
   const onFormSubmit = (data: AddSeatFormData) => {
     onSubmit(data);
-    if (!data.createAnother) {
-      onClose();
-    } else {
-      reset({ ...data, seatTitle: "", employeeId: [] });
-    }
+    onClose();
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
         side="right"
-        className="sm:max-w-[450px] p-0 flex flex-col border-l shadow-2xl bg-white"
+        className="sm:max-w-[450px] p-0 flex flex-col border-l shadow-2xl bg-white [&>button]:text-white/80 hover:[&>button]:text-white [&>button]:top-5 [&>button]:right-6"
       >
-        <SheetHeader className="px-8 py-5 border-b bg-gray-50 flex flex-row items-center justify-between space-y-0 shrink-0">
-          <SheetTitle className="text-xl font-bold text-gray-800">
+        <SheetHeader className="px-8 py-5 border-b bg-primary flex flex-row items-center justify-between space-y-0 shrink-0">
+          <SheetTitle className="text-xl font-bold text-white ">
             New seat
           </SheetTitle>
         </SheetHeader>
@@ -124,19 +121,26 @@ export function AddSeatModal({
           <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8">
             {/* Seat Title */}
             <div className="space-y-2.5">
-              <Label className="text-[13px] font-bold text-gray-700">
+              <Label className="text-[13px]  text-gray-700 ">
                 Seat title <span className="text-red-500">*</span>
               </Label>
-              <Input
-                {...register("seatTitle", { required: true })}
-                placeholder="Type a title"
-                className="h-11 bg-white border-gray-200 focus-visible:ring-primary/20 text-sm"
+              <Controller
+                name="seatTitle"
+                control={control}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    placeholder="Type a title"
+                    className="h-11 bg-white border-gray-200 focus-visible:ring-primary/20 text-sm "
+                  />
+                )}
               />
             </div>
 
             {/* Employee Selection */}
             <div className="space-y-2.5">
-              <Label className="text-[13px] font-bold text-gray-700">
+              <Label className="text-[13px]  text-gray-700 ">
                 Employee(s) in seat
               </Label>
               <Controller
@@ -165,41 +169,9 @@ export function AddSeatModal({
               />
             </div>
 
-            {/* Dept Head Checkbox */}
-            <div className="flex items-start gap-3 group">
-              <Controller
-                name="isDeptHead"
-                control={control}
-                render={({ field }) => (
-                  <div
-                    className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${
-                      field.value
-                        ? "bg-primary border-primary"
-                        : "bg-white border-gray-300"
-                    }`}
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    {field.value && (
-                      <Plus className="w-3.5 h-3.5 text-white stroke-[3px] rotate-45" />
-                    )}
-                  </div>
-                )}
-              />
-              <div className="space-y-1">
-                <p className="text-sm font-bold text-gray-700">
-                  This seat is the head of its department
-                </p>
-                <p className="text-xs text-gray-500 leading-relaxed max-w-[480px]">
-                  New seats will automatically be assigned to the same
-                  department as their supervisor, unless they are a department
-                  head themselves.
-                </p>
-              </div>
-            </div>
-
             {/* Supervisor Selection */}
             <div className="space-y-2.5">
-              <Label className="text-[13px] font-bold text-gray-700">
+              <Label className="text-[13px] text-gray-700 ">
                 Supervisor of seat
               </Label>
               <Controller
@@ -218,31 +190,58 @@ export function AddSeatModal({
               />
             </div>
 
+            {/* Dept Head Checkbox (Commented out as it's not active in system logic) */}
+            {/* 
+            <div className="flex items-start gap-3 group">
+              <Controller
+                name="isDeptHead"
+                control={control}
+                render={({ field }) => (
+                  <FormCheckbox
+                    id="isDeptHead"
+                    checked={field.value}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                    containerClass="mt-1 tb:mt-1"
+                    className="w-5 h-5 accent-primary cursor-pointer"
+                  />
+                )}
+              />
+              <div className="space-y-1">
+                <label htmlFor="isDeptHead" className="text-sm font-bold text-gray-700 cursor-pointer  select-none">
+                  This seat is the head of its department
+                </label>
+                <p className="text-xs text-gray-500 leading-relaxed max-w-[480px] ">
+                  New seats will automatically be assigned to the same
+                  department as their supervisor, unless they are a department
+                  head themselves.
+                </p>
+              </div>
+            </div>
+            */}
+
             {/* Manager Checkbox */}
-            <div className="flex items-start gap-3 group pt-2">
+            <div className="flex  items-center gap-3 group pt-2">
               <Controller
                 name="isManager"
                 control={control}
                 render={({ field }) => (
-                  <div
-                    className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${
-                      field.value
-                        ? "bg-primary border-primary"
-                        : "bg-white border-gray-300"
-                    }`}
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    {field.value && (
-                      <Plus className="w-3.5 h-3.5 text-white stroke-[3px] rotate-45" />
-                    )}
-                  </div>
+                  <FormCheckbox
+                    id="isManager"
+                    checked={field.value}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                    containerClass="mt-1 tb:mt-1"
+                    className="w-4 h-4 accent-primary cursor-pointer"
+                  />
                 )}
               />
               <div className="space-y-1">
-                <p className="text-sm font-bold text-gray-700">
+                <label
+                  htmlFor="isManager"
+                  className="text-sm font-bold text-gray-700 cursor-pointer  select-none"
+                >
                   This seat is a manager
-                </p>
-                <p className="text-xs text-gray-500 leading-relaxed">
+                </label>
+                <p className="text-xs text-gray-500 leading-relaxed ">
                   Managers have additional permissions to view and manage their
                   team's performance and data.
                 </p>
@@ -250,30 +249,32 @@ export function AddSeatModal({
             </div>
           </div>
 
-          <SheetFooter className="px-8 py-5 bg-gray-50 border-t flex items-center justify-between shrink-0">
-            <label className="flex items-center gap-2 cursor-pointer group">
-              <input
-                type="checkbox"
-                {...register("createAnother")}
-                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/20"
-              />
-              <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">
-                Create another seat
-              </span>
-            </label>
+          <SheetFooter className="px-8 py-5 bg-gray-50 border-t flex items-center justify-end shrink-0">
+            {/* Create another seat checkbox (Commented out per user request) */}
+            {/*
+            <FormCheckbox
+              id="createAnother"
+              label="Create another seat"
+              labelClass="text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors cursor-pointer select-none "
+              checked={false}
+              onChange={() => {}}
+              containerClass="mt-0 tb:mt-0"
+              className="w-4 h-4 accent-primary cursor-pointer"
+            />
+            */}
             <div className="flex items-center gap-3">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={onClose}
-                className="text-gray-500 font-bold hover:bg-gray-100"
+                className="text-gray-500 font-bold hover:bg-gray-100 "
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-[#14b8a6] hover:bg-[#0d9488] text-white font-bold px-8 h-11 rounded-md transition-all shadow-md"
+                className="bg-primary hover:bg-primary-dark text-white font-bold px-8 h-11 rounded-md transition-all shadow-md  border-none"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />

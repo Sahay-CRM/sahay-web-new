@@ -321,7 +321,7 @@ export const companyNavigationData = [
   // {
   //   id: 22,
   //   icon: "Network",
-  //   label: "Organization Chart",
+  //   label: "Organization Structure",
   //   link: "/dashboard/organization-chart",
   //   permission: "View",
   // },

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import {
   useGetTeamPositions,
   useAddUpdateTeamPosition,
@@ -9,6 +10,7 @@ import {
 import {
   ReactFlow,
   Background,
+  BackgroundVariant,
   useNodesState,
   useEdgesState,
   Edge,
@@ -58,6 +60,12 @@ const nodeTypes = { org: OrgNode };
 
 export const OrganizationChartContent = () => {
   const user = useSelector(getUserDetail);
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Organization Structure", href: "" }]);
+  }, [setBreadcrumbs]);
+
   const { data: positionsRes, isLoading } = useGetTeamPositions(
     user?.companyId as string,
   );
@@ -204,6 +212,17 @@ export const OrganizationChartContent = () => {
     [],
   );
 
+  const getAncestorEdges = useCallback(
+    (nodeId: string, edgeList: Edge[]): string[] => {
+      const parentEdges = edgeList.filter((e) => e.target === nodeId);
+      return [
+        ...parentEdges.map((e) => e.id),
+        ...parentEdges.flatMap((e) => getAncestorEdges(e.source, edgeList)),
+      ];
+    },
+    [],
+  );
+
   const handleToggleExpand = useCallback(
     (nodeId: string) => {
       setHiddenNodes((prev) => {
@@ -344,21 +363,37 @@ export const OrganizationChartContent = () => {
     visibleLevel,
   ]);
 
+  const activeAncestorEdgeIds = useMemo(() => {
+    const selectedNode = nodes.find((n) => n.selected);
+    if (!selectedNode) return new Set<string>();
+    return new Set(getAncestorEdges(selectedNode.id, edges));
+  }, [nodes, edges, getAncestorEdges]);
+
   const displayEdges = useMemo(
     () =>
-      edges.filter((e) => {
-        const sourceNode = nodes.find((n) => n.id === e.source);
-        const targetNode = nodes.find((n) => n.id === e.target);
-        const isVisible =
-          sourceNode &&
-          targetNode &&
-          sourceNode.data.depth < visibleLevel &&
-          targetNode.data.depth <= visibleLevel &&
-          !hiddenNodes.has(e.source) &&
-          !hiddenNodes.has(e.target);
-        return isVisible;
-      }),
-    [edges, hiddenNodes, nodes, visibleLevel],
+      edges
+        .filter((e) => {
+          const sourceNode = nodes.find((n) => n.id === e.source);
+          const targetNode = nodes.find((n) => n.id === e.target);
+          const isVisible =
+            sourceNode &&
+            targetNode &&
+            sourceNode.data.depth < visibleLevel &&
+            targetNode.data.depth <= visibleLevel &&
+            !hiddenNodes.has(e.source) &&
+            !hiddenNodes.has(e.target);
+          return isVisible;
+        })
+        .map((e) => {
+          const isAncestor = activeAncestorEdgeIds.has(e.id);
+          return {
+            ...e,
+            style: isAncestor
+              ? { stroke: "#2e3090", strokeWidth: 2 }
+              : { stroke: "#5d6063", strokeWidth: 0.9 },
+          };
+        }),
+    [edges, hiddenNodes, nodes, visibleLevel, activeAncestorEdgeIds],
   );
 
   const handleDirectionChange = (d: "TB" | "LR") => {
@@ -419,7 +454,7 @@ export const OrganizationChartContent = () => {
   );
 
   return (
-    <div className="flex flex-col h-[calc(100vh-85px)] w-full bg-white overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-gray-100 overflow-hidden">
       <Toolbar
         totalNodes={nodes.length}
         visibleLevel={visibleLevel}
@@ -477,7 +512,12 @@ export const OrganizationChartContent = () => {
           minZoom={0.05}
           maxZoom={2}
         >
-          <Background color="#f1f5f9" gap={24} size={1} />
+          <Background
+            variant={BackgroundVariant.Dots}
+            color="#6b7280"
+            gap={24}
+            size={1}
+          />
           <Panel
             position="bottom-left"
             className="m-6 bg-white/95 backdrop-blur-md px-3 py-2 rounded-xl border border-gray-200 shadow-lg flex items-center gap-2 z-30 text-xs font-semibold text-gray-700"
@@ -547,6 +587,10 @@ export const OrganizationChartContent = () => {
         isLoading={isAdding}
         positions={positionsList}
         companyId={user?.companyId}
+        isRoot={
+          !positionsList.find((p) => p.positionId === editingNodeId)
+            ?.parentPositionId
+        }
         initialData={(() => {
           const node = nodes.find((n) => n.id === editingNodeId);
           if (!node) return null;

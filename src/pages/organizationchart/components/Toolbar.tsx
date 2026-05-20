@@ -28,9 +28,9 @@ export function Toolbar({
       <div className="flex items-center gap-6">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-lg font-semibold text-gray-900 leading-tight">
-              Company Hierarchy
-            </h1>
+            {/* <h1 className="text-lg font-semibold text-gray-900 leading-tight">
+              Organization Structure
+            </h1> */}
             {spanOfControl && (
               <Popover>
                 <PopoverTrigger asChild>
@@ -94,25 +94,29 @@ export function Toolbar({
         <div className="h-6 w-px bg-gray-200" />
 
         {/* Level Controls */}
-        <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200 text-xs font-medium text-gray-700">
+        <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-2 py-1 shadow-sm">
           <button
-            className="p-1 rounded text-gray-500 hover:text-gray-900 hover:bg-white transition-all disabled:opacity-30 shadow-2xs"
+            type="button"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-primary transition-all hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             disabled={visibleLevel <= 1}
             onClick={() => onLevelChange(visibleLevel - 1)}
             title="Decrease Level"
           >
-            <ChevronDown className="w-3.5 h-3.5" />
+            <ChevronUp className="h-4 w-4" />
           </button>
-          <div className="flex items-center px-2 justify-center min-w-[65px]">
-            Level: {visibleLevel}
+
+          <div className="min-w-[60px] text-center text-sm font-semibold text-gray-700">
+            Level {visibleLevel}
           </div>
+
           <button
-            className="p-1 rounded text-gray-500 hover:text-gray-900 hover:bg-white transition-all disabled:opacity-30 shadow-2xs"
+            type="button"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-primary transition-all hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             disabled={visibleLevel >= maxLevel}
             onClick={() => onLevelChange(visibleLevel + 1)}
             title="Increase Level"
           >
-            <ChevronUp className="w-3.5 h-3.5" />
+            <ChevronDown className="h-4 w-4" />
           </button>
         </div>
       </div>
