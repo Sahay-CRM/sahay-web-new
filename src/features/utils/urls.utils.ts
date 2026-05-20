@@ -458,6 +458,8 @@ const Urls = {
     `${baseUrl}/company/employee/datapoint-permission/update/${empId}`,
   getKpiPermissionMaster: () =>
     `${baseUrl}/company/employee/datapoint-permission/get`,
+  getKpiNotAssignedToEmployee: () =>
+    `${baseUrl}/company/kpi/get-not-assigned-to-employee`,
 };
 
 export default Urls;

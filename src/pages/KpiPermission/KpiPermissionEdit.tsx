@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import {
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 import { Button } from "@/components/ui/button";
-import useDdAllKpiList from "@/features/api/KpiList/useDdAllKpiList";
+import useGetKpiNotAssignedToEmployee from "@/features/api/KpiList/useGetKpiNotAssignedToEmployee";
 import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 import { SpinnerIcon } from "@/components/shared/Icons";
 import useUpdateKpiPermission from "@/features/api/permission/useUpdateKpiPermission";
@@ -20,6 +20,14 @@ import useGetKpiPermissionMaster from "@/features/api/permission/useGetKpiPermis
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import PageNotAccess from "../PageNoAccess";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { getInitials } from "@/features/utils/app.utils";
+import { getColorFromName } from "@/features/utils/formatting.utils";
 
 interface KpiPermissionState {
   [kpiId: string]: {
@@ -51,12 +59,11 @@ export default function KpiPermissionEdit() {
     enable: !!employeeId,
   });
 
-  const { data: kpiData, isLoading: isKpiLoading } = useDdAllKpiList({
-    filter: {
-      isPaging: false,
-    },
-    enable: true,
-  });
+  const { data: kpiData, isLoading: isKpiLoading } =
+    useGetKpiNotAssignedToEmployee({
+      employeeId: employeeId || "",
+      enable: !!employeeId,
+    });
 
   useEffect(() => {
     setBreadcrumbs([
@@ -261,10 +268,10 @@ export default function KpiPermissionEdit() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50px]"></TableHead>
-              <TableHead className="w-[250px] font-bold uppercase">
-                KPI Name
-              </TableHead>
-              <TableHead className="text-center font-bold uppercase">
+              <TableHead className="w-[300px] ">KPI Name</TableHead>
+              <TableHead className="w-[150px] ">Tag</TableHead>
+              <TableHead className="w-[120px] ">Assigned</TableHead>
+              <TableHead className="text-center ">
                 <div className="flex items-center justify-center gap-2">
                   <FormCheckbox
                     checked={isColumnChecked("View")}
@@ -273,7 +280,7 @@ export default function KpiPermissionEdit() {
                   View
                 </div>
               </TableHead>
-              <TableHead className="text-center font-bold uppercase">
+              <TableHead className="text-center ">
                 <div className="flex items-center justify-center gap-2">
                   <FormCheckbox
                     checked={isColumnChecked("Edit")}
@@ -282,7 +289,7 @@ export default function KpiPermissionEdit() {
                   Edit
                 </div>
               </TableHead>
-              <TableHead className="text-center font-bold uppercase">
+              <TableHead className="text-center ">
                 <div className="flex items-center justify-center gap-2">
                   <FormCheckbox
                     checked={isColumnChecked("Delete")}
@@ -306,22 +313,51 @@ export default function KpiPermissionEdit() {
                     onChange={() => toggleRow(kpi.kpiId)}
                   />
                 </TableCell>
-                <TableCell className="font-medium">{kpi.KPIName}</TableCell>
-                <TableCell className="text-center">
+                <TableCell className="font-medium text-gray-900 py-3.5">
+                  {kpi.KPIName}
+                </TableCell>
+                <TableCell className="text-left py-3.5">
+                  {kpi.tag ? (
+                    <span className="text-sm font-medium text-gray-700">
+                      {kpi.tag}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-gray-400 font-medium">-</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-left py-3.5">
+                  {kpi.employeeName ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`w-7 h-7 bg-primary text-white flex items-center justify-center aspect-square rounded-full text-[12px] font-medium ${getColorFromName(kpi.employeeName)}`}
+                          >
+                            {getInitials(kpi.employeeName)}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>{kpi.employeeName}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <span className="text-xs text-gray-400 font-medium">-</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-center py-3.5">
                   <FormCheckbox
                     checked={permissions[kpi.kpiId]?.View || false}
                     onChange={() => togglePermission(kpi.kpiId, "View")}
                     className="mx-auto"
                   />
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="text-center py-3.5">
                   <FormCheckbox
                     checked={permissions[kpi.kpiId]?.Edit || false}
                     onChange={() => togglePermission(kpi.kpiId, "Edit")}
                     className="mx-auto"
                   />
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="text-center py-3.5">
                   <FormCheckbox
                     checked={permissions[kpi.kpiId]?.Delete || false}
                     onChange={() => togglePermission(kpi.kpiId, "Delete")}
