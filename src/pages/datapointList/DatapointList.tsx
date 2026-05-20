@@ -314,11 +314,10 @@ export default function CompanyTaskList() {
                       : `${item.value1}`,
                 employeeName: getInitials(item.employeeName || ""), // Use initials for the display
                 employeeFullName: item.employeeName,
+                createdByFullName: item.createdBy,
                 // empTags: Array.isArray(item.empTags) ? item.empTags.join(", ") : item.empTags || "",
-                createdByEmployeeName: getInitials(
-                  item.createdBy?.employeeName || "",
-                ),
-                createdByFullName: item.createdBy?.employeeName || "",
+                createdByEmployeeName: getInitials(item.createdBy || ""),
+
                 isActive: !item.isDelete,
               }))}
             columns={visibleColumns}
@@ -391,12 +390,12 @@ export default function CompanyTaskList() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div
-                            className={`w-7 h-7 bg-primary text-white flex items-center justify-center aspect-square rounded-full text-[12px] font-medium ${getColorFromName(row.employeeFullName)}`}
+                            className={`w-7 h-7 bg-primary text-white flex items-center justify-center aspect-square rounded-full text-[12px] font-medium ${getColorFromName(row.createdBy)}`}
                           >
-                            {row.employeeName}
+                            {row.createdByEmployeeName}
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent>{row.employeeFullName}</TooltipContent>
+                        <TooltipContent>{row.createdBy}</TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   );

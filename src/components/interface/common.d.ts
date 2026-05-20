@@ -978,15 +978,13 @@ interface KPIFormData {
   coreParameterId?: string;
   hasData?: boolean;
   employeeName?: string;
+  createdBy?: string;
   employeeFullName?: string;
   visualFrequencyAggregate: string | null;
   ioKPIId?: string;
   isDelete?: boolean;
   isFocus?: boolean;
-  createdBy?: {
-    employeeId: string;
-    employeeName: string;
-  };
+
   // skipDays?: string[];
 }
 
