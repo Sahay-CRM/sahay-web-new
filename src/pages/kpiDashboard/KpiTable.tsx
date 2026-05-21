@@ -1765,60 +1765,63 @@ export default function UpdatedKpiTable() {
               <div className="flex items-center relative">
                 {isSearchOpen ? (
                   <div className="flex items-center gap-2 bg-white animate-in slide-in-from-right-2 duration-200">
-                    <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md shadow-sm pl-2.5 pr-2 h-10 w-40 min-[1200px]:w-64 overflow-x-auto overflow-y-hidden pb-0.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+                    <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-md shadow-sm pl-2.5 pr-1 h-10 w-40 min-[1200px]:w-64 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
                       <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-                      {enableEmpTags && selectedEmpTags.length > 0 && (
-                        <div className="flex items-center gap-1 overflow-x-auto overflow-y-hidden whitespace-nowrap py-1 pb-1.5 shrink-0">
-                          {selectedEmpTags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="bg-blue-50 text-primary border border-blue-200 text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 shrink-0 animate-in zoom-in-95 duration-150 shadow-2xs"
-                            >
-                              @{tag}
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedEmpTags((prev) =>
-                                    prev.filter((t) => t !== tag),
-                                  );
-                                }}
-                                className="hover:bg-blue-200 text-primary rounded-full p-0.5 transition-colors flex items-center justify-center"
+                      <div className="flex-1 flex items-center overflow-x-auto overflow-y-hidden pb-0.5 scrollbar-none">
+                        {enableEmpTags && selectedEmpTags.length > 0 && (
+                          <div className="flex items-center gap-1 overflow-x-auto overflow-y-hidden whitespace-nowrap py-1 pb-1.5 shrink-0">
+                            {selectedEmpTags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="bg-blue-50 text-primary border border-blue-200 text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 shrink-0 animate-in zoom-in-95 duration-150 shadow-2xs"
                               >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <input
-                        type="text"
-                        placeholder={
-                          enableEmpTags && selectedEmpTags.length > 0
-                            ? "Add tag or search..."
-                            : enableEmpTags
-                              ? "Search... (@ for tags)"
-                              : "Search..."
-                        }
-                        value={searchTerm?.search || ""}
-                        onChange={(e) =>
-                          setSearchTerm({ search: e.target.value })
-                        }
-                        className="border-none outline-none focus:ring-0 text-sm w-36 min-[1200px]:w-48 shrink-0 py-1 bg-transparent placeholder:text-gray-400"
-                      />
+                                @{tag}
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedEmpTags((prev) =>
+                                      prev.filter((t) => t !== tag),
+                                    );
+                                  }}
+                                  className="hover:bg-blue-200 text-primary rounded-full p-0.5 transition-colors flex items-center justify-center"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <input
+                          type="text"
+                          autoFocus
+                          placeholder={
+                            enableEmpTags && selectedEmpTags.length > 0
+                              ? "Add tag or search..."
+                              : enableEmpTags
+                                ? "Search... (@ for tags)"
+                                : "Search..."
+                          }
+                          value={searchTerm?.search || ""}
+                          onChange={(e) =>
+                            setSearchTerm({ search: e.target.value })
+                          }
+                          className="border-none outline-none focus:ring-0 text-sm w-full py-1 bg-transparent placeholder:text-gray-400"
+                        />
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0 hover:bg-transparent text-gray-400 hover:text-gray-600"
+                        onClick={() => {
+                          setIsSearchOpen(false);
+                          setSearchTerm({ search: "" });
+                          setSelectedEmpTags([]);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 shrink-0"
-                      onClick={() => {
-                        setIsSearchOpen(false);
-                        setSearchTerm({ search: "" });
-                        setSelectedEmpTags([]);
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
 
                     {enableEmpTags && searchTerm?.search?.startsWith("@") && (
                       <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-md shadow-lg border border-gray-200 p-2.5 z-50 max-h-60 overflow-y-auto">
@@ -1899,7 +1902,12 @@ export default function UpdatedKpiTable() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="py-5 px-5 -mt-1 shrink-0"
+                      className={cn(
+                        "py-5 px-5 -mt-1 shrink-0 transition-all",
+                        (searchTerm?.search?.trim() ||
+                          selectedEmpTags.length > 0) &&
+                          "bg-blue-100 border-blue-200 text-primary hover:bg-blue-200",
+                      )}
                       onClick={() => {
                         setIsSearchOpen(true);
                         setIsDateOpen(false);

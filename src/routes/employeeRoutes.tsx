@@ -161,7 +161,7 @@ export default function EmployeeRoutes() {
         <Route path="settings" Component={Theme} />
         <Route path="company-designation" Component={companydesignation} />
         <Route path="company-employee" Component={companyEmployee} />
-        <Route path="organization-chart" Component={OrganizationChart} />
+        <Route path="organization-structure" Component={OrganizationChart} />
         <Route path="employees/add" element={<AddCompanyEmployee />} />
         <Route path="employees/edit/:id" element={<AddCompanyEmployee />} />
         <Route path="calendar" Component={CompanyImportantDates} />

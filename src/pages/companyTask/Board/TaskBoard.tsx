@@ -250,7 +250,7 @@ export default function TaskBoard() {
   }
 
   return (
-    <div className="flex flex-col py-4 h-[calc(100vh-90px)] overflow-hidden bg-white">
+    <div className="flex flex-col  h-[calc(100vh-90px)] overflow-hidden bg-white w-full   py-6">
       {/* Header Section */}
       <div className="w-full px-2 overflow-x-auto sm:px-4  flex flex-col">
         <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
@@ -273,10 +273,7 @@ export default function TaskBoard() {
               className="w-80"
             />
             <Link to="/dashboard/tasks">
-              <Button
-                variant="outline"
-                className="h-9 px-4 text-[11px] font-bold border-primary/30 text-primary hover:bg-primary/5 rounded-full"
-              >
+              <Button variant={"outline"} className="py-2 h-10 w-fit">
                 View as List
               </Button>
             </Link>

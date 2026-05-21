@@ -12,6 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 
 export function Toolbar({
   // totalNodes,
@@ -21,6 +22,7 @@ export function Toolbar({
   onSearch,
   onAddSeat,
   spanOfControl,
+  permission,
 }: ToolbarProps) {
   return (
     <div className="flex flex-wrap items-center justify-between px-6 py-4 border-b border-gray-200 bg-white sticky top-0 shrink-0 z-50 gap-4 shadow-xs">
@@ -34,11 +36,11 @@ export function Toolbar({
             {spanOfControl && (
               <Popover>
                 <PopoverTrigger asChild>
-                  <button className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-primary text-xs font-semibold rounded-full border border-indigo-200 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                  <Button className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-primary   flex items-center cursor-pointer">
                     <Activity className="w-3.5 h-3.5" />
                     Span of Control: {spanOfControl.type} ({spanOfControl.ratio}
                     )
-                  </button>
+                  </Button>
                 </PopoverTrigger>
                 <PopoverContent
                   align="start"
@@ -94,8 +96,8 @@ export function Toolbar({
         <div className="h-6 w-px bg-gray-200" />
 
         {/* Level Controls */}
-        <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-2 py-1 shadow-sm">
-          <button
+        <div className="flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 ">
+          <Button
             type="button"
             className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-primary transition-all hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             disabled={visibleLevel <= 1}
@@ -103,13 +105,13 @@ export function Toolbar({
             title="Decrease Level"
           >
             <ChevronUp className="h-4 w-4" />
-          </button>
+          </Button>
 
           <div className="min-w-[60px] text-center text-sm font-semibold text-gray-700">
             Level {visibleLevel}
           </div>
 
-          <button
+          <Button
             type="button"
             className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-primary transition-all hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             disabled={visibleLevel >= maxLevel}
@@ -117,7 +119,7 @@ export function Toolbar({
             title="Increase Level"
           >
             <ChevronDown className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -135,13 +137,15 @@ export function Toolbar({
           />
         </div>
 
-        <button
-          onClick={onAddSeat}
-          className="flex items-center gap-1.5 bg-primary text-white text-xs font-medium px-4 py-2 rounded-md hover:bg-primary/90 transition-all shadow-sm h-10 whitespace-nowrap"
-        >
-          <Plus className="w-4 h-4" />
-          Add Position
-        </button>
+        {permission.Add && (
+          <Button
+            onClick={onAddSeat}
+            className="flex py-2 w-fit items-center  cursor-pointer  "
+          >
+            <Plus className="w-4 h-4" />
+            Add Position
+          </Button>
+        )}
       </div>
     </div>
   );

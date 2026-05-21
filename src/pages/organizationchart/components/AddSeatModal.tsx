@@ -10,10 +10,10 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
+import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 
 export function AddSeatModal({
@@ -121,18 +121,20 @@ export function AddSeatModal({
           <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8">
             {/* Seat Title */}
             <div className="space-y-2.5">
-              <Label className="text-[13px]  text-gray-700 ">
-                Seat title <span className="text-red-500">*</span>
-              </Label>
               <Controller
                 name="seatTitle"
                 control={control}
-                rules={{ required: true }}
-                render={({ field }) => (
-                  <Input
+                rules={{ required: "Seat title is required" }}
+                render={({ field, fieldState }) => (
+                  <FormInputField
                     {...field}
+                    id="seatTitle"
+                    label="Seat title"
                     placeholder="Type a title"
-                    className="h-11 bg-white border-gray-200 focus-visible:ring-primary/20 text-sm "
+                    isMandatory={true}
+                    error={fieldState.error}
+                    containerClass="mt-0 tb:mt-0"
+                    className="h-11 bg-white border-gray-200 focus-visible:ring-primary/20 text-sm"
                   />
                 )}
               />
@@ -140,15 +142,12 @@ export function AddSeatModal({
 
             {/* Employee Selection */}
             <div className="space-y-2.5">
-              <Label className="text-[13px]  text-gray-700 ">
-                Employee(s) in seat
-              </Label>
               <Controller
                 name="employeeId"
                 control={control}
                 render={({ field }) => (
                   <SearchDropdown
-                    label=""
+                    label="Employee(s) in seat"
                     placeholder="Type or choose assigned employees"
                     options={empOptions}
                     multiSelect
@@ -171,15 +170,12 @@ export function AddSeatModal({
 
             {/* Supervisor Selection */}
             <div className="space-y-2.5">
-              <Label className="text-[13px] text-gray-700 ">
-                Supervisor of seat
-              </Label>
               <Controller
                 name="parentPositionId"
                 control={control}
                 render={({ field }) => (
                   <SearchDropdown
-                    label=""
+                    label="Supervisor of seat"
                     placeholder="Type or choose assigned supervisor"
                     options={supervisorOptions}
                     selectedValues={field.value ? [field.value] : []}
@@ -235,12 +231,12 @@ export function AddSeatModal({
                 )}
               />
               <div className="space-y-1">
-                <label
+                <Label
                   htmlFor="isManager"
                   className="text-sm font-bold text-gray-700 cursor-pointer  select-none"
                 >
                   This seat is a manager
-                </label>
+                </Label>
                 <p className="text-xs text-gray-500 leading-relaxed ">
                   Managers have additional permissions to view and manage their
                   team's performance and data.

@@ -3,6 +3,7 @@ import { Handle, Position } from "@xyflow/react";
 import { MoreHorizontal, Minus, Plus, UserMinus } from "lucide-react";
 import { getInitials, avatarColor } from "../utils/orgChartUtils";
 import { NodeContextMenu } from "./NodeContextMenu";
+import { Button } from "@/components/ui/button";
 
 export const OrgNode = ({
   data,
@@ -55,15 +56,16 @@ export const OrgNode = ({
           )} */}
         </div>
 
-        <button
+        <Button
+          variant="ghost"
           onClick={(e) => {
             e.stopPropagation();
             setMenuPos({ x: e.clientX, y: e.clientY });
           }}
-          className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition"
+          className="w-5 h-5 p-0 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition border-none cursor-pointer shadow-none"
         >
           <MoreHorizontal className="w-3.5 h-3.5" />
-        </button>
+        </Button>
       </div>
 
       {/* Employees */}
@@ -101,15 +103,16 @@ export const OrgNode = ({
               </div>
 
               {data.onRemoveEmployee && (
-                <button
+                <Button
+                  variant="ghost"
                   onClick={(e) => {
                     e.stopPropagation();
                     data.onRemoveEmployee?.(emp.employeeId);
                   }}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/emp:opacity-100 text-red-500 hover:text-red-700 transition"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover/emp:opacity-100 text-red-500 hover:text-red-700 transition p-0 w-fit h-fit border-none cursor-pointer shadow-none"
                 >
                   <UserMinus className="w-3 h-3" />
-                </button>
+                </Button>
               )}
             </div>
           );
@@ -127,19 +130,20 @@ export const OrgNode = ({
 
       {/* Expand Collapse */}
       {data.hasChildren && (
-        <button
+        <Button
+          variant="ghost"
           onClick={(e) => {
             e.stopPropagation();
             data.onToggleExpand?.(id);
           }}
-          className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center hover:border-primary hover:text-primary transition"
+          className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-5 h-5 p-0 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center hover:border-primary hover:text-primary transition cursor-pointer shadow-none"
         >
           {data.isExpanded ? (
             <Minus className="w-3 h-3" />
           ) : (
             <Plus className="w-3 h-3" />
           )}
-        </button>
+        </Button>
       )}
 
       {/* Bottom Handle */}

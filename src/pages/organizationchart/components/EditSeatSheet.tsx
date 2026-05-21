@@ -10,10 +10,10 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
+import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 
 export function EditSeatSheet({
@@ -74,7 +74,13 @@ export function EditSeatSheet({
     value: p.positionId,
   }));
 
-  const { handleSubmit, control, reset, register } = useForm<AddSeatFormData>({
+  const {
+    handleSubmit,
+    control,
+    reset,
+    register,
+    formState: { errors },
+  } = useForm<AddSeatFormData>({
     defaultValues: initialData || {
       seatTitle: "",
       employeeId: [],
@@ -112,29 +118,25 @@ export function EditSeatSheet({
           className="flex flex-col flex-1 overflow-hidden"
         >
           <div className="flex-1 overflow-y-auto px-8 py-8 space-y-9">
-            {/* Seat Title */}
-            <div className="space-y-2.5">
-              <Label className="text-[13px] text-slate-700 ">
-                Seat title <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                {...register("seatTitle", { required: true })}
-                placeholder="Type a title"
-                className="h-11 bg-white border-slate-200 focus-visible:ring-primary/20 text-sm "
-              />
-            </div>
+            <FormInputField
+              id="seatTitle"
+              {...register("seatTitle", { required: "Seat title is required" })}
+              error={errors.seatTitle}
+              label="Seat title"
+              placeholder="Type a title"
+              containerClass="mt-0 tb:mt-0"
+              className="h-11 bg-white border-slate-200 focus-visible:ring-primary/20 text-sm"
+              isMandatory={true}
+            />
 
             {/* Employee Selection */}
             <div className="space-y-2.5">
-              <Label className="text-[13px]  text-slate-700 ">
-                Employee(s) in seat
-              </Label>
               <Controller
                 name="employeeId"
                 control={control}
                 render={({ field }) => (
                   <SearchDropdown
-                    label=""
+                    label="Employee(s) in seat"
                     placeholder="Type or choose assigned employees"
                     options={empOptions}
                     multiSelect
@@ -158,15 +160,12 @@ export function EditSeatSheet({
             {/* Supervisor Selection - hidden for root/top-level seat */}
             {!isRoot && (
               <div className="space-y-2.5">
-                <Label className="text-[13px]  text-slate-700 ">
-                  Supervisor of seat
-                </Label>
                 <Controller
                   name="parentPositionId"
                   control={control}
                   render={({ field }) => (
                     <SearchDropdown
-                      label=""
+                      label="Supervisor of seat"
                       placeholder="Type or choose assigned supervisor"
                       options={supervisorOptions}
                       selectedValues={field.value ? [field.value] : []}
@@ -194,13 +193,13 @@ export function EditSeatSheet({
                 )}
               />
               <div className="space-y-0">
-                <label
+                <Label
                   htmlFor="isManager"
-                  className="text-sm font-bold text-slate-700 cursor-pointer  select-none"
+                  className="text-md  text-slate-700 cursor-pointer  select-none"
                 >
                   This seat is a manager
-                </label>
-                <p className="text-xs text-slate-500  ">
+                </Label>
+                <p className="text-sm text-slate-500  ">
                   Managers have additional permissions to view and manage their
                   team's performance and data.
                 </p>

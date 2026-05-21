@@ -318,13 +318,14 @@ export const companyNavigationData = [
   //   link: "/dashboard/report-builder/view",
   //   permission: "View",
   // },
-  // {
-  //   id: 22,
-  //   icon: "Network",
-  //   label: "Organization Structure",
-  //   link: "/dashboard/organization-chart",
-  //   permission: "View",
-  // },
+  {
+    id: 22,
+    icon: "Network",
+    label: "Organization Structure",
+    link: "/dashboard/organization-structure",
+    permission: "View",
+    moduleKey: "ORG_STRUCTURE",
+  },
 ];
 
 export const getRouteByLabel = (label: string): string | null => {

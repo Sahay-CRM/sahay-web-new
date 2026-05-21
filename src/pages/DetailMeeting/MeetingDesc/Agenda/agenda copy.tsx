@@ -904,45 +904,50 @@ export default function Agenda({
                 </div>
               </div>
             ) : meetingStatus === "STARTED" ? (
-              <div>
-                <div className="flex flex-wrap gap-8 text-center  justify-center h-full">
+              <div className="h-full w-full overflow-y-auto pr-1 flex flex-col">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl mx-auto py-2 justify-items-center my-auto">
                   {joiners &&
                     joiners.map((item) => {
                       return (
                         <div
                           key={item.employeeId}
-                          className="flex items-center"
+                          className="flex items-center w-full justify-center"
                         >
-                          <div className="flex gap-2 w-40">
-                            <div className="relative">
-                              {item.isTeamLeader && (
-                                <span className="absolute -top-2 right-3 z-10 bg-white shadow-2xl rounded-full p-0.5">
-                                  <Crown className="w-3 h-3 text-[#303290] drop-shadow" />
-                                </span>
-                              )}
-                              <div className="w-10 h-10 rounded-full overflow-hidden">
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      {item.employeeImage !== null ? (
-                                        <img
-                                          src={`${ImageBaseURL}/share/company/profilePics/${item.employeeImage}`}
-                                          alt={item.employeeName}
-                                          className="w-full h-full object-cover outline-2 outline-blue-400 bg-black"
-                                        />
-                                      ) : (
-                                        <div className="bg-gray-300 text-gray-700 w-full h-full content-center font-semibold text-sm">
-                                          {getInitials(item.employeeName)}
-                                        </div>
-                                      )}
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      {item.employeeName}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
+                          <div className="flex gap-2 w-full max-w-[280px] border px-4 py-2 rounded-md justify-between items-center bg-white shadow-sm hover:shadow transition-shadow">
+                            <div className="relative flex gap-2 items-center w-full justify-between">
+                              <div className="flex gap-2 items-center overflow-hidden">
+                                {item.isTeamLeader && (
+                                  <span className="absolute -top-2 left-5 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                                    <Crown className="w-3 h-3 text-[#303290] drop-shadow" />
+                                  </span>
+                                )}
+                                <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        {item.employeeImage !== null ? (
+                                          <img
+                                            src={`${ImageBaseURL}/share/company/profilePics/${item.employeeImage}`}
+                                            alt={item.employeeName}
+                                            className="w-full h-full object-cover outline-2 outline-blue-400 bg-black"
+                                          />
+                                        ) : (
+                                          <div className="bg-gray-300 text-gray-700 w-full h-full content-center font-semibold text-sm flex items-center justify-center">
+                                            {getInitials(item.employeeName)}
+                                          </div>
+                                        )}
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        {item.employeeName}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
+                                <div className="text-sm font-medium text-gray-800 truncate">
+                                  {item.employeeName}
+                                </div>
                               </div>
-                              <div>
+                              <div className="shrink-0 flex items-center">
                                 <FormCheckbox
                                   id={`${item.employeeId}-checkbox`}
                                   className="w-[15px] h-[15px]"
@@ -955,10 +960,6 @@ export default function Agenda({
                                   disabled={!isTeamLeader}
                                 />
                               </div>
-                            </div>
-
-                            <div className="text-sm font-medium text-gray-800 mt-2">
-                              {item.employeeName}
                             </div>
                           </div>
                         </div>

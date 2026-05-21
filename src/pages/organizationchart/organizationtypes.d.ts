@@ -93,4 +93,5 @@ interface ToolbarProps {
   onSearch: (q: string) => void;
   onAddSeat: () => void;
   spanOfControl?: SpanOfControl | null;
+  permission?: permission;
 }

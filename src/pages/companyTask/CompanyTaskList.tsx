@@ -133,10 +133,7 @@ export default function CompanyTaskList() {
               className="w-80"
             />
             <Link to="/dashboard/tasks/board">
-              <Button
-                variant="outline"
-                className="h-9 px-4 text-[11px] font-bold border-primary/30 text-primary hover:bg-primary/5 rounded-full"
-              >
+              <Button variant={"outline"} className="py-2 h-10 w-fit">
                 View as Column
               </Button>
             </Link>
@@ -178,7 +175,7 @@ export default function CompanyTaskList() {
                   <Button
                     variant={showOverdue ? "destructive" : "outline"}
                     onClick={handleOverdueToggle}
-                    className="py-2 w-fit"
+                    className="py-2 h-10 w-fit"
                   >
                     {showOverdue ? "Show All Tasks" : "Show Overdue"}
                   </Button>

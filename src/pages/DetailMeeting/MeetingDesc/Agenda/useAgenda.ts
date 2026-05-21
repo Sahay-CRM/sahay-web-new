@@ -67,6 +67,7 @@ export const useAgenda = ({
     issueObjectiveId: "",
   });
   const [modalOpen, setModalOpen] = useState(false);
+  const [noAgendaModalOpen, setNoAgendaModalOpen] = useState(false);
   const [modalIssue, setModalIssue] = useState("");
   const [dropdownVisible, setDropdownVisible] = useState(false);
   // const [agendaList, setAgendaList] = useState<MeetingAgenda[]>([]);
@@ -669,8 +670,7 @@ export const useAgenda = ({
 
   const handleDesc = () => {
     if (!agendaList || agendaList.length === 0) {
-      // eslint-disable-next-line no-alert
-      window.alert("Please add an issue objective before starting discussion.");
+      setNoAgendaModalOpen(true);
       return;
     }
 
@@ -1235,6 +1235,7 @@ export const useAgenda = ({
     issueInput,
     editing,
     modalOpen,
+    noAgendaModalOpen,
     modalIssue,
     dropdownVisible,
     agendaList,
@@ -1245,6 +1246,7 @@ export const useAgenda = ({
     setIssueInput,
     setEditingValue,
     setModalOpen,
+    setNoAgendaModalOpen,
     setModalIssue,
     setDropdownVisible,
     handleAddIssue,
