@@ -1169,7 +1169,7 @@ export default function Agenda({
                           key={item.employeeId}
                           className="flex items-center w-full justify-center"
                         >
-                          <div className="flex gap-2 w-full max-w-[280px] border px-4 py-2 rounded-md justify-between items-center bg-white shadow-sm hover:shadow transition-shadow">
+                          <div className="flex gap-2 w-full max-w-[280px] border px-4 py-2 rounded-md justify-between items-center bg-white ">
                             <div className="relative flex gap-2 items-center w-full justify-between">
                               <div className="flex gap-2 items-center overflow-hidden">
                                 {item.isTeamLeader && (

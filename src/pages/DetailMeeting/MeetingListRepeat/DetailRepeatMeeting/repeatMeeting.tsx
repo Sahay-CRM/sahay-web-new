@@ -137,12 +137,7 @@ export default function RepeatMeeting() {
       isLoading={!meetingTiming}
     >
       <div className="flex w-full h-full bg-gray-200 overflow-hidden">
-        <div
-          className={cn(
-            "bg-white p-4 flex-1 min-w-0",
-            "transition-all duration-300 ease-in-out",
-          )}
-        >
+        <div className={cn("bg-white p-4 flex-1 min-w-0")}>
           <div className="w-full mt-4 overflow-hidden">
             <DetailRepeatMeeting
               meetingName={meetingName ?? ""}
