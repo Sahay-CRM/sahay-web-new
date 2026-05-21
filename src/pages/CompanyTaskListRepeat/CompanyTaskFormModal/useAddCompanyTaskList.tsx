@@ -823,6 +823,8 @@ export default function useAddEmployee() {
                 columns={{
                   srNo: "srNo",
                   employeeName: "User Name",
+                  employeeType: "Employee Type",
+                  designationName: "Designation",
                 }}
                 primaryKey="employeeId"
                 multiSelect={true}

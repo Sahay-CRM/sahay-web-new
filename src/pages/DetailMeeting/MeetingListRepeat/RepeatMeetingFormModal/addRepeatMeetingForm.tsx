@@ -416,6 +416,8 @@ const Joiners = () => {
     { key: "srNo", label: "Sr No", visible: true },
     { key: "employeeName", label: "Joiners", visible: true },
     { key: "employeeMobile", label: "Mobile", visible: true },
+    { key: "employeeType", label: "Employee Type", visible: true },
+    { key: "designationName", label: "Designation", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
