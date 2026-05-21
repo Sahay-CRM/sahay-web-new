@@ -42,37 +42,30 @@ export default function CompanyLevelAssign() {
   return (
     <FormProvider {...methods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-        <div className="flex justify-between h-[65px] overflow-hidden">
-          <h1 className="font-semibold capitalize text-xl text-black mb-4">
-            Company Level Assign
-          </h1>
-          <div className="flex justify-end">
-            {hasUnsavedChanges && (
-              <>
-                {(permission.Add || permission.Edit) && (
-                  <button
-                    type="button"
-                    className="mt-4 mb-2 px-4 py-1 bg-primary text-white rounded hover:bg-primary-dark disabled:bg-primary/50 disabled:cursor-not-allowed"
-                    onClick={handleSave}
-                    disabled={isSaving}
-                  >
-                    {isSaving ? "Saving..." : "Update"}
-                  </button>
-                )}
-                {(permission.Add || permission.Edit) && (
-                  <button
-                    type="button"
-                    className="mt-4 mb-2 ml-2 px-4 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:bg-gray-500/50 disabled:cursor-not-allowed"
-                    onClick={handleCancel}
-                    disabled={isSaving}
-                  >
-                    Cancel
-                  </button>
-                )}
-              </>
+        {hasUnsavedChanges && (
+          <div className="flex justify-end mb-4 shrink-0">
+            {(permission.Add || permission.Edit) && (
+              <button
+                type="button"
+                className="mb-2 px-4 py-1.5 bg-primary text-white rounded hover:bg-primary-dark disabled:bg-primary/50 disabled:cursor-not-allowed"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? "Saving..." : "Update"}
+              </button>
+            )}
+            {(permission.Add || permission.Edit) && (
+              <button
+                type="button"
+                className="mb-2 ml-2 px-4 py-1.5 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:bg-gray-500/50 disabled:cursor-not-allowed"
+                onClick={handleCancel}
+                disabled={isSaving}
+              >
+                Cancel
+              </button>
             )}
           </div>
-        </div>
+        )}
 
         <div className="flex gap-10">
           <div className="w-1/2 mt-2">

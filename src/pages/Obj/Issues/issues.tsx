@@ -100,11 +100,16 @@ export default function Issues() {
   return (
     <FormProvider {...methods}>
       <div className="w-full h-full px-2 sm:px-4 py-6 flex flex-col overflow-hidden">
-        <div className="flex mb-5 justify-between items-center shrink-0">
-          <h1 className="font-semibold capitalize text-xl text-black">
-            Issues List
-          </h1>
-          <div className="flex items-center space-x-5 tb:space-x-7">
+        <div className="flex justify-between items-center mb-4 shrink-0 gap-4 flex-wrap">
+          <div>
+            <SearchInput
+              placeholder="Search..."
+              searchValue={paginationFilter?.search || ""}
+              setPaginationFilter={setPaginationFilter}
+              className="w-80"
+            />
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
             <FormSelect
               value={isDataFilter}
               options={dataFilterOption}
@@ -113,26 +118,6 @@ export default function Issues() {
               }}
               triggerClassName="mb-0"
             />
-            {permission.Add && (
-              <Link to="">
-                <Button className="py-2 w-fit" onClick={handleAdd}>
-                  Add Issues
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
-
-        <div className="flex justify-between items-center shrink-0">
-          <div>
-            <SearchInput
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-              className="w-80"
-            />
-          </div>{" "}
-          <div className="flex items-center gap-2">
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>
@@ -150,6 +135,13 @@ export default function Issues() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
+            )}
+            {permission.Add && (
+              <Link to="">
+                <Button className="py-2 w-fit" onClick={handleAdd}>
+                  Add Issues
+                </Button>
+              </Link>
             )}
           </div>
         </div>

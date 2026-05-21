@@ -18,6 +18,14 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
@@ -213,6 +221,7 @@ export default function Agenda({
     issueInput,
     editing,
     modalOpen,
+    noAgendaModalOpen,
     modalIssue,
     dropdownVisible,
     agendaList,
@@ -223,6 +232,7 @@ export default function Agenda({
     setIssueInput,
     setEditingValue,
     setModalOpen,
+    setNoAgendaModalOpen,
     setDropdownVisible,
     handleAddIssue,
     startEdit,
@@ -438,6 +448,19 @@ export default function Agenda({
           handleStartMeeting();
         }}
       />
+      <Dialog open={noAgendaModalOpen} onOpenChange={setNoAgendaModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Agenda Required</DialogTitle>
+            <DialogDescription>
+              Please add an issue objective before starting discussion.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setNoAgendaModalOpen(false)}>OK</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <IssueAgendaAddModal
         isModalOpen={addIssueModal}
         modalClose={() => setAddIssueModal(false)}
@@ -1063,7 +1086,7 @@ export default function Agenda({
           </div>
           <div
             className={`
-    flex justify-center w-full h-[calc(100vh-210px)] relative border-primary
+    flex justify-center w-full h-[calc(100vh-140px)] relative border-primary
 
     ${
       meetingStatus === "DISCUSSION" &&
@@ -1137,48 +1160,50 @@ export default function Agenda({
                 </div>
               </div>
             ) : meetingStatus === "STARTED" ? (
-              <div className="h-full flex items-center justify-center">
-                <div className="flex flex-wrap gap-4 text-center justify-center">
+              <div className="h-full w-full overflow-y-auto pr-1">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl mx-auto py-2 justify-items-center">
                   {joiners &&
                     joiners.map((item) => {
                       return (
                         <div
                           key={item.employeeId}
-                          className="flex items-center"
+                          className="flex items-center w-full justify-center"
                         >
-                          <div className="flex gap-2 w-fit border px-4 py-2 rounded-md">
-                            <div className="relative flex gap-2">
-                              {item.isTeamLeader && (
-                                <span className="absolute -top-2 left-5 z-10 bg-white shadow-2xl rounded-full p-0.5">
-                                  <Crown className="w-3 h-3 text-[#303290] drop-shadow" />
-                                </span>
-                              )}
-                              <div className="w-10 h-10 rounded-full overflow-hidden">
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      {item.employeeImage !== null ? (
-                                        <img
-                                          src={`${ImageBaseURL}/share/profilePics/${item.employeeImage}`}
-                                          alt={item.employeeName}
-                                          className="w-full h-full object-cover outline-2 outline-blue-400 bg-black"
-                                        />
-                                      ) : (
-                                        <div className="bg-gray-300 text-gray-700 w-full h-full content-center font-semibold text-sm">
-                                          {getInitials(item.employeeName)}
-                                        </div>
-                                      )}
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      {item.employeeName}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
+                          <div className="flex gap-2 w-full max-w-[280px] border px-4 py-2 rounded-md justify-between items-center bg-white shadow-sm hover:shadow transition-shadow">
+                            <div className="relative flex gap-2 items-center w-full justify-between">
+                              <div className="flex gap-2 items-center overflow-hidden">
+                                {item.isTeamLeader && (
+                                  <span className="absolute -top-2 left-5 z-10 bg-white shadow-2xl rounded-full p-0.5">
+                                    <Crown className="w-3 h-3 text-[#303290] drop-shadow" />
+                                  </span>
+                                )}
+                                <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        {item.employeeImage !== null ? (
+                                          <img
+                                            src={`${ImageBaseURL}/share/profilePics/${item.employeeImage}`}
+                                            alt={item.employeeName}
+                                            className="w-full h-full object-cover outline-2 outline-blue-400 bg-black"
+                                          />
+                                        ) : (
+                                          <div className="bg-gray-300 text-gray-700 w-full h-full content-center font-semibold text-sm flex items-center justify-center">
+                                            {getInitials(item.employeeName)}
+                                          </div>
+                                        )}
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        {item.employeeName}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
+                                <div className="text-sm font-medium text-gray-800 truncate">
+                                  {item.employeeName}
+                                </div>
                               </div>
-                              <div className="text-sm font-medium text-gray-800 mt-2">
-                                {item.employeeName}
-                              </div>
-                              <div>
+                              <div className="shrink-0 flex items-center">
                                 <FormCheckbox
                                   id={`${item.employeeId}-checkbox`}
                                   className="w-[15px] h-[15px]"

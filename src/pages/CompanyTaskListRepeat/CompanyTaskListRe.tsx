@@ -101,18 +101,6 @@ export default function CompanyTaskListRe() {
   return (
     <FormProvider {...methods}>
       <div className="w-full h-full px-2 sm:px-4 py-6 flex flex-col overflow-hidden">
-        <div className="flex mb-3 justify-between items-center shrink-0">
-          <h1 className="font-semibold capitalize text-xl text-black">
-            Company Repetition Task List
-          </h1>
-          <div className="flex items-center space-x-5 tb:space-x-7">
-            {permission.Add && (
-              <Link to="/dashboard/tasksrepeat/add">
-                <Button className="py-2 w-fit">Add Company Repeat Task</Button>
-              </Link>
-            )}
-          </div>
-        </div>
         <div className="flex justify-between items-center mb-4 flex-wrap gap-4 shrink-0">
           <div>
             <SearchInput
@@ -122,7 +110,7 @@ export default function CompanyTaskListRe() {
               className="w-80"
             />
           </div>
-          <div className="flex gap-4 flex-wrap">
+          <div className="flex gap-3 flex-wrap items-center">
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>
@@ -140,6 +128,11 @@ export default function CompanyTaskListRe() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
+            )}
+            {permission.Add && (
+              <Link to="/dashboard/tasksrepeat/add">
+                <Button className="py-2 w-fit">Add Company Repeat Task</Button>
+              </Link>
             )}
           </div>
         </div>

@@ -12,6 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 
 export function Toolbar({
   // totalNodes,
@@ -21,6 +22,7 @@ export function Toolbar({
   onSearch,
   onAddSeat,
   spanOfControl,
+  permission,
 }: ToolbarProps) {
   return (
     <div className="flex flex-wrap items-center justify-between px-6 py-4 border-b border-gray-200 bg-white sticky top-0 shrink-0 z-50 gap-4 shadow-xs">
@@ -28,17 +30,17 @@ export function Toolbar({
       <div className="flex items-center gap-6">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-lg font-semibold text-gray-900 leading-tight">
-              Company Hierarchy
-            </h1>
+            {/* <h1 className="text-lg font-semibold text-gray-900 leading-tight">
+              Organization Structure
+            </h1> */}
             {spanOfControl && (
               <Popover>
                 <PopoverTrigger asChild>
-                  <button className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-primary text-xs font-semibold rounded-full border border-indigo-200 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                  <Button className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-primary   flex items-center cursor-pointer">
                     <Activity className="w-3.5 h-3.5" />
                     Span of Control: {spanOfControl.type} ({spanOfControl.ratio}
                     )
-                  </button>
+                  </Button>
                 </PopoverTrigger>
                 <PopoverContent
                   align="start"
@@ -94,26 +96,30 @@ export function Toolbar({
         <div className="h-6 w-px bg-gray-200" />
 
         {/* Level Controls */}
-        <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200 text-xs font-medium text-gray-700">
-          <button
-            className="p-1 rounded text-gray-500 hover:text-gray-900 hover:bg-white transition-all disabled:opacity-30 shadow-2xs"
+        <div className="flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 ">
+          <Button
+            type="button"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-primary transition-all hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             disabled={visibleLevel <= 1}
             onClick={() => onLevelChange(visibleLevel - 1)}
             title="Decrease Level"
           >
-            <ChevronDown className="w-3.5 h-3.5" />
-          </button>
-          <div className="flex items-center px-2 justify-center min-w-[65px]">
-            Level: {visibleLevel}
+            <ChevronUp className="h-4 w-4" />
+          </Button>
+
+          <div className="min-w-[60px] text-center text-sm font-semibold text-gray-700">
+            Level {visibleLevel}
           </div>
-          <button
-            className="p-1 rounded text-gray-500 hover:text-gray-900 hover:bg-white transition-all disabled:opacity-30 shadow-2xs"
+
+          <Button
+            type="button"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-primary transition-all hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             disabled={visibleLevel >= maxLevel}
             onClick={() => onLevelChange(visibleLevel + 1)}
             title="Increase Level"
           >
-            <ChevronUp className="w-3.5 h-3.5" />
-          </button>
+            <ChevronDown className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
@@ -131,13 +137,15 @@ export function Toolbar({
           />
         </div>
 
-        <button
-          onClick={onAddSeat}
-          className="flex items-center gap-1.5 bg-primary text-white text-xs font-medium px-4 py-2 rounded-md hover:bg-primary/90 transition-all shadow-sm h-10 whitespace-nowrap"
-        >
-          <Plus className="w-4 h-4" />
-          Add Position
-        </button>
+        {permission.Add && (
+          <Button
+            onClick={onAddSeat}
+            className="flex py-2 w-fit items-center  cursor-pointer  "
+          >
+            <Plus className="w-4 h-4" />
+            Add Position
+          </Button>
+        )}
       </div>
     </div>
   );

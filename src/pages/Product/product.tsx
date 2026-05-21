@@ -85,19 +85,7 @@ export default function Product() {
   return (
     <FormProvider {...methods}>
       <div className="w-full h-full px-2 sm:px-4 py-4 flex flex-col overflow-hidden">
-        <div className="flex mb-5 justify-between items-center shrink-0">
-          <h1 className="font-semibold capitalize text-xl text-black">
-            Product List
-          </h1>
-          <div className="flex items-center space-x-5 tb:space-x-7">
-            {permission.Add && (
-              <Button className="py-2 w-fit" onClick={handleAdd}>
-                Add Product
-              </Button>
-            )}
-          </div>
-        </div>
-        <div className="flex justify-between items-center mb-4 shrink-0">
+        <div className="flex justify-between items-center mb-4 shrink-0 gap-4">
           <div>
             <SearchInput
               placeholder="Search..."
@@ -105,8 +93,8 @@ export default function Product() {
               setPaginationFilter={setPaginationFilter}
               className="w-80"
             />
-          </div>{" "}
-          <div className="flex items-center gap-2">
+          </div>
+          <div className="flex items-center gap-3">
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>
@@ -129,11 +117,16 @@ export default function Product() {
               variant="outline"
               size="sm"
               onClick={resetColumnWidths}
-              className="flex items-center gap-2 cursor-pointer"
+              className="flex items-center gap-2 cursor-pointer h-9"
             >
               <RefreshCw className="h-4 w-4" />
               Reset
             </Button>
+            {permission.Add && (
+              <Button className="py-2 w-fit" onClick={handleAdd}>
+                Add Product
+              </Button>
+            )}
           </div>
         </div>
 

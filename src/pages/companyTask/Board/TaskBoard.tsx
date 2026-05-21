@@ -250,48 +250,35 @@ export default function TaskBoard() {
   }
 
   return (
-    <div className="flex flex-col py-4 h-[calc(100vh-90px)] overflow-hidden bg-white">
+    <div className="flex flex-col  h-[calc(100vh-90px)] overflow-hidden bg-white w-full   py-6">
       {/* Header Section */}
       <div className="w-full px-2 overflow-x-auto sm:px-4  flex flex-col">
-        <div className="flex mb-3 justify-between items-center">
-          <h1 className="font-semibold capitalize text-xl text-black">
-            Company Task List
-          </h1>
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+          <div className="flex items-center space-x-5 tb:space-x-7">
+            <SearchInput
+              placeholder="Search..."
+              searchValue={searchTerm}
+              setPaginationFilter={(
+                updater:
+                  | { search: string }
+                  | ((prev: { search: string }) => { search: string }),
+              ) => {
+                if (typeof updater === "function") {
+                  const result = updater({ search: searchTerm });
+                  setSearchTerm(result.search);
+                } else {
+                  setSearchTerm(updater.search);
+                }
+              }}
+              className="w-80"
+            />
             <Link to="/dashboard/tasks">
-              <Button
-                variant="outline"
-                className="h-9 px-4 text-[11px] font-bold border-primary/30 text-primary hover:bg-primary/5 rounded-full"
-              >
+              <Button variant={"outline"} className="py-2 h-10 w-fit">
                 View as List
               </Button>
             </Link>
-            <Link to="/dashboard/tasks/add">
-              <Button className="py-2 w-fit">Add Company Task</Button>
-            </Link>
           </div>
-        </div>
-
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <SearchInput
-            placeholder="Search..."
-            searchValue={searchTerm}
-            setPaginationFilter={(
-              updater:
-                | { search: string }
-                | ((prev: { search: string }) => { search: string }),
-            ) => {
-              if (typeof updater === "function") {
-                const result = updater({ search: searchTerm });
-                setSearchTerm(result.search);
-              } else {
-                setSearchTerm(updater.search);
-              }
-            }}
-            className="w-80"
-          />
-
-          <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
             {!showOverdue && (
               <DateRangePicker
                 value={{
@@ -329,6 +316,12 @@ export default function TaskBoard() {
             >
               {showOverdue ? "Show All Tasks" : "Show Overdue"}
             </Button>
+
+            <div className="flex items-center gap-2">
+              <Link to="/dashboard/tasks/add">
+                <Button className="py-2 w-fit">Add Company Task</Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

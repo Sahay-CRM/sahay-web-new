@@ -84,12 +84,6 @@ export default function RequestMasterList() {
   return (
     <FormProvider {...methods}>
       <div className="w-full h-full px-2 sm:px-4 py-6 flex flex-col overflow-hidden">
-        <div className="flex mb-3 justify-between items-center shrink-0">
-          <h1 className="font-semibold capitalize text-xl text-black">
-            Request Master List
-          </h1>
-        </div>
-
         <div className="flex justify-between items-center mb-4 flex-wrap gap-4 shrink-0">
           <div>
             <SearchInput

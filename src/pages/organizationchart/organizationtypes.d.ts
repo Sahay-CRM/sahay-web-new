@@ -65,6 +65,7 @@ interface EditSeatSheetProps {
   positions: TeamPosition[];
   companyId?: string;
   initialData: AddSeatFormData | null;
+  isRoot?: boolean;
 }
 
 interface CtxMenuProps {
@@ -92,4 +93,5 @@ interface ToolbarProps {
   onSearch: (q: string) => void;
   onAddSeat: () => void;
   spanOfControl?: SpanOfControl | null;
+  permission?: permission;
 }

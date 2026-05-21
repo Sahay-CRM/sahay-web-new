@@ -177,28 +177,26 @@ export default function ProjectTaskList() {
   return (
     <div className="bg-white p-1 border h-[calc(100vh-120px)] rounded-2xl shadow-md flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 bg-white z-20 px-5 pt-2">
-        <div className="flex justify-between w-full">
-          <h2 className="text-2xl font-semibold">Tasks</h2>
-          <div className="flex gap-2 flex-row">
-            <SearchInput
-              placeholder="Search..."
-              searchValue={paginationFilter?.search || ""}
-              setPaginationFilter={setPaginationFilter}
-              className="w-80 h-9"
-            />
-            {taskPermission.Add && (
-              <Button
-                onClick={() => {
-                  setEditingTaskId(null);
-                  setIsAddTaskOpen(true);
-                  reset(defaultValue);
-                }}
-              >
-                Add Task
-              </Button>
-            )}
-          </div>
+      <div className="sticky top-0 bg-white z-20 px-5 pt-2 mb-4">
+        <div className="flex justify-between items-center w-full gap-4">
+          <SearchInput
+            placeholder="Search..."
+            searchValue={paginationFilter?.search || ""}
+            setPaginationFilter={setPaginationFilter}
+            className="w-80 h-9"
+          />
+          {taskPermission.Add && (
+            <Button
+              className="py-2 w-fit h-9"
+              onClick={() => {
+                setEditingTaskId(null);
+                setIsAddTaskOpen(true);
+                reset(defaultValue);
+              }}
+            >
+              Add Task
+            </Button>
+          )}
         </div>
       </div>
 

@@ -117,11 +117,11 @@ export default function CompanyProjectTabList() {
               />
 
               <Button
-                variant="outline"
                 onClick={() =>
                   setViewMode(viewMode === "list" ? "board" : "list")
                 }
-                className="h-9 px-4 text-[11px] font-bold border-primary/30 text-primary hover:bg-primary/5 rounded-full flex items-center gap-2"
+                variant={"outline"}
+                className="py-2 h-10 w-fit"
               >
                 {viewMode === "list" ? <>View as column</> : <>View as List</>}
               </Button>

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
-
-import { Plus, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import {
   Sheet,
@@ -11,9 +10,10 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
+import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 
 export function EditSeatSheet({
@@ -24,6 +24,7 @@ export function EditSeatSheet({
   positions,
   companyId,
   initialData,
+  isRoot = false,
 }: EditSeatSheetProps) {
   const [empSearch, setEmpSearch] = useState("");
 
@@ -68,12 +69,18 @@ export function EditSeatSheet({
 
   const supervisorOptions = positions.map((p) => ({
     label: p.seatTitle
-      ? `${p.seatTitle} (${p.employeeName || "Unassigned"})`
+      ? `${p.seatTitle}`
       : p.employeeName || p.designationName || "Unassigned",
     value: p.positionId,
   }));
 
-  const { handleSubmit, control, reset, register } = useForm<AddSeatFormData>({
+  const {
+    handleSubmit,
+    control,
+    reset,
+    register,
+    formState: { errors },
+  } = useForm<AddSeatFormData>({
     defaultValues: initialData || {
       seatTitle: "",
       employeeId: [],
@@ -98,10 +105,10 @@ export function EditSeatSheet({
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
         side="right"
-        className="sm:max-w-[450px] p-0 flex flex-col border-l shadow-2xl"
+        className="sm:max-w-[450px] p-0 flex flex-col border-l shadow-2xl bg-white [&>button]:text-white/80 hover:[&>button]:text-white [&>button]:top-5 [&>button]:right-6"
       >
-        <SheetHeader className="px-6 py-5 border-b bg-slate-50 flex flex-row items-center justify-between space-y-0 shrink-0">
-          <SheetTitle className="text-xl font-bold text-slate-800">
+        <SheetHeader className="px-8 py-5 border-b bg-primary flex flex-row items-center justify-between space-y-0 shrink-0">
+          <SheetTitle className="text-xl font-bold text-white ">
             Edit seat
           </SheetTitle>
         </SheetHeader>
@@ -111,29 +118,25 @@ export function EditSeatSheet({
           className="flex flex-col flex-1 overflow-hidden"
         >
           <div className="flex-1 overflow-y-auto px-8 py-8 space-y-9">
-            {/* Seat Title */}
-            <div className="space-y-2.5">
-              <Label className="text-[13px] font-bold text-slate-700">
-                Seat title <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                {...register("seatTitle", { required: true })}
-                placeholder="Type a title"
-                className="h-11 bg-white border-slate-200 focus-visible:ring-primary/20 text-sm"
-              />
-            </div>
+            <FormInputField
+              id="seatTitle"
+              {...register("seatTitle", { required: "Seat title is required" })}
+              error={errors.seatTitle}
+              label="Seat title"
+              placeholder="Type a title"
+              containerClass="mt-0 tb:mt-0"
+              className="h-11 bg-white border-slate-200 focus-visible:ring-primary/20 text-sm"
+              isMandatory={true}
+            />
 
             {/* Employee Selection */}
             <div className="space-y-2.5">
-              <Label className="text-[13px] font-bold text-slate-700">
-                Employee(s) in seat
-              </Label>
               <Controller
                 name="employeeId"
                 control={control}
                 render={({ field }) => (
                   <SearchDropdown
-                    label=""
+                    label="Employee(s) in seat"
                     placeholder="Type or choose assigned employees"
                     options={empOptions}
                     multiSelect
@@ -154,53 +157,49 @@ export function EditSeatSheet({
               />
             </div>
 
-            {/* Supervisor Selection */}
-
-            <div className="space-y-2.5">
-              <Label className="text-[13px] font-bold text-slate-700">
-                Supervisor of seat
-              </Label>
-              <Controller
-                name="parentPositionId"
-                control={control}
-                render={({ field }) => (
-                  <SearchDropdown
-                    label=""
-                    placeholder="Type or choose assigned supervisor"
-                    options={supervisorOptions}
-                    selectedValues={field.value ? [field.value] : []}
-                    onSelect={(val) => field.onChange(val.value)}
-                    onSearchChange={() => {}}
-                  />
-                )}
-              />
-            </div>
+            {/* Supervisor Selection - hidden for root/top-level seat */}
+            {!isRoot && (
+              <div className="space-y-2.5">
+                <Controller
+                  name="parentPositionId"
+                  control={control}
+                  render={({ field }) => (
+                    <SearchDropdown
+                      label="Supervisor of seat"
+                      placeholder="Type or choose assigned supervisor"
+                      options={supervisorOptions}
+                      selectedValues={field.value ? [field.value] : []}
+                      onSelect={(val) => field.onChange(val.value)}
+                      onSearchChange={() => {}}
+                    />
+                  )}
+                />
+              </div>
+            )}
 
             {/* Manager Checkbox */}
-            <div className="flex items-start gap-3 group pt-2">
+            <div className="flex items-center gap-3 group pt-2">
               <Controller
                 name="isManager"
                 control={control}
                 render={({ field }) => (
-                  <div
-                    className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${
-                      field.value
-                        ? "bg-primary border-primary"
-                        : "bg-white border-slate-300"
-                    }`}
-                    onClick={() => field.onChange(!field.value)}
-                  >
-                    {field.value && (
-                      <Plus className="w-3.5 h-3.5 text-white stroke-[3px] rotate-45" />
-                    )}
-                  </div>
+                  <FormCheckbox
+                    id="isManager"
+                    checked={field.value}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                    containerClass="mt-1 tb:mt-1"
+                    className="w-4 h-4 accent-primary cursor-pointer"
+                  />
                 )}
               />
-              <div className="space-y-1">
-                <p className="text-sm font-bold text-slate-700">
+              <div className="space-y-0">
+                <Label
+                  htmlFor="isManager"
+                  className="text-md  text-slate-700 cursor-pointer  select-none"
+                >
                   This seat is a manager
-                </p>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                </Label>
+                <p className="text-sm text-slate-500  ">
                   Managers have additional permissions to view and manage their
                   team's performance and data.
                 </p>
@@ -214,14 +213,14 @@ export function EditSeatSheet({
                 type="button"
                 variant="ghost"
                 onClick={onClose}
-                className="text-slate-500 font-bold hover:bg-slate-100"
+                className="text-slate-500 font-bold hover:bg-slate-100 "
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-[#14b8a6] hover:bg-[#0d9488] text-white font-bold px-10 h-11 rounded-md transition-all shadow-md"
+                className="bg-primary hover:bg-primary-dark text-white font-bold px-10 h-11 rounded-md transition-all shadow-md  border-none"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />

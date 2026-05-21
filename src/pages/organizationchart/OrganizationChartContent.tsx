@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { getUserDetail } from "@/features/selectors/auth.selector";
+import {
+  getUserDetail,
+  getUserPermission,
+} from "@/features/selectors/auth.selector";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import {
   useGetTeamPositions,
   useAddUpdateTeamPosition,
@@ -9,6 +13,7 @@ import {
 import {
   ReactFlow,
   Background,
+  BackgroundVariant,
   useNodesState,
   useEdgesState,
   Edge,
@@ -35,6 +40,9 @@ import { Toolbar } from "./components/Toolbar";
 import { AddSeatModal } from "./components/AddSeatModal";
 import { EditSeatSheet } from "./components/EditSeatSheet";
 import { getLayoutedElements } from "./utils/orgChartUtils";
+import { Button } from "@/components/ui/button";
+import ModalData from "@/components/shared/Modal/ModalData";
+import PageNotAccess from "../PageNoAccess";
 
 interface OrgChartNodeData extends Record<string, unknown> {
   seatTitle: string;
@@ -58,6 +66,12 @@ const nodeTypes = { org: OrgNode };
 
 export const OrganizationChartContent = () => {
   const user = useSelector(getUserDetail);
+  const { setBreadcrumbs } = useBreadcrumbs();
+  const permission = useSelector(getUserPermission)?.ORG_STRUCTURE;
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Organization Structure", href: "" }]);
+  }, [setBreadcrumbs]);
+
   const { data: positionsRes, isLoading } = useGetTeamPositions(
     user?.companyId as string,
   );
@@ -77,6 +91,13 @@ export const OrganizationChartContent = () => {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [initialParentId, setInitialParentId] = useState<string | undefined>();
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [pendingDeletePositionId, setPendingDeletePositionId] = useState<
+    string | null
+  >(null);
+  const [pendingRemoveEmployee, setPendingRemoveEmployee] = useState<{
+    positionId: string;
+    employeeId: string;
+  } | null>(null);
 
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
   const [visibleLevel, setVisibleLevel] = useState(10); // Default to a high number to show all
@@ -94,7 +115,13 @@ export const OrganizationChartContent = () => {
 
   // Build graph from API
   useEffect(() => {
-    if (positionsList.length === 0) return;
+    if (positionsList.length === 0) {
+      setNodes([]);
+      setEdges([]);
+      setMaxLevel(1);
+      setVisibleLevel(1);
+      return;
+    }
 
     // 1. First, build a map of parent -> children to calculate depths
     const childMap: Record<string, string[]> = {};
@@ -188,7 +215,7 @@ export const OrganizationChartContent = () => {
     );
     setNodes(ln as Node<OrgChartNodeData>[]);
     setEdges(le as Edge[]);
-  }, [positionsRes, setNodes, setEdges, direction]);
+  }, [positionsList, setNodes, setEdges, direction]);
 
   // Collapse/Expand helpers
   const getDescendants = useCallback(
@@ -199,6 +226,17 @@ export const OrganizationChartContent = () => {
       return [
         ...children,
         ...children.flatMap((c) => getDescendants(c, edgeList)),
+      ];
+    },
+    [],
+  );
+
+  const getAncestorEdges = useCallback(
+    (nodeId: string, edgeList: Edge[]): string[] => {
+      const parentEdges = edgeList.filter((e) => e.target === nodeId);
+      return [
+        ...parentEdges.map((e) => e.id),
+        ...parentEdges.flatMap((e) => getAncestorEdges(e.source, edgeList)),
       ];
     },
     [],
@@ -217,55 +255,71 @@ export const OrganizationChartContent = () => {
     [edges, getDescendants],
   );
 
-  const handleDelete = useCallback(
-    (nodeId: string) => {
-      // eslint-disable-next-line no-alert
-      if (window.confirm("Remove this position and all its subordinates?")) {
-        deletePosition(nodeId);
-      }
-    },
-    [deletePosition],
-  );
+  const handleDelete = useCallback((nodeId: string) => {
+    setPendingDeletePositionId(nodeId);
+  }, []);
+
+  const confirmDeletePosition = useCallback(() => {
+    if (!pendingDeletePositionId) return;
+    deletePosition(pendingDeletePositionId);
+    setPendingDeletePositionId(null);
+  }, [deletePosition, pendingDeletePositionId]);
+
+  const closeDeletePositionModal = useCallback(() => {
+    setPendingDeletePositionId(null);
+  }, []);
 
   const handleRemoveEmployee = useCallback(
     (positionId: string, employeeId: string) => {
-      const targetPos = positionsList.find((p) => p.positionId === positionId);
-      if (!targetPos) return;
-
-      const currentEmps =
-        targetPos.employees && Array.isArray(targetPos.employees)
-          ? targetPos.employees.map((e) => e.employeeId)
-          : targetPos.employeeId
-            ? [targetPos.employeeId]
-            : [];
-
-      const remainingEmps = currentEmps.filter((id) => id !== employeeId);
-
-      if (
-        window.confirm(
-          "Are you sure you want to unassign this employee from the seat?",
-        )
-      ) {
-        addUpdatePosition(
-          {
-            teamPositionId: positionId,
-            employeeId: remainingEmps.join(","),
-            parentPositionId: targetPos.parentPositionId || null,
-            seatTitle:
-              targetPos.seatTitle || targetPos.designationName || "Position",
-            isDeptHead: targetPos.isDeptHead || false,
-            isManager: targetPos.isManager || false,
-          },
-          {
-            onSuccess: () => {
-              setTimeout(() => fitView({ duration: 600 }), 300);
-            },
-          },
-        );
-      }
+      setPendingRemoveEmployee({ positionId, employeeId });
     },
-    [positionsRes?.data, addUpdatePosition, fitView],
+    [],
   );
+
+  const confirmRemoveEmployee = useCallback(() => {
+    if (!pendingRemoveEmployee) return;
+
+    const targetPos = positionsList.find(
+      (p) => p.positionId === pendingRemoveEmployee.positionId,
+    );
+    if (!targetPos) {
+      setPendingRemoveEmployee(null);
+      return;
+    }
+
+    const currentEmps =
+      targetPos.employees && Array.isArray(targetPos.employees)
+        ? targetPos.employees.map((e) => e.employeeId)
+        : targetPos.employeeId
+          ? [targetPos.employeeId]
+          : [];
+
+    const remainingEmps = currentEmps.filter(
+      (id) => id !== pendingRemoveEmployee.employeeId,
+    );
+
+    addUpdatePosition(
+      {
+        teamPositionId: pendingRemoveEmployee.positionId,
+        employeeId: remainingEmps.join(","),
+        parentPositionId: targetPos.parentPositionId || null,
+        seatTitle:
+          targetPos.seatTitle || targetPos.designationName || "Position",
+        isDeptHead: targetPos.isDeptHead || false,
+        isManager: targetPos.isManager || false,
+      },
+      {
+        onSuccess: () => {
+          setPendingRemoveEmployee(null);
+          setTimeout(() => fitView({ duration: 600 }), 300);
+        },
+      },
+    );
+  }, [positionsList, pendingRemoveEmployee, addUpdatePosition, fitView]);
+
+  const closeRemoveEmployeeModal = useCallback(() => {
+    setPendingRemoveEmployee(null);
+  }, []);
 
   const handleAddSubmit = (data: AddSeatFormData) => {
     addUpdatePosition(
@@ -344,21 +398,37 @@ export const OrganizationChartContent = () => {
     visibleLevel,
   ]);
 
+  const activeAncestorEdgeIds = useMemo(() => {
+    const selectedNode = nodes.find((n) => n.selected);
+    if (!selectedNode) return new Set<string>();
+    return new Set(getAncestorEdges(selectedNode.id, edges));
+  }, [nodes, edges, getAncestorEdges]);
+
   const displayEdges = useMemo(
     () =>
-      edges.filter((e) => {
-        const sourceNode = nodes.find((n) => n.id === e.source);
-        const targetNode = nodes.find((n) => n.id === e.target);
-        const isVisible =
-          sourceNode &&
-          targetNode &&
-          sourceNode.data.depth < visibleLevel &&
-          targetNode.data.depth <= visibleLevel &&
-          !hiddenNodes.has(e.source) &&
-          !hiddenNodes.has(e.target);
-        return isVisible;
-      }),
-    [edges, hiddenNodes, nodes, visibleLevel],
+      edges
+        .filter((e) => {
+          const sourceNode = nodes.find((n) => n.id === e.source);
+          const targetNode = nodes.find((n) => n.id === e.target);
+          const isVisible =
+            sourceNode &&
+            targetNode &&
+            sourceNode.data.depth < visibleLevel &&
+            targetNode.data.depth <= visibleLevel &&
+            !hiddenNodes.has(e.source) &&
+            !hiddenNodes.has(e.target);
+          return isVisible;
+        })
+        .map((e) => {
+          const isAncestor = activeAncestorEdgeIds.has(e.id);
+          return {
+            ...e,
+            style: isAncestor
+              ? { stroke: "#2e3090", strokeWidth: 2 }
+              : { stroke: "#5d6063", strokeWidth: 0.9 },
+          };
+        }),
+    [edges, hiddenNodes, nodes, visibleLevel, activeAncestorEdgeIds],
   );
 
   const handleDirectionChange = (d: "TB" | "LR") => {
@@ -418,8 +488,12 @@ export const OrganizationChartContent = () => {
     [positionsList, edges, getDescendants, addUpdatePosition, fitView],
   );
 
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
+
   return (
-    <div className="flex flex-col h-[calc(100vh-85px)] w-full bg-white overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-gray-100 overflow-hidden">
       <Toolbar
         totalNodes={nodes.length}
         visibleLevel={visibleLevel}
@@ -428,6 +502,7 @@ export const OrganizationChartContent = () => {
         onSearch={setSearchQuery}
         onAddSeat={() => setIsAddOpen(true)}
         spanOfControl={spanOfControl}
+        permission={permission}
       />
 
       <div className="flex-1 relative overflow-hidden">
@@ -443,7 +518,7 @@ export const OrganizationChartContent = () => {
         )}
 
         {!isLoading && nodes.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-gray-100">
             <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
               <LayoutTemplate className="w-8 h-8 text-primary" />
             </div>
@@ -455,71 +530,88 @@ export const OrganizationChartContent = () => {
                 Click "Add Position" to start building your org chart
               </p>
             </div>
-            <button
-              onClick={() => setIsAddOpen(true)}
-              className="flex items-center gap-2 bg-primary text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-all"
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setInitialParentId(undefined);
+                setIsAddOpen(true);
+              }}
+              variant={"outline"}
+              className="py-2 bg-primary text-white h-10 w-fit"
             >
               <Plus className="w-4 h-4" /> Add First Position
-            </button>
+            </Button>
           </div>
         )}
 
-        <ReactFlow
-          nodes={displayNodes}
-          edges={displayEdges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          connectionLineType={ConnectionLineType.Step}
-          fitView
-          fitViewOptions={{ padding: 0.25 }}
-          minZoom={0.05}
-          maxZoom={2}
-        >
-          <Background color="#f1f5f9" gap={24} size={1} />
-          <Panel
-            position="bottom-left"
-            className="m-6 bg-white/95 backdrop-blur-md px-3 py-2 rounded-xl border border-gray-200 shadow-lg flex items-center gap-2 z-30 text-xs font-semibold text-gray-700"
+        {nodes.length > 0 && (
+          <ReactFlow
+            nodes={displayNodes}
+            edges={displayEdges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            connectionLineType={ConnectionLineType.Step}
+            fitView
+            fitViewOptions={{ padding: 0.25 }}
+            minZoom={0.05}
+            maxZoom={2}
           >
-            <button
-              onClick={() => zoomOut()}
-              className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all shadow-2xs"
-              title="Zoom Out"
+            <Background
+              variant={BackgroundVariant.Dots}
+              color="#6b7280"
+              gap={24}
+              size={1}
+            />
+            <Panel
+              position="bottom-left"
+              className="m-6 bg-white/95 backdrop-blur-md px-3 py-2 rounded-xl border border-gray-200 shadow-lg flex items-center gap-2 z-30 text-xs font-semibold text-gray-700"
             >
-              <Minus className="w-4 h-4" />
-            </button>
-            <span className="min-w-[50px] text-center font-bold text-gray-800">
-              {Math.round(zoom * 100)}%
-            </span>
-            <button
-              onClick={() => zoomIn()}
-              className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all shadow-2xs"
-              title="Zoom In"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-            <div className="w-px h-4 bg-gray-200 mx-1" />
-            <button
-              onClick={() => fitView({ duration: 500 })}
-              className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all shadow-2xs"
-              title="Fit View"
-            >
-              <Maximize2 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() =>
-                handleDirectionChange(direction === "TB" ? "LR" : "TB")
-              }
-              className="w-7 h-7 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all shadow-2xs"
-              title="Change Orientation"
-            >
-              <Layers
-                className={`w-4 h-4 transition-transform duration-300 ${direction === "LR" ? "rotate-[-90deg]" : ""}`}
-              />
-            </button>
-          </Panel>
-        </ReactFlow>
+              <Button
+                variant="ghost"
+                onClick={() => zoomOut()}
+                className="w-7 h-7 p-0 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all shadow-2xs cursor-pointer border-none"
+                title="Zoom Out"
+              >
+                <Minus className="w-4 h-4" />
+              </Button>
+              <span className="min-w-[50px] text-center font-bold text-gray-800">
+                {Math.round(zoom * 100)}%
+              </span>
+              <Button
+                variant="ghost"
+                onClick={() => zoomIn()}
+                className="w-7 h-7 p-0 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all shadow-2xs cursor-pointer border-none"
+                title="Zoom In"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+              <div className="w-px h-4 bg-gray-200 mx-1" />
+              <Button
+                variant="ghost"
+                onClick={() => fitView({ duration: 500 })}
+                className="w-7 h-7 p-0 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all shadow-2xs cursor-pointer border-none"
+                title="Fit View"
+              >
+                <Maximize2 className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() =>
+                  handleDirectionChange(direction === "TB" ? "LR" : "TB")
+                }
+                className="w-7 h-7 p-0 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all shadow-2xs cursor-pointer border-none"
+                title="Change Orientation"
+              >
+                <Layers
+                  className={`w-4 h-4 transition-transform duration-300 ${direction === "LR" ? "rotate-[-90deg]" : ""}`}
+                />
+              </Button>
+            </Panel>
+          </ReactFlow>
+        )}
       </div>
 
       {/* Add Seat Modal */}
@@ -547,6 +639,10 @@ export const OrganizationChartContent = () => {
         isLoading={isAdding}
         positions={positionsList}
         companyId={user?.companyId}
+        isRoot={
+          !positionsList.find((p) => p.positionId === editingNodeId)
+            ?.parentPositionId
+        }
         initialData={(() => {
           const node = nodes.find((n) => n.id === editingNodeId);
           if (!node) return null;
@@ -564,6 +660,55 @@ export const OrganizationChartContent = () => {
           };
         })()}
       />
+
+      <ModalData
+        isModalOpen={!!pendingDeletePositionId}
+        modalTitle="Remove Position?"
+        modalClose={closeDeletePositionModal}
+        containerClass="!min-w-0 !max-w-[425px] !min-h-0 w-full"
+        buttons={[
+          {
+            btnText: "Cancel",
+            buttonCss:
+              "py-1.5 px-5 bg-white border border-gray-300 text-black hover:bg-gray-50",
+            btnClick: closeDeletePositionModal,
+          },
+          {
+            btnText: "Remove",
+            buttonCss: "py-1.5 px-5 bg-red-600 text-white hover:bg-red-700",
+            btnClick: confirmDeletePosition,
+          },
+        ]}
+      >
+        <p className="text-sm text-gray-600">
+          Remove this position and all its subordinates?
+        </p>
+      </ModalData>
+
+      <ModalData
+        isModalOpen={!!pendingRemoveEmployee}
+        modalTitle="Unassign Employee?"
+        modalClose={closeRemoveEmployeeModal}
+        containerClass="!min-w-0 !max-w-[425px] !min-h-0 w-full"
+        buttons={[
+          {
+            btnText: "Cancel",
+            buttonCss:
+              "py-1.5 px-5 bg-white border border-gray-300 text-black hover:bg-gray-50",
+            btnClick: closeRemoveEmployeeModal,
+          },
+          {
+            btnText: "Unassign",
+            buttonCss: "py-1.5 px-5 bg-red-600 text-white hover:bg-red-700",
+            btnClick: confirmRemoveEmployee,
+            isLoading: isAdding,
+          },
+        ]}
+      >
+        <p className="text-sm text-gray-600">
+          Are you sure you want to unassign this employee from the seat?
+        </p>
+      </ModalData>
     </div>
   );
 };

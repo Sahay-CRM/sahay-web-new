@@ -44,29 +44,24 @@ export default function HealthScoreList() {
   return (
     <FormProvider {...formMethods}>
       <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-        <div className="flex mb-5 justify-between items-center">
-          <h1 className="font-semibold capitalize text-xl text-black">
-            Health Score
-          </h1>
-          <div className="flex items-center space-x-5 tb:space-x-7">
-            {(permission.Add || permission.Edit) &&
-              isCoreSelected &&
-              islevelIdSelected && (
-                <Button className="py-2 w-fit" onClick={handleEditToggle}>
-                  {isEditing ? "Submit" : "Edit"}
-                </Button>
-              )}
-
-            {isEditing && (
-              <Button
-                variant="outline"
-                className="py-2 w-fit"
-                onClick={handleCancel}
-              >
-                Cancel
+        <div className="flex justify-end mb-4 shrink-0 gap-3">
+          {(permission.Add || permission.Edit) &&
+            isCoreSelected &&
+            islevelIdSelected && (
+              <Button className="py-2 w-fit" onClick={handleEditToggle}>
+                {isEditing ? "Submit" : "Edit"}
               </Button>
             )}
-          </div>
+
+          {isEditing && (
+            <Button
+              variant="outline"
+              className="py-2 w-fit"
+              onClick={handleCancel}
+            >
+              Cancel
+            </Button>
+          )}
         </div>
         <div className="flex flex-col sm:flex-row gap-10">
           {/* <Controller
