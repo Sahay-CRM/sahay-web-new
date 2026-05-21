@@ -256,7 +256,6 @@ export default function MeetingDesc() {
       <div
         className={cn(
           "bg-white p-4 flex-1 min-w-0",
-          "transition-all duration-300 ease-in-out",
           isShaking && "animate-shake",
         )}
       >
