@@ -2304,6 +2304,7 @@ export default function UpdatedKpiTable() {
                                       const selectOptions = [
                                         { value: "1", label: "Yes" },
                                         { value: "2", label: "No" },
+                                        { value: "3", label: "N/A" },
                                       ];
                                       const isValid =
                                         inputVal === String(value1);
@@ -2333,6 +2334,7 @@ export default function UpdatedKpiTable() {
                                                     "relative border  rounded-sm text-sm w-[80px] h-[42px] bg-white group",
                                                     cell?.data !== "-" &&
                                                       inputVal !== "" &&
+                                                      inputVal !== "3" &&
                                                       selectedPeriod !==
                                                         "YEARLY" &&
                                                       (isValid
@@ -2784,10 +2786,12 @@ export default function UpdatedKpiTable() {
                                       "";
                                     if (valStr !== "" && valStr !== "-") {
                                       if (cell?.validationType === "YES_NO") {
-                                        const isValid =
-                                          valStr === String(cell?.value1);
-                                        total += isValid ? 1 : -1;
-                                        count += 1;
+                                        if (valStr !== "3") {
+                                          const isValid =
+                                            valStr === String(cell?.value1);
+                                          total += isValid ? 1 : -1;
+                                          count += 1;
+                                        }
                                       } else {
                                         const num = Number(valStr);
                                         if (!isNaN(num)) {
@@ -2851,10 +2855,12 @@ export default function UpdatedKpiTable() {
                                       "";
                                     if (valStr !== "" && valStr !== "-") {
                                       if (cell?.validationType === "YES_NO") {
-                                        const isValid =
-                                          valStr === String(cell?.value1);
-                                        total += isValid ? 1 : -1;
-                                        count += 1;
+                                        if (valStr !== "3") {
+                                          const isValid =
+                                            valStr === String(cell?.value1);
+                                          total += isValid ? 1 : -1;
+                                          count += 1;
+                                        }
                                       } else {
                                         const num = Number(valStr);
                                         if (!isNaN(num)) {
