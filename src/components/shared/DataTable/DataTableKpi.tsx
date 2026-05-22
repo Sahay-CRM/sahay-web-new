@@ -170,6 +170,31 @@ const TableDataKpi = <T extends Record<string, unknown>>({
 
   const permission = useSelector(getUserPermission)?.[moduleKey];
 
+  const checkRowPermission = (item: T, action: "EDIT" | "DELETE" | "VIEW") => {
+    if (moduleKey === "DATAPOINT_LIST") {
+      const isOwnKpi = item.isOwnKpi;
+      if (isOwnKpi === true) {
+        if (action === "EDIT") return !!permission?.Edit;
+        if (action === "DELETE") return !!permission?.Delete;
+        if (action === "VIEW") return !!permission?.View;
+        return false;
+      } else {
+        const kpiPermission = item.kpiPermission;
+        if (typeof kpiPermission === "string") {
+          return kpiPermission
+            .split(",")
+            .map((p) => p.trim().toUpperCase())
+            .includes(action);
+        }
+        return false;
+      }
+    }
+    if (action === "EDIT") return !!permission?.Edit;
+    if (action === "DELETE") return !!permission?.Delete;
+    if (action === "VIEW") return !!permission?.View;
+    return false;
+  };
+
   const handleCheckboxChange = (item: T, isChecked: boolean) => {
     const selectedItems = Array.isArray(selectedValue) ? selectedValue : [];
 
@@ -658,7 +683,7 @@ const TableDataKpi = <T extends Record<string, unknown>>({
                                     </Tooltip>
                                   ) : (
                                     isActionButton?.(item) &&
-                                    permission?.Edit && (
+                                    checkRowPermission(item, "EDIT") && (
                                       <Tooltip>
                                         <TooltipTrigger asChild>
                                           <Button
@@ -706,7 +731,7 @@ const TableDataKpi = <T extends Record<string, unknown>>({
                                     </Tooltip>
                                   ) : (
                                     isActionButton?.(item) &&
-                                    permission?.Delete &&
+                                    checkRowPermission(item, "DELETE") &&
                                     (!canDelete || canDelete(item)) && (
                                       <Tooltip>
                                         <TooltipTrigger asChild>
@@ -732,7 +757,7 @@ const TableDataKpi = <T extends Record<string, unknown>>({
                                     )
                                   )}
 
-                                  {permission?.Delete &&
+                                  {checkRowPermission(item, "DELETE") &&
                                     showActiveToggle &&
                                     isActionButton?.(item) &&
                                     (!canDelete || canDelete(item)) && (
