@@ -320,18 +320,26 @@ export default function CompanyTaskList() {
             onDelete={(row: KPIFormData) => {
               onDelete(row);
             }}
-            onEdit={
-              permission.Edit
-                ? (row: KPIFormData) => {
-                    if (row.kpiId) {
-                      setIsEditKpiId(row.kpiId as string);
-                      setIsEditModalOpen(true);
-                    }
-                  }
-                : undefined
-            }
+            onEdit={(row: KPIFormData) => {
+              if (row.kpiId) {
+                setIsEditKpiId(row.kpiId as string);
+                setIsEditModalOpen(true);
+              }
+            }}
             onRowClick={(row: KPIFormData) => {
-              handleRowsModalOpen(row);
+              const canView =
+                row.isOwnKpi === true
+                  ? !!permission?.View
+                  : typeof row.kpiPermission === "string"
+                    ? row.kpiPermission
+                        .split(",")
+                        .map((p: string) => p.trim().toUpperCase())
+                        .includes("VIEW")
+                    : false;
+
+              if (canView) {
+                handleRowsModalOpen(row);
+              }
             }}
             customActions={(row: KPIFormData) => {
               return (

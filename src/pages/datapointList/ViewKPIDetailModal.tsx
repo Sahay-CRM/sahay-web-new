@@ -17,6 +17,16 @@ export default function ViewKpiDetailModal({
 }: ViewMeetingModalProps) {
   const permission = useSelector(getUserPermission).DATAPOINT_LIST;
 
+  const canEdit =
+    modalData.isOwnKpi === true
+      ? !!permission.Edit
+      : typeof modalData.kpiPermission === "string"
+        ? modalData.kpiPermission
+            .split(",")
+            .map((p: string) => p.trim().toUpperCase())
+            .includes("EDIT")
+        : false;
+
   const handleEdit = () => {
     if (modalData?.kpiId && onEdit) {
       onEdit(modalData.kpiId);
@@ -34,7 +44,7 @@ export default function ViewKpiDetailModal({
           buttonCss: "py-1.5 px-5 bg-gray-200 hover:bg-gray-300",
           btnClick: modalClose,
         },
-        ...(permission.Edit
+        ...(canEdit
           ? [
               {
                 btnText: "Edit",

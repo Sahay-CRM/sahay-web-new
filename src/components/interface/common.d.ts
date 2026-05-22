@@ -984,8 +984,8 @@ interface KPIFormData {
   ioKPIId?: string;
   isDelete?: boolean;
   isFocus?: boolean;
-
-  // skipDays?: string[];
+  isOwnKpi?: boolean;
+  kpiPermission?: string;
 }
 
 interface KPIFormDataProp {
