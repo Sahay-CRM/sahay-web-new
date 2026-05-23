@@ -283,6 +283,29 @@ export default function EmployeeRoutes() {
             () => import("../pages/DashboardReport/DashboardBuilderPage"),
           )}
         />
+        {/* Gantt routes */}
+        <Route
+          path="gantt/templates"
+          Component={lazy(() => import("../pages/gantt/GanttTemplatePage"))}
+        />
+        <Route
+          path="gantt/templates/:id"
+          Component={lazy(
+            () => import("../pages/gantt/GanttTemplateDetailPage"),
+          )}
+        />
+        <Route
+          path="gantt/workspaces"
+          Component={lazy(
+            () => import("../pages/gantt/GanttWorkspaceListPage"),
+          )}
+        />
+        <Route
+          path="gantt/workspaces/:id"
+          Component={lazy(
+            () => import("../pages/gantt/GanttWorkspaceDetailPage"),
+          )}
+        />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

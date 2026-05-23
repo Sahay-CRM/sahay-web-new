@@ -460,6 +460,50 @@ const Urls = {
     `${baseUrl}/company/employee/datapoint-permission/get`,
   getKpiNotAssignedToEmployee: () =>
     `${baseUrl}/company/kpi/get-not-assigned-to-employee`,
+
+  // ── Gantt Chart Module ──────────────────────────────────────────────────────
+  // Templates
+  ganttTemplateList: () => `${baseUrl}/company/gantt/template/get`,
+  ganttTemplateDetail: (id: string) =>
+    `${baseUrl}/company/gantt/template/get/${id}`,
+  ganttTemplateCreate: () => `${baseUrl}/company/gantt/template/create`,
+  ganttTemplateUpdate: (id: string) =>
+    `${baseUrl}/company/gantt/template/update/${id}`,
+  ganttTemplateDelete: (id: string) =>
+    `${baseUrl}/company/gantt/template/delete/${id}`,
+  ganttTemplateDuplicate: (id: string) =>
+    `${baseUrl}/company/gantt/template/duplicate/${id}`,
+  ganttTemplatePublish: (id: string) =>
+    `${baseUrl}/company/gantt/template/publish/${id}`,
+
+  // Workspaces
+  ganttWorkspaceList: () => `${baseUrl}/company/gantt/workspace/get`,
+  ganttWorkspaceDetail: (id: string) =>
+    `${baseUrl}/company/gantt/workspace/get/${id}`,
+  ganttWorkspaceCreate: () => `${baseUrl}/company/gantt/workspace/create`,
+  ganttWorkspaceCreateFromTemplate: () =>
+    `${baseUrl}/company/gantt/workspace/create-from-template`,
+  ganttWorkspaceUpdate: (id: string) =>
+    `${baseUrl}/company/gantt/workspace/update/${id}`,
+  ganttWorkspaceDelete: (id: string) =>
+    `${baseUrl}/company/gantt/workspace/delete/${id}`,
+
+  // Items
+  ganttItemCreate: () => `${baseUrl}/company/gantt/item/create`,
+  ganttItemUpdate: (id: string) => `${baseUrl}/company/gantt/item/update/${id}`,
+  ganttItemDelete: (id: string) => `${baseUrl}/company/gantt/item/delete/${id}`,
+  ganttItemProgress: (id: string) =>
+    `${baseUrl}/company/gantt/item/progress/${id}`,
+  ganttItemDates: (id: string) => `${baseUrl}/company/gantt/item/dates/${id}`,
+  ganttItemAssign: (id: string) => `${baseUrl}/company/gantt/item/assign/${id}`,
+  ganttItemReorder: () => `${baseUrl}/company/gantt/item/reorder`,
+
+  // Dependencies
+  ganttDependencyCreate: () => `${baseUrl}/company/gantt/dependency/create`,
+  ganttDependencyDelete: (id: string) =>
+    `${baseUrl}/company/gantt/dependency/delete/${id}`,
+  ganttDependencyListByWorkspace: (workspaceId: string) =>
+    `${baseUrl}/company/gantt/dependency/get-by-workspace/${workspaceId}`,
 };
 
 export default Urls;
