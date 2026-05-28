@@ -1,24 +1,28 @@
-import { useCallback, useRef, useState, useMemo, UIEvent } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import type {
   CompanyGanttItem,
   CompanyGanttPhase,
   CompanyGanttDependency,
 } from "@/types/gantt";
-import { GanttLeftPanel, LEFT_PANEL_WIDTH } from "./GanttLeftPanel";
-import { GanttTimeline, GanttArrowheadDefs } from "./GanttTimeline";
-import {
-  GanttTimelineHeader,
-  TIMELINE_HEADER_HEIGHT,
-} from "./GanttTimelineHeader";
+import { LEFT_PANEL_WIDTH, GanttLeftPanel } from "./GanttLeftPanel";
+import { GanttTimeline } from "./GanttTimeline";
+import { GanttTimelineHeader } from "./GanttTimelineHeader";
 import {
   buildGanttRows,
   computeTimelineBounds,
   getTodayX,
 } from "@/pages/gantt/utils/gantt.utils";
 import GanttItemDetailModal from "@/pages/gantt/components/GanttItemDetailModal";
+import { CalendarDays } from "lucide-react";
 
-// Day width in pixels — can be zoomed
-const DEFAULT_DAY_WIDTH = 24;
+export type GanttViewMode = "Day" | "Week" | "Month" | "Year";
+
+const VIEW_MODES: { label: string; value: GanttViewMode }[] = [
+  { label: "Day", value: "Day" },
+  { label: "Week", value: "Week" },
+  { label: "Month", value: "Month" },
+  { label: "Year", value: "Year" },
+];
 
 interface Props {
   workspaceId: string;
@@ -35,57 +39,27 @@ export default function GanttChart({
   itemsTree,
   dependencies,
 }: Props) {
-  // ── Collapse state ────────────────────────────────────────────────────────
+  const [viewMode, setViewMode] = useState<GanttViewMode>("Day");
   const [collapsedPhases, setCollapsedPhases] = useState<Set<string>>(
     new Set(),
   );
   const [collapsedItems, setCollapsedItems] = useState<Set<string>>(new Set());
-  const [dayWidth, setDayWidth] = useState(DEFAULT_DAY_WIDTH);
-
-  // ── Selected item ─────────────────────────────────────────────────────────
   const [selectedItem, setSelectedItem] = useState<CompanyGanttItem | null>(
     null,
   );
+  const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
 
-  // ── Synced scroll refs ────────────────────────────────────────────────────
-  const leftRef = useRef<HTMLDivElement>(null);
-  const rightRef = useRef<HTMLDivElement>(null);
-  const syncingLeft = useRef(false);
-  const syncingRight = useRef(false);
+  const leftScrollRef = useRef<HTMLDivElement>(null);
+  const rightScrollRef = useRef<HTMLDivElement>(null);
 
-  const handleLeftScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
-    if (syncingRight.current) return;
-    syncingLeft.current = true;
-    if (rightRef.current)
-      rightRef.current.scrollTop = e.currentTarget.scrollTop;
-    syncingLeft.current = false;
+  // ── Scroll Synchronization ──────────────────────────────────────────────────
+  const handleScroll = useCallback(() => {
+    if (rightScrollRef.current && leftScrollRef.current) {
+      leftScrollRef.current.scrollTop = rightScrollRef.current.scrollTop;
+    }
   }, []);
 
-  const handleRightScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
-    if (syncingLeft.current) return;
-    syncingRight.current = true;
-    if (leftRef.current) leftRef.current.scrollTop = e.currentTarget.scrollTop;
-    syncingRight.current = false;
-  }, []);
-
-  // ── Build rows ────────────────────────────────────────────────────────────
-  const rows = useMemo(
-    () => buildGanttRows(itemsTree, phases, collapsedPhases, collapsedItems),
-    [itemsTree, phases, collapsedPhases, collapsedItems],
-  );
-
-  // ── Timeline bounds ───────────────────────────────────────────────────────
-  const { timelineStart, totalDays } = useMemo(
-    () => computeTimelineBounds(workspaceStartDate, itemsTree),
-    [workspaceStartDate, itemsTree],
-  );
-
-  const todayX = useMemo(
-    () => getTodayX(timelineStart, dayWidth),
-    [timelineStart, dayWidth],
-  );
-
-  // ── Handlers ──────────────────────────────────────────────────────────────
+  // ── Handlers ─────────────────────────────────────────────────────────────
   const togglePhase = useCallback((phaseId: string) => {
     setCollapsedPhases((prev) => {
       const next = new Set(prev);
@@ -104,131 +78,133 @@ export default function GanttChart({
     });
   }, []);
 
-  const totalTimelineWidth = totalDays * dayWidth;
+  // ── Date and Timeline Calculations ────────────────────────────────────────
+  const dayWidth = useMemo(() => {
+    switch (viewMode) {
+      case "Day":
+        return 36;
+      case "Week":
+        return 8;
+      case "Month":
+        return 2.5;
+      case "Year":
+        return 1.5;
+      default:
+        return 36;
+    }
+  }, [viewMode]);
+
+  const { timelineStart, totalDays } = useMemo(
+    () => computeTimelineBounds(workspaceStartDate, itemsTree, viewMode),
+    [workspaceStartDate, itemsTree, viewMode],
+  );
+
+  const todayX = useMemo(
+    () => getTodayX(timelineStart, dayWidth),
+    [timelineStart, dayWidth],
+  );
+
+  // ── Rows for left panel ───────────────────────────────────────────────────
+  const rows = useMemo(
+    () => buildGanttRows(itemsTree, phases, collapsedPhases, collapsedItems),
+    [itemsTree, phases, collapsedPhases, collapsedItems],
+  );
 
   return (
-    <div className="flex flex-col h-full overflow-hidden border border-border rounded-md bg-background">
-      {/* ── Zoom toolbar ─────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border bg-muted/20 shrink-0 text-xs text-muted-foreground">
-        <span>Zoom:</span>
-        <button
-          type="button"
-          onClick={() => setDayWidth((w) => Math.max(10, w - 4))}
-          className="h-6 w-6 rounded border border-border bg-background flex items-center justify-center hover:bg-muted transition-colors"
-        >
-          −
-        </button>
-        <span className="w-14 text-center">{dayWidth}px/day</span>
-        <button
-          type="button"
-          onClick={() => setDayWidth((w) => Math.min(64, w + 4))}
-          className="h-6 w-6 rounded border border-border bg-background flex items-center justify-center hover:bg-muted transition-colors"
-        >
-          +
-        </button>
-        <button
-          type="button"
-          onClick={() => setDayWidth(DEFAULT_DAY_WIDTH)}
-          className="ml-1 text-xs underline underline-offset-2 hover:text-foreground transition-colors"
-        >
-          Reset
-        </button>
-        <span className="ml-auto">
-          {rows.length} rows · {totalDays} days
+    <div className="flex flex-col h-full overflow-hidden border border-border rounded-md bg-background shadow-sm">
+      {/* ── Toolbar ────────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border bg-muted/20 shrink-0">
+        {/* View mode switcher */}
+        <div className="flex items-center gap-1">
+          <CalendarDays className="h-3.5 w-3.5 text-muted-foreground mr-1" />
+          {VIEW_MODES.map((mode) => (
+            <button
+              key={mode.value}
+              type="button"
+              onClick={() => setViewMode(mode.value)}
+              className={`h-6 px-2.5 rounded text-xs font-medium transition-colors ${
+                viewMode === mode.value
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Stats */}
+        <span className="ml-auto text-xs text-muted-foreground">
+          {rows.filter((r) => r.type === "item").length} tasks · {phases.length}{" "}
+          phases
         </span>
       </div>
 
-      {/* ── Main split ───────────────────────────────────────────────────── */}
+      {/* ── Main layout ────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: header (sticky) + scrollable rows */}
+        {/* ── Left panel (task list) ──────────────────────────────────── */}
         <div
           style={{ width: LEFT_PANEL_WIDTH, flexShrink: 0 }}
-          className="flex flex-col border-r border-border"
+          className="flex flex-col border-r border-border overflow-hidden bg-background"
         >
-          {/* Left header (sticky, aligned with timeline header) */}
-          <div
-            style={{
-              height: TIMELINE_HEADER_HEIGHT,
-              minHeight: TIMELINE_HEADER_HEIGHT,
-            }}
-            className="border-b border-border bg-muted/30 flex items-end px-3 pb-1 shrink-0"
-          >
+          {/* Column header - height matched to timeline header (50px) */}
+          <div className="h-[50px] min-h-[50px] shrink-0 border-b border-border bg-muted/30 flex items-center px-3">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Task
+              Task / Phase
             </span>
           </div>
-          {/* Scrollable rows (synced with right panel) */}
-          <div
-            ref={leftRef}
-            onScroll={handleLeftScroll}
-            className="overflow-y-auto overflow-x-hidden flex-1"
-          >
+
+          {/* Scrollable list container */}
+          <div ref={leftScrollRef} className="flex-1 overflow-y-hidden">
             <GanttLeftPanel
               rows={rows}
               headerHeight={0}
               onTogglePhase={togglePhase}
               onToggleItem={toggleItem}
               onItemClick={setSelectedItem}
+              hoveredRowId={hoveredRowId}
+              onHoverRow={setHoveredRowId}
             />
           </div>
         </div>
 
-        {/* Right: header (sticky) + scrollable timeline (x+y) */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Timeline header row (not scrollable vertically, but scroll position tied horizontally) */}
-          <div
-            className="overflow-x-auto shrink-0 border-b border-border"
-            style={{ scrollbarWidth: "none" }}
-            ref={(el) => {
-              // Mirror horizontal scroll from right body to this header
-              if (el) {
-                el.dataset.headerEl = "true";
-              }
-            }}
-          >
-            <div style={{ width: totalTimelineWidth }}>
-              <GanttTimelineHeader
-                phases={phases}
-                timelineStart={timelineStart}
-                totalDays={totalDays}
-                dayWidth={dayWidth}
-              />
-            </div>
+        {/* ── Custom Timeline ─────────────────────────────────────────── */}
+        <div
+          ref={rightScrollRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-auto bg-background"
+        >
+          {/* Timeline Header (sticky top-0 z-20) */}
+          <div className="sticky top-0 z-20 w-fit">
+            <GanttTimelineHeader
+              timelineStart={timelineStart}
+              totalDays={totalDays}
+              dayWidth={dayWidth}
+              viewMode={viewMode}
+            />
           </div>
 
-          {/* Main scrollable area (both axes) */}
-          <div
-            ref={rightRef}
-            onScroll={handleRightScroll}
-            className="flex-1 overflow-auto"
-          >
-            {/* Arrowhead defs for dependency arrows */}
-            <svg style={{ position: "absolute", width: 0, height: 0 }}>
-              <GanttArrowheadDefs />
-            </svg>
-
-            <div
-              style={{
-                width: totalTimelineWidth,
-                minWidth: totalTimelineWidth,
-              }}
-            >
-              <GanttTimeline
-                rows={rows}
-                dependencies={dependencies}
-                timelineStart={timelineStart}
-                totalDays={totalDays}
-                dayWidth={dayWidth}
-                todayX={todayX}
-                headerHeight={0}
-                onItemClick={setSelectedItem}
-              />
-            </div>
+          {/* Timeline SVG drawing */}
+          <div className="w-fit">
+            <GanttTimeline
+              rows={rows}
+              dependencies={dependencies}
+              timelineStart={timelineStart}
+              totalDays={totalDays}
+              dayWidth={dayWidth}
+              todayX={todayX}
+              headerHeight={0}
+              onItemClick={setSelectedItem}
+              hoveredRowId={hoveredRowId}
+              onHoverRow={setHoveredRowId}
+              itemsTree={itemsTree}
+              phases={phases}
+            />
           </div>
         </div>
       </div>
 
-      {/* ── Item detail modal ─────────────────────────────────────────────── */}
+      {/* ── Item detail modal ───────────────────────────────────────────── */}
       {selectedItem && (
         <GanttItemDetailModal
           open={!!selectedItem}
@@ -238,6 +214,8 @@ export default function GanttChart({
           item={selectedItem}
           workspaceId={workspaceId}
           phases={phases}
+          itemsTree={itemsTree}
+          dependencies={dependencies}
         />
       )}
     </div>

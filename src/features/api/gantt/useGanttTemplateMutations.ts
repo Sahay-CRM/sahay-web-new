@@ -10,6 +10,7 @@ interface CreateTemplatePayload {
   templateDescription?: string;
   ownerType: "SYSTEM" | "COMPANY";
   industryId?: string | null;
+  companyId?: string | null;
 }
 
 export function useCreateGanttTemplate() {
@@ -34,22 +35,26 @@ export function useCreateGanttTemplate() {
   });
 }
 
-export function useUpdateGanttTemplate(id: string) {
+export function useUpdateGanttTemplate() {
   return useMutation({
-    mutationFn: async (
-      payload: Partial<CreateTemplatePayload> & { isActive?: boolean },
-    ) => {
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: Partial<CreateTemplatePayload> & { isActive?: boolean };
+    }) => {
       const { data } = await Api.put<{ data: unknown; message: string }>({
         url: Urls.ganttTemplateUpdate(id),
         data: payload,
       });
-      return data;
+      return { data, id };
     },
     onSuccess: (res) => {
-      toast.success(res.message || "Template updated");
+      toast.success(res.data.message || "Template updated");
       queryClient.invalidateQueries({ queryKey: ["gantt-templates"] });
       queryClient.invalidateQueries({
-        queryKey: ["gantt-template-detail", id],
+        queryKey: ["gantt-template-detail", res.id],
       });
     },
     onError: (err: AxiosError<{ message?: string }>) => {

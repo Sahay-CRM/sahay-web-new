@@ -45,6 +45,7 @@ import {
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import IssueAgendaAddModal from "./issueAgendaAddModal";
+import ModalData from "@/components/shared/Modal/ModalData/ModalData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   closestCenter,
@@ -299,6 +300,18 @@ export default function Agenda({
 
   const [showMaxAgendaModal, setShowMaxAgendaModal] = useState(false);
 
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  }>({
+    open: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
+
   const handleStartMeetingClick = () => {
     const totalMinutes = Math.floor(Number(meetingTime || 0) / 60);
     const durationPerAgenda = Number(
@@ -309,8 +322,32 @@ export default function Agenda({
     if (unresolvedCount !== undefined && unresolvedCount > maxAgenda) {
       setShowMaxAgendaModal(true);
     } else {
-      handleStartMeeting();
+      setConfirmModal({
+        open: true,
+        title: "Start Meeting",
+        description: "Are you sure you want to start the meeting?",
+        onConfirm: () => {
+          handleStartMeeting();
+          setConfirmModal((prev) => ({ ...prev, open: false }));
+        },
+      });
     }
+  };
+
+  const handleStartDiscussionClick = () => {
+    if (!agendaList || agendaList.length === 0) {
+      setNoAgendaModalOpen(true);
+      return;
+    }
+    setConfirmModal({
+      open: true,
+      title: "Start Discussion",
+      description: "Are you sure you want to start the discussion?",
+      onConfirm: () => {
+        handleDesc();
+        setConfirmModal((prev) => ({ ...prev, open: false }));
+      },
+    });
   };
 
   const [contentWidth, setContentWidth] = useState("90%");
@@ -445,7 +482,15 @@ export default function Agenda({
         onClose={() => setShowMaxAgendaModal(false)}
         onStartAnyway={() => {
           setShowMaxAgendaModal(false);
-          handleStartMeeting();
+          setConfirmModal({
+            open: true,
+            title: "Start Meeting",
+            description: "Are you sure you want to start the meeting anyway?",
+            onConfirm: () => {
+              handleStartMeeting();
+              setConfirmModal((prev) => ({ ...prev, open: false }));
+            },
+          });
         }}
       />
       <Dialog open={noAgendaModalOpen} onOpenChange={setNoAgendaModalOpen}>
@@ -461,6 +506,31 @@ export default function Agenda({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ModalData
+        isModalOpen={confirmModal.open}
+        modalClose={() => setConfirmModal((prev) => ({ ...prev, open: false }))}
+        modalTitle={confirmModal.title}
+        containerClass="min-h-fit"
+        buttons={[
+          {
+            btnText: "Cancel",
+            btnClick: () =>
+              setConfirmModal((prev) => ({ ...prev, open: false })),
+            buttonCss:
+              "bg-transparent text-gray-700 hover:bg-gray-100 border border-gray-300",
+          },
+          {
+            btnText: "Confirm",
+            btnClick: () => {
+              confirmModal.onConfirm();
+            },
+          },
+        ]}
+      >
+        <p className="text-gray-700 text-sm sm:text-base py-2">
+          {confirmModal.description}
+        </p>
+      </ModalData>
       <IssueAgendaAddModal
         isModalOpen={addIssueModal}
         modalClose={() => setAddIssueModal(false)}
@@ -627,7 +697,7 @@ export default function Agenda({
                       <Button
                         variant="outline"
                         className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
-                        onClick={handleDesc}
+                        onClick={handleStartDiscussionClick}
                         isLoading={isPending}
                       >
                         Start Discussion
@@ -1042,7 +1112,21 @@ export default function Agenda({
                       <Button
                         variant="outline"
                         className="w-[180px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
-                        onClick={handleConclusionMeeting}
+                        onClick={() => {
+                          setConfirmModal({
+                            open: true,
+                            title: "Go To Conclusion",
+                            description:
+                              "Are you sure you want to go to the conclusion?",
+                            onConfirm: () => {
+                              handleConclusionMeeting();
+                              setConfirmModal((prev) => ({
+                                ...prev,
+                                open: false,
+                              }));
+                            },
+                          });
+                        }}
                       >
                         Go To Conclusion
                       </Button>
@@ -1052,7 +1136,21 @@ export default function Agenda({
                     <Button
                       variant="outline"
                       className="bg-primary text-white px-4 hover:bg-primary py-5 text-sm hover:text-white sm:text-base md:text-lg"
-                      onClick={handleCloseMeetingWithLog}
+                      onClick={() => {
+                        setConfirmModal({
+                          open: true,
+                          title: "End Meeting",
+                          description:
+                            "Are you sure you want to end the meeting?",
+                          onConfirm: () => {
+                            handleCloseMeetingWithLog();
+                            setConfirmModal((prev) => ({
+                              ...prev,
+                              open: false,
+                            }));
+                          },
+                        });
+                      }}
                       isLoading={endMeetingLoading}
                     >
                       End Meeting

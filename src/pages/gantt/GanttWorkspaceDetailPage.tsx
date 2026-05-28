@@ -55,8 +55,8 @@ export default function GanttWorkspaceDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <SpinnerIcon className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center min-h-[60vh] text-primary">
+        <SpinnerIcon />
       </div>
     );
   }

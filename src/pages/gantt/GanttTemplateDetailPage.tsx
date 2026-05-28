@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
@@ -63,13 +64,19 @@ export default function GanttTemplateDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-32">
-        <SpinnerIcon className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center py-32 text-primary">
+        <SpinnerIcon />
       </div>
     );
   }
 
-  if (isError || !data) {
+  const template =
+    data?.template ?? ((data as any)?.templateName ? (data as any) : null);
+  const phases = data?.phases ?? [];
+  const itemsTree = data?.itemsTree ?? [];
+  const dependencies = data?.dependencies ?? [];
+
+  if (isError || !data || !template) {
     return (
       <div className="p-6">
         <p className="text-muted-foreground">
@@ -83,8 +90,6 @@ export default function GanttTemplateDetailPage() {
       </div>
     );
   }
-
-  const { template, phases, itemsTree, dependencies } = data;
 
   const handleDelete = async () => {
     await deleteMutation.mutateAsync(template.ganttTemplateId);
@@ -370,7 +375,7 @@ function TemplateItemRow({ item, depth }: TemplateItemRowProps) {
           className="flex items-center gap-2 px-4 py-2 text-sm"
           style={{ paddingLeft: `${16 + depth * 16}px` }}
         >
-          {item.isMilestone ? (
+          {item.itemType === "MILESTONE" || item.isMilestone ? (
             <Diamond className="h-3.5 w-3.5 text-amber-500 shrink-0" />
           ) : (
             <SquareCheck className="h-3.5 w-3.5 text-blue-500 shrink-0" />

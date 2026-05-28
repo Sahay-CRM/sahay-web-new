@@ -1,0 +1,91 @@
+/**
+ * frappe-gantt Theme Override
+ * Maps frappe-gantt CSS variables to app theme (light + dark)
+ * Dark mode uses .dark class (Tailwind convention)
+ */
+
+/* Import frappe-gantt base styles (relative path bypasses package exports map) */
+@import "../../../../node_modules/frappe-gantt/dist/frappe-gantt.css";
+
+/* ── Light theme overrides ──────────────────────────────────────────────── */
+:root {
+  --g-header-background: oklch(1 0 0);
+  --g-row-color: oklch(1 0 0);
+  --g-row-border-color: oklch(0.922 0 0);
+  --g-border-color: oklch(0.922 0 0);
+  --g-tick-color: oklch(0.922 0 0);
+  --g-tick-color-thick: oklch(0.9 0 0);
+  --g-text-dark: oklch(0.145 0 0);
+  --g-text-muted: oklch(0.556 0 0);
+  --g-text-light: oklch(1 0 0);
+  --g-bar-color: oklch(0.97 0 0);
+  --g-bar-border: oklch(0.922 0 0);
+  --g-progress-color: #2e3090;
+  --g-arrow-color: oklch(0.4 0 0);
+  --g-handle-color: #2e3090;
+  --g-today-highlight: #ef4444;
+  --g-weekend-highlight-color: oklch(0.97 0 0);
+  --g-weekend-label-color: oklch(0.9 0 0);
+  --g-actions-background: oklch(0.97 0 0);
+  --g-popup-actions: oklch(0.97 0 0);
+  --g-expected-progress: oklch(0.85 0.05 264);
+}
+
+/* ── Dark theme overrides ───────────────────────────────────────────────── */
+.dark {
+  --g-header-background: oklch(0.145 0 0);
+  --g-row-color: oklch(0.145 0 0);
+  --g-row-border-color: oklch(1 0 0 / 10%);
+  --g-border-color: oklch(1 0 0 / 10%);
+  --g-tick-color: oklch(1 0 0 / 6%);
+  --g-tick-color-thick: oklch(1 0 0 / 12%);
+  --g-text-dark: oklch(0.985 0 0);
+  --g-text-muted: oklch(0.708 0 0);
+  --g-text-light: oklch(0.145 0 0);
+  --g-bar-color: oklch(0.205 0 0);
+  --g-bar-border: oklch(1 0 0 / 15%);
+  --g-progress-color: oklch(0.6 0.15 264);
+  --g-arrow-color: oklch(0.75 0 0);
+  --g-handle-color: oklch(0.85 0 0);
+  --g-today-highlight: #ef4444;
+  --g-weekend-highlight-color: oklch(1 0 0 / 4%);
+  --g-weekend-label-color: oklch(1 0 0 / 20%);
+  --g-actions-background: oklch(0.269 0 0);
+  --g-popup-actions: oklch(0.269 0 0);
+  --g-expected-progress: oklch(0.4 0.1 264);
+}
+
+/* ── Container layout tweaks ────────────────────────────────────────────── */
+.frappe-gantt-wrapper .gantt-container {
+  border-radius: 0;
+  border: none;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Hide frappe-gantt's built-in left panel (we use our own GanttLeftPanel) */
+.frappe-gantt-wrapper .gantt-container .gantt .grid-row-text {
+  display: none;
+}
+
+/* Hide the side header controls (view mode select, today button) — we provide our own toolbar */
+.frappe-gantt-wrapper .gantt-container .side-header {
+  display: none;
+}
+
+/* Improve bar appearance */
+.frappe-gantt-wrapper .gantt .bar-wrapper .bar {
+  rx: 4px;
+  ry: 4px;
+}
+
+/* Popup card styling */
+.frappe-gantt-wrapper .gantt-container .popup-wrapper {
+  border: 1px solid oklch(0.922 0 0);
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: 12px;
+}
+
+.dark .frappe-gantt-wrapper .gantt-container .popup-wrapper {
+  border-color: oklch(1 0 0 / 10%);
+}

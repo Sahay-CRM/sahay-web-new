@@ -42,7 +42,7 @@ export default function GanttAssignModal({
   const { data: employees, isLoading } = useQuery({
     queryKey: ["employee-dd-all"],
     queryFn: async () => {
-      const { data } = await Api.get<{ data: Employee[] }>({
+      const { data } = await Api.post<{ data: Employee[] }>({
         url: Urls.getAllEmployeeDd(),
       });
       return data.data;
@@ -104,8 +104,8 @@ export default function GanttAssignModal({
 
           <div className="max-h-56 overflow-y-auto space-y-1">
             {isLoading ? (
-              <div className="flex justify-center py-6">
-                <SpinnerIcon className="h-5 w-5 animate-spin text-primary" />
+              <div className="flex justify-center py-6 text-primary">
+                <SpinnerIcon />
               </div>
             ) : filtered.length === 0 ? (
               <p className="text-center text-sm text-muted-foreground py-4">

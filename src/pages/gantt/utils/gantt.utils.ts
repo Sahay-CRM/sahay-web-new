@@ -4,6 +4,9 @@ import {
   format,
   isToday,
   startOfDay,
+  endOfMonth,
+  endOfYear,
+  endOfQuarter,
 } from "date-fns";
 import type {
   CompanyGanttItem,
@@ -238,7 +241,7 @@ export const PRIORITY_COLOR: Record<GanttItemPriority, string> = {
 export function computeTimelineBounds(
   workspaceStartDate: string,
   items: CompanyGanttItem[],
-  paddingDays = 7,
+  viewMode: "Day" | "Week" | "Month" | "Year" = "Day",
 ): { timelineStart: Date; timelineEnd: Date; totalDays: number } {
   let minDate = new Date(workspaceStartDate);
   let maxDate = addDays(minDate, 30); // fallback 30 days
@@ -254,8 +257,29 @@ export function computeTimelineBounds(
   };
   if (items.length) walkItems(items);
 
+  // Set padding and minimum duration based on view mode
+  let paddingDays = 7;
+  let minDurationDays = 30;
+
+  if (viewMode === "Week") {
+    paddingDays = 14;
+    minDurationDays = 90;
+  } else if (viewMode === "Month") {
+    paddingDays = 30;
+    minDurationDays = 365;
+  } else if (viewMode === "Year") {
+    paddingDays = 90;
+    minDurationDays = 365 * 3;
+  }
+
   const timelineStart = addDays(startOfDay(minDate), -paddingDays);
-  const timelineEnd = addDays(startOfDay(maxDate), paddingDays);
+  let timelineEnd = addDays(startOfDay(maxDate), paddingDays);
+
+  const curDuration = differenceInCalendarDays(timelineEnd, timelineStart) + 1;
+  if (curDuration < minDurationDays) {
+    timelineEnd = addDays(timelineStart, minDurationDays - 1);
+  }
+
   const totalDays = differenceInCalendarDays(timelineEnd, timelineStart) + 1;
 
   return { timelineStart, timelineEnd, totalDays };
@@ -284,60 +308,234 @@ export function datesOverlap(
   return start1 <= end2 && end1 >= start2;
 }
 
-/** Build month-grouping labels for timeline header */
+/** Compute overall planned start/end dates for a phase */
+export interface PhaseDateBounds {
+  startDate: Date | null;
+  endDate: Date | null;
+}
+
+export function computePhaseBounds(
+  itemsTree: CompanyGanttItem[],
+  phaseId: string,
+): PhaseDateBounds {
+  let minStart: Date | null = null;
+  let maxEnd: Date | null = null;
+
+  const walk = (list: CompanyGanttItem[]) => {
+    for (const item of list) {
+      if (item.ganttPhaseId === phaseId) {
+        const s = new Date(item.plannedStartDate);
+        const e = new Date(item.plannedEndDate);
+        if (!minStart || s < minStart) minStart = s;
+        if (!maxEnd || e > maxEnd) maxEnd = e;
+      }
+      if (item.children?.length) walk(item.children);
+    }
+  };
+
+  walk(itemsTree);
+  return { startDate: minStart, endDate: maxEnd };
+}
+
+export interface TimelineHeaderCell {
+  label: string;
+  x: number;
+  width: number;
+  isToday?: boolean;
+}
+
+/** Build high-fidelity dynamic timeline headers for different view modes */
+export function buildTimelineHeaders(
+  timelineStart: Date,
+  totalDays: number,
+  dayWidth: number,
+  viewMode: "Day" | "Week" | "Month" | "Year",
+): { topHeaders: TimelineHeaderCell[]; bottomHeaders: TimelineHeaderCell[] } {
+  const topHeaders: TimelineHeaderCell[] = [];
+  const bottomHeaders: TimelineHeaderCell[] = [];
+  const timelineEnd = addDays(timelineStart, totalDays - 1);
+
+  if (viewMode === "Day") {
+    // Top headers: Month Year
+    let cur = startOfDay(timelineStart);
+    while (cur <= timelineEnd) {
+      const monthStart = cur;
+      const monthEnd = endOfMonth(cur);
+      const segStart = monthStart;
+      const segEnd = monthEnd > timelineEnd ? timelineEnd : monthEnd;
+
+      const segmentDays = differenceInCalendarDays(segEnd, segStart) + 1;
+      const x = differenceInCalendarDays(segStart, timelineStart) * dayWidth;
+      const width = segmentDays * dayWidth;
+
+      topHeaders.push({
+        label: format(segStart, "MMMM yyyy"),
+        x,
+        width,
+      });
+      cur = addDays(monthEnd, 1);
+    }
+
+    // Bottom headers: Day number
+    for (let i = 0; i < totalDays; i++) {
+      const day = addDays(timelineStart, i);
+      bottomHeaders.push({
+        label: format(day, "d"),
+        x: i * dayWidth,
+        width: dayWidth,
+        isToday: isToday(day),
+      });
+    }
+  } else if (viewMode === "Week") {
+    // Top headers: Month Year
+    let cur = startOfDay(timelineStart);
+    while (cur <= timelineEnd) {
+      const monthStart = cur;
+      const monthEnd = endOfMonth(cur);
+      const segStart = monthStart;
+      const segEnd = monthEnd > timelineEnd ? timelineEnd : monthEnd;
+
+      const segmentDays = differenceInCalendarDays(segEnd, segStart) + 1;
+      const x = differenceInCalendarDays(segStart, timelineStart) * dayWidth;
+      const width = segmentDays * dayWidth;
+
+      topHeaders.push({
+        label: format(segStart, "MMMM yyyy"),
+        x,
+        width,
+      });
+      cur = addDays(monthEnd, 1);
+    }
+
+    // Bottom headers: Week start date
+    for (let i = 0; i < totalDays; i += 7) {
+      const weekStart = addDays(timelineStart, i);
+      const weekEnd =
+        addDays(weekStart, 6) > timelineEnd
+          ? timelineEnd
+          : addDays(weekStart, 6);
+      const segmentDays = differenceInCalendarDays(weekEnd, weekStart) + 1;
+      const hasToday = isTodayInRange(weekStart, weekEnd);
+
+      bottomHeaders.push({
+        label: format(weekStart, "MMM d"),
+        x: i * dayWidth,
+        width: segmentDays * dayWidth,
+        isToday: hasToday,
+      });
+    }
+  } else if (viewMode === "Month") {
+    // Top headers: Year
+    let cur = startOfDay(timelineStart);
+    while (cur <= timelineEnd) {
+      const yearStart = cur;
+      const yearEnd = endOfYear(cur);
+      const segStart = yearStart;
+      const segEnd = yearEnd > timelineEnd ? timelineEnd : yearEnd;
+
+      const segmentDays = differenceInCalendarDays(segEnd, segStart) + 1;
+      const x = differenceInCalendarDays(segStart, timelineStart) * dayWidth;
+      const width = segmentDays * dayWidth;
+
+      topHeaders.push({
+        label: format(segStart, "yyyy"),
+        x,
+        width,
+      });
+      cur = addDays(yearEnd, 1);
+    }
+
+    // Bottom headers: Month abbreviation
+    let monthCur = startOfDay(timelineStart);
+    while (monthCur <= timelineEnd) {
+      const monthStart = monthCur;
+      const monthEnd = endOfMonth(monthCur);
+      const segStart = monthStart;
+      const segEnd = monthEnd > timelineEnd ? timelineEnd : monthEnd;
+
+      const segmentDays = differenceInCalendarDays(segEnd, segStart) + 1;
+      const x = differenceInCalendarDays(segStart, timelineStart) * dayWidth;
+      const width = segmentDays * dayWidth;
+      const hasToday = isTodayInRange(segStart, segEnd);
+
+      bottomHeaders.push({
+        label: format(segStart, "MMM"),
+        x,
+        width,
+        isToday: hasToday,
+      });
+      monthCur = addDays(monthEnd, 1);
+    }
+  } else if (viewMode === "Year") {
+    // Top headers: Year
+    let cur = startOfDay(timelineStart);
+    while (cur <= timelineEnd) {
+      const yearStart = cur;
+      const yearEnd = endOfYear(cur);
+      const segStart = yearStart;
+      const segEnd = yearEnd > timelineEnd ? timelineEnd : yearEnd;
+
+      const segmentDays = differenceInCalendarDays(segEnd, segStart) + 1;
+      const x = differenceInCalendarDays(segStart, timelineStart) * dayWidth;
+      const width = segmentDays * dayWidth;
+
+      topHeaders.push({
+        label: format(segStart, "yyyy"),
+        x,
+        width,
+      });
+      cur = addDays(yearEnd, 1);
+    }
+
+    // Bottom headers: Quarters
+    let qCur = startOfDay(timelineStart);
+    while (qCur <= timelineEnd) {
+      const qStart = qCur;
+      const qEnd = endOfQuarter(qCur);
+      const segStart = qStart;
+      const segEnd = qEnd > timelineEnd ? timelineEnd : qEnd;
+
+      const segmentDays = differenceInCalendarDays(segEnd, segStart) + 1;
+      const x = differenceInCalendarDays(segStart, timelineStart) * dayWidth;
+      const width = segmentDays * dayWidth;
+      const hasToday = isTodayInRange(segStart, segEnd);
+      const qNum = Math.floor(segStart.getMonth() / 3) + 1;
+
+      bottomHeaders.push({
+        label: `Q${qNum}`,
+        x,
+        width,
+        isToday: hasToday,
+      });
+      qCur = addDays(qEnd, 1);
+    }
+  }
+
+  return { topHeaders, bottomHeaders };
+}
+
+function isTodayInRange(start: Date, end: Date): boolean {
+  const today = startOfDay(new Date());
+  return today >= startOfDay(start) && today <= startOfDay(end);
+}
+
+/** Keep backwards-compatible legacy stubs for header building to avoid breaking compilation */
 export function buildMonthLabels(
   timelineStart: Date,
   totalDays: number,
   dayWidth: number,
 ): Array<{ label: string; x: number; width: number }> {
-  const labels: Array<{ label: string; x: number; width: number }> = [];
-  let cur = startOfDay(timelineStart);
-
-  while (differenceInCalendarDays(cur, timelineStart) < totalDays) {
-    const monthStart = cur;
-    const monthLabel = format(cur, "MMMM yyyy");
-    // Advance to first day of next month
-    let next = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
-    // Clamp to timeline end
-    const timelineEnd = addDays(timelineStart, totalDays - 1);
-    if (next > timelineEnd) next = addDays(timelineEnd, 1);
-
-    const daysInSegment = differenceInCalendarDays(next, monthStart);
-    const x = dateToX(monthStart, timelineStart, dayWidth);
-    const width = daysInSegment * dayWidth;
-    labels.push({ label: monthLabel, x, width });
-    cur = next;
-  }
-
-  return labels;
+  return buildTimelineHeaders(timelineStart, totalDays, dayWidth, "Day")
+    .topHeaders;
 }
 
-/** Build week labels for timeline sub-header */
 export function buildWeekLabels(
   timelineStart: Date,
   totalDays: number,
   dayWidth: number,
 ): Array<{ label: string; x: number; width: number; isToday?: boolean }> {
-  const labels: Array<{
-    label: string;
-    x: number;
-    width: number;
-    isToday?: boolean;
-  }> = [];
-
-  for (let i = 0; i < totalDays; i += 7) {
-    const day = addDays(timelineStart, i);
-    const x = i * dayWidth;
-    const daysLeft = Math.min(7, totalDays - i);
-    labels.push({
-      label: format(day, "MMM d"),
-      x,
-      width: daysLeft * dayWidth,
-      isToday: isToday(day),
-    });
-  }
-
-  return labels;
+  return buildTimelineHeaders(timelineStart, totalDays, dayWidth, "Day")
+    .bottomHeaders;
 }
 
 // ── Misc ─────────────────────────────────────────────────────────────────────

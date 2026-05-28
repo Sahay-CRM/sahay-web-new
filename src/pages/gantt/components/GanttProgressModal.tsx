@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
-import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { useUpdateGanttProgress } from "@/features/api/gantt";
 import type { CompanyGanttItem, GanttItemStatus } from "@/types/gantt";
 import { STATUS_OPTIONS, fmtDate } from "@/pages/gantt/utils/gantt.utils";
@@ -25,8 +24,6 @@ interface Props {
 interface FormValues {
   progressPercentage: number;
   itemStatus: string;
-  actualStartDate?: string;
-  actualEndDate?: string;
 }
 
 export default function GanttProgressModal({
@@ -42,12 +39,6 @@ export default function GanttProgressModal({
       defaultValues: {
         progressPercentage: item.progressPercentage,
         itemStatus: item.itemStatus,
-        actualStartDate: item.actualStartDate
-          ? new Date(item.actualStartDate).toISOString().slice(0, 10)
-          : "",
-        actualEndDate: item.actualEndDate
-          ? new Date(item.actualEndDate).toISOString().slice(0, 10)
-          : "",
       },
     },
   );
@@ -70,13 +61,6 @@ export default function GanttProgressModal({
       payload: {
         progressPercentage: values.progressPercentage,
         itemStatus: values.itemStatus as GanttItemStatus,
-        actualStartDate: values.actualStartDate
-          ? new Date(values.actualStartDate).toISOString()
-          : undefined,
-        actualEndDate:
-          values.itemStatus === "COMPLETED" && values.actualEndDate
-            ? new Date(values.actualEndDate).toISOString()
-            : undefined,
       },
     });
     onOpenChange(false);
@@ -143,36 +127,6 @@ export default function GanttProgressModal({
               />
             )}
           />
-
-          {/* Actual start date */}
-          <Controller
-            name="actualStartDate"
-            control={control}
-            render={({ field }) => (
-              <FormInputField
-                {...field}
-                type="date"
-                label="Actual Start Date"
-                placeholder="Optional"
-              />
-            )}
-          />
-
-          {/* Actual end date — shown when completed */}
-          {status === "COMPLETED" && (
-            <Controller
-              name="actualEndDate"
-              control={control}
-              render={({ field }) => (
-                <FormInputField
-                  {...field}
-                  type="date"
-                  label="Actual End Date"
-                  placeholder="Optional"
-                />
-              )}
-            />
-          )}
 
           <DialogFooter>
             <Button

@@ -1,53 +1,55 @@
 import { memo } from "react";
 import type { CompanyGanttPhase } from "@/types/gantt";
-import {
-  buildMonthLabels,
-  buildWeekLabels,
-} from "@/pages/gantt/utils/gantt.utils";
+import { buildTimelineHeaders } from "@/pages/gantt/utils/gantt.utils";
 
-const ROW_HEIGHT = 36;
 const HEADER_MONTH_H = 28;
 const HEADER_WEEK_H = 22;
 
 interface Props {
-  phases: CompanyGanttPhase[];
+  phases?: CompanyGanttPhase[];
   timelineStart: Date;
   totalDays: number;
   dayWidth: number;
+  viewMode: "Day" | "Week" | "Month" | "Year";
 }
 
 export const GanttTimelineHeader = memo(function GanttTimelineHeader({
   timelineStart,
   totalDays,
   dayWidth,
+  viewMode,
 }: Props) {
   const totalWidth = totalDays * dayWidth;
-  const monthLabels = buildMonthLabels(timelineStart, totalDays, dayWidth);
-  const weekLabels = buildWeekLabels(timelineStart, totalDays, dayWidth);
+  const { topHeaders, bottomHeaders } = buildTimelineHeaders(
+    timelineStart,
+    totalDays,
+    dayWidth,
+    viewMode,
+  );
 
   return (
     <svg
       width={totalWidth}
       height={HEADER_MONTH_H + HEADER_WEEK_H}
-      className="block"
+      className="block bg-muted/20"
     >
-      {/* Month row */}
-      {monthLabels.map((m) => (
-        <g key={`month-${m.x}`}>
+      {/* Top Header Row (e.g. Month Year or Year) */}
+      {topHeaders.map((m, idx) => (
+        <g key={`top-${idx}-${m.x}`}>
           <rect
             x={m.x}
             y={0}
             width={m.width}
             height={HEADER_MONTH_H}
-            fill="transparent"
+            className="fill-none"
           />
           <line
             x1={m.x}
             y1={0}
             x2={m.x}
             y2={HEADER_MONTH_H + HEADER_WEEK_H}
-            stroke="hsl(var(--border))"
-            strokeWidth={1}
+            className="stroke-slate-200"
+            strokeWidth={0.8}
           />
           <text
             x={m.x + m.width / 2}
@@ -55,51 +57,61 @@ export const GanttTimelineHeader = memo(function GanttTimelineHeader({
             textAnchor="middle"
             fontSize={11}
             fontWeight={600}
-            fill="hsl(var(--muted-foreground))"
-            className="select-none"
+            className="fill-slate-600 select-none"
           >
             {m.label}
           </text>
         </g>
       ))}
 
-      {/* Week row */}
-      {weekLabels.map((w) => (
-        <g key={`week-${w.x}`}>
+      {/* Separator line between top and bottom header rows */}
+      <line
+        x1={0}
+        y1={HEADER_MONTH_H}
+        x2={totalWidth}
+        y2={HEADER_MONTH_H}
+        className="stroke-slate-200"
+        strokeWidth={0.8}
+      />
+
+      {/* Bottom Header Row (e.g. Day number, Week start, Month name, or Quarter) */}
+      {bottomHeaders.map((w, idx) => (
+        <g key={`bottom-${idx}-${w.x}`}>
           <rect
             x={w.x}
             y={HEADER_MONTH_H}
             width={w.width}
             height={HEADER_WEEK_H}
-            fill={w.isToday ? "hsl(var(--primary) / 0.05)" : "transparent"}
+            className={w.isToday ? "fill-rose-500/10" : "fill-none"}
           />
           <line
             x1={w.x}
             y1={HEADER_MONTH_H}
             x2={w.x}
             y2={HEADER_MONTH_H + HEADER_WEEK_H}
-            stroke="hsl(var(--border))"
-            strokeWidth={1}
+            className="stroke-slate-200/50"
+            strokeWidth={0.6}
           />
           <text
-            x={w.x + 4}
+            x={w.x + w.width / 2}
             y={HEADER_MONTH_H + HEADER_WEEK_H - 6}
-            fontSize={10}
-            fill="hsl(var(--muted-foreground))"
-            className="select-none"
+            textAnchor="middle"
+            fontSize={9.5}
+            fontWeight={w.isToday ? 700 : 500}
+            className={`select-none ${w.isToday ? "fill-rose-500" : "fill-slate-500"}`}
           >
             {w.label}
           </text>
         </g>
       ))}
 
-      {/* Bottom border */}
+      {/* Bottom border line */}
       <line
         x1={0}
         y1={HEADER_MONTH_H + HEADER_WEEK_H}
         x2={totalWidth}
         y2={HEADER_MONTH_H + HEADER_WEEK_H}
-        stroke="hsl(var(--border))"
+        className="stroke-slate-200"
         strokeWidth={1}
       />
     </svg>
@@ -107,4 +119,3 @@ export const GanttTimelineHeader = memo(function GanttTimelineHeader({
 });
 
 export const TIMELINE_HEADER_HEIGHT = HEADER_MONTH_H + HEADER_WEEK_H;
-export { ROW_HEIGHT };

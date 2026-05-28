@@ -30,6 +30,8 @@ interface Props {
   onTogglePhase: (phaseId: string) => void;
   onToggleItem: (itemId: string) => void;
   onItemClick: (item: CompanyGanttItem) => void;
+  hoveredRowId: string | null;
+  onHoverRow: (id: string | null) => void;
 }
 
 export const GanttLeftPanel = memo(function GanttLeftPanel({
@@ -38,6 +40,8 @@ export const GanttLeftPanel = memo(function GanttLeftPanel({
   onTogglePhase,
   onToggleItem,
   onItemClick,
+  hoveredRowId,
+  onHoverRow,
 }: Props) {
   return (
     <div
@@ -45,24 +49,30 @@ export const GanttLeftPanel = memo(function GanttLeftPanel({
       className="flex-shrink-0 border-r border-border bg-background select-none"
     >
       {/* Header spacer */}
-      <div
-        style={{ height: headerHeight }}
-        className="border-b border-border bg-muted/30 flex items-end px-3 pb-1"
-      >
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          Task
-        </span>
-      </div>
+      {headerHeight > 0 && (
+        <div
+          style={{ height: headerHeight }}
+          className="border-b border-border bg-muted/30 flex items-end px-3 pb-1"
+        >
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Task
+          </span>
+        </div>
+      )}
 
       {/* Rows */}
       {rows.map((row) => {
+        const isHovered = hoveredRowId === row.id;
         if (row.type === "phase") {
           return (
             <PhaseRow
               key={row.id}
               row={row}
               height={ROW_HEIGHT}
+              isHovered={isHovered}
               onToggle={() => row.phaseId && onTogglePhase(row.phaseId)}
+              onMouseEnter={() => onHoverRow(row.id)}
+              onMouseLeave={() => onHoverRow(null)}
             />
           );
         }
@@ -72,8 +82,11 @@ export const GanttLeftPanel = memo(function GanttLeftPanel({
             key={row.id}
             row={row}
             height={ROW_HEIGHT}
+            isHovered={isHovered}
             onToggle={() => onToggleItem(row.item!.ganttItemId)}
             onClick={() => onItemClick(row.item!)}
+            onMouseEnter={() => onHoverRow(row.id)}
+            onMouseLeave={() => onHoverRow(null)}
           />
         );
       })}
@@ -88,17 +101,27 @@ export { LEFT_PANEL_WIDTH };
 function PhaseRow({
   row,
   height,
+  isHovered,
   onToggle,
+  onMouseEnter,
+  onMouseLeave,
 }: {
   row: GanttFlatRow;
   height: number;
+  isHovered: boolean;
   onToggle: () => void;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
 }) {
   return (
     <div
       style={{ height }}
-      className="flex items-center gap-1.5 px-2 border-b border-border bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+      className={`flex items-center gap-1.5 px-2 border-b border-border cursor-pointer transition-colors ${
+        isHovered ? "bg-muted/70" : "bg-muted/30 hover:bg-muted/50"
+      }`}
       onClick={onToggle}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <div
         className="h-2.5 w-2.5 rounded-full shrink-0"
@@ -119,13 +142,19 @@ function PhaseRow({
 function ItemRow({
   row,
   height,
+  isHovered,
   onToggle,
   onClick,
+  onMouseEnter,
+  onMouseLeave,
 }: {
   row: GanttFlatRow;
   height: number;
+  isHovered: boolean;
   onToggle: () => void;
   onClick: () => void;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
 }) {
   const item = row.item!;
   const statusColor = ITEM_STATUS_COLOR[item.itemStatus];
@@ -139,8 +168,12 @@ function ItemRow({
           height,
           paddingLeft: `${8 + row.depth * 16}px`,
         }}
-        className="flex items-center gap-1 border-b border-border hover:bg-muted/20 transition-colors cursor-pointer pr-2"
+        className={`flex items-center gap-1 border-b border-border transition-colors cursor-pointer pr-2 ${
+          isHovered ? "bg-muted/40" : "hover:bg-muted/20"
+        }`}
         onClick={onClick}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
       >
         {/* Expand/collapse toggle for parent items */}
         {row.hasChildren ? (
@@ -163,8 +196,8 @@ function ItemRow({
         )}
 
         {/* Type icon */}
-        {item.isMilestone ? (
-          <Diamond className="h-3 w-3 text-amber-500 shrink-0" />
+        {item.itemType === "MILESTONE" || item.isMilestone ? (
+          <Diamond className="h-3 w-3 text-yellow-500 shrink-0" />
         ) : (
           <SquareCheck
             className="h-3 w-3 shrink-0"

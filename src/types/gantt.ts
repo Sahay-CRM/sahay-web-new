@@ -30,6 +30,7 @@ export type GanttItemStatus =
 // ── Template Layer ─────────────────────────────
 
 export interface GanttTemplate {
+  srNo?: number;
   ganttTemplateId: string;
   templateName: string;
   templateDescription?: string | null;
@@ -43,6 +44,7 @@ export interface GanttTemplate {
   createdBy: string;
   isDelete: boolean;
   createdDatetime?: string;
+  industryName?: string | null;
 }
 
 export interface GanttTemplatePhase {
@@ -168,6 +170,8 @@ export interface GanttTemplateListResponse {
   totalCount: number;
   currentPage: number;
   pageSize: number;
+  totalPage: number;
+  hasMore: boolean;
   data: GanttTemplate[];
 }
 
