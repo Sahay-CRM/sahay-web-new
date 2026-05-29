@@ -9,7 +9,14 @@ import {
 } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Bell, Info, LaptopMinimal, LogOut, User2Icon } from "lucide-react";
+import {
+  Bell,
+  Info,
+  LaptopMinimal,
+  LogOut,
+  User2Icon,
+  Smartphone,
+} from "lucide-react";
 
 import { Breadcrumbs } from "@/components/shared/BreadCrumbs/breadcrumbs";
 import VerticalNavBar from "@/components/shared/VerticalNavBar/VerticalNavBar";
@@ -82,6 +89,9 @@ import { toast } from "sonner";
 
 const CompanyModal = lazy(() => import("@/pages/auth/login/CompanyModal"));
 const NotificationDropdown = lazy(() => import("./notificationDropdown"));
+const AppDownloadModal = lazy(
+  () => import("@/components/shared/Modal/AppDownloadModal/AppDownloadModal"),
+);
 
 const MemoSidebar = memo(VerticalNavBar);
 const MemoBreadcrumbs = memo(Breadcrumbs);
@@ -106,6 +116,7 @@ const DashboardLayout = () => {
 
   const [isCompanyModalOpen, setCompanyModalOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isDownloadModalOpen, setDownloadModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const user = useSelector(getUserDetail, shallowEqual);
@@ -424,6 +435,26 @@ const DashboardLayout = () => {
               </div>
 
               <div className="flex items-center justify-end gap-x-4 pt-1 relative">
+                {/* App Download */}
+                <div className="relative">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="p-2 border relative hover:bg-slate-50 transition-colors"
+                          onClick={() => setDownloadModalOpen(true)}
+                        >
+                          <Smartphone className="size-[20px]" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        Download Mobile App
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
                 {/* Updates/Info */}
                 <div className="relative">
                   <TooltipProvider>
@@ -659,6 +690,15 @@ const DashboardLayout = () => {
           </div>
         </div>
       </ModalData>
+
+      {isDownloadModalOpen && (
+        <Suspense>
+          <AppDownloadModal
+            isOpen={isDownloadModalOpen}
+            onClose={() => setDownloadModalOpen(false)}
+          />
+        </Suspense>
+      )}
     </>
   );
 };
