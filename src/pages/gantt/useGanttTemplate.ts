@@ -1,16 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
-import {
-  useGanttTemplates,
-  useDeleteGanttTemplate,
-} from "@/features/api/gantt";
-import Api from "@/features/utils/api.utils";
-import Urls from "@/features/utils/urls.utils";
-import { queryClient } from "@/queryClient";
+import { useGanttTemplates } from "@/features/api/gantt";
 import type { GanttTemplate, GanttTemplateOwnerType } from "@/types/gantt";
 import { fmtDate } from "./utils/gantt.utils";
 
@@ -40,21 +33,13 @@ export default function useGanttTemplate() {
     setPaginationFilter((prev) => ({ ...prev, currentPage: 1 }));
   };
 
-  // ── Modal states ───────────────────────────────────────────────────────────
-  const [deleteTarget, setDeleteTarget] = useState<GanttTemplate | null>(null);
-  const [editTarget, setEditTarget] = useState<GanttTemplate | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
+  // ── "Use Template" modal state ─────────────────────────────────────────────
+  const [useTemplateTarget, setUseTemplateTarget] =
+    useState<GanttTemplate | null>(null);
 
-  const openCreate = () => setCreateOpen(true);
-  const openEdit = (row: GanttTemplate) => setEditTarget(row);
-  const openDelete = (row: GanttTemplate) => setDeleteTarget(row);
-
-  const closeFormModal = () => {
-    setCreateOpen(false);
-    setEditTarget(null);
-  };
-
-  const closeDeleteModal = () => setDeleteTarget(null);
+  const openUseModal = (template: GanttTemplate) =>
+    setUseTemplateTarget(template);
+  const closeUseModal = () => setUseTemplateTarget(null);
 
   // ── Column toggle ──────────────────────────────────────────────────────────
   const [columnToggleOptions, setColumnToggleOptions] = useState([
@@ -99,7 +84,7 @@ export default function useGanttTemplate() {
   const canToggleColumns = columnToggleOptions.length > 3;
 
   // ── Data ───────────────────────────────────────────────────────────────────
-  const { data, isLoading, refetch } = useGanttTemplates({
+  const { data, isLoading } = useGanttTemplates({
     currentPage: paginationFilter.currentPage ?? 1,
     pageSize: paginationFilter.pageSize ?? 25,
     search: paginationFilter.search || undefined,
@@ -109,42 +94,19 @@ export default function useGanttTemplate() {
         : (ownerTypeFilter as GanttTemplateOwnerType),
   });
 
-  const deleteMutation = useDeleteGanttTemplate();
-
-  const templates = (data?.data ?? []).map((item, index) => ({
-    ...item,
-    srNo: ((data?.currentPage || 1) - 1) * (data?.pageSize || 25) + index + 1,
-    industryName: item.industryName || "—",
-    status: item.isPublished ? "published" : "draft",
-    createdDatetime: fmtDate(item.createdDatetime),
-  }));
+  const templates = (data?.data ?? [])
+    .filter((item) => item.isPublished)
+    .map((item, index) => ({
+      ...item,
+      srNo: ((data?.currentPage || 1) - 1) * (data?.pageSize || 25) + index + 1,
+      industryName: item.industryName || "—",
+      status: item.isPublished ? "published" : "draft",
+      createdDatetime: fmtDate(item.createdDatetime),
+    }));
 
   const paginationDetails = mapPaginationDetails(data);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleToggleActive = async (template: GanttTemplate) => {
-    try {
-      await Api.put({
-        url: Urls.ganttTemplateUpdate(template.ganttTemplateId),
-        data: { isActive: !template.isActive },
-      });
-      toast.success("Template status updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["gantt-templates"] });
-    } catch {
-      toast.error("Failed to update template status");
-    }
-  };
-
-  const handleDeleteTemplate = async () => {
-    if (!deleteTarget) return;
-    try {
-      await deleteMutation.mutateAsync(deleteTarget.ganttTemplateId);
-      closeDeleteModal();
-    } catch {
-      // Error handled by mutation
-    }
-  };
-
   const handleRowClick = (row: { ganttTemplateId: string }) => {
     navigate(`/dashboard/gantt/templates/${row.ganttTemplateId}`);
   };
@@ -154,7 +116,6 @@ export default function useGanttTemplate() {
     templates,
     paginationDetails,
     isLoading,
-    refetch,
 
     // filters
     paginationFilter,
@@ -168,20 +129,12 @@ export default function useGanttTemplate() {
     onToggleColumn,
     canToggleColumns,
 
-    // modals
-    deleteTarget,
-    editTarget,
-    createOpen,
-    openCreate,
-    openEdit,
-    openDelete,
-    closeFormModal,
-    closeDeleteModal,
+    // use template modal
+    useTemplateTarget,
+    openUseModal,
+    closeUseModal,
 
     // actions
-    handleToggleActive,
-    handleDeleteTemplate,
     handleRowClick,
-    deleteMutation,
   };
 }

@@ -270,6 +270,8 @@ export interface UpdateGanttProgressRequest {
 export interface UpdateGanttDatesRequest {
   plannedStartDate: string;
   plannedEndDate: string;
+  actualStartDate?: string | null;
+  actualEndDate?: string | null;
 }
 
 export interface AssignGanttItemRequest {

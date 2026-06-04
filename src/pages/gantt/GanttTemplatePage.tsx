@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { GitBranch } from "lucide-react";
 
 import TableData from "@/components/shared/DataTable/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
@@ -12,14 +12,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -28,7 +20,7 @@ import {
 } from "@/components/ui/select";
 
 import type { GanttTemplate } from "@/types/gantt";
-import GanttTemplateFormModal from "./components/GanttTemplateFormModal";
+import GanttCreateWorkspaceModal from "./components/GanttCreateWorkspaceModal";
 import useGanttTemplate from "./useGanttTemplate";
 
 export default function GanttTemplatePage() {
@@ -37,7 +29,6 @@ export default function GanttTemplatePage() {
     templates,
     paginationDetails,
     isLoading,
-    refetch,
 
     // filters
     paginationFilter,
@@ -51,21 +42,13 @@ export default function GanttTemplatePage() {
     onToggleColumn,
     canToggleColumns,
 
-    // modals
-    deleteTarget,
-    editTarget,
-    createOpen,
-    openCreate,
-    openEdit,
-    openDelete,
-    closeFormModal,
-    closeDeleteModal,
+    // use template modal
+    useTemplateTarget,
+    openUseModal,
+    closeUseModal,
 
     // actions
-    handleToggleActive,
-    handleDeleteTemplate,
     handleRowClick,
-    deleteMutation,
   } = useGanttTemplate();
 
   return (
@@ -115,72 +98,84 @@ export default function GanttTemplatePage() {
               </Tooltip>
             </TooltipProvider>
           )}
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4 mr-1" /> New Template
-          </Button>
         </div>
       </div>
 
       {/* Data Table */}
       <div className="flex-1 bg-white overflow-hidden flex flex-col rounded-md border border-slate-100">
-        <TableData
-          tableHeightClass="flex-1"
-          tableData={templates}
-          columns={visibleColumns}
-          primaryKey="ganttTemplateId"
-          isActionButton={() => true}
-          onEdit={(row) => openEdit(row as GanttTemplate)}
-          onRowClick={handleRowClick}
-          onDelete={(row) => openDelete(row as GanttTemplate)}
-          canDelete={() => true}
-          paginationDetails={paginationDetails}
-          isLoading={isLoading}
-          setPaginationFilter={setPaginationFilter}
-          searchValue={paginationFilter?.search}
-          permissionKey="ganttTemplateId"
-          moduleKey="EMPLOYEE"
-          sortableColumns={["templateName"]}
-          showActiveToggle={true}
-          onToggleActive={(item) => handleToggleActive(item as GanttTemplate)}
-          activeToggleKey="isActive"
-          actionColumnWidth="w-[140px] overflow-hidden"
-        />
+        {!isLoading && templates.length === 0 ? (
+          // ── Empty state ─────────────────────────────────────────────────────
+          <div className="flex flex-col items-center justify-center h-full gap-3 py-24 text-center">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
+              <GitBranch className="w-8 h-8 text-slate-400" />
+            </div>
+            <p className="text-slate-600 font-medium">No Templates Available</p>
+            <p className="text-slate-400 text-sm max-w-xs">
+              Templates are created by the Admin. Once published, they will
+              appear here and you can use them to generate workspaces.
+            </p>
+            <Link to="/dashboard/gantt/workspaces" className="mt-2">
+              <Button variant="outline" size="sm">
+                Go to Workspaces
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <TableData
+            tableHeightClass="flex-1"
+            tableData={templates}
+            columns={visibleColumns}
+            primaryKey="ganttTemplateId"
+            isActionButton={(row) =>
+              !!(row as unknown as GanttTemplate).isPublished
+            }
+            onRowClick={handleRowClick}
+            paginationDetails={paginationDetails}
+            isLoading={isLoading}
+            setPaginationFilter={setPaginationFilter}
+            searchValue={paginationFilter?.search}
+            permissionKey="ganttTemplateId"
+            moduleKey="EMPLOYEE"
+            sortableColumns={["templateName"]}
+            customActions={(row) => {
+              const t = row as unknown as GanttTemplate;
+              if (!t.isPublished) return null;
+              return (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        className="h-8 px-3 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openUseModal(t);
+                        }}
+                      >
+                        <GitBranch className="w-3.5 h-3.5 mr-1" />
+                        Use
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Create workspace from this template
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              );
+            }}
+          />
+        )}
       </div>
 
-      {/* Delete Confirmation Modal */}
-      <Dialog open={!!deleteTarget} onOpenChange={closeDeleteModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Template</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete template &quot;
-              {deleteTarget?.templateName}&quot;? This cannot be undone.
-              Existing workspaces created from this template will not be
-              affected.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={closeDeleteModal}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteTemplate}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Create / Edit Template Modal */}
-      <GanttTemplateFormModal
-        isModalOpen={createOpen || !!editTarget}
-        modalClose={closeFormModal}
-        onSuccess={() => refetch()}
-        editData={editTarget}
-      />
+      {/* Use Template Modal */}
+      {useTemplateTarget && (
+        <GanttCreateWorkspaceModal
+          open={!!useTemplateTarget}
+          onOpenChange={(v) => !v && closeUseModal()}
+          templateId={useTemplateTarget.ganttTemplateId}
+          templateName={useTemplateTarget.templateName}
+        />
+      )}
     </div>
   );
 }

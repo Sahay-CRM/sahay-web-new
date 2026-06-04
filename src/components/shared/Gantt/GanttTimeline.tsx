@@ -91,32 +91,24 @@ export const GanttTimeline = memo(function GanttTimeline({
       const predItem = predRow.item;
       const succItem = succRow.item;
 
+      const predStart = predItem.actualStartDate || predItem.plannedStartDate;
+      const predEnd = predItem.actualEndDate || predItem.plannedEndDate;
+      const succStart = succItem.actualStartDate || succItem.plannedStartDate;
+
       const isPredMilestone =
         predItem.itemType === "MILESTONE" || predItem.isMilestone;
       const predEndX = isPredMilestone
-        ? dateToX(
-            new Date(predItem.plannedStartDate),
-            timelineStart,
-            dayWidth,
-          ) + MILESTONE_SIZE
-        : dateToX(
-            new Date(predItem.plannedStartDate),
-            timelineStart,
-            dayWidth,
-          ) +
+        ? dateToX(new Date(predStart), timelineStart, dayWidth) + MILESTONE_SIZE
+        : dateToX(new Date(predStart), timelineStart, dayWidth) +
           durationToWidth(
             differenceInCalendarDays(
-              startOfDay(new Date(predItem.plannedEndDate)),
-              startOfDay(new Date(predItem.plannedStartDate)),
+              startOfDay(new Date(predEnd)),
+              startOfDay(new Date(predStart)),
             ) + 1,
             dayWidth,
           );
 
-      const succStartX = dateToX(
-        new Date(succItem.plannedStartDate),
-        timelineStart,
-        dayWidth,
-      );
+      const succStartX = dateToX(new Date(succStart), timelineStart, dayWidth);
 
       const predY = headerHeight + predIdx * ROW_HEIGHT + ROW_HEIGHT / 2;
       const succY = headerHeight + succIdx * ROW_HEIGHT + ROW_HEIGHT / 2;
@@ -137,12 +129,17 @@ export const GanttTimeline = memo(function GanttTimeline({
     <TooltipProvider>
       <div
         className="relative select-none"
-        style={{ width: totalWidth, height: headerHeight + totalHeight }}
+        style={{
+          minWidth: "100%",
+          width: totalWidth,
+          height: headerHeight + totalHeight,
+        }}
       >
         <svg
           width={totalWidth}
           height={headerHeight + totalHeight}
-          className="block bg-background"
+          className="block bg-background max-w-none"
+          style={{ minWidth: "100%" }}
         >
           <GanttArrowheadDefs />
 
@@ -154,7 +151,7 @@ export const GanttTimeline = memo(function GanttTimeline({
                 key={`bg-${row.id}`}
                 x={0}
                 y={headerHeight + i * ROW_HEIGHT}
-                width={totalWidth}
+                width="100%"
                 height={ROW_HEIGHT}
                 className={`transition-colors duration-150 cursor-pointer ${
                   isHovered
@@ -199,7 +196,7 @@ export const GanttTimeline = memo(function GanttTimeline({
               key={`hline-${row.id}`}
               x1={0}
               y1={headerHeight + i * ROW_HEIGHT}
-              x2={totalWidth}
+              x2="100%"
               y2={headerHeight + i * ROW_HEIGHT}
               className="stroke-slate-200"
               strokeWidth={0.5}
@@ -209,7 +206,7 @@ export const GanttTimeline = memo(function GanttTimeline({
           <line
             x1={0}
             y1={headerHeight + totalHeight}
-            x2={totalWidth}
+            x2="100%"
             y2={headerHeight + totalHeight}
             className="stroke-slate-200"
             strokeWidth={0.5}
@@ -392,17 +389,19 @@ function GanttBar({
 
   const isItemMilestone = item.itemType === "MILESTONE" || item.isMilestone;
 
+  const itemStart = item.actualStartDate || item.plannedStartDate;
+  const itemEnd = item.actualEndDate || item.plannedEndDate;
+
   if (isItemMilestone) {
     const cx =
-      dateToX(new Date(item.plannedStartDate), timelineStart, dayWidth) +
-      dayWidth / 2;
+      dateToX(new Date(itemStart), timelineStart, dayWidth) + dayWidth / 2;
     const cy = y + ROW_HEIGHT / 2;
 
     const milestoneTooltip = (
       <div className="text-xs space-y-1 text-slate-200">
         <div className="font-semibold text-slate-50">{item.itemName}</div>
         <div className="text-[11px] text-slate-400">
-          Milestone • {fmtDate(item.plannedStartDate)}
+          Milestone • {fmtDate(itemStart)}
         </div>
       </div>
     );
@@ -460,19 +459,15 @@ function GanttBar({
 
   const durationDays = Math.max(
     differenceInCalendarDays(
-      startOfDay(new Date(item.plannedEndDate)),
-      startOfDay(new Date(item.plannedStartDate)),
+      startOfDay(new Date(itemEnd)),
+      startOfDay(new Date(itemStart)),
     ) + 1,
     1,
   );
 
-  const x = dateToX(new Date(item.plannedStartDate), timelineStart, dayWidth);
+  const x = dateToX(new Date(itemStart), timelineStart, dayWidth);
   const width = durationToWidth(durationDays, dayWidth);
   const progressWidth = (item.progressPercentage / 100) * width;
-
-  // Dynamic text color for duration inside the bar (white if covered by progress, slate-700 if not)
-  const isTextOnProgress = progressWidth >= width / 2 + 15;
-  const insideTextColor = isTextOnProgress ? "fill-white" : "fill-slate-700";
 
   const taskTooltip = (
     <div className="text-xs space-y-1 text-slate-200">
@@ -483,6 +478,12 @@ function GanttBar({
         <span className="text-slate-500 font-medium mr-1">Planned:</span>
         {fmtDate(item.plannedStartDate)} – {fmtDate(item.plannedEndDate)}
       </div>
+      {(item.actualStartDate || item.actualEndDate) && (
+        <div className="text-[11px] text-slate-300">
+          <span className="text-slate-500 font-medium mr-1">Actual:</span>
+          {fmtDate(item.actualStartDate)} – {fmtDate(item.actualEndDate)}
+        </div>
+      )}
       <div className="text-[11px] text-slate-300">
         <span className="text-slate-500 font-medium mr-1">Duration:</span>
         {durationDays} {durationDays === 1 ? "day" : "days"}
@@ -503,66 +504,68 @@ function GanttBar({
           onMouseLeave={onLeave}
           className="cursor-pointer group"
         >
-          {/* Background bar */}
+          {/* Solid bar background */}
           <rect
             x={x}
             y={barY}
             width={width}
             height={BAR_HEIGHT}
-            rx={5}
-            ry={5}
-            fill={`${itemColor}15`}
-            stroke={itemColor}
-            strokeWidth={1.2}
-            className="transition-all duration-150 group-hover:stroke-[1.8px]"
+            rx={4}
+            ry={4}
+            fill={itemColor}
+            opacity={0.85}
+            className="transition-all duration-150 group-hover:opacity-100"
           />
-          {/* Progress fill */}
-          {progressWidth > 0 && (
+          {/* Progress fill — lighter white overlay */}
+          {progressWidth > 0 && progressWidth < width && (
             <rect
               x={x}
               y={barY}
               width={progressWidth}
               height={BAR_HEIGHT}
-              rx={5}
-              ry={5}
-              fill={`${itemColor}a8`}
+              rx={4}
+              ry={4}
+              fill="white"
+              opacity={0.25}
             />
           )}
-
-          {/* Duration inside the bar (only shown if width is sufficient to prevent text overflow) */}
-          {width >= 60 && (
+          {/* Progress text inside bar */}
+          {width >= 50 && (
             <text
               x={x + width / 2}
-              y={barY + BAR_HEIGHT / 2 + 3}
+              y={barY + BAR_HEIGHT / 2 + 3.5}
               fontSize={9}
-              fontWeight={600}
+              fontWeight={700}
               textAnchor="middle"
-              className={`${insideTextColor} select-none pointer-events-none transition-colors`}
+              fill="white"
+              className="select-none pointer-events-none"
             >
-              {durationDays} {durationDays === 1 ? "day" : "days"}
+              {item.progressPercentage > 0
+                ? `${item.progressPercentage}%`
+                : `${durationDays}d`}
             </text>
           )}
 
-          {/* Text label showing task name and progress - Background Mask */}
+          {/* Text label outside bar - task name */}
           <text
-            x={x + width + 8}
+            x={x + width + 6}
             y={barY + BAR_HEIGHT / 2 + 3.5}
             fontSize={10}
             fontWeight={500}
             stroke="white"
-            strokeWidth={4}
+            strokeWidth={3}
             strokeLinejoin="round"
-            className="fill-none select-none pointer-events-none opacity-95"
+            fill="none"
+            className="select-none pointer-events-none opacity-90"
           >
             {item.itemName} ({item.progressPercentage}%)
           </text>
-          {/* Text label showing task name and progress */}
           <text
-            x={x + width + 8}
+            x={x + width + 6}
             y={barY + BAR_HEIGHT / 2 + 3.5}
             fontSize={10}
             fontWeight={500}
-            className="fill-slate-700 select-none pointer-events-none transition-colors group-hover:fill-primary"
+            className="fill-slate-600 select-none pointer-events-none transition-colors group-hover:fill-primary"
           >
             {item.itemName}{" "}
             <tspan className="fill-slate-400" fontSize={9}>
@@ -611,9 +614,12 @@ function DependencyArrow({ x1, y1, x2, y2 }: DependencyArrowProps) {
       <path
         d={d}
         fill="none"
-        className="stroke-slate-400/90 pointer-events-none"
-        strokeWidth={1.3}
+        stroke="#64748b"
+        strokeWidth={1.5}
+        strokeDasharray={isSufficientGap ? undefined : "4,2"}
         markerEnd="url(#arrowhead)"
+        className="pointer-events-none"
+        opacity={0.7}
       />
     </g>
   );
@@ -625,13 +631,13 @@ export function GanttArrowheadDefs() {
     <defs>
       <marker
         id="arrowhead"
-        markerWidth="6"
-        markerHeight="6"
-        refX="5"
+        markerWidth="8"
+        markerHeight="8"
+        refX="6"
         refY="3"
         orient="auto"
       >
-        <polygon points="0 1, 5 3, 0 5" className="fill-slate-400/90" />
+        <polygon points="0 0, 6 3, 0 6" fill="#64748b" opacity={0.8} />
       </marker>
     </defs>
   );

@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { useCreateWorkspaceFromTemplate } from "@/features/api/gantt";
 
+import { format } from "date-fns";
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -44,7 +46,7 @@ export default function GanttCreateWorkspaceModal({
     defaultValues: {
       workspaceName: "",
       workspaceDescription: "",
-      startDate: new Date().toISOString().slice(0, 10),
+      startDate: format(new Date(), "yyyy-MM-dd"),
       targetEndDate: "",
     },
   });

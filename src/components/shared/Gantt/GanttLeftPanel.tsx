@@ -113,26 +113,29 @@ function PhaseRow({
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }) {
+  const color = row.phaseColor ?? "#6366f1";
   return (
     <div
-      style={{ height }}
+      style={{
+        height,
+        background: color + "0d",
+        borderLeft: `3px solid ${color}`,
+      }}
       className={`flex items-center gap-1.5 px-2 border-b border-border cursor-pointer transition-colors ${
-        isHovered ? "bg-muted/70" : "bg-muted/30 hover:bg-muted/50"
+        isHovered ? "bg-muted/70" : "hover:bg-muted/40"
       }`}
       onClick={onToggle}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <div
-        className="h-2.5 w-2.5 rounded-full shrink-0"
-        style={{ background: row.phaseColor ?? "#6366f1" }}
-      />
       {row.isCollapsed ? (
         <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
       ) : (
         <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
       )}
-      <span className="text-xs font-semibold truncate">{row.phaseName}</span>
+      <span className="text-xs font-semibold truncate" style={{ color }}>
+        {row.phaseName}
+      </span>
     </div>
   );
 }
@@ -160,6 +163,7 @@ function ItemRow({
   const statusColor = ITEM_STATUS_COLOR[item.itemStatus];
   const statusBg = ITEM_STATUS_BG[item.itemStatus];
   const priorityColor = PRIORITY_COLOR[item.priority];
+  const progress = item.progressPercentage ?? 0;
 
   return (
     <TooltipProvider>
@@ -168,7 +172,7 @@ function ItemRow({
           height,
           paddingLeft: `${8 + row.depth * 16}px`,
         }}
-        className={`flex items-center gap-1 border-b border-border transition-colors cursor-pointer pr-2 ${
+        className={`relative flex items-center gap-1 border-b border-border transition-colors cursor-pointer pr-2 ${
           isHovered ? "bg-muted/40" : "hover:bg-muted/20"
         }`}
         onClick={onClick}
@@ -194,6 +198,12 @@ function ItemRow({
         ) : (
           <span className="w-4 shrink-0" />
         )}
+
+        {/* Status dot */}
+        <div
+          className="h-2 w-2 rounded-full shrink-0"
+          style={{ background: statusColor }}
+        />
 
         {/* Type icon */}
         {item.itemType === "MILESTONE" || item.isMilestone ? (
@@ -226,7 +236,7 @@ function ItemRow({
               </Badge>
             </div>
             <p className="text-[10px] mt-1 text-muted-foreground">
-              {item.progressPercentage}% complete
+              {progress}% complete
             </p>
           </TooltipContent>
         </Tooltip>
@@ -245,6 +255,14 @@ function ItemRow({
           </Tooltip>
         ) : (
           <Users className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+        )}
+
+        {/* Progress bar — thin strip at bottom */}
+        {progress > 0 && (
+          <div
+            className="absolute bottom-0 left-0 h-[2px] rounded-full transition-all"
+            style={{ width: `${progress}%`, background: statusColor + "cc" }}
+          />
         )}
       </div>
     </TooltipProvider>

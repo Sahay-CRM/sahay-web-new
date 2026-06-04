@@ -1,15 +1,12 @@
 import { Controller, useForm } from "react-hook-form";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import ModalData from "@/components/shared/Modal/ModalData";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
-import { useCreateGanttItem, useUpdateGanttItem } from "@/features/api/gantt";
+import {
+  useCreateGanttItem,
+  useUpdateGanttItem,
+  useUpdateGanttDates,
+} from "@/features/api/gantt";
 import type {
   CompanyGanttItem,
   CompanyGanttPhase,
@@ -53,6 +50,7 @@ export default function GanttItemFormModal({
     workspaceId,
     editItem?.ganttItemId ?? "",
   );
+  const updateDatesMutation = useUpdateGanttDates(workspaceId);
 
   const {
     control,
@@ -65,11 +63,17 @@ export default function GanttItemFormModal({
       itemDescription: editItem?.itemDescription ?? "",
       itemType: editItem?.itemType ?? "TASK",
       ganttPhaseId: editItem?.ganttPhaseId ?? defaultPhaseId ?? "",
-      plannedStartDate: editItem?.plannedStartDate
-        ? new Date(editItem.plannedStartDate).toISOString().slice(0, 10)
+      plannedStartDate: editItem
+        ? format(
+            new Date(editItem.actualStartDate || editItem.plannedStartDate),
+            "yyyy-MM-dd",
+          )
         : format(new Date(), "yyyy-MM-dd"),
-      plannedEndDate: editItem?.plannedEndDate
-        ? new Date(editItem.plannedEndDate).toISOString().slice(0, 10)
+      plannedEndDate: editItem
+        ? format(
+            new Date(editItem.actualEndDate || editItem.plannedEndDate),
+            "yyyy-MM-dd",
+          )
         : format(new Date(), "yyyy-MM-dd"),
       priority: editItem?.priority ?? "MEDIUM",
     },
@@ -77,13 +81,22 @@ export default function GanttItemFormModal({
 
   const onSubmit = handleSubmit(async (values) => {
     if (isEdit) {
-      await updateMutation.mutateAsync({
-        itemName: values.itemName,
-        itemDescription: values.itemDescription,
-        itemType: values.itemType as GanttItemType,
-        priority: values.priority as CompanyGanttItem["priority"],
-        ganttPhaseId: values.ganttPhaseId || null,
-      });
+      await Promise.all([
+        updateMutation.mutateAsync({
+          itemName: values.itemName,
+          itemDescription: values.itemDescription,
+          itemType: values.itemType as GanttItemType,
+          priority: values.priority as CompanyGanttItem["priority"],
+          ganttPhaseId: values.ganttPhaseId || null,
+        }),
+        updateDatesMutation.mutateAsync({
+          itemId: editItem.ganttItemId,
+          payload: {
+            plannedStartDate: new Date(values.plannedStartDate).toISOString(),
+            plannedEndDate: new Date(values.plannedEndDate).toISOString(),
+          },
+        }),
+      ]);
     } else {
       await createMutation.mutateAsync({
         ganttWorkspaceId: workspaceId,
@@ -106,43 +119,66 @@ export default function GanttItemFormModal({
     label: p.phaseName,
   }));
 
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const isPending =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    updateDatesMutation.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Item" : "Add Item"}</DialogTitle>
-        </DialogHeader>
+    <ModalData
+      isModalOpen={open}
+      modalTitle={isEdit ? "Edit Item" : "Add Item"}
+      modalClose={() => {
+        reset();
+        onOpenChange(false);
+      }}
+      containerClass="max-w-md"
+      buttons={[
+        {
+          btnText: "Cancel",
+          buttonCss:
+            "py-1.5 px-5 bg-white border border-slate-200 text-black font-semibold hover:bg-slate-50 rounded-lg transition-colors",
+          btnClick: () => {
+            reset();
+            onOpenChange(false);
+          },
+        },
+        {
+          btnText: isEdit ? "Update" : "Add Item",
+          btnClick: onSubmit,
+          isLoading: isPending,
+        },
+      ]}
+    >
+      <div className="space-y-4 pt-1">
+        <Controller
+          name="itemName"
+          control={control}
+          rules={{ required: "Item name is required" }}
+          render={({ field }) => (
+            <FormInputField
+              {...field}
+              label="Item Name"
+              placeholder="e.g. Data Gathering"
+              isMandatory
+              error={errors.itemName}
+            />
+          )}
+        />
 
-        <form onSubmit={onSubmit} className="space-y-4 pt-2">
-          <Controller
-            name="itemName"
-            control={control}
-            rules={{ required: "Item name is required" }}
-            render={({ field }) => (
-              <FormInputField
-                {...field}
-                label="Item Name"
-                placeholder="e.g. Data Gathering"
-                isMandatory
-                error={errors.itemName}
-              />
-            )}
-          />
+        <Controller
+          name="itemDescription"
+          control={control}
+          render={({ field }) => (
+            <FormInputField
+              {...field}
+              label="Description"
+              placeholder="Optional"
+            />
+          )}
+        />
 
-          <Controller
-            name="itemDescription"
-            control={control}
-            render={({ field }) => (
-              <FormInputField
-                {...field}
-                label="Description"
-                placeholder="Optional"
-              />
-            )}
-          />
-
+        <div className="grid grid-cols-2 gap-4">
           <Controller
             name="itemType"
             control={control}
@@ -159,55 +195,6 @@ export default function GanttItemFormModal({
             )}
           />
 
-          {phases.length > 0 && (
-            <Controller
-              name="ganttPhaseId"
-              control={control}
-              render={({ field }) => (
-                <FormSelect
-                  label="Phase"
-                  value={field.value ?? ""}
-                  onChange={field.onChange}
-                  options={phaseOptions}
-                  placeholder="Select phase (optional)"
-                />
-              )}
-            />
-          )}
-
-          {!isEdit && (
-            <>
-              <Controller
-                name="plannedStartDate"
-                control={control}
-                rules={{ required: "Start date is required" }}
-                render={({ field }) => (
-                  <FormInputField
-                    {...field}
-                    type="date"
-                    label="Planned Start"
-                    isMandatory
-                    error={errors.plannedStartDate}
-                  />
-                )}
-              />
-              <Controller
-                name="plannedEndDate"
-                control={control}
-                rules={{ required: "End date is required" }}
-                render={({ field }) => (
-                  <FormInputField
-                    {...field}
-                    type="date"
-                    label="Planned End"
-                    isMandatory
-                    error={errors.plannedEndDate}
-                  />
-                )}
-              />
-            </>
-          )}
-
           <Controller
             name="priority"
             control={control}
@@ -220,21 +207,56 @@ export default function GanttItemFormModal({
               />
             )}
           />
+        </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : isEdit ? "Update" : "Add Item"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        {phases.length > 0 && (
+          <Controller
+            name="ganttPhaseId"
+            control={control}
+            render={({ field }) => (
+              <FormSelect
+                label="Phase"
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                options={phaseOptions}
+                placeholder="Select phase (optional)"
+              />
+            )}
+          />
+        )}
+
+        <div className="grid grid-cols-2 gap-4">
+          <Controller
+            name="plannedStartDate"
+            control={control}
+            rules={{ required: "Start date is required" }}
+            render={({ field }) => (
+              <FormInputField
+                {...field}
+                type="date"
+                label="Planned Start"
+                isMandatory
+                error={errors.plannedStartDate}
+              />
+            )}
+          />
+
+          <Controller
+            name="plannedEndDate"
+            control={control}
+            rules={{ required: "End date is required" }}
+            render={({ field }) => (
+              <FormInputField
+                {...field}
+                type="date"
+                label="Planned End"
+                isMandatory
+                error={errors.plannedEndDate}
+              />
+            )}
+          />
+        </div>
+      </div>
+    </ModalData>
   );
 }

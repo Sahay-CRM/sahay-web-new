@@ -31,7 +31,8 @@ export const GanttTimelineHeader = memo(function GanttTimelineHeader({
     <svg
       width={totalWidth}
       height={HEADER_MONTH_H + HEADER_WEEK_H}
-      className="block bg-muted/20"
+      className="block bg-muted/20 max-w-none"
+      style={{ minWidth: "100%" }}
     >
       {/* Top Header Row (e.g. Month Year or Year) */}
       {topHeaders.map((m, idx) => (
@@ -68,7 +69,7 @@ export const GanttTimelineHeader = memo(function GanttTimelineHeader({
       <line
         x1={0}
         y1={HEADER_MONTH_H}
-        x2={totalWidth}
+        x2="100%"
         y2={HEADER_MONTH_H}
         className="stroke-slate-200"
         strokeWidth={0.8}
@@ -109,7 +110,7 @@ export const GanttTimelineHeader = memo(function GanttTimelineHeader({
       <line
         x1={0}
         y1={HEADER_MONTH_H + HEADER_WEEK_H}
-        x2={totalWidth}
+        x2="100%"
         y2={HEADER_MONTH_H + HEADER_WEEK_H}
         className="stroke-slate-200"
         strokeWidth={1}

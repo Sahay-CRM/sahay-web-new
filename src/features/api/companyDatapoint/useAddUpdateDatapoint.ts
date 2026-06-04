@@ -30,6 +30,7 @@ export default function useAddUpdateDataPoint() {
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["get-datapoint-list-non-select"] });
       queryClient.resetQueries({ queryKey: ["get-kpi-by-id"] });
+      queryClient.resetQueries({ queryKey: ["kpi-list-dd-all"] });
 
       queryClient.resetQueries({ queryKey: ["get-datapoint-list"] });
     },

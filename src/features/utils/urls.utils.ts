@@ -463,18 +463,18 @@ const Urls = {
 
   // ── Gantt Chart Module ──────────────────────────────────────────────────────
   // Templates
-  ganttTemplateList: () => `${baseUrl}/company/gantt/template/get`,
+  ganttTemplateList: () => `${baseUrl}/admin/gantt-template/get`,
   ganttTemplateDetail: (id: string) =>
-    `${baseUrl}/company/gantt/template/get/${id}`,
-  ganttTemplateCreate: () => `${baseUrl}/company/gantt/template/create`,
+    `${baseUrl}/admin/gantt-template/get/${id}`,
+  ganttTemplateCreate: () => `${baseUrl}/admin/gantt-template/create`,
   ganttTemplateUpdate: (id: string) =>
-    `${baseUrl}/company/gantt/template/update/${id}`,
+    `${baseUrl}/admin/gantt-template/update/${id}`,
   ganttTemplateDelete: (id: string) =>
-    `${baseUrl}/company/gantt/template/delete/${id}`,
+    `${baseUrl}/admin/gantt-template/delete/${id}`,
   ganttTemplateDuplicate: (id: string) =>
-    `${baseUrl}/company/gantt/template/duplicate/${id}`,
+    `${baseUrl}/admin/gantt-template/duplicate/${id}`,
   ganttTemplatePublish: (id: string) =>
-    `${baseUrl}/company/gantt/template/publish/${id}`,
+    `${baseUrl}/admin/gantt-template/publish/${id}`,
 
   // Workspaces
   ganttWorkspaceList: () => `${baseUrl}/company/gantt/workspace/get`,

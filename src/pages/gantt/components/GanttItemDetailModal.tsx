@@ -1,43 +1,39 @@
-import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-  Pencil,
-  Trash2,
-  TrendingUp,
-  UserPlus,
-  Diamond,
-  SquareCheck,
-  Link2,
-  Plus,
-  Loader2,
-} from "lucide-react";
+import ModalData from "@/components/shared/Modal/ModalData";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
+import { SpinnerIcon } from "@/components/shared/Icons";
+import { useQuery } from "@tanstack/react-query";
+import Api from "@/features/utils/api.utils";
+import Urls from "@/features/utils/urls.utils";
+import { Trash2, Diamond, SquareCheck, Plus, Loader2 } from "lucide-react";
 import type {
   CompanyGanttItem,
   CompanyGanttPhase,
   CompanyGanttDependency,
   GanttDependencyType,
+  GanttItemStatus,
+  GanttItemPriority,
 } from "@/types/gantt";
 import {
   fmtDate,
-  ITEM_STATUS_BG,
-  PRIORITY_COLOR,
+  STATUS_OPTIONS,
+  PRIORITY_OPTIONS,
+  getInitials,
 } from "@/pages/gantt/utils/gantt.utils";
 import {
   useDeleteGanttItem,
   useCreateGanttDependency,
   useDeleteGanttDependency,
+  useUpdateGanttProgress,
+  useAssignGanttItem,
+  useUpdateGanttItem,
+  useUpdateGanttDates,
 } from "@/features/api/gantt";
-import GanttProgressModal from "./GanttProgressModal";
-import GanttItemFormModal from "./GanttItemFormModal";
-import GanttAssignModal from "./GanttAssignModal";
+//
 
 interface Props {
   open: boolean;
@@ -47,6 +43,12 @@ interface Props {
   phases: CompanyGanttPhase[];
   itemsTree?: CompanyGanttItem[];
   dependencies?: CompanyGanttDependency[];
+}
+
+interface Employee {
+  employeeId: string;
+  employeeName: string;
+  designation?: string;
 }
 
 function flattenItems(items: CompanyGanttItem[]): CompanyGanttItem[] {
@@ -66,23 +68,104 @@ export default function GanttItemDetailModal({
   onOpenChange,
   item,
   workspaceId,
-  phases,
   itemsTree = [],
   dependencies = [],
 }: Props) {
-  const [progressOpen, setProgressOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [assignOpen, setAssignOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<
+    "general" | "progress" | "dependency" | "assign"
+  >("general");
+  //
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  // Dependency states
-  const [newPredId, setNewPredId] = useState("");
-  const [newDepType, setNewDepType] = useState<GanttDependencyType>("FS");
-  const [newLagDays, setNewLagDays] = useState(0);
+  // Inline forms state
+  const [progressVal, setProgressVal] = useState(item.progressPercentage);
+  const [statusVal, setStatusVal] = useState(item.itemStatus);
+  const [selectedAssigneeId, setSelectedAssigneeId] = useState(
+    item.assignedToEmployeeId ?? "",
+  );
+
+  // General tab edit state
+  const [nameVal, setNameVal] = useState(item.itemName);
+  const [descVal, setDescVal] = useState(item.itemDescription ?? "");
+  const [startDateVal, setStartDateVal] = useState(() => {
+    const currentStart = item.actualStartDate || item.plannedStartDate;
+    return currentStart ? format(new Date(currentStart), "yyyy-MM-dd") : "";
+  });
+  const [endDateVal, setEndDateVal] = useState(() => {
+    const currentEnd = item.actualEndDate || item.plannedEndDate;
+    return currentEnd ? format(new Date(currentEnd), "yyyy-MM-dd") : "";
+  });
+  const [priorityVal, setPriorityVal] = useState(item.priority);
+
+  // Sync state when item or open state changes
+  useEffect(() => {
+    setProgressVal(item.progressPercentage);
+    setStatusVal(item.itemStatus);
+    setSelectedAssigneeId(item.assignedToEmployeeId ?? "");
+    setNameVal(item.itemName);
+    setDescVal(item.itemDescription ?? "");
+
+    const currentStart = item.actualStartDate || item.plannedStartDate;
+    setStartDateVal(
+      currentStart ? format(new Date(currentStart), "yyyy-MM-dd") : "",
+    );
+
+    const currentEnd = item.actualEndDate || item.plannedEndDate;
+    setEndDateVal(currentEnd ? format(new Date(currentEnd), "yyyy-MM-dd") : "");
+
+    setPriorityVal(item.priority);
+  }, [item.ganttItemId, open]);
+
+  // Dependency states – multi-row pending
+  interface PendingDep {
+    id: string;
+    predId: string;
+    depType: GanttDependencyType;
+    lagDays: number;
+  }
+  const [pendingDeps, setPendingDeps] = useState<PendingDep[]>([
+    { id: crypto.randomUUID(), predId: "", depType: "FS", lagDays: 0 },
+  ]);
 
   const deleteMutation = useDeleteGanttItem(workspaceId);
   const createDepMutation = useCreateGanttDependency(workspaceId);
   const deleteDepMutation = useDeleteGanttDependency(workspaceId);
+  const progressMutation = useUpdateGanttProgress(workspaceId);
+  const assignMutation = useAssignGanttItem(workspaceId);
+  const updateMutation = useUpdateGanttItem(workspaceId, item.ganttItemId);
+  const updateDatesMutation = useUpdateGanttDates(workspaceId);
+
+  const handleGeneralSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await Promise.all([
+      updateMutation.mutateAsync({
+        itemName: nameVal,
+        itemDescription: descVal || undefined,
+        priority: priorityVal,
+      }),
+      updateDatesMutation.mutateAsync({
+        itemId: item.ganttItemId,
+        payload: {
+          plannedStartDate: item.plannedStartDate,
+          plannedEndDate: item.plannedEndDate,
+          actualStartDate: new Date(startDateVal).toISOString(),
+          actualEndDate: new Date(endDateVal).toISOString(),
+        },
+      }),
+    ]);
+  };
+
+  const { data: employees, isLoading: employeesLoading } = useQuery({
+    queryKey: ["employee-dd-all"],
+    queryFn: async () => {
+      const { data } = await Api.post<{ data: Employee[] }>({
+        url: Urls.getAllEmployeeDd(),
+      });
+      return data.data;
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: open,
+  });
 
   const handleDelete = async () => {
     await deleteMutation.mutateAsync(item.ganttItemId);
@@ -90,22 +173,87 @@ export default function GanttItemDetailModal({
     onOpenChange(false);
   };
 
-  const handleAddDependency = async (e: React.FormEvent) => {
+  const handleProgressChange = (newVal: number) => {
+    setProgressVal(newVal);
+    if (newVal === 100 && statusVal !== "COMPLETED") {
+      setStatusVal("COMPLETED");
+    } else if (newVal > 0 && newVal < 100 && statusVal === "NOT_STARTED") {
+      setStatusVal("IN_PROGRESS");
+    }
+  };
+
+  const handleStatusChange = (newVal: GanttItemStatus) => {
+    setStatusVal(newVal);
+    if (newVal === "COMPLETED") {
+      setProgressVal(100);
+    } else if (newVal === "NOT_STARTED") {
+      setProgressVal(0);
+    }
+  };
+
+  const handleProgressSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPredId) return;
+    await progressMutation.mutateAsync({
+      itemId: item.ganttItemId,
+      payload: {
+        progressPercentage: progressVal,
+        itemStatus: statusVal as GanttItemStatus,
+      },
+    });
+  };
+
+  const handleAssign = async (employeeId: string | null) => {
     try {
-      await createDepMutation.mutateAsync({
-        ganttWorkspaceId: workspaceId,
-        predecessorItemId: newPredId,
-        successorItemId: item.ganttItemId,
-        dependencyType: newDepType,
-        lagDays: Number(newLagDays) || 0,
+      await assignMutation.mutateAsync({
+        itemId: item.ganttItemId,
+        payload: { assignedToEmployeeId: employeeId },
       });
-      setNewPredId("");
-      setNewLagDays(0);
     } catch {
       // Handled by toast inside mutation hook
     }
+  };
+
+  const handleAddDependencies = async () => {
+    const validRows = pendingDeps.filter((r) => r.predId);
+    if (!validRows.length) return;
+    try {
+      await Promise.all(
+        validRows.map((row) =>
+          createDepMutation.mutateAsync({
+            ganttWorkspaceId: workspaceId,
+            predecessorItemId: row.predId,
+            successorItemId: item.ganttItemId,
+            dependencyType: row.depType,
+            lagDays: Number(row.lagDays) || 0,
+          }),
+        ),
+      );
+      // reset to one empty row
+      setPendingDeps([
+        { id: crypto.randomUUID(), predId: "", depType: "FS", lagDays: 0 },
+      ]);
+    } catch {
+      // Handled by toast inside mutation hook
+    }
+  };
+
+  const updatePendingRow = (id: string, patch: Partial<PendingDep>) => {
+    setPendingDeps((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, ...patch } : r)),
+    );
+  };
+
+  const addPendingRow = () => {
+    setPendingDeps((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), predId: "", depType: "FS", lagDays: 0 },
+    ]);
+  };
+
+  const removePendingRow = (id: string) => {
+    setPendingDeps((prev) =>
+      prev.length > 1 ? prev.filter((r) => r.id !== id) : prev,
+    );
   };
 
   const handleDeleteDependency = async (depId: string) => {
@@ -116,8 +264,6 @@ export default function GanttItemDetailModal({
     }
   };
 
-  const statusBg = ITEM_STATUS_BG[item.itemStatus];
-  const priorityColor = PRIORITY_COLOR[item.priority];
   const isMilestone = item.itemType === "MILESTONE" || item.isMilestone;
 
   // Process dependencies
@@ -141,407 +287,593 @@ export default function GanttItemDetailModal({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {isMilestone ? (
-                <Diamond className="h-4 w-4 text-pink-500" />
-              ) : (
-                <SquareCheck className="h-4 w-4 text-blue-500" />
-              )}
-              <span className="truncate">{item.itemName}</span>
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 pt-1">
-            {/* Status & priority badges */}
-            <div className="flex flex-wrap gap-2">
-              <Badge className={`text-xs ${statusBg}`}>
-                {item.itemStatus.replace("_", " ")}
-              </Badge>
-              <Badge variant="outline" className={`text-xs ${priorityColor}`}>
-                {item.priority}
-              </Badge>
-              {isMilestone && (
-                <Badge
-                  variant="outline"
-                  className="text-xs bg-pink-50 text-pink-700 border-pink-200"
-                >
-                  Milestone
-                </Badge>
-              )}
-            </div>
-
-            {/* Description */}
-            {item.itemDescription && (
-              <p className="text-sm text-muted-foreground">
-                {item.itemDescription}
-              </p>
+      <ModalData
+        isModalOpen={open}
+        modalTitle={item.itemName}
+        modalClose={() => onOpenChange(false)}
+        containerClass="max-w-xl w-[560px]"
+      >
+        <div className="flex-1 flex flex-col">
+          {/* Subtitle / Header details */}
+          <div className="flex items-center gap-2 mb-4 text-xs text-slate-500 font-medium">
+            {isMilestone ? (
+              <span className="flex items-center gap-1 text-pink-600 font-semibold">
+                <Diamond className="h-3.5 w-3.5 shrink-0" />
+                Milestone
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-primary font-semibold">
+                <SquareCheck className="h-3.5 w-3.5 shrink-0" />
+                Standard Task
+              </span>
             )}
+            <span className="text-slate-350 font-light">•</span>
+            <span className="text-slate-500">
+              Planned: {fmtDate(item.plannedStartDate)} –{" "}
+              {fmtDate(item.plannedEndDate)}
+            </span>
+          </div>
 
-            <Separator />
+          {/* Tab switcher buttons - minimalist line style */}
+          <div className="flex border-b border-slate-100 mb-6 gap-8">
+            {[
+              { id: "general" as const, label: "General" },
+              { id: "progress" as const, label: "Progress" },
+              { id: "dependency" as const, label: "Dependency" },
+              { id: "assign" as const, label: "Assign Employee" },
+            ].map((tab) => {
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`pb-3 text-[14px] font-semibold relative transition-all duration-200 border-b-2 -mb-[2px] ${
+                    active
+                      ? "border-primary text-primary"
+                      : "border-transparent text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
 
-            {/* Progress */}
-            {!isMilestone && (
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Progress</span>
-                  <span className="font-semibold">
-                    {item.progressPercentage}%
-                  </span>
-                </div>
-                <div className="h-2 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-primary transition-all"
-                    style={{ width: `${item.progressPercentage}%` }}
+          {/* Tab Content Area */}
+          <div className="flex-1 min-h-[300px] overflow-y-auto pr-0.5">
+            {/* ── GENERAL TAB ── */}
+            {activeTab === "general" && (
+              <form
+                id="general-form"
+                onSubmit={handleGeneralSubmit}
+                className="space-y-4 pt-1"
+              >
+                {/* Task Name */}
+                <div className="space-y-1">
+                  <Label className="text-md font-semibold text-slate-800 mb-1.5 block">
+                    Task Name
+                  </Label>
+                  <Input
+                    value={nameVal}
+                    onChange={(e) => setNameVal(e.target.value)}
+                    placeholder="Task Name"
+                    className="h-10 text-md border border-slate-200 rounded-lg focus-visible:ring-primary focus-visible:border-primary w-full"
+                    required
                   />
                 </div>
+
+                {/* Description */}
+                <div className="space-y-1">
+                  <Label className="text-md font-semibold text-slate-800 mb-1.5 block">
+                    Description
+                  </Label>
+                  <Input
+                    value={descVal}
+                    onChange={(e) => setDescVal(e.target.value)}
+                    placeholder="Optional Description"
+                    className="h-10 text-md border border-slate-200 rounded-lg focus-visible:ring-primary focus-visible:border-primary w-full"
+                  />
+                </div>
+
+                {/* Start & End Date */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-md font-semibold text-slate-800 mb-1.5 block">
+                      Start Date
+                    </Label>
+                    <Input
+                      type="date"
+                      value={startDateVal}
+                      onChange={(e) => setStartDateVal(e.target.value)}
+                      className="h-10 text-md border border-slate-200 rounded-lg focus-visible:ring-primary focus-visible:border-primary w-full"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-md font-semibold text-slate-800 mb-1.5 block">
+                      End Date
+                    </Label>
+                    <Input
+                      type="date"
+                      value={endDateVal}
+                      onChange={(e) => setEndDateVal(e.target.value)}
+                      className="h-10 text-md border border-slate-200 rounded-lg focus-visible:ring-primary focus-visible:border-primary w-full"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Priority */}
+                <div className="space-y-1">
+                  <FormSelect
+                    label="Priority"
+                    value={priorityVal}
+                    onChange={(val) =>
+                      setPriorityVal(
+                        (Array.isArray(val)
+                          ? val[0]
+                          : val) as GanttItemPriority,
+                      )
+                    }
+                    options={PRIORITY_OPTIONS}
+                    labelClass="text-md font-semibold text-slate-800 mb-1.5 block"
+                    triggerClassName="h-10 rounded-lg border-slate-200 text-md"
+                  />
+                </div>
+              </form>
+            )}
+
+            {/* ── PROGRESS TAB ── */}
+            {activeTab === "progress" && (
+              <form
+                id="progress-form"
+                onSubmit={handleProgressSubmit}
+                className="space-y-6"
+              >
+                {/* Progress slider */}
+                {!isMilestone ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <Label className="text-md font-semibold text-slate-800">
+                        Progress Percentage
+                      </Label>
+                      <span className="text-sm font-bold text-primary font-mono">
+                        {progressVal}%
+                      </span>
+                    </div>
+                    <div className="pt-1">
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={5}
+                        value={progressVal}
+                        onChange={(e) =>
+                          handleProgressChange(Number(e.target.value))
+                        }
+                        className="w-full h-1.5 accent-primary cursor-pointer rounded-lg appearance-none bg-slate-200"
+                      />
+                      <div className="flex justify-between text-[9px] text-slate-400 font-semibold font-mono mt-1">
+                        <span>0%</span>
+                        <span>50%</span>
+                        <span>100%</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500 leading-relaxed pl-3 border-l-2 border-amber-300">
+                    Milestones represent key targets and do not have numerical
+                    progress. You can mark them completed by changing the status
+                    below.
+                  </p>
+                )}
+
+                {/* Status Dropdown */}
+                <div className="space-y-1.5">
+                  <FormSelect
+                    label="Execution Status"
+                    value={statusVal}
+                    onChange={(val) =>
+                      handleStatusChange(
+                        (Array.isArray(val) ? val[0] : val) as GanttItemStatus,
+                      )
+                    }
+                    options={STATUS_OPTIONS}
+                    labelClass="text-md font-semibold text-slate-800 mb-1.5 block"
+                    triggerClassName="!py-0 h-10 rounded-lg border-slate-200 text-md"
+                  />
+                </div>
+              </form>
+            )}
+
+            {/* ── DEPENDENCY TAB ── */}
+            {activeTab === "dependency" && (
+              <div className="space-y-5">
+                {/* Existing dependencies */}
+                {predecessors.length > 0 || successors.length > 0 ? (
+                  <div className="divide-y divide-slate-105/60 max-h-[200px] overflow-y-auto pr-1">
+                    {predecessors.map((dep) => {
+                      const pred = itemMap.get(dep.predecessorItemId);
+                      const typeLabel =
+                        dep.dependencyType === "FS"
+                          ? "Starts after finishes"
+                          : dep.dependencyType === "SS"
+                            ? "Starts in parallel"
+                            : dep.dependencyType === "FF"
+                              ? "Finishes in parallel"
+                              : "Finishes after starts";
+                      return (
+                        <div
+                          key={dep.ganttDependencyId}
+                          className="flex items-center justify-between py-3 text-xs"
+                        >
+                          <div className="flex flex-col gap-0.5 min-w-0">
+                            <span className="font-bold text-slate-800 truncate">
+                              {pred?.itemName ?? "Unknown Task"}
+                            </span>
+                            <span className="text-slate-400 text-[10px]">
+                              {typeLabel}{" "}
+                              {dep.lagDays > 0 && `(Lag: +${dep.lagDays}d)`}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="text-[10px] font-bold text-primary uppercase">
+                              {dep.dependencyType}
+                            </span>
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-slate-400 hover:text-red-650 hover:bg-red-50/50 rounded-lg transition-colors"
+                              onClick={() =>
+                                handleDeleteDependency(dep.ganttDependencyId)
+                              }
+                              disabled={deleteDepMutation.isPending}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {successors.map((dep) => {
+                      const succ = itemMap.get(dep.successorItemId);
+                      const typeLabel =
+                        dep.dependencyType === "FS"
+                          ? "Starts after this finishes"
+                          : dep.dependencyType === "SS"
+                            ? "Starts in parallel with this"
+                            : dep.dependencyType === "FF"
+                              ? "Finishes in parallel with this"
+                              : "Finishes after this starts";
+                      return (
+                        <div
+                          key={dep.ganttDependencyId}
+                          className="flex items-center justify-between py-3 text-xs"
+                        >
+                          <div className="flex flex-col gap-0.5 min-w-0">
+                            <span className="font-bold text-slate-800 truncate">
+                              {succ?.itemName ?? "Unknown Task"}
+                            </span>
+                            <span className="text-slate-400 text-[10px]">
+                              {typeLabel}{" "}
+                              {dep.lagDays > 0 && `(Lag: +${dep.lagDays}d)`}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">
+                              {dep.dependencyType} (Succ)
+                            </span>
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-slate-400 hover:text-red-650 hover:bg-red-50/50 rounded-lg transition-colors"
+                              onClick={() =>
+                                handleDeleteDependency(dep.ganttDependencyId)
+                              }
+                              disabled={deleteDepMutation.isPending}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 italic py-4 text-center">
+                    No task dependencies linked yet.
+                  </p>
+                )}
+
+                {/* Add dependency rows */}
+                {candidates.length > 0 ? (
+                  <div className="space-y-3 pt-4 border-t border-dashed border-slate-200">
+                    <Label className="text-sm font-bold text-slate-800 block">
+                      Add New Relation Links
+                    </Label>
+
+                    {/* Header row */}
+                    <div className="grid grid-cols-12 gap-2 items-center">
+                      <span className="col-span-5 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
+                        Depends On
+                      </span>
+                      <span className="col-span-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
+                        Relation Type
+                      </span>
+                      <span className="col-span-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wide text-center">
+                        Lag (d)
+                      </span>
+                      <span className="col-span-1" />
+                    </div>
+
+                    {pendingDeps.map((row) => (
+                      <div
+                        key={row.id}
+                        className="grid grid-cols-12 gap-2 items-center"
+                      >
+                        <div className="col-span-5">
+                          <FormSelect
+                            value={row.predId}
+                            onChange={(val) =>
+                              updatePendingRow(row.id, {
+                                predId: Array.isArray(val) ? val[0] : val,
+                              })
+                            }
+                            options={candidates
+                              .filter(
+                                (c) =>
+                                  !pendingDeps.some(
+                                    (r) =>
+                                      r.id !== row.id &&
+                                      r.predId === c.ganttItemId,
+                                  ),
+                              )
+                              .map((c) => ({
+                                value: c.ganttItemId,
+                                label: c.itemName,
+                              }))}
+                            placeholder="Select task..."
+                          />
+                        </div>
+
+                        <div className="col-span-4">
+                          <FormSelect
+                            value={row.depType}
+                            onChange={(val) =>
+                              updatePendingRow(row.id, {
+                                depType: (Array.isArray(val)
+                                  ? val[0]
+                                  : val) as GanttDependencyType,
+                              })
+                            }
+                            options={[
+                              { value: "FS", label: "FS: Finish-to-Start" },
+                              { value: "SS", label: "SS: Start-to-Start" },
+                              { value: "FF", label: "FF: Finish-to-Finish" },
+                              { value: "SF", label: "SF: Start-to-Finish" },
+                            ]}
+                          />
+                        </div>
+
+                        <div className="col-span-2">
+                          <input
+                            type="number"
+                            min="0"
+                            value={row.lagDays}
+                            onChange={(e) =>
+                              updatePendingRow(row.id, {
+                                lagDays: Number(e.target.value),
+                              })
+                            }
+                            className="w-full h-9 text-sm border border-slate-200 rounded-lg bg-white px-2 shadow-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all text-center"
+                          />
+                        </div>
+
+                        <div className="col-span-1 flex justify-center">
+                          <button
+                            type="button"
+                            onClick={() => removePendingRow(row.id)}
+                            className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Add another row */}
+                    <button
+                      type="button"
+                      onClick={addPendingRow}
+                      className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:text-primary/80 transition-colors mt-1"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Add Another
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-slate-400 text-center py-2">
+                    No other tasks available for linking relationship.
+                  </p>
+                )}
               </div>
             )}
 
-            {/* Dates */}
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <p className="text-muted-foreground text-xs mb-0.5">
-                  Planned Start
-                </p>
-                <p className="font-medium">{fmtDate(item.plannedStartDate)}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs mb-0.5">
-                  Planned End
-                </p>
-                <p className="font-medium">{fmtDate(item.plannedEndDate)}</p>
-              </div>
-              {item.actualStartDate && (
-                <div>
-                  <p className="text-muted-foreground text-xs mb-0.5">
-                    Actual Start
-                  </p>
-                  <p className="font-medium">{fmtDate(item.actualStartDate)}</p>
-                </div>
-              )}
-              {item.actualEndDate && (
-                <div>
-                  <p className="text-muted-foreground text-xs mb-0.5">
-                    Actual End
-                  </p>
-                  <p className="font-medium">{fmtDate(item.actualEndDate)}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Assignee */}
-            <div className="text-sm">
-              <p className="text-muted-foreground text-xs mb-0.5">
-                Assigned To
-              </p>
-              <p className="font-medium">
-                {item.assignedEmployee?.employeeName ?? "Unassigned"}
-              </p>
-            </div>
-
-            <Separator />
-
-            {/* Task Correlations & Dependencies */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                <Link2 className="h-4 w-4 text-primary" />
-                <span>Task Correlations & Dependencies</span>
-              </div>
-              <div className="text-[10px] text-muted-foreground bg-muted/40 px-2 py-1 rounded border border-dashed flex justify-between">
-                <span>Debug flatItems: {flatItems.length}</span>
-                <span>predecessors: {predecessors.length}</span>
-                <span>successors: {successors.length}</span>
-                <span>candidates: {candidates.length}</span>
-              </div>
-
-              {/* Existing dependencies */}
-              {predecessors.length > 0 || successors.length > 0 ? (
-                <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
-                  {predecessors.map((dep) => {
-                    const pred = itemMap.get(dep.predecessorItemId);
-                    const typeLabel =
-                      dep.dependencyType === "FS"
-                        ? "Starts after finishes"
-                        : dep.dependencyType === "SS"
-                          ? "Starts in parallel"
-                          : dep.dependencyType === "FF"
-                            ? "Finishes in parallel"
-                            : "Finishes after starts";
-                    const badgeVariant =
-                      dep.dependencyType === "SS" ? "secondary" : "outline";
-                    return (
-                      <div
-                        key={dep.ganttDependencyId}
-                        className="flex items-center justify-between text-xs p-2 rounded border bg-muted/20"
-                      >
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          <span className="font-medium text-foreground truncate">
-                            {pred?.itemName ?? "Unknown Task"}
-                          </span>
-                          <span className="text-muted-foreground text-[10px]">
-                            {typeLabel}{" "}
-                            {dep.lagDays > 0 && `(Lag: +${dep.lagDays}d)`}
-                          </span>
+            {/* ── ASSIGN EMPLOYEE TAB ── */}
+            {activeTab === "assign" && (
+              <div className="space-y-4">
+                {item.assignedEmployee?.employeeName ? (
+                  <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                    <div className="min-w-0">
+                      <Label className="text-md font-semibold text-slate-800 mb-1.5 block">
+                        Current Assignee
+                      </Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[9px] font-bold">
+                          {getInitials(item.assignedEmployee.employeeName)}
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <Badge
-                            variant={badgeVariant}
-                            className="text-[10px] uppercase font-semibold"
-                          >
-                            {dep.dependencyType}
-                          </Badge>
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() =>
-                              handleDeleteDependency(dep.ganttDependencyId)
-                            }
-                            disabled={deleteDepMutation.isPending}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
+                        <span className="text-xs font-bold text-slate-850">
+                          {item.assignedEmployee.employeeName}
+                        </span>
                       </div>
-                    );
-                  })}
-
-                  {successors.map((dep) => {
-                    const succ = itemMap.get(dep.successorItemId);
-                    const typeLabel =
-                      dep.dependencyType === "FS"
-                        ? "Starts after this finishes"
-                        : dep.dependencyType === "SS"
-                          ? "Starts in parallel with this"
-                          : dep.dependencyType === "FF"
-                            ? "Finishes in parallel with this"
-                            : "Finishes after this starts";
-                    return (
-                      <div
-                        key={dep.ganttDependencyId}
-                        className="flex items-center justify-between text-xs p-2 rounded border bg-muted/20"
-                      >
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          <span className="font-medium text-foreground truncate">
-                            {succ?.itemName ?? "Unknown Task"}
-                          </span>
-                          <span className="text-muted-foreground text-[10px]">
-                            {typeLabel}{" "}
-                            {dep.lagDays > 0 && `(Lag: +${dep.lagDays}d)`}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] uppercase font-semibold"
-                          >
-                            {dep.dependencyType} (Successor)
-                          </Badge>
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() =>
-                              handleDeleteDependency(dep.ganttDependencyId)
-                            }
-                            disabled={deleteDepMutation.isPending}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground italic">
-                  No correlations or dependencies defined yet.
-                </p>
-              )}
-
-              {/* Add dependency form */}
-              {candidates.length > 0 && (
-                <form
-                  onSubmit={handleAddDependency}
-                  className="space-y-2 pt-2 border-t border-dashed"
-                >
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-                    Add New Relation / Link
-                  </p>
-                  <div className="grid grid-cols-12 gap-1.5 items-end">
-                    {/* Predecessor task selection */}
-                    <div className="col-span-5 space-y-1">
-                      <label className="text-[10px] text-muted-foreground block font-medium">
-                        Depends On
-                      </label>
-                      <select
-                        value={newPredId}
-                        onChange={(e) => setNewPredId(e.target.value)}
-                        className="w-full h-8 text-xs border border-input rounded bg-background px-2 py-1 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        required
-                      >
-                        <option value="">Select task...</option>
-                        {candidates.map((c) => (
-                          <option key={c.ganttItemId} value={c.ganttItemId}>
-                            {c.itemName}
-                          </option>
-                        ))}
-                      </select>
                     </div>
-
-                    {/* Relationship type */}
-                    <div className="col-span-4 space-y-1">
-                      <label className="text-[10px] text-muted-foreground block font-medium">
-                        Relationship Type
-                      </label>
-                      <select
-                        value={newDepType}
-                        onChange={(e) =>
-                          setNewDepType(e.target.value as GanttDependencyType)
-                        }
-                        className="w-full h-8 text-xs border border-input rounded bg-background px-2 py-1 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      >
-                        <option value="FS">FS: Finish-to-Start</option>
-                        <option value="SS">
-                          SS: Start-to-Start (Parallel)
-                        </option>
-                        <option value="FF">FF: Finish-to-Finish</option>
-                        <option value="SF">SF: Start-to-Finish</option>
-                      </select>
-                    </div>
-
-                    {/* Lag days */}
-                    <div className="col-span-2 space-y-1">
-                      <label className="text-[10px] text-muted-foreground block font-medium">
-                        Lag (days)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={newLagDays}
-                        onChange={(e) => setNewLagDays(Number(e.target.value))}
-                        className="w-full h-8 text-xs border border-input rounded bg-background px-2 py-1 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-center"
-                      />
-                    </div>
-
-                    {/* Submit button */}
-                    <div className="col-span-1">
-                      <Button
-                        type="submit"
-                        size="icon"
-                        className="h-8 w-8 shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground"
-                        disabled={createDepMutation.isPending || !newPredId}
-                      >
-                        {createDepMutation.isPending ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <Plus className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 text-xs text-slate-500 hover:text-red-650 hover:bg-red-50/50 border border-slate-200 rounded-lg shadow-sm"
+                      onClick={() => handleAssign(null)}
+                      disabled={assignMutation.isPending}
+                    >
+                      {assignMutation.isPending ? (
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                      ) : null}
+                      Unassign
+                    </Button>
                   </div>
-                </form>
+                ) : (
+                  <div className="py-2.5">
+                    <p className="text-xs text-slate-400 italic">
+                      Currently unassigned. Select an employee below to assign
+                      this task.
+                    </p>
+                  </div>
+                )}
+
+                {employeesLoading ? (
+                  <div className="flex justify-center py-8 text-primary">
+                    <SpinnerIcon />
+                  </div>
+                ) : (
+                  <FormSelect
+                    label="Select Assignee"
+                    value={selectedAssigneeId}
+                    onChange={(val) =>
+                      setSelectedAssigneeId(Array.isArray(val) ? val[0] : val)
+                    }
+                    options={(employees ?? []).map((emp) => ({
+                      value: emp.employeeId,
+                      label: emp.employeeName,
+                    }))}
+                    placeholder="Select employee..."
+                    labelClass="text-md font-semibold text-slate-800 mb-1.5 block"
+                    triggerClassName="h-10 rounded-lg border-slate-200 text-md"
+                  />
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ── Unified Footer ── */}
+          {(activeTab === "general" ||
+            activeTab === "progress" ||
+            activeTab === "dependency" ||
+            activeTab === "assign") && (
+            <div className="flex gap-2 pt-4 mt-2 border-t border-slate-100 items-center">
+              {activeTab === "general" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-8 px-3.5 text-xs font-semibold border-red-200 text-red-650 hover:bg-red-50 hover:text-red-700 transition-colors rounded-lg mr-auto"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Delete Task
+                </Button>
+              )}
+              {activeTab === "dependency" ? (
+                <Button
+                  type="button"
+                  onClick={handleAddDependencies}
+                  disabled={
+                    createDepMutation.isPending ||
+                    !pendingDeps.some((r) => r.predId)
+                  }
+                  className="bg-primary hover:bg-primary/90 text-white font-semibold h-8 px-4 text-xs transition-colors rounded-lg shadow-sm ml-auto"
+                >
+                  {createDepMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Add Dependencies"
+                  )}
+                </Button>
+              ) : activeTab === "assign" ? (
+                <Button
+                  type="button"
+                  onClick={() => handleAssign(selectedAssigneeId)}
+                  disabled={assignMutation.isPending || !selectedAssigneeId}
+                  className="bg-primary hover:bg-primary/90 text-white font-semibold h-8 px-4 text-xs transition-colors rounded-lg shadow-sm ml-auto"
+                >
+                  {assignMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Assignee"
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  form={
+                    activeTab === "general" ? "general-form" : "progress-form"
+                  }
+                  disabled={
+                    activeTab === "general"
+                      ? updateMutation.isPending ||
+                        updateDatesMutation.isPending
+                      : progressMutation.isPending
+                  }
+                  className="bg-primary hover:bg-primary/90 text-white font-semibold h-8 px-4 text-xs transition-colors rounded-lg shadow-sm ml-auto"
+                >
+                  {activeTab === "general"
+                    ? updateMutation.isPending || updateDatesMutation.isPending
+                      ? "Saving..."
+                      : "Save Details"
+                    : progressMutation.isPending
+                      ? "Saving..."
+                      : "Save Progress"}
+                </Button>
               )}
             </div>
+          )}
+        </div>
+      </ModalData>
 
-            <Separator />
-
-            {/* Actions */}
-            <div className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setProgressOpen(true)}
-              >
-                <TrendingUp className="h-3.5 w-3.5 mr-1" /> Update Progress
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setEditOpen(true)}
-              >
-                <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setAssignOpen(true)}
-              >
-                <UserPlus className="h-3.5 w-3.5 mr-1" /> Assign
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-destructive hover:text-destructive ml-auto"
-                onClick={() => setConfirmDelete(true)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Progress modal */}
-      {progressOpen && (
-        <GanttProgressModal
-          open={progressOpen}
-          onOpenChange={setProgressOpen}
-          item={item}
-          workspaceId={workspaceId}
-        />
-      )}
-
-      {/* Edit modal */}
-      {editOpen && (
-        <GanttItemFormModal
-          open={editOpen}
-          onOpenChange={setEditOpen}
-          workspaceId={workspaceId}
-          phases={phases}
-          editItem={item}
-        />
-      )}
-
-      {/* Assign modal */}
-      {assignOpen && (
-        <GanttAssignModal
-          open={assignOpen}
-          onOpenChange={setAssignOpen}
-          item={item}
-          workspaceId={workspaceId}
-        />
-      )}
+      {/* Edit modal inline */}
 
       {/* Delete confirm */}
-      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Item</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Delete &quot;{item.itemName}&quot; and all its sub-items? This
-            cannot be undone.
-          </p>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setConfirmDelete(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={deleteMutation.isPending}
-            >
-              Delete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ModalData
+        isModalOpen={confirmDelete}
+        modalTitle="Delete Item"
+        modalClose={() => setConfirmDelete(false)}
+        buttons={[
+          {
+            btnText: "Cancel",
+            buttonCss:
+              "py-1.5 px-5 bg-white border border-slate-200 text-black font-semibold hover:bg-slate-50 rounded-lg transition-colors",
+            btnClick: () => setConfirmDelete(false),
+          },
+          {
+            btnText: "Delete",
+            buttonCss:
+              "py-1.5 px-5 bg-red-600 text-white hover:bg-red-500 border border-red-600 rounded-lg transition-colors",
+            btnClick: handleDelete,
+            isLoading: deleteMutation.isPending,
+          },
+        ]}
+      >
+        <p className="text-sm text-slate-600 leading-relaxed">
+          Delete &quot;{item.itemName}&quot; and all its sub-items? This cannot
+          be undone.
+        </p>
+      </ModalData>
     </>
   );
 }
