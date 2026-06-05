@@ -1,4 +1,7 @@
-export { useGanttTemplates } from "./useGanttTemplates";
+export {
+  useGanttTemplates,
+  useGanttTemplatesGetAll,
+} from "./useGanttTemplates";
 export { useGanttTemplateDetail } from "./useGanttTemplateDetail";
 export {
   useCreateGanttTemplate,

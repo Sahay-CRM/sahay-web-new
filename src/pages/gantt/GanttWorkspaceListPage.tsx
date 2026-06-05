@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, RefreshCw, Eye, Trash } from "lucide-react";
+import { Plus, Eye, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,11 +15,13 @@ import {
   useGanttWorkspaces,
   useDeleteGanttWorkspace,
   useCreateGanttWorkspace,
+  useCreateWorkspaceFromTemplate,
+  useGanttTemplatesGetAll,
 } from "@/features/api/gantt";
-import { fmtDate, WORKSPACE_STATUS_OPTIONS } from "./utils/gantt.utils";
+import { fmtDate } from "./utils/gantt.utils";
 import type {
   CompanyGanttWorkspace,
-  GanttWorkspaceStatus,
+  // GanttWorkspaceStatus,
 } from "@/types/gantt";
 import { Controller, useForm } from "react-hook-form";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
@@ -42,7 +44,7 @@ export default function GanttWorkspaceListPage() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const navigate = useNavigate();
 
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  // const [statusFilter, setStatusFilter] = useState<string>("all");
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 25,
@@ -59,18 +61,22 @@ export default function GanttWorkspaceListPage() {
     ]);
   }, [setBreadcrumbs]);
 
-  const { data, isLoading, refetch } = useGanttWorkspaces({
+  const { data, isLoading } = useGanttWorkspaces({
     currentPage: paginationFilter.currentPage ?? 1,
     pageSize: paginationFilter.pageSize ?? 25,
-    workspaceStatus:
-      statusFilter === "all"
-        ? undefined
-        : (statusFilter as GanttWorkspaceStatus),
+    // workspaceStatus:
+    //   statusFilter === "all"
+    //     ? undefined
+    //     : (statusFilter as GanttWorkspaceStatus),
     search: paginationFilter.search || undefined,
   });
 
   const deleteMutation = useDeleteGanttWorkspace();
   const createMutation = useCreateGanttWorkspace();
+  const createFromTemplateMutation = useCreateWorkspaceFromTemplate();
+
+  const { data: templatesData } = useGanttTemplatesGetAll();
+  const templates = templatesData?.data ?? [];
 
   const workspaces = data?.data ?? [];
 
@@ -85,21 +91,37 @@ export default function GanttWorkspaceListPage() {
       workspaceDescription: "",
       startDate: format(new Date(), "yyyy-MM-dd"),
       targetEndDate: "",
+      templateId: "",
     },
   });
 
   const handleCreate = handleSubmit(async (values) => {
-    const res = await createMutation.mutateAsync({
-      workspaceName: values.workspaceName,
-      workspaceDescription: values.workspaceDescription,
-      startDate: new Date(values.startDate).toISOString(),
-      targetEndDate: values.targetEndDate
-        ? new Date(values.targetEndDate).toISOString()
-        : undefined,
-    });
-    reset();
-    setCreateOpen(false);
-    navigate(`/dashboard/gantt/workspaces/${res.data.ganttWorkspaceId}`);
+    if (values.templateId) {
+      const res = await createFromTemplateMutation.mutateAsync({
+        templateId: values.templateId,
+        workspaceName: values.workspaceName,
+        workspaceDescription: values.workspaceDescription,
+        startDate: new Date(values.startDate).toISOString(),
+        targetEndDate: values.targetEndDate
+          ? new Date(values.targetEndDate).toISOString()
+          : undefined,
+      });
+      reset();
+      setCreateOpen(false);
+      navigate(`/dashboard/gantt/workspaces/${res.data.ganttWorkspaceId}`);
+    } else {
+      const res = await createMutation.mutateAsync({
+        workspaceName: values.workspaceName,
+        workspaceDescription: values.workspaceDescription,
+        startDate: new Date(values.startDate).toISOString(),
+        targetEndDate: values.targetEndDate
+          ? new Date(values.targetEndDate).toISOString()
+          : undefined,
+      });
+      reset();
+      setCreateOpen(false);
+      navigate(`/dashboard/gantt/workspaces/${res.data.ganttWorkspaceId}`);
+    }
   });
 
   // Table columns
@@ -134,7 +156,7 @@ export default function GanttWorkspaceListPage() {
             className="w-72"
           />
           {/* Status filter */}
-          <div className="w-44">
+          {/* <div className="w-44">
             <FormSelect
               value={statusFilter}
               onChange={(val) =>
@@ -146,13 +168,13 @@ export default function GanttWorkspaceListPage() {
               ]}
               triggerClassName="h-9 rounded-lg border-slate-200 text-sm"
             />
-          </div>
+          </div> */}
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => refetch()}>
+          {/* <Button variant="outline" size="sm" onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4 mr-1" /> Refresh
-          </Button>
+          </Button> */}
           <Button size="sm" onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4 mr-1" /> New Workspace
           </Button>
@@ -262,7 +284,13 @@ export default function GanttWorkspaceListPage() {
       </Dialog>
 
       {/* Create workspace modal */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      <Dialog
+        open={createOpen}
+        onOpenChange={(val) => {
+          setCreateOpen(val);
+          if (!val) reset();
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>New Workspace</DialogTitle>
@@ -298,6 +326,25 @@ export default function GanttWorkspaceListPage() {
               )}
             />
             <Controller
+              name="templateId"
+              control={control}
+              render={({ field }) => (
+                <FormSelect
+                  label="Initialize from Template"
+                  value={field.value}
+                  onChange={(val) =>
+                    field.onChange(Array.isArray(val) ? val[0] : val)
+                  }
+                  options={templates.map((t) => ({
+                    value: t.ganttTemplateId,
+                    label: t.templateName,
+                  }))}
+                  isClear={true}
+                  placeholder="Select a template (optional)"
+                />
+              )}
+            />
+            <Controller
               name="startDate"
               control={control}
               rules={{ required: "Start date is required" }}
@@ -327,12 +374,24 @@ export default function GanttWorkspaceListPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setCreateOpen(false)}
+                onClick={() => {
+                  setCreateOpen(false);
+                  reset();
+                }}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? "Creating..." : "Create"}
+              <Button
+                type="submit"
+                disabled={
+                  createMutation.isPending ||
+                  createFromTemplateMutation.isPending
+                }
+              >
+                {createMutation.isPending ||
+                createFromTemplateMutation.isPending
+                  ? "Creating..."
+                  : "Create"}
               </Button>
             </DialogFooter>
           </form>

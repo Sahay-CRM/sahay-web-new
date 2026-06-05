@@ -72,6 +72,10 @@ export default function CompanyTaskList() {
     taskDateRange,
     appliedDateRange,
     handleDateRangeReset,
+    employeeOptions,
+    selectedEmployees,
+    handleEmployeeFilterChange,
+    isEmployee,
   } = useCompanyTaskList();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -172,6 +176,20 @@ export default function CompanyTaskList() {
                       multiSelect
                     />
                   </div>
+
+                  {!isEmployee && (
+                    <div>
+                      <DropdownSearchMenu
+                        label="User Selection"
+                        options={employeeOptions}
+                        selected={selectedEmployees}
+                        onChange={(selected) => {
+                          handleEmployeeFilterChange(selected as string[]);
+                        }}
+                        multiSelect
+                      />
+                    </div>
+                  )}
                   <Button
                     variant={showOverdue ? "destructive" : "outline"}
                     onClick={handleOverdueToggle}

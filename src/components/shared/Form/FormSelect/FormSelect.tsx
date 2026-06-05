@@ -13,7 +13,7 @@ import {
 import { FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, X } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { isColorDark } from "@/features/utils/color.utils";
 
@@ -40,6 +40,7 @@ interface FormSelectProps {
   triggerClassName?: string;
   placeclassName?: string;
   labelClass?: string;
+  isClear?: boolean;
 }
 
 export default function FormSelect({
@@ -57,6 +58,7 @@ export default function FormSelect({
   isSearchable = false,
   triggerClassName = "",
   placeclassName = "",
+  isClear = false,
   labelClass,
 }: FormSelectProps) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -126,7 +128,29 @@ export default function FormSelect({
                 color: textColor,
               }}
             >
-              <SelectValue placeholder={placeholder} />
+              <div className="flex items-center justify-between w-full">
+                <SelectValue placeholder={placeholder} />
+
+                {isClear && value && (
+                  <button
+                    type="button"
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                    }}
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      onChange("");
+                    }}
+                    className="ml-2 z-20 cursor-pointer text-slate-400 hover:text-red-500"
+                  >
+                    <X className="h-4 w-4 hover:text-red-500" />
+                  </button>
+                )}
+              </div>
             </SelectTrigger>
           </FormControl>
 

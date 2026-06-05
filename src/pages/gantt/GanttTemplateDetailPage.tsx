@@ -20,7 +20,6 @@ import {
   GitMerge,
   Clock,
   User,
-  CalendarDays,
   AlertCircle,
   GanttChartSquare,
   Columns3,
@@ -41,9 +40,13 @@ import {
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useGanttTemplateDetail } from "@/features/api/gantt";
 import { SpinnerIcon } from "@/components/shared/Icons";
-import { fmtDate } from "./utils/gantt.utils";
-import type { GanttTemplateItem, GanttTemplatePhase } from "@/types/gantt";
+import type {
+  GanttTemplateItem,
+  GanttTemplatePhase,
+  GanttTemplateDependency,
+} from "@/types/gantt";
 import GanttCreateWorkspaceModal from "./components/GanttCreateWorkspaceModal";
+import { getInitials } from "./utils/gantt.utils";
 
 // ── Priority config ──────────────────────────────────────────────────────────
 const PRIORITY_CONFIG: Record<
@@ -110,24 +113,24 @@ export default function GanttTemplateDetailPage() {
     <div className="min-h-full bg-muted/10">
       {/* ── Light Header Banner ────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-slate-200 px-6 py-5 shrink-0">
-        <Link
+        {/* <Link
           to="/dashboard/gantt/templates"
           className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 transition-colors mb-3"
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Back to Templates
-        </Link>
+        </Link> */}
 
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0 bg-slate-100 border border-slate-200">
+            {/* <div className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0 bg-slate-100 border border-slate-200">
               <Layers className="h-5 w-5 text-slate-600" />
-            </div>
+            </div> */}
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-lg font-bold text-slate-800">
                   {template.templateName}
                 </h1>
-                <span
+                {/* <span
                   className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full animate-pulse"
                   style={
                     template.isPublished
@@ -144,15 +147,15 @@ export default function GanttTemplateDetailPage() {
                   }
                 >
                   {template.isPublished ? "Published" : "Draft"}
-                </span>
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                </span> */}
+                {/* <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
                   v{template.version}
                 </span>
                 <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
                   {template.ownerType}
-                </span>
+                </span> */}
               </div>
-              {template.templateDescription && (
+              {/* {template.templateDescription && (
                 <p className="text-xs text-slate-500 mt-1 max-w-xl">
                   {template.templateDescription}
                 </p>
@@ -160,7 +163,7 @@ export default function GanttTemplateDetailPage() {
               <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1 font-medium">
                 <CalendarDays className="h-3 w-3" /> Created{" "}
                 {fmtDate(template.createdDatetime)}
-              </p>
+              </p> */}
             </div>
           </div>
 
@@ -242,7 +245,11 @@ export default function GanttTemplateDetailPage() {
           <ListView phases={phases} itemsTree={itemsTree} />
         )}
         {viewMode === "timeline" && (
-          <TimelineView phases={phases} itemsTree={itemsTree} />
+          <TimelineView
+            phases={phases}
+            itemsTree={itemsTree}
+            dependencies={dependencies}
+          />
         )}
         {viewMode === "board" && (
           <BoardView phases={phases} itemsTree={itemsTree} />
@@ -334,9 +341,9 @@ function flattenItems(items: GanttTemplateItem[]): GanttTemplateItem[] {
 // VIEW 2 — GANTT TIMELINE (interactive, with toolbar)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const TL_ROW_H = 36;
+const ROW_HEIGHT = 42;
 const TL_LEFT_W = 308;
-const TL_HEADER_H = 54;
+const TL_HEADER_H = 40;
 
 type TLRow =
   | {
@@ -356,11 +363,13 @@ type TLRow =
 function TimelineView({
   phases,
   itemsTree,
+  dependencies,
 }: {
   phases: GanttTemplatePhase[];
   itemsTree: GanttTemplateItem[];
+  dependencies: GanttTemplateDependency[];
 }) {
-  const [dayW, setDayW] = useState(22);
+  const [dayW, setDayW] = useState(40);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [q, setQ] = useState("");
   const leftRef = useRef<HTMLDivElement>(null);
@@ -385,6 +394,19 @@ function TimelineView({
     );
   }, [allFlat]);
 
+  // Determine timeline timescale mode automatically
+  const scaleMode = useMemo(() => {
+    if (maxDay <= 42) return "DAY";
+    if (maxDay <= 280) return "WEEK";
+    return "MONTH";
+  }, [maxDay]);
+
+  const baseCells = useMemo(() => {
+    if (scaleMode === "DAY") return maxDay;
+    if (scaleMode === "WEEK") return Math.ceil(maxDay / 7);
+    return Math.ceil(maxDay / 30);
+  }, [maxDay, scaleMode]);
+
   const [availWidth, setAvailWidth] = useState<number>(0);
 
   useEffect(() => {
@@ -399,11 +421,108 @@ function TimelineView({
     return () => observer.disconnect();
   }, []);
 
-  const adjustedMaxDay = useMemo(() => {
-    if (availWidth <= 0 || dayW <= 0) return maxDay;
-    const minDays = Math.ceil(availWidth / dayW) + 1;
-    return Math.max(maxDay, minDays);
-  }, [maxDay, dayW, availWidth]);
+  const totalCells = useMemo(() => {
+    if (availWidth <= 0 || dayW <= 0) return baseCells;
+    const minCells = Math.ceil(availWidth / dayW) + 1;
+    return Math.max(baseCells, minCells);
+  }, [baseCells, dayW, availWidth]);
+
+  const bottomTierUnits = useMemo(() => {
+    let showEvery = 1;
+    if (dayW >= 28) {
+      showEvery = 1;
+    } else if (dayW >= 14) {
+      showEvery = 5;
+    } else {
+      showEvery = 10;
+    }
+
+    return Array.from({ length: totalCells }).map((_, i) => {
+      let label = "";
+      if (i % showEvery === 0) {
+        if (scaleMode === "DAY") {
+          label = `${i + 1}`;
+        } else if (scaleMode === "WEEK") {
+          label = `W${i + 1}`;
+        } else {
+          label = `M${i + 1}`;
+        }
+      }
+
+      if (scaleMode === "DAY") {
+        return { label, title: `Day ${i + 1}` };
+      } else if (scaleMode === "WEEK") {
+        return { label, title: `Week ${i + 1}` };
+      } else {
+        return { label, title: `Month ${i + 1}` };
+      }
+    });
+  }, [totalCells, scaleMode, dayW]);
+
+  const topTierUnits = useMemo(() => {
+    const units: Array<{ label: string; width: number }> = [];
+    const step = scaleMode === "DAY" ? 7 : scaleMode === "WEEK" ? 4 : 12;
+    const labelPrefix =
+      scaleMode === "DAY" ? "Week" : scaleMode === "WEEK" ? "Month" : "Year";
+    const shortPrefix =
+      scaleMode === "DAY" ? "W" : scaleMode === "WEEK" ? "M" : "Y";
+
+    for (let i = 0; i < totalCells; i += step) {
+      const num = Math.floor(i / step) + 1;
+      const span = Math.min(step, totalCells - i);
+      const width = span * dayW;
+
+      let label = "";
+      if (width >= 60) {
+        label = `${labelPrefix} ${num}`;
+      } else if (width >= 35) {
+        label = `${shortPrefix}${num}`;
+      } else if (width >= 16) {
+        label = `${num}`;
+      } else {
+        label = "";
+      }
+
+      units.push({
+        label,
+        width,
+      });
+    }
+    return units;
+  }, [totalCells, scaleMode, dayW]);
+
+  // Coordinate converters
+  const getCoordinates = useCallback(
+    (startDay: number, duration: number) => {
+      let startX = 0;
+      let width = 0;
+      if (scaleMode === "DAY") {
+        startX = (startDay - 1) * dayW;
+        width = duration * dayW;
+      } else if (scaleMode === "WEEK") {
+        startX = ((startDay - 1) / 7) * dayW;
+        width = (duration / 7) * dayW;
+      } else {
+        startX = ((startDay - 1) / 30) * dayW;
+        width = (duration / 30) * dayW;
+      }
+      return { startX, width };
+    },
+    [scaleMode, dayW],
+  );
+
+  const getMilestoneCx = useCallback(
+    (startDay: number) => {
+      if (scaleMode === "DAY") {
+        return (startDay - 1) * dayW + dayW / 2;
+      } else if (scaleMode === "WEEK") {
+        return ((startDay - 1) / 7) * dayW + dayW / 2;
+      } else {
+        return ((startDay - 1) / 30) * dayW + dayW / 2;
+      }
+    },
+    [scaleMode, dayW],
+  );
 
   // Build flat rows (phase headers + items)
   const rows = useMemo((): TLRow[] => {
@@ -459,12 +578,12 @@ function TimelineView({
 
   // Zoom
   const zoomIn = () => setDayW((w) => Math.min(w * 1.45, 80));
-  const zoomOut = () => setDayW((w) => Math.max(w / 1.45, 4));
+  const zoomOut = () => setDayW((w) => Math.max(w / 1.45, 10));
   const zoomFit = useCallback(() => {
     if (!wrapRef.current) return;
     const avail = wrapRef.current.clientWidth - TL_LEFT_W - 24;
-    setDayW(Math.max(avail / maxDay, 4));
-  }, [maxDay]);
+    setDayW(Math.max(avail / baseCells, 10));
+  }, [baseCells]);
   const expandAll = () => setCollapsed(new Set());
   const collapseAll = () =>
     setCollapsed(new Set(phases.map((p) => p.ganttTemplatePhaseId)));
@@ -479,18 +598,10 @@ function TimelineView({
       return n;
     });
 
-  // Week groups for header
-  const weeks: { label: string; startDay: number; days: number }[] = [];
-  for (let d = 1; d < adjustedMaxDay; d += 7) {
-    weeks.push({
-      label: `Week ${Math.ceil(d / 7)}`,
-      startDay: d,
-      days: Math.min(7, adjustedMaxDay - d),
-    });
-  }
-
-  const totalW = adjustedMaxDay * dayW;
-  const bodyH = rows.length * TL_ROW_H;
+  const totalW = totalCells * dayW;
+  const bodyH = rows.length * ROW_HEIGHT;
+  const hasHorizontalScroll = totalW > availWidth;
+  const extraHeight = hasHorizontalScroll ? 60 : 44;
 
   const tbBtn =
     "inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent hover:border-border transition-colors";
@@ -510,7 +621,9 @@ function TimelineView({
     <div
       ref={wrapRef}
       className="flex flex-col rounded-xl border bg-card overflow-hidden"
-      style={{ height: Math.min(Math.max(bodyH + TL_HEADER_H + 44, 260), 560) }}
+      style={{
+        height: Math.min(Math.max(bodyH + TL_HEADER_H + extraHeight, 260), 560),
+      }}
     >
       {/* ── Toolbar ──────────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-1 px-3 py-2 border-b bg-muted/20 shrink-0 flex-wrap">
@@ -569,7 +682,7 @@ function TimelineView({
                     key={`lph-${row.phase.ganttTemplatePhaseId}`}
                     className="flex items-center gap-2 border-b cursor-pointer transition-colors"
                     style={{
-                      height: TL_ROW_H,
+                      height: ROW_HEIGHT,
                       background: color + "12",
                       borderLeft: `3px solid ${color}`,
                     }}
@@ -606,7 +719,7 @@ function TimelineView({
                   key={`li-${item.ganttTemplateItemId}-${idx}`}
                   className="flex items-center border-b gap-1 pr-2 hover:bg-muted/20 transition-colors"
                   style={{
-                    height: TL_ROW_H,
+                    height: ROW_HEIGHT,
                     paddingLeft: `${28 + depth * 16}px`,
                   }}
                 >
@@ -648,56 +761,43 @@ function TimelineView({
         >
           {/* Timeline header — sticky */}
           <div
-            className="sticky top-0 z-20 bg-card border-b"
+            className="sticky top-0 z-20 bg-card border-b w-fit flex flex-col select-none"
             style={{
               minWidth: "100%",
               width: Math.max(totalW, 500),
               height: TL_HEADER_H,
             }}
           >
-            {/* Week row */}
-            <div className="relative border-b" style={{ height: 26 }}>
-              {weeks.map((wk) => (
+            {/* Top Row: Weeks/Months/Years */}
+            <div
+              className="relative border-b flex bg-slate-50/80 font-bold text-slate-500 text-[10px] shrink-0"
+              style={{ height: 20, width: Math.max(totalW, 500) }}
+            >
+              {topTierUnits.map((unit, idx) => (
                 <div
-                  key={wk.startDay}
-                  className="absolute top-0 bottom-0 flex items-center justify-center text-[10px] font-bold text-muted-foreground border-r overflow-hidden px-1"
-                  style={{
-                    left: (wk.startDay - 1) * dayW,
-                    width: wk.days * dayW,
-                  }}
+                  key={`top-tier-${idx}`}
+                  style={{ width: unit.width }}
+                  className="h-full shrink-0 border-r border-slate-200 flex items-center pl-2.5 truncate"
                 >
-                  {wk.days * dayW > 40 ? wk.label : ""}
+                  {unit.label}
                 </div>
               ))}
             </div>
-            {/* Day numbers row */}
-            <div className="relative" style={{ height: 28 }}>
-              {Array.from({ length: adjustedMaxDay - 1 }, (_, i) => i + 1).map(
-                (d) => {
-                  let showEvery = 1;
-                  if (dayW >= 16) {
-                    showEvery = 1;
-                  } else if (dayW * 7 >= 35) {
-                    showEvery = 7;
-                  } else if (dayW * 14 >= 35) {
-                    showEvery = 14;
-                  } else if (dayW * 28 >= 35) {
-                    showEvery = 28;
-                  } else {
-                    showEvery = 90;
-                  }
-                  if (d % showEvery !== 1 && d !== 1) return null;
-                  return (
-                    <div
-                      key={d}
-                      className="absolute top-0 bottom-0 flex items-center justify-center text-[10px] text-muted-foreground"
-                      style={{ left: (d - 1) * dayW, width: showEvery * dayW }}
-                    >
-                      {d}
-                    </div>
-                  );
-                },
-              )}
+            {/* Bottom Row: Days/Weeks/Months */}
+            <div
+              className="relative flex bg-white font-bold text-slate-500 text-[10px] shrink-0"
+              style={{ height: 20, width: Math.max(totalW, 500) }}
+            >
+              {bottomTierUnits.map((unit, idx) => (
+                <div
+                  key={`bottom-tier-${idx}`}
+                  style={{ width: dayW }}
+                  className="h-full shrink-0 border-r border-slate-200 flex items-center justify-center bg-white"
+                  title={unit.title}
+                >
+                  {unit.label}
+                </div>
+              ))}
             </div>
           </div>
 
@@ -710,100 +810,269 @@ function TimelineView({
               position: "relative",
             }}
           >
-            {/* Week separator grid lines */}
-            {weeks.map((wk) => (
-              <div
-                key={wk.startDay}
-                className="absolute top-0 bottom-0 border-l border-border/40"
-                style={{ left: (wk.startDay - 1) * dayW }}
-              />
-            ))}
-            {/* Fine day lines (only when zoomed in enough) */}
-            {dayW >= 14 &&
-              Array.from({ length: adjustedMaxDay - 1 }, (_, i) => i + 1).map(
-                (d) => (
-                  <div
-                    key={d}
-                    className="absolute top-0 bottom-0 border-l border-border/15"
-                    style={{ left: (d - 1) * dayW }}
-                  />
-                ),
-              )}
+            <svg
+              width={Math.max(totalW, 500)}
+              height={bodyH}
+              className="block bg-white absolute top-0 left-0"
+            >
+              <defs>
+                <marker
+                  id="elbow-arrow"
+                  markerWidth="6"
+                  markerHeight="6"
+                  refX="5"
+                  refY="3"
+                  orient="auto"
+                >
+                  <polygon points="0 1, 5 3, 0 5" fill="#94a3b8" />
+                </marker>
+              </defs>
 
-            {/* Rows */}
-            {rows.map((row, idx) => {
-              const y = idx * TL_ROW_H;
-              if (row.kind === "phase") {
+              {/* Draw vertical calendar column grid lines */}
+              {Array.from({ length: totalCells }).map((_, di) => {
+                const x = di * dayW;
                 return (
-                  <div
-                    key={`rph-${row.phase.ganttTemplatePhaseId}`}
-                    className="absolute left-0 right-0 border-b"
-                    style={{
-                      top: y,
-                      height: TL_ROW_H,
-                      background: (row.phase.color ?? "#94a3b8") + "08",
-                    }}
+                  <line
+                    key={`gridline-${di}`}
+                    x1={x}
+                    y1={0}
+                    x2={x}
+                    y2={bodyH}
+                    stroke="#e2e8f0"
+                    strokeWidth={1}
+                    strokeDasharray="2 2"
                   />
                 );
-              }
-              const { item, phaseColor } = row;
-              const isMilestone =
-                item.itemType === "MILESTONE" || item.isMilestone;
-              const barLeft = (item.relativeStartDay - 1) * dayW;
-              const barWidth = Math.max(
-                isMilestone ? 0 : item.relativeDurationDays * dayW,
-                isMilestone ? 0 : Math.max(dayW, 4),
-              );
-              return (
-                <div
-                  key={`ri-${item.ganttTemplateItemId}-${idx}`}
-                  className="absolute left-0 right-0 border-b hover:bg-muted/10 transition-colors"
-                  style={{ top: y, height: TL_ROW_H }}
-                >
-                  {isMilestone ? (
-                    // Milestone — rotated diamond ◆
+              })}
+
+              {/* Draw Dependency Connection Elbows between tasks */}
+              {dependencies.map((dep) => {
+                const predIdx = rows.findIndex(
+                  (r) =>
+                    r.kind === "item" &&
+                    r.item.ganttTemplateItemId === dep.predecessorItemId,
+                );
+                const succIdx = rows.findIndex(
+                  (r) =>
+                    r.kind === "item" &&
+                    r.item.ganttTemplateItemId === dep.successorItemId,
+                );
+                if (predIdx === -1 || succIdx === -1) return null;
+
+                const predRow = rows[predIdx];
+                const succRow = rows[succIdx];
+                if (predRow.kind !== "item" || succRow.kind !== "item")
+                  return null;
+
+                const pred = predRow.item;
+                const succ = succRow.item;
+
+                const isPredMilestone =
+                  pred.itemType === "MILESTONE" || pred.isMilestone;
+                const predCoords = getCoordinates(
+                  pred.relativeStartDay,
+                  pred.relativeDurationDays,
+                );
+                const predEndX = isPredMilestone
+                  ? getMilestoneCx(pred.relativeStartDay)
+                  : predCoords.startX + predCoords.width;
+
+                const succCoords = getCoordinates(
+                  succ.relativeStartDay,
+                  succ.relativeDurationDays,
+                );
+                const succStartX = succCoords.startX;
+
+                const predY = predIdx * ROW_HEIGHT + ROW_HEIGHT / 2;
+                const succY = succIdx * ROW_HEIGHT + ROW_HEIGHT / 2;
+
+                const offset = 12;
+                let d = "";
+                if (succStartX > predEndX + 8) {
+                  d = `M ${predEndX} ${predY} L ${predEndX + offset} ${predY} L ${predEndX + offset} ${succY} L ${succStartX} ${succY}`;
+                } else {
+                  const midY = (predY + succY) / 2;
+                  d = `M ${predEndX} ${predY} L ${predEndX + offset} ${predY} L ${predEndX + offset} ${midY} L ${succStartX - offset} ${midY} L ${succStartX - offset} ${succY} L ${succStartX} ${succY}`;
+                }
+
+                return (
+                  <path
+                    key={dep.ganttTemplateDependencyId}
+                    d={d}
+                    fill="none"
+                    stroke="#cbd5e1"
+                    strokeWidth={1.5}
+                    strokeLinecap="round"
+                    className="hover:stroke-indigo-500 hover:stroke-[2px] transition-all"
+                    markerEnd="url(#elbow-arrow)"
+                  />
+                );
+              })}
+
+              {/* Draw Phase bracket boundaries and Task bar capsules */}
+              {rows.map((row, idx) => {
+                const y = idx * ROW_HEIGHT;
+                if (row.kind === "phase") {
+                  const p = row.phase;
+                  const phaseId = p.ganttTemplatePhaseId;
+                  const phaseItems = allFlat.filter(
+                    (i) => i.ganttTemplatePhaseId === phaseId,
+                  );
+
+                  if (phaseItems.length === 0) {
+                    return (
+                      <rect
+                        key={`timeline-phase-${p.ganttTemplatePhaseId}-${idx}`}
+                        x={0}
+                        y={y}
+                        width={totalW}
+                        height={ROW_HEIGHT}
+                        fill={(p.color ?? "#94a3b8") + "0c"}
+                      />
+                    );
+                  }
+
+                  const startDays = phaseItems.map((i) => i.relativeStartDay);
+                  const endDays = phaseItems.map(
+                    (i) =>
+                      i.relativeStartDay + Math.max(i.relativeDurationDays, 1),
+                  );
+                  const minStartDay = Math.min(...startDays);
+                  const maxEndDay = Math.max(...endDays);
+
+                  const { startX, width } = getCoordinates(
+                    minStartDay,
+                    maxEndDay - minStartDay,
+                  );
+                  const barHeight = 4;
+                  const barY = y + (ROW_HEIGHT - barHeight) / 2;
+
+                  return (
+                    <g key={`timeline-phase-${p.ganttTemplatePhaseId}-${idx}`}>
+                      <rect
+                        x={0}
+                        y={y}
+                        width={totalW}
+                        height={ROW_HEIGHT}
+                        fill={(p.color ?? "#94a3b8") + "0c"}
+                      />
+                      <rect
+                        x={startX}
+                        y={barY}
+                        width={width}
+                        height={barHeight}
+                        fill="#374151"
+                        rx={1}
+                      />
+                      <path
+                        d={`M ${startX} ${barY + 6} L ${startX} ${barY} L ${startX + width} ${barY} L ${startX + width} ${barY + 6}`}
+                        stroke="#374151"
+                        strokeWidth={2.5}
+                        fill="none"
+                      />
+                      <text
+                        x={startX + width + 8}
+                        y={y + ROW_HEIGHT / 2 + 3.5}
+                        fontSize={9.5}
+                        fontWeight={700}
+                        fill="#334155"
+                        className="select-none pointer-events-none font-bold"
+                      >
+                        {p.phaseName}
+                      </text>
+                    </g>
+                  );
+                }
+
+                // Item row rendering
+                const { item, phaseColor } = row;
+                const isMilestone =
+                  item.itemType === "MILESTONE" || item.isMilestone;
+                const barColor = item.color || phaseColor || "#556ee6";
+
+                if (isMilestone) {
+                  const cx = getMilestoneCx(item.relativeStartDay);
+                  const cy = y + ROW_HEIGHT / 2;
+                  const mSize = 7;
+
+                  return (
+                    <g key={`timeline-item-${item.ganttTemplateItemId}-${idx}`}>
+                      <rect
+                        x={0}
+                        y={y}
+                        width={totalW}
+                        height={ROW_HEIGHT}
+                        fill="transparent"
+                        className="hover:fill-slate-50/50"
+                      />
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <polygon
+                              points={`${cx},${cy - mSize} ${cx + mSize},${cy} ${cx},${cy + mSize} ${cx - mSize},${cy}`}
+                              fill="#f59e0b"
+                              stroke="#d97706"
+                              strokeWidth={1.5}
+                              className="cursor-default hover:scale-110 transition-transform"
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs font-semibold">
+                              {item.itemName}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              🏁 Milestone · Day {item.relativeStartDay}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      <text
+                        x={cx + mSize + 8}
+                        y={cy + 3.5}
+                        fontSize={9.5}
+                        fontWeight={600}
+                        fill="#64748b"
+                        className="select-none pointer-events-none font-semibold font-mono"
+                      >
+                        {item.itemName} (Milestone)
+                      </text>
+                    </g>
+                  );
+                }
+
+                const { startX, width } = getCoordinates(
+                  item.relativeStartDay,
+                  item.relativeDurationDays,
+                );
+                const barHeight = 22;
+                const barY = y + (ROW_HEIGHT - barHeight) / 2;
+
+                return (
+                  <g key={`timeline-item-${item.ganttTemplateItemId}-${idx}`}>
+                    <rect
+                      x={0}
+                      y={y}
+                      width={totalW}
+                      height={ROW_HEIGHT}
+                      fill="transparent"
+                      className="hover:fill-slate-50/50"
+                    />
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div
-                            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rotate-45 cursor-default shadow-sm"
-                            style={{
-                              left: barLeft,
-                              background: "#f59e0b",
-                              border: "1.5px solid #d97706",
-                            }}
+                          <rect
+                            x={startX}
+                            y={barY}
+                            width={width}
+                            height={barHeight}
+                            rx={4}
+                            fill={barColor}
+                            opacity={0.85}
+                            stroke={barColor}
+                            strokeWidth={1}
+                            className="cursor-default hover:opacity-95 transition-opacity"
                           />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="text-xs font-semibold">
-                            {item.itemName}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">
-                            🏁 Milestone · Day {item.relativeStartDay}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : (
-                    // Task bar
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            className="absolute top-[5px] bottom-[5px] rounded-md flex items-center overflow-hidden cursor-default shadow-sm hover:brightness-95 transition-all"
-                            style={{
-                              left: barLeft,
-                              width: barWidth,
-                              background: phaseColor + "cc",
-                              border: `1.5px solid ${phaseColor}`,
-                            }}
-                          >
-                            {barWidth > 48 && (
-                              <span className="text-white text-[10px] font-semibold px-2 truncate whitespace-nowrap leading-none">
-                                {item.itemName}
-                              </span>
-                            )}
-                          </div>
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="text-xs font-semibold">
@@ -814,17 +1083,31 @@ function TimelineView({
                             {item.relativeDurationDays} days
                           </p>
                           {item.assigneeRoleHint && (
-                            <p className="text-[10px]">
-                              {item.assigneeRoleHint}
+                            <p className="text-[10px] font-medium text-slate-500">
+                              Role: {item.assigneeRoleHint}
                             </p>
                           )}
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  )}
-                </div>
-              );
-            })}
+
+                    <text
+                      x={startX + width + 8}
+                      y={barY + barHeight / 2 + 3.5}
+                      fontSize={9.5}
+                      fontWeight={600}
+                      fill="#64748b"
+                      className="select-none pointer-events-none font-semibold"
+                    >
+                      {item.itemName}{" "}
+                      <tspan fill="#94a3b8" fontWeight={400}>
+                        ({item.relativeDurationDays} days)
+                      </tspan>
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
           </div>
         </div>
       </div>
@@ -867,7 +1150,7 @@ function ListView({
     setCollapsed(new Set(phases.map((p) => p.ganttTemplatePhaseId)));
 
   return (
-    <div className="flex flex-col rounded-xl border bg-card overflow-hidden">
+    <div className="flex flex-col rounded-xl border bg-card overflow-hidden h-[calc(100vh-350px)]">
       {/* Toolbar */}
       <div className="flex items-center gap-1 px-3 py-2 border-b bg-muted/20 shrink-0 flex-wrap">
         <button
@@ -894,9 +1177,9 @@ function ListView({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-auto flex-1">
         <table className="w-full border-collapse text-left text-xs text-slate-600 bg-white">
-          <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 uppercase tracking-wider font-semibold">
+          <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 uppercase tracking-wider font-semibold sticky top-0 z-10">
             <tr>
               <th className="px-4 py-3 w-12 text-center font-bold">#</th>
               <th className="px-4 py-3 font-bold">Task Name</th>
@@ -1150,60 +1433,62 @@ function ListView({
   );
 }
 
+// ── Kanban Column config ─────────────────────────────────────────────────────
+const STATUS_COLUMNS = [
+  { id: "NOT_STARTED", name: "Yet to start", color: "#94a3b8" },
+  { id: "IN_PROGRESS", name: "In Progress", color: "#3b82f6" },
+  { id: "ON_HOLD", name: "On Hold", color: "#f59e0b" },
+  { id: "COMPLETED", name: "Completed", color: "#22c55e" },
+  { id: "CANCELLED", name: "Cancelled", color: "#ef4444" },
+];
+
+const STATUS_BADGE_STYLE: Record<
+  string,
+  { bg: string; text: string; label: string }
+> = {
+  NOT_STARTED: {
+    bg: "bg-[#ffe600]/15",
+    text: "text-[#8a7300]",
+    label: "Yet to start",
+  },
+  IN_PROGRESS: {
+    bg: "bg-[#00f2fe]/10",
+    text: "text-[#008080]",
+    label: "In Progress",
+  },
+  ON_HOLD: { bg: "bg-amber-100", text: "text-amber-800", label: "On Hold" },
+  COMPLETED: {
+    bg: "bg-green-100/15",
+    text: "text-green-800",
+    label: "Completed",
+  },
+  CANCELLED: { bg: "bg-red-100", text: "text-red-800", label: "Cancelled" },
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// VIEW 4 — KANBAN BOARD (one column per phase)
+// VIEW 4 — KANBAN BOARD (one column per task status)
 // ═══════════════════════════════════════════════════════════════════════════════
 function BoardView({
-  phases,
   itemsTree,
 }: {
   phases: GanttTemplatePhase[];
   itemsTree: GanttTemplateItem[];
 }) {
-  const sortedPhases = [...phases].sort((a, b) => a.phaseOrder - b.phaseOrder);
-  const unphased = itemsTree.filter((i) => !i.ganttTemplatePhaseId);
+  const allItems = useMemo(() => {
+    return flattenItems(itemsTree);
+  }, [itemsTree]);
 
-  if (phases.length === 0 && itemsTree.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 gap-3 rounded-xl border border-dashed">
-        <ListTodo className="h-8 w-8 text-muted-foreground/30" />
-        <p className="text-sm text-muted-foreground">
-          No phases or items defined yet.
-        </p>
-      </div>
-    );
-  }
-
-  const allColumns = [
-    ...sortedPhases.map((p) => ({
-      id: p.ganttTemplatePhaseId,
-      name: p.phaseName,
-      color: p.color ?? "#94a3b8",
-      items: flattenItems(
-        itemsTree.filter(
-          (i) => i.ganttTemplatePhaseId === p.ganttTemplatePhaseId,
-        ),
-      ),
-    })),
-    ...(unphased.length > 0
-      ? [
-          {
-            id: "unphased",
-            name: "Unassigned",
-            color: "#94a3b8",
-            items: flattenItems(unphased),
-          },
-        ]
-      : []),
-  ];
+  const columns = useMemo(() => {
+    return STATUS_COLUMNS.map((col) => ({
+      ...col,
+      items: col.id === "NOT_STARTED" ? allItems : [],
+    }));
+  }, [allItems]);
 
   return (
-    <div className="overflow-x-auto pb-4">
-      <div
-        className="flex gap-3 items-start"
-        style={{ minWidth: `${allColumns.length * 280}px` }}
-      >
-        {allColumns.map((col) => (
+    <div className="overflow-x-auto pb-4 h-full">
+      <div className="flex gap-4 items-start min-w-[1200px] h-[calc(100vh-300px)] pr-2 pt-1">
+        {columns.map((col) => (
           <KanbanColumn key={col.id} col={col} />
         ))}
       </div>
@@ -1217,7 +1502,7 @@ function KanbanColumn({
   col: { id: string; name: string; color: string; items: GanttTemplateItem[] };
 }) {
   return (
-    <div className="flex flex-col w-64 shrink-0 rounded-xl border border-slate-200 bg-[#f8f9fa] overflow-hidden">
+    <div className="flex flex-col w-72 shrink-0 rounded-xl border border-slate-200 bg-[#f8f9fa] overflow-hidden h-full max-h-[calc(100vh-220px)]">
       {/* Column Header */}
       <div className="px-4 py-3 border-b border-slate-200 bg-white flex flex-col gap-1 shrink-0">
         <div className="flex items-center justify-between">
@@ -1240,11 +1525,7 @@ function KanbanColumn({
           </div>
         ) : (
           col.items.map((item) => (
-            <KanbanCard
-              key={item.ganttTemplateItemId}
-              item={item}
-              phaseColor={col.color}
-            />
+            <KanbanCard key={item.ganttTemplateItemId} item={item} />
           ))
         )}
       </div>
@@ -1252,61 +1533,37 @@ function KanbanColumn({
   );
 }
 
-function KanbanCard({
-  item,
-  phaseColor,
-}: {
-  item: GanttTemplateItem;
-  phaseColor: string;
-}) {
+function KanbanCard({ item }: { item: GanttTemplateItem }) {
   const isMilestone = item.itemType === "MILESTONE" || item.isMilestone;
-  const priority = PRIORITY_CONFIG[item.priority] ?? PRIORITY_CONFIG.MEDIUM;
-
-  if (isMilestone) {
-    return (
-      <div className="rounded-xl border border-slate-200 bg-white p-4 cursor-default shadow-sm hover:shadow-md transition-all flex flex-col gap-2.5 group relative">
-        <div className="flex items-start gap-2">
-          <Diamond className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
-          <span className="text-[13px] font-bold text-slate-800 leading-snug group-hover:text-primary transition-colors line-clamp-2">
-            {item.itemName}
-          </span>
-        </div>
-        <div className="flex items-center justify-between pt-1 border-t border-slate-100 mt-0.5">
-          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-250/50 px-2 py-0.5 rounded-full">
-            🏁 Milestone
-          </span>
-          <span className="text-[10px] text-slate-400">
-            Day {item.relativeStartDay}
-          </span>
-        </div>
-      </div>
-    );
-  }
+  const statusBadge = STATUS_BADGE_STYLE.NOT_STARTED;
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 cursor-default shadow-sm hover:shadow-md transition-all flex flex-col gap-2.5 group relative">
       {/* Title */}
-      <div className="flex items-start gap-2">
-        <CheckSquare
-          className="h-3.5 w-3.5 mt-0.5 shrink-0"
-          style={{ color: phaseColor }}
-        />
+      <div className="flex items-start gap-2 justify-between">
         <span className="text-[13px] font-bold text-slate-800 leading-snug group-hover:text-primary transition-colors line-clamp-2">
           {item.itemName}
         </span>
       </div>
 
-      {/* Role details */}
-      {item.assigneeRoleHint && (
-        <div className="text-xs text-slate-500 flex items-center gap-1.5">
-          <span className="font-medium text-slate-400">Role Hint:</span>
-          <span className="text-[11px] text-slate-700 font-medium truncate">
-            {item.assigneeRoleHint}
-          </span>
-        </div>
-      )}
+      {/* Assignee line */}
+      <div className="text-xs text-slate-500 flex items-center gap-1.5">
+        <span className="font-medium text-slate-400">Assignees:</span>
+        {item.assigneeRoleHint ? (
+          <div className="flex items-center gap-1">
+            <div className="h-5 w-5 rounded-full bg-slate-100 border border-slate-250 text-[8px] font-bold flex items-center justify-center text-slate-600 shadow-sm shrink-0">
+              {getInitials(item.assigneeRoleHint)}
+            </div>
+            <span className="text-[11px] text-slate-700 font-medium truncate max-w-[120px]">
+              {item.assigneeRoleHint}
+            </span>
+          </div>
+        ) : (
+          <span className="text-[11px] text-slate-400 italic">Unassigned</span>
+        )}
+      </div>
 
-      {/* Timing details */}
+      {/* Start Day line */}
       <div className="text-xs text-slate-500">
         <span className="font-medium text-slate-400">Start Day:</span>{" "}
         <span className="text-[11px] text-slate-700 font-semibold">
@@ -1314,25 +1571,21 @@ function KanbanCard({
         </span>
       </div>
 
-      {/* Footer / priority & duration */}
+      {/* Footer line */}
       <div className="flex items-center justify-between pt-1 border-t border-slate-100 mt-0.5">
         <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
           <Clock className="h-3.5 w-3.5" />
           <span>
-            {item.relativeDurationDays}{" "}
-            {item.relativeDurationDays === 1 ? "day" : "days"}
+            {isMilestone
+              ? "Milestone"
+              : `${item.relativeDurationDays} ${item.relativeDurationDays === 1 ? "day" : "days"}`}
           </span>
         </div>
 
         <span
-          className="text-[10px] font-bold px-2 py-0.5 rounded-full border"
-          style={{
-            background: priority.bg,
-            color: priority.color,
-            borderColor: `${priority.color}33`,
-          }}
+          className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-transparent ${statusBadge.bg} ${statusBadge.text}`}
         >
-          {priority.label}
+          {statusBadge.label}
         </span>
       </div>
     </div>

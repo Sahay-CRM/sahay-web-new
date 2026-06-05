@@ -464,6 +464,7 @@ const Urls = {
   // ── Gantt Chart Module ──────────────────────────────────────────────────────
   // Templates
   ganttTemplateList: () => `${baseUrl}/admin/gantt-template/get`,
+  ganttTemplateGetAll: () => `${baseUrl}/admin/gantt-template/get-all`,
   ganttTemplateDetail: (id: string) =>
     `${baseUrl}/admin/gantt-template/get/${id}`,
   ganttTemplateCreate: () => `${baseUrl}/admin/gantt-template/create`,
