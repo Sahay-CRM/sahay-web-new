@@ -135,7 +135,7 @@ export default function GanttTemplatePage() {
             permissionKey="ganttTemplateId"
             moduleKey="EMPLOYEE"
             sortableColumns={["templateName"]}
-            actionColumnWidth="w-[100px]"
+            actionColumnWidth="w-[150px]"
             customActions={(row) => {
               const t = row as unknown as GanttTemplate;
               if (!t.isPublished) return null;
