@@ -63,6 +63,19 @@ function flattenItems(items: CompanyGanttItem[]): CompanyGanttItem[] {
   return result;
 }
 
+function generateUUID() {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return crypto.randomUUID();
+  }
+  return (
+    Math.random().toString(36).substring(2, 15) +
+    Math.random().toString(36).substring(2, 15)
+  );
+}
+
 export default function GanttItemDetailModal({
   open,
   onOpenChange,
@@ -124,7 +137,7 @@ export default function GanttItemDetailModal({
     lagDays: number;
   }
   const [pendingDeps, setPendingDeps] = useState<PendingDep[]>([
-    { id: crypto.randomUUID(), predId: "", depType: "FS", lagDays: 0 },
+    { id: generateUUID(), predId: "", depType: "FS", lagDays: 0 },
   ]);
 
   const deleteMutation = useDeleteGanttItem(workspaceId);
@@ -230,7 +243,7 @@ export default function GanttItemDetailModal({
       );
       // reset to one empty row
       setPendingDeps([
-        { id: crypto.randomUUID(), predId: "", depType: "FS", lagDays: 0 },
+        { id: generateUUID(), predId: "", depType: "FS", lagDays: 0 },
       ]);
     } catch {
       // Handled by toast inside mutation hook
@@ -246,7 +259,7 @@ export default function GanttItemDetailModal({
   const addPendingRow = () => {
     setPendingDeps((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), predId: "", depType: "FS", lagDays: 0 },
+      { id: generateUUID(), predId: "", depType: "FS", lagDays: 0 },
     ]);
   };
 
