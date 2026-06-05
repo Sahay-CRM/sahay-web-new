@@ -126,9 +126,7 @@ export default function GanttTemplatePage() {
             tableData={templates}
             columns={visibleColumns}
             primaryKey="ganttTemplateId"
-            isActionButton={(row) =>
-              !!(row as unknown as GanttTemplate).isPublished
-            }
+            isActionButton={() => false}
             onRowClick={handleRowClick}
             paginationDetails={paginationDetails}
             isLoading={isLoading}
@@ -137,6 +135,7 @@ export default function GanttTemplatePage() {
             permissionKey="ganttTemplateId"
             moduleKey="EMPLOYEE"
             sortableColumns={["templateName"]}
+            actionColumnWidth="w-[100px]"
             customActions={(row) => {
               const t = row as unknown as GanttTemplate;
               if (!t.isPublished) return null;
@@ -153,7 +152,7 @@ export default function GanttTemplatePage() {
                         }}
                       >
                         <GitBranch className="w-3.5 h-3.5 mr-1" />
-                        Use
+                        Use Template
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
