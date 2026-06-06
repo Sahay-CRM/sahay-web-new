@@ -1,6 +1,18 @@
 import { useRef, useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useParams } from "react-router-dom";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 import FormSelect from "@/components/shared/Form/FormSelect";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
@@ -17,6 +29,7 @@ import {
   useGetDetailMeetingAgenda,
 } from "@/features/api/detailMeeting";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import ProjectDrawer from "../Projects/projectDrawer";
 
 type TaskFormData = {
   taskName: string;
@@ -53,9 +66,16 @@ export default function TaskDrawer({
 
   const [isTypeSearch, setIsTypeSearch] = useState("");
   const [isProjectSearch, setIsProjectSearch] = useState("");
+  const [projectDrawerOpen, setProjectDrawerOpen] = useState(false);
+  const [defaultProjectName, setDefaultProjectName] = useState("");
 
+  const [isConfModalOpen, setIsConfModalOpen] = useState(false);
+  const [reasons, setReasons] = useState("");
   const { data: taskStatus } = useGetAllTaskStatus({ filter: {} });
   const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
+  const [savedPayload, setSavedPayload] = useState<
+    Parameters<typeof addUpdateTask>[0] | null
+  >(null);
   const { data: ioList } = useGetDetailMeetingAgenda({
     filter: {
       meetingId: meetingId,
@@ -118,6 +138,11 @@ export default function TaskDrawer({
       : []
     : [];
 
+  const rawTaskDeadline = taskData
+    ? (taskData as TaskGetPaging & { rawTaskDeadline?: string | Date | null })
+        .rawTaskDeadline
+    : undefined;
+
   const defaultValues = taskData
     ? {
         taskName: taskData.taskName || "",
@@ -128,7 +153,7 @@ export default function TaskDrawer({
         assignUsers: Array.isArray(taskData.assignUsers)
           ? taskData.assignUsers.map((u) => u.employeeId)
           : [],
-        taskDeadline: taskData.taskDeadline || null,
+        taskDeadline: rawTaskDeadline || taskData.taskDeadline || null,
         ioId: issueId || "",
         ioType: ioType || "",
       }
@@ -206,6 +231,58 @@ export default function TaskDrawer({
   //   };
   // }, [onClose, open]);
 
+  const handleSuccess = () => {
+    if (taskData && taskData.meetingNoteId) {
+      addNote(
+        {
+          meetingNoteId: taskData?.meetingNoteId,
+          noteType: "TASKS",
+          noteTag: "Task",
+        },
+        {
+          onSuccess: () => {
+            tasksFireBase();
+            onClose();
+          },
+        },
+      );
+    } else {
+      tasksFireBase();
+      onClose();
+    }
+  };
+
+  const onConfirmSubmit = () => {
+    if (!reasons.trim()) {
+      toast.error("Please provide a reason.");
+      return;
+    }
+
+    if (!savedPayload) return;
+
+    const finalPayload = {
+      ...savedPayload,
+      isForceChangeDeadline: true,
+      reasons: reasons,
+    };
+
+    addUpdateTask(finalPayload, {
+      onSuccess: () => {
+        setIsConfModalOpen(false);
+        handleSuccess();
+      },
+      onError: (error: Error) => {
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+        toast.error(
+          `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+        );
+      },
+    });
+  };
+
   const onSubmit = (data: TaskFormData) => {
     if (meetingId) {
       const {
@@ -234,23 +311,24 @@ export default function TaskDrawer({
 
       addUpdateTask(payload, {
         onSuccess: () => {
-          if (taskData && taskData.meetingNoteId) {
-            addNote(
-              {
-                meetingNoteId: taskData?.meetingNoteId,
-                noteType: "TASKS",
-                noteTag: "Task",
-              },
-              {
-                onSuccess: () => {
-                  tasksFireBase();
-                  onClose();
-                },
-              },
-            );
+          handleSuccess();
+        },
+        onError: (error: Error) => {
+          const axiosError = error as AxiosError<{
+            message?: string;
+            status: number;
+          }>;
+
+          if (axiosError.response?.data?.status === 417) {
+            setSavedPayload(payload);
+            setReasons("");
+            setIsConfModalOpen(true);
           } else {
-            tasksFireBase();
-            onClose();
+            toast.error(
+              `Error: ${
+                axiosError.response?.data?.message || "An error occurred"
+              }`,
+            );
           }
         },
       });
@@ -379,6 +457,10 @@ export default function TaskDrawer({
                   error={errors.projectId}
                   isMandatory
                   onSearchChange={setIsProjectSearch}
+                  onAddNew={(query) => {
+                    setDefaultProjectName(query);
+                    setProjectDrawerOpen(true);
+                  }}
                 />
               )}
             />
@@ -425,6 +507,64 @@ export default function TaskDrawer({
           </form>
         </div>
       </div>
+
+      <Dialog open={isConfModalOpen} onOpenChange={setIsConfModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirmation Required</DialogTitle>
+            <DialogDescription>
+              The deadline has been changed. Please provide a reason to proceed
+              with the update.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="reason" className="text-sm font-medium">
+                Reason
+              </label>
+              <Textarea
+                id="reason"
+                placeholder="Enter reasons for deadline change..."
+                value={reasons}
+                onChange={(e) => setReasons(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setIsConfModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={onConfirmSubmit}
+              disabled={!reasons.trim()}
+            >
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {projectDrawerOpen && (
+        <ProjectDrawer
+          open={projectDrawerOpen}
+          onClose={() => setProjectDrawerOpen(false)}
+          projectData={null}
+          issueId={issueId}
+          projectsFireBase={() => {}}
+          ioType={ioType}
+          defaultProjectName={defaultProjectName}
+          onProjectCreated={(newProject) => {
+            setValue("projectId", newProject.projectId!);
+            setIsProjectSearch(""); // Refresh options
+          }}
+        />
+      )}
     </>
   );
 }

@@ -12,7 +12,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getInitials } from "@/features/utils/app.utils";
+import { getInitials, convertToLocalDate } from "@/features/utils/app.utils";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 
 import ProjectTaskList from "./projectTaskList";
@@ -254,10 +254,7 @@ const ProjectView = () => {
                           Deadline:
                         </span>
                         <span className="font-semibold">
-                          {format(
-                            new Date(project.projectDeadline),
-                            "dd/MM/yyyy h:mm a",
-                          )}
+                          {convertToLocalDate(project.projectDeadline)}
                         </span>
                       </div>
                     )}

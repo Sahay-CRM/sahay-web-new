@@ -1,6 +1,18 @@
 import { useRef, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 import FormSelect from "@/components/shared/Form/FormSelect";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
@@ -38,6 +50,8 @@ interface ProjectDrawerProps {
   issueId?: string;
   projectsFireBase: () => void;
   ioType?: string;
+  onProjectCreated?: (project: CompanyProjectDataProps) => void;
+  defaultProjectName?: string;
 }
 
 export default function ProjectDrawer({
@@ -47,12 +61,19 @@ export default function ProjectDrawer({
   issueId,
   projectsFireBase,
   ioType,
+  onProjectCreated,
+  defaultProjectName,
 }: ProjectDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
   const [isStatusSearch, setIsStatusSearch] = useState("");
 
+  const [isConfModalOpen, setIsConfModalOpen] = useState(false);
+  const [reasons, setReasons] = useState("");
   const { mutate: addProject, isPending } = useAddUpdateCompanyProject();
+  const [savedPayload, setSavedPayload] = useState<
+    Parameters<typeof addProject>[0] | null
+  >(null);
 
   const { data: ioList } = useGetDetailMeetingAgenda({
     filter: {
@@ -103,14 +124,22 @@ export default function ProjectDrawer({
       }))
     : [];
 
+  const rawProjectDeadline = projectData
+    ? (
+        projectData as CompanyProjectDataProps & {
+          rawProjectDeadline?: string | Date | null;
+        }
+      ).rawProjectDeadline
+    : undefined;
+
+  const deadlineVal = rawProjectDeadline || projectData?.projectDeadline;
+
   const defaultValues = projectData
     ? {
         projectId: projectData.projectId || "",
         projectName: projectData.projectName || "",
         projectDescription: projectData.projectDescription || "",
-        projectDeadline: projectData.projectDeadline
-          ? new Date(projectData.projectDeadline)
-          : null,
+        projectDeadline: deadlineVal ? new Date(deadlineVal) : null,
         projectStatusId: projectData.projectStatusId || "",
         coreParameterId: projectData.coreParameterId || "",
         subParameterId: Array.isArray(projectData.subParameters)
@@ -124,7 +153,7 @@ export default function ProjectDrawer({
       }
     : {
         projectId: "",
-        projectName: "",
+        projectName: defaultProjectName || "",
         projectDescription: "",
         projectDeadline: "",
         projectStatusId: "",
@@ -214,6 +243,64 @@ export default function ProjectDrawer({
   //   };
   // }, [onClose, open]);
 
+  const handleSuccess = (newProject?: CompanyProjectDataProps) => {
+    if (projectData && projectData.meetingNoteId) {
+      addNote(
+        {
+          meetingNoteId: projectData?.meetingNoteId,
+          noteType: "PROJECT",
+          noteTag: "Project",
+        },
+        {
+          onSuccess: () => {
+            projectsFireBase();
+            if (newProject && onProjectCreated) {
+              onProjectCreated(newProject);
+            }
+            onClose();
+          },
+        },
+      );
+    } else {
+      projectsFireBase();
+      if (newProject && onProjectCreated) {
+        onProjectCreated(newProject);
+      }
+      onClose();
+    }
+  };
+
+  const onConfirmSubmit = () => {
+    if (!reasons.trim()) {
+      toast.error("Please provide a reason.");
+      return;
+    }
+
+    if (!savedPayload) return;
+
+    const finalPayload = {
+      ...savedPayload,
+      isForceChangeDeadline: true,
+      reasons: reasons,
+    };
+
+    addProject(finalPayload, {
+      onSuccess: (res) => {
+        setIsConfModalOpen(false);
+        handleSuccess(res.data);
+      },
+      onError: (error: Error) => {
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+        toast.error(
+          `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+        );
+      },
+    });
+  };
+
   const onSubmit = (data: ProjectFormData) => {
     if (meetingId) {
       const { employeeId, projectDeadline, ioType, ioId, ...rest } = data;
@@ -234,24 +321,25 @@ export default function ProjectDrawer({
         ioType: data.ioType,
       };
       addProject(payload, {
-        onSuccess: () => {
-          if (projectData && projectData.meetingNoteId) {
-            addNote(
-              {
-                meetingNoteId: projectData?.meetingNoteId,
-                noteType: "PROJECT",
-                noteTag: "Project",
-              },
-              {
-                onSuccess: () => {
-                  projectsFireBase();
-                  onClose();
-                },
-              },
-            );
+        onSuccess: (res) => {
+          handleSuccess(res.data);
+        },
+        onError: (error: Error) => {
+          const axiosError = error as AxiosError<{
+            message?: string;
+            status: number;
+          }>;
+
+          if (axiosError.response?.data?.status === 417) {
+            setSavedPayload(payload);
+            setReasons("");
+            setIsConfModalOpen(true);
           } else {
-            projectsFireBase();
-            onClose();
+            toast.error(
+              `Error: ${
+                axiosError.response?.data?.message || "An error occurred"
+              }`,
+            );
           }
         },
       });
@@ -440,6 +528,48 @@ export default function ProjectDrawer({
           </form>
         </div>
       </div>
+
+      <Dialog open={isConfModalOpen} onOpenChange={setIsConfModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirmation Required</DialogTitle>
+            <DialogDescription>
+              The deadline has been changed. Please provide a reason to proceed
+              with the update.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="reason" className="text-sm font-medium">
+                Reason
+              </label>
+              <Textarea
+                id="reason"
+                placeholder="Enter reasons for deadline change..."
+                value={reasons}
+                onChange={(e) => setReasons(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setIsConfModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={onConfirmSubmit}
+              disabled={!reasons.trim()}
+            >
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
+import { convertToLocalDate } from "@/features/utils/app.utils";
 import { toast } from "sonner";
 import { off, onValue, ref } from "firebase/database";
 import { useParams } from "react-router-dom";
@@ -237,8 +238,9 @@ export default function Tasks({
                 .join(", ")
             : "",
           taskDeadline: task.taskDeadline
-            ? new Date(task.taskDeadline).toISOString().split("T")[0]
+            ? convertToLocalDate(task.taskDeadline)
             : "",
+          rawTaskDeadline: task.taskDeadline,
         }))}
         columns={visibleColumns}
         primaryKey="taskId"

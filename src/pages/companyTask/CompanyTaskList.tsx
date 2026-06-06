@@ -20,7 +20,7 @@ import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
-import { format } from "date-fns";
+import { convertToLocalDate } from "@/features/utils/app.utils";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -237,7 +237,7 @@ export default function CompanyTaskList() {
                   index +
                   1,
                 taskDeadline: item.taskDeadline
-                  ? format(new Date(item.taskDeadline), "dd/MM/yyyy h:mm aa")
+                  ? convertToLocalDate(item.taskDeadline)
                   : "",
                 assigneeNames: item.TaskEmployeeJunction
                   ? item.TaskEmployeeJunction.map(
