@@ -350,26 +350,7 @@ export default function Agenda({
     });
   };
 
-  const [contentWidth, setContentWidth] = useState("90%");
   const sensors = useSensors(useSensor(PointerSensor));
-
-  const SIDEBAR_WIDTH = 600;
-
-  const updateWidth = () => {
-    const screenWidth = window.innerWidth;
-    if (isSideBar) {
-      setContentWidth(`${screenWidth - SIDEBAR_WIDTH}px`);
-    } else {
-      setContentWidth("90%");
-    }
-  };
-
-  useEffect(() => {
-    updateWidth();
-    window.addEventListener("resize", updateWidth);
-    return () => window.removeEventListener("resize", updateWidth);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSideBar]);
 
   // const formatAgendaTime = (totalSeconds: number) => {
   //   if (!totalSeconds || isNaN(totalSeconds)) {
@@ -869,7 +850,7 @@ export default function Agenda({
                 <TabsContent value="PARKED" className="mt-0"></TabsContent>
               </Tabs>
             </div>
-            <div className="mt-1 h-[calc(100vh-260px)] pr-1 w-full overflow-auto">
+            <div className="mt-1 h-[calc(100vh-180px)] pr-1 w-full overflow-auto">
               {agendaList && agendaList.length > 0 ? (
                 <DndContext
                   sensors={sensors}
@@ -917,7 +898,7 @@ export default function Agenda({
 
               {meetingStatus === "DISCUSSION" && (
                 <div
-                  className="absolute bottom-0 right-0 border rounded-full p-2 bg-white shadow-2xl shadow-primary border-primary"
+                  className="absolute bottom-10 -right-3 border rounded-full p-2 bg-white shadow-2xl shadow-primary border-primary"
                   onClick={handleAddAgendaModal}
                 >
                   <Plus />
@@ -926,10 +907,7 @@ export default function Agenda({
             </div>
           </div>
         </div>
-        <div
-          style={{ width: contentWidth }}
-          className={`${meetingStatus !== "DISCUSSION" && ""}`}
-        >
+        <div className="flex-1 min-w-0">
           <div className="flex justify-between">
             {meetingStatus === "DISCUSSION" && (
               <div className="w-full">
@@ -1395,7 +1373,7 @@ export default function Agenda({
                 </div>
               </div>
             ) : (
-              <div className="flex-1 h-[calc(100vh-320px)] overflow-x-hidden overflow-y-auto w-full">
+              <div className="flex-1 h-[calc(100vh-220px)] overflow-x-hidden overflow-y-auto w-full">
                 <div>
                   {!selectedItem || !hasChanges(selectedItem) ? (
                     <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg mt-6 p-8 text-center">

@@ -545,6 +545,7 @@ const AddDetailMeeting = () => {
     isPending,
     meetingApiData,
     permission,
+    isFormDirty,
   } = useAddDetailMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -628,6 +629,7 @@ const AddDetailMeeting = () => {
               isPending={isPending}
               onFinish={onFinish}
               isUpdate={!!companyMeetingId}
+              isSubmitDisabled={!!companyMeetingId && !isFormDirty}
             />
           </div>
 

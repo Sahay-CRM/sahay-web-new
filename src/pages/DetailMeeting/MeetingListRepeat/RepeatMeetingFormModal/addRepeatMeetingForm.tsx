@@ -566,6 +566,7 @@ const AddRepeatMeeting = () => {
     isChildData,
     handleKeepAll,
     handleDeleteAll,
+    isFormDirty,
   } = useAddRepeatMeetingForm();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -646,6 +647,7 @@ const AddRepeatMeeting = () => {
               isPending={isPending}
               onFinish={onFinish}
               isUpdate={!!repetitiveMeetingId}
+              isSubmitDisabled={!!repetitiveMeetingId && !isFormDirty}
             />
           </div>
 

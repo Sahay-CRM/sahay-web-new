@@ -26,7 +26,7 @@ export default function useAddMeeting() {
     mode: "onChange",
   });
 
-  const { handleSubmit, trigger, reset, getValues, setValue } = methods;
+  const { handleSubmit, trigger, reset, getValues, setValue, watch } = methods;
 
   useEffect(() => {
     if (meetingApiData?.data) {
@@ -192,6 +192,115 @@ export default function useAddMeeting() {
     setModalOpen(false);
   };
 
+  const [
+    watchedName,
+    watchedDesc,
+    watchedDateTime,
+    watchedEndDate,
+    watchedStatusId,
+    watchedType,
+    watchedJoiners,
+    watchedDocs,
+    watchedRemovedIds,
+  ] = watch([
+    "meetingName",
+    "meetingDescription",
+    "meetingDateTime",
+    "endDate",
+    "meetingStatusId",
+    "meetingTypeId",
+    "employeeId",
+    "meetingDocuments",
+    "removedFileIdsArray",
+  ]);
+
+  const isFormDirty = (() => {
+    if (!meetingApiData?.data) return false;
+    const data = meetingApiData.data;
+
+    const nameChanged =
+      (watchedName || "").trim() !== (data.meetingName || "").trim();
+    const descChanged =
+      (watchedDesc || "").trim() !== (data.meetingDescription || "").trim();
+
+    const originalStart = data.meetingDateTime
+      ? new Date(data.meetingDateTime).toISOString()
+      : null;
+    const currentStart = watchedDateTime
+      ? new Date(watchedDateTime).toISOString()
+      : null;
+    const startChanged = currentStart !== originalStart;
+
+    const originalEnd = data.endDate
+      ? new Date(data.endDate).toISOString()
+      : null;
+    const currentEnd = watchedEndDate
+      ? new Date(watchedEndDate).toISOString()
+      : null;
+    const endChanged = currentEnd !== originalEnd;
+
+    const originalStatusId = data.meetingStatus?.meetingStatusId || undefined;
+    const statusChanged = watchedStatusId !== originalStatusId;
+
+    const originalTypeId = data.meetingType?.meetingTypeId || data.meetingType;
+    const currentTypeId = watchedType?.meetingTypeId || watchedType;
+    const typeChanged = currentTypeId !== originalTypeId;
+
+    const originalJoiners = (data.joiners || []) as (string | Joiners)[];
+    const currentJoiners = (watchedJoiners || []) as (string | Joiners)[];
+
+    const getJoinerId = (j: string | Joiners): string => {
+      return typeof j === "string" ? j : j.employeeId;
+    };
+
+    const getJoinerIsTeamLeader = (j: string | Joiners): boolean => {
+      return typeof j === "string" ? false : !!j.isTeamLeader;
+    };
+
+    const originalJoinerIds = originalJoiners
+      .map(getJoinerId)
+      .filter(Boolean)
+      .sort();
+    const currentJoinerIds = currentJoiners
+      .map(getJoinerId)
+      .filter(Boolean)
+      .sort();
+    const joinersListChanged =
+      originalJoinerIds.join(",") !== currentJoinerIds.join(",");
+
+    const originalTLIds = originalJoiners
+      .filter(getJoinerIsTeamLeader)
+      .map(getJoinerId)
+      .filter(Boolean)
+      .sort();
+    const currentTLIds = currentJoiners
+      .filter(getJoinerIsTeamLeader)
+      .map(getJoinerId)
+      .filter(Boolean)
+      .sort();
+    const teamLeadersChanged =
+      originalTLIds.join(",") !== currentTLIds.join(",");
+
+    const hasNewUploads = (watchedDocs || []).some(
+      (file: File | string | FileType) =>
+        file instanceof File || typeof file === "string",
+    );
+    const hasRemovedFiles = (watchedRemovedIds || []).length > 0;
+
+    return (
+      nameChanged ||
+      descChanged ||
+      startChanged ||
+      endChanged ||
+      statusChanged ||
+      typeChanged ||
+      joinersListChanged ||
+      teamLeadersChanged ||
+      hasNewUploads ||
+      hasRemovedFiles
+    );
+  })();
+
   return {
     isModalOpen,
     handleClose,
@@ -203,5 +312,6 @@ export default function useAddMeeting() {
     companyMeetingId,
     isPending,
     meetingApiData,
+    isFormDirty,
   };
 }

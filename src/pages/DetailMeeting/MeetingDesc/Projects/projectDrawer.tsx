@@ -359,7 +359,7 @@ export default function ProjectDrawer({
       >
         <div className="h-[calc(100vh-30px)] overflow-scroll">
           <div className="flex justify-between items-center p-4 border-b">
-            <h2 className="text-lg font-semibold">Project Drawer</h2>
+            <h2 className="text-lg font-semibold">Company Project</h2>
             <button
               onClick={onClose}
               className="text-gray-500 text-2xl hover:text-gray-700"

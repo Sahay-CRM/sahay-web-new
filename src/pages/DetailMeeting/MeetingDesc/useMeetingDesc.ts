@@ -35,6 +35,10 @@ export default function useMeetingDesc() {
   const [openEmployeeId, setOpenEmployeeId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
 
+  const isFirstUpdate = useRef(true);
+  const prevActiveTabRef = useRef<string | undefined>(undefined);
+  const prevStatusRef = useRef<string | undefined>(undefined);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isShaking, setIsShaking] = useState(false);
   const [recordingTimer, setRecordingTimer] = useState<NodeJS.Timeout | null>(
@@ -120,84 +124,87 @@ export default function useMeetingDesc() {
   }, [db, meetingId, meetingTiming?.detailMeetingStatus]);
 
   useEffect(() => {
-    if (!meetingId || !db) return;
+    if (!meetingResponse) return;
 
-    const activeTabRef = ref(db, `meetings/${meetingId}/state/activeTab`);
-    const statusRef = ref(db, `meetings/${meetingId}/state/status`);
+    const activeTab = meetingResponse.state?.activeTab;
 
-    const filter = { meetingId };
+    if (prevActiveTabRef.current === undefined) {
+      prevActiveTabRef.current = activeTab;
+      return;
+    }
 
-    const unsubActiveTabImmediate = onValue(activeTabRef, (snapshot) => {
-      if (!meetingResponse) return;
-      if (snapshot.exists()) {
-        const activeTab = snapshot.val();
+    const prevActiveTab = prevActiveTabRef.current;
+    if (activeTab !== prevActiveTab) {
+      prevActiveTabRef.current = activeTab;
 
-        handleUpdatedRefresh();
-        if (activeTab === "CONCLUSION") {
+      if (activeTab === "CONCLUSION") {
+        queryClient.resetQueries({
+          queryKey: ["get-meeting-conclusion-res"],
+        });
+        queryClient.resetQueries({
+          queryKey: ["get-meeting-conclusion-time-by-meetingId"],
+        });
+
+        const timer = setTimeout(() => {
           queryClient.resetQueries({
             queryKey: ["get-meeting-conclusion-res"],
           });
           queryClient.resetQueries({
-            queryKey: ["get-meeting-conclusion-time-by-meetingId"],
+            queryKey: [
+              "get-meeting-conclusion-time-by-meetingId",
+              { meetingId },
+            ],
           });
-        } else if (activeTab === "ENDED") {
-          handleUpdatedRefresh();
-        }
-      }
-    });
-
-    const unsubActiveTabDelayed = onValue(activeTabRef, (snapshot) => {
-      let timer: NodeJS.Timeout;
-
-      if (snapshot.exists()) {
-        const activeTab = snapshot.val();
-
-        timer = setTimeout(() => {
-          if (activeTab === "CONCLUSION") {
-            queryClient.resetQueries({
-              queryKey: ["get-meeting-conclusion-res"],
-            });
-            queryClient.resetQueries({
-              queryKey: ["get-meeting-conclusion-time-by-meetingId", filter],
-            });
-          } else if (activeTab === "ENDED") {
-            handleUpdatedRefresh();
-          }
         }, 2000);
-      } else {
-        timer = setTimeout(() => {
+        return () => clearTimeout(timer);
+      } else if (activeTab === "ENDED") {
+        handleUpdatedRefresh();
+        const timer = setTimeout(() => {
+          handleUpdatedRefresh();
+        }, 2000);
+        return () => clearTimeout(timer);
+      } else if (prevActiveTab && !activeTab) {
+        const timer = setTimeout(() => {
           handleUpdatedRefresh();
           queryClient.resetQueries({
             queryKey: ["get-meeting-conclusion-res"],
           });
         }, 1000);
+        return () => clearTimeout(timer);
       }
+    }
+  }, [meetingResponse, handleUpdatedRefresh, meetingId]);
 
-      return () => clearTimeout(timer);
-    });
+  useEffect(() => {
+    if (!meetingResponse) return;
 
-    const unsubStatus = onValue(statusRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const activeTab = snapshot.val();
-        if (activeTab === "IN_PROGRESS") {
-          queryClient.resetQueries({
-            queryKey: ["get-meeting-conclusion-time-by-meetingId", filter],
-          });
-        } else if (activeTab === "ENDED") {
-          handleUpdatedRefresh();
-        }
-      } else {
+    const status = meetingResponse.state?.status;
+
+    if (prevStatusRef.current === undefined) {
+      prevStatusRef.current = status;
+      return;
+    }
+
+    const prevStatus = prevStatusRef.current;
+    if (status !== prevStatus) {
+      prevStatusRef.current = status;
+
+      if (status === "IN_PROGRESS") {
+        queryClient.resetQueries({
+          queryKey: ["get-meeting-conclusion-time-by-meetingId", { meetingId }],
+        });
+      } else if (status === "DISCUSSION") {
+        handleUpdatedRefresh();
+      } else if (status === "CONCLUSION") {
+        handleUpdatedRefresh();
+      } else if (status === "ENDED") {
+        handleUpdatedRefresh();
+      } else if (!status) {
         handleUpdatedRefresh();
       }
       queryClient.resetQueries({ queryKey: ["get-meeting-conclusion-res"] });
-    });
-
-    return () => {
-      unsubActiveTabImmediate();
-      unsubActiveTabDelayed();
-      unsubStatus();
-    };
-  }, [db, handleUpdatedRefresh, meetingId, meetingResponse]);
+    }
+  }, [meetingResponse, handleUpdatedRefresh, meetingId]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -489,6 +496,10 @@ export default function useMeetingDesc() {
 
     const unsubscribe = onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
+        if (isFirstUpdate.current) {
+          isFirstUpdate.current = false;
+          return;
+        }
         queryClient.invalidateQueries({
           queryKey: ["get-meeting-details-timing"],
         });
@@ -632,6 +643,7 @@ export default function useMeetingDesc() {
         const mp3Blob = new Blob([buffer], { type: "audio/mpeg" });
         resolve(mp3Blob);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error("Error converting to MP3:", error);
         // Fallback: return original webm but with .mp3 extension
         resolve(webmBlob);
@@ -704,6 +716,7 @@ export default function useMeetingDesc() {
 
       return true;
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error("Transcript error:", err);
       return false;
     }
@@ -914,6 +927,7 @@ export default function useMeetingDesc() {
             },
           );
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.error("Error uploading recording:", error);
           toast.error("Failed to save recording");
         }
@@ -955,6 +969,7 @@ export default function useMeetingDesc() {
         "Recording started! Please record for at least 20 seconds.",
       );
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error in recording setup:", error);
       toast.error("Failed to initialize recording");
     }
@@ -1021,8 +1036,13 @@ export default function useMeetingDesc() {
 
   const isStop = now - startTime! < 20 * 1000;
 
+  const firebaseStatus = meetingResponse?.state?.status;
+  const mappedStatus =
+    firebaseStatus === "IN_PROGRESS" ? "STARTED" : firebaseStatus;
+  const meetingStatus = mappedStatus || meetingTiming?.detailMeetingStatus;
+
   return {
-    meetingStatus: meetingTiming?.detailMeetingStatus,
+    meetingStatus,
     meetingId,
     meetingResponse,
     meetingTiming,
