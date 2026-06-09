@@ -694,6 +694,7 @@ const AddMeeting = () => {
     companyMeetingId,
     isPending,
     meetingApiData,
+    isFormDirty,
   } = useAddMeeting();
 
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -780,6 +781,7 @@ const AddMeeting = () => {
               isPending={isPending}
               onFinish={onFinish}
               isUpdate={!!companyMeetingId}
+              isSubmitDisabled={!!companyMeetingId && !isFormDirty}
             />
           </div>
 

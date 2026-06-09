@@ -1,6 +1,5 @@
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
-import { format } from "date-fns";
 import { Calendar, Edit } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -24,7 +23,7 @@ import {
   useGetCompanyTask,
   useGetCompanyTaskById,
 } from "@/features/api/companyTask";
-import { getInitials } from "@/features/utils/app.utils";
+import { getInitials, convertToLocalDate } from "@/features/utils/app.utils";
 import { queryClient } from "@/queryClient";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
@@ -278,10 +277,7 @@ export default function ProjectTaskList() {
                       <span className="font-medium">Deadline:</span>
                       <span>
                         {task.taskDeadline
-                          ? format(
-                              new Date(task.taskDeadline),
-                              "dd/MM/yyyy h:mm a",
-                            )
+                          ? convertToLocalDate(task.taskDeadline)
                           : "-"}
                       </span>
                     </div>

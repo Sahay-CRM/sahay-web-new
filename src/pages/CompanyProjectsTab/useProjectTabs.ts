@@ -11,7 +11,11 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useGetCoreParameterDropdown } from "@/features/api/Business";
-import { getUTCEndOfDay, getUTCStartOfDay } from "@/features/utils/app.utils";
+import {
+  getUTCEndOfDay,
+  getUTCStartOfDay,
+  convertToLocalDate,
+} from "@/features/utils/app.utils";
 import { DateRange } from "react-day-picker";
 
 export default function useProjectTabs() {
@@ -244,7 +248,7 @@ export default function useProjectTabs() {
         [],
       subParameterIds: [],
       projectDeadline: project.projectDeadline
-        ? new Date(project.projectDeadline).toLocaleDateString("en-GB")
+        ? convertToLocalDate(project.projectDeadline)
         : "No deadline",
       projectStatus: project.projectStatus ? String(project.projectStatus) : "",
       projectStatusId: project.projectStatusId,

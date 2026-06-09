@@ -33,6 +33,7 @@ interface SearchDropdownProps {
   isCrossShow?: boolean;
   disabled?: boolean;
   multiSelect?: boolean;
+  onAddNew?: (query: string) => void;
 }
 
 const SearchDropdown = ({
@@ -50,6 +51,7 @@ const SearchDropdown = ({
   isCrossShow = true,
   disabled = false,
   multiSelect = false,
+  onAddNew,
 }: SearchDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -60,6 +62,10 @@ const SearchDropdown = ({
   const filteredOptions = options.filter(
     (opt) =>
       opt.isHeader || opt.label.toLowerCase().includes(query.toLowerCase()),
+  );
+
+  const hasExactMatch = options.some(
+    (opt) => opt.label.toLowerCase() === query.trim().toLowerCase(),
   );
 
   const bg = selectedOption?.color;
@@ -154,48 +160,79 @@ const SearchDropdown = ({
             onWheel={(e) => e.stopPropagation()}
           >
             {filteredOptions.length > 0 ? (
-              filteredOptions.map((item, index) => {
-                if (item.isHeader) {
+              <>
+                {filteredOptions.map((item, index) => {
+                  if (item.isHeader) {
+                    return (
+                      <div
+                        key={`header-${index}`}
+                        className="px-4 py-2 text-[12px] font-semibold text-primary uppercase tracking-wider bg-gray-50/50"
+                      >
+                        {item.label}
+                      </div>
+                    );
+                  }
                   return (
                     <div
-                      key={`header-${index}`}
-                      className="px-4 py-2 text-[12px] font-semibold text-primary uppercase tracking-wider bg-gray-50/50"
+                      key={item.value}
+                      className="px-2 py-1"
+                      onClick={() => {
+                        onSelect(item);
+                        if (!multiSelect) {
+                          setQuery("");
+                          setOpen(false);
+                        }
+                      }}
                     >
-                      {item.label}
+                      <div
+                        className={twMerge(
+                          "cursor-pointer text-sm py-1 flex items-center justify-between rounded-sm transition-colors duration-200",
+                          selectedValues.includes(item.value)
+                            ? "bg-gray-100 px-2 text-gray-900"
+                            : "hover:bg-gray-100 px-2 hover:text-gray-900",
+                        )}
+                      >
+                        <span className="truncate">{item.label}</span>
+                        {selectedValues.includes(item.value) && (
+                          <Check className="h-4 w-4 text-primary" />
+                        )}
+                      </div>
                     </div>
                   );
-                }
-                return (
-                  <div
-                    key={item.value}
-                    className="px-2 py-1"
-                    onClick={() => {
-                      onSelect(item);
-                      if (!multiSelect) {
-                        setQuery("");
-                        setOpen(false);
-                      }
-                    }}
-                  >
+                })}
+                {!hasExactMatch && query.trim() && onAddNew && (
+                  <div className="px-2 py-1 border-t border-gray-100">
                     <div
-                      className={twMerge(
-                        "cursor-pointer text-sm py-1 flex items-center justify-between rounded-sm transition-colors duration-200",
-                        selectedValues.includes(item.value)
-                          ? "bg-gray-100 px-2 text-gray-900"
-                          : "hover:bg-gray-100 px-2 hover:text-gray-900",
-                      )}
+                      className="px-2 py-1.5 text-sm text-primary hover:bg-gray-100 rounded-sm cursor-pointer font-medium"
+                      onClick={() => {
+                        onAddNew(query);
+                        setOpen(false);
+                        setQuery("");
+                      }}
                     >
-                      <span className="truncate">{item.label}</span>
-                      {selectedValues.includes(item.value) && (
-                        <Check className="h-4 w-4 text-primary" />
-                      )}
+                      Add new "{query}"
                     </div>
                   </div>
-                );
-              })
+                )}
+              </>
             ) : (
-              <div className="px-3 py-2 text-sm text-muted-foreground">
-                No results found
+              <div className="p-1">
+                {onAddNew && query.trim() ? (
+                  <div
+                    className="px-3 py-2 text-sm text-primary hover:bg-gray-100 rounded-sm cursor-pointer font-medium"
+                    onClick={() => {
+                      onAddNew(query);
+                      setOpen(false);
+                      setQuery("");
+                    }}
+                  >
+                    Add new "{query}"
+                  </div>
+                ) : (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">
+                    No results found
+                  </div>
+                )}
               </div>
             )}
           </div>

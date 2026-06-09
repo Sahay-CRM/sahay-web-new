@@ -22,6 +22,7 @@ import {
   Network,
   Eye,
   LayoutDashboard,
+  GanttChart,
 } from "lucide-react";
 
 // Icon mapping object
@@ -49,6 +50,7 @@ export const iconMap = {
   Network,
   Eye,
   LayoutDashboard,
+  GanttChart,
 };
 
 export type IconName = keyof typeof iconMap;

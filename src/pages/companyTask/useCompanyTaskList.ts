@@ -1,10 +1,14 @@
+import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import {
   deleteCompanyTaskMutation,
   useGetAllTaskStatus,
   useGetCompanyTask,
 } from "@/features/api/companyTask";
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
-import { getUserPermission } from "@/features/selectors/auth.selector";
+import {
+  getUserDetail,
+  getUserPermission,
+} from "@/features/selectors/auth.selector";
 import { getUTCEndOfDay, getUTCStartOfDay } from "@/features/utils/app.utils";
 import { AxiosError } from "axios";
 import { useCallback, useEffect, useState } from "react";
@@ -21,11 +25,21 @@ export default function useCompanyTaskList() {
   const [isImportExportModalOpen, setIsImportExportModalOpen] = useState(false);
   const [isImport, setIsImport] = useState(false);
   const permission = useSelector(getUserPermission).TASK;
+  const user = useSelector(getUserDetail);
+  const isEmployee = user?.employeeType?.toUpperCase() === "EMPLOYEE";
   const [isChildData, setIsChildData] = useState<string | undefined>();
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewModalData, setViewModalData] = useState<TaskGetPaging>(
     {} as TaskGetPaging,
   );
+  const { data: employeeData } = useGetEmployeeDd({
+    filter: {},
+  });
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const handleEmployeeFilterChange = (selected: string[]) => {
+    setSelectedEmployees(selected);
+    setPaginationFilter((prev) => ({ ...prev }));
+  };
 
   // LocalStorage key for persisting company task date range
   const COMPANY_TASK_DATE_RANGE_KEY = "companyTaskDateRange";
@@ -138,6 +152,7 @@ export default function useCompanyTaskList() {
   } = useGetCompanyTask({
     filter: {
       ...paginationFilter,
+      employeeId: selectedEmployees,
       statusArray: filters.taskStatusName,
       ...(showOverdue
         ? {}
@@ -421,6 +436,11 @@ export default function useCompanyTaskList() {
     setIsViewModalOpen(true);
   };
 
+  const employeeOptions =
+    employeeData?.data?.map((item) => ({
+      value: item.employeeId ?? "",
+      label: item.employeeName ?? "",
+    })) || [];
   return {
     companyTaskData,
     closeDeleteModal,
@@ -460,5 +480,10 @@ export default function useCompanyTaskList() {
     isLoading,
     // taskStatus,
     appliedDateRange,
+    employeeOptions,
+
+    handleEmployeeFilterChange,
+    selectedEmployees,
+    isEmployee,
   };
 }

@@ -944,6 +944,7 @@ export default function KPITable({
                                   const selectOptions = [
                                     { value: "1", label: "Yes" },
                                     { value: "2", label: "No" },
+                                    { value: "3", label: "N/A" },
                                   ];
                                   const isValid = inputVal === String(value1);
                                   return (
@@ -962,6 +963,7 @@ export default function KPITable({
                                               className={clsx(
                                                 "rounded-sm text-sm w-[80px] h-[42px]",
                                                 inputVal !== "" &&
+                                                  inputVal !== "3" &&
                                                   (isValid
                                                     ? "bg-green-100 border border-green-500"
                                                     : "bg-red-100 border border-red-500"),

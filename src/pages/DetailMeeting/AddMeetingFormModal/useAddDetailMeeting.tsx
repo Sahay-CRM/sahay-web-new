@@ -27,7 +27,7 @@ export default function useAddDetailMeeting() {
     mode: "onChange",
   });
 
-  const { handleSubmit, trigger, reset, getValues, setValue } = methods;
+  const { handleSubmit, trigger, reset, getValues, setValue, watch } = methods;
 
   useEffect(() => {
     if (meetingApiData) {
@@ -113,6 +113,90 @@ export default function useAddDetailMeeting() {
     setModalOpen(false);
   };
 
+  const [
+    watchedName,
+    watchedDesc,
+    watchedDateTime,
+    watchedType,
+    watchedJoiners,
+  ] = watch([
+    "meetingName",
+    "meetingDescription",
+    "meetingDateTime",
+    "meetingTypeId",
+    "employeeId",
+  ]);
+
+  const isFormDirty = (() => {
+    if (!meetingApiData) return false;
+
+    const nameChanged =
+      (watchedName || "").trim() !== (meetingApiData.meetingName || "").trim();
+    const descChanged =
+      (watchedDesc || "").trim() !==
+      (meetingApiData.meetingDescription || "").trim();
+
+    const originalStart = meetingApiData.meetingDateTime
+      ? new Date(meetingApiData.meetingDateTime).toISOString()
+      : null;
+    const currentStart = watchedDateTime
+      ? new Date(watchedDateTime).toISOString()
+      : null;
+    const startChanged = currentStart !== originalStart;
+
+    const originalTypeId =
+      meetingApiData.meetingType?.meetingTypeId || meetingApiData.meetingTypeId;
+    const currentTypeId = watchedType?.meetingTypeId || watchedType;
+    const typeChanged = currentTypeId !== originalTypeId;
+
+    const originalJoiners = (meetingApiData.joiners || []) as (
+      | string
+      | Joiners
+    )[];
+    const currentJoiners = (watchedJoiners || []) as (string | Joiners)[];
+
+    const getJoinerId = (j: string | Joiners): string => {
+      return typeof j === "string" ? j : j.employeeId;
+    };
+
+    const getJoinerIsTeamLeader = (j: string | Joiners): boolean => {
+      return typeof j === "string" ? false : !!j.isTeamLeader;
+    };
+
+    const originalJoinerIds = originalJoiners
+      .map(getJoinerId)
+      .filter(Boolean)
+      .sort();
+    const currentJoinerIds = currentJoiners
+      .map(getJoinerId)
+      .filter(Boolean)
+      .sort();
+    const joinersListChanged =
+      originalJoinerIds.join(",") !== currentJoinerIds.join(",");
+
+    const originalTLIds = originalJoiners
+      .filter(getJoinerIsTeamLeader)
+      .map(getJoinerId)
+      .filter(Boolean)
+      .sort();
+    const currentTLIds = currentJoiners
+      .filter(getJoinerIsTeamLeader)
+      .map(getJoinerId)
+      .filter(Boolean)
+      .sort();
+    const teamLeadersChanged =
+      originalTLIds.join(",") !== currentTLIds.join(",");
+
+    return (
+      nameChanged ||
+      descChanged ||
+      startChanged ||
+      typeChanged ||
+      joinersListChanged ||
+      teamLeadersChanged
+    );
+  })();
+
   return {
     isModalOpen,
     handleClose,
@@ -125,5 +209,6 @@ export default function useAddDetailMeeting() {
     isPending,
     meetingApiData,
     permission,
+    isFormDirty,
   };
 }

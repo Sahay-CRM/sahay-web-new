@@ -45,6 +45,7 @@ import {
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import IssueAgendaAddModal from "./issueAgendaAddModal";
+import ModalData from "@/components/shared/Modal/ModalData/ModalData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   closestCenter,
@@ -299,6 +300,18 @@ export default function Agenda({
 
   const [showMaxAgendaModal, setShowMaxAgendaModal] = useState(false);
 
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  }>({
+    open: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
+
   const handleStartMeetingClick = () => {
     const totalMinutes = Math.floor(Number(meetingTime || 0) / 60);
     const durationPerAgenda = Number(
@@ -309,30 +322,35 @@ export default function Agenda({
     if (unresolvedCount !== undefined && unresolvedCount > maxAgenda) {
       setShowMaxAgendaModal(true);
     } else {
-      handleStartMeeting();
+      setConfirmModal({
+        open: true,
+        title: "Start Meeting",
+        description: "Are you sure you want to start the meeting?",
+        onConfirm: () => {
+          handleStartMeeting();
+          setConfirmModal((prev) => ({ ...prev, open: false }));
+        },
+      });
     }
   };
 
-  const [contentWidth, setContentWidth] = useState("90%");
+  const handleStartDiscussionClick = () => {
+    if (!agendaList || agendaList.length === 0) {
+      setNoAgendaModalOpen(true);
+      return;
+    }
+    setConfirmModal({
+      open: true,
+      title: "Start Discussion",
+      description: "Are you sure you want to start the discussion?",
+      onConfirm: () => {
+        handleDesc();
+        setConfirmModal((prev) => ({ ...prev, open: false }));
+      },
+    });
+  };
+
   const sensors = useSensors(useSensor(PointerSensor));
-
-  const SIDEBAR_WIDTH = 600;
-
-  const updateWidth = () => {
-    const screenWidth = window.innerWidth;
-    if (isSideBar) {
-      setContentWidth(`${screenWidth - SIDEBAR_WIDTH}px`);
-    } else {
-      setContentWidth("90%");
-    }
-  };
-
-  useEffect(() => {
-    updateWidth();
-    window.addEventListener("resize", updateWidth);
-    return () => window.removeEventListener("resize", updateWidth);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSideBar]);
 
   // const formatAgendaTime = (totalSeconds: number) => {
   //   if (!totalSeconds || isNaN(totalSeconds)) {
@@ -445,7 +463,15 @@ export default function Agenda({
         onClose={() => setShowMaxAgendaModal(false)}
         onStartAnyway={() => {
           setShowMaxAgendaModal(false);
-          handleStartMeeting();
+          setConfirmModal({
+            open: true,
+            title: "Start Meeting",
+            description: "Are you sure you want to start the meeting anyway?",
+            onConfirm: () => {
+              handleStartMeeting();
+              setConfirmModal((prev) => ({ ...prev, open: false }));
+            },
+          });
         }}
       />
       <Dialog open={noAgendaModalOpen} onOpenChange={setNoAgendaModalOpen}>
@@ -461,6 +487,31 @@ export default function Agenda({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ModalData
+        isModalOpen={confirmModal.open}
+        modalClose={() => setConfirmModal((prev) => ({ ...prev, open: false }))}
+        modalTitle={confirmModal.title}
+        containerClass="min-h-fit"
+        buttons={[
+          {
+            btnText: "Cancel",
+            btnClick: () =>
+              setConfirmModal((prev) => ({ ...prev, open: false })),
+            buttonCss:
+              "bg-transparent text-gray-700 hover:bg-gray-100 border border-gray-300",
+          },
+          {
+            btnText: "Confirm",
+            btnClick: () => {
+              confirmModal.onConfirm();
+            },
+          },
+        ]}
+      >
+        <p className="text-gray-700 text-sm sm:text-base py-2">
+          {confirmModal.description}
+        </p>
+      </ModalData>
       <IssueAgendaAddModal
         isModalOpen={addIssueModal}
         modalClose={() => setAddIssueModal(false)}
@@ -627,7 +678,7 @@ export default function Agenda({
                       <Button
                         variant="outline"
                         className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
-                        onClick={handleDesc}
+                        onClick={handleStartDiscussionClick}
                         isLoading={isPending}
                       >
                         Start Discussion
@@ -799,7 +850,7 @@ export default function Agenda({
                 <TabsContent value="PARKED" className="mt-0"></TabsContent>
               </Tabs>
             </div>
-            <div className="mt-1 h-[calc(100vh-260px)] pr-1 w-full overflow-auto">
+            <div className="mt-1 h-[calc(100vh-180px)] pr-1 w-full overflow-auto">
               {agendaList && agendaList.length > 0 ? (
                 <DndContext
                   sensors={sensors}
@@ -847,7 +898,7 @@ export default function Agenda({
 
               {meetingStatus === "DISCUSSION" && (
                 <div
-                  className="absolute bottom-0 right-0 border rounded-full p-2 bg-white shadow-2xl shadow-primary border-primary"
+                  className="absolute bottom-10 -right-3 border rounded-full p-2 bg-white shadow-2xl shadow-primary border-primary"
                   onClick={handleAddAgendaModal}
                 >
                   <Plus />
@@ -856,10 +907,7 @@ export default function Agenda({
             </div>
           </div>
         </div>
-        <div
-          style={{ width: contentWidth }}
-          className={`${meetingStatus !== "DISCUSSION" && ""}`}
-        >
+        <div className="flex-1 min-w-0">
           <div className="flex justify-between">
             {meetingStatus === "DISCUSSION" && (
               <div className="w-full">
@@ -1042,7 +1090,21 @@ export default function Agenda({
                       <Button
                         variant="outline"
                         className="w-[180px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
-                        onClick={handleConclusionMeeting}
+                        onClick={() => {
+                          setConfirmModal({
+                            open: true,
+                            title: "Go To Conclusion",
+                            description:
+                              "Are you sure you want to go to the conclusion?",
+                            onConfirm: () => {
+                              handleConclusionMeeting();
+                              setConfirmModal((prev) => ({
+                                ...prev,
+                                open: false,
+                              }));
+                            },
+                          });
+                        }}
                       >
                         Go To Conclusion
                       </Button>
@@ -1052,7 +1114,21 @@ export default function Agenda({
                     <Button
                       variant="outline"
                       className="bg-primary text-white px-4 hover:bg-primary py-5 text-sm hover:text-white sm:text-base md:text-lg"
-                      onClick={handleCloseMeetingWithLog}
+                      onClick={() => {
+                        setConfirmModal({
+                          open: true,
+                          title: "End Meeting",
+                          description:
+                            "Are you sure you want to end the meeting?",
+                          onConfirm: () => {
+                            handleCloseMeetingWithLog();
+                            setConfirmModal((prev) => ({
+                              ...prev,
+                              open: false,
+                            }));
+                          },
+                        });
+                      }}
                       isLoading={endMeetingLoading}
                     >
                       End Meeting
@@ -1297,7 +1373,7 @@ export default function Agenda({
                 </div>
               </div>
             ) : (
-              <div className="flex-1 h-[calc(100vh-320px)] overflow-x-hidden overflow-y-auto w-full">
+              <div className="flex-1 h-[calc(100vh-220px)] overflow-x-hidden overflow-y-auto w-full">
                 <div>
                   {!selectedItem || !hasChanges(selectedItem) ? (
                     <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg mt-6 p-8 text-center">

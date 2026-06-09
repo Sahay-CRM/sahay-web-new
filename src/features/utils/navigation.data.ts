@@ -326,6 +326,29 @@ export const companyNavigationData = [
     permission: "View",
     moduleKey: "ORG_STRUCTURE",
   },
+  {
+    id: 23,
+    icon: "GanttChart",
+    label: "Gantt",
+    permission: "View",
+    moduleKey: "ORG_STRUCTURE",
+    items: [
+      {
+        id: 1,
+        label: "Workspaces",
+        link: "/dashboard/gantt/workspaces",
+        permission: "View",
+        moduleKey: "KPI_PERMISSION",
+      },
+      {
+        id: 2,
+        label: "Templates",
+        link: "/dashboard/gantt/templates",
+        permission: "View",
+        moduleKey: "KPI_PERMISSION",
+      },
+    ],
+  },
 ];
 
 export const getRouteByLabel = (label: string): string | null => {
