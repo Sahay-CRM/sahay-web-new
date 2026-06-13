@@ -495,7 +495,10 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
         {/* Local Search Input Removed - Moved to Header */}
 
         <div
-          className={cn("h-[calc(100vh-170px)] overflow-y-scroll", className)}
+          className={cn(
+            "h-[calc(var(--vh,100vh)-170px)] overflow-y-scroll",
+            className,
+          )}
         >
           {Array.isArray(meetingNotes?.data) &&
             (() => {

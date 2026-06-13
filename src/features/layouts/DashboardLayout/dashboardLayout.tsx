@@ -403,11 +403,15 @@ const DashboardLayout = () => {
       <SidebarControlContext.Provider value={{ open, setOpen }}>
         <div
           className="flex bg-gray-200 gap-x-4 overflow-hidden"
-          style={{
-            zoom: zoom / 100,
-            height: `${10000 / zoom}vh`,
-            width: `${10000 / zoom}vw`,
-          }}
+          style={
+            {
+              zoom: zoom / 100,
+              height: `${10000 / zoom}vh`,
+              width: `${10000 / zoom}vw`,
+              "--vh": `${10000 / zoom}vh`,
+              "--vw": `${10000 / zoom}vw`,
+            } as React.CSSProperties
+          }
         >
           <div
             className={`${open ? "w-[16.25rem]" : "hidden sm:block sm:w-16"} bg-white rounded-tr-2xl transition-all duration-300`}
