@@ -20,9 +20,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-const ROW_HEIGHT = 36;
-const BAR_HEIGHT = 18;
-const MILESTONE_SIZE = 7;
+const ROW_HEIGHT = 40;
+const BAR_HEIGHT = 20;
+const MILESTONE_SIZE = 8;
 
 interface DepLine {
   id: string;
@@ -153,7 +153,7 @@ export const GanttTimeline = memo(function GanttTimeline({
                 y={headerHeight + i * ROW_HEIGHT}
                 width="100%"
                 height={ROW_HEIGHT}
-                className={`transition-colors duration-150 cursor-pointer ${
+                className={`transition-colors duration-150 cursor-default ${
                   isHovered
                     ? "fill-slate-100/70"
                     : row.type === "phase"
@@ -164,11 +164,6 @@ export const GanttTimeline = memo(function GanttTimeline({
                 }`}
                 onMouseEnter={() => onHoverRow(row.id)}
                 onMouseLeave={() => onHoverRow(null)}
-                onClick={() => {
-                  if (row.type === "item" && row.item) {
-                    onItemClick(row.item);
-                  }
-                }}
               />
             );
           })}
@@ -219,8 +214,8 @@ export const GanttTimeline = memo(function GanttTimeline({
               y1={headerHeight}
               x2={todayX}
               y2={headerHeight + totalHeight}
-              className="stroke-rose-400/80"
-              strokeWidth={1.5}
+              className="stroke-rose-450/90"
+              strokeWidth={2}
               strokeDasharray="3,3"
             />
           )}
@@ -257,9 +252,9 @@ export const GanttTimeline = memo(function GanttTimeline({
                 timelineStart={timelineStart}
                 dayWidth={dayWidth}
                 phases={phases}
-                onClick={() => onItemClick(row.item!)}
                 onHover={() => onHoverRow(row.id)}
                 onLeave={() => onHoverRow(null)}
+                onItemClick={onItemClick}
               />
             );
           })}
@@ -312,7 +307,7 @@ function PhaseBand({
   const barHeight = 4;
 
   return (
-    <g className="cursor-pointer" onMouseEnter={onHover} onMouseLeave={onLeave}>
+    <g className="cursor-default" onMouseEnter={onHover} onMouseLeave={onLeave}>
       {/* Summary Bracket Line */}
       <rect
         x={startX}
@@ -335,11 +330,11 @@ function PhaseBand({
       {/* Phase title adjacent text */}
       <text
         x={startX + width + 8}
-        y={barY + 5}
-        fontSize={10}
-        fontWeight={600}
+        y={barY + 6.5}
+        fontSize={12}
+        fontWeight={700}
         fill={phaseColor}
-        className="select-none pointer-events-none opacity-85"
+        className="select-none pointer-events-none opacity-90"
       >
         {row.phaseName}
       </text>
@@ -356,9 +351,9 @@ interface GanttBarProps {
   timelineStart: Date;
   dayWidth: number;
   phases: CompanyGanttPhase[];
-  onClick: () => void;
   onHover: () => void;
   onLeave: () => void;
+  onItemClick: (item: CompanyGanttItem) => void;
 }
 
 function GanttBar({
@@ -368,9 +363,9 @@ function GanttBar({
   timelineStart,
   dayWidth,
   phases,
-  onClick,
   onHover,
   onLeave,
+  onItemClick,
 }: GanttBarProps) {
   const y = headerHeight + rowIndex * ROW_HEIGHT;
   const barY = y + (ROW_HEIGHT - BAR_HEIGHT) / 2;
@@ -410,10 +405,10 @@ function GanttBar({
       <Tooltip>
         <TooltipTrigger asChild>
           <g
-            onClick={onClick}
             onMouseEnter={onHover}
             onMouseLeave={onLeave}
-            className="cursor-pointer"
+            onClick={() => onItemClick(item)}
+            className="cursor-pointer group"
           >
             {/* Milestone diamond */}
             <polygon
@@ -425,9 +420,9 @@ function GanttBar({
             {/* Milestone label next to diamond - Background Mask */}
             <text
               x={cx + MILESTONE_SIZE + 6}
-              y={cy + 3.5}
-              fontSize={10}
-              fontWeight={500}
+              y={cy + 4}
+              fontSize={12}
+              fontWeight={600}
               stroke="white"
               strokeWidth={4}
               strokeLinejoin="round"
@@ -438,9 +433,9 @@ function GanttBar({
             {/* Milestone label next to diamond */}
             <text
               x={cx + MILESTONE_SIZE + 6}
-              y={cy + 3.5}
-              fontSize={10}
-              fontWeight={500}
+              y={cy + 4}
+              fontSize={12}
+              fontWeight={600}
               className="fill-slate-500 select-none pointer-events-none"
             >
               {item.itemName}
@@ -499,9 +494,9 @@ function GanttBar({
     <Tooltip>
       <TooltipTrigger asChild>
         <g
-          onClick={onClick}
           onMouseEnter={onHover}
           onMouseLeave={onLeave}
+          onClick={() => onItemClick(item)}
           className="cursor-pointer group"
         >
           {/* Solid bar background */}
@@ -534,7 +529,7 @@ function GanttBar({
             <text
               x={x + width / 2}
               y={barY + BAR_HEIGHT / 2 + 3.5}
-              fontSize={9}
+              fontSize={10}
               fontWeight={700}
               textAnchor="middle"
               fill="white"
@@ -549,9 +544,9 @@ function GanttBar({
           {/* Text label outside bar - task name */}
           <text
             x={x + width + 6}
-            y={barY + BAR_HEIGHT / 2 + 3.5}
-            fontSize={10}
-            fontWeight={500}
+            y={barY + BAR_HEIGHT / 2 + 4}
+            fontSize={12}
+            fontWeight={600}
             stroke="white"
             strokeWidth={3}
             strokeLinejoin="round"
@@ -562,13 +557,13 @@ function GanttBar({
           </text>
           <text
             x={x + width + 6}
-            y={barY + BAR_HEIGHT / 2 + 3.5}
-            fontSize={10}
-            fontWeight={500}
-            className="fill-slate-600 select-none pointer-events-none transition-colors group-hover:fill-primary"
+            y={barY + BAR_HEIGHT / 2 + 4}
+            fontSize={12}
+            fontWeight={600}
+            className="fill-slate-650 select-none pointer-events-none transition-colors group-hover:fill-primary"
           >
             {item.itemName}{" "}
-            <tspan className="fill-slate-400" fontSize={9}>
+            <tspan className="fill-slate-400 font-medium" fontSize={10}>
               ({item.progressPercentage}%)
             </tspan>
           </text>

@@ -150,22 +150,27 @@ export default function GanttItemDetailModal({
 
   const handleGeneralSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await Promise.all([
-      updateMutation.mutateAsync({
-        itemName: nameVal,
-        itemDescription: descVal || undefined,
-        priority: priorityVal,
-      }),
-      updateDatesMutation.mutateAsync({
-        itemId: item.ganttItemId,
-        payload: {
-          plannedStartDate: item.plannedStartDate,
-          plannedEndDate: item.plannedEndDate,
-          actualStartDate: new Date(startDateVal).toISOString(),
-          actualEndDate: new Date(endDateVal).toISOString(),
-        },
-      }),
-    ]);
+    try {
+      await Promise.all([
+        updateMutation.mutateAsync({
+          itemName: nameVal,
+          itemDescription: descVal || undefined,
+          priority: priorityVal,
+        }),
+        updateDatesMutation.mutateAsync({
+          itemId: item.ganttItemId,
+          payload: {
+            plannedStartDate: item.plannedStartDate,
+            plannedEndDate: item.plannedEndDate,
+            actualStartDate: new Date(startDateVal).toISOString(),
+            actualEndDate: new Date(endDateVal).toISOString(),
+          },
+        }),
+      ]);
+      onOpenChange(false);
+    } catch {
+      // Handled by mutation hook toasts
+    }
   };
 
   const { data: employees, isLoading: employeesLoading } = useQuery({
@@ -206,13 +211,18 @@ export default function GanttItemDetailModal({
 
   const handleProgressSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await progressMutation.mutateAsync({
-      itemId: item.ganttItemId,
-      payload: {
-        progressPercentage: progressVal,
-        itemStatus: statusVal as GanttItemStatus,
-      },
-    });
+    try {
+      await progressMutation.mutateAsync({
+        itemId: item.ganttItemId,
+        payload: {
+          progressPercentage: progressVal,
+          itemStatus: statusVal as GanttItemStatus,
+        },
+      });
+      onOpenChange(false);
+    } catch {
+      // Handled by mutation hook toasts
+    }
   };
 
   const handleAssign = async (employeeId: string | null) => {
@@ -221,6 +231,7 @@ export default function GanttItemDetailModal({
         itemId: item.ganttItemId,
         payload: { assignedToEmployeeId: employeeId },
       });
+      onOpenChange(false);
     } catch {
       // Handled by toast inside mutation hook
     }
@@ -245,6 +256,7 @@ export default function GanttItemDetailModal({
       setPendingDeps([
         { id: generateUUID(), predId: "", depType: "FS", lagDays: 0 },
       ]);
+      onOpenChange(false);
     } catch {
       // Handled by toast inside mutation hook
     }
@@ -467,7 +479,7 @@ export default function GanttItemDetailModal({
                         }
                         className="w-full h-1.5 accent-primary cursor-pointer rounded-lg appearance-none bg-slate-200"
                       />
-                      <div className="flex justify-between text-[9px] text-slate-400 font-semibold font-mono mt-1">
+                      <div className="flex justify-between text-md text-primary font-semibold font-mono mt-1">
                         <span>0%</span>
                         <span>50%</span>
                         <span>100%</span>
@@ -522,16 +534,16 @@ export default function GanttItemDetailModal({
                           className="flex items-center justify-between py-3 text-xs"
                         >
                           <div className="flex flex-col gap-0.5 min-w-0">
-                            <span className="font-bold text-slate-800 truncate">
+                            <span className="font-bold text-sm text-slate-800 truncate">
                               {pred?.itemName ?? "Unknown Task"}
                             </span>
-                            <span className="text-slate-400 text-[10px]">
+                            <span className="text-slate-400 text-sm">
                               {typeLabel}{" "}
                               {dep.lagDays > 0 && `(Lag: +${dep.lagDays}d)`}
                             </span>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
-                            <span className="text-[10px] font-bold text-primary uppercase">
+                            <span className="text-sm font-bold text-primary uppercase">
                               {dep.dependencyType}
                             </span>
                             <Button
@@ -597,7 +609,7 @@ export default function GanttItemDetailModal({
                     })}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400 italic py-4 text-center">
+                  <p className="text-sm text-slate-400 italic py-4 text-center">
                     No task dependencies linked yet.
                   </p>
                 )}
@@ -605,19 +617,19 @@ export default function GanttItemDetailModal({
                 {/* Add dependency rows */}
                 {candidates.length > 0 ? (
                   <div className="space-y-3 pt-4 border-t border-dashed border-slate-200">
-                    <Label className="text-sm font-bold text-slate-800 block">
+                    <Label className="text-md font-bold text-slate-800 block">
                       Add New Relation Links
                     </Label>
 
                     {/* Header row */}
                     <div className="grid grid-cols-12 gap-2 items-center">
-                      <span className="col-span-5 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
+                      <span className="col-span-5 text-sm font-semibold text-slate-500 uppercase tracking-wide">
                         Depends On
                       </span>
-                      <span className="col-span-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
+                      <span className="col-span-4 text-sm font-semibold text-slate-500 uppercase tracking-wide">
                         Relation Type
                       </span>
-                      <span className="col-span-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wide text-center">
+                      <span className="col-span-2 text-sm font-semibold text-slate-500 uppercase tracking-wide text-center">
                         Lag (d)
                       </span>
                       <span className="col-span-1" />
@@ -749,7 +761,7 @@ export default function GanttItemDetailModal({
                   </div>
                 ) : (
                   <div className="py-2.5">
-                    <p className="text-xs text-slate-400 italic">
+                    <p className="text-sm text-slate-400 italic">
                       Currently unassigned. Select an employee below to assign
                       this task.
                     </p>
@@ -790,7 +802,7 @@ export default function GanttItemDetailModal({
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-8 px-3.5 text-xs font-semibold border-red-200 text-red-650 hover:bg-red-50 hover:text-red-700 transition-colors rounded-lg mr-auto"
+                  className=" bg-red-700 text-white transition-colors rounded-lg mr-auto"
                   onClick={() => setConfirmDelete(true)}
                 >
                   <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Delete Task
@@ -804,7 +816,7 @@ export default function GanttItemDetailModal({
                     createDepMutation.isPending ||
                     !pendingDeps.some((r) => r.predId)
                   }
-                  className="bg-primary hover:bg-primary/90 text-white font-semibold h-8 px-4 text-xs transition-colors rounded-lg shadow-sm ml-auto"
+                  className=" ml-auto"
                 >
                   {createDepMutation.isPending ? (
                     <>
@@ -820,7 +832,7 @@ export default function GanttItemDetailModal({
                   type="button"
                   onClick={() => handleAssign(selectedAssigneeId)}
                   disabled={assignMutation.isPending || !selectedAssigneeId}
-                  className="bg-primary hover:bg-primary/90 text-white font-semibold h-8 px-4 text-xs transition-colors rounded-lg shadow-sm ml-auto"
+                  className=" ml-auto"
                 >
                   {assignMutation.isPending ? (
                     <>
@@ -843,7 +855,7 @@ export default function GanttItemDetailModal({
                         updateDatesMutation.isPending
                       : progressMutation.isPending
                   }
-                  className="bg-primary hover:bg-primary/90 text-white font-semibold h-8 px-4 text-xs transition-colors rounded-lg shadow-sm ml-auto"
+                  className=" ml-auto"
                 >
                   {activeTab === "general"
                     ? updateMutation.isPending || updateDatesMutation.isPending

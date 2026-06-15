@@ -1168,7 +1168,7 @@ export default function Agenda({
 
     ${
       meetingStatus === "DISCUSSION" &&
-      " border-l-1 border-r-1 border-b-1 rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"
+      " border-t-1 border-l-1 border-r-1 border-b-1 rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"
     }
 
     ${meetingStatus === "CONCLUSION" && "h-[calc(var(--vh,100vh)-220px)]"}
@@ -1178,25 +1178,6 @@ export default function Agenda({
     ${(meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") && "border"}
   `}
           >
-            {meetingStatus === "DISCUSSION" && (
-              <div className="absolute top-0 left-0 right-1 h-0.5 flex">
-                <div
-                  className="border-t-1 border-primary h-0"
-                  style={{
-                    width:
-                      activeTab === "tasks"
-                        ? "280px"
-                        : activeTab === "projects"
-                          ? "140px"
-                          : activeTab === "kpis"
-                            ? "0px"
-                            : "0px",
-                  }}
-                />
-                <div style={{ width: "124px" }} />
-                <div className="border-t-1 border-primary h-0 flex-1" />
-              </div>
-            )}
             {meetingStatus === "NOT_STARTED" ? (
               <div className="max-w-3xl border rounded-sm overflow-y-scroll h-fit">
                 <div className="p-6">

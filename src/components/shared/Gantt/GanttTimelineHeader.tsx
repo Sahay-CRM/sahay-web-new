@@ -56,7 +56,7 @@ export const GanttTimelineHeader = memo(function GanttTimelineHeader({
             x={m.x + m.width / 2}
             y={HEADER_MONTH_H - 8}
             textAnchor="middle"
-            fontSize={11}
+            fontSize={12}
             fontWeight={600}
             className="fill-slate-600 select-none"
           >
@@ -97,7 +97,7 @@ export const GanttTimelineHeader = memo(function GanttTimelineHeader({
             x={w.x + w.width / 2}
             y={HEADER_MONTH_H + HEADER_WEEK_H - 6}
             textAnchor="middle"
-            fontSize={9.5}
+            fontSize={10.5}
             fontWeight={w.isToday ? 700 : 500}
             className={`select-none ${w.isToday ? "fill-rose-500" : "fill-slate-500"}`}
           >

@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 
-const ROW_HEIGHT = 36;
+const ROW_HEIGHT = 40;
 const LEFT_PANEL_WIDTH = 320;
 
 interface Props {
@@ -52,9 +52,9 @@ export const GanttLeftPanel = memo(function GanttLeftPanel({
       {headerHeight > 0 && (
         <div
           style={{ height: headerHeight }}
-          className="border-b border-border bg-muted/30 flex items-end px-3 pb-1"
+          className="border-b border-border bg-muted/30 flex items-end px-3 pb-1.5"
         >
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+          <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
             Task
           </span>
         </div>
@@ -121,7 +121,7 @@ function PhaseRow({
         background: color + "0d",
         borderLeft: `3px solid ${color}`,
       }}
-      className={`flex items-center gap-1.5 px-2 border-b border-border cursor-pointer transition-colors ${
+      className={`flex items-center gap-1.5 px-3 border-b border-border cursor-pointer transition-colors ${
         isHovered ? "bg-muted/70" : "hover:bg-muted/40"
       }`}
       onClick={onToggle}
@@ -129,11 +129,11 @@ function PhaseRow({
       onMouseLeave={onMouseLeave}
     >
       {row.isCollapsed ? (
-        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
       ) : (
-        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
       )}
-      <span className="text-xs font-semibold truncate" style={{ color }}>
+      <span className="text-sm font-bold truncate" style={{ color }}>
         {row.phaseName}
       </span>
     </div>
@@ -172,7 +172,7 @@ function ItemRow({
           height,
           paddingLeft: `${8 + row.depth * 16}px`,
         }}
-        className={`relative flex items-center gap-1 border-b border-border transition-colors cursor-pointer pr-2 ${
+        className={`relative flex items-center gap-2 border-b border-border transition-colors cursor-pointer pr-3 ${
           isHovered ? "bg-muted/40" : "hover:bg-muted/20"
         }`}
         onClick={onClick}
@@ -190,9 +190,9 @@ function ItemRow({
             className="shrink-0 p-0.5 hover:text-primary transition-colors"
           >
             {row.isCollapsed ? (
-              <ChevronRight className="h-3 w-3" />
+              <ChevronRight className="h-3.5 w-3.5" />
             ) : (
-              <ChevronDown className="h-3 w-3" />
+              <ChevronDown className="h-3.5 w-3.5" />
             )}
           </button>
         ) : (
@@ -207,10 +207,10 @@ function ItemRow({
 
         {/* Type icon */}
         {item.itemType === "MILESTONE" || item.isMilestone ? (
-          <Diamond className="h-3 w-3 text-yellow-500 shrink-0" />
+          <Diamond className="h-4 w-4 text-yellow-500 shrink-0" />
         ) : (
           <SquareCheck
-            className="h-3 w-3 shrink-0"
+            className="h-4 w-4 shrink-0"
             style={{ color: statusColor }}
           />
         )}
@@ -218,24 +218,24 @@ function ItemRow({
         {/* Name */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="text-xs truncate flex-1 min-w-0">
+            <span className="text-sm font-semibold truncate flex-1 min-w-0 text-foreground/90">
               {item.itemName}
             </span>
           </TooltipTrigger>
           <TooltipContent side="right" className="max-w-[200px]">
-            <p className="font-medium">{item.itemName}</p>
+            <p className="font-semibold text-sm">{item.itemName}</p>
             <div className="flex gap-1 mt-1 flex-wrap">
-              <Badge className={`text-[10px] px-1 py-0 ${statusBg}`}>
+              <Badge className={`text-[10px] px-2 py-0 ${statusBg}`}>
                 {item.itemStatus.replace("_", " ")}
               </Badge>
               <Badge
                 variant="outline"
-                className={`text-[10px] px-1 py-0 ${priorityColor}`}
+                className={`text-[10px] px-2 py-0 ${priorityColor}`}
               >
                 {item.priority}
               </Badge>
             </div>
-            <p className="text-[10px] mt-1 text-muted-foreground">
+            <p className="text-xs mt-1 text-muted-foreground font-medium">
               {progress}% complete
             </p>
           </TooltipContent>
@@ -245,7 +245,7 @@ function ItemRow({
         {item.assignedEmployee?.employeeName ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="h-5 w-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[8px] font-bold shrink-0">
+              <div className="h-5.5 w-5.5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[9px] font-bold shrink-0">
                 {getInitials(item.assignedEmployee.employeeName)}
               </div>
             </TooltipTrigger>
@@ -254,7 +254,7 @@ function ItemRow({
             </TooltipContent>
           </Tooltip>
         ) : (
-          <Users className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+          <Users className="h-4 w-4 text-muted-foreground/40 shrink-0" />
         )}
 
         {/* Progress bar — thin strip at bottom */}

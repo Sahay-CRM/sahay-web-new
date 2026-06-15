@@ -189,7 +189,7 @@ export default function KPITable({
     [selectedKpisTyped],
   );
 
-  const isLoading = !kpiStructure && !meetingLoading;
+  const isLoading = meetingLoading;
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
   const [tempValues, setTempValues] = useState<{ [key: string]: string }>({});
   const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(

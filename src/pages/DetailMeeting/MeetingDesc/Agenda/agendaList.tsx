@@ -64,6 +64,22 @@ export default function AgendaList({
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
+  const itemRef = useRef<HTMLLIElement | null>(null);
+
+  const setRefs = (node: HTMLLIElement | null) => {
+    setNodeRef(node);
+    itemRef.current = node;
+  };
+
+  useEffect(() => {
+    if (isSelectedAgenda === item?.issueObjectiveId && itemRef.current) {
+      itemRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [isSelectedAgenda, item?.issueObjectiveId]);
+
   useEffect(() => {
     if (!meetingResponse?.timers?.objectives || !meetingTime || !item) return;
 
@@ -183,7 +199,7 @@ export default function AgendaList({
     <div className="py-1 px-1">
       <li
         key={item.issueObjectiveId}
-        ref={setNodeRef}
+        ref={setRefs}
         className={`group px-2 flex border w-full 
         ${item.departmentName && "pt-2"} 
                 ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-16 bg-white text-black" : "h-20"}

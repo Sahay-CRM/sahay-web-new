@@ -488,6 +488,8 @@ const Urls = {
     `${baseUrl}/company/gantt/workspace/update/${id}`,
   ganttWorkspaceDelete: (id: string) =>
     `${baseUrl}/company/gantt/workspace/delete/${id}`,
+  ganttWorkspaceImport: (id: string) =>
+    `${baseUrl}/company/gantt/workspace/import/${id}`,
 
   // Items
   ganttItemCreate: () => `${baseUrl}/company/gantt/item/create`,

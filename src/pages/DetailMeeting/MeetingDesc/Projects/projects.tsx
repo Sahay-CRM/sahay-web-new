@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 
 import ProjectSearchDropdown from "./ProjectSearchDropdown";
 import ProjectDrawer from "./projectDrawer";
+import Loader from "@/components/shared/Loader/Loader";
 
 import {
   useAddUpdateCompanyProject,
@@ -50,14 +51,17 @@ export default function Projects({
   const { mutate: addMeetingProject } = addMeetingProjectDataMutation();
   const { mutate: deleteProjectById } = deleteMeetingProjectMutation();
 
-  const { data: selectedProjects } = useGetMeetingProject({
-    filter: {
-      meetingId: meetingId,
-      ...(ioType === "ISSUE" ? { issueId: issueId } : { objectiveId: issueId }),
-      ioType: ioType,
-    },
-    enable: !!meetingId && !!issueId && !!ioType,
-  });
+  const { data: selectedProjects, isLoading: isProjectLoading } =
+    useGetMeetingProject({
+      filter: {
+        meetingId: meetingId,
+        ...(ioType === "ISSUE"
+          ? { issueId: issueId }
+          : { objectiveId: issueId }),
+        ioType: ioType,
+      },
+      enable: !!meetingId && !!issueId && !!ioType,
+    });
 
   const { mutate: addProject } = useAddUpdateCompanyProject();
 
@@ -193,6 +197,10 @@ export default function Projects({
     setDrawerOpen(true);
     setSelected(null);
   };
+
+  if (isProjectLoading) {
+    return <Loader />;
+  }
 
   return (
     <div className="h-full flex flex-col overflow-hidden">

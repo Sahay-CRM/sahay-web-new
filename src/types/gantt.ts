@@ -249,6 +249,7 @@ export interface CreateGanttItemRequest {
   priority?: GanttItemPriority;
   itemOrder?: number;
   color?: string;
+  assignedToEmployeeId?: string | null;
 }
 
 export interface UpdateGanttItemRequest {

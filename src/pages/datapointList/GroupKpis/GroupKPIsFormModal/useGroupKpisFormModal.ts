@@ -80,6 +80,7 @@ export default function useGroupKpisFormModal({
     filter: { frequencyType: selectedFrequency },
     enable: !!selectedFrequency,
   });
+  console.log(kpiListData, "kpiListData");
 
   const selectedKpiIds = watch("kpiIds");
   const selectedValidationType = watch("validationType");
@@ -125,7 +126,9 @@ export default function useGroupKpisFormModal({
 
     return filteredData.map((item) => ({
       value: item.kpiId,
-      label: `${item.KPIName} (${item.KPILabel}) (${item.coreParameterName})`,
+      label: `${item.KPIName}${item.tag ? ` (${item.tag})` : ""}${
+        item.coreParameterName ? ` (${item.coreParameterName})` : ""
+      }`,
     }));
   }, [
     kpiListData,
