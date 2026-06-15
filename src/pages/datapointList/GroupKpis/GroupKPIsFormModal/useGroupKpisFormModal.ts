@@ -80,7 +80,6 @@ export default function useGroupKpisFormModal({
     filter: { frequencyType: selectedFrequency },
     enable: !!selectedFrequency,
   });
-  console.log(kpiListData, "kpiListData");
 
   const selectedKpiIds = watch("kpiIds");
   const selectedValidationType = watch("validationType");
