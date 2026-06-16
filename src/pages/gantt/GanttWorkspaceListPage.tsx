@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, ChevronDown, Download, Upload, Loader2 } from "lucide-react";
+import { Plus, ChevronDown, Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { exportGanttTemplate } from "./utils/ganttExcel";
 import GanttImportModal from "./components/GanttImportModal";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
-import Api from "@/features/utils/api.utils";
-import Urls from "@/features/utils/urls.utils";
+// import Api from "@/features/utils/api.utils";
+// import Urls from "@/features/utils/urls.utils";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +28,7 @@ import {
 import { fmtDate, WORKSPACE_STATUS_OPTIONS } from "./utils/gantt.utils";
 import type {
   CompanyGanttWorkspace,
-  CompanyGanttPhase,
+  // CompanyGanttPhase,
   GanttWorkspaceStatus,
 } from "@/types/gantt";
 import { Controller, useForm } from "react-hook-form";
@@ -103,44 +103,44 @@ function WorkspaceStatusDropdown({ row }: { row: CompanyGanttWorkspace }) {
 }
 
 function RowTemplateActions({
-  row,
-  employees,
+  // row,
+  // employees,
   onImportClick,
 }: {
   row: CompanyGanttWorkspace;
   employees: EmployeeDetails[];
   onImportClick: () => void;
 }) {
-  const [isExporting, setIsExporting] = useState(false);
+  // const [isExporting, setIsExporting] = useState(false);
 
-  const handleExport = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsExporting(true);
-    try {
-      const { data } = await Api.post<{
-        data: { phases: CompanyGanttPhase[] };
-      }>({
-        url: Urls.ganttWorkspaceDetail(row.ganttWorkspaceId),
-        data: {},
-      });
-      const phases = data.data?.phases || [];
-      await exportGanttTemplate(row.workspaceName, phases, employees);
-      toast.success("Excel template downloaded successfully.");
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error("Export template error: ", err);
-      toast.error("Failed to export template.");
-    } finally {
-      setIsExporting(false);
-    }
-  };
+  // const handleExport = async (e: React.MouseEvent) => {
+  //   e.stopPropagation();
+  //   setIsExporting(true);
+  //   try {
+  //     const { data } = await Api.post<{
+  //       data: { phases: CompanyGanttPhase[] };
+  //     }>({
+  //       url: Urls.ganttWorkspaceDetail(row.ganttWorkspaceId),
+  //       data: {},
+  //     });
+  //     const phases = data.data?.phases || [];
+  //     await exportGanttTemplate(row.workspaceName, phases, employees);
+  //     toast.success("Excel template downloaded successfully.");
+  //   } catch (err) {
+  //     // eslint-disable-next-line no-console
+  //     console.error("Export template error: ", err);
+  //     toast.error("Failed to export template.");
+  //   } finally {
+  //     setIsExporting(false);
+  //   }
+  // };
 
   return (
     <div
       className="flex items-center gap-1.5"
       onClick={(e) => e.stopPropagation()}
     >
-      <Button
+      {/* <Button
         variant="ghost"
         size="icon"
         disabled={isExporting}
@@ -153,7 +153,7 @@ function RowTemplateActions({
         ) : (
           <Download className="h-4 w-4" />
         )}
-      </Button>
+      </Button> */}
       <Button
         variant="ghost"
         size="icon"
@@ -275,7 +275,7 @@ export default function GanttWorkspaceListPage() {
       reset();
     } else {
       if (values.templateId) {
-        const res = await createFromTemplateMutation.mutateAsync({
+        await createFromTemplateMutation.mutateAsync({
           templateId: values.templateId,
           workspaceName: values.workspaceName,
           workspaceDescription: values.workspaceDescription,
@@ -286,9 +286,8 @@ export default function GanttWorkspaceListPage() {
         });
         reset();
         setCreateOpen(false);
-        navigate(`/dashboard/gantt/workspaces/${res.data.ganttWorkspaceId}`);
       } else {
-        const res = await createMutation.mutateAsync({
+        await createMutation.mutateAsync({
           workspaceName: values.workspaceName,
           workspaceDescription: values.workspaceDescription,
           startDate: new Date(values.startDate).toISOString(),
@@ -298,7 +297,6 @@ export default function GanttWorkspaceListPage() {
         });
         reset();
         setCreateOpen(false);
-        navigate(`/dashboard/gantt/workspaces/${res.data.ganttWorkspaceId}`);
       }
     }
   });
@@ -376,7 +374,7 @@ export default function GanttWorkspaceListPage() {
           viewButton={true}
           isActionButton={() => true}
           permissionKey="ganttWorkspaceId"
-          moduleKey="EMPLOYEE"
+          moduleKey="GANTT_CHART"
           actionColumnWidth="w-[120px]"
           paginationDetails={
             data

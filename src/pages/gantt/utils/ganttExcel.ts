@@ -299,6 +299,24 @@ export async function exportGanttTemplate(
         "Allowed values are NOT_STARTED, IN_PROGRESS, ON_HOLD, COMPLETED, or CANCELLED.",
     };
 
+    // Parent ID Validation (referencing Task/Milestone IDs in column B)
+    wsStructure.getCell(`C${r}`).dataValidation = {
+      type: "list",
+      allowBlank: true,
+      formulae: [`=$B$2:$B$${maxStructureRows}`],
+      showErrorMessage: true,
+      errorTitle: "Invalid Parent ID",
+      error: "Please select a valid parent Task/Milestone ID from column B.",
+    };
+
+    // Predecessor IDs Validation (referencing Task/Milestone IDs in column B)
+    wsStructure.getCell(`M${r}`).dataValidation = {
+      type: "list",
+      allowBlank: true,
+      formulae: [`=$B$2:$B$${maxStructureRows}`],
+      showErrorMessage: false, // Don't show error so they can type custom formats like "1SS" or "1FS, 2SS"
+    };
+
     // Assignee Name Validation (from Active Employees sheet Column A)
     if (activeEmployees && activeEmployees.length > 0) {
       wsStructure.getCell(`L${r}`).dataValidation = {

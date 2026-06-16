@@ -160,8 +160,8 @@ export default function GanttItemDetailModal({
         updateDatesMutation.mutateAsync({
           itemId: item.ganttItemId,
           payload: {
-            plannedStartDate: item.plannedStartDate,
-            plannedEndDate: item.plannedEndDate,
+            // plannedStartDate: item.plannedStartDate,
+            // plannedEndDate: item.plannedEndDate,
             actualStartDate: new Date(startDateVal).toISOString(),
             actualEndDate: new Date(endDateVal).toISOString(),
           },
@@ -310,6 +310,16 @@ export default function GanttItemDetailModal({
       !successors.some((s) => s.successorItemId === i.ganttItemId),
   );
 
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const originalStart = item.actualStartDate || item.plannedStartDate;
+  const originalStartStr = originalStart
+    ? format(new Date(originalStart), "yyyy-MM-dd")
+    : "";
+  const minStartDate =
+    originalStartStr && originalStartStr < todayStr
+      ? originalStartStr
+      : todayStr;
+
   return (
     <>
       <ModalData
@@ -413,6 +423,7 @@ export default function GanttItemDetailModal({
                       onChange={(e) => setStartDateVal(e.target.value)}
                       className="h-10 text-md border border-slate-200 rounded-lg focus-visible:ring-primary focus-visible:border-primary w-full"
                       required
+                      min={minStartDate}
                     />
                   </div>
                   <div className="space-y-1">
@@ -425,6 +436,7 @@ export default function GanttItemDetailModal({
                       onChange={(e) => setEndDateVal(e.target.value)}
                       className="h-10 text-md border border-slate-200 rounded-lg focus-visible:ring-primary focus-visible:border-primary w-full"
                       required
+                      min={startDateVal || minStartDate}
                     />
                   </div>
                 </div>

@@ -6,7 +6,6 @@ import {
   CheckCircle,
   FileSpreadsheet,
   Loader2,
-  Info,
   ChevronRight,
   RefreshCw,
 } from "lucide-react";
@@ -60,6 +59,7 @@ export default function GanttImportModal({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showPreviewList, setShowPreviewList] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showConflictOptions, setShowConflictOptions] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -153,19 +153,25 @@ export default function GanttImportModal({
     setFileName("");
     setFileSize("");
     setSelectedFile(null);
+    setShowConflictOptions(false);
   };
 
-  const executeImport = async () => {
+  const executeImport = async (option?: "replace" | "skip" | "clear_all") => {
     if (!selectedFile) return;
 
     setStage("IMPORTING");
     setProgress(30);
-    setImportStatus("Uploading file to server...");
+    setImportStatus(
+      option ? `Re-importing (${option})...` : "Uploading file to server...",
+    );
     setErrorMsg(null);
 
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
+      if (option) {
+        formData.append("validOptions", option);
+      }
 
       setProgress(60);
       setImportStatus("Processing spreadsheet on server...");
@@ -182,6 +188,7 @@ export default function GanttImportModal({
       setImportStatus(res.data.message || "All items imported successfully!");
       setStage("FINISHED");
       toast.success("Gantt structure imported successfully.");
+      setShowConflictOptions(false);
 
       // Invalidate queries to refresh views
       queryClient.invalidateQueries({
@@ -195,15 +202,31 @@ export default function GanttImportModal({
     } catch (err: unknown) {
       // eslint-disable-next-line no-console
       console.error("Gantt Import execution error:", err);
-      const apiError = err as {
-        response?: { data?: { message?: string } };
+      const axiosError = err as {
+        response?: {
+          status?: number;
+          data?: { status?: number; message?: string };
+        };
         message?: string;
       };
-      const apiErrorMsg =
-        apiError?.response?.data?.message ||
-        apiError?.message ||
-        "An unexpected error occurred.";
-      setErrorMsg(`Import failed. Reason: ${apiErrorMsg}`);
+
+      const is417 =
+        axiosError.response?.status === 417 ||
+        axiosError.response?.data?.status === 417;
+
+      if (is417) {
+        setShowConflictOptions(true);
+        setErrorMsg(
+          axiosError.response?.data?.message ||
+            "Workspace already contains data. Please choose an import option.",
+        );
+      } else {
+        const apiErrorMsg =
+          axiosError.response?.data?.message ||
+          axiosError.message ||
+          "An unexpected error occurred.";
+        setErrorMsg(`Import failed. Reason: ${apiErrorMsg}`);
+      }
       setStage("PREVIEW");
     }
   };
@@ -221,6 +244,7 @@ export default function GanttImportModal({
       setFileSize("");
       setProgress(0);
       setSelectedFile(null);
+      setShowConflictOptions(false);
     }, 200);
   };
 
@@ -241,23 +265,50 @@ export default function GanttImportModal({
               },
             ]
           : stage === "PREVIEW"
-            ? [
-                {
-                  btnText: "Cancel / Reset",
-                  buttonCss:
-                    "py-1.5 px-5 bg-white border border-slate-200 text-black hover:bg-slate-50 rounded-lg",
-                  btnClick: handleCancel,
-                },
-                {
-                  btnText: "Run Import",
-                  btnClick: executeImport,
-                  isLoading: false,
-                  buttonCss:
-                    errors.length > 0
-                      ? "hidden"
-                      : "bg-primary hover:bg-primary/95 text-white",
-                },
-              ]
+            ? showConflictOptions
+              ? [
+                  {
+                    btnText: "Cancel / Reset",
+                    buttonCss:
+                      "py-1.5 px-5 bg-white border border-slate-200 text-black hover:bg-slate-50 rounded-lg",
+                    btnClick: handleCancel,
+                  },
+                  {
+                    btnText: "Skip Existing",
+                    btnClick: () => executeImport("skip"),
+                    buttonCss:
+                      "bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300",
+                  },
+                  {
+                    btnText: "Replace Existing",
+                    btnClick: () => executeImport("replace"),
+                    buttonCss:
+                      "bg-amber-500 hover:bg-amber-600 text-white border-amber-500",
+                  },
+                  {
+                    btnText: "Clear & Re-import",
+                    btnClick: () => executeImport("clear_all"),
+                    buttonCss:
+                      "bg-red-500 hover:bg-red-600 text-white border-red-500",
+                  },
+                ]
+              : [
+                  {
+                    btnText: "Cancel / Reset",
+                    buttonCss:
+                      "py-1.5 px-5 bg-white border border-slate-200 text-black hover:bg-slate-50 rounded-lg",
+                    btnClick: handleCancel,
+                  },
+                  {
+                    btnText: "Run Import",
+                    btnClick: () => executeImport(),
+                    isLoading: false,
+                    buttonCss:
+                      errors.length > 0
+                        ? "hidden"
+                        : "bg-primary hover:bg-primary/95 text-white",
+                  },
+                ]
             : stage === "FINISHED"
               ? [
                   {
@@ -270,9 +321,12 @@ export default function GanttImportModal({
     >
       <div className="py-2 space-y-4">
         {/* Workspace Info Header */}
-        <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 text-xs flex items-center justify-between">
-          <span className="text-slate-500 font-medium">Target Workspace:</span>
-          <span className="font-bold text-slate-800 truncate max-w-[320px]">
+        <div className="bg-slate-50/50 border border-slate-150/60 rounded-xl p-3.5 text-xs flex items-center justify-between shadow-sm">
+          <span className="text-slate-500 font-medium flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+            Target Workspace:
+          </span>
+          <span className="font-bold text-slate-800 truncate max-w-[320px] bg-white border px-2.5 py-1 rounded-lg text-[11px] shadow-sm">
             {workspaceName}
           </span>
         </div>
@@ -311,27 +365,6 @@ export default function GanttImportModal({
                 </p>
               </div>
             </div>
-
-            <div className="bg-amber-50/70 border border-amber-200/50 rounded-lg p-3 flex gap-2.5">
-              <Info className="h-4.5 w-4.5 text-amber-600 shrink-0 mt-0.5" />
-              <div className="text-[11px] text-amber-800 leading-normal space-y-1">
-                <p className="font-bold">Important Instructions:</p>
-                <ul className="list-disc pl-4 space-y-0.5">
-                  <li>
-                    Please use the template matching this workspace to ensure
-                    Phase names match exactly.
-                  </li>
-                  <li>
-                    Phases not pre-defined in the workspace will import items as{" "}
-                    <strong>Unphased</strong>.
-                  </li>
-                  <li>
-                    Ensure dates follow YYYY-MM-DD format, and start dates are
-                    prior to end dates.
-                  </li>
-                </ul>
-              </div>
-            </div>
           </div>
         )}
 
@@ -339,19 +372,24 @@ export default function GanttImportModal({
         {stage === "PREVIEW" && (
           <div className="space-y-4">
             {/* File Info */}
-            <div className="flex items-center gap-3 border p-2.5 rounded-lg bg-white">
-              <FileSpreadsheet className="h-8 w-8 text-green-600 shrink-0" />
+            <div className="flex items-center gap-3 border border-slate-150/60 p-3 rounded-xl bg-slate-50/30 shadow-sm">
+              <div className="h-10 w-10 rounded-lg bg-green-50 flex items-center justify-center text-green-650 shrink-0 border border-green-100">
+                <FileSpreadsheet className="h-5 w-5" />
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-slate-800 truncate">
                   {fileName}
                 </p>
-                <p className="text-[10px] text-slate-500">{fileSize}</p>
+                <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                  {fileSize}
+                </p>
               </div>
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-7 w-7 text-slate-400"
+                className="h-8 w-8 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
                 onClick={handleCancel}
+                title="Upload different file"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
               </Button>
@@ -359,40 +397,42 @@ export default function GanttImportModal({
 
             {/* Error Message from backend execution if retry */}
             {errorMsg && (
-              <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-3 text-xs leading-normal flex gap-2">
-                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-red-600" />
+              <div className="bg-rose-50 border border-rose-100 text-rose-950 rounded-xl p-3.5 text-xs leading-normal flex gap-2.5 shadow-sm">
+                <AlertTriangle className="h-4.5 w-4.5 shrink-0 mt-0.5 text-rose-650" />
                 <div>
-                  <p className="font-bold">Execution Error:</p>
-                  <p className="mt-0.5">{errorMsg}</p>
+                  <p className="font-bold text-rose-900">Execution Error:</p>
+                  <p className="mt-0.5 text-rose-800 text-[11px] font-medium leading-relaxed">
+                    {errorMsg}
+                  </p>
                 </div>
               </div>
             )}
 
             {/* Validation Failures */}
             {errors.length > 0 && (
-              <div className="space-y-2">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-800 flex gap-2">
-                  <AlertTriangle className="h-4.5 w-4.5 shrink-0 text-red-600" />
+              <div className="space-y-2.5">
+                <div className="bg-rose-50 border border-rose-200/60 rounded-xl p-3.5 text-xs text-rose-950 flex gap-2.5 shadow-sm">
+                  <AlertTriangle className="h-5 w-5 shrink-0 text-rose-600" />
                   <div>
-                    <span className="font-bold">
+                    <span className="font-bold text-rose-900">
                       Errors blocking import ({errors.length}):
                     </span>
-                    <p className="mt-0.5 text-[11px] text-red-700">
+                    <p className="mt-1 text-[11px] text-rose-700 leading-relaxed">
                       Please correct these issues in your spreadsheet and upload
                       again.
                     </p>
                   </div>
                 </div>
-                <div className="border border-red-100 rounded-lg max-h-[160px] overflow-y-auto divide-y divide-red-50 bg-red-50/10">
+                <div className="border border-rose-100 rounded-xl max-h-[180px] overflow-y-auto divide-y divide-rose-50 bg-rose-50/5 shadow-inner">
                   {errors.map((err, idx) => (
                     <div
                       key={idx}
-                      className="p-2.5 text-[11px] text-red-800 flex justify-between gap-4"
+                      className="p-3 text-xs text-rose-800 flex justify-between items-center gap-4 hover:bg-rose-50/20 transition-colors"
                     >
-                      <span>
+                      <span className="font-medium text-[11px] text-rose-700 leading-relaxed">
                         Row {err.row}: {err.message}
                       </span>
-                      <span className="font-semibold text-red-900 shrink-0">
+                      <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-200/50 shrink-0 uppercase tracking-wider">
                         {err.column}
                       </span>
                     </div>
@@ -401,100 +441,75 @@ export default function GanttImportModal({
               </div>
             )}
 
-            {/* Warnings list */}
-            {errors.length === 0 && warnings.length > 0 && (
-              <div className="space-y-2">
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 flex gap-2">
-                  <AlertTriangle className="h-4.5 w-4.5 shrink-0 text-amber-600" />
-                  <div>
-                    <span className="font-bold">
-                      Warnings ({warnings.length}):
-                    </span>
-                    <p className="mt-0.5 text-[11px] text-amber-700">
-                      Import can proceed, but the following issues will occur:
-                    </p>
-                  </div>
+            {/* Success Preview Summary - only render if no errors and no warnings */}
+            {errors.length === 0 && warnings.length === 0 && (
+              <div className="bg-green-50 border border-green-200/60 rounded-xl p-4 text-xs text-green-950 flex items-center gap-3 shadow-sm">
+                <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 shrink-0">
+                  <CheckCircle className="h-5 w-5" />
                 </div>
-                <div className="border border-amber-100 rounded-lg max-h-[120px] overflow-y-auto divide-y divide-amber-50 bg-amber-50/10">
-                  {warnings.map((wrn, idx) => (
-                    <div
-                      key={idx}
-                      className="p-2.5 text-[11px] text-amber-800 flex justify-between gap-4"
-                    >
-                      <span>
-                        Row {wrn.row}: {wrn.message}
-                      </span>
-                      <span className="font-semibold text-amber-900 shrink-0">
-                        {wrn.column}
-                      </span>
-                    </div>
-                  ))}
+                <div>
+                  <p className="font-bold text-green-900 text-sm">
+                    Spreadsheet Validation Passed!
+                  </p>
+                  <p className="text-[11px] text-green-700 mt-1 leading-relaxed">
+                    Ready to import <strong>{parsedTasks.length}</strong> items
+                    and{" "}
+                    <strong>
+                      {parsedTasks.reduce(
+                        (acc, t) => acc + t.predecessors.length,
+                        0,
+                      )}
+                    </strong>{" "}
+                    dependencies.
+                  </p>
                 </div>
               </div>
             )}
 
-            {/* Success Preview Summary */}
+            {/* Structure preview toggle */}
             {errors.length === 0 && (
-              <div className="space-y-3">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-xs text-green-800 flex items-center gap-2.5">
-                  <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
-                  <div>
-                    <p className="font-bold">Spreadsheet Validation Passed!</p>
-                    <p className="text-[11px] text-green-700 mt-0.5">
-                      Ready to import <strong>{parsedTasks.length}</strong>{" "}
-                      items and{" "}
-                      <strong>
-                        {parsedTasks.reduce(
-                          (acc, t) => acc + t.predecessors.length,
-                          0,
-                        )}
-                      </strong>{" "}
-                      dependencies.
-                    </p>
-                  </div>
-                </div>
+              <div className="border border-slate-150 rounded-xl overflow-hidden bg-white shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setShowPreviewList(!showPreviewList)}
+                  className="w-full px-3.5 py-2.5 text-xs font-semibold hover:bg-slate-50 border-b flex justify-between items-center text-slate-700 transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                    Preview Items List ({parsedTasks.length})
+                  </span>
+                  <ChevronRight
+                    className={`h-4 w-4 transition-transform text-slate-400 ${
+                      showPreviewList ? "rotate-90" : ""
+                    }`}
+                  />
+                </button>
 
-                {/* Structure preview toggle */}
-                <div className="border rounded-lg overflow-hidden bg-white">
-                  <button
-                    type="button"
-                    onClick={() => setShowPreviewList(!showPreviewList)}
-                    className="w-full px-3 py-2 text-xs font-semibold hover:bg-slate-50 border-b flex justify-between items-center text-slate-700"
-                  >
-                    <span>Preview Items List</span>
-                    <ChevronRight
-                      className={`h-4 w-4 transition-transform text-slate-400 ${
-                        showPreviewList ? "rotate-90" : ""
-                      }`}
-                    />
-                  </button>
-
-                  {showPreviewList && (
-                    <div className="max-h-[200px] overflow-y-auto text-xs divide-y">
-                      {parsedTasks.map((t, idx) => (
-                        <div
-                          key={idx}
-                          className="p-2.5 flex items-center justify-between gap-4"
-                        >
-                          <div className="min-w-0">
-                            <span className="font-medium text-slate-800 truncate block">
-                              {t.itemName}
-                            </span>
-                            <span className="text-[10px] text-slate-500 block mt-0.5">
-                              ID: {t.excelTaskId} · {t.itemType} · Priority:{" "}
-                              {t.priority}
-                            </span>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-600 border">
-                              {t.phaseName || "Unphased"}
-                            </span>
-                          </div>
+                {showPreviewList && (
+                  <div className="max-h-[200px] overflow-y-auto text-xs divide-y dive-slate-100 bg-slate-50/30">
+                    {parsedTasks.map((t, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="min-w-0">
+                          <span className="font-semibold text-sm text-slate-800 truncate block">
+                            {t.itemName}
+                          </span>
+                          <span className="text-xs text-slate-500 block mt-1 font-medium">
+                            {t.itemType} · Priority:{" "}
+                            <span className="font-bold">{t.priority}</span>
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-white text-slate-600 border border-slate-200 shadow-sm">
+                            {t.phaseName || "Unphased"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
