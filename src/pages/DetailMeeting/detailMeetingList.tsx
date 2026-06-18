@@ -182,9 +182,14 @@ export default function DetailMeetingList() {
             )}
 
             {permission.Add && (
-              <Link to="/dashboard/meeting/detail/add">
-                <Button className="py-2 w-fit">Add Live Meeting</Button>
-              </Link>
+              <div className="flex gap-2">
+                <Link to="/dashboard/meeting/detail/clone">
+                  <Button className="py-2 w-fit">Clone Template</Button>
+                </Link>
+                <Link to="/dashboard/meeting/detail/add">
+                  <Button className="py-2 w-fit">Add Live Meeting</Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>

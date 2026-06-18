@@ -1,5 +1,6 @@
 // src/components/ui/DropdownSearchMenu.tsx
 
+import { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -45,32 +46,45 @@ const DropdownSearchMenu = ({
   iconOnly,
   responsive,
 }: DropdownSearchMenuProps) => {
+  const [open, setOpen] = useState(false);
+  const [localSelected, setLocalSelected] = useState<string[]>(selected);
+
+  // Synchronize when the dropdown opens
+  useEffect(() => {
+    if (open) {
+      setLocalSelected(selected);
+    }
+  }, [open, selected]);
+
   const handleOptionToggle = (value: string) => {
-    if (!onChange) return;
     if (multiSelect) {
-      if (selected.includes(value)) {
-        onChange(selected.filter((v) => v !== value));
+      if (localSelected.includes(value)) {
+        setLocalSelected(localSelected.filter((v) => v !== value));
       } else {
-        onChange([...selected, value]);
+        setLocalSelected([...localSelected, value]);
       }
     } else {
-      onChange([value]);
+      onChange?.([value]);
+      setOpen(false);
     }
   };
 
-  const hasSelection = selected.length > 0;
+  const displaySelected = multiSelect && open ? localSelected : selected;
+  const hasSelection = displaySelected.length > 0;
 
   // Determine display text based on selection count
   let displayLabel = label;
-  if (selected.length === 1) {
-    const selectedOption = options?.find((opt) => opt.value === selected[0]);
+  if (displaySelected.length === 1) {
+    const selectedOption = options?.find(
+      (opt) => opt.value === displaySelected[0],
+    );
     displayLabel = selectedOption ? selectedOption.label : "Filtered";
-  } else if (selected.length > 1) {
-    displayLabel = `Filtered (${selected.length})`;
+  } else if (displaySelected.length > 1) {
+    displayLabel = `Filtered (${displaySelected.length})`;
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           variant={hasSelection ? "default" : "outline"}
@@ -92,7 +106,7 @@ const DropdownSearchMenu = ({
                 {icon}
                 {hasSelection && (
                   <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
-                    {selected.length}
+                    {displaySelected.length}
                   </span>
                 )}
               </div>
@@ -121,7 +135,7 @@ const DropdownSearchMenu = ({
               {icon}
               {hasSelection && (
                 <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
-                  {selected.length}
+                  {displaySelected.length}
                 </span>
               )}
             </>
@@ -155,8 +169,9 @@ const DropdownSearchMenu = ({
       >
         {multiSelect && options && options.length > 0 && (
           <DropdownMenuCheckboxItem
-            checked={selected.length === 0}
-            onCheckedChange={() => onChange?.([])}
+            checked={localSelected.length === 0}
+            onSelect={(e) => e.preventDefault()}
+            onCheckedChange={() => setLocalSelected([])}
           >
             All
           </DropdownMenuCheckboxItem>
@@ -165,7 +180,8 @@ const DropdownSearchMenu = ({
           ? options.map((opt, idx) => (
               <DropdownMenuCheckboxItem
                 key={`${opt.value}-${idx}`}
-                checked={selected.includes(opt.value)}
+                checked={localSelected.includes(opt.value)}
+                onSelect={(e) => e.preventDefault()}
                 onCheckedChange={() => handleOptionToggle(opt.value)}
               >
                 {opt.label}
@@ -185,6 +201,28 @@ const DropdownSearchMenu = ({
                 {col.label}
               </DropdownMenuCheckboxItem>
             ))}
+        {multiSelect && options && options.length > 0 && (
+          <div className="p-2 border-t flex gap-2 justify-end sticky bottom-0 bg-white z-10">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setLocalSelected([])}
+              className="text-xs h-8 cursor-pointer"
+            >
+              Clear
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                onChange?.(localSelected);
+                setOpen(false);
+              }}
+              className="text-xs h-8 cursor-pointer bg-primary text-white hover:bg-primary/90"
+            >
+              Apply
+            </Button>
+          </div>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

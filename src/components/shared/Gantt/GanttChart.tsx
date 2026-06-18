@@ -13,6 +13,7 @@ import {
   getTodayX,
 } from "@/pages/gantt/utils/gantt.utils";
 import GanttItemDetailModal from "@/pages/gantt/components/GanttItemDetailModal";
+import { Button } from "@/components/ui/button";
 import {
   CalendarDays,
   ChevronsDownUp,
@@ -224,87 +225,101 @@ export default function GanttChart({
     });
   }, [allRows, searchQ]);
 
-  const itemRows = rows.filter((r) => r.type === "item");
-  const completedCount = itemRows.filter(
-    (r) => r.item?.itemStatus === "COMPLETED",
-  ).length;
-
-  const tbBtn =
-    "inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent hover:border-border transition-colors";
-
   return (
     <div
       ref={wrapRef}
       className="flex flex-col h-full overflow-hidden border border-border rounded-xl bg-background shadow-sm"
     >
       {/* ── Toolbar ────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-1 px-3 py-2 border-b border-border bg-muted/20 shrink-0 flex-wrap">
+      <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border bg-muted/20 shrink-0 flex-wrap">
         {/* View mode */}
         <div className="flex items-center gap-1 mr-1">
-          <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+          <CalendarDays className="h-4 w-4 text-muted-foreground mr-0.5" />
           {VIEW_MODES.map((mode) => (
-            <button
+            <Button
               key={mode.value}
               type="button"
+              variant={viewMode === mode.value ? "default" : "outline"}
+              size="sm"
               onClick={() => handleViewMode(mode.value)}
-              className={`h-6 px-2.5 rounded text-xs font-medium transition-colors ${
-                viewMode === mode.value
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
+              className="h-8 text-sm font-semibold px-3"
             >
               {mode.label}
-            </button>
+            </Button>
           ))}
         </div>
 
         <div className="w-px h-4 bg-border mx-0.5" />
 
         {/* Expand / Collapse */}
-        <button onClick={expandAll} className={tbBtn}>
-          <ChevronsDownUp className="h-3.5 w-3.5" /> Expand All
-        </button>
-        <button onClick={collapseAll} className={tbBtn}>
-          <ChevronsUpDown className="h-3.5 w-3.5" /> Collapse All
-        </button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={expandAll}
+          className="h-8 text-sm font-semibold text-muted-foreground hover:text-foreground gap-1.5"
+        >
+          <ChevronsDownUp className="h-4 w-4" /> Expand All
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={collapseAll}
+          className="h-8 text-sm font-semibold text-muted-foreground hover:text-foreground gap-1.5"
+        >
+          <ChevronsUpDown className="h-4 w-4" /> Collapse All
+        </Button>
 
         <div className="w-px h-4 bg-border mx-0.5" />
 
         {/* Zoom */}
-        <button onClick={zoomIn} className={tbBtn}>
-          <ZoomIn className="h-3.5 w-3.5" /> Zoom In
-        </button>
-        <button onClick={zoomOut} className={tbBtn}>
-          <ZoomOut className="h-3.5 w-3.5" /> Zoom Out
-        </button>
-        <button onClick={zoomFit} className={tbBtn}>
-          <Maximize2 className="h-3.5 w-3.5" /> Zoom to Fit
-        </button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={zoomIn}
+          className="h-8 text-sm font-semibold text-muted-foreground hover:text-foreground gap-1.5"
+        >
+          <ZoomIn className="h-4 w-4" /> Zoom In
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={zoomOut}
+          className="h-8 text-sm font-semibold text-muted-foreground hover:text-foreground gap-1.5"
+        >
+          <ZoomOut className="h-4 w-4" /> Zoom Out
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={zoomFit}
+          className="h-8 text-sm font-semibold text-muted-foreground hover:text-foreground gap-1.5"
+        >
+          <Maximize2 className="h-4 w-4" /> Zoom to Fit
+        </Button>
 
         {/* Today */}
         {todayX !== null && (
           <>
             <div className="w-px h-4 bg-border mx-0.5" />
-            <button onClick={scrollToToday} className={tbBtn}>
-              <Target className="h-3.5 w-3.5" /> Today
-            </button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={scrollToToday}
+              className="h-8 text-sm font-semibold text-muted-foreground hover:text-foreground gap-1.5"
+            >
+              <Target className="h-4 w-4" /> Today
+            </Button>
           </>
         )}
 
-        {/* Stats */}
-        <span className="text-xs text-muted-foreground ml-1 hidden sm:block">
-          {itemRows.length} tasks · {completedCount} done · {phases.length}{" "}
-          phases
-        </span>
-
         {/* Search */}
-        <div className="ml-auto flex items-center gap-1.5 border rounded-md px-2 py-1 bg-background">
-          <Search className="h-3 w-3 text-muted-foreground" />
+        <div className="ml-auto flex items-center gap-2 border border-input rounded-md px-3 h-8 bg-background focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
+          <Search className="h-4 w-4 text-muted-foreground" />
           <input
             value={searchQ}
             onChange={(e) => setSearchQ(e.target.value)}
             placeholder="Search tasks…"
-            className="outline-none bg-transparent w-28 text-xs text-foreground placeholder:text-muted-foreground"
+            className="outline-none bg-transparent w-36 text-sm text-foreground placeholder:text-muted-foreground/70"
           />
         </div>
       </div>
@@ -318,7 +333,7 @@ export default function GanttChart({
         >
           {/* Column header - height matched to timeline header (50px) */}
           <div className="h-[50px] min-h-[50px] shrink-0 border-b border-border bg-muted/30 flex items-center px-3">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
               Task / Phase
             </span>
           </div>

@@ -37,3 +37,7 @@ export { default as updateIoSequenceMutation } from "./useUpdateMeetingIoSequenc
 export { default as deleteDetailMeetingMutation } from "./useDeleteDetailMeeting";
 export { default as getTranscript } from "./useGetDetailMeetingTranscript";
 export { default as useGetDetailMeetingSearch } from "./useGetDetailMeetingSearch";
+export {
+  useGetAdminMeetingTemplatesAll,
+  useCloneAdminMeetingTemplateToMeeting,
+} from "./useCloneAdminMeetingTemplate";

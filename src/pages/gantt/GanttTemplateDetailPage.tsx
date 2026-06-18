@@ -18,11 +18,9 @@ import {
   Layers,
   ListTodo,
   GitMerge,
-  Clock,
   User,
   AlertCircle,
   GanttChartSquare,
-  Columns3,
   ZoomIn,
   ZoomOut,
   Maximize2,
@@ -46,7 +44,6 @@ import type {
   GanttTemplateDependency,
 } from "@/types/gantt";
 import GanttCreateWorkspaceModal from "./components/GanttCreateWorkspaceModal";
-import { getInitials } from "./utils/gantt.utils";
 
 // ── Priority config ──────────────────────────────────────────────────────────
 const PRIORITY_CONFIG: Record<
@@ -59,7 +56,7 @@ const PRIORITY_CONFIG: Record<
   CRITICAL: { label: "Critical", color: "#dc2626", bg: "#fef2f2" },
 };
 
-type ViewMode = "list" | "timeline" | "board";
+type ViewMode = "list" | "timeline";
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function GanttTemplateDetailPage() {
@@ -215,7 +212,6 @@ export default function GanttTemplateDetailPage() {
                 icon: GanttChartSquare,
                 label: "Timeline",
               },
-              { mode: "board" as ViewMode, icon: Columns3, label: "Board" },
             ] as const
           ).map(({ mode, icon: Icon, label }) => (
             <button
@@ -250,9 +246,6 @@ export default function GanttTemplateDetailPage() {
             itemsTree={itemsTree}
             dependencies={dependencies}
           />
-        )}
-        {viewMode === "board" && (
-          <BoardView phases={phases} itemsTree={itemsTree} />
         )}
 
         {/* Dependencies */}
@@ -1428,165 +1421,6 @@ function ListView({
             })()}
           </tbody>
         </table>
-      </div>
-    </div>
-  );
-}
-
-// ── Kanban Column config ─────────────────────────────────────────────────────
-const STATUS_COLUMNS = [
-  { id: "NOT_STARTED", name: "Yet to start", color: "#94a3b8" },
-  { id: "IN_PROGRESS", name: "In Progress", color: "#3b82f6" },
-  { id: "ON_HOLD", name: "On Hold", color: "#f59e0b" },
-  { id: "COMPLETED", name: "Completed", color: "#22c55e" },
-  { id: "CANCELLED", name: "Cancelled", color: "#ef4444" },
-];
-
-const STATUS_BADGE_STYLE: Record<
-  string,
-  { bg: string; text: string; label: string }
-> = {
-  NOT_STARTED: {
-    bg: "bg-[#ffe600]/15",
-    text: "text-[#8a7300]",
-    label: "Yet to start",
-  },
-  IN_PROGRESS: {
-    bg: "bg-[#00f2fe]/10",
-    text: "text-[#008080]",
-    label: "In Progress",
-  },
-  ON_HOLD: { bg: "bg-amber-100", text: "text-amber-800", label: "On Hold" },
-  COMPLETED: {
-    bg: "bg-green-100/15",
-    text: "text-green-800",
-    label: "Completed",
-  },
-  CANCELLED: { bg: "bg-red-100", text: "text-red-800", label: "Cancelled" },
-};
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// VIEW 4 — KANBAN BOARD (one column per task status)
-// ═══════════════════════════════════════════════════════════════════════════════
-function BoardView({
-  itemsTree,
-}: {
-  phases: GanttTemplatePhase[];
-  itemsTree: GanttTemplateItem[];
-}) {
-  const allItems = useMemo(() => {
-    return flattenItems(itemsTree);
-  }, [itemsTree]);
-
-  const columns = useMemo(() => {
-    return STATUS_COLUMNS.map((col) => ({
-      ...col,
-      items: col.id === "NOT_STARTED" ? allItems : [],
-    }));
-  }, [allItems]);
-
-  return (
-    <div className="overflow-x-auto pb-4 h-full">
-      <div className="flex gap-4 items-start min-w-[1200px] h-[calc(100vh-300px)] pr-2 pt-1">
-        {columns.map((col) => (
-          <KanbanColumn key={col.id} col={col} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function KanbanColumn({
-  col,
-}: {
-  col: { id: string; name: string; color: string; items: GanttTemplateItem[] };
-}) {
-  return (
-    <div className="flex flex-col w-72 shrink-0 rounded-xl border border-slate-200 bg-[#f8f9fa] overflow-hidden h-full max-h-[calc(100vh-220px)]">
-      {/* Column Header */}
-      <div className="px-4 py-3 border-b border-slate-200 bg-white flex flex-col gap-1 shrink-0">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-slate-800 leading-none">
-            {col.name}
-          </span>
-          <span className="text-[10px] font-bold h-5 w-5 rounded-full bg-blue-900 text-white flex items-center justify-center shrink-0">
-            {col.items.length}
-          </span>
-        </div>
-      </div>
-
-      {/* Cards List */}
-      <div className="flex flex-1 flex-col gap-2.5 p-3 overflow-y-auto min-h-[300px]">
-        {col.items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-2 rounded-xl border border-dashed border-slate-200 bg-white text-center my-auto mx-1">
-            <span className="text-xs text-slate-400 font-medium">
-              No tasks here
-            </span>
-          </div>
-        ) : (
-          col.items.map((item) => (
-            <KanbanCard key={item.ganttTemplateItemId} item={item} />
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
-function KanbanCard({ item }: { item: GanttTemplateItem }) {
-  const isMilestone = item.itemType === "MILESTONE" || item.isMilestone;
-  const statusBadge = STATUS_BADGE_STYLE.NOT_STARTED;
-
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 cursor-default shadow-sm hover:shadow-md transition-all flex flex-col gap-2.5 group relative">
-      {/* Title */}
-      <div className="flex items-start gap-2 justify-between">
-        <span className="text-[13px] font-bold text-slate-800 leading-snug group-hover:text-primary transition-colors line-clamp-2">
-          {item.itemName}
-        </span>
-      </div>
-
-      {/* Assignee line */}
-      <div className="text-xs text-slate-500 flex items-center gap-1.5">
-        <span className="font-medium text-slate-400">Assignees:</span>
-        {item.assigneeRoleHint ? (
-          <div className="flex items-center gap-1">
-            <div className="h-5 w-5 rounded-full bg-slate-100 border border-slate-250 text-[8px] font-bold flex items-center justify-center text-slate-600 shadow-sm shrink-0">
-              {getInitials(item.assigneeRoleHint)}
-            </div>
-            <span className="text-[11px] text-slate-700 font-medium truncate max-w-[120px]">
-              {item.assigneeRoleHint}
-            </span>
-          </div>
-        ) : (
-          <span className="text-[11px] text-slate-400 italic">Unassigned</span>
-        )}
-      </div>
-
-      {/* Start Day line */}
-      <div className="text-xs text-slate-500">
-        <span className="font-medium text-slate-400">Start Day:</span>{" "}
-        <span className="text-[11px] text-slate-700 font-semibold">
-          Day {item.relativeStartDay}
-        </span>
-      </div>
-
-      {/* Footer line */}
-      <div className="flex items-center justify-between pt-1 border-t border-slate-100 mt-0.5">
-        <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
-          <Clock className="h-3.5 w-3.5" />
-          <span>
-            {isMilestone
-              ? "Milestone"
-              : `${item.relativeDurationDays} ${item.relativeDurationDays === 1 ? "day" : "days"}`}
-          </span>
-        </div>
-
-        <span
-          className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-transparent ${statusBadge.bg} ${statusBadge.text}`}
-        >
-          {statusBadge.label}
-        </span>
       </div>
     </div>
   );

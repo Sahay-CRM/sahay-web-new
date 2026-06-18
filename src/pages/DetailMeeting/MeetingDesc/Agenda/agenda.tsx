@@ -91,8 +91,8 @@ function IssueModal({
         position: "fixed",
         top: 0,
         left: 0,
-        width: "100vw",
-        height: "100vh",
+        width: "var(--vw, 100vw)",
+        height: "var(--vh, 100vh)",
         background: "rgba(0,0,0,0.2)",
         display: "flex",
         alignItems: "center",
@@ -715,7 +715,7 @@ export default function Agenda({
           className={cn(
             isSideBar
               ? "w-[370px]  h-full min-w-[370px] ease-out duration-1000"
-              : "w-[65%]",
+              : "w-[50%]",
           )}
         >
           {meetingStatus !== "ENDED" &&
@@ -850,7 +850,9 @@ export default function Agenda({
                 <TabsContent value="PARKED" className="mt-0"></TabsContent>
               </Tabs>
             </div>
-            <div className="mt-1 h-[calc(100vh-180px)] pr-1 w-full overflow-auto">
+            <div
+              className={`mt-1 pr-1 w-full overflow-auto ${meetingStatus === "DISCUSSION" ? "h-[calc(var(--vh,100vh)-230px)]" : "h-[calc(var(--vh,100vh)-260px)]"}`}
+            >
               {agendaList && agendaList.length > 0 ? (
                 <DndContext
                   sensors={sensors}
@@ -1162,39 +1164,20 @@ export default function Agenda({
           </div>
           <div
             className={`
-    flex justify-center w-full h-[calc(100vh-140px)] relative border-primary
+    flex justify-center w-full h-[calc(var(--vh,100vh)-140px)] relative border-primary
 
     ${
       meetingStatus === "DISCUSSION" &&
-      " border-l-1 border-r-1 border-b-1 rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"
+      " border-t-1 border-l-1 border-r-1 border-b-1 rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"
     }
 
-    ${meetingStatus === "CONCLUSION" && "h-[calc(100vh-220px)]"}
+    ${meetingStatus === "CONCLUSION" && "h-[calc(var(--vh,100vh)-220px)]"}
 
     ${meetingStatus !== "DISCUSSION" && "p-4"}
 
     ${(meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") && "border"}
   `}
           >
-            {meetingStatus === "DISCUSSION" && (
-              <div className="absolute top-0 left-0 right-1 h-0.5 flex">
-                <div
-                  className="border-t-1 border-primary h-0"
-                  style={{
-                    width:
-                      activeTab === "tasks"
-                        ? "280px"
-                        : activeTab === "projects"
-                          ? "140px"
-                          : activeTab === "kpis"
-                            ? "0px"
-                            : "0px",
-                  }}
-                />
-                <div style={{ width: "124px" }} />
-                <div className="border-t-1 border-primary h-0 flex-1" />
-              </div>
-            )}
             {meetingStatus === "NOT_STARTED" ? (
               <div className="max-w-3xl border rounded-sm overflow-y-scroll h-fit">
                 <div className="p-6">
@@ -1301,7 +1284,7 @@ export default function Agenda({
               </div>
             ) : meetingStatus === "DISCUSSION" ? (
               detailAgendaData && (
-                <div className="h-[calc(100vh-200px)] flex flex-col overflow-hidden mt-5 px-2 w-full">
+                <div className="h-[calc(var(--vh,100vh)-200px)] flex flex-col overflow-hidden mt-5 px-2 w-full">
                   <Suspense fallback={<div>Loading...</div>}>
                     {activeTab === "tasks" && (
                       <Tasks
@@ -1373,7 +1356,7 @@ export default function Agenda({
                 </div>
               </div>
             ) : (
-              <div className="flex-1 h-[calc(100vh-220px)] overflow-x-hidden overflow-y-auto w-full">
+              <div className="flex-1 h-[calc(var(--vh,100vh)-220px)] overflow-x-hidden overflow-y-auto w-full">
                 <div>
                   {!selectedItem || !hasChanges(selectedItem) ? (
                     <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg mt-6 p-8 text-center">

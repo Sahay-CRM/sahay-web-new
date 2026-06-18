@@ -21,6 +21,7 @@ import TaskSearchDropdown from "./TaskSearchDropdown";
 import useAddUpdateCompanyTask from "@/features/api/companyTask/useAddUpdateCompanyTask";
 import { queryClient } from "@/queryClient";
 import TaskDrawer from "./taskDrawer";
+import Loader from "@/components/shared/Loader/Loader";
 import { Button } from "@/components/ui/button";
 import {
   addMeetingTaskDataMutation,
@@ -55,7 +56,7 @@ export default function Tasks({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selected, setSelected] = useState<TaskGetPaging | null>(null);
 
-  const { data: selectedTask } = useGetMeetingTask({
+  const { data: selectedTask, isLoading: isTaskLoading } = useGetMeetingTask({
     filter: {
       meetingId: meetingId,
       ...(ioType === "ISSUE" ? { issueId: issueId } : { objectiveId: issueId }),
@@ -188,6 +189,10 @@ export default function Tasks({
     setDrawerOpen(true);
     setSelected(null);
   };
+
+  if (isTaskLoading) {
+    return <Loader />;
+  }
 
   return (
     <div className="h-full flex flex-col overflow-hidden">

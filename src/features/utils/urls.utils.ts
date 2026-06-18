@@ -488,6 +488,8 @@ const Urls = {
     `${baseUrl}/company/gantt/workspace/update/${id}`,
   ganttWorkspaceDelete: (id: string) =>
     `${baseUrl}/company/gantt/workspace/delete/${id}`,
+  ganttWorkspaceImport: (id: string) =>
+    `${baseUrl}/company/gantt/workspace/import/${id}`,
 
   // Items
   ganttItemCreate: () => `${baseUrl}/company/gantt/item/create`,
@@ -505,6 +507,11 @@ const Urls = {
     `${baseUrl}/company/gantt/dependency/delete/${id}`,
   ganttDependencyListByWorkspace: (workspaceId: string) =>
     `${baseUrl}/company/gantt/dependency/get-by-workspace/${workspaceId}`,
+
+  // Admin Meeting Template Clone
+  adminMeetingTemplateGetAll: () => `${baseUrl}/admin-meeting-template/get`,
+  cloneAdminMeetingTemplateToMeeting: (id: string) =>
+    `${baseUrl}/admin-meeting-template/clone-to-meeting/${id}`,
 };
 
 export default Urls;

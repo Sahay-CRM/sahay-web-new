@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Eye, Trash } from "lucide-react";
+import { Plus, ChevronDown, Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { exportGanttTemplate } from "./utils/ganttExcel";
+import GanttImportModal from "./components/GanttImportModal";
+import { useGetEmployeeDd } from "@/features/api/companyEmployee";
+// import Api from "@/features/utils/api.utils";
+// import Urls from "@/features/utils/urls.utils";
 import {
   Dialog,
   DialogContent,
@@ -17,11 +23,13 @@ import {
   useCreateGanttWorkspace,
   useCreateWorkspaceFromTemplate,
   useGanttTemplatesGetAll,
+  useUpdateGanttWorkspace,
 } from "@/features/api/gantt";
-import { fmtDate } from "./utils/gantt.utils";
+import { fmtDate, WORKSPACE_STATUS_OPTIONS } from "./utils/gantt.utils";
 import type {
   CompanyGanttWorkspace,
-  // GanttWorkspaceStatus,
+  // CompanyGanttPhase,
+  GanttWorkspaceStatus,
 } from "@/types/gantt";
 import { Controller, useForm } from "react-hook-form";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
@@ -30,6 +38,12 @@ import { format } from "date-fns";
 import TableData from "@/components/shared/DataTable/DataTable";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import SearchInput from "@/components/shared/SearchInput";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 // Status badge color map
 const STATUS_COLORS: Record<string, string> = {
@@ -39,6 +53,119 @@ const STATUS_COLORS: Record<string, string> = {
   COMPLETED: "bg-blue-100 text-blue-700",
   CANCELLED: "bg-red-100 text-red-600",
 };
+
+function WorkspaceStatusDropdown({ row }: { row: CompanyGanttWorkspace }) {
+  const updateMutation = useUpdateGanttWorkspace(row.ganttWorkspaceId);
+
+  const handleStatusChange = async (status: string) => {
+    await updateMutation.mutateAsync({
+      workspaceStatus: status as GanttWorkspaceStatus,
+    });
+  };
+
+  const currentStatus = WORKSPACE_STATUS_OPTIONS.find(
+    (opt) => opt.value === row.workspaceStatus,
+  );
+  const statusClass =
+    STATUS_COLORS[row.workspaceStatus] ?? "bg-slate-100 text-slate-600";
+
+  return (
+    <div onClick={(e) => e.stopPropagation()}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={updateMutation.isPending}
+            className={`h-8 min-w-[110px] justify-between text-[11px] font-semibold px-3 py-1 rounded-full ${statusClass} border border-transparent hover:border-slate-200 transition-all cursor-pointer`}
+          >
+            {currentStatus?.label || row.workspaceStatus}
+            <ChevronDown className="w-3.5 h-3.5 ml-1.5 shrink-0 opacity-70" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          className="bg-white border rounded-md shadow-md p-1 min-w-[120px]"
+        >
+          {WORKSPACE_STATUS_OPTIONS.map((opt) => (
+            <DropdownMenuItem
+              key={opt.value}
+              onClick={() => handleStatusChange(opt.value)}
+              className="text-xs px-2.5 py-1.5 rounded cursor-pointer hover:bg-slate-50 transition-colors focus:bg-slate-50 focus:outline-none"
+            >
+              {opt.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
+function RowTemplateActions({
+  // row,
+  // employees,
+  onImportClick,
+}: {
+  row: CompanyGanttWorkspace;
+  employees: EmployeeDetails[];
+  onImportClick: () => void;
+}) {
+  // const [isExporting, setIsExporting] = useState(false);
+
+  // const handleExport = async (e: React.MouseEvent) => {
+  //   e.stopPropagation();
+  //   setIsExporting(true);
+  //   try {
+  //     const { data } = await Api.post<{
+  //       data: { phases: CompanyGanttPhase[] };
+  //     }>({
+  //       url: Urls.ganttWorkspaceDetail(row.ganttWorkspaceId),
+  //       data: {},
+  //     });
+  //     const phases = data.data?.phases || [];
+  //     await exportGanttTemplate(row.workspaceName, phases, employees);
+  //     toast.success("Excel template downloaded successfully.");
+  //   } catch (err) {
+  //     // eslint-disable-next-line no-console
+  //     console.error("Export template error: ", err);
+  //     toast.error("Failed to export template.");
+  //   } finally {
+  //     setIsExporting(false);
+  //   }
+  // };
+
+  return (
+    <div
+      className="flex items-center gap-1.5"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* <Button
+        variant="ghost"
+        size="icon"
+        disabled={isExporting}
+        onClick={handleExport}
+        className="h-8 w-8 text-slate-500 hover:text-slate-800"
+        title="Download Excel Template"
+      >
+        {isExporting ? (
+          <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+        ) : (
+          <Download className="h-4 w-4" />
+        )}
+      </Button> */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onImportClick}
+        className="h-8 w-8 text-slate-500 hover:text-slate-800"
+        title="Import Excel Template"
+      >
+        <Upload className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
 
 export default function GanttWorkspaceListPage() {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -52,7 +179,17 @@ export default function GanttWorkspaceListPage() {
   });
   const [deleteTarget, setDeleteTarget] =
     useState<CompanyGanttWorkspace | null>(null);
+  const [editTarget, setEditTarget] = useState<CompanyGanttWorkspace | null>(
+    null,
+  );
   const [createOpen, setCreateOpen] = useState(false);
+  const [importTarget, setImportTarget] =
+    useState<CompanyGanttWorkspace | null>(null);
+
+  const { data: employeeData } = useGetEmployeeDd({
+    filter: { isDeactivated: false, pageSize: 1000 },
+  });
+  const employees = employeeData?.data || [];
 
   useEffect(() => {
     setBreadcrumbs([
@@ -74,6 +211,9 @@ export default function GanttWorkspaceListPage() {
   const deleteMutation = useDeleteGanttWorkspace();
   const createMutation = useCreateGanttWorkspace();
   const createFromTemplateMutation = useCreateWorkspaceFromTemplate();
+  const updateWorkspaceMutation = useUpdateGanttWorkspace(
+    editTarget?.ganttWorkspaceId ?? "",
+  );
 
   const { data: templatesData } = useGanttTemplatesGetAll();
   const templates = templatesData?.data ?? [];
@@ -95,32 +235,69 @@ export default function GanttWorkspaceListPage() {
     },
   });
 
-  const handleCreate = handleSubmit(async (values) => {
-    if (values.templateId) {
-      const res = await createFromTemplateMutation.mutateAsync({
-        templateId: values.templateId,
+  useEffect(() => {
+    if (createOpen) {
+      if (editTarget) {
+        reset({
+          workspaceName: editTarget.workspaceName,
+          workspaceDescription: editTarget.workspaceDescription || "",
+          startDate: editTarget.startDate
+            ? format(new Date(editTarget.startDate), "yyyy-MM-dd")
+            : "",
+          targetEndDate: editTarget.targetEndDate
+            ? format(new Date(editTarget.targetEndDate), "yyyy-MM-dd")
+            : "",
+          templateId: "",
+        });
+      } else {
+        reset({
+          workspaceName: "",
+          workspaceDescription: "",
+          startDate: format(new Date(), "yyyy-MM-dd"),
+          targetEndDate: "",
+          templateId: "",
+        });
+      }
+    }
+  }, [createOpen, editTarget, reset]);
+
+  const handleSave = handleSubmit(async (values) => {
+    if (editTarget) {
+      await updateWorkspaceMutation.mutateAsync({
         workspaceName: values.workspaceName,
         workspaceDescription: values.workspaceDescription,
-        startDate: new Date(values.startDate).toISOString(),
         targetEndDate: values.targetEndDate
           ? new Date(values.targetEndDate).toISOString()
           : undefined,
       });
-      reset();
       setCreateOpen(false);
-      navigate(`/dashboard/gantt/workspaces/${res.data.ganttWorkspaceId}`);
+      setEditTarget(null);
+      reset();
     } else {
-      const res = await createMutation.mutateAsync({
-        workspaceName: values.workspaceName,
-        workspaceDescription: values.workspaceDescription,
-        startDate: new Date(values.startDate).toISOString(),
-        targetEndDate: values.targetEndDate
-          ? new Date(values.targetEndDate).toISOString()
-          : undefined,
-      });
-      reset();
-      setCreateOpen(false);
-      navigate(`/dashboard/gantt/workspaces/${res.data.ganttWorkspaceId}`);
+      if (values.templateId) {
+        await createFromTemplateMutation.mutateAsync({
+          templateId: values.templateId,
+          workspaceName: values.workspaceName,
+          workspaceDescription: values.workspaceDescription,
+          startDate: new Date(values.startDate).toISOString(),
+          targetEndDate: values.targetEndDate
+            ? new Date(values.targetEndDate).toISOString()
+            : undefined,
+        });
+        reset();
+        setCreateOpen(false);
+      } else {
+        await createMutation.mutateAsync({
+          workspaceName: values.workspaceName,
+          workspaceDescription: values.workspaceDescription,
+          startDate: new Date(values.startDate).toISOString(),
+          targetEndDate: values.targetEndDate
+            ? new Date(values.targetEndDate).toISOString()
+            : undefined,
+        });
+        reset();
+        setCreateOpen(false);
+      }
     }
   });
 
@@ -155,26 +332,19 @@ export default function GanttWorkspaceListPage() {
             setPaginationFilter={setPaginationFilter}
             className="w-72"
           />
-          {/* Status filter */}
-          {/* <div className="w-44">
-            <FormSelect
-              value={statusFilter}
-              onChange={(val) =>
-                setStatusFilter(Array.isArray(val) ? val[0] : val)
-              }
-              options={[
-                { value: "all", label: "All Statuses" },
-                ...WORKSPACE_STATUS_OPTIONS,
-              ]}
-              triggerClassName="h-9 rounded-lg border-slate-200 text-sm"
-            />
-          </div> */}
         </div>
 
         <div className="flex items-center gap-2">
-          {/* <Button variant="outline" size="sm" onClick={() => refetch()}>
-            <RefreshCw className="h-4 w-4 mr-1" /> Refresh
-          </Button> */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              await exportGanttTemplate("Gantt", [], employees);
+              toast.success("Blank template downloaded.");
+            }}
+          >
+            <Download className="h-4 w-4 mr-1.5" /> Template
+          </Button>
           <Button size="sm" onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4 mr-1" /> New Workspace
           </Button>
@@ -189,33 +359,23 @@ export default function GanttWorkspaceListPage() {
           columns={columns}
           primaryKey="ganttWorkspaceId"
           isLoading={isLoading}
+          onEdit={(row) => {
+            setEditTarget(row as unknown as CompanyGanttWorkspace);
+            setCreateOpen(true);
+          }}
+          onDelete={(row) =>
+            setDeleteTarget(row as unknown as CompanyGanttWorkspace)
+          }
+          onViewButton={(row) =>
+            navigate(
+              `/dashboard/gantt/workspaces/${String(row.ganttWorkspaceId)}`,
+            )
+          }
+          viewButton={true}
+          isActionButton={() => true}
+          permissionKey="ganttWorkspaceId"
+          moduleKey="GANTT_CHART"
           actionColumnWidth="w-[120px]"
-          customActions={(row) => (
-            <div className="flex gap-2 justify-end">
-              <button
-                type="button"
-                title="Open Gantt"
-                onClick={() =>
-                  navigate(
-                    `/dashboard/gantt/workspaces/${String(row.ganttWorkspaceId)}`,
-                  )
-                }
-                className="inline-flex items-center justify-center h-8 w-8 rounded border border-slate-200 bg-white text-primary hover:bg-primary hover:text-white transition-colors cursor-pointer"
-              >
-                <Eye className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                title="Delete"
-                onClick={() =>
-                  setDeleteTarget(row as unknown as CompanyGanttWorkspace)
-                }
-                className="inline-flex items-center justify-center h-8 w-8 rounded border border-slate-200 bg-white text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
-              >
-                <Trash className="h-4 w-4" />
-              </button>
-            </div>
-          )}
           paginationDetails={
             data
               ? mapPaginationDetails({
@@ -238,17 +398,23 @@ export default function GanttWorkspaceListPage() {
           extraColumns={[
             {
               label: "Status",
-              width: "w-[130px]",
-              render: (row) => {
-                const status = (row as CompanyGanttWorkspace).workspaceStatus;
-                return (
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${STATUS_COLORS[status] ?? "bg-slate-100 text-slate-600"}`}
-                  >
-                    {status.replace("_", " ")}
-                  </span>
-                );
-              },
+              width: "w-[120px]",
+              render: (row) => (
+                <WorkspaceStatusDropdown row={row as CompanyGanttWorkspace} />
+              ),
+            },
+            {
+              label: "Templates",
+              width: "w-[120px]",
+              render: (row) => (
+                <RowTemplateActions
+                  row={row as CompanyGanttWorkspace}
+                  employees={employees}
+                  onImportClick={() =>
+                    setImportTarget(row as CompanyGanttWorkspace)
+                  }
+                />
+              ),
             },
           ]}
         />
@@ -283,23 +449,29 @@ export default function GanttWorkspaceListPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Create workspace modal */}
+      {/* Create / Edit workspace modal */}
       <Dialog
         open={createOpen}
         onOpenChange={(val) => {
           setCreateOpen(val);
-          if (!val) reset();
+          if (!val) {
+            setEditTarget(null);
+            reset();
+          }
         }}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>New Workspace</DialogTitle>
+            <DialogTitle>
+              {editTarget ? "Edit Workspace" : "New Workspace"}
+            </DialogTitle>
             <DialogDescription>
-              Create an empty workspace. Add phases and items manually, or use a
-              template.
+              {editTarget
+                ? "Update workspace details."
+                : "Create an empty workspace. Add phases and items manually, or use a template."}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleCreate} className="space-y-4 pt-2">
+          <form onSubmit={handleSave} className="space-y-4 pt-2">
             <Controller
               name="workspaceName"
               control={control}
@@ -325,25 +497,27 @@ export default function GanttWorkspaceListPage() {
                 />
               )}
             />
-            <Controller
-              name="templateId"
-              control={control}
-              render={({ field }) => (
-                <FormSelect
-                  label="Initialize from Template"
-                  value={field.value}
-                  onChange={(val) =>
-                    field.onChange(Array.isArray(val) ? val[0] : val)
-                  }
-                  options={templates.map((t) => ({
-                    value: t.ganttTemplateId,
-                    label: t.templateName,
-                  }))}
-                  isClear={true}
-                  placeholder="Select a template (optional)"
-                />
-              )}
-            />
+            {!editTarget && (
+              <Controller
+                name="templateId"
+                control={control}
+                render={({ field }) => (
+                  <FormSelect
+                    label="Initialize from Template"
+                    value={field.value}
+                    onChange={(val) =>
+                      field.onChange(Array.isArray(val) ? val[0] : val)
+                    }
+                    options={templates.map((t) => ({
+                      value: t.ganttTemplateId,
+                      label: t.templateName,
+                    }))}
+                    isClear={true}
+                    placeholder="Select a template (optional)"
+                  />
+                )}
+              />
+            )}
             <Controller
               name="startDate"
               control={control}
@@ -354,6 +528,7 @@ export default function GanttWorkspaceListPage() {
                   type="date"
                   label="Start Date"
                   isMandatory
+                  disabled={!!editTarget}
                   error={errors.startDate}
                 />
               )}
@@ -376,6 +551,7 @@ export default function GanttWorkspaceListPage() {
                 variant="outline"
                 onClick={() => {
                   setCreateOpen(false);
+                  setEditTarget(null);
                   reset();
                 }}
               >
@@ -385,18 +561,35 @@ export default function GanttWorkspaceListPage() {
                 type="submit"
                 disabled={
                   createMutation.isPending ||
-                  createFromTemplateMutation.isPending
+                  createFromTemplateMutation.isPending ||
+                  updateWorkspaceMutation.isPending
                 }
               >
                 {createMutation.isPending ||
-                createFromTemplateMutation.isPending
-                  ? "Creating..."
-                  : "Create"}
+                createFromTemplateMutation.isPending ||
+                updateWorkspaceMutation.isPending
+                  ? editTarget
+                    ? "Saving..."
+                    : "Creating..."
+                  : editTarget
+                    ? "Save Changes"
+                    : "Create"}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+
+      {importTarget && (
+        <GanttImportModal
+          open={!!importTarget}
+          onOpenChange={(open) => {
+            if (!open) setImportTarget(null);
+          }}
+          workspaceId={importTarget.ganttWorkspaceId}
+          workspaceName={importTarget.workspaceName}
+        />
+      )}
     </div>
   );
 }

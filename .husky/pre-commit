@@ -1,1 +1,11 @@
-npx lint-staged
+
+# Run lint-staged for staged files
+
+# Fail if any console.log is found in staged files
+if git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|jsx|ts|tsx)$' | xargs grep -n 'console\.log'; then
+  echo '❌ Commit aborted: console.log found in staged files.'
+  exit 1
+fi
+
+# Type check (fail on error)
+npx tsc --noEmit

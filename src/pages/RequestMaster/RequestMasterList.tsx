@@ -50,6 +50,7 @@ export default function RequestMasterList() {
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "type", label: "Type", visible: true },
+    { key: "refName", label: "Request For", visible: true },
     { key: "oldValue", label: "Old Value", visible: true },
     { key: "newValue", label: "New Value", visible: true },
     { key: "status", label: "Status", visible: true },
@@ -160,6 +161,7 @@ export default function RequestMasterList() {
                   ? format(new Date(item.newValue), "dd/MM/yyyy h:mm aa")
                   : " - ",
                 remarks: item.remarks || " - ",
+                refName: item.refName || item.taskName || item.projectName || item.meetingName || " - ",
               }),
             )}
             columns={visibleColumns}

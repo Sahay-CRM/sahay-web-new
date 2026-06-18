@@ -36,31 +36,46 @@ export function ZoomProvider({ children }: { children: ReactNode }) {
     return Math.min(Math.max(calculated, ZOOM_MIN), ZOOM_MAX);
   }, []);
 
-  const [zoom, setZoom] = useState<number>(() => {
+  const [zoomOffset, setZoomOffset] = useState<number>(() => {
+    if (typeof window === "undefined") return 0;
+    const storedOffset = localStorage.getItem("CRM_UI_ZOOM_OFFSET");
+    if (storedOffset) {
+      const parsed = Number(storedOffset);
+      if (!isNaN(parsed)) return parsed;
+    }
+    // Migration logic for old manual absolute zoom
     const isManual = localStorage.getItem(ZOOM_MANUAL_FLAG) === "true";
     if (isManual) {
-      const stored = localStorage.getItem(ZOOM_STORAGE_KEY);
-      if (stored) {
-        const parsed = Number(stored);
-        if (!isNaN(parsed)) {
-          return Math.min(Math.max(parsed, ZOOM_MIN), ZOOM_MAX);
+      const storedAbs = localStorage.getItem(ZOOM_STORAGE_KEY);
+      if (storedAbs) {
+        const parsedAbs = Number(storedAbs);
+        if (!isNaN(parsedAbs)) {
+          const auto = calculateAutoZoom();
+          const offset = parsedAbs - auto;
+          localStorage.removeItem(ZOOM_MANUAL_FLAG);
+          localStorage.removeItem(ZOOM_STORAGE_KEY);
+          localStorage.setItem("CRM_UI_ZOOM_OFFSET", String(offset));
+          return offset;
         }
       }
     }
-    return calculateAutoZoom();
+    return 0;
   });
 
-  // Handle auto scaling on window resize if not manually locked
+  const [zoom, setZoom] = useState<number>(() => {
+    const auto = calculateAutoZoom();
+    return Math.min(Math.max(auto + zoomOffset, ZOOM_MIN), ZOOM_MAX);
+  });
+
+  // Handle auto scaling on window resize/zoom changes
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
 
     const handleResize = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        const isManual = localStorage.getItem(ZOOM_MANUAL_FLAG) === "true";
-        if (!isManual) {
-          setZoom(calculateAutoZoom());
-        }
+        const auto = calculateAutoZoom();
+        setZoom(Math.min(Math.max(auto + zoomOffset, ZOOM_MIN), ZOOM_MAX));
       }, 100); // 100ms debounce
     };
 
@@ -71,7 +86,7 @@ export function ZoomProvider({ children }: { children: ReactNode }) {
       clearTimeout(timeoutId);
       window.removeEventListener("resize", handleResize);
     };
-  }, [calculateAutoZoom]);
+  }, [calculateAutoZoom, zoomOffset]);
 
   // Root font-size scaling is handled by CSS zoom in DashboardLayout
   // useEffect(() => {
@@ -80,27 +95,34 @@ export function ZoomProvider({ children }: { children: ReactNode }) {
   // }, [zoom]);
 
   const zoomIn = useCallback(() => {
-    localStorage.setItem(ZOOM_MANUAL_FLAG, "true");
-    setZoom((prev) => {
-      const newZoom = Math.min(prev + ZOOM_STEP, ZOOM_MAX);
-      localStorage.setItem(ZOOM_STORAGE_KEY, String(newZoom));
-      return newZoom;
+    setZoomOffset((prevOffset) => {
+      const auto = calculateAutoZoom();
+      const currentZoom = auto + prevOffset;
+      const newZoom = Math.min(currentZoom + ZOOM_STEP, ZOOM_MAX);
+      const newOffset = newZoom - auto;
+      localStorage.setItem("CRM_UI_ZOOM_OFFSET", String(newOffset));
+      setZoom(newZoom);
+      return newOffset;
     });
-  }, []);
+  }, [calculateAutoZoom]);
 
   const zoomOut = useCallback(() => {
-    localStorage.setItem(ZOOM_MANUAL_FLAG, "true");
-    setZoom((prev) => {
-      const newZoom = Math.max(prev - ZOOM_STEP, ZOOM_MIN);
-      localStorage.setItem(ZOOM_STORAGE_KEY, String(newZoom));
-      return newZoom;
+    setZoomOffset((prevOffset) => {
+      const auto = calculateAutoZoom();
+      const currentZoom = auto + prevOffset;
+      const newZoom = Math.max(currentZoom - ZOOM_STEP, ZOOM_MIN);
+      const newOffset = newZoom - auto;
+      localStorage.setItem("CRM_UI_ZOOM_OFFSET", String(newOffset));
+      setZoom(newZoom);
+      return newOffset;
     });
-  }, []);
+  }, [calculateAutoZoom]);
 
   const resetZoom = useCallback(() => {
-    // Revert back to proportional auto-scaling mode
+    localStorage.removeItem("CRM_UI_ZOOM_OFFSET");
     localStorage.removeItem(ZOOM_MANUAL_FLAG);
     localStorage.removeItem(ZOOM_STORAGE_KEY);
+    setZoomOffset(0);
     setZoom(calculateAutoZoom());
   }, [calculateAutoZoom]);
 

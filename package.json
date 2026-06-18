@@ -49,6 +49,7 @@
     "dagre": "^0.8.5",
     "date-fns": "^4.1.0",
     "docx": "^9.5.1",
+    "exceljs": "^4.4.0",
     "firebase": "^11.9.1",
     "frappe-gantt": "^1.2.2",
     "html-to-image": "^1.11.13",

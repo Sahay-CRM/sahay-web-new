@@ -249,6 +249,7 @@ export interface CreateGanttItemRequest {
   priority?: GanttItemPriority;
   itemOrder?: number;
   color?: string;
+  assignedToEmployeeId?: string | null;
 }
 
 export interface UpdateGanttItemRequest {
@@ -268,8 +269,8 @@ export interface UpdateGanttProgressRequest {
 }
 
 export interface UpdateGanttDatesRequest {
-  plannedStartDate: string;
-  plannedEndDate: string;
+  plannedStartDate?: string;
+  plannedEndDate?: string;
   actualStartDate?: string | null;
   actualEndDate?: string | null;
 }

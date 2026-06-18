@@ -57,6 +57,7 @@ export default function GanttItemFormModal({
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm<FormValues>({
     defaultValues: {
       itemName: editItem?.itemName ?? "",
@@ -78,6 +79,20 @@ export default function GanttItemFormModal({
       priority: editItem?.priority ?? "MEDIUM",
     },
   });
+
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const originalStartStr = editItem
+    ? format(
+        new Date(editItem.actualStartDate || editItem.plannedStartDate),
+        "yyyy-MM-dd",
+      )
+    : "";
+  const minStartDate =
+    originalStartStr && originalStartStr < todayStr
+      ? originalStartStr
+      : todayStr;
+
+  const selectedStartDate = watch("plannedStartDate");
 
   const onSubmit = handleSubmit(async (values) => {
     if (isEdit) {
@@ -237,6 +252,7 @@ export default function GanttItemFormModal({
                 label="Planned Start"
                 isMandatory
                 error={errors.plannedStartDate}
+                min={minStartDate}
               />
             )}
           />
@@ -252,6 +268,7 @@ export default function GanttItemFormModal({
                 label="Planned End"
                 isMandatory
                 error={errors.plannedEndDate}
+                min={selectedStartDate || minStartDate}
               />
             )}
           />

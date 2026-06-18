@@ -1734,6 +1734,10 @@ interface RequestMasterData {
   createdDatetime: string;
   updatedDatetime: string;
   srNo?: number;
+  refName?: string | null;
+  taskName?: string | null;
+  projectName?: string | null;
+  meetingName?: string | null;
 }
 
 interface CreateRequestMaster {
@@ -1924,4 +1928,12 @@ interface BoardColumnProps {
     docs: { fileId: string; fileName: string }[],
     id: string,
   ) => void;
+}
+
+interface AdminMeetingTemplate {
+  id?: string;
+  title: string;
+  agendaIds?: string | null;
+  noteIds?: string | null;
+  timePlanned?: string;
 }

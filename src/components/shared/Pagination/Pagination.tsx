@@ -48,7 +48,7 @@ const Pagination: React.FC<PaginationProps> = ({
 
   return (
     <div className="w-full border-t pt-4 ">
-      <div className="w-full max-w-screen-2xl mx-auto px-4 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+      <div className="w-full px-8 pb-2 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
         <div className="text-sm text-muted-foreground text-center sm:text-left">
           Showing {from} to {to} of{" "}
           <span className="font-medium text-foreground">{totalCount}</span>{" "}
