@@ -52,6 +52,37 @@ export const UpdateStatusModal = ({
           <DialogTitle>Update Request Status</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4 w-full">
+          {data && (
+            <div className="text-sm border-b pb-3 mb-2 space-y-1">
+              <div>
+                <span className="font-semibold text-muted-foreground">Type: </span>
+                <span className="font-medium">{data.type}</span>
+              </div>
+              {(data.refName || data.taskName || data.projectName || data.meetingName) && (
+                <div>
+                  <span className="font-semibold text-muted-foreground">
+                    {data.type?.toUpperCase() === "TASK"
+                      ? "Task Name: "
+                      : data.type?.toUpperCase() === "PROJECT"
+                        ? "Project Name: "
+                        : data.type?.toUpperCase() === "MEETING"
+                          ? "Meeting Name: "
+                          : "Request For: "}
+                  </span>
+                  <span className="font-medium">
+                    {data.refName || data.taskName || data.projectName || data.meetingName}
+                  </span>
+                </div>
+              )}
+              {data.reasions && (
+                <div>
+                  <span className="font-semibold text-muted-foreground">Reason: </span>
+                  <span className="font-medium">{data.reasions}</span>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex flex-col gap-2 w-full">
             <label htmlFor="status" className="text-sm font-medium">
               Status
