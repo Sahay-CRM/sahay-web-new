@@ -72,6 +72,7 @@ export default function Issues() {
     // { key: "isResolved", label: "isResolved", visible: true },
     { key: "type", label: "Type", visible: true },
     { key: "departmentName", label: "Department Name", visible: true },
+    { key: "totalTime", label: "Total Time Spend", visible: true },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -154,6 +155,7 @@ export default function Issues() {
                 ...item,
                 srNo:
                   (issueList.currentPage - 1) * issueList.pageSize + index + 1,
+                totalTime: `${item?.totalTime} min`,
               }),
             )}
             columns={visibleColumns}

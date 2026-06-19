@@ -1363,6 +1363,7 @@ interface IssuesProps {
   isForce?: boolean;
   isDelete?: boolean;
   type?: string | null;
+  totalTime?: string;
 }
 
 interface UseIssuesFormModalProps {
@@ -1388,6 +1389,7 @@ interface ObjectiveProps {
   isForce?: boolean;
   isDelete?: boolean;
   type?: string | null;
+  totalTime?: string;
 }
 interface UpdateItem {
   srNo: number;
