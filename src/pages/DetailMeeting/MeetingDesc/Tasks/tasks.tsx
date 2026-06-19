@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
-import { convertToLocalDate } from "@/features/utils/app.utils";
+import {  formatToLocalDateTime } from "@/features/utils/app.utils";
 import { toast } from "sonner";
 import { off, onValue, ref } from "firebase/database";
 import { useParams } from "react-router-dom";
@@ -243,7 +243,7 @@ export default function Tasks({
                 .join(", ")
             : "",
           taskDeadline: task.taskDeadline
-            ? convertToLocalDate(task.taskDeadline)
+            ? formatToLocalDateTime(task.taskDeadline)
             : "",
           rawTaskDeadline: task.taskDeadline,
         }))}

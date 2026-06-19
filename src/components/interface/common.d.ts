@@ -1939,3 +1939,10 @@ interface AdminMeetingTemplate {
   noteIds?: string | null;
   timePlanned?: string;
 }
+interface ColumnConfig {
+  label: string;
+  tooltipColumn?: string;
+  width?: string;
+  render?: (value: unknown, item: unknown) => React.ReactNode;
+  isTimeFormat?: boolean;
+}

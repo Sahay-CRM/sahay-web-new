@@ -235,7 +235,9 @@ export function convertToLocalTime(deadline: string | Date | null): string {
 }
 
 // utils/dateFormatter.js
-export const formatToLocalDateTime = (dateString: string) => {
+export const formatToLocalDateTime = (
+  dateString: string | number | Date | null | undefined,
+) => {
   if (!dateString) return "";
 
   const date = new Date(dateString);
@@ -404,3 +406,18 @@ export const getUTCEndOfDay = (date?: string | Date) => {
     Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999),
   ).toISOString();
 };
+
+
+export const formatAgendaTime = (time: string) => {
+  if (!time) return "-";
+  const [hours, minutes, seconds] = time.split(":").map(Number);
+
+  const parts = [];
+
+  if (hours) parts.push(`${hours} hr`);
+  if (minutes) parts.push(`${minutes} min`);
+  if (seconds) parts.push(`${seconds} sec`);
+
+  return parts.length > 0 ? parts.join(" ") : "-";
+};
+

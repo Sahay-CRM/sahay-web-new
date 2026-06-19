@@ -181,16 +181,18 @@ export default function DetailMeetingList() {
               </TooltipProvider>
             )}
 
-            {permission.Add && (
-              <div className="flex gap-2">
+            <div className="flex gap-2">
+              {cloneMeetingPermission?.Add && (
                 <Link to="/dashboard/meeting/detail/clone">
                   <Button className="py-2 w-fit">Clone Template</Button>
                 </Link>
+              )}
+              {permission.Add && (
                 <Link to="/dashboard/meeting/detail/add">
                   <Button className="py-2 w-fit">Add Live Meeting</Button>
                 </Link>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 

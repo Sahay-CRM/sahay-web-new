@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { AxiosError } from "axios";
-import { convertToLocalDate } from "@/features/utils/app.utils";
+import { formatToLocalDateTime } from "@/features/utils/app.utils";
 import { useParams } from "react-router-dom";
 import { off, onValue, ref } from "firebase/database";
 import { toast } from "sonner";
@@ -245,7 +245,7 @@ export default function Projects({
           selectedProjects?.map((item) => ({
             ...item,
             projectDeadline: item.projectDeadline
-              ? convertToLocalDate(item.projectDeadline)
+              ? formatToLocalDateTime(item.projectDeadline)
               : "",
             rawProjectDeadline: item.projectDeadline,
             status: item.projectStatusId,

@@ -72,15 +72,24 @@ export default function Objective() {
     // { key: "isResolved", label: "isResolved", visible: true },
     { key: "type", label: "Type", visible: true },
     { key: "departmentName", label: "Department Name", visible: true },
-     { key: "totalTime", label: "Total Time Spend", visible: true },
+     { key: "totalTime", label: "Total Time Spend", visible: true , isTimeFormat: true  },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        if (col.isTimeFormat) {
+          acc[col.key] = {
+            label: col.label,
+            isTimeFormat: true,
+          };
+        } else {
+          acc[col.key] = col.label;
+        }
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string | ColumnConfig>,
   );
 
   const onToggleColumn = (key: string) => {
@@ -157,7 +166,6 @@ export default function Objective() {
                   (objectiveList.currentPage - 1) * objectiveList.pageSize +
                   index +
                   1,
-                    totalTime: `${item?.totalTime} min`,
               }),
             )}
             columns={visibleColumns}

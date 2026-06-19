@@ -24,7 +24,11 @@ import PageNotAccess from "@/pages/PageNoAccess";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 
 const MeetingTemplateStep = () => {
-  const { control, setValue } = useFormContext();
+  const {
+    control,
+    setValue,
+    formState: { errors },
+  } = useFormContext();
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 25,
@@ -75,6 +79,13 @@ const MeetingTemplateStep = () => {
             setPaginationFilter={setPaginationFilter}
             className="w-80"
           />
+          {errors.templateId && (
+            <p className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] whitespace-nowrap before:content-['*']">
+              {typeof errors.templateId?.message === "string"
+                ? errors.templateId.message
+                : ""}
+            </p>
+          )}
         </div>
         {canToggleColumns && (
           <div className="ml-4">

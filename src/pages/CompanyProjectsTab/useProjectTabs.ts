@@ -14,7 +14,7 @@ import { useGetCoreParameterDropdown } from "@/features/api/Business";
 import {
   getUTCEndOfDay,
   getUTCStartOfDay,
-  convertToLocalDate,
+  formatToLocalDateTime,
 } from "@/features/utils/app.utils";
 import { DateRange } from "react-day-picker";
 
@@ -248,7 +248,7 @@ export default function useProjectTabs() {
         [],
       subParameterIds: [],
       projectDeadline: project.projectDeadline
-        ? convertToLocalDate(project.projectDeadline)
+        ? formatToLocalDateTime(project.projectDeadline)
         : "No deadline",
       projectStatus: project.projectStatus ? String(project.projectStatus) : "",
       projectStatusId: project.projectStatusId,

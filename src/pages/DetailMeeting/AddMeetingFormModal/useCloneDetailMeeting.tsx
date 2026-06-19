@@ -9,7 +9,7 @@ import { getUserPermission } from "@/features/selectors/auth.selector";
 
 export default function useCloneDetailMeeting() {
   const [isModalOpen, setModalOpen] = useState(false);
-  const permission = useSelector(getUserPermission).LIVE_MEETING;
+  const permission = useSelector(getUserPermission).CLONE_MEETING;
 
   const { mutate: cloneMeeting, isPending } = useCloneAdminMeetingTemplateToMeeting();
   const navigate = useNavigate();
