@@ -41,6 +41,7 @@ import { getColorFromName } from "@/features/utils/formatting.utils";
 import { isColorDark } from "@/features/utils/color.utils";
 import { TableTooltip } from "./tableTooltip";
 import { twMerge } from "tailwind-merge";
+import { formatAgendaTime } from "@/features/utils/app.utils";
 
 interface DetailsPermission {
   view: boolean;
@@ -48,10 +49,12 @@ interface DetailsPermission {
   delete?: boolean;
 }
 
-interface ColumnConfig {
+export interface ColumnConfig {
   label: string;
   tooltipColumn?: string;
   width?: string;
+  render?: (value: unknown, item: unknown) => React.ReactNode;
+  isTimeFormat?: boolean;
 }
 
 interface TableProps<T extends Record<string, unknown>> {
@@ -123,6 +126,38 @@ interface TableProps<T extends Record<string, unknown>> {
   indexColumnWidth?: string;
   tableHeightClass?: string;
 }
+
+const renderTimeFormat = (time: unknown) => {
+  const formatted = formatAgendaTime(String(time || ""));
+  if (formatted === "-") {
+    return (
+      <div>
+        <span className="text-muted-foreground font-normal">-</span>
+      </div>
+    );
+  }
+
+  const parts = formatted.split(" ");
+  return (
+    <div className="">
+      {parts.map((word, idx) => {
+        if (idx % 2 === 0) {
+          return (
+            <span key={idx} className="text-[14px] font-semibold  text-primary">
+              {word}
+            </span>
+          );
+        } else {
+          return (
+            <span key={idx} className="text-[10px] text-muted-foreground ml-0.5 mr-1.5 last:mr-0">
+              {word}
+            </span>
+          );
+        }
+      })}
+    </div>
+  );
+};
 
 const TableData = <T extends Record<string, unknown>>({
   tableData = [],
@@ -541,6 +576,16 @@ const TableData = <T extends Record<string, unknown>>({
                             const columnConfig = columns[clm] as
                               | ColumnConfig
                               | undefined;
+
+                            if (columnConfig && typeof columnConfig === "object") {
+                              if (columnConfig.render) {
+                                return columnConfig.render(item[clm], item);
+                              }
+                              if (columnConfig.isTimeFormat) {
+                                return renderTimeFormat(item[clm]);
+                              }
+                            }
+
                             const cellValue = String(item[clm] ?? " - ");
                             const tooltipValue = columnConfig?.tooltipColumn
                               ? String(

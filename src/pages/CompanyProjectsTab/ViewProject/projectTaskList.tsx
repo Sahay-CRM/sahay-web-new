@@ -23,7 +23,7 @@ import {
   useGetCompanyTask,
   useGetCompanyTaskById,
 } from "@/features/api/companyTask";
-import { getInitials, convertToLocalDate } from "@/features/utils/app.utils";
+import { getInitials, formatToLocalDateTime } from "@/features/utils/app.utils";
 import { queryClient } from "@/queryClient";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
@@ -277,7 +277,7 @@ export default function ProjectTaskList() {
                       <span className="font-medium">Deadline:</span>
                       <span>
                         {task.taskDeadline
-                          ? convertToLocalDate(task.taskDeadline)
+                          ? formatToLocalDateTime(task.taskDeadline)
                           : "-"}
                       </span>
                     </div>

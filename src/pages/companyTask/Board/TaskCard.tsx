@@ -9,7 +9,7 @@ import { isColorDark } from "@/features/utils/color.utils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Clock, Eye, Trash2 } from "lucide-react";
-import { getInitials, convertToLocalDate } from "@/features/utils/app.utils";
+import { getInitials, formatToLocalDateTime } from "@/features/utils/app.utils";
 import { useState } from "react";
 import ViewMeetingModal from "../ViewMeetingModal";
 import ConfirmationDeleteModal from "../ConfirmTaskDeleteModal";
@@ -103,7 +103,7 @@ export default function TaskCard({ task, refetch }: TaskCardProps) {
   const formattedTaskForModal = {
     ...task,
     taskDeadline: task.taskDeadline
-      ? convertToLocalDate(task.taskDeadline)
+      ? formatToLocalDateTime(task.taskDeadline)
       : "",
     assigneeNames: assigneesString,
   };
@@ -222,7 +222,7 @@ export default function TaskCard({ task, refetch }: TaskCardProps) {
           >
             <span className="font-semibold whitespace-nowrap">Deadline :</span>
             <TableTooltip
-              text={`${task.taskDeadline ? convertToLocalDate(task.taskDeadline) : ""}`}
+              text={`${task.taskDeadline ? formatToLocalDateTime(task.taskDeadline) : ""}`}
             />
           </div>
         </div>
