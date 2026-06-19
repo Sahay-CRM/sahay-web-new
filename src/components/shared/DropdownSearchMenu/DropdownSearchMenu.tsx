@@ -74,13 +74,19 @@ const DropdownSearchMenu = ({
 
   // Determine display text based on selection count
   let displayLabel = label;
-  if (displaySelected.length === 1) {
-    const selectedOption = options?.find(
-      (opt) => opt.value === displaySelected[0],
-    );
-    displayLabel = selectedOption ? selectedOption.label : "Filtered";
-  } else if (displaySelected.length > 1) {
-    displayLabel = `Filtered (${displaySelected.length})`;
+  if (multiSelect) {
+    if (displaySelected.length > 0) {
+      displayLabel = `Filtered (${displaySelected.length})`;
+    }
+  } else {
+    if (displaySelected.length === 1) {
+      const selectedOption = options?.find(
+        (opt) => opt.value === displaySelected[0],
+      );
+      displayLabel = selectedOption ? selectedOption.label : "Filtered";
+    } else if (displaySelected.length > 1) {
+      displayLabel = `Filtered (${displaySelected.length})`;
+    }
   }
 
   return (
@@ -206,7 +212,11 @@ const DropdownSearchMenu = ({
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => setLocalSelected([])}
+              onClick={() => {
+                setLocalSelected([]);
+                onChange?.([]);
+                setOpen(false);
+              }}
               className="text-xs h-8 cursor-pointer"
             >
               Clear

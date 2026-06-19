@@ -41,10 +41,10 @@ export default function IssueDeleteModal({
         },
       ]}
     >
-      <div className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm ">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-3 text-md ">
         <div className="flex gap-1 ">
-          <span className="font-medium text-primary"> Issue Name: </span>
-          <h2>{modalData.issueName}</h2>
+          <span className="  font-medium text-primary"> Issue Name: </span>
+          {modalData.issueName}
         </div>
 
         {modalData.departmentName && (
