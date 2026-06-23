@@ -54,7 +54,8 @@ const DropdownSearchMenu = ({
     if (open) {
       setLocalSelected(selected);
     }
-  }, [open, selected]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handleOptionToggle = (value: string) => {
     if (multiSelect) {
@@ -170,7 +171,7 @@ const DropdownSearchMenu = ({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        className="w-56 max-h-[400px] overflow-y-auto"
+        className="w-56 max-h-[400px] flex flex-col overflow-y-hidden p-1"
         align={iconOnly || responsive ? "end" : "start"}
       >
         {multiSelect && options && options.length > 0 && (
@@ -182,33 +183,35 @@ const DropdownSearchMenu = ({
             All
           </DropdownMenuCheckboxItem>
         )}
-        {options && options.length > 0
-          ? options.map((opt, idx) => (
-              <DropdownMenuCheckboxItem
-                key={`${opt.value}-${idx}`}
-                checked={localSelected.includes(opt.value)}
-                onSelect={(e) => e.preventDefault()}
-                onCheckedChange={() => handleOptionToggle(opt.value)}
-              >
-                {opt.label}
-                {showCount && opt.count !== undefined && (
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    ({opt.count})
-                  </span>
-                )}
-              </DropdownMenuCheckboxItem>
-            ))
-          : columns?.map((col, idx) => (
-              <DropdownMenuCheckboxItem
-                key={`${col.key}-${idx}`}
-                checked={col.visible}
-                onCheckedChange={() => onToggleColumn?.(col.key)}
-              >
-                {col.label}
-              </DropdownMenuCheckboxItem>
-            ))}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {options && options.length > 0
+            ? options.map((opt, idx) => (
+                <DropdownMenuCheckboxItem
+                  key={`${opt.value}-${idx}`}
+                  checked={localSelected.includes(opt.value)}
+                  onSelect={(e) => e.preventDefault()}
+                  onCheckedChange={() => handleOptionToggle(opt.value)}
+                >
+                  {opt.label}
+                  {showCount && opt.count !== undefined && (
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      ({opt.count})
+                    </span>
+                  )}
+                </DropdownMenuCheckboxItem>
+              ))
+            : columns?.map((col, idx) => (
+                <DropdownMenuCheckboxItem
+                  key={`${col.key}-${idx}`}
+                  checked={col.visible}
+                  onCheckedChange={() => onToggleColumn?.(col.key)}
+                >
+                  {col.label}
+                </DropdownMenuCheckboxItem>
+              ))}
+        </div>
         {multiSelect && options && options.length > 0 && (
-          <div className="p-2 border-t flex gap-2 justify-end sticky bottom-0 bg-white z-10">
+          <div className="p-2 border-t flex gap-2 justify-end bg-white z-10">
             <Button
               size="sm"
               variant="ghost"
