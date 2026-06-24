@@ -241,15 +241,19 @@ export const formatToLocalDateTime = (
   if (!dateString) return "";
 
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
+
+  // Convert UTC to local time by reversing the timezone shift
+  const shiftedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
 
   // Format date as dd mm yyyy
-  const day = date.getDate().toString().padStart(2, "0");
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const year = date.getFullYear();
+  const day = shiftedDate.getDate().toString().padStart(2, "0");
+  const month = (shiftedDate.getMonth() + 1).toString().padStart(2, "0");
+  const year = shiftedDate.getFullYear();
 
   // Format time as hh:mm am/pm
-  let hours = date.getHours();
-  const minutes = date.getMinutes().toString().padStart(2, "0");
+  let hours = shiftedDate.getHours();
+  const minutes = shiftedDate.getMinutes().toString().padStart(2, "0");
   const ampm = hours >= 12 ? "pm" : "am";
 
   hours = hours % 12;
@@ -264,6 +268,9 @@ export const formatToLocalDateTimeIntl = (dateString: string) => {
   if (!dateString) return "";
 
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
+
+  const shiftedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
 
   return new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
@@ -272,7 +279,7 @@ export const formatToLocalDateTimeIntl = (dateString: string) => {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
-  }).format(date);
+  }).format(shiftedDate);
 };
 
 /**
