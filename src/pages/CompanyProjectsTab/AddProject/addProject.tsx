@@ -139,6 +139,7 @@ const ProjectInfo = ({ isEditMode, deadlineRequest }: ProjectInfoProps) => {
         <div className="relative z-50" ref={dropdownRef}>
           <FormInputField
             label="Project Name"
+            isMandatory={true}
             {...register("projectName", { required: "Name is required" })}
             error={errors.projectName}
             placeholder="Enter Project Name"
@@ -169,6 +170,7 @@ const ProjectInfo = ({ isEditMode, deadlineRequest }: ProjectInfoProps) => {
           )}
         </div>
         <FormInputField
+         isMandatory={true}
           label="Project Description"
           {...register("projectDescription", {
             required: "Description is required",
@@ -179,43 +181,27 @@ const ProjectInfo = ({ isEditMode, deadlineRequest }: ProjectInfoProps) => {
         <Controller
           control={control}
           name="projectDeadline"
-          render={({ field }) => {
-            // Convert to local time for display
-            const localDate = field.value
-              ? new Date(
-                  new Date(field.value).getTime() +
-                    new Date().getTimezoneOffset() * 60000,
-                )
-              : null;
-
-            return (
-              <div>
-                <FormDateTimePicker
-                  label="Project Deadline"
-                  value={localDate}
-                  onChange={(date) => {
-                    // Convert back to UTC when saving
-                    const utcDate = date
-                      ? new Date(
-                          date.getTime() - date.getTimezoneOffset() * 60000,
-                        )
-                      : null;
-                    field.onChange(utcDate);
-                  }}
-                  error={errors.projectDeadline}
-                  disablePastDays={
-                    Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
-                  }
-                  disabled={deadlineRequest === "PENDING"}
-                />
-                {deadlineRequest === "PENDING" && (
-                  <p className="text-xs text-primary mt-1">
-                    Deadline change request is pending approval
-                  </p>
-                )}
-              </div>
-            );
-          }}
+          rules={{ required: "Project Deadline is required" }}
+          render={({ field }) => (
+            <div>
+              <FormDateTimePicker
+                label="Project Deadline"
+                value={field.value}
+                onChange={field.onChange}
+                isMandatory={true}
+                error={errors.projectDeadline}
+                disablePastDays={
+                  Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                }
+                disabled={deadlineRequest === "PENDING"}
+              />
+              {deadlineRequest === "PENDING" && (
+                <p className="text-xs text-primary mt-1">
+                  Deadline change request is pending approval
+                </p>
+              )}
+            </div>
+          )}
         />
         <Controller
           name="projectStatusId"

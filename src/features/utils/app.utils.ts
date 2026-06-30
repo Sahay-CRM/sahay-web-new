@@ -241,19 +241,15 @@ export const formatToLocalDateTime = (
   if (!dateString) return "";
 
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return "";
-
-  // Convert UTC to local time by reversing the timezone shift
-  const shiftedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
 
   // Format date as dd mm yyyy
-  const day = shiftedDate.getDate().toString().padStart(2, "0");
-  const month = (shiftedDate.getMonth() + 1).toString().padStart(2, "0");
-  const year = shiftedDate.getFullYear();
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
 
   // Format time as hh:mm am/pm
-  let hours = shiftedDate.getHours();
-  const minutes = shiftedDate.getMinutes().toString().padStart(2, "0");
+  let hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, "0");
   const ampm = hours >= 12 ? "pm" : "am";
 
   hours = hours % 12;
