@@ -119,7 +119,7 @@ export default function FormDateTimePicker({
         />
         <CalendarIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
       </div>
-      {error && <span className="text-red-500 text-sm">{error.message}</span>}
+      {error && <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">{error.message}</span>}
       <style>
         {`
           .responsive-datepicker-popper {

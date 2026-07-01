@@ -264,6 +264,9 @@ export const formatToLocalDateTimeIntl = (dateString: string) => {
   if (!dateString) return "";
 
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
+
+  const shiftedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
 
   return new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
@@ -272,7 +275,7 @@ export const formatToLocalDateTimeIntl = (dateString: string) => {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
-  }).format(date);
+  }).format(shiftedDate);
 };
 
 /**
