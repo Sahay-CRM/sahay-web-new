@@ -2599,6 +2599,7 @@ export default function UpdatedKpiTable() {
                                                       ),
 
                                                     cell?.data !== "-" &&
+                                                      inputValues[key] === undefined &&
                                                       validationKey &&
                                                       validationKey !== null &&
                                                       selectedPeriod !==
