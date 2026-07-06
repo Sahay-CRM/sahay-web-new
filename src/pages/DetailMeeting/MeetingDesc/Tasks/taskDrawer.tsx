@@ -179,11 +179,25 @@ export default function TaskDrawer({
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
     setValue,
   } = useForm<TaskFormData>({
     defaultValues,
   });
+
+  const taskNameValue = watch("taskName") || "";
+  const taskDescriptionValue = watch("taskDescription") || "";
+  const prevTaskNameRef = useRef(taskNameValue);
+
+  useEffect(() => {
+    if (taskDescriptionValue === "" || taskDescriptionValue === prevTaskNameRef.current) {
+      if (taskDescriptionValue !== taskNameValue) {
+        setValue("taskDescription", taskNameValue);
+      }
+    }
+    prevTaskNameRef.current = taskNameValue;
+  }, [taskNameValue, taskDescriptionValue, setValue]);
 
   useEffect(() => {
     if (!taskData || !taskData.taskStatusId) {

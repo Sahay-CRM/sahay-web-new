@@ -169,6 +169,19 @@ const MeetingInfo = () => {
     setCustomRepeatData,
   } = useAddRepeatMeetingForm();
 
+  const meetingNameValue = watch("meetingName") || "";
+  const meetingDescriptionValue = watch("meetingDescription") || "";
+  const prevMeetingNameRef = useRef(meetingNameValue);
+
+  useEffect(() => {
+    if (meetingDescriptionValue === "" || meetingDescriptionValue === prevMeetingNameRef.current) {
+      if (meetingDescriptionValue !== meetingNameValue) {
+        setValue("meetingDescription", meetingNameValue);
+      }
+    }
+    prevMeetingNameRef.current = meetingNameValue;
+  }, [meetingNameValue, meetingDescriptionValue, setValue]);
+
   const repeatTime = watch("repeatTime");
   const selectedRepeat = watch("repeatType");
   const nextDate = watch("nextDate");

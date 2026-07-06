@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { CalendarDays, Pencil, ReceiptText, Trash2 } from "lucide-react";
+import { CalendarDays, Pencil, ReceiptText, Trash2, Ban } from "lucide-react";
 
 import { useRepeatTaskToDo } from "./useRepeatTaskToDo";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -68,20 +68,25 @@ export default function RepeatTaskToDo() {
     today,
     userData,
     shouldDisableCheckbox,
+    toggleNotApplicable,
   } = useRepeatTaskToDo();
 
   const tasks = companyTaskData?.data || [];
 
   const activeTasks = tasks
-    .filter((t) => !t.isCompleted)
+    .filter((t) => !t.isCompleted && !t.isNotApplicable)
     .sort((a, b) => getDayDiff(a.taskDeadline) - getDayDiff(b.taskDeadline));
 
   const doneTasks = tasks
-    .filter((t) => t.isCompleted)
+    .filter((t) => t.isCompleted && !t.isNotApplicable)
     .sort((a, b) => getDayDiff(a.taskDeadline) - getDayDiff(b.taskDeadline));
 
-  const allTasks = [...activeTasks, ...doneTasks];
-  const totalTasks = tasks.length;
+  const naTasks = tasks
+    .filter((t) => t.isNotApplicable)
+    .sort((a, b) => getDayDiff(a.taskDeadline) - getDayDiff(b.taskDeadline));
+
+  const allTasks = [...activeTasks, ...doneTasks, ...naTasks];
+  const totalTasks = tasks.filter((t) => !t.isNotApplicable).length;
   const completedTasks = doneTasks.length;
 
   const isSameDate = (date1: Date, date2: Date): boolean => {
@@ -92,77 +97,94 @@ export default function RepeatTaskToDo() {
     );
   };
 
-  const renderTaskItem = (task: RepeatTaskAllRes, isCompleted: boolean) => (
-    <div
-      key={task.taskId}
-      className={`group overflow-hidden flex h-12 justify-between px-2 rounded-sm border bg-card hover:bg-accent transition ${
-        !isSameDate(selectedDate!, today) && "bg-gray-300 hover:bg-gray-200"
-      } ${isCompleted && "bg-gray-100 hover:bg-gray-200"}`}
-    >
-      <div className="flex gap-4 flex-1 items-center justify-between">
-        <div className="flex gap-3 flex-1 items-center overflow-hidden min-w-0">
-          {isCompleted ? (
-            <FormCheckbox
-              checked={task.isCompleted}
-              onChange={() => {
-                if (task.taskId && isSameDate(selectedDate!, today)) {
-                  toggleComplete(task.taskId, !task.isCompleted);
-                }
-              }}
-              className={`w-4 h-4 rounded-full border border-gray-400 data-[state=checked]:bg-primary data-[state=checked]:border-primary ${
-                isSameDate(selectedDate!, today) ? "" : "cursor-not-allowed"
-              }`}
-              containerClass="rounded-full overflow-hidden mt-0"
-              onClick={(e) => e.stopPropagation()}
-              disabled={shouldDisableCheckbox(task)}
-            />
-          ) : (
-            <RadioGroup
-              value={task.isCompleted ? "done" : "todo"}
-              onValueChange={() => {
-                if (
-                  !shouldDisableCheckbox(task) &&
-                  task.taskId &&
-                  isSameDate(selectedDate!, today)
-                ) {
-                  toggleComplete(task.taskId, !task.isCompleted);
-                }
-              }}
-              className={`px-1 flex-shrink-0 ${
-                isSameDate(selectedDate!, today)
-                  ? "cursor-pointer"
-                  : "cursor-not-allowed"
-              }`}
-              onClick={(e) => e.stopPropagation()}
-              disabled={shouldDisableCheckbox(task)}
-            >
-              <RadioGroupItem
-                value="done"
-                id={`task-${task.taskId}`}
+  const renderTaskItem = (task: RepeatTaskAllRes, isCompleted: boolean) => {
+    const isTaskNA = !!task.isNotApplicable;
+    return (
+      <div
+        key={task.taskId}
+        className={`group overflow-hidden flex h-12 justify-between px-2 rounded-sm border bg-card hover:bg-accent transition ${
+          !isSameDate(selectedDate!, today) && "bg-gray-300 hover:bg-gray-200"
+        } ${isCompleted && "bg-gray-100 hover:bg-gray-200"} ${isTaskNA ? "opacity-60 bg-gray-200 text-gray-500" : ""}`}
+      >
+        <div className="flex gap-4 flex-1 items-center justify-between">
+          <div className="flex gap-3 flex-1 items-center overflow-hidden min-w-0">
+            {isTaskNA ? (
+              <FormCheckbox
+                checked={false}
+                className="w-4 h-4 rounded-full border border-gray-300 cursor-not-allowed mt-0"
+                containerClass="rounded-full overflow-hidden mt-0"
+                disabled
+              />
+            ) : isCompleted ? (
+              <FormCheckbox
+                checked={task.isCompleted}
+                onChange={() => {
+                  if (task.taskId && isSameDate(selectedDate!, today)) {
+                    toggleComplete(task.taskId, !task.isCompleted);
+                  }
+                }}
                 className={`w-4 h-4 rounded-full border border-gray-400 data-[state=checked]:bg-primary data-[state=checked]:border-primary ${
+                  isSameDate(selectedDate!, today) ? "" : "cursor-not-allowed"
+                }`}
+                containerClass="rounded-full overflow-hidden mt-0"
+                onClick={(e) => e.stopPropagation()}
+                disabled={shouldDisableCheckbox(task)}
+              />
+            ) : (
+              <RadioGroup
+                value={task.isCompleted ? "done" : "todo"}
+                onValueChange={() => {
+                  if (
+                    !shouldDisableCheckbox(task) &&
+                    task.taskId &&
+                    isSameDate(selectedDate!, today)
+                  ) {
+                    toggleComplete(task.taskId, !task.isCompleted);
+                  }
+                }}
+                className={`px-1 flex-shrink-0 ${
                   isSameDate(selectedDate!, today)
                     ? "cursor-pointer"
                     : "cursor-not-allowed"
                 }`}
-              />
-            </RadioGroup>
-          )}
-
-          <div className="w-full flex gap-2 group">
-            <div
-              className="flex flex-col flex-1 min-w-0 cursor-pointer py-1.5 w-full"
-              onClick={() => {
-                if (task.taskId && isSameDate(selectedDate!, today)) {
-                  toggleComplete(task.taskId, !task.isCompleted);
-                }
-              }}
-            >
-              <Label
-                className="text-black text-[14px] whitespace-normal break-words min-w-0"
-                title={task.taskName}
+                onClick={(e) => e.stopPropagation()}
+                disabled={shouldDisableCheckbox(task)}
               >
-                {task.taskName} &nbsp; &nbsp; Project: {task.projectName}
-              </Label>
+                <RadioGroupItem
+                  value="done"
+                  id={`task-${task.taskId}`}
+                  className={`w-4 h-4 rounded-full border border-gray-400 data-[state=checked]:bg-primary data-[state=checked]:border-primary ${
+                    isSameDate(selectedDate!, today)
+                      ? "cursor-pointer"
+                      : "cursor-not-allowed"
+                  }`}
+                />
+              </RadioGroup>
+            )}
+
+            <div className="w-full flex gap-2 group">
+              <div
+                className="flex flex-col flex-1 min-w-0 cursor-pointer py-1.5 w-full"
+                onClick={() => {
+                  if (!isTaskNA && task.taskId && isSameDate(selectedDate!, today)) {
+                    toggleComplete(task.taskId, !task.isCompleted);
+                  }
+                }}
+              >
+                <Label
+                  className={`text-black text-[14px] whitespace-normal break-words min-w-0 ${isTaskNA ? "text-gray-500 line-through font-normal" : ""}`}
+                  title={task.taskName}
+                >
+                  {task.taskName} &nbsp; &nbsp; Project: {task.projectName}
+                  {isTaskNA && (
+                    <span 
+                      className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-800 border border-red-200 uppercase tracking-wider"
+                      style={{ textDecoration: "none" }}
+                    >
+                      Not Applicable
+                    </span>
+                  )}
+                </Label>
               {(permission.Add || permission.Edit) && (
                 <div className="flex gap-2 items-center">
                   <span className="text-[12px] text-primary flex gap-2 items-center">
@@ -174,6 +196,33 @@ export default function RepeatTaskToDo() {
             </div>
 
             <div className="flex items-center">
+              {isSameDate(selectedDate!, today) && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        className={`h-6 w-6 p-0 hover:bg-gray-300 bg-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-2 ${
+                          isTaskNA ? "text-red-500 hover:text-red-700" : "text-gray-500 hover:text-gray-700"
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleNotApplicable(task);
+                        }}
+                        disabled={shouldDisableCheckbox(task)}
+                      >
+                        <Ban className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs text-white">
+                        {isTaskNA ? "Mark Applicable" : "Mark Not Applicable"}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -234,6 +283,7 @@ export default function RepeatTaskToDo() {
       </div>
     </div>
   );
+};
 
   return (
     <div className="h-full flex flex-col">
@@ -311,6 +361,16 @@ export default function RepeatTaskToDo() {
                             </h3>
                           )}
                           {renderTaskItem(task, true)}
+                        </>
+                      )}
+                      {naTasks.includes(task) && (
+                        <>
+                          {naTasks.indexOf(task) === 0 && (
+                            <h3 className="text-xs font-semibold text-gray-600 mt-4 mb-1">
+                              NOT APPLICABLE
+                            </h3>
+                          )}
+                          {renderTaskItem(task, false)}
                         </>
                       )}
                     </div>

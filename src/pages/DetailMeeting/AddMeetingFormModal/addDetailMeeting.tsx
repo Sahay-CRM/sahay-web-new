@@ -118,10 +118,22 @@ const MeetingInfo = () => {
     formState: { errors },
     control,
     watch,
+    setValue,
   } = useFormContext();
 
   const { companyMeetingId } = useAddDetailMeeting();
   const meetingNameValue = watch("meetingName") || "";
+  const meetingDescriptionValue = watch("meetingDescription") || "";
+  const prevMeetingNameRef = useRef(meetingNameValue);
+
+  useEffect(() => {
+    if (meetingDescriptionValue === "" || meetingDescriptionValue === prevMeetingNameRef.current) {
+      if (meetingDescriptionValue !== meetingNameValue) {
+        setValue("meetingDescription", meetingNameValue);
+      }
+    }
+    prevMeetingNameRef.current = meetingNameValue;
+  }, [meetingNameValue, meetingDescriptionValue, setValue]);
   const isEditMode = !!companyMeetingId;
 
   // In edit mode, track the original name so dropdown only shows when user changes it

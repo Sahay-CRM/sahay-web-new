@@ -63,7 +63,14 @@ export default function useAddMeeting() {
           endDate: null,
           meetingStatusId: undefined,
           meetingTypeId: undefined,
-          employeeId: userDetail?.employeeId ? [{ employeeId: userDetail.employeeId }] : [],
+          employeeId: userDetail?.employeeId
+            ? [
+                {
+                  ...userDetail,
+                  isTeamLeader: false,
+                },
+              ]
+            : [],
           meetingDocuments: [],
           removedFileIdsArray: [],
         });

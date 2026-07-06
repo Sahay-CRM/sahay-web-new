@@ -236,6 +236,17 @@ const TaskDetailsStep = ({
   } = useAddCompanyTask();
 
   const taskNameValue = watch("taskName") || "";
+  const taskDescriptionValue = watch("taskDescription") || "";
+  const prevTaskNameRef = useRef(taskNameValue);
+
+  useEffect(() => {
+    if (taskDescriptionValue === "" || taskDescriptionValue === prevTaskNameRef.current) {
+      if (taskDescriptionValue !== taskNameValue) {
+        setValue("taskDescription", taskNameValue);
+      }
+    }
+    prevTaskNameRef.current = taskNameValue;
+  }, [taskNameValue, taskDescriptionValue, setValue]);
 
   // In edit mode, track the original name so dropdown only shows when user changes it
   const [originalName, setOriginalName] = useState<string | null>(null);

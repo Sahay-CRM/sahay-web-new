@@ -73,7 +73,16 @@ const Login: React.FC = () => {
                 label="Mobile Number"
                 {...register("mobile", {
                   required: "Please enter your mobile number",
+                  pattern: {
+                    value: /^[0-9]{10}$/,
+                    message: "Please enter a valid 10-digit mobile number",
+                  },
+                  onChange: (e) => {
+                    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  },
                 })}
+                type="tel"
+                maxLength={10}
                 error={errors.mobile}
                 placeholder="Enter mobile number"
                 disabled={statusSentOtp}

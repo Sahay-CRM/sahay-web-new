@@ -51,7 +51,14 @@ export default function useAddDetailMeeting() {
           meetingDescription: "",
           meetingDateTime: null,
           meetingTypeId: undefined,
-          employeeId: userDetail?.employeeId ? [{ employeeId: userDetail.employeeId }] : [],
+          employeeId: userDetail?.employeeId
+            ? [
+                {
+                  ...userDetail,
+                  isTeamLeader: false,
+                },
+              ]
+            : [],
         });
       }
     }

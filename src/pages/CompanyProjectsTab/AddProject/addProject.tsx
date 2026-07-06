@@ -63,6 +63,17 @@ const ProjectInfo = ({ isEditMode, deadlineRequest }: ProjectInfoProps) => {
   } = useAddProject();
 
   const projectNameValue = watch("projectName") || "";
+  const projectDescriptionValue = watch("projectDescription") || "";
+  const prevProjectNameRef = useRef(projectNameValue);
+
+  useEffect(() => {
+    if (projectDescriptionValue === "" || projectDescriptionValue === prevProjectNameRef.current) {
+      if (projectDescriptionValue !== projectNameValue) {
+        setValue("projectDescription", projectNameValue);
+      }
+    }
+    prevProjectNameRef.current = projectNameValue;
+  }, [projectNameValue, projectDescriptionValue, setValue]);
 
   // In edit mode, track the original name so we only search once the user changes it
   const [originalName, setOriginalName] = useState<string | null>(null);
