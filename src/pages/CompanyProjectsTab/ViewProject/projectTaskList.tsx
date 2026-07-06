@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { Calendar, Edit } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,21 @@ export default function ProjectTaskList() {
     setValue,
     formState: { errors },
     reset,
+    watch,
   } = useForm();
+
+  const taskNameValue = watch("taskName") || "";
+  const taskDescriptionValue = watch("taskDescription") || "";
+  const prevTaskNameRef = useRef(taskNameValue);
+
+  useEffect(() => {
+    if (taskDescriptionValue === "" || taskDescriptionValue === prevTaskNameRef.current) {
+      if (taskDescriptionValue !== taskNameValue) {
+        setValue("taskDescription", taskNameValue);
+      }
+    }
+    prevTaskNameRef.current = taskNameValue;
+  }, [taskNameValue, taskDescriptionValue, setValue]);
 
   const defaultValue = {
     meetingId: "",
@@ -127,6 +141,16 @@ export default function ProjectTaskList() {
         value: status.taskTypeId || "",
       }))
     : [];
+
+  const defaultTaskStatus = (taskStatus?.data || [])
+    .slice()
+    .sort((a, b) => (a.taskStatusOrder || 0) - (b.taskStatusOrder || 0))[0];
+
+  useEffect(() => {
+    if (!editingTaskId && defaultTaskStatus && !watch("taskStatusId")) {
+      setValue("taskStatusId", defaultTaskStatus.taskStatusId);
+    }
+  }, [defaultTaskStatus, editingTaskId, setValue, watch]);
 
   useEffect(() => {
     if (taskDataById?.data && editingTaskId) {

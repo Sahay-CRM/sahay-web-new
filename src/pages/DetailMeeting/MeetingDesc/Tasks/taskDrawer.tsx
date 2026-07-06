@@ -143,11 +143,15 @@ export default function TaskDrawer({
         .rawTaskDeadline
     : undefined;
 
+  const defaultTaskStatus = (taskStatus?.data || [])
+    .slice()
+    .sort((a, b) => (a.taskStatusOrder || 0) - (b.taskStatusOrder || 0))[0];
+
   const defaultValues = taskData
     ? {
         taskName: taskData.taskName || "",
         taskDescription: taskData.taskDescription || "",
-        taskStatusId: taskData.taskStatusId || taskStatus?.data[0].taskStatusId,
+        taskStatusId: taskData.taskStatusId || defaultTaskStatus?.taskStatusId || "",
         taskTypeId: taskData.taskTypeId || "",
         projectId: taskData.projectId || "",
         assignUsers: Array.isArray(taskData.assignUsers)
@@ -160,8 +164,7 @@ export default function TaskDrawer({
     : {
         taskName: "",
         taskDescription: "",
-        taskStatusId:
-          taskStatusOption.length > 0 ? taskStatusOption[0].value : "",
+        taskStatusId: defaultTaskStatus?.taskStatusId || "",
         taskTypeId: "",
         projectId: "",
         assignUsers: [],
@@ -176,19 +179,33 @@ export default function TaskDrawer({
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
     setValue,
   } = useForm<TaskFormData>({
     defaultValues,
   });
 
+  const taskNameValue = watch("taskName") || "";
+  const taskDescriptionValue = watch("taskDescription") || "";
+  const prevTaskNameRef = useRef(taskNameValue);
+
   useEffect(() => {
-    if (!taskData || !taskData.taskStatusId) {
-      if (taskStatus?.data?.[0]?.taskStatusId) {
-        setValue("taskStatusId", taskStatus.data[0].taskStatusId);
+    if (taskDescriptionValue === "" || taskDescriptionValue === prevTaskNameRef.current) {
+      if (taskDescriptionValue !== taskNameValue) {
+        setValue("taskDescription", taskNameValue);
       }
     }
-  }, [setValue, taskData, taskStatus?.data]);
+    prevTaskNameRef.current = taskNameValue;
+  }, [taskNameValue, taskDescriptionValue, setValue]);
+
+  useEffect(() => {
+    if (!taskData || !taskData.taskStatusId) {
+      if (defaultTaskStatus?.taskStatusId) {
+        setValue("taskStatusId", defaultTaskStatus.taskStatusId);
+      }
+    }
+  }, [setValue, taskData, defaultTaskStatus]);
 
   // Reset form when taskData changes
   useEffect(() => {

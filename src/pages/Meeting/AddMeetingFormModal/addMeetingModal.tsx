@@ -1,4 +1,5 @@
 import ModalData from "@/components/shared/Modal/ModalData";
+import { format } from "date-fns";
 
 interface MeetingModalProps {
   modalData: MeetingData;
@@ -17,7 +18,15 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
 }) => {
   const employeeNames = modalData
     ?.employeeId!.map((e) => e.employeeName)
+    .filter(Boolean)
     .join(", ");
+
+  const meetingType = modalData?.meetingType as CompanyMeetingTypeDataProps | undefined;
+  const meetingTypeId = modalData?.meetingTypeId as unknown as CompanyMeetingTypeDataProps | undefined;
+  const meetingTypeName =
+    modalData?.meetingTypeName ||
+    meetingType?.meetingTypeName ||
+    meetingTypeId?.meetingTypeName;
 
   return (
     <ModalData
@@ -25,7 +34,7 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
       modalTitle={modalData.meetingId ? "Update Meeting" : "Add Meeting"}
       modalClose={modalClose}
       buttons={[
-        {
+        { 
           btnText: "Cancel",
           buttonCss: "py-1.5 px-5",
           btnClick: modalClose,
@@ -58,7 +67,7 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
             <span className="font-medium text-primary">
               Meeting Start Date Time:{" "}
             </span>
-            {modalData.meetingDateTime}
+              {format(new Date(modalData.meetingDateTime), "dd/MM/yyyy h:mm aa")}
           </div>
         )}
         {modalData?.endDate && (
@@ -66,7 +75,7 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
             <span className="font-medium text-primary">
               Meeting End Date Time:{" "}
             </span>
-            {modalData.endDate}
+             {format(new Date(modalData.endDate), "dd/MM/yyyy h:mm aa")}
           </div>
         )}
         {modalData?.meetingStatus && (
@@ -77,10 +86,10 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
               : modalData.meetingStatus}
           </div>
         )}
-        {modalData?.meetingTypeName && (
+        {meetingTypeName && (
           <div>
             <span className="font-medium text-primary">Meeting Type: </span>
-            {modalData.meetingTypeName}
+            {meetingTypeName}
           </div>
         )}
         {employeeNames && (

@@ -7,16 +7,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SpinnerIcon } from "@/components/shared/Icons";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect } from "react";
 import { TableTooltip } from "@/components/shared/DataTable/tableTooltip";
 import { Button } from "@/components/ui/button";
-import GroupKpisFormModal from "./GroupKPIsFormModal";
 import { useDdAllKpiList } from "@/features/api/KpiList";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { Edit } from "lucide-react";
-// import { addUpdateKpiMergeMutation } from "@/features/api/companyDatapoint";
+import { useNavigate } from "react-router-dom";
 
 export default function GroupKpis() {
+  const navigate = useNavigate();
   const { data: datpointData, isLoading } = useDdAllKpiList({
     filter: { mergeFlag: true },
     enable: true,
@@ -24,11 +24,6 @@ export default function GroupKpis() {
   const { setBreadcrumbs } = useBreadcrumbs();
 
   const selectedKpis: string[] = [];
-
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // const { mutate: addUpdateKpiGroup } = addUpdateKpiMergeMutation();
 
   useEffect(() => {
     setBreadcrumbs([{ label: "KPI Group", href: "" }]);
@@ -53,42 +48,16 @@ export default function GroupKpis() {
     );
   };
 
-  const modalClose = () => {
-    setIsModalOpen(false);
-  };
-
   const onEditClick = (groupId: string) => {
-    setSelectedGroupId(groupId);
-    setIsModalOpen(true);
+    navigate(`/dashboard/kpi/group-kpis/edit/${groupId}`);
   };
-
-  // const handleDelete = (deletedItem: KPIFormData) => {
-  //   const masterId = deletedItem.kpiMergeId;
-  //   if (!masterId || !groupedData?.[masterId]) return;
-
-  //   const remainingItems = groupedData[masterId].filter(
-  //     (item) => item.kpiId !== deletedItem.kpiId,
-  //   );
-  //   const remainingIds = remainingItems
-  //     .map((item) => item.kpiId)
-  //     .filter((id): id is string => typeof id === "string");
-
-  //   const payload = {
-  //     kpiMergeId: masterId,
-  //     kpiIds: remainingIds,
-  //   };
-  //   addUpdateKpiGroup(payload);
-  // };
 
   return (
     <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
       <div>
         <Button
           className="py-2 w-fit mb-5"
-          onClick={() => {
-            setSelectedGroupId(null);
-            setIsModalOpen(true);
-          }}
+          onClick={() => navigate("/dashboard/kpi/group-kpis/add")}
         >
           Create Group KPIs
         </Button>
@@ -129,7 +98,7 @@ export default function GroupKpis() {
                   <TableRow className="bg-gray-100">
                     <TableCell
                       colSpan={11}
-                      className="font-semibold  left-0 bg-gray-100 relative"
+                      className="font-semibold left-0 bg-gray-100 relative"
                     >
                       <div className="flex justify-between items-center">
                         <div>
@@ -191,17 +160,6 @@ export default function GroupKpis() {
                       <TableCell className="truncate">
                         <TableTooltip text={String(item.value2 ?? " - ")} />
                       </TableCell>
-                      {/* <TableCell className="truncate text-end">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(item);
-                          }}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </TableCell> */}
                     </TableRow>
                   ))}
                 </Fragment>
@@ -216,15 +174,7 @@ export default function GroupKpis() {
           </TableBody>
         </Table>
       </div>
-
-      {isModalOpen && (
-        <GroupKpisFormModal
-          isModalOpen={isModalOpen}
-          selectedKpisIds={selectedKpis}
-          modalClose={modalClose}
-          groupId={selectedGroupId}
-        />
-      )}
     </div>
   );
 }
+

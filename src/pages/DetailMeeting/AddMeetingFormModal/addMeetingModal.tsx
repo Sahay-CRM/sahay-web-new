@@ -18,11 +18,20 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
 }) => {
   const employeeNames = modalData
     ?.employeeId!.map((e) => e.employeeName)
+    .filter(Boolean)
     .join(", ");
+
+  const meetingType = modalData?.meetingType as CompanyMeetingTypeDataProps | undefined;
+  const meetingTypeId = modalData?.meetingTypeId as unknown as CompanyMeetingTypeDataProps | undefined;
+  const meetingTypeName =
+    modalData?.meetingTypeName ||
+    meetingType?.meetingTypeName ||
+    meetingTypeId?.meetingTypeName;
+
   return (
     <ModalData
       isModalOpen={isModalOpen}
-      modalTitle={modalData.meetingId ? "Update Meeting" : "Add Meeting"}
+      modalTitle={modalData.meetingId ? "Update Live Meeting" : "Add Live Meeting"}
       modalClose={modalClose}
       buttons={[
         {
@@ -69,10 +78,10 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
               : modalData.meetingStatus}
           </div>
         )}
-        {modalData?.meetingTypeName && (
+        {meetingTypeName && (
           <div>
             <span className="font-medium text-primary">Meeting Type: </span>
-            {modalData.meetingTypeName}
+            {meetingTypeName}
           </div>
         )}
         {employeeNames && (

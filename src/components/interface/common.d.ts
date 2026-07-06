@@ -513,6 +513,7 @@ interface BaseResponse<T> {
   sortBy: string;
   sortOrder: string;
   data: T[];
+  isHideDateFilter?: boolean;
 }
 
 interface DesignationDetails {
@@ -724,6 +725,7 @@ interface RepeatTaskAllRes {
   repetitiveTaskId?: string;
   taskName?: string;
   isCompleted?: boolean;
+  isNotApplicable?: boolean;
   taskStatus?: string;
   winLostTask?: number;
   taskStatusId?: string;

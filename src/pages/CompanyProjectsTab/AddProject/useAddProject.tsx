@@ -7,7 +7,7 @@ import {
 } from "@/features/api/companyProject";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { getUserPermission } from "@/features/selectors/auth.selector";
+import { getUserPermission, getUserDetail } from "@/features/selectors/auth.selector";
 import { useGetCoreParameterDropdown } from "@/features/api/Business";
 // import { queryClient } from "@/queryClient";
 import { docUploadMutation } from "@/features/api/file";
@@ -27,7 +27,7 @@ export default function useAddProject() {
   const [isBusFuncSearch, setIsBusFuncSearch] = useState("");
   const { mutate: docUpload } = docUploadMutation();
   const permission = useSelector(getUserPermission).PROJECT_LIST;
-
+  const userDetail = useSelector(getUserDetail);
   const [isConfModalOpen, setIsConfModalOpen] = useState(false);
   const [reasons, setReasons] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -124,11 +124,21 @@ export default function useAddProject() {
           projectStatusId: "",
           subParameterId: [],
           coreParameterId: "",
-          employeeId: [],
+          employeeId: userDetail?.employeeId ? [userDetail.employeeId] : [],
         });
       }
     }
-  }, [projectApiData, reset, companyProjectId]);
+  }, [projectApiData, reset, companyProjectId, userDetail]);
+
+  const defaultStatus = (StatusOptionsData?.data || [])
+    .slice()
+    .sort((a, b) => (a.projectStatusOrder || 0) - (b.projectStatusOrder || 0))[0];
+
+  useEffect(() => {
+    if (!companyProjectId && defaultStatus && !watch("projectStatusId")) {
+      setValue("projectStatusId", defaultStatus.projectStatusId);
+    }
+  }, [defaultStatus, companyProjectId, setValue, watch]);
 
   /** Clear subParameters when coreParameter changes */
   const watchedCoreParameter = watch("coreParameterId");
@@ -220,14 +230,15 @@ export default function useAddProject() {
         handleModalClose();
 
         const from = searchParams.get("from");
+        const taskId = searchParams.get("taskId");
 
         // ✅ Decide base path just like meeting
         let basePath = "/dashboard/projects";
 
         if (from === "task") {
-          basePath = "/dashboard/tasks/add";
+          basePath = taskId ? `/dashboard/tasks/edit/${taskId}` : "/dashboard/tasks/add";
         } else if (from === "tasksrepeat") {
-          basePath = "/dashboard/tasksrepeat/add";
+          basePath = taskId ? `/dashboard/tasksrepeat/edit/${taskId}` : "/dashboard/tasksrepeat/add";
         }
 
         // ✅ If normal project, just go project list
@@ -280,12 +291,13 @@ export default function useAddProject() {
         handleModalClose();
 
         const from = searchParams.get("from");
+        const taskId = searchParams.get("taskId");
         let basePath = "/dashboard/projects";
 
         if (from === "task") {
-          basePath = "/dashboard/tasks/add";
+          basePath = taskId ? `/dashboard/tasks/edit/${taskId}` : "/dashboard/tasks/add";
         } else if (from === "tasksrepeat") {
-          basePath = "/dashboard/tasksrepeat/add";
+          basePath = taskId ? `/dashboard/tasksrepeat/edit/${taskId}` : "/dashboard/tasksrepeat/add";
         }
 
         if (basePath === "/dashboard/projects") {

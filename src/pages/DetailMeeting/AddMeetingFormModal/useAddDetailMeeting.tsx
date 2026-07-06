@@ -8,13 +8,14 @@ import {
   useGetMeetingTiming,
 } from "@/features/api/detailMeeting";
 import { useSelector } from "react-redux";
-import { getUserPermission } from "@/features/selectors/auth.selector";
+import { getUserPermission, getUserDetail } from "@/features/selectors/auth.selector";
 
 // Renamed function
 export default function useAddDetailMeeting() {
   const { id: companyMeetingId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
   const permission = useSelector(getUserPermission).LIVE_MEETING;
+  const userDetail = useSelector(getUserDetail);
 
   const { mutate: addDetailMeeting, isPending } =
     addUpdateDetailMeetingMutation();
@@ -42,8 +43,26 @@ export default function useAddDetailMeeting() {
         meetingTypeId: data.meetingType || undefined,
         employeeId: data.joiners,
       });
+    } else {
+      if (!companyMeetingId) {
+        reset({
+          meetingId: "",
+          meetingName: "",
+          meetingDescription: "",
+          meetingDateTime: null,
+          meetingTypeId: undefined,
+          employeeId: userDetail?.employeeId
+            ? [
+                {
+                  ...userDetail,
+                  isTeamLeader: false,
+                },
+              ]
+            : [],
+        });
+      }
     }
-  }, [meetingApiData, reset, companyMeetingId, setValue]);
+  }, [meetingApiData, reset, companyMeetingId, setValue, userDetail]);
 
   const handleClose = () => setModalOpen(false);
 

@@ -150,8 +150,24 @@ export function useRepeatTaskToDo() {
     enable: !!employeeIds && !!selectedDate,
   });
 
+  const toggleNotApplicable = (task: RepeatTaskAllRes) => {
+    if (!task.taskId) return;
+
+    const nextVal = !task.isNotApplicable;
+    updateRepeatTask({
+      taskId: task.taskId,
+      isNotApplicable: nextVal,
+    });
+  };
+
   const toggleComplete = (taskId: string, isCompleted: boolean) => {
-    updateRepeatTask({ taskId, isCompleted });
+    const task = companyTaskData?.data?.find((t) => t.taskId === taskId);
+    const payload: RepeatTaskAllRes = { taskId, isCompleted };
+
+    if (task?.isNotApplicable) {
+      payload.isNotApplicable = false;
+    }
+    updateRepeatTask(payload);
   };
 
   const employeeOption = [
@@ -230,5 +246,6 @@ export function useRepeatTaskToDo() {
     today,
     userData,
     shouldDisableCheckbox,
+    toggleNotApplicable,
   };
 }

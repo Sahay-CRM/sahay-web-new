@@ -176,6 +176,19 @@ export default function ProjectDrawer({
     defaultValues,
   });
 
+  const projectNameValue = watch("projectName") || "";
+  const projectDescriptionValue = watch("projectDescription") || "";
+  const prevProjectNameRef = useRef(projectNameValue);
+
+  useEffect(() => {
+    if (projectDescriptionValue === "" || projectDescriptionValue === prevProjectNameRef.current) {
+      if (projectDescriptionValue !== projectNameValue) {
+        setValue("projectDescription", projectNameValue);
+      }
+    }
+    prevProjectNameRef.current = projectNameValue;
+  }, [projectNameValue, projectDescriptionValue, setValue]);
+
   useEffect(() => {
     if (!projectData || !projectData.projectStatusId) {
       if (projectStatusData?.data?.[0]?.projectStatusId) {

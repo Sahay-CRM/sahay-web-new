@@ -16,6 +16,7 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import PageNotAccess from "../PageNoAccess";
+import { formatEmployeeType } from "@/features/utils/app.utils";
 
 export default function MeetingList() {
   const {
@@ -111,6 +112,13 @@ export default function MeetingList() {
             key={employeeData?.currentPage}
             tableData={employeeData?.data.map((item, index) => ({
               ...item,
+               designationName:
+                item.employeeType === "OWNER"
+                  ? item.designationName
+                    ? `Owner / ${item.designationName}`
+                    : "Owner"
+                  : item.designationName ||
+                    formatEmployeeType(item.employeeType),
               srNo:
                 (employeeData.currentPage - 1) * employeeData.pageSize +
                 index +

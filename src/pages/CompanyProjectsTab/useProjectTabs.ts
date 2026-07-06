@@ -469,5 +469,6 @@ export default function useProjectTabs() {
     handleDateRangeSaveApply,
     handleDateRangeReset,
     refetch,
+    isHideDateFilter: projectListData?.isHideDateFilter,
   };
 }

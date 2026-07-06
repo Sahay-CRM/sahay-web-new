@@ -157,6 +157,17 @@ const MeetingInfo = ({
   });
 
   const meetingNameValue = watch("meetingName") || "";
+  const meetingDescriptionValue = watch("meetingDescription") || "";
+  const prevMeetingNameRef = useRef(meetingNameValue);
+
+  useEffect(() => {
+    if (meetingDescriptionValue === "" || meetingDescriptionValue === prevMeetingNameRef.current) {
+      if (meetingDescriptionValue !== meetingNameValue) {
+        setValue("meetingDescription", meetingNameValue);
+      }
+    }
+    prevMeetingNameRef.current = meetingNameValue;
+  }, [meetingNameValue, meetingDescriptionValue, setValue]);
 
   // In edit mode, track the original name so dropdown only shows when user changes it
   const [originalName, setOriginalName] = useState<string | null>(null);
@@ -245,6 +256,7 @@ const MeetingInfo = ({
           shouldValidate: true,
           shouldDirty: true,
         });
+        setValue("meetingStatus", defaultStatus.label);
       }
     }
   }, [shouldHideStatus, meetingStatusOptions, setValue]);
@@ -385,6 +397,7 @@ const MeetingInfo = ({
                 onSelect={(value) => {
                   field.onChange(value.value);
                   setValue("meetingStatusId", value.value);
+                  setValue("meetingStatus", value.label);
                 }}
                 className="mt-0.5"
                 onSearchChange={setIsStatusSearch}
