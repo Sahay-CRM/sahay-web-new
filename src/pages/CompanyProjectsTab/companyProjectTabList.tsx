@@ -81,6 +81,7 @@ export default function CompanyProjectTabList() {
     handleDateRangeSaveApply,
     handleDateRangeReset,
     refetch,
+    isHideDateFilter,
   } = useProjectTabs();
   const [isViewDocsModalOpen, setIsViewDocsModalOpen] = useState(false);
   const [viewDocsModalData, setViewDocsModalData] = useState<IProjectFormData>(
@@ -156,21 +157,23 @@ export default function CompanyProjectTabList() {
                 className="h-10"
               />
 
-              <DateRangePicker
-                value={{
-                  from: projectDateRange.projectStartDate,
-                  to: projectDateRange.projectDeadline,
-                }}
-                onChange={handleDateRangeChange}
-                onApply={handleDateRangeApply}
-                onSaveApply={handleDateRangeSaveApply}
-                defaultDate={{
-                  startDate: appliedDateRange.projectStartDate,
-                  deadline: appliedDateRange.projectDeadline,
-                }}
-                isClear
-                handleClear={handleDateRangeReset}
-              />
+              {!isHideDateFilter && (
+                <DateRangePicker
+                  value={{
+                    from: projectDateRange.projectStartDate,
+                    to: projectDateRange.projectDeadline,
+                  }}
+                  onChange={handleDateRangeChange}
+                  onApply={handleDateRangeApply}
+                  onSaveApply={handleDateRangeSaveApply}
+                  defaultDate={{
+                    startDate: appliedDateRange.projectStartDate,
+                    deadline: appliedDateRange.projectDeadline,
+                  }}
+                  isClear
+                  handleClear={handleDateRangeReset}
+                />
+              )}
 
               {permission.Add && (
                 <Link to="/dashboard/projects/add">

@@ -130,6 +130,16 @@ export default function useAddProject() {
     }
   }, [projectApiData, reset, companyProjectId, userDetail]);
 
+  const defaultStatus = (StatusOptionsData?.data || [])
+    .slice()
+    .sort((a, b) => (a.projectStatusOrder || 0) - (b.projectStatusOrder || 0))[0];
+
+  useEffect(() => {
+    if (!companyProjectId && defaultStatus && !watch("projectStatusId")) {
+      setValue("projectStatusId", defaultStatus.projectStatusId);
+    }
+  }, [defaultStatus, companyProjectId, setValue, watch]);
+
   /** Clear subParameters when coreParameter changes */
   const watchedCoreParameter = watch("coreParameterId");
   const [previousCoreParameterId, setPreviousCoreParameterId] = useState<

@@ -158,6 +158,16 @@ export const useAddCompanyTask = () => {
       }))
     : [];
 
+  const defaultTaskStatus = (taskStatus?.data || [])
+    .slice()
+    .sort((a, b) => (a.taskStatusOrder || 0) - (b.taskStatusOrder || 0))[0];
+
+  useEffect(() => {
+    if (!taskId && defaultTaskStatus && !methods.watch("taskStatusId")) {
+      methods.setValue("taskStatusId", defaultTaskStatus.taskStatusId);
+    }
+  }, [defaultTaskStatus, taskId, methods]);
+
   const taskTypeOptions = taskTypeData
     ? taskTypeData.data.map((status) => ({
         label: status.taskTypeName || "Unnamed",

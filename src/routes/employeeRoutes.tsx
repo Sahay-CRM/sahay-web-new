@@ -97,6 +97,9 @@ const RepeatMeetingData = lazy(
 const Issues = lazy(() => import("../pages/Obj/Issues"));
 const Objective = lazy(() => import("../pages/Obj/Objective"));
 const GroupKpis = lazy(() => import("../pages/datapointList/GroupKpis"));
+const AddGroupKpis = lazy(
+  () => import("../pages/datapointList/GroupKpis/AddGroupKpis"),
+);
 
 const RepeatTaskToDoList = lazy(() => import("../pages/RepeatTaskToDo"));
 
@@ -219,6 +222,8 @@ export default function EmployeeRoutes() {
         <Route path="kpi/add" element={<AddCompanyDatapoint />} />
         <Route path="kpi/edit/:id" element={<AddCompanyDatapoint />} />
         <Route path="kpi/group-kpis" element={<GroupKpis />} />
+        <Route path="kpi/group-kpis/add" element={<AddGroupKpis />} />
+        <Route path="kpi/group-kpis/edit/:id" element={<AddGroupKpis />} />
 
         <Route path="datapoint" Component={DatapointList} />
         <Route path="kpi-dashboard" Component={KPIDashboard} />

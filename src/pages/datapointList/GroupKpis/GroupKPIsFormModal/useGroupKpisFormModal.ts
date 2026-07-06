@@ -265,7 +265,7 @@ export default function useGroupKpisFormModal({
     const currentIndex = frequencyOrder.indexOf(selected);
     if (currentIndex === -1) return frequenceOptions;
     return frequenceOptions.filter(
-      (opt) => frequencyOrder.indexOf(opt.value) >= currentIndex,
+      (opt) => frequencyOrder.indexOf(opt.value) > currentIndex,
     );
   };
 

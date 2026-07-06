@@ -6,9 +6,17 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
-interface AddUpdateKpiMergeRes {
+export interface AddUpdateKpiMergeRes {
   kpiMergeId?: string;
   kpiIds?: string[];
+  baseKpiIds?: string[];
+  otherKpiIds?: string[];
+  isMinusKpi?: boolean;
+  kpiMergeName?: string;
+  frequencyType?: string;
+  value1?: string;
+  value2?: string;
+  validationType?: string;
   tag?: string;
   unit?: string;
   visualFrequencyTypes?: string;

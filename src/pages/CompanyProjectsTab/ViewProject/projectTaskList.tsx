@@ -53,6 +53,7 @@ export default function ProjectTaskList() {
     setValue,
     formState: { errors },
     reset,
+    watch,
   } = useForm();
 
   const defaultValue = {
@@ -127,6 +128,16 @@ export default function ProjectTaskList() {
         value: status.taskTypeId || "",
       }))
     : [];
+
+  const defaultTaskStatus = (taskStatus?.data || [])
+    .slice()
+    .sort((a, b) => (a.taskStatusOrder || 0) - (b.taskStatusOrder || 0))[0];
+
+  useEffect(() => {
+    if (!editingTaskId && defaultTaskStatus && !watch("taskStatusId")) {
+      setValue("taskStatusId", defaultTaskStatus.taskStatusId);
+    }
+  }, [defaultTaskStatus, editingTaskId, setValue, watch]);
 
   useEffect(() => {
     if (taskDataById?.data && editingTaskId) {

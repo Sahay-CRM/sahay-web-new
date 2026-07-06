@@ -513,6 +513,7 @@ interface BaseResponse<T> {
   sortBy: string;
   sortOrder: string;
   data: T[];
+  isHideDateFilter?: boolean;
 }
 
 interface DesignationDetails {
