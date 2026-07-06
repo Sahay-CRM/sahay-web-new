@@ -8,10 +8,10 @@ import {
   useDdTaskType,
 } from "@/features/api/companyTask";
 import { getEmployee } from "@/features/api/companyEmployee";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useGetBothCompanyMeeting } from "@/features/api/companyMeeting";
 import { useSelector } from "react-redux";
-import { getUserPermission } from "@/features/selectors/auth.selector";
+import { getUserPermission, getUserDetail } from "@/features/selectors/auth.selector";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 
@@ -36,6 +36,7 @@ export const useAddCompanyTask = () => {
   const { id: taskId } = useParams();
   const { data: taskDataById } = useGetCompanyTaskById(taskId || "");
   const permission = useSelector(getUserPermission);
+  const userDetail = useSelector(getUserDetail);
   const navigate = useNavigate();
   // const [isChildData, setIsChildData] = useState<string | undefined>();
   const [isConfModalOpen, setIsConfModalOpen] = useState(false);
@@ -46,10 +47,22 @@ export const useAddCompanyTask = () => {
   const [isTypeSearch, setIsTypeSearch] = useState("");
   const [isStatusSearch, setIsStatusSearch] = useState("");
 
+  const [searchParams] = useSearchParams();
+  let projectId = searchParams.get("projectId") || "";
+  let meetingId = searchParams.get("meetingId") || "";
+  projectId = projectId.replace(/[?&]+$/, "");
+  meetingId = meetingId.replace(/[?&]+$/, "");
+
+  const initialStep = (() => {
+    if (meetingId) return 3;
+    if (projectId) return 2;
+    return 1;
+  })();
+
   const methods = useForm<FormValues>({
     defaultValues: {
       taskId: "",
-      project: "",
+      project: projectId,
       taskName: "",
       taskDescription: "",
       taskStartDate: null,
@@ -57,7 +70,8 @@ export const useAddCompanyTask = () => {
       // repeatType: "none",
       taskStatusId: "",
       taskTypeId: "",
-      assignUser: [],
+      meeting: meetingId,
+      assignUser: userDetail?.employeeId ? [userDetail.employeeId] : [],
       comment: "",
     },
     mode: "onChange",
@@ -68,8 +82,8 @@ export const useAddCompanyTask = () => {
     if (taskId && taskDataById?.data) {
       reset({
         taskId: taskDataById.data.taskId || "",
-        project: taskDataById.data?.projectId || "",
-        meeting: taskDataById.data?.meetingId || "",
+        project: projectId || taskDataById.data?.projectId || "",
+        meeting: meetingId || taskDataById.data?.meetingId || "",
         taskName: taskDataById.data.taskName || "",
         taskDescription: taskDataById.data.taskDescription || "",
         taskStartDate: taskDataById.data.taskStartDate
@@ -86,8 +100,8 @@ export const useAddCompanyTask = () => {
           : [],
       });
     }
-  }, [taskId, taskDataById, reset]);
-  const [step, setStep] = useState(1);
+  }, [taskId, taskDataById, reset, projectId, meetingId]);
+  const [step, setStep] = useState(initialStep);
 
   const [paginationFilterEmployee, setPaginationFilterEmployee] =
     useState<PaginationFilter>({
@@ -151,20 +165,10 @@ export const useAddCompanyTask = () => {
       }))
     : [];
 
-  // Repetition options
-  // const repetitionOptions = [
-  //   { value: "none", label: "No Repetition" },
-  //   { value: "daily", label: "Daily" },
-  //   { value: "weekly", label: "Weekly" },
-  //   { value: "monthly", label: "Monthly" },
-  //   { value: "annually", label: "Annually" },
-  // ];
 
   // Dynamically set steps based on taskId
   const steps = ["Project", "Meeting", "Basic Info", "Assign User"];
-  // : ["Project", "Meeting", "Basic Info", "AssignUser", "Comment"];
-
-  // Define required and optional fields for each step
+  
   const stepFieldConfig: Record<
     number,
     { required: (keyof FormValues)[]; optional: (keyof FormValues)[] }
@@ -182,9 +186,7 @@ export const useAddCompanyTask = () => {
           ],
           optional: ["taskStartDate"],
         },
-        // Adjusted step numbers to be contiguous for array indexing if needed,
-        // but direct object key access is fine.
-        // Assuming step numbers are 1, 2, 3, 4, (5 if not taskId)
+       
         4: { required: ["assignUser"], optional: [] }, // Was 7
       }
     : {

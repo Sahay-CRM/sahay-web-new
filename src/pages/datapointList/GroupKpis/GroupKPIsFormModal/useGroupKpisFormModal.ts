@@ -125,7 +125,7 @@ export default function useGroupKpisFormModal({
 
     return filteredData.map((item) => ({
       value: item.kpiId,
-      label: `${item.KPIName}${item.tag ? ` (${item.tag})` : ""}${
+      label: `${item.KPIName} (${item.employeeName}) ${item.tag ? ` (${item.tag})` : ""}${
         item.coreParameterName ? ` (${item.coreParameterName})` : ""
       }`,
     }));

@@ -40,6 +40,7 @@ const ProjectSelectionStep = () => {
     permission,
     paginationFilterProject,
     projectLoading,
+    taskId,
   } = useAddCompanyTask();
 
   return (
@@ -61,7 +62,7 @@ const ProjectSelectionStep = () => {
           )}
         </div>
         {permission.PROJECT_LIST.Add && (
-          <Link to="/dashboard/projects/add?from=task">
+          <Link to={`/dashboard/projects/add?from=task${taskId ? `&taskId=${taskId}` : ""}`}>
             <Button className="py-2 w-fit">Add Company Project</Button>
           </Link>
         )}
@@ -130,6 +131,7 @@ const MeetingSelectionStep = () => {
     permission,
     paginationFilterMeeting,
     meetingLoading,
+    taskId,
   } = useAddCompanyTask();
 
   const projectId = watch("project");
@@ -151,7 +153,7 @@ const MeetingSelectionStep = () => {
           )}
         </div>
         {permission.MEETING_LIST?.Add && (
-          <Link to={`/dashboard/meeting/add?from=task&projectId=${projectId}`}>
+          <Link to={`/dashboard/meeting/add?from=task&projectId=${projectId}${taskId ? `&taskId=${taskId}` : ""}`}>
             <Button className="py-2 w-fit">Add Meeting</Button>
           </Link>
         )}
@@ -620,15 +622,6 @@ export default function AddCompanyTask() {
     }
   }, [meetingId, projectId, setValue]);
 
-  const effectiveStep = (() => {
-    let adjustedStep = step;
-
-    if (projectId) adjustedStep += 1;
-    if (meetingId) adjustedStep += 1;
-
-    return adjustedStep;
-  })();
-
   const totalSteps = 4;
 
   const handleNext = handleSubmit(
@@ -637,7 +630,7 @@ export default function AddCompanyTask() {
   );
 
   const renderStepContent = () => {
-    switch (effectiveStep) {
+    switch (step) {
       case 1:
         return <ProjectSelectionStep key="projectStep" />;
       case 2:
@@ -671,14 +664,12 @@ export default function AddCompanyTask() {
         <div className="w-full h-full px-2 sm:px-4 py-6 flex flex-col overflow-hidden">
           <div className="shrink-0">
             <StepProgress
-              currentStep={effectiveStep}
+              currentStep={step}
               totalSteps={totalSteps}
-              stepNames={stepNamesArray} // ⚡ अब slice मत करो, सारे step दिखेंगे
+              stepNames={stepNamesArray}
               back={prevStep}
-              isFirstStep={
-                projectId ? effectiveStep === 2 : effectiveStep === 1
-              }
-              isLastStep={effectiveStep === totalSteps}
+              isFirstStep={step === 1}
+              isLastStep={step === totalSteps}
               next={handleNext}
               isPending={isPending}
               onFinish={handleSubmit(onSubmit)}

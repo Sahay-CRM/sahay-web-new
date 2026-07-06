@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import TableData from "@/components/shared/DataTable/DataTable";
@@ -52,6 +52,12 @@ import {
 export default function useAddEmployee() {
   const { id: repetitiveTaskId } = useParams<{ id?: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  let queryProjectId = searchParams.get("projectId") || "";
+  let queryMeetingId = searchParams.get("meetingId") || "";
+  queryProjectId = queryProjectId.replace(/[?&]+$/, "");
+  queryMeetingId = queryMeetingId.replace(/[?&]+$/, "");
 
   const { data: taskDataById } = useGetRepeatCompanyTaskById({
     filter: {
@@ -134,16 +140,19 @@ export default function useAddEmployee() {
 
       const employeeIds = t?.employeeIds ?? [];
 
+      const targetProjectId = queryProjectId || t.projectId;
+      const targetMeetingId = queryMeetingId || t.meetingId;
+
       setValue("repetitiveTaskId", t.repetitiveTaskId);
       setValue("repeatTime", convertUtcTimeToLocal(t.repeatTime));
       setValue(
         "project",
-        projectListdata?.data?.find((p) => p.projectId === t.projectId) || null,
+        projectListdata?.data?.find((p) => p.projectId === targetProjectId) || null,
       );
       setValue(
         "meeting",
         (meetingData &&
-          meetingData?.data?.find((m) => m.meetingId === t.meetingId)) ||
+          meetingData?.data?.find((m) => m.meetingId === targetMeetingId)) ||
           null,
       );
       setValue("taskName", t.taskName || "");
@@ -179,6 +188,8 @@ export default function useAddEmployee() {
     employeedata?.data,
     setValue,
     meetingData,
+    queryProjectId,
+    queryMeetingId,
   ]);
 
   const onSubmit = handleSubmit(async (data) => {
@@ -322,7 +333,7 @@ export default function useAddEmployee() {
             )}
           </div>
           {permission.PROJECT_LIST?.Add && (
-            <a href="/dashboard/projects/add?from=tasksrepeat">
+            <a href={`/dashboard/projects/add?from=tasksrepeat${repetitiveTaskId ? `&taskId=${repetitiveTaskId}` : ""}`}>
               <Button className="py-2 w-fit">Add Company Project</Button>
             </a>
           )}
@@ -402,7 +413,7 @@ export default function useAddEmployee() {
 
           {permission.MEETING_LIST?.Add && (
             <a
-              href={`/dashboard/meeting/add?from=tasksrepeat&projectId=${projectId?.projectId ?? ""}`}
+              href={`/dashboard/meeting/add?from=tasksrepeat&projectId=${projectId?.projectId ?? ""}${repetitiveTaskId ? `&taskId=${repetitiveTaskId}` : ""}`}
             >
               <Button className="py-2 w-fit">Add Meeting </Button>
             </a>

@@ -8,11 +8,14 @@ import { docUploadMutation } from "@/features/api/file";
 import { queryClient } from "@/queryClient";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useState } from "react";
+import { useSelector } from "react-redux";
+import { getUserDetail } from "@/features/selectors/auth.selector";
 
 // Renamed function
 export default function useAddMeeting() {
   const { id: companyMeetingId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
+  const userDetail = useSelector(getUserDetail);
 
   const { mutate: addMeeting, isPending } = useAddUpdateCompanyMeeting();
   const navigate = useNavigate();
@@ -50,8 +53,23 @@ export default function useAddMeeting() {
           : [],
         removedFileIdsArray: [],
       });
+    } else {
+      if (!companyMeetingId) {
+        reset({
+          meetingId: "",
+          meetingName: "",
+          meetingDescription: "",
+          meetingDateTime: null,
+          endDate: null,
+          meetingStatusId: undefined,
+          meetingTypeId: undefined,
+          employeeId: userDetail?.employeeId ? [{ employeeId: userDetail.employeeId }] : [],
+          meetingDocuments: [],
+          removedFileIdsArray: [],
+        });
+      }
     }
-  }, [meetingApiData, reset, companyMeetingId, setValue]);
+  }, [meetingApiData, reset, companyMeetingId, setValue, userDetail]);
 
   const handleClose = () => setModalOpen(false);
 
@@ -108,14 +126,15 @@ export default function useAddMeeting() {
 
         const from = searchParams.get("from");
         const projectId = searchParams.get("projectId");
+        const taskId = searchParams.get("taskId");
 
         // ✅ Decide base path
         let basePath = "/dashboard/meeting";
 
         if (from === "task") {
-          basePath = "/dashboard/tasks/add";
+          basePath = taskId ? `/dashboard/tasks/edit/${taskId}` : "/dashboard/tasks/add";
         } else if (from === "tasksrepeat") {
-          basePath = "/dashboard/tasksrepeat/add";
+          basePath = taskId ? `/dashboard/tasksrepeat/edit/${taskId}` : "/dashboard/tasksrepeat/add";
         }
 
         // ✅ If it's meeting (no task path), go direct
