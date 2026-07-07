@@ -22,10 +22,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverAnchor,
+} from "@/components/ui/popover";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import DateRangePicker from "@/components/shared/DateRange";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ViewProjectDocsModal } from "./ViewProjectDocumentModal";
 import ProjectBoard from "./Board/ProjectBoard";
 
@@ -38,7 +43,6 @@ export default function CompanyProjectTabList() {
     longPressTab,
     isDialogOpen,
     newTabName,
-    dropdownRef,
     deleteTab,
     startPress,
     cancelPress,
@@ -102,6 +106,14 @@ export default function CompanyProjectTabList() {
 
   const isLoading = isPending || isLoadingProject;
   const [viewMode, setViewMode] = useState<"list" | "board">("list");
+
+  const openedAtRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (longPressTab) {
+      openedAtRef.current = Date.now();
+    }
+  }, [longPressTab]);
 
   return (
     <div className="w-full  h-[calc(100vh-90px)] flex flex-col">
@@ -207,77 +219,95 @@ export default function CompanyProjectTabList() {
                 </Tooltip>
               </TooltipProvider>
               {tabs.map((tab) => (
-                <div
+                <Popover
                   key={tab.id}
-                  draggable={tab.id !== "all"}
-                  className="relative"
-                  onMouseDown={() => startPress(tab)}
-                  onMouseUp={cancelPress}
-                  onMouseLeave={cancelPress}
-                  onTouchStart={() => startPress(tab)}
-                  onTouchEnd={cancelPress}
+                  open={longPressTab?.id === tab.id}
+                  onOpenChange={(open) => {
+                    if (!open) setLongPressTab(null);
+                  }}
                 >
-                  <input
-                    type="radio"
-                    name="tabset"
-                    id={tab.id}
-                    checked={activeTab === tab.id}
-                    onChange={() => handleTabChange(tab)}
-                    className="absolute left-[-200vw]"
-                  />
-                  <label
-                    htmlFor={tab.id}
-                    className={`px-3 py-1 cursor-pointer rounded-full font-semibold transition text-sm
-              ${
-                activeTab === tab.id
-                  ? "bg-primary text-white"
-                  : "text-black bg-white border border-gray-300"
-              }`}
-                  >
-                    {tab.label}
-                  </label>
-
-                  {longPressTab?.id === tab.id && (
+                  <PopoverAnchor asChild>
                     <div
-                      ref={dropdownRef}
-                      className="absolute text-sm top-full right-0 mt-2 w-45 border bg-white shadow-lg rounded-md z-50"
+                      draggable={tab.id !== "all"}
+                      className="relative"
+                      onMouseDown={() => startPress(tab)}
+                      onMouseUp={cancelPress}
+                      onMouseLeave={cancelPress}
+                      onTouchStart={() => startPress(tab)}
+                      onTouchEnd={cancelPress}
                     >
-                      <button
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                        onClick={() => {
-                          openDialogForEdit(tab);
-                          setLongPressTab(null);
-                        }}
+                      <input
+                        type="radio"
+                        name="tabset"
+                        id={tab.id}
+                        checked={activeTab === tab.id}
+                        onChange={() => handleTabChange(tab)}
+                        className="absolute left-[-200vw]"
+                      />
+                      <label
+                        htmlFor={tab.id}
+                        className={`px-3 py-1 cursor-pointer rounded-full font-semibold transition text-sm
+                  ${
+                    activeTab === tab.id
+                      ? "bg-primary text-white"
+                      : "text-black bg-white border border-gray-300"
+                  }`}
                       >
-                        Edit
-                      </button>
-                      <button
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                        onClick={() => deleteTab(tab)}
-                      >
-                        Delete
-                      </button>
-                      <button
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                        onClick={() => {
-                          openAddProjectDrawer(tab);
-                          setLongPressTab(null);
-                        }}
-                      >
-                        Manage Project
-                      </button>
-                      <button
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                        onClick={() => {
-                          setIsRearrangeOpen(tab);
-                          setLongPressTab(null);
-                        }}
-                      >
-                        Manage Sequence
-                      </button>
+                        {tab.label}
+                      </label>
                     </div>
-                  )}
-                </div>
+                  </PopoverAnchor>
+
+                  <PopoverContent
+                    className="w-48 bg-white border border-gray-200 shadow-md rounded-md z-50 p-1 flex flex-col gap-0.5"
+                    align="end"
+                    side="bottom"
+                    sideOffset={4}
+                    onInteractOutside={(e) => {
+                      const timeSinceOpen = Date.now() - openedAtRef.current;
+                      if (timeSinceOpen < 500) {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
+                    <button
+                      className="cursor-pointer block w-full text-left px-4 py-2 text-sm text-black hover:bg-gray-100 rounded-md transition-colors"
+                      onClick={() => {
+                        openDialogForEdit(tab);
+                        setLongPressTab(null);
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="cursor-pointer block w-full text-left px-4 py-2 text-sm text-black hover:bg-gray-100 rounded-md transition-colors"
+                      onClick={() => {
+                        deleteTab(tab);
+                        setLongPressTab(null);
+                      }}
+                    >
+                      Delete
+                    </button>
+                    <button
+                      className="cursor-pointer block w-full text-left px-4 py-2 text-sm text-black hover:bg-gray-100 rounded-md transition-colors"
+                      onClick={() => {
+                        openAddProjectDrawer(tab);
+                        setLongPressTab(null);
+                      }}
+                    >
+                      Manage Project
+                    </button>
+                    <button
+                      className="cursor-pointer block w-full text-left px-4 py-2 text-sm text-black hover:bg-gray-100 rounded-md transition-colors"
+                      onClick={() => {
+                        setIsRearrangeOpen(tab);
+                        setLongPressTab(null);
+                      }}
+                    >
+                      Manage Sequence
+                    </button>
+                  </PopoverContent>
+                </Popover>
               ))}
             </div>
           </div>
