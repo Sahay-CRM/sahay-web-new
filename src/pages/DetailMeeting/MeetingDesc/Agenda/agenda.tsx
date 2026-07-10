@@ -860,12 +860,38 @@ export default function Agenda({
                   onDragEnd={handleDragEnd}
                 >
                   <SortableContext
-                    items={agendaList.map((i) => i.issueObjectiveId)}
+                    items={agendaList
+                      .slice()
+                      .sort((a, b) => {
+                        const seqA = a.sequence;
+                        const seqB = b.sequence;
+                        if (seqA === null || seqA === undefined) {
+                          if (seqB === null || seqB === undefined) return 0;
+                          return 1;
+                        }
+                        if (seqB === null || seqB === undefined) {
+                          return -1;
+                        }
+                        return seqA - seqB;
+                      })
+                      .map((i) => i.issueObjectiveId)}
                     strategy={verticalListSortingStrategy}
                   >
                     <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                       {agendaList &&
-                        agendaList
+                        [...agendaList]
+                          .sort((a, b) => {
+                            const seqA = a.sequence;
+                            const seqB = b.sequence;
+                            if (seqA === null || seqA === undefined) {
+                              if (seqB === null || seqB === undefined) return 0;
+                              return 1;
+                            }
+                            if (seqB === null || seqB === undefined) {
+                              return -1;
+                            }
+                            return seqA - seqB;
+                          })
                           .filter((data) => resolutionFilter === data.type)
                           .map((item, idx) => (
                             <AgendaList
