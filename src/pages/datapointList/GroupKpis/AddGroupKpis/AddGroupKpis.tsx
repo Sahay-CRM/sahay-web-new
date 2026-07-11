@@ -127,6 +127,9 @@ export default function AddGroupKpis() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [sortAsc, setSortAsc] = useState<boolean>(true);
 
+  const [isManualValue1, setIsManualValue1] = useState(false);
+  const [isManualValue2, setIsManualValue2] = useState(false);
+
   const methods = useForm<AddGroupKpiFormValues>({
     defaultValues: {
       kpiIds: [],
@@ -165,6 +168,7 @@ export default function AddGroupKpis() {
   const rawOtherKpiIds = watch("otherKpiIds");
   const otherKpiIds = useMemo(() => rawOtherKpiIds || [], [rawOtherKpiIds]);
 
+  const selectedValidationType = watch("validationType");
   const visualFrequencyAggregate = watch("visualFrequencyAggregate");
   const isMinusKpiActive =
     watch("isMinusKpi") || visualFrequencyAggregate === "minus";
@@ -227,6 +231,18 @@ export default function AddGroupKpis() {
       setValue("value1", fetchedGroupData.value1 || "");
       setValue("value2", fetchedGroupData.value2 || "");
 
+      if (fetchedGroupData.value1) {
+        setIsManualValue1(true);
+      } else {
+        setIsManualValue1(false);
+      }
+
+      if (fetchedGroupData.value2) {
+        setIsManualValue2(true);
+      } else {
+        setIsManualValue2(false);
+      }
+
       const fetchedKpiIds = parseIdList(
         resObj.kpiIds || fetchedGroupData.kpiIds,
       );
@@ -243,6 +259,99 @@ export default function AddGroupKpis() {
     }
   }, [isSuccess, fetchedGroupData, setValue]);
 
+  // Helper to parse values safely
+  const parseVal = (val: unknown): number => {
+    if (val === undefined || val === null || val === "") return 0;
+    const parsed = parseFloat(String(val));
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  // Helper to format values cleanly (up to 4 decimal places, removing trailing zeros)
+  const roundValue = (num: number): string => {
+    return Number(num.toFixed(4)).toString();
+  };
+
+  // Auto-calculate value1 and value2 based on selected KPIs when not entered manually
+  const allKpis = useMemo(() => {
+    return kpiListData?.data || [];
+  }, [kpiListData]);
+
+  useEffect(() => {
+    let autoValue1 = "";
+    let autoValue2 = "";
+
+    if (isMinusKpiActive) {
+      if (baseKpiIds.length > 0 || otherKpiIds.length > 0) {
+        const baseKpisList = allKpis.filter(
+          (k) => k.kpiId && baseKpiIds.includes(k.kpiId),
+        );
+        const otherKpisList = allKpis.filter(
+          (k) => k.kpiId && otherKpiIds.includes(k.kpiId),
+        );
+
+        const baseSum1 = baseKpisList.reduce(
+          (acc, k) => acc + parseVal(k.value1),
+          0,
+        );
+        const otherSum1 = otherKpisList.reduce(
+          (acc, k) => acc + parseVal(k.value1),
+          0,
+        );
+        autoValue1 = roundValue(baseSum1 - otherSum1);
+
+        const baseSum2 = baseKpisList.reduce(
+          (acc, k) => acc + parseVal(k.value2),
+          0,
+        );
+        const otherSum2 = otherKpisList.reduce(
+          (acc, k) => acc + parseVal(k.value2),
+          0,
+        );
+        autoValue2 = roundValue(baseSum2 - otherSum2);
+      }
+    } else {
+      if (selectedKpiIds.length > 0) {
+        const selectedKpisList = allKpis.filter(
+          (k) => k.kpiId && selectedKpiIds.includes(k.kpiId),
+        );
+
+        const sum1 = selectedKpisList.reduce(
+          (acc, k) => acc + parseVal(k.value1),
+          0,
+        );
+        const sum2 = selectedKpisList.reduce(
+          (acc, k) => acc + parseVal(k.value2),
+          0,
+        );
+
+        if (visualFrequencyAggregate === "average") {
+          autoValue1 = roundValue(sum1 / selectedKpiIds.length);
+          autoValue2 = roundValue(sum2 / selectedKpiIds.length);
+        } else {
+          autoValue1 = roundValue(sum1);
+          autoValue2 = roundValue(sum2);
+        }
+      }
+    }
+
+    if (!isManualValue1) {
+      setValue("value1", autoValue1, { shouldValidate: true });
+    }
+    if (!isManualValue2) {
+      setValue("value2", autoValue2, { shouldValidate: true });
+    }
+  }, [
+    selectedKpiIds,
+    baseKpiIds,
+    otherKpiIds,
+    visualFrequencyAggregate,
+    isMinusKpiActive,
+    allKpis,
+    isManualValue1,
+    isManualValue2,
+    setValue,
+  ]);
+
   // Visual frequency options helper
   const getFilteredVisualFrequencyOptions = () => {
     if (!selectedFrequency) return frequenceOptions;
@@ -256,89 +365,6 @@ export default function AddGroupKpis() {
   const shouldShowVisualFrequency = selectedFrequency !== "YEARLY";
 
   // Filter KPI items based on real-time search term
-  const allKpis = useMemo(() => {
-    return kpiListData?.data || [];
-  }, [kpiListData]);
-
-  // Auto-calculate Value 1 & Value 2
-  useEffect(() => {
-    if (!allKpis || allKpis.length === 0) {
-      setValue("value1", "0", { shouldValidate: true });
-      setValue("value2", "0", { shouldValidate: true });
-      return;
-    }
-
-    let computedValue1: number | null = null;
-    let computedValue2 = 0;
-
-    if (isMinusKpiActive) {
-      // Base KPIs sum
-      const selectedBaseKpis = allKpis.filter(
-        (kpi) => kpi.kpiId && baseKpiIds.includes(kpi.kpiId),
-      );
-      const baseSum1 = selectedBaseKpis.reduce((acc, kpi) => {
-        const val = parseFloat(kpi.value1 || "0");
-        return acc + (isNaN(val) ? 0 : val);
-      }, 0);
-      const baseSum2 = selectedBaseKpis.reduce((acc, kpi) => {
-        const val = parseFloat(kpi.value2 || "0");
-        return acc + (isNaN(val) ? 0 : val);
-      }, 0);
-
-      // Other KPIs sum
-      const selectedOtherKpis = allKpis.filter(
-        (kpi) => kpi.kpiId && otherKpiIds.includes(kpi.kpiId),
-      );
-      const otherSum1 = selectedOtherKpis.reduce((acc, kpi) => {
-        const val = parseFloat(kpi.value1 || "0");
-        return acc + (isNaN(val) ? 0 : val);
-      }, 0);
-      const otherSum2 = selectedOtherKpis.reduce((acc, kpi) => {
-        const val = parseFloat(kpi.value2 || "0");
-        return acc + (isNaN(val) ? 0 : val);
-      }, 0);
-
-      computedValue1 = baseSum1 - otherSum1;
-      computedValue2 = baseSum2 - otherSum2;
-    } else {
-      // Sum or Average
-      const selectedKpis = allKpis.filter(
-        (kpi) => kpi.kpiId && selectedKpiIds.includes(kpi.kpiId),
-      );
-      const totalSum1 = selectedKpis.reduce((acc, kpi) => {
-        const val = parseFloat(kpi.value1 || "0");
-        return acc + (isNaN(val) ? 0 : val);
-      }, 0);
-      const totalSum2 = selectedKpis.reduce((acc, kpi) => {
-        const val = parseFloat(kpi.value2 || "0");
-        return acc + (isNaN(val) ? 0 : val);
-      }, 0);
-
-      if (visualFrequencyAggregate === "average") {
-        computedValue1 =
-          selectedKpis.length > 0 ? totalSum1 / selectedKpis.length : 0;
-        computedValue2 =
-          selectedKpis.length > 0 ? totalSum2 / selectedKpis.length : 0;
-      } else {
-        computedValue1 = totalSum1;
-        computedValue2 = totalSum2;
-      }
-    }
-
-    const formattedValue1 = computedValue1 !== null ? parseFloat(computedValue1.toFixed(4)).toString() : "0";
-    const formattedValue2 = parseFloat(computedValue2.toFixed(4)).toString();
-    setValue("value1", formattedValue1, { shouldValidate: true });
-    setValue("value2", formattedValue2, { shouldValidate: true });
-  }, [
-    selectedKpiIds,
-    baseKpiIds,
-    otherKpiIds,
-    visualFrequencyAggregate,
-    isMinusKpiActive,
-    allKpis,
-    setValue,
-  ]);
-
   const filteredKpis = useMemo(() => {
     let list = allKpis;
     if (searchTerm.trim()) {
@@ -885,7 +911,9 @@ export default function AddGroupKpis() {
                 <Controller
                   control={control}
                   name="validationType"
-                  rules={{ required: "Validation Type is required" }}
+                  rules={{
+                    required: "Validation type is required",
+                  }}
                   render={({ field }) => (
                     <FormSelect
                       label="Validation Type"
@@ -901,6 +929,75 @@ export default function AddGroupKpis() {
               </div>
 
               <div className="grid gap-6 grid-cols-1 md:grid-cols-3 items-center">
+                {selectedValidationType === "YES_NO" ? (
+                  <Controller
+                    control={control}
+                    name="value1"
+                    render={({ field }) => (
+                      <FormSelect
+                        label="Value 1"
+                        value={field.value}
+                        onChange={(val) => {
+                          field.onChange(val);
+                          if (val === "" || val === undefined || val === null) {
+                            setIsManualValue1(false);
+                          } else {
+                            setIsManualValue1(true);
+                          }
+                        }}
+                        options={[
+                          { value: "1", label: "Yes" },
+                          { value: "2", label: "No" },
+                        ]}
+                        error={errors.value1}
+                        placeholder="Select Yes/No"
+                      />
+                    )}
+                  />
+                ) : (
+                  <FormInputField
+                    label="Value 1"
+                    type="number"
+                    {...register("value1", {
+                      onChange: (e) => {
+                        e.target.value = e.target.value.replace(
+                          /[^0-9.-]/g,
+                          "",
+                        );
+                        if (e.target.value === "") {
+                          setIsManualValue1(false);
+                        } else {
+                          setIsManualValue1(true);
+                        }
+                      },
+                    })}
+                    error={errors.value1}
+                    placeholder="Enter Value 1 (Numbers only)"
+                  />
+                )}
+
+                {selectedValidationType === "BETWEEN" && (
+                  <FormInputField
+                    label="Value 2"
+                    type="number"
+                    {...register("value2", {
+                      onChange: (e) => {
+                        e.target.value = e.target.value.replace(
+                          /[^0-9.-]/g,
+                          "",
+                        );
+                        if (e.target.value === "") {
+                          setIsManualValue2(false);
+                        } else {
+                          setIsManualValue2(true);
+                        }
+                      },
+                    })}
+                    error={errors.value2}
+                    placeholder="Enter Value 2 (Numbers only)"
+                  />
+                )}
+
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <FormInputField
                     label="Unit"
@@ -935,15 +1032,31 @@ export default function AddGroupKpis() {
                     />
                   </div>
                 </div>
-                {selectedFrequency && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-600">
-                      Calculated Value 1 (
-                      {visualFrequencyAggregate.toUpperCase()}):
-                    </span>
-                    <span className="text-base font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-md">
-                      {watch("value1") || "0"}
-                    </span>
+
+                {/* Display Value 1 and Value 2 if validation type is selected */}
+                {selectedValidationType && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="text-sm font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-md flex items-center gap-1.5 animate-in fade-in">
+                      <span className="text-xs text-gray-500 font-normal">
+                        Value 1:
+                      </span>
+                      {selectedValidationType === "YES_NO"
+                        ? watch("value1") === "1"
+                          ? "Yes"
+                          : watch("value1") === "2"
+                            ? "No"
+                            : watch("value1") || "-"
+                        : watch("value1") || "-"}
+                    </div>
+
+                    {selectedValidationType === "BETWEEN" && (
+                      <div className="text-sm font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-md flex items-center gap-1.5 animate-in fade-in">
+                        <span className="text-xs text-gray-500 font-normal">
+                          Value 2:
+                        </span>
+                        {watch("value2") || "-"}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
