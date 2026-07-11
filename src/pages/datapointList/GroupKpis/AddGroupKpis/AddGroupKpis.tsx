@@ -165,7 +165,6 @@ export default function AddGroupKpis() {
   const rawOtherKpiIds = watch("otherKpiIds");
   const otherKpiIds = useMemo(() => rawOtherKpiIds || [], [rawOtherKpiIds]);
 
-  const selectedValidationType = watch("validationType");
   const visualFrequencyAggregate = watch("visualFrequencyAggregate");
   const isMinusKpiActive =
     watch("isMinusKpi") || visualFrequencyAggregate === "minus";
@@ -261,22 +260,28 @@ export default function AddGroupKpis() {
     return kpiListData?.data || [];
   }, [kpiListData]);
 
-  // Auto-calculate Value 1
+  // Auto-calculate Value 1 & Value 2
   useEffect(() => {
     if (!allKpis || allKpis.length === 0) {
       setValue("value1", "0", { shouldValidate: true });
+      setValue("value2", "0", { shouldValidate: true });
       return;
     }
 
-    let computedValue = 0;
+    let computedValue1: number | null = null;
+    let computedValue2 = 0;
 
     if (isMinusKpiActive) {
       // Base KPIs sum
       const selectedBaseKpis = allKpis.filter(
         (kpi) => kpi.kpiId && baseKpiIds.includes(kpi.kpiId),
       );
-      const baseSum = selectedBaseKpis.reduce((acc, kpi) => {
+      const baseSum1 = selectedBaseKpis.reduce((acc, kpi) => {
         const val = parseFloat(kpi.value1 || "0");
+        return acc + (isNaN(val) ? 0 : val);
+      }, 0);
+      const baseSum2 = selectedBaseKpis.reduce((acc, kpi) => {
+        const val = parseFloat(kpi.value2 || "0");
         return acc + (isNaN(val) ? 0 : val);
       }, 0);
 
@@ -284,32 +289,46 @@ export default function AddGroupKpis() {
       const selectedOtherKpis = allKpis.filter(
         (kpi) => kpi.kpiId && otherKpiIds.includes(kpi.kpiId),
       );
-      const otherSum = selectedOtherKpis.reduce((acc, kpi) => {
+      const otherSum1 = selectedOtherKpis.reduce((acc, kpi) => {
         const val = parseFloat(kpi.value1 || "0");
         return acc + (isNaN(val) ? 0 : val);
       }, 0);
+      const otherSum2 = selectedOtherKpis.reduce((acc, kpi) => {
+        const val = parseFloat(kpi.value2 || "0");
+        return acc + (isNaN(val) ? 0 : val);
+      }, 0);
 
-      computedValue = baseSum - otherSum;
+      computedValue1 = baseSum1 - otherSum1;
+      computedValue2 = baseSum2 - otherSum2;
     } else {
       // Sum or Average
       const selectedKpis = allKpis.filter(
         (kpi) => kpi.kpiId && selectedKpiIds.includes(kpi.kpiId),
       );
-      const totalSum = selectedKpis.reduce((acc, kpi) => {
+      const totalSum1 = selectedKpis.reduce((acc, kpi) => {
         const val = parseFloat(kpi.value1 || "0");
+        return acc + (isNaN(val) ? 0 : val);
+      }, 0);
+      const totalSum2 = selectedKpis.reduce((acc, kpi) => {
+        const val = parseFloat(kpi.value2 || "0");
         return acc + (isNaN(val) ? 0 : val);
       }, 0);
 
       if (visualFrequencyAggregate === "average") {
-        computedValue =
-          selectedKpis.length > 0 ? totalSum / selectedKpis.length : 0;
+        computedValue1 =
+          selectedKpis.length > 0 ? totalSum1 / selectedKpis.length : 0;
+        computedValue2 =
+          selectedKpis.length > 0 ? totalSum2 / selectedKpis.length : 0;
       } else {
-        computedValue = totalSum;
+        computedValue1 = totalSum1;
+        computedValue2 = totalSum2;
       }
     }
 
-    const formattedValue = parseFloat(computedValue.toFixed(4)).toString();
-    setValue("value1", formattedValue, { shouldValidate: true });
+    const formattedValue1 = computedValue1 !== null ? parseFloat(computedValue1.toFixed(4)).toString() : "0";
+    const formattedValue2 = parseFloat(computedValue2.toFixed(4)).toString();
+    setValue("value1", formattedValue1, { shouldValidate: true });
+    setValue("value2", formattedValue2, { shouldValidate: true });
   }, [
     selectedKpiIds,
     baseKpiIds,
@@ -882,23 +901,6 @@ export default function AddGroupKpis() {
               </div>
 
               <div className="grid gap-6 grid-cols-1 md:grid-cols-3 items-center">
-                {selectedValidationType === "BETWEEN" && (
-                  <FormInputField
-                    label="Value 2"
-                    type="number"
-                    {...register("value2", {
-                      onChange: (e) => {
-                        e.target.value = e.target.value.replace(
-                          /[^0-9.-]/g,
-                          "",
-                        );
-                      },
-                    })}
-                    error={errors.value2}
-                    placeholder="Enter Value 2 (Numbers only)"
-                  />
-                )}
-
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <FormInputField
                     label="Unit"
