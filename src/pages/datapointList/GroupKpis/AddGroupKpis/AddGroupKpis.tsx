@@ -155,7 +155,6 @@ export default function AddGroupKpis() {
     watch,
     setValue,
     formState: { errors },
-    trigger,
   } = methods;
 
   const selectedFrequency = watch("frequencyType");
@@ -172,6 +171,26 @@ export default function AddGroupKpis() {
   const visualFrequencyAggregate = watch("visualFrequencyAggregate");
   const isMinusKpiActive =
     watch("isMinusKpi") || visualFrequencyAggregate === "minus";
+  const kpiMergeName = watch("kpiMergeName");
+
+  const isStep1Valid = useMemo(() => {
+    if (!selectedFrequency) return false;
+    if (isMinusKpiActive) {
+      return baseKpiIds.length > 0 && otherKpiIds.length > 0;
+    } else {
+      return selectedKpiIds.length > 0;
+    }
+  }, [
+    selectedFrequency,
+    isMinusKpiActive,
+    baseKpiIds,
+    otherKpiIds,
+    selectedKpiIds,
+  ]);
+
+  const isStep2Valid = useMemo(() => {
+    return !!kpiMergeName?.trim() && !!selectedValidationType;
+  }, [kpiMergeName, selectedValidationType]);
 
   // Fetch KPI list filtered by selected frequency
   const { data: kpiListData, isLoading: isKpisLoading } = useDdAllKpiList({
@@ -349,6 +368,57 @@ export default function AddGroupKpis() {
     allKpis,
     isManualValue1,
     isManualValue2,
+    setValue,
+  ]);
+
+  // Default select a validationType based on majority of selected KPIs in Step 1
+  useEffect(() => {
+    if (!!id || step !== 1) return;
+
+    const idsToCompare = isMinusKpiActive
+      ? [...baseKpiIds, ...otherKpiIds]
+      : selectedKpiIds;
+
+    if (idsToCompare.length === 0) {
+      setValue("validationType", "", { shouldValidate: true });
+      return;
+    }
+
+    const selectedKpis = allKpis.filter(
+      (k) => k.kpiId && idsToCompare.includes(k.kpiId),
+    );
+
+    if (selectedKpis.length === 0) return;
+
+    const counts: Record<string, number> = {};
+    selectedKpis.forEach((k) => {
+      if (k.validationType) {
+        counts[k.validationType] = (counts[k.validationType] || 0) + 1;
+      }
+    });
+
+    let majorityType = "";
+    let maxCount = 0;
+    Object.entries(counts).forEach(([type, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        majorityType = type;
+      }
+    });
+
+    if (majorityType) {
+      setValue("validationType", majorityType, { shouldValidate: true });
+    } else {
+      setValue("validationType", "", { shouldValidate: true });
+    }
+  }, [
+    id,
+    step,
+    selectedKpiIds,
+    baseKpiIds,
+    otherKpiIds,
+    isMinusKpiActive,
+    allKpis,
     setValue,
   ]);
 
@@ -533,8 +603,7 @@ export default function AddGroupKpis() {
     );
   }, [otherFilteredKpis, otherKpiIds]);
 
-  const nextStep = async () => {
-    const isStep1Valid = await trigger(["kpiMergeName", "frequencyType"]);
+  const nextStep = () => {
     if (isStep1Valid) {
       setStep(2);
     }
@@ -779,7 +848,7 @@ export default function AddGroupKpis() {
           <StepProgress
             currentStep={step}
             totalSteps={2}
-            stepNames={["Basic Details", "KPIs Selection"]}
+            stepNames={["KPIs Selection", "Basic Details"]}
             back={prevStep}
             next={nextStep}
             isFirstStep={step === 1}
@@ -787,254 +856,104 @@ export default function AddGroupKpis() {
             isPending={addUpdateMutation.isPending}
             onFinish={handleSubmit(onSubmit)}
             isUpdate={!!id}
+            isNextDisabled={!isStep1Valid}
+            isSubmitDisabled={!isStep1Valid || !isStep2Valid}
           />
         </div>
 
         {/* Step Content */}
         <div className="step-content w-full flex-1 overflow-hidden flex flex-col pt-4">
           {step === 1 && (
-            <div className="bg-white rounded-lg border p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-220px)]">
-              <div className="border-b pb-3 mb-4">
-                <h2 className="text-lg font-semibold text-gray-800">
-                  {id ? "Edit Basic Details" : "Group KPI Basic Details"}
-                </h2>
-                <p className="text-sm text-gray-500">
-                  Enter the group name, frequency, and aggregate validation
-                  settings.
-                </p>
-              </div>
-
-              <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-                <FormInputField
-                  label="Group Name"
-                  {...register("kpiMergeName", {
-                    required: "Group name is required",
-                  })}
-                  isMandatory
-                  error={errors.kpiMergeName}
-                  placeholder="Enter Group Name"
-                />
-
-                <Controller
-                  control={control}
-                  name="frequencyType"
-                  rules={{ required: "Frequency is required" }}
-                  render={({ field }) => (
-                    <FormSelect
-                      label="Frequency"
-                      value={field.value}
-                      onChange={(val) => {
-                        const freqStr =
-                          typeof val === "string"
-                            ? val
-                            : Array.isArray(val)
-                              ? val[0] || ""
-                              : "";
-                        field.onChange(freqStr);
-                        setValue("kpiIds", []);
-                        setValue("baseKpiIds", []);
-                        setValue("otherKpiIds", []);
-
-                        const newUpperIndex = frequencyOrder.indexOf(freqStr);
-                        const currentVisuals =
-                          watch("visualFrequencyTypes") || [];
-                        const validVisuals = currentVisuals.filter(
-                          (v) => frequencyOrder.indexOf(v) > newUpperIndex,
-                        );
-                        setValue("visualFrequencyTypes", validVisuals);
-                      }}
-                      options={frequenceOptions}
-                      error={errors.frequencyType}
-                      isMandatory
-                      placeholder="Select Frequency"
-                    />
-                  )}
-                />
-              </div>
-
-              <div className="grid gap-6 grid-cols-1 md:grid-cols-3 items-center">
-                <Controller
-                  control={control}
-                  name="visualFrequencyAggregate"
-                  render={({ field }) => (
-                    <FormSelect
-                      label="Sum/Average"
-                      value={field.value || "sum"}
-                      onChange={(val) => {
-                        field.onChange(val);
-                        const isMinus = val === "minus";
-                        setValue("isMinusKpi", isMinus);
-                      }}
-                      options={sumAveOptions}
-                      error={errors.visualFrequencyAggregate}
-                      placeholder="Select visual frequency Aggregate"
-                    />
-                  )}
-                />
-
-                {/* <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-gray-700">
-                    Minus KPI
-                  </label>
-                  <div className="flex items-center gap-2 pt-2">
-                    <Switch
-                      id="isMinusKpi-switch"
-                      checked={watch("isMinusKpi") || false}
-                      disabled={true}
-                    />
-                    <span className="text-sm font-medium text-gray-600">
-                      {watch("isMinusKpi") ? "True" : "False"}
-                    </span>
-                  </div>
-                </div> */}
-
-                {shouldShowVisualFrequency && (
-                  <Controller
-                    control={control}
-                    name="visualFrequencyTypes"
-                    render={({ field }) => (
-                      <FormSelect
-                        label="Visual Frequency Types"
-                        value={field.value || []}
-                        onChange={(value) => {
-                          field.onChange(value);
-                        }}
-                        options={getFilteredVisualFrequencyOptions()}
-                        error={errors.visualFrequencyTypes}
-                        isMulti={true}
-                        placeholder="Select visual frequency types"
-                      />
-                    )}
-                  />
-                )}
-
-                <Controller
-                  control={control}
-                  name="validationType"
-                  rules={{
-                    required: "Validation type is required",
-                  }}
-                  render={({ field }) => (
-                    <FormSelect
-                      label="Validation Type"
-                      value={field.value}
-                      onChange={field.onChange}
-                      options={validationTypeOptions}
-                      error={errors.validationType}
-                      placeholder="Select validation type"
-                      isMandatory
-                    />
-                  )}
-                />
-              </div>
-
-              <div className="grid gap-6 grid-cols-1 md:grid-cols-3 items-center">
-                {selectedValidationType === "YES_NO" ? (
-                  <Controller
-                    control={control}
-                    name="value1"
-                    render={({ field }) => (
-                      <FormSelect
-                        label="Value 1"
-                        value={field.value}
-                        onChange={(val) => {
-                          field.onChange(val);
-                          if (val === "" || val === undefined || val === null) {
-                            setIsManualValue1(false);
-                          } else {
-                            setIsManualValue1(true);
-                          }
-                        }}
-                        options={[
-                          { value: "1", label: "Yes" },
-                          { value: "2", label: "No" },
-                        ]}
-                        error={errors.value1}
-                        placeholder="Select Yes/No"
-                      />
-                    )}
-                  />
-                ) : (
-                  <FormInputField
-                    label="Value 1"
-                    type="number"
-                    {...register("value1", {
-                      onChange: (e) => {
-                        e.target.value = e.target.value.replace(
-                          /[^0-9.-]/g,
-                          "",
-                        );
-                        if (e.target.value === "") {
-                          setIsManualValue1(false);
-                        } else {
-                          setIsManualValue1(true);
-                        }
-                      },
-                    })}
-                    error={errors.value1}
-                    placeholder="Enter Value 1 (Numbers only)"
-                  />
-                )}
-
-                {selectedValidationType === "BETWEEN" && (
-                  <FormInputField
-                    label="Value 2"
-                    type="number"
-                    {...register("value2", {
-                      onChange: (e) => {
-                        e.target.value = e.target.value.replace(
-                          /[^0-9.-]/g,
-                          "",
-                        );
-                        if (e.target.value === "") {
-                          setIsManualValue2(false);
-                        } else {
-                          setIsManualValue2(true);
-                        }
-                      },
-                    })}
-                    error={errors.value2}
-                    placeholder="Enter Value 2 (Numbers only)"
-                  />
-                )}
-
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-                  <FormInputField
-                    label="Unit"
-                    {...register("unit")}
-                    placeholder="Enter Unit (e.g. %, Count, Days)"
-                  />
-                  <FormInputField
-                    label="Tag"
-                    {...register("tag")}
-                    placeholder="Enter Tag"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
             <div className="bg-white rounded-lg border p-4 flex flex-col flex-1 overflow-hidden">
-              {/* Header Search Input */}
-              <div className="flex flex-wrap items-center justify-between gap-4 mb-4 shrink-0 border-b pb-3">
-                <div className="flex items-center gap-4">
-                  <div className="relative h-10 w-80 md:w-96">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4">
-                      <SearchIcon />
-                    </span>
-                    <Input
-                      type="text"
-                      placeholder="Search KPI by name, tag, core parameter..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-9 pr-3 h-10 text-sm w-full"
+              {/* Header controls layout: Frequency, Sum/Average, and optional Search bar in one line */}
+              <div className="flex flex-wrap items-end justify-between gap-4 mb-4 shrink-0 border-b pb-3">
+                <div className="flex flex-wrap items-end gap-4 flex-1">
+                  {/* Frequency Selector */}
+                  <div className="w-full sm:w-64">
+                    <Controller
+                      control={control}
+                      name="frequencyType"
+                      rules={{ required: "Frequency is required" }}
+                      render={({ field }) => (
+                        <FormSelect
+                          label="Frequency"
+                          value={field.value}
+                          onChange={(val) => {
+                            const freqStr =
+                              typeof val === "string"
+                                ? val
+                                : Array.isArray(val)
+                                  ? val[0] || ""
+                                  : "";
+                            field.onChange(freqStr);
+                            setValue("kpiIds", []);
+                            setValue("baseKpiIds", []);
+                            setValue("otherKpiIds", []);
+
+                            const newUpperIndex =
+                              frequencyOrder.indexOf(freqStr);
+                            const currentVisuals =
+                              watch("visualFrequencyTypes") || [];
+                            const validVisuals = currentVisuals.filter(
+                              (v) => frequencyOrder.indexOf(v) > newUpperIndex,
+                            );
+                            setValue("visualFrequencyTypes", validVisuals);
+                          }}
+                          options={frequenceOptions}
+                          error={errors.frequencyType}
+                          isMandatory
+                          placeholder="Select Frequency"
+                        />
+                      )}
                     />
                   </div>
+
+                  {/* Sum/Average Selector */}
+                  <div className="w-full sm:w-64">
+                    <Controller
+                      control={control}
+                      name="visualFrequencyAggregate"
+                      render={({ field }) => (
+                        <FormSelect
+                          label="Sum/Average"
+                          value={field.value || "sum"}
+                          onChange={(val) => {
+                            field.onChange(val);
+                            const isMinus = val === "minus";
+                            setValue("isMinusKpi", isMinus);
+                          }}
+                          options={sumAveOptions}
+                          error={errors.visualFrequencyAggregate}
+                          placeholder="Select visual frequency Aggregate"
+                        />
+                      )}
+                    />
+                  </div>
+
+                  {/* Search Bar (shown only when selectedFrequency is true) */}
+                  {selectedFrequency && (
+                    <div className="flex-1 min-w-[280px] mb-2">
+                      <label className="text-lg font-medium text-black mb-4 block">
+                        Search KPI
+                      </label>
+                      <div className="relative h-10 w-full pt-0.5">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4">
+                          <SearchIcon />
+                        </span>
+                        <Input
+                          type="text"
+                          placeholder="Search KPI by name, tag, core parameter..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-9 pr-3 h-10 text-sm w-full"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Display Value 1 and Value 2 if validation type is selected */}
-                {selectedValidationType && (
+                {/* Display Value 1 and Value 2 if validation type is selected and frequency is selected */}
+                {selectedFrequency && selectedValidationType && (
                   <div className="flex flex-wrap items-center gap-3">
                     <div className="text-sm font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-md flex items-center gap-1.5 animate-in fade-in">
                       <span className="text-xs text-gray-500 font-normal">
@@ -1062,111 +981,275 @@ export default function AddGroupKpis() {
               </div>
 
               {!selectedFrequency ? (
-                <div className="p-8 text-center text-amber-600 bg-amber-50 rounded-md">
-                  Please select a <strong>Frequency</strong> in Step 1 before
-                  selecting KPIs.
-                </div>
-              ) : isMinusKpiActive ? (
-                /* TWO-PART VIEW WHEN IS MINUS KPI IS TRUE */
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 overflow-hidden">
-                  {/* PART 1: BASE KPI SELECTION */}
-                  <div className="flex flex-col border rounded-md p-3 bg-gray-50/30 overflow-hidden">
-                    <div className="flex items-center justify-between mb-3 shrink-0">
-                      <h3 className="text-base font-bold text-[#2e3090]">
-                        Base KPI
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-md">
-                          Base Selected: {baseKpiIds.length}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-8 text-xs"
-                          onClick={() =>
-                            handleSelectAllBase(!isAllBaseSelected)
-                          }
-                          disabled={filteredKpis.length === 0}
-                        >
-                          {isAllBaseSelected ? "Deselect All" : "Select All"}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {renderKpiGroupedTable(
-                      filteredKpis,
-                      baseKpiIds,
-                      handleToggleBaseKpi,
-                      handleSelectAllBase,
-                      isAllBaseSelected,
-                      "bg-[#2e3090]",
-                    )}
-                  </div>
-
-                  {/* PART 2: OTHER KPI SELECTION (Excludes Base Selected KPIs) */}
-                  <div className="flex flex-col border rounded-md p-3 bg-gray-50/30 overflow-hidden">
-                    <div className="flex items-center justify-between mb-3 shrink-0">
-                      <h3 className="text-base font-bold text-[#2e3090]">
-                        Other KPI
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-md">
-                          Other Selected: {otherKpiIds.length}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-8 text-xs"
-                          onClick={() =>
-                            handleSelectAllOther(!isAllOtherSelected)
-                          }
-                          disabled={otherFilteredKpis.length === 0}
-                        >
-                          {isAllOtherSelected ? "Deselect All" : "Select All"}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {renderKpiGroupedTable(
-                      otherFilteredKpis,
-                      otherKpiIds,
-                      handleToggleOtherKpi,
-                      handleSelectAllOther,
-                      isAllOtherSelected,
-                      "bg-[#2e3090]",
-                    )}
-                  </div>
+                <div className="p-8 text-center text-indigo-600 bg-indigo-50/50 border border-dashed rounded-md flex-1 flex flex-col justify-center items-center">
+                  <p className="text-base font-medium">
+                    Please select a Frequency above to view and select KPIs.
+                  </p>
                 </div>
               ) : (
-                /* SINGLE TABLE VIEW FOR SUM / AVERAGE MODE */
-                <div className="flex flex-col flex-1 overflow-hidden">
-                  <div className="flex items-center justify-between mb-3 shrink-0">
-                    <span className="text-sm font-semibold text-[#2e3090] px-3 py-1.5 bg-indigo-50 rounded-md">
-                      Selected: {selectedKpiIds.length} KPI(s)
-                    </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSelectAll(!isAllSelected)}
-                      disabled={filteredKpis.length === 0}
-                    >
-                      {isAllSelected
-                        ? "Deselect All Matching"
-                        : "Select All Matching"}
-                    </Button>
-                  </div>
+                <Fragment>
+                  {isMinusKpiActive ? (
+                    /* TWO-PART VIEW WHEN IS MINUS KPI IS TRUE */
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 overflow-hidden">
+                      {/* PART 1: BASE KPI SELECTION */}
+                      <div className="flex flex-col border rounded-md p-3 bg-gray-50/30 overflow-hidden">
+                        <div className="flex items-center justify-between mb-3 shrink-0">
+                          <h3 className="text-base font-bold text-[#2e3090]">
+                            Base KPI
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-md">
+                              Base Selected: {baseKpiIds.length}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs"
+                              onClick={() =>
+                                handleSelectAllBase(!isAllBaseSelected)
+                              }
+                              disabled={filteredKpis.length === 0}
+                            >
+                              {isAllBaseSelected
+                                ? "Deselect All"
+                                : "Select All"}
+                            </Button>
+                          </div>
+                        </div>
 
-                  {renderKpiGroupedTable(
-                    filteredKpis,
-                    selectedKpiIds,
-                    handleToggleSelectKpi,
-                    handleSelectAll,
-                    isAllSelected,
-                    "bg-[#2e3090]",
+                        {renderKpiGroupedTable(
+                          filteredKpis,
+                          baseKpiIds,
+                          handleToggleBaseKpi,
+                          handleSelectAllBase,
+                          isAllBaseSelected,
+                          "bg-[#2e3090]",
+                        )}
+                      </div>
+
+                      {/* PART 2: OTHER KPI SELECTION (Excludes Base Selected KPIs) */}
+                      <div className="flex flex-col border rounded-md p-3 bg-gray-50/30 overflow-hidden">
+                        <div className="flex items-center justify-between mb-3 shrink-0">
+                          <h3 className="text-base font-bold text-[#2e3090]">
+                            Other KPI
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-md">
+                              Other Selected: {otherKpiIds.length}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs"
+                              onClick={() =>
+                                handleSelectAllOther(!isAllOtherSelected)
+                              }
+                              disabled={otherFilteredKpis.length === 0}
+                            >
+                              {isAllOtherSelected
+                                ? "Deselect All"
+                                : "Select All"}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {renderKpiGroupedTable(
+                          otherFilteredKpis,
+                          otherKpiIds,
+                          handleToggleOtherKpi,
+                          handleSelectAllOther,
+                          isAllOtherSelected,
+                          "bg-[#2e3090]",
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    /* SINGLE TABLE VIEW FOR SUM / AVERAGE MODE */
+                    <div className="flex flex-col flex-1 overflow-hidden">
+                      <div className="flex items-center justify-between mb-3 shrink-0">
+                        <span className="text-sm font-semibold text-[#2e3090] px-3 py-1.5 bg-indigo-50 rounded-md">
+                          Selected: {selectedKpiIds.length} KPI(s)
+                        </span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSelectAll(!isAllSelected)}
+                          disabled={filteredKpis.length === 0}
+                        >
+                          {isAllSelected
+                            ? "Deselect All Matching"
+                            : "Select All Matching"}
+                        </Button>
+                      </div>
+
+                      {renderKpiGroupedTable(
+                        filteredKpis,
+                        selectedKpiIds,
+                        handleToggleSelectKpi,
+                        handleSelectAll,
+                        isAllSelected,
+                        "bg-[#2e3090]",
+                      )}
+                    </div>
                   )}
+                </Fragment>
+              )}
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="bg-white rounded-lg border p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-220px)]">
+              <div className="border-b pb-3 mb-4">
+                <h2 className="text-lg font-semibold text-gray-800">
+                  {id ? "Edit Basic Details" : "Group KPI Basic Details"}
+                </h2>
+                <p className="text-sm text-gray-500">
+                  Enter the group name, validation, and aggregate settings.
+                </p>
+              </div>
+
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                <FormInputField
+                  label="Group Name"
+                  {...register("kpiMergeName", {
+                    required: "Group name is required",
+                  })}
+                  isMandatory
+                  error={errors.kpiMergeName}
+                  placeholder="Enter Group Name"
+                />
+
+                <Controller
+                  control={control}
+                  name="validationType"
+                  rules={{
+                    required: "Validation type is required",
+                  }}
+                  render={({ field }) => (
+                    <FormSelect
+                      label="Validation Type"
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={validationTypeOptions}
+                      error={errors.validationType}
+                      placeholder="Select validation type"
+                      isMandatory
+                    />
+                  )}
+                />
+              </div>
+
+              {shouldShowVisualFrequency && (
+                <div className="flex gap-2 items-center">
+                  <div>
+                    <Controller
+                      control={control}
+                      name="visualFrequencyTypes"
+                      render={({ field }) => (
+                        <FormSelect
+                          label="Visual Frequency Types"
+                          value={field.value || []}
+                          onChange={(value) => {
+                            field.onChange(value);
+                          }}
+                          options={getFilteredVisualFrequencyOptions()}
+                          error={errors.visualFrequencyTypes}
+                          isMulti={true}
+                          placeholder="Select visual frequency types"
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="grid gap-6 grid-cols-1 md:grid-cols-3 items-center">
+                    {selectedValidationType === "YES_NO" ? (
+                      <Controller
+                        control={control}
+                        name="value1"
+                        render={({ field }) => (
+                          <FormSelect
+                            label="Value 1"
+                            value={field.value}
+                            onChange={(val) => {
+                              field.onChange(val);
+                              if (
+                                val === "" ||
+                                val === undefined ||
+                                val === null
+                              ) {
+                                setIsManualValue1(false);
+                              } else {
+                                setIsManualValue1(true);
+                              }
+                            }}
+                            options={[
+                              { value: "1", label: "Yes" },
+                              { value: "2", label: "No" },
+                            ]}
+                            error={errors.value1}
+                            placeholder="Select Yes/No"
+                          />
+                        )}
+                      />
+                    ) : (
+                      <FormInputField
+                        label="Value 1"
+                        type="number"
+                        {...register("value1", {
+                          onChange: (e) => {
+                            e.target.value = e.target.value.replace(
+                              /[^0-9.-]/g,
+                              "",
+                            );
+                            if (e.target.value === "") {
+                              setIsManualValue1(false);
+                            } else {
+                              setIsManualValue1(true);
+                            }
+                          },
+                        })}
+                        error={errors.value1}
+                        placeholder="Enter Value 1 (Numbers only)"
+                      />
+                    )}
+
+                    {selectedValidationType === "BETWEEN" && (
+                      <FormInputField
+                        label="Value 2"
+                        type="number"
+                        {...register("value2", {
+                          onChange: (e) => {
+                            e.target.value = e.target.value.replace(
+                              /[^0-9.-]/g,
+                              "",
+                            );
+                            if (e.target.value === "") {
+                              setIsManualValue2(false);
+                            } else {
+                              setIsManualValue2(true);
+                            }
+                          },
+                        })}
+                        error={errors.value2}
+                        placeholder="Enter Value 2 (Numbers only)"
+                      />
+                    )}
+
+                    <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                      <FormInputField
+                        label="Unit"
+                        {...register("unit")}
+                        placeholder="Enter Unit (e.g. %, Count, Days)"
+                      />
+                      <FormInputField
+                        label="Tag"
+                        {...register("tag")}
+                        placeholder="Enter Tag"
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

@@ -54,7 +54,7 @@ export default function GroupKpis() {
 
   return (
     <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-      <div>
+      <div className="w-full text-right">
         <Button
           className="py-2 w-fit mb-5"
           onClick={() => navigate("/dashboard/kpi/group-kpis/add")}
@@ -177,4 +177,3 @@ export default function GroupKpis() {
     </div>
   );
 }
-
