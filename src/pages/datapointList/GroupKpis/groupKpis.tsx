@@ -7,13 +7,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SpinnerIcon } from "@/components/shared/Icons";
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { TableTooltip } from "@/components/shared/DataTable/tableTooltip";
 import { Button } from "@/components/ui/button";
 import { useDdAllKpiList } from "@/features/api/KpiList";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { Edit } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { getUserDetail } from "@/features/selectors/auth.selector";
+import { useDeleteKPIMerge } from "@/features/api/companyDatapoint";
+import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
 
 export default function GroupKpis() {
   const navigate = useNavigate();
@@ -23,7 +27,35 @@ export default function GroupKpis() {
   });
   const { setBreadcrumbs } = useBreadcrumbs();
 
+  const userData = useSelector(getUserDetail);
+  const isSuperAdmin =
+    userData?.isSuperAdmin === true ||
+    String(userData?.isSuperAdmin) === "true";
+  const deleteMutation = useDeleteKPIMerge();
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [groupIdToDelete, setGroupIdToDelete] = useState<string | null>(null);
+  const [groupNameToDelete, setGroupNameToDelete] = useState("");
+
   const selectedKpis: string[] = [];
+
+  const onDeleteClick = (groupId: string, groupName: string) => {
+    setGroupIdToDelete(groupId);
+    setGroupNameToDelete(groupName);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (groupIdToDelete) {
+      deleteMutation.mutate(groupIdToDelete, {
+        onSuccess: () => {
+          setIsDeleteModalOpen(false);
+          setGroupIdToDelete(null);
+          setGroupNameToDelete("");
+        },
+      });
+    }
+  };
 
   useEffect(() => {
     setBreadcrumbs([{ label: "KPI Group", href: "" }]);
@@ -79,7 +111,7 @@ export default function GroupKpis() {
               <TableHead className="min-w-[100px]">Unit</TableHead>
               <TableHead className="min-w-[150px]">Value1</TableHead>
               <TableHead className="min-w-[150px]">Value2</TableHead>
-              <TableHead className="text-end w-16">Delete</TableHead>
+              <TableHead className="text-end w-16">Action</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -116,6 +148,19 @@ export default function GroupKpis() {
                             className="cursor-pointer"
                             onClick={() => onEditClick(masterId)}
                           />
+                          {isSuperAdmin && (
+                            <Trash2
+                              size={16}
+                              className="cursor-pointer text-red-600 hover:text-red-800"
+                              onClick={() =>
+                                onDeleteClick(
+                                  masterId,
+                                  groupItems[0]?.kpiMergeName ||
+                                    "Unnamed Group",
+                                )
+                              }
+                            />
+                          )}
                         </div>
                       </div>
                     </TableCell>
@@ -160,6 +205,7 @@ export default function GroupKpis() {
                       <TableCell className="truncate">
                         <TableTooltip text={String(item.value2 ?? " - ")} />
                       </TableCell>
+                      <TableCell></TableCell>
                     </TableRow>
                   ))}
                 </Fragment>
@@ -174,6 +220,18 @@ export default function GroupKpis() {
           </TableBody>
         </Table>
       </div>
+      <ConfirmationDeleteModal
+        title="Delete Group KPI"
+        label="Are you sure you want to delete this Group KPI?"
+        modalData={groupNameToDelete}
+        isModalOpen={isDeleteModalOpen}
+        modalClose={() => {
+          setIsDeleteModalOpen(false);
+          setGroupIdToDelete(null);
+          setGroupNameToDelete("");
+        }}
+        onSubmit={handleConfirmDelete}
+      />
     </div>
   );
 }
