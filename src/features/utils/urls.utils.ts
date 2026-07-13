@@ -272,6 +272,7 @@ const Urls = {
   getKpiMergeById: (id: string) => `${baseUrl}/company/kpi-merge/get/${id}`,
   createKPIMerge: () => `${baseUrl}/company/kpi-merge/create`,
   updateKPIMerge: (id: string) => `${baseUrl}/company/kpi-merge/update/${id}`,
+  deleteKPIMerge: (id: string) => `${baseUrl}/company/kpi-merge/delete/${id}`,
 
   deleteCompanyMeetingNote: (id: string) =>
     `${baseUrl}/company/detail-meeting/note/delete/${id}`,

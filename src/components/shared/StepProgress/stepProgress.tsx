@@ -16,6 +16,7 @@ interface StepProgressProps {
   isPending?: boolean;
   isUpdate?: boolean;
   isSubmitDisabled?: boolean;
+  isNextDisabled?: boolean;
 }
 
 const StepProgress: React.FC<StepProgressProps> = ({
@@ -32,6 +33,7 @@ const StepProgress: React.FC<StepProgressProps> = ({
   onFinish,
   isUpdate,
   isSubmitDisabled,
+  isNextDisabled,
 }) => {
   const renderStep = (step: number) => {
     const isCompleted = step < currentStep;
@@ -104,7 +106,7 @@ const StepProgress: React.FC<StepProgressProps> = ({
             <Button
               onClick={next}
               className="w-fit"
-              disabled={isLastStep || isPending}
+              disabled={isLastStep || isPending || isNextDisabled}
             >
               Next
             </Button>
