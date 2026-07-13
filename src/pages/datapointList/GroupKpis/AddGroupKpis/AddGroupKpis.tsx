@@ -954,7 +954,7 @@ export default function AddGroupKpis() {
 
                 {/* Display Value 1 and Value 2 if validation type is selected and frequency is selected */}
                 {selectedFrequency && selectedValidationType && (
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex mb-3 flex-wrap items-center gap-3">
                     <div className="text-sm font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-md flex items-center gap-1.5 animate-in fade-in">
                       <span className="text-xs text-gray-500 font-normal">
                         Value 1:
