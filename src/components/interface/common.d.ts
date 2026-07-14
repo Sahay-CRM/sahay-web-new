@@ -166,6 +166,8 @@ interface EventData {
   bgColor?: string;
   textColor?: string;
   eventType?: string;
+  timeLogId?: string;
+  refId?: string;
 }
 
 //kk
@@ -1947,4 +1949,25 @@ interface ColumnConfig {
   width?: string;
   render?: (value: unknown, item: unknown) => React.ReactNode;
   isTimeFormat?: boolean;
+}
+
+interface TimeLog {
+  timeLogId: string;
+  employeeId: string;
+  type: "TASK" | "MEETING";
+  refId?: string;
+  startHours: number;
+  endHours: number;
+  note: string;
+  date: string;
+  createdAt?: string;
+  updatedAt?: string;
+  taskDetails?: {
+    taskName: string;
+    taskDescription?: string;
+  };
+  meetingDetails?: {
+    meetingName: string;
+    meetingDescription?: string;
+  };
 }

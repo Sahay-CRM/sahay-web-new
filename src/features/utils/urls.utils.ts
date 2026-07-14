@@ -513,6 +513,13 @@ const Urls = {
   adminMeetingTemplateGetAll: () => `${baseUrl}/admin-meeting-template/get`,
   cloneAdminMeetingTemplateToMeeting: (id: string) =>
     `${baseUrl}/admin-meeting-template/clone-to-meeting/${id}`,
+
+  // Time Logs
+  addTimeLog: () => `${baseUrl}/company/employee/time-log/add`,
+  getAllTimeLogs: () => `${baseUrl}/company/employee/time-log/get-all`,
+  getTimeLogById: (id: string) => `${baseUrl}/company/employee/time-log/get/${id}`,
+  updateTimeLog: (id: string) => `${baseUrl}/company/employee/time-log/update/${id}`,
+  deleteTimeLog: (id: string) => `${baseUrl}/company/employee/time-log/delete/${id}`,
 };
 
 export default Urls;
