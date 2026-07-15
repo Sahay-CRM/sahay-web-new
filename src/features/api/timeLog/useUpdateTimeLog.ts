@@ -7,8 +7,8 @@ import { toast } from "sonner";
 
 export interface UpdateTimeLogPayload {
   timeLogId: string;
-  startHours?: number;
-  endHours?: number;
+  startHours?: string;
+  endHours?: string;
   note?: string;
   date?: string;
   type?: "TASK" | "MEETING";

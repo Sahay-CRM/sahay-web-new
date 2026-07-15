@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Calendar, AlignLeft, Trash2 } from "lucide-react";
+import { Calendar, AlignLeft, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAllCompanyTask } from "@/features/api/companyTask";
@@ -39,7 +39,6 @@ export default function TimeSlotDrawer({
   onSave,
   onDelete,
 }: TimeSlotDrawerProps) {
-  const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   
   const queryClient = useQueryClient();
@@ -68,36 +67,37 @@ export default function TimeSlotDrawer({
     value: m.meetingId || "",
   }));
 
-  // Prefill title & description from selected task
-  useEffect(() => {
-    if (eventType === "task" && selectedTaskId) {
-      const selectedTask = companyTask?.data?.find(t => t.taskId === selectedTaskId);
-      if (selectedTask) {
-        setTitle(selectedTask.taskName || "");
-        setDescription(selectedTask.taskDescription || "");
-      }
-    }
-  }, [selectedTaskId, eventType, companyTask]);
 
-  // Prefill title & description from selected meeting
-  useEffect(() => {
-    if (eventType === "meeting" && selectedMeetingId) {
-      const selectedMeet = meetingData?.find(m => m.meetingId === selectedMeetingId);
-      if (selectedMeet) {
-        setTitle(selectedMeet.meetingName || "");
-        setDescription(selectedMeet.meetingDescription || "");
-      }
-    }
-  }, [selectedMeetingId, eventType, meetingData]);
   
   // Editable time slot states
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
+  const isEditable = useMemo(() => {
+    if (!date) return true;
+    
+    // Parse log date (YYYY-MM-DD)
+    const logDate = new Date(date);
+    logDate.setHours(0, 0, 0, 0);
+    
+    // Today's date in local time
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Calculate difference in days
+    const diffTime = today.getTime() - logDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Read env limit
+    const limitStr = import.meta.env.VITE_TIMESHEET_PREVIOUS_DAYS_LIMIT;
+    const limitDays = limitStr ? parseInt(limitStr, 10) : 1;
+    
+    return diffDays <= limitDays;
+  }, [date]);
+
   useEffect(() => {
     if (isOpen) {
-      setTitle(editingEvent?.title || "");
       setDescription(editingEvent?.description || "");
       
       const activeSlot = editingEvent || selectedSlot;
@@ -165,53 +165,39 @@ export default function TimeSlotDrawer({
     }
     
     const refId = eventType === "task" ? selectedTaskId : selectedMeetingId;
-    onSave(title, description, parsed.start, parsed.end, eventType, refId);
+    const selectedTask = companyTask?.data?.find((t) => t.taskId === selectedTaskId);
+    const selectedMeet = meetingData?.find((m) => m.meetingId === selectedMeetingId);
+    const computedTitle = eventType === "task" 
+      ? (selectedTask?.taskName || "Task Log") 
+      : (selectedMeet?.meetingName || "Meeting Log");
+      
+    onSave(computedTitle, description, parsed.start, parsed.end, eventType, refId);
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <style>
+        {`
+          .custom-time-input::-webkit-calendar-picker-indicator {
+            display: none !important;
+            -webkit-appearance: none !important;
+          }
+        `}
+      </style>
       <SheetContent className="sm:max-w-[420px] p-0 flex flex-col h-full bg-background border-l shadow-2xl">
         <SheetHeader className="p-6 pb-2 border-b flex flex-row items-center justify-between">
           <SheetTitle className="text-lg font-semibold text-foreground">
-            {editingEvent ? "Edit Custom Event" : "Create Custom Event"}
+            {!isEditable ? "View Time Log" : (editingEvent ? "Edit Time Log" : "Create Time Log")}
           </SheetTitle>
-          {editingEvent && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors mr-6"
-              onClick={onDelete}
-              title="Delete Event"
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          )}
         </SheetHeader>
 
         <form onSubmit={handleSave} className="flex-1 flex flex-col justify-between overflow-hidden">
           <div className="p-6 space-y-6 overflow-y-auto flex-1">
-            {/* Title Input (Google Calendar Style) */}
-            <div className="space-y-2">
-              <Label htmlFor="event-title" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Event Title
-              </Label>
-              <Input
-                id="event-title"
-                type="text"
-                placeholder="Add title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="text-xl font-medium border-0 border-b rounded-none px-0 pb-1.5 focus-visible:ring-0 focus-visible:border-primary placeholder:text-muted-foreground/50 transition-colors bg-transparent w-full"
-                required
-                autoFocus
-              />
-            </div>
 
-            {/* Event Type Selector */}
+            {/* Log Type Selector */}
             <div className="space-y-2">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Event Type
+                Log Type
               </Label>
               <div className="flex bg-muted p-1 rounded-lg gap-1">
                 {([ "task", "meeting"] as const).map((type) => (
@@ -219,9 +205,12 @@ export default function TimeSlotDrawer({
                     key={type}
                     type="button"
                     onClick={() => {
-                      setEventType(type);
+                      if (isEditable) setEventType(type);
                     }}
+                    disabled={!isEditable}
                     className={`flex-1 text-center py-1.5 text-xs font-semibold rounded-md transition-all ${
+                      !isEditable ? "opacity-60 cursor-not-allowed" : ""
+                    } ${
                       eventType === type
                         ? "bg-background text-foreground shadow-xs"
                         : "text-muted-foreground hover:text-foreground"
@@ -241,13 +230,15 @@ export default function TimeSlotDrawer({
                   <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Select Task
                   </Label>
-                  <button
-                    type="button"
-                    onClick={() => setIsTaskDrawerOpen(true)}
-                    className="text-xs font-semibold text-primary hover:underline focus:outline-none"
-                  >
-                    + Add Task
-                  </button>
+                  {isEditable && (
+                    <button
+                      type="button"
+                      onClick={() => setIsTaskDrawerOpen(true)}
+                      className="text-xs font-semibold text-primary hover:underline focus:outline-none"
+                    >
+                      + Add Task
+                    </button>
+                  )}
                 </div>
                 <SearchDropdown
                   placeholder="Search and select task..."
@@ -257,6 +248,7 @@ export default function TimeSlotDrawer({
                   onSearchChange={setTaskSearch}
                   className="w-full text-sm bg-background border rounded-md"
                   isCrossShow={true}
+                  disabled={!isEditable}
                 />
               </div>
             )}
@@ -268,13 +260,15 @@ export default function TimeSlotDrawer({
                   <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Select Meeting
                   </Label>
-                  <button
-                    type="button"
-                    onClick={() => setIsMeetingDrawerOpen(true)}
-                    className="text-xs font-semibold text-primary hover:underline focus:outline-none"
-                  >
-                    + Add Meeting
-                  </button>
+                  {isEditable && (
+                    <button
+                      type="button"
+                      onClick={() => setIsMeetingDrawerOpen(true)}
+                      className="text-xs font-semibold text-primary hover:underline focus:outline-none"
+                    >
+                      + Add Meeting
+                    </button>
+                  )}
                 </div>
                 <SearchDropdown
                   placeholder="Search and select meeting..."
@@ -284,63 +278,93 @@ export default function TimeSlotDrawer({
                   onSearchChange={() => {}}
                   className="w-full text-sm bg-background border rounded-md"
                   isCrossShow={true}
+                  disabled={!isEditable}
                 />
               </div>
             )}
 
-            {/* Time / Date Details */}
+            {/* Date Display (Outside / Above the Card, not changeable) */}
+            <div className="flex items-center gap-2 bg-primary/5 text-primary px-3 py-2.5 rounded-lg border border-primary/10 select-none">
+              <Calendar className="size-4" />
+              <span className="text-xs font-semibold uppercase tracking-wider">Date:</span>
+              <span className="text-sm font-bold">
+                {date ? date.split("-").reverse().join("-") : ""}
+              </span>
+            </div>
+
+            {/* Time Details Card */}
             <div className="space-y-4 bg-muted/40 p-4 rounded-xl border">
               <div className="flex items-center gap-2">
-                <Calendar className="size-4 text-muted-foreground" />
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Date & Time
+                  Logged Time range
                 </span>
               </div>
               
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                {/* Date Input */}
-                <div className="space-y-1">
-                  <Label htmlFor="event-date" className="text-[10px] font-semibold text-muted-foreground">
-                    Date
-                  </Label>
-                  <Input
-                    id="event-date"
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="h-8 py-1 px-2 text-xs bg-background rounded-md border"
-                    required
-                  />
-                </div>
-
+              <div className="grid grid-cols-2 gap-4">
                 {/* Start Time Input */}
                 <div className="space-y-1">
-                  <Label htmlFor="event-start-time" className="text-[10px] font-semibold text-muted-foreground">
+                  <Label htmlFor="event-start-time" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Start Time
                   </Label>
-                  <Input
-                    id="event-start-time"
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    className="h-8 py-1 px-2 text-xs bg-background rounded-md border"
-                    required
-                  />
+                  <div 
+                    onClick={() => {
+                      if (isEditable) {
+                        const input = document.getElementById("event-start-time") as HTMLInputElement;
+                        if (input && typeof input.showPicker === "function") {
+                          try {
+                            input.showPicker();
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }
+                      }
+                    }}
+                    className="relative cursor-pointer w-full"
+                  >
+                    <Input
+                      id="event-start-time"
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className="h-9 py-2 pl-3 pr-10 text-sm bg-background rounded-md border w-full focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary cursor-pointer custom-time-input"
+                      disabled={!isEditable}
+                      required
+                    />
+                    <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none text-muted-foreground" />
+                  </div>
                 </div>
 
                 {/* End Time Input */}
                 <div className="space-y-1">
-                  <Label htmlFor="event-end-time" className="text-[10px] font-semibold text-muted-foreground">
+                  <Label htmlFor="event-end-time" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     End Time
                   </Label>
-                  <Input
-                    id="event-end-time"
-                    type="time"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    className="h-8 py-1 px-2 text-xs bg-background rounded-md border"
-                    required
-                  />
+                  <div 
+                    onClick={() => {
+                      if (isEditable) {
+                        const input = document.getElementById("event-end-time") as HTMLInputElement;
+                        if (input && typeof input.showPicker === "function") {
+                          try {
+                            input.showPicker();
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }
+                      }
+                    }}
+                    className="relative cursor-pointer w-full"
+                  >
+                    <Input
+                      id="event-end-time"
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      className="h-9 py-2 pl-3 pr-10 text-sm bg-background rounded-md border w-full focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary cursor-pointer custom-time-input"
+                      disabled={!isEditable}
+                      required
+                    />
+                    <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none text-muted-foreground" />
+                  </div>
                 </div>
               </div>
 
@@ -359,40 +383,57 @@ export default function TimeSlotDrawer({
               )}
             </div>
 
-            {/* Description Textarea */}
+            {/* Notes Textarea */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <AlignLeft className="size-4 text-muted-foreground" />
                 <Label htmlFor="event-desc" className="text-sm font-semibold text-foreground">
-                  Description
+                  Notes
                 </Label>
               </div>
               <Textarea
                 id="event-desc"
-                placeholder="Add description or notes"
+                placeholder={isEditable ? "Add notes..." : "No notes."}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="min-h-[120px] resize-none rounded-lg border-input bg-transparent placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary p-3"
+                disabled={!isEditable}
               />
             </div>
           </div>
 
           {/* Footer Actions */}
-          <div className="p-6 border-t bg-muted/20 flex items-center justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium hover:bg-muted"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="px-5 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
-            >
-              {editingEvent ? "Save Changes" : "Save Event"}
-            </Button>
+          <div className="p-6 border-t bg-muted/20 flex items-center justify-between">
+            <div>
+              {editingEvent && isEditable && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={onDelete}
+                  className="px-4 py-2 text-sm font-medium bg-destructive hover:bg-destructive/90 text-destructive-foreground text-white shadow-sm"
+                >
+                  Delete
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium hover:bg-muted"
+              >
+                {isEditable ? "Cancel" : "Close"}
+              </Button>
+              {isEditable && (
+                <Button
+                  type="submit"
+                  className="px-5 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                >
+                  {editingEvent ? "Save Changes" : "Save"}
+                </Button>
+              )}
+            </div>
           </div>
         </form>
  
@@ -402,8 +443,6 @@ export default function TimeSlotDrawer({
             onClose={() => setIsTaskDrawerOpen(false)}
             onTaskCreated={(newTask) => {
               setSelectedTaskId(newTask.taskId || "");
-              setTitle(newTask.taskName || "");
-              setDescription(newTask.taskDescription || "");
               setIsTaskDrawerOpen(false);
             }}
           />
@@ -415,7 +454,6 @@ export default function TimeSlotDrawer({
             onClose={() => setIsMeetingDrawerOpen(false)}
             onMeetingCreated={(newMeeting) => {
               setSelectedMeetingId(newMeeting.meetingId || "");
-              setTitle(newMeeting.meetingName || "");
               setIsMeetingDrawerOpen(false);
               queryClient.invalidateQueries({ queryKey: ["get-meeting-dropdown"] });
             }}

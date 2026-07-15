@@ -11,6 +11,7 @@ interface FormTimePickerProps {
   value?: string | null; // HH:mm format
   onChange: (value: string) => void;
   error?: { message?: string };
+  disabled?: boolean;
 }
 
 export function FormTimePicker({
@@ -20,6 +21,7 @@ export function FormTimePicker({
   value,
   onChange,
   error,
+  disabled = false,
 }: FormTimePickerProps) {
   // Convert "HH:mm" → Date for DatePicker display
   const selectedDate = value
@@ -40,8 +42,9 @@ export function FormTimePicker({
         </FormLabel>
       )}
 
-      <div className="relative border h-9 flex items-center px-2 rounded-md">
+      <div className={twMerge("relative border h-9 flex items-center px-2 rounded-md", disabled && "opacity-60 bg-muted/50 cursor-not-allowed pointer-events-none")}>
         <DatePicker
+          disabled={disabled}
           selected={selectedDate}
           onChange={(date) => {
             if (date) {
@@ -64,9 +67,9 @@ export function FormTimePicker({
           dateFormat="hh:mm aa"
           timeFormat="hh:mm aa"
           placeholderText="Select time"
-          popperClassName="z-50"
+          popperClassName="responsive-datepicker-popper z-50"
           popperPlacement="bottom-start"
-          portalId="root-portal"
+          portalId="root"
         />
 
         <CalendarIcon className="absolute right-3 top-2.5 h-4 w-4 opacity-50 pointer-events-none" />

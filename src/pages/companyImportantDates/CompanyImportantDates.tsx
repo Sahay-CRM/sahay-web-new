@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { dateFnsLocalizer } from "react-big-calendar";
-import { Calendar as BigCalendar } from "react-big-calendar";
+import { Calendar as BigCalendar, View } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 
 import useCalendar from "./useCompanyImportantDates";
@@ -36,6 +36,10 @@ function CustomEventComponent({ event }: { event: EventData }) {
   const bgColor = event.bgColor || "#2f328b";
   const textColor = event.textColor || "#ffffff";
 
+  const startStr = event.start ? format(new Date(event.start), "h:mm a") : "";
+  const endStr = event.end ? format(new Date(event.end), "h:mm a") : "";
+  const timeRange = startStr && endStr ? `${startStr} - ${endStr}` : "";
+
   return (
     <div className="custom-event-inner h-full w-full">
       {/* Day/Week view layout */}
@@ -46,6 +50,11 @@ function CustomEventComponent({ event }: { event: EventData }) {
           color: textColor,
         }}
       >
+        {timeRange && (
+          <div className="text-[9px] opacity-90 font-semibold mb-0.5">
+            {timeRange}
+          </div>
+        )}
         <div className="font-bold text-[11px] leading-tight truncate">
           {event.title}
         </div>
@@ -135,12 +144,46 @@ function Calendar() {
     }
   }, [selectedOption, taskEvents, meetingEvents, importantDateEvents]);
 
-  const mergedEvents = useMemo(() => {
-    if (selectedOption === "all" || selectedOption === "importantDate") {
-      return [...events, ...customEvents];
+  const placeholderEvent = useMemo(() => {
+    if (selectedSlot && isDrawerOpen && !editingEvent) {
+      return {
+        eventId: "placeholder",
+        title: "(Logging Time...)",
+        description: "",
+        start: selectedSlot.start,
+        end: selectedSlot.end,
+        bgColor: "#2e3195",
+        textColor: "#ffffff",
+        eventType: "placeholder",
+      } as EventData;
     }
-    return events;
-  }, [events, customEvents, selectedOption]);
+    return null;
+  }, [selectedSlot, isDrawerOpen, editingEvent]);
+
+  const mergedEvents = useMemo(() => {
+    let list = events;
+    if (isFeatureEnabled) {
+      if (currentView === "day") {
+        // Show ONLY the logged times (customEvents) in Day view
+        if (selectedOption === "task") {
+          list = customEvents.filter((e) => e.eventType === "task");
+        } else if (selectedOption === "meeting") {
+          list = customEvents.filter((e) => e.eventType === "meeting");
+        } else if (selectedOption === "importantDate") {
+          list = [];
+        } else {
+          list = customEvents;
+        }
+      } else {
+        // Show ONLY the normal calendar events in Month, Week views
+        list = events;
+      }
+    }
+    if (placeholderEvent) {
+      return [...list, placeholderEvent];
+    }
+    return list;
+  }, [isFeatureEnabled, currentView, events, customEvents, selectedOption, placeholderEvent]);
 
   // Dynamically build options based on view permissions
   const selectOptions = [];
@@ -167,6 +210,9 @@ function Calendar() {
             box-shadow: none !important;
             padding: 0 !important;
           }
+          .rbc-day-slot .rbc-event-label {
+            display: none !important;
+          }
           .rbc-day-slot .rbc-event .custom-event-inner {
             pointer-events: auto !important;
             width: calc(100% - 12px) !important;
@@ -174,6 +220,9 @@ function Calendar() {
           }
           .rbc-day-slot .rbc-slot-selection {
             width: calc(100% - 12px) !important;
+            background-color: rgba(46, 49, 149, 0.25) !important;
+            border: 1.5px solid #2e3195 !important;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
           }
           .custom-event-day-week {
             display: none;
@@ -249,6 +298,7 @@ function Calendar() {
           onSelectSlot={handleSelectSlot}
           onSelecting={() => true}
           longPressThreshold={250}
+          view={currentView as View}
           onView={(v) => setCurrentView(v)}
           components={{
             event: CustomEventComponent,
@@ -293,14 +343,19 @@ function Calendar() {
               handleMeetingModal(event.eventId);
             }
           }}
-          eventPropGetter={(event) => ({
-            style: {
-              minHeight: 22,
-              backgroundColor: event.bgColor,
-              color: event.textColor,
-              fontSize: "12px",
-            },
-          })}
+          eventPropGetter={(event) => {
+            const isPlaceholder = event.eventId === "placeholder";
+            return {
+              style: {
+                minHeight: 22,
+                backgroundColor: event.bgColor,
+                color: event.textColor,
+                fontSize: "12px",
+                opacity: isPlaceholder ? 0.65 : 1,
+                border: isPlaceholder ? "2px dashed #1a73e8" : "none",
+              },
+            };
+          }}
           dayPropGetter={(date) => {
             // Normalize both dates to start of day in local timezone for comparison
             const currentDate = new Date(date);

@@ -441,6 +441,7 @@ export default function CalendarAddTaskDrawer({
                     value={field.value}
                     onChange={field.onChange}
                     error={errors.taskDeadline}
+                    portalId=""
                   />
                 )}
               />

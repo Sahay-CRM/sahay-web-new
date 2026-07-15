@@ -1956,12 +1956,14 @@ interface TimeLog {
   employeeId: string;
   type: "TASK" | "MEETING";
   refId?: string;
-  startHours: number;
-  endHours: number;
+  startHours: string | number;
+  endHours: string | number;
   note: string;
   date: string;
   createdAt?: string;
   updatedAt?: string;
+  createdDatetime?: string;
+  updatedDatetime?: string;
   taskDetails?: {
     taskName: string;
     taskDescription?: string;

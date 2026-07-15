@@ -369,6 +369,7 @@ export default function MeetingDrawer({
                         }
                       }}
                       error={errors.meetingDateTime}
+                      portalId=""
                     />
                   </div>
                 );
@@ -402,6 +403,7 @@ export default function MeetingDrawer({
                         }
                       }}
                       error={errors.endDate}
+                      portalId=""
                     />
                   </div>
                 );

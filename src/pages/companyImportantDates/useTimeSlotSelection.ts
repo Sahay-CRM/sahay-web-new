@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import {
   useAddTimeLog,
   useGetAllTimeLogs,
@@ -85,9 +86,26 @@ export function useTimeSlotSelection() {
   const customEvents = useMemo(() => {
     if (!timeLogs) return [];
     return timeLogs.map((log) => {
-      const logDate = log.date || (log.createdAt ? log.createdAt.split("T")[0] : undefined);
-      const start = convertHoursToDate(logDate, log.startHours);
-      const end = convertHoursToDate(logDate, log.endHours);
+      const logDate = log.date || 
+                      (log.createdDatetime ? log.createdDatetime.split("T")[0] : undefined) || 
+                      (log.createdAt ? log.createdAt.split("T")[0] : undefined);
+      
+      let start: Date;
+      let end: Date;
+
+      if (log.startHours && typeof log.startHours === "string" && log.startHours.includes("T")) {
+        start = new Date(log.startHours);
+      } else {
+        const startHoursVal = log.startHours ? parseFloat(String(log.startHours)) : 0;
+        start = convertHoursToDate(logDate, startHoursVal);
+      }
+
+      if (log.endHours && typeof log.endHours === "string" && log.endHours.includes("T")) {
+        end = new Date(log.endHours);
+      } else {
+        const endHoursVal = log.endHours ? parseFloat(String(log.endHours)) : 0;
+        end = convertHoursToDate(logDate, endHoursVal);
+      }
       const typeVal = log.type || "TASK";
       const isTask = typeVal === "TASK";
       
@@ -113,6 +131,24 @@ export function useTimeSlotSelection() {
       // Only allow in Day/Week views
       const isTimeSlotView = currentView === "week" || currentView === "day";
       if (!isTimeSlotView) return;
+
+      // Validate date limit for new logs
+      const logDate = new Date(slotInfo.start);
+      logDate.setHours(0, 0, 0, 0);
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const diffTime = today.getTime() - logDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      const limitStr = import.meta.env.VITE_TIMESHEET_PREVIOUS_DAYS_LIMIT;
+      const limitDays = limitStr ? parseInt(limitStr, 10) : 1;
+      
+      if (diffDays > limitDays) {
+        toast.error(`You cannot log time for dates older than ${limitDays} day(s) ago.`);
+        return;
+      }
 
       // Avoid trigger on clicking single date cell in month view if it leaks
       if (slotInfo.action === "select") {
@@ -142,7 +178,7 @@ export function useTimeSlotSelection() {
 
   const saveEvent = useCallback(
     (
-      title: string,
+      _title: string,
       description: string,
       customStart?: Date,
       customEnd?: Date,
@@ -154,8 +190,8 @@ export function useTimeSlotSelection() {
       if (!finalStart || !finalEnd || !employeeId) return;
 
       const dateStr = format(finalStart, "yyyy-MM-dd");
-      const startHours = convertDateToDecimalHours(finalStart);
-      const endHours = convertDateToDecimalHours(finalEnd);
+      const startHours = finalStart.toISOString();
+      const endHours = finalEnd.toISOString();
       const type = (eventTypeStr?.toUpperCase() || "TASK") as "TASK" | "MEETING";
 
       if (editingEvent) {
@@ -164,7 +200,7 @@ export function useTimeSlotSelection() {
           timeLogId: editingEvent.eventId,
           startHours,
           endHours,
-          note: description || title,
+          note: description,
           date: dateStr,
           type,
           refId: refId || undefined,
@@ -177,7 +213,7 @@ export function useTimeSlotSelection() {
           refId: refId || undefined,
           startHours,
           endHours,
-          note: description || title,
+          note: description,
           date: dateStr,
         });
       }

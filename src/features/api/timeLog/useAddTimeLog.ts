@@ -9,8 +9,8 @@ export interface AddTimeLogPayload {
   employeeId: string;
   type: "TASK" | "MEETING";
   refId?: string;
-  startHours: number;
-  endHours: number;
+  startHours: string;
+  endHours: string;
   note: string;
   date: string;
 }
