@@ -520,6 +520,18 @@ const Urls = {
   getTimeLogById: (id: string) => `${baseUrl}/company/employee/time-log/get/${id}`,
   updateTimeLog: (id: string) => `${baseUrl}/company/employee/time-log/update/${id}`,
   deleteTimeLog: (id: string) => `${baseUrl}/company/employee/time-log/delete/${id}`,
+
+  // Daily Planning
+  getDailyPlan: () => `${baseUrl}/company/employee/daily-plan/get`,
+  addDailyPlanItem: () => `${baseUrl}/company/employee/daily-plan/add-item`,
+  updateDailyPlanItem: (id: string) =>
+    `${baseUrl}/company/employee/daily-plan/update-item/${id}`,
+  carryForwardDailyPlanItem: (id: string) =>
+    `${baseUrl}/company/employee/daily-plan/carry-forward/${id}`,
+  removeDailyPlanItem: (id: string) =>
+    `${baseUrl}/company/employee/daily-plan/remove-item/${id}`,
+  getDailyPlanItemHistory: () =>
+    `${baseUrl}/company/employee/daily-plan/item-history`,
 };
 
 export default Urls;

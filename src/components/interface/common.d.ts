@@ -1973,3 +1973,105 @@ interface TimeLog {
     meetingDescription?: string;
   };
 }
+
+type DailyPlanItemType = "TASK" | "MEETING";
+
+type PlanningStatus = "PLANNED" | "COMPLETED" | "FORWARDED" | "CANCELLED";
+
+interface DailyPlanItemTaskRef {
+  taskId: string;
+  taskName: string;
+  taskDescription?: string;
+  taskDeadline?: string | null;
+}
+
+interface DailyPlanItemMeetingRef {
+  meetingId: string;
+  meetingName: string;
+  meetingDescription?: string;
+  meetingDateTime?: string | null;
+}
+
+interface DailyPlanItemHistoryRecord {
+  historyId: string;
+  planItemId: string;
+  planningDate: string;
+  forwardedFromDate?: string | null;
+  forwardedToDate?: string | null;
+  createdBy?: string;
+  createdDatetime: string;
+}
+
+interface DailyPlanItem {
+  planItemId: string;
+  planId: string;
+  employeeId: string;
+  type: DailyPlanItemType;
+  taskId?: string | null;
+  meetingId?: string | null;
+  estimatedTime: number;
+  actualTime?: number | null;
+  status: PlanningStatus;
+  remarks?: string | null;
+  startTime?: string | null;
+  completionTime?: string | null;
+  task?: DailyPlanItemTaskRef | null;
+  meeting?: DailyPlanItemMeetingRef | null;
+  historyRecords?: DailyPlanItemHistoryRecord[];
+  isForwarded?: boolean;
+  createdBy?: string;
+  updatedBy?: string | null;
+  createdDatetime?: string;
+  updatedDatetime?: string;
+}
+
+interface DailyPlan {
+  planId: string;
+  employeeId: string;
+  date: string;
+  dailyPlanItems: DailyPlanItem[];
+}
+
+interface DailyPlanResponse {
+  success?: boolean;
+  status?: number;
+  message?: string;
+  data: DailyPlan;
+}
+
+interface AddDailyPlanItemPayload {
+  employeeId?: string;
+  date: string;
+  type: DailyPlanItemType;
+  taskId?: string;
+  meetingId?: string;
+  estimatedTime: number;
+  remarks?: string;
+}
+
+interface UpdateDailyPlanItemPayload {
+  planItemId: string;
+  status?: PlanningStatus;
+  estimatedTime?: number;
+  actualTime?: number;
+  startTime?: string;
+  completionTime?: string;
+  remarks?: string;
+}
+
+interface CarryForwardDailyPlanItemPayload {
+  planItemId: string;
+  targetDate: string;
+  carryForwardReason?: string;
+}
+
+interface DailyPlanItemHistoryEntry {
+  historyId: string;
+  planItemId: string;
+  planningDate: string;
+  forwardedFromDate?: string | null;
+  forwardedToDate?: string | null;
+  createdBy?: string;
+  createdByName?: string;
+  createdDatetime: string;
+}

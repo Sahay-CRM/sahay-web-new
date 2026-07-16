@@ -154,6 +154,8 @@ const DashboardReportView = lazy(
   () => import("../pages/DashboardReport/DashboardReportView"),
 );
 
+const DailyPlanning = lazy(() => import("../pages/DailyPlanning/DailyPlanning"));
+
 export default function EmployeeRoutes() {
   return (
     <Routes>
@@ -176,6 +178,7 @@ export default function EmployeeRoutes() {
         <Route path="employees/add" element={<AddCompanyEmployee />} />
         <Route path="employees/edit/:id" element={<AddCompanyEmployee />} />
         <Route path="calendar" Component={CompanyImportantDates} />
+        <Route path="daily-planning" element={<DailyPlanning />} />
 
         <Route path="meeting" Component={CompanyMeeting} />
         <Route path="meeting/add" element={<AddCompanyMeeting />} />
