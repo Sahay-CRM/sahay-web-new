@@ -276,7 +276,11 @@ const DashboardLayout = () => {
             (n) => n.notificationId === notification.notificationId,
           );
           if (index !== -1) dispatch(markNotificationRead(index));
-          handleView(notification.data?.type, notification.data?.typeId);
+          handleView(
+            notification.data?.type,
+            notification.data?.typeId,
+            notification.data?.frequencyType
+          );
         },
       },
     );
@@ -378,9 +382,17 @@ const DashboardLayout = () => {
     return <Navigate to="/login" />;
   }
 
-  const handleView = (type?: string, typeId?: string) => {
-    if (type && typeId) {
-      navigate(`/dashboard/${type.toLowerCase()}s/view/${typeId}`);
+  const handleView = (type?: string, typeId?: string, frequencyType?: string) => {
+    const upperType = type?.toUpperCase();
+    if (upperType === "TASK" && typeId) {
+      navigate(`/dashboard/tasks/view/${typeId}`);
+    } else if (upperType === "PROJECT" && typeId) {
+      navigate(`/dashboard/projects/view/${typeId}`);
+    } else if (upperType === "MEETING" && typeId) {
+      navigate(`/dashboard/meeting/detail/${typeId}`);
+    } else if (upperType === "KPI" || upperType === "KPIDASHBOARD") {
+      const query = frequencyType ? `?selectedType=${frequencyType.toUpperCase()}` : "";
+      navigate(`/dashboard/kpi-dashboard${query}`);
     }
     setIsNotificationOpen(false);
   };

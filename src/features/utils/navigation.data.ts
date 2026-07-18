@@ -8,13 +8,6 @@ export const companyNavigationData = [
     moduleKey: "ROUTINE_TASK",
   },
   {
-    id: 24,
-    icon: "CalendarClock",
-    label: "Daily Planning",
-    link: "/dashboard/daily-planning",
-    permission: "View",
-  },
-  {
     id: 1,
     icon: "UserCheck",
     label: "Company Designation",

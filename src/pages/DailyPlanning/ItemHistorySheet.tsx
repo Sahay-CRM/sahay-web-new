@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { CalendarDays, ArrowRightCircle } from "lucide-react";
 import useGetDailyPlanItemHistory from "@/features/api/dailyPlan/useGetDailyPlanItemHistory";
 import StatusBadge from "./statusBadge";
+import { formatMinutesToHours } from "@/features/utils/formatting.utils";
 
 interface ItemHistorySheetProps {
   open: boolean;
@@ -47,12 +48,12 @@ export default function ItemHistorySheet({
 
           <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-sm">
             <span className="text-muted-foreground">Estimated</span>
-            <span className="font-medium">{item?.estimatedTime ?? 0} mins</span>
+            <span className="font-medium">{formatMinutesToHours(item?.estimatedTime)}</span>
           </div>
           <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-sm">
             <span className="text-muted-foreground">Actual</span>
             <span className="font-medium">
-              {item?.actualTime ?? "-"} {item?.actualTime ? "mins" : ""}
+              {formatMinutesToHours(item?.actualTime)}
             </span>
           </div>
 

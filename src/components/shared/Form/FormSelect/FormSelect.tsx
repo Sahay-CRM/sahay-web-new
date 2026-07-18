@@ -199,7 +199,10 @@ export default function FormSelect({
                 className="mb-2"
               />
             )}
-            <div className="max-h-60 overflow-auto">
+            <div
+              className="max-h-60 overflow-auto"
+              onWheel={(e) => e.stopPropagation()}
+            >
               {filteredOptions.map((opt) => {
                 const stringVal = String(opt.value);
                 const selected = Array.isArray(value)

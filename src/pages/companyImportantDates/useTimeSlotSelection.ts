@@ -128,8 +128,8 @@ export function useTimeSlotSelection() {
     (slotInfo: { start: Date; end: Date; action: string }) => {
       if (!isFeatureEnabled) return;
 
-      // Only allow in Day/Week views
-      const isTimeSlotView = currentView === "week" || currentView === "day";
+      // Only allow in Day view
+      const isTimeSlotView = currentView === "day";
       if (!isTimeSlotView) return;
 
       // Validate date limit for new logs

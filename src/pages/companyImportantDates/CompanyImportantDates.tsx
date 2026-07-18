@@ -15,8 +15,8 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import ConfirmationTaskModal from "./confirmationTaskModal";
 import ConfirmationMeetingModal from "./confirmationMeetingModal";
 import { useNavigate } from "react-router-dom";
+import { CalendarClock } from "lucide-react";
 
-import { Switch } from "@/components/ui/switch";
 import { useTimeSlotSelection } from "./useTimeSlotSelection";
 import TimeSlotDrawer from "./TimeSlotDrawer";
 
@@ -103,7 +103,6 @@ function Calendar() {
 
   const {
     isFeatureEnabled,
-    setIsFeatureEnabled,
     currentView,
     setCurrentView,
     selectedSlot,
@@ -250,34 +249,29 @@ function Calendar() {
                 View Important Date
               </Button>
             )}
+            <Button onClick={() => navigate("/dashboard/daily-planning")} className="flex items-center gap-2">
+              <CalendarClock className="size-4" />
+              Daily Planning
+            </Button>
           </div>
 
           {/* RIGHT SIDE SELECT AND TOGGLE */}
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 border rounded-md px-3 py-1.5 bg-background shadow-xs">
-              <span className="text-xs font-medium text-muted-foreground select-none">
-                Time-slot Selection
-              </span>
-              <Switch
-                checked={isFeatureEnabled}
-                onCheckedChange={setIsFeatureEnabled}
-              />
-            </div>
-
-            {(permission.TASK?.View ||
-              permission.MEETING_LIST?.View ||
-              permission.IMPORTANT_DATE?.View) && (
-              <div>
-                <FormSelect
-                  value={selectedOption}
-                  onChange={(item) =>
-                    handleOptionChange(item as string | string[])
-                  }
-                  options={selectOptions}
-                  triggerClassName="mb-0 py-4"
-                />
-              </div>
-            )}
+            {currentView !== "day" &&
+              (permission.TASK?.View ||
+                permission.MEETING_LIST?.View ||
+                permission.IMPORTANT_DATE?.View) && (
+                <div>
+                  <FormSelect
+                    value={selectedOption}
+                    onChange={(item) =>
+                      handleOptionChange(item as string | string[])
+                    }
+                    options={selectOptions}
+                    triggerClassName="mb-0 py-4"
+                  />
+                </div>
+              )}
           </div>
         </div>
 
@@ -294,7 +288,7 @@ function Calendar() {
           startAccessor="start"
           endAccessor="end"
           className="rounded-lg p-1 shadow-sm"
-          selectable={isFeatureEnabled && !isDrawerOpen && (currentView === "week" || currentView === "day")}
+          selectable={isFeatureEnabled && !isDrawerOpen && currentView === "day"}
           onSelectSlot={handleSelectSlot}
           onSelecting={() => true}
           longPressThreshold={250}

@@ -28,7 +28,7 @@ interface SearchDropdownProps {
   labelClass?: string;
   isMandatory?: boolean;
   error?: { message?: string };
-  onSearchChange: (value: string) => void;
+  onSearchChange?: (value: string) => void;
   dropdownClass?: string;
   isCrossShow?: boolean;
   disabled?: boolean;

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { format, addDays, isToday } from "date-fns";
 import {
@@ -16,13 +16,14 @@ import {
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { getUserId } from "@/features/selectors/auth.selector";
 import useGetDailyPlan from "@/features/api/dailyPlan/useGetDailyPlan";
 import useUpdateDailyPlanItem from "@/features/api/dailyPlan/useUpdateDailyPlanItem";
 import useRemoveDailyPlanItem from "@/features/api/dailyPlan/useRemoveDailyPlanItem";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { formatMinutesToHours } from "@/features/utils/formatting.utils";
 
 import StatusBadge from "./statusBadge";
 import AddDailyPlanItemDialog from "./AddDailyPlanItemDialog";
@@ -35,6 +36,7 @@ export default function DailyPlanning() {
   const [selectedDate, setSelectedDate] = useState(
     format(new Date(), "yyyy-MM-dd"),
   );
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [completeItem, setCompleteItem] = useState<DailyPlanItem | null>(null);
@@ -44,6 +46,12 @@ export default function DailyPlanning() {
   const { data, isLoading } = useGetDailyPlan(employeeId, selectedDate);
   const { mutate: updateItem } = useUpdateDailyPlanItem();
   const { mutate: removeItem } = useRemoveDailyPlanItem();
+
+  const { setBreadcrumbs } = useBreadcrumbs();
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Daily Planning", href: "" }]);
+  }, [setBreadcrumbs]);
 
   const items = useMemo(() => data?.data?.dailyPlanItems || [], [data]);
 
@@ -70,53 +78,59 @@ export default function DailyPlanning() {
     removeItem(item.planItemId);
   };
 
-  const radius = 34;
+  const radius = 29;
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference - (completionPct / 100) * circumference;
 
   return (
-    <div className="flex flex-col gap-4 p-4 sm:p-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-2 rounded-2xl border bg-white/60 p-2 shadow-sm backdrop-blur-md dark:bg-white/5">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-sm"
-            onClick={() => shiftDay(-1)}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+    <div className="w-full h-full px-2 sm:px-4 py-6 flex flex-col gap-5 overflow-auto bg-theme-bg-base/20">
+      {/* Header / Date Selector */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between shrink-0">
+        <div className="flex items-center gap-2">
+          {/* Date Switcher Box */}
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-white p-1.5 shadow-xs dark:bg-white/5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => shiftDay(-1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
 
-          <div className="flex items-center gap-2 px-2">
-            <CalendarDays className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold sm:text-base">
-              {isToday(new Date(selectedDate)) ? "Today, " : ""}
-              {format(new Date(selectedDate), "dd MMMM yyyy")}
-            </span>
+            <div
+              onClick={() => dateInputRef.current?.showPicker()}
+              className="relative flex items-center gap-2 px-3 py-1.5 hover:bg-muted/50 rounded-lg cursor-pointer transition-colors"
+            >
+              <CalendarDays className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-slate-800 select-none">
+                {format(new Date(selectedDate), "dd MMM yyyy")}
+              </span>
+              <input
+                ref={dateInputRef}
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="absolute inset-0 opacity-0 pointer-events-none w-full h-full"
+              />
+            </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => shiftDay(1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-sm"
-            onClick={() => shiftDay(1)}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-
-          <Input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="ml-1 w-[150px] rounded-sm"
-          />
-
+          {/* Today Button (rendered outside date switcher box) */}
           {!isToday(new Date(selectedDate)) && (
             <Button
               variant="outline"
               size="sm"
-              className="rounded-sm"
+              className="h-9 px-3 text-sm"
               onClick={() => goToDate(new Date())}
             >
               Today
@@ -126,7 +140,8 @@ export default function DailyPlanning() {
 
         {isToday(new Date(selectedDate)) && (
           <Button
-            className="gap-2 rounded-sm"
+            size="default"
+            className="gap-2 px-4 py-2 h-9 text-sm font-medium"
             onClick={() => setIsAddOpen(true)}
           >
             <Plus className="h-4 w-4" />
@@ -135,97 +150,102 @@ export default function DailyPlanning() {
         )}
       </div>
 
-      {/* Progress Summary */}
-      <Card className="overflow-hidden py-0">
-        <CardContent className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
-          <div className="flex items-center gap-5">
+      {/* Progress Summary Card */}
+      <Card className="overflow-hidden border border-border rounded-xl shadow-xs bg-white shrink-0">
+        <CardContent className="flex flex-col items-center gap-4 p-5 sm:flex-row sm:justify-between">
+          <div className="flex items-center gap-4">
             <svg
-              width="88"
-              height="88"
-              viewBox="0 0 88 88"
+              width="64"
+              height="64"
+              viewBox="0 0 64 64"
               className="shrink-0"
             >
               <circle
-                cx="44"
-                cy="44"
+                cx="32"
+                cy="32"
                 r={radius}
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="8"
-                className="text-muted/40"
+                strokeWidth="6"
+                className="text-muted/20"
               />
               <circle
-                cx="44"
-                cy="44"
+                cx="32"
+                cy="32"
                 r={radius}
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="8"
+                strokeWidth="6"
                 strokeLinecap="round"
                 strokeDasharray={circumference}
                 strokeDashoffset={dashOffset}
                 className="text-primary transition-all duration-500"
-                transform="rotate(-90 44 44)"
+                transform="rotate(-90 32 32)"
               />
               <text
                 x="50%"
                 y="50%"
                 dominantBaseline="middle"
                 textAnchor="middle"
-                className="fill-foreground text-lg font-bold"
+                className="fill-foreground text-sm font-bold"
               >
                 {completionPct}%
               </text>
             </svg>
 
             <div>
-              <p className="text-sm text-muted-foreground">
-                Today&apos;s Progress
+              <p className="text-xs font-medium text-muted-foreground">
+                Today's Progress
               </p>
-              <p className="text-xl font-bold">
+              <p className="text-base font-bold text-slate-800">
                 Completed: {completedCount} / {totalCount} items
-                {/* ({totalCount > 0 ? completionPct.toFixed(1) : "0.0"}%) */}
               </p>
             </div>
           </div>
 
-          <div className="grid w-full grid-cols-2 gap-3 sm:w-auto sm:grid-cols-4">
+          <div className="grid w-full grid-cols-4 gap-3 sm:w-auto">
             {(
               [
-                ["PLANNED", "Planned"],
-                ["COMPLETED", "Completed"],
-                ["FORWARDED", "Forwarded"],
-                ["CANCELLED", "Cancelled"],
-              ] as [PlanningStatus, string][]
-            ).map(([status, label]) => (
+                ["PLANNED", "Planned", "bg-slate-50 border-slate-200 text-slate-700"],
+                ["COMPLETED", "Completed", "bg-emerald-50 border-emerald-200 text-emerald-700"],
+                ["FORWARDED", "Forwarded", "bg-blue-50 border-blue-200 text-blue-700"],
+                ["CANCELLED", "Cancelled", "bg-red-50 border-red-200 text-red-700"],
+              ] as [PlanningStatus, string, string][]
+            ).map(([status, label, colorClasses]) => (
               <div
                 key={status}
-                className="rounded-sm border bg-white/70 px-3 py-2 text-center shadow-sm dark:bg-white/5"
+                className={`rounded-xl border ${colorClasses} px-4 py-2 text-center shadow-xs min-w-[90px] sm:min-w-[100px]`}
               >
-                <p className="text-lg font-bold">
+                <p className="text-base font-bold">
                   {items.filter((i) => i.status === status).length}
                 </p>
-                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider opacity-85 mt-0.5">{label}</p>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Items Grid */}
-      <Tabs defaultValue="tasks" className="w-full">
-        <TabsList className="rounded-sm">
-          <TabsTrigger value="tasks" className="gap-2 rounded-lg">
+      {/* Items Tabs */}
+      <Tabs defaultValue="tasks" className="w-full flex-1 flex flex-col gap-4">
+        <TabsList className="bg-muted p-1 rounded-xl w-fit shrink-0">
+          <TabsTrigger
+            value="tasks"
+            className="gap-2 rounded-lg px-4 py-1.5 text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-medium cursor-pointer"
+          >
             <ListChecks className="h-4 w-4" />
-            Planned Tasks ({tasks.length})
+            Tasks ({tasks.length})
           </TabsTrigger>
-          <TabsTrigger value="meetings" className="gap-2 rounded-lg">
+          <TabsTrigger
+            value="meetings"
+            className="gap-2 rounded-lg px-4 py-1.5 text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-medium cursor-pointer"
+          >
             <Presentation className="h-4 w-4" />
-            Planned Meetings ({meetings.length})
+            Meetings ({meetings.length})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="tasks">
+        <TabsContent value="tasks" className="flex-1 mt-0">
           <ItemsTable
             items={tasks}
             isLoading={isLoading}
@@ -238,7 +258,7 @@ export default function DailyPlanning() {
           />
         </TabsContent>
 
-        <TabsContent value="meetings">
+        <TabsContent value="meetings" className="flex-1 mt-0">
           <ItemsTable
             items={meetings}
             isLoading={isLoading}
@@ -295,14 +315,18 @@ function ItemsTable({
   items,
   isLoading,
   emptyLabel,
-  onOpenHistory,
   onStart,
   onComplete,
   onForward,
   onRemove,
 }: ItemsTableProps) {
+  const hasActions = useMemo(
+    () => items.some((item) => item.status === "PLANNED"),
+    [items],
+  );
+
   return (
-    <Card className="mt-4 rounded-2xl border shadow-sm">
+    <Card className="rounded-xl border border-border bg-white shadow-xs overflow-hidden">
       <CardContent className="p-0">
         {isLoading && (
           <p className="p-6 text-sm text-muted-foreground">Loading plan...</p>
@@ -314,18 +338,18 @@ function ItemsTable({
 
         {!isLoading && items.length > 0 && (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm border-collapse">
               <thead>
-                <tr className="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground">
-                  <th className="px-4 py-3 font-medium">Title</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Est. (min)</th>
-                  <th className="px-4 py-3 font-medium">Actual (min)</th>
-                  <th className="px-4 py-3 font-medium">Remarks</th>
-                  <th className="px-4 py-3 text-right font-medium">Actions</th>
+                <tr className="border-b border-border bg-muted/20 text-left text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                  <th className="px-4 py-3 font-semibold">Title</th>
+                  <th className="px-4 py-3 font-semibold">Status</th>
+                  <th className="px-4 py-3 font-semibold">Est. Time</th>
+                  <th className="px-4 py-3 font-semibold">Actual Time</th>
+                  <th className="px-4 py-3 font-semibold">Remarks</th>
+                  {hasActions && <th className="px-4 py-3 text-right font-semibold">Actions</th>}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border">
                 {items.map((item) => {
                   const isInProgress =
                     item.status === "PLANNED" && Boolean(item.startTime);
@@ -338,17 +362,12 @@ function ItemsTable({
                   return (
                     <tr
                       key={item.planItemId}
-                      className="border-b last:border-0 hover:bg-muted/20"
+                      className="hover:bg-muted/5 transition-colors"
                     >
-                      <td className="px-4 py-3">
-                        <button
-                          className="font-medium text-primary hover:underline"
-                          onClick={() => onOpenHistory(item)}
-                        >
-                          {item.task?.taskName ||
-                            item.meeting?.meetingName ||
-                            "Untitled"}
-                        </button>
+                      <td className="px-4 py-3 font-medium text-slate-800">
+                        {item.task?.taskName ||
+                          item.meeting?.meetingName ||
+                          "Untitled"}
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge
@@ -356,65 +375,71 @@ function ItemsTable({
                           startTime={item.startTime}
                         />
                       </td>
-                      <td className="px-4 py-3">{item.estimatedTime}</td>
-                      <td className="px-4 py-3">{item.actualTime ?? "-"}</td>
+                      <td className="px-4 py-3 font-medium text-slate-700">
+                        {formatMinutesToHours(item.estimatedTime)}
+                      </td>
+                      <td className="px-4 py-3 font-medium text-slate-700">
+                        {formatMinutesToHours(item.actualTime)}
+                      </td>
                       <td className="px-4 py-3 max-w-[220px] truncate text-muted-foreground">
                         {item.remarks ||
                           (forwardedFromDate
                             ? `Forwarded from ${format(new Date(forwardedFromDate), "dd-MM-yyyy")}`
                             : "-")}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {item.status === "PLANNED" && !isInProgress && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="gap-1 rounded-lg"
-                              onClick={() => onStart(item)}
-                            >
-                              <Play className="h-3.5 w-3.5" />
-                              Start
-                            </Button>
-                          )}
+                      {hasActions && (
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {item.status === "PLANNED" && !isInProgress && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 px-3 gap-1 rounded-md text-xs"
+                                onClick={() => onStart(item)}
+                              >
+                                <Play className="h-3.5 w-3.5 text-emerald-600 fill-emerald-600/20" />
+                                Start
+                              </Button>
+                            )}
 
-                          {item.status === "PLANNED" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="gap-1 rounded-lg"
-                              onClick={() => onComplete(item)}
-                            >
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                              Complete
-                            </Button>
-                          )}
+                            {item.status === "PLANNED" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 px-3 gap-1 rounded-md text-xs"
+                                onClick={() => onComplete(item)}
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+                                Complete
+                              </Button>
+                            )}
 
-                          {item.status === "PLANNED" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="gap-1 rounded-lg"
-                              onClick={() => onForward(item)}
-                            >
-                              <ArrowRightCircle className="h-3.5 w-3.5" />
-                              Forward
-                            </Button>
-                          )}
+                            {item.status === "PLANNED" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 px-3 gap-1 rounded-md text-xs"
+                                onClick={() => onForward(item)}
+                              >
+                                <ArrowRightCircle className="h-3.5 w-3.5 text-amber-600" />
+                                Forward
+                              </Button>
+                            )}
 
-                          {item.status === "PLANNED" && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="gap-1 rounded-lg text-destructive hover:text-destructive"
-                              onClick={() => onRemove(item)}
-                            >
-                              <X className="h-3.5 w-3.5" />
-                              Remove
-                            </Button>
-                          )}
-                        </div>
-                      </td>
+                            {item.status === "PLANNED" && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 px-3 gap-1 rounded-md text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => onRemove(item)}
+                              >
+                                <X className="h-3.5 w-3.5" />
+                                Remove
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

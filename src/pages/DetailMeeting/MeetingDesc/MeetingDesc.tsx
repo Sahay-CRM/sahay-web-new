@@ -39,7 +39,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  formatToLocalDateTimeIntl,
+  formatToLocalDateTime,
   formatUTCDateToLocal,
   getInitials,
 } from "@/features/utils/app.utils";
@@ -1056,7 +1056,7 @@ export default function MeetingDesc() {
             meetingName={meetingTiming?.meetingName || ""}
             meetingDate={
               meetingTiming?.meetingDateTime
-                ? formatToLocalDateTimeIntl(meetingTiming.meetingDateTime)
+                ? formatToLocalDateTime(meetingTiming.meetingDateTime)
                 : ""
             }
             joiners={(meetingTiming?.joiners as Joiners[]) || []}

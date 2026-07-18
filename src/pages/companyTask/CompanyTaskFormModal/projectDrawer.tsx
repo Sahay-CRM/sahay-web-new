@@ -363,11 +363,11 @@ export default function ProjectDrawer({
 
   return (
     <>
-      {open && <div className="fixed inset-0 bg-black/60 z-50" />}
+      {open && <div className="fixed inset-0 bg-black/60 z-[70]" />}
       {/* Drawer */}
       <div
         ref={drawerRef}
-        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out
+        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-lg z-[70] transform transition-transform duration-300 ease-in-out
           ${open ? "translate-x-0" : "translate-x-full"}
         `}
         style={{ pointerEvents: open ? "auto" : "none" }}

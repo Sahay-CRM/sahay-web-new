@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +19,9 @@ import {
 } from "@/components/ui/select";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown/searchDropdown";
 import useGetCompanyTaskSearch from "@/features/api/companyTask/useGetCompanyTaskSearch";
+import useGetCompanyTask from "@/features/api/companyTask/useGetCompanyTask";
 import useGetMeetingSearch from "@/features/api/companyMeeting/useGetMeetingSearch";
+import useDdCompanyMeeting from "@/features/api/companyMeeting/useDdCompanyMeeting";
 import useAddDailyPlanItem from "@/features/api/dailyPlan/useAddDailyPlanItem";
 
 interface AddDailyPlanItemDialogProps {
@@ -42,27 +44,46 @@ export default function AddDailyPlanItemDialog({
   const [remarks, setRemarks] = useState("");
 
   const { data: taskSearchData } = useGetCompanyTaskSearch(
-    type === "TASK" ? search : "",
+    type === "TASK" && search ? search : "",
   );
+  const { data: allTasksData } = useGetCompanyTask({
+    filter: { currentPage: 1, pageSize: 25 },
+    enable: type === "TASK" && !search,
+  });
+
   const { data: meetingSearchData } = useGetMeetingSearch(
-    type === "MEETING" ? search : "",
+    type === "MEETING" && search ? search : "",
   );
+  const { data: allMeetingsData } = useDdCompanyMeeting();
 
   const { mutate: addItem, isPending } = useAddDailyPlanItem();
 
-  const taskOptions =
-    taskSearchData?.data?.map((t) => ({
-      value: t.taskId,
-      label: t.taskName,
-    })) || [];
+  const taskOptions = useMemo(() => {
+    const rawTasks = search
+      ? taskSearchData?.data || []
+      : allTasksData?.data || [];
+    return rawTasks.map((t) => ({
+      value: t.taskId || "",
+      label: t.taskName || "",
+    }));
+  }, [search, taskSearchData, allTasksData]);
 
-  const meetingOptions = [
-    ...(meetingSearchData?.data?.normal || []),
-    ...(meetingSearchData?.data?.detail || []),
-  ].map((m) => ({
-    value: m.meetingId,
-    label: m.meetingName,
-  }));
+  const meetingOptions = useMemo(() => {
+    if (search) {
+      return [
+        ...(meetingSearchData?.data?.normal || []),
+        ...(meetingSearchData?.data?.detail || []),
+      ].map((m) => ({
+        value: m.meetingId || "",
+        label: m.meetingName || "",
+      }));
+    } else {
+      return (allMeetingsData || []).map((m) => ({
+        value: m.meetingId || "",
+        label: m.meetingName || "",
+      }));
+    }
+  }, [search, meetingSearchData, allMeetingsData]);
 
   const options = type === "TASK" ? taskOptions : meetingOptions;
 
@@ -137,13 +158,6 @@ export default function AddDailyPlanItemDialog({
                 type === "TASK" ? "Search tasks..." : "Search meetings..."
               }
             />
-            {type === "TASK" &&
-              search.trim().length > 0 &&
-              search.trim().length < 3 && (
-                <p className="text-xs text-muted-foreground">
-                  Type at least 5 characters to search tasks.
-                </p>
-              )}
           </div>
 
           <div className="grid gap-2">
