@@ -4,6 +4,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import DashboardLayout from "@/features/layouts/DashboardLayout/dashboardLayout";
 import AddCompanyEmployee from "@/pages/companyEmployee/AddEmployeeFromModal";
 import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
+import AddCompanyTaskSingle from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskSingle";
 import AddCompanyMeeting from "@/pages/Meeting/AddMeetingFormModal/addMeeting";
 
 const Theme = lazy(() => import("../pages/theme/Theme"));
@@ -49,8 +50,12 @@ const HealthWeightage = lazy(() => import("../pages/HealthWeightage"));
 const CompanyLevelAssign = lazy(() => import("../pages/CompanyLevel"));
 const CompanyTaskView = lazy(() => import("../pages/companyTask/ViewProject"));
 
-const AddCompanyProjectList = lazy(
-  () => import("../pages/CompanyProjectsTab/AddProject"),
+// const AddCompanyProjectList = lazy(
+//   () => import("../pages/CompanyProjectsTab/AddProject"),
+// );
+
+const AddProjectSingle = lazy(
+  () => import("../pages/CompanyProjectsTab/AddProject/AddProjectSingle"),
 );
 
 const AddCompanyDatapoint = lazy(
@@ -149,6 +154,9 @@ const DashboardReportView = lazy(
   () => import("../pages/DashboardReport/DashboardReportView"),
 );
 
+const DailyPlanning = lazy(() => import("../pages/DailyPlanning/DailyPlanning"));
+const Blueprint = lazy(() => import("../pages/MenuBlueprint/MenuBlueprint"));
+
 export default function EmployeeRoutes() {
   return (
     <Routes>
@@ -171,6 +179,7 @@ export default function EmployeeRoutes() {
         <Route path="employees/add" element={<AddCompanyEmployee />} />
         <Route path="employees/edit/:id" element={<AddCompanyEmployee />} />
         <Route path="calendar" Component={CompanyImportantDates} />
+        <Route path="daily-planning" element={<DailyPlanning />} />
 
         <Route path="meeting" Component={CompanyMeeting} />
         <Route path="meeting/add" element={<AddCompanyMeeting />} />
@@ -201,10 +210,14 @@ export default function EmployeeRoutes() {
           path="tasks/board"
           Component={lazy(() => import("../pages/companyTask/Board/TaskBoard"))}
         />
-        <Route path="tasks/add" element={<AddCompanyTaskList />} />
+        {/* <Route path="tasks/add" element={<AddCompanyTaskList />} /> */}
+        <Route path="tasks/add" element={<AddCompanyTaskSingle />} />
+        <Route path="tasks/add-stepped" element={<AddCompanyTaskList />} />
         <Route path="tasks/view/:id" element={<CompanyTaskView />} />
 
-        <Route path="tasks/edit/:id" element={<AddCompanyTaskList />} />
+        {/* <Route path="tasks/edit/:id" element={<AddCompanyTaskList />} /> */}
+        <Route path="tasks/edit/:id" element={<AddCompanyTaskSingle />} />
+        <Route path="tasks/edit-stepped/:id" element={<AddCompanyTaskList />} />
         <Route path="tasksrepeat/add" element={<AddCompanyTaskListRepeat />} />
         <Route
           path="tasksrepeat/edit/:id"
@@ -214,8 +227,8 @@ export default function EmployeeRoutes() {
         <Route path="tasksrepeat" element={<CompanyTaskRe />} />
 
         <Route path="projects" Component={CompanyProjectTab} />
-        <Route path="projects/add" element={<AddCompanyProjectList />} />
-        <Route path="projects/edit/:id" element={<AddCompanyProjectList />} />
+        <Route path="projects/add" element={<AddProjectSingle />} />
+        <Route path="projects/edit/:id" element={<AddProjectSingle />} />
         <Route path="projects/view/:id" Component={CompanyProjectView} />
 
         <Route path="kpi" Component={DatapointList} />
@@ -271,6 +284,7 @@ export default function EmployeeRoutes() {
         />
         <Route path="form-builder" Component={FormBuilder} />
         <Route path="handover" Component={HandOverData} />
+        <Route path="blueprint" Component={Blueprint} />
         <Route
           path="form-preview"
           Component={lazy(

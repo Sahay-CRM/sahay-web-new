@@ -349,6 +349,14 @@ export const companyNavigationData = [
       },
     ],
   },
+  {
+    id: 24,
+    icon: "LayoutTemplate",
+    label: "Blueprint",
+    link: "/dashboard/blueprint",
+    permission: "View",
+     moduleKey: "BLUEPRINT",
+  },
 ];
 
 export const getRouteByLabel = (label: string): string | null => {

@@ -1,0 +1,288 @@
+import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { useGetCompanyProject } from "@/features/api/companyProject";
+import {
+  useGetAllTaskStatus,
+  addUpdateCompanyTaskMutation,
+  useGetCompanyTaskById,
+  useDdTaskType,
+} from "@/features/api/companyTask";
+import { getEmployee } from "@/features/api/companyEmployee";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useGetBothCompanyMeeting } from "@/features/api/companyMeeting";
+import { useSelector } from "react-redux";
+import { getUserPermission, getUserDetail } from "@/features/selectors/auth.selector";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
+
+interface FormValues {
+  taskId?: string;
+  project: string;
+  taskName: string;
+  taskDescription: string;
+  taskStartDate: Date | null;
+  taskDeadline: Date | null;
+  repeatType: string;
+  taskStatusId?: string;
+  taskTypeId?: string;
+  meeting?: string;
+  assignUser: string[];
+  comment?: string;
+}
+
+export const useAddCompanyTaskSingle = () => {
+  const { mutate: addUpdateTask, isPending } = addUpdateCompanyTaskMutation();
+  const { id: taskId } = useParams();
+  const { data: taskDataById } = useGetCompanyTaskById(taskId || "");
+  const permission = useSelector(getUserPermission);
+  const userDetail = useSelector(getUserDetail);
+  const navigate = useNavigate();
+
+  const [isConfModalOpen, setIsConfModalOpen] = useState(false);
+  const [reasons, setReasons] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [savedPayload, setSavedPayload] = useState<any>(null);
+
+  const [isTypeSearch, setIsTypeSearch] = useState("");
+  const [isStatusSearch, setIsStatusSearch] = useState("");
+
+  const [searchParams] = useSearchParams();
+  let projectId = searchParams.get("projectId") || "";
+  let meetingId = searchParams.get("meetingId") || "";
+  projectId = projectId.replace(/[?&]+$/, "");
+  meetingId = meetingId.replace(/[?&]+$/, "");
+
+  const methods = useForm<FormValues>({
+    defaultValues: {
+      taskId: "",
+      project: projectId,
+      taskName: "",
+      taskDescription: "",
+      taskStartDate: null,
+      taskDeadline: null,
+      taskStatusId: "",
+      taskTypeId: "",
+      meeting: meetingId,
+      assignUser: userDetail?.employeeId ? [userDetail.employeeId] : [],
+      comment: "",
+    },
+    mode: "onChange",
+  });
+  const { reset } = methods;
+
+  useEffect(() => {
+    if (taskId && taskDataById?.data) {
+      reset({
+        taskId: taskDataById.data.taskId || "",
+        project: projectId || taskDataById.data?.projectId || "",
+        meeting: meetingId || taskDataById.data?.meetingId || "",
+        taskName: taskDataById.data.taskName || "",
+        taskDescription: taskDataById.data.taskDescription || "",
+        taskStartDate: taskDataById.data.taskStartDate
+          ? new Date(taskDataById.data.taskStartDate)
+          : null,
+        taskDeadline: taskDataById.data.taskDeadline
+          ? new Date(taskDataById.data.taskDeadline)
+          : null,
+        taskStatusId: taskDataById.data.taskStatusId || "",
+        taskTypeId: taskDataById.data.taskTypeId || "",
+        assignUser: taskDataById.data.assignUsers
+          ? taskDataById.data.assignUsers.map((user) => user.employeeId)
+          : [],
+      });
+    }
+  }, [taskId, taskDataById, reset, projectId, meetingId]);
+
+  const [paginationFilterEmployee, setPaginationFilterEmployee] =
+    useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 100, // Show more options in single page dropdown for better UX
+      search: "",
+    });
+  const [paginationFilterProject, setPaginationFilterProject] =
+    useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 100,
+      search: "",
+    });
+  const [paginationFilterMeeting, setPaginationFilterMeeting] =
+    useState<PaginationFilter>({
+      currentPage: 1,
+      pageSize: 100,
+      search: "",
+    });
+
+  const { data: taskStatus, isLoading: statusLoading } = useGetAllTaskStatus({
+    filter: {
+      search: isStatusSearch.length >= 3 ? isStatusSearch : undefined,
+      pageSize: 25,
+    },
+    enable: isStatusSearch.length >= 3,
+  });
+
+  const { data: taskTypeData, isLoading: typeLoading } = useDdTaskType({
+    filter: {
+      search: isTypeSearch,
+    },
+    enable: isTypeSearch.length >= 3,
+  });
+
+  const { data: employeedata, isLoading: employeeLoading } = getEmployee({
+    filter: { ...paginationFilterEmployee, isDeactivated: false },
+  });
+  const { data: projectListdata, isLoading: projectLoading } =
+    useGetCompanyProject({
+      filter: paginationFilterProject,
+      enable: !!paginationFilterProject,
+    });
+  const { data: meetingData, isLoading: meetingLoading } =
+    useGetBothCompanyMeeting({
+      filter: paginationFilterMeeting,
+    });
+
+  const taskStatusOptions = taskStatus
+    ? taskStatus.data.map((status) => ({
+        label: status.taskStatus,
+        value: status.taskStatusId,
+        color: status.color,
+      }))
+    : [];
+
+  const defaultTaskStatus = (taskStatus?.data || [])
+    .slice()
+    .sort((a, b) => (a.taskStatusOrder || 0) - (b.taskStatusOrder || 0))[0];
+
+  useEffect(() => {
+    if (!taskId && defaultTaskStatus && !methods.watch("taskStatusId")) {
+      methods.setValue("taskStatusId", defaultTaskStatus.taskStatusId);
+    }
+  }, [defaultTaskStatus, taskId, methods]);
+
+  const taskTypeOptions = taskTypeData
+    ? taskTypeData.data.map((status) => ({
+        label: status.taskTypeName || "Unnamed",
+        value: status.taskTypeId || "",
+      }))
+    : [];
+
+  const onSubmit = async (data: FormValues) => {
+    const assigneeIds = data.assignUser;
+
+    const payload = data.taskId
+      ? {
+          taskId: taskId,
+          taskName: data.taskName,
+          taskDescription: data.taskDescription,
+          taskStartDate: data.taskStartDate
+            ? new Date(data.taskStartDate)
+            : null,
+          taskDeadline: data.taskDeadline ? new Date(data.taskDeadline) : null,
+          taskStatusId: data?.taskStatusId,
+          taskTypeId: data?.taskTypeId,
+          comment: data.comment,
+          employeeIds: assigneeIds,
+          projectId: data.project,
+          meetingId: data.meeting,
+        }
+      : {
+          taskName: data.taskName,
+          taskDescription: data.taskDescription,
+          taskStartDate: data.taskStartDate
+            ? new Date(data.taskStartDate)
+            : null,
+          taskDeadline: data.taskDeadline ? new Date(data.taskDeadline) : null,
+          taskStatusId: data?.taskStatusId,
+          taskTypeId: data?.taskTypeId,
+          comment: data.comment,
+          employeeIds: assigneeIds,
+          projectId: data.project,
+          meetingId: data.meeting,
+        };
+
+    addUpdateTask(payload, {
+      onSuccess: () => {
+        navigate("/dashboard/tasks");
+      },
+      onError: (error: Error) => {
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+
+        if (axiosError.response?.data?.status === 417) {
+          setSavedPayload(payload);
+          setReasons("");
+          setIsConfModalOpen(true);
+        } else if (axiosError.response?.data.status !== 417) {
+          toast.error(
+            `Error: ${
+              axiosError.response?.data?.message || "An error occurred"
+            }`,
+          );
+        }
+      },
+    });
+  };
+
+  const onConfirmSubmit = () => {
+    if (!reasons.trim()) {
+      toast.error("Please provide a reason.");
+      return;
+    }
+
+    const finalPayload = {
+      ...savedPayload,
+      isForceChangeDeadline: true,
+      reasons: reasons,
+    };
+
+    addUpdateTask(finalPayload, {
+      onSuccess: () => {
+        setIsConfModalOpen(false);
+        navigate("/dashboard/tasks");
+      },
+      onError: (error: Error) => {
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+        toast.error(
+          `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+        );
+      },
+    });
+  };
+
+  return {
+    onSubmit,
+    methods,
+    employeedata,
+    projectListdata,
+    setPaginationFilterEmployee,
+    setPaginationFilterProject,
+    setPaginationFilterMeeting,
+    meetingData,
+    taskId,
+    taskStatusOptions,
+    taskTypeOptions,
+    permission,
+    paginationFilterProject,
+    paginationFilterEmployee,
+    paginationFilterMeeting,
+    isPending,
+    taskDataById,
+    projectLoading,
+    statusLoading,
+    typeLoading,
+    employeeLoading,
+    meetingLoading,
+    taskPermission: permission.TASK,
+    setIsTypeSearch,
+    setIsStatusSearch,
+    isConfModalOpen,
+    setIsConfModalOpen,
+    reasons,
+    setReasons,
+    onConfirmSubmit,
+  };
+};

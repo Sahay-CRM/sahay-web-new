@@ -7,7 +7,7 @@ export default function useDdCompanyMeeting() {
     queryKey: ["get-meeting-dropdown"],
     queryFn: async () => {
       const { data: resData } = await Api.post<{
-        data: CompanyMeetingDataProps;
+        data: CompanyMeetingDataProps[];
       }>({
         url: Urls.getAllCompanyMeetingByPage(),
       });

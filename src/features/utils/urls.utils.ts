@@ -513,6 +513,39 @@ const Urls = {
   adminMeetingTemplateGetAll: () => `${baseUrl}/admin-meeting-template/get`,
   cloneAdminMeetingTemplateToMeeting: (id: string) =>
     `${baseUrl}/admin-meeting-template/clone-to-meeting/${id}`,
+
+  // Time Logs
+  addTimeLog: () => `${baseUrl}/company/employee/time-log/add`,
+  getAllTimeLogs: () => `${baseUrl}/company/employee/time-log/get-all`,
+  getTimeLogById: (id: string) => `${baseUrl}/company/employee/time-log/get/${id}`,
+  updateTimeLog: (id: string) => `${baseUrl}/company/employee/time-log/update/${id}`,
+  deleteTimeLog: (id: string) => `${baseUrl}/company/employee/time-log/delete/${id}`,
+
+  // Daily Planning
+  getDailyPlan: () => `${baseUrl}/company/employee/daily-plan/get`,
+  addDailyPlanItem: () => `${baseUrl}/company/employee/daily-plan/add-item`,
+  updateDailyPlanItem: (id: string) =>
+    `${baseUrl}/company/employee/daily-plan/update-item/${id}`,
+  carryForwardDailyPlanItem: (id: string) =>
+    `${baseUrl}/company/employee/daily-plan/carry-forward/${id}`,
+  removeDailyPlanItem: (id: string) =>
+    `${baseUrl}/company/employee/daily-plan/remove-item/${id}`,
+  getDailyPlanItemHistory: () =>
+    `${baseUrl}/company/employee/daily-plan/item-history`,
+
+  // Blueprint Endpoints
+  blueprintCoreValueGetAll: () => `${baseUrl}/blueprint-core-value/get-all`,
+  companyCoreValueGetAll: () => `${baseUrl}/company/core-value/get-all`,
+  companyCoreValueCreate: () => `${baseUrl}/company/core-value/create`,
+  companyCoreValueDelete: (id: string) => `${baseUrl}/company/core-value/delete/${id}`,
+  companyMissionGet: () => `${baseUrl}/company/mission/get`,
+  companyMissionUpsert: () => `${baseUrl}/company/mission/upsert`,
+  companyBlueprintGoalGetAll: () => `${baseUrl}/company/blueprint-goal/get-all`,
+  companyBlueprintGoalCreate: () => `${baseUrl}/company/blueprint-goal/create`,
+  companyBlueprintGoalUpdate: (id: string) => `${baseUrl}/company/blueprint-goal/update/${id}`,
+  companyBlueprintGoalDelete: (id: string) => `${baseUrl}/company/blueprint-goal/delete/${id}`,
+  companyGoalValueSave: () => `${baseUrl}/company/blueprint-goal/value/save`,
+  companyGoalValueDelete: (id: string) => `${baseUrl}/company/blueprint-goal/value/delete/${id}`,
 };
 
 export default Urls;

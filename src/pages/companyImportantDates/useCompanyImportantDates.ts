@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useDdCompanyMeeting } from "@/features/api/companyMeeting";
 import { useAllCompanyTask } from "@/features/api/companyTask";
 import useGetHoliday from "@/features/api/Holiday/useGetHoliday";
@@ -64,7 +65,7 @@ export default function useCalendar() {
       };
     });
 
-  const transformMeetingDataToEvents = (data: Meeting[]): EventData[] =>
+  const transformMeetingDataToEvents = (data: any[]): EventData[] =>
     data.map((item) => {
       // Use meetingDateTime for both start and end, matching local time
       const dateTime = item.meetingDateTime;
@@ -165,7 +166,7 @@ export default function useCalendar() {
         ? [meetingData]
         : [];
     const meeting = meetingsArray.find(
-      (m: MeetingData) => m.meetingId === meetingId,
+      (m: any) => m.meetingId === meetingId,
     );
     if (meeting) {
       setMeetingModalData(meeting as MeetingData);

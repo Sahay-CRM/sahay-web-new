@@ -41,6 +41,7 @@ interface FormSelectProps {
   placeclassName?: string;
   labelClass?: string;
   isClear?: boolean;
+  alwaysShowPlaceholder?: boolean;
 }
 
 export default function FormSelect({
@@ -60,6 +61,7 @@ export default function FormSelect({
   placeclassName = "",
   isClear = false,
   labelClass,
+  alwaysShowPlaceholder = false,
 }: FormSelectProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
@@ -71,6 +73,9 @@ export default function FormSelect({
     : options;
 
   const displayValue = () => {
+    if (alwaysShowPlaceholder) {
+      return placeholder;
+    }
     if (isMulti) {
       const selected = Array.isArray(value) ? value : [];
       if (selected.length > 0) {
@@ -199,7 +204,10 @@ export default function FormSelect({
                 className="mb-2"
               />
             )}
-            <div className="max-h-60 overflow-auto">
+            <div
+              className="max-h-60 overflow-auto"
+              onWheel={(e) => e.stopPropagation()}
+            >
               {filteredOptions.map((opt) => {
                 const stringVal = String(opt.value);
                 const selected = Array.isArray(value)

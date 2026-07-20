@@ -15,6 +15,6 @@ export default function useGetCompanyTaskSearch(searchTerm: string) {
       });
       return data;
     },
-    enabled: debouncedSearch.trim().length >= 5,
+    enabled: debouncedSearch.trim().length >= 3,
   });
 }

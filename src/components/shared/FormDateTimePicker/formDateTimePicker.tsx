@@ -17,6 +17,7 @@ interface Props {
   labelClass?: string;
   hideTime?: boolean;
   disabled?: boolean;
+  portalId?: string;
 }
 
 export default function FormDateTimePicker({
@@ -31,6 +32,7 @@ export default function FormDateTimePicker({
   labelClass,
   hideTime = false,
   disabled = false,
+  portalId = "root",
 }: Props) {
   const dateValue = typeof value === "string" ? new Date(value) : value;
 
@@ -112,7 +114,7 @@ export default function FormDateTimePicker({
           dateFormat={hideTime ? "dd/MM/yyyy" : "dd/MM/yyyy h:mm aa"}
           placeholderText={hideTime ? "Select date" : "Select date and time"}
           className="border px-10 py-1.5 rounded-md w-full text-sm sm:text-base"
-          portalId="root"
+          portalId={portalId || undefined}
           popperClassName="responsive-datepicker-popper"
           filterDate={filterDate}
           disabled={disabled}

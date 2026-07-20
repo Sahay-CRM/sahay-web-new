@@ -80,7 +80,10 @@ export default function MultiIconSelect({
             />
           )}
 
-          <div className="max-h-60 overflow-auto">
+          <div
+            className="max-h-60 overflow-auto"
+            onWheel={(e) => e.stopPropagation()}
+          >
             {filtered.map((opt) => {
               const val = String(opt.value);
               const selected = value.includes(val);
