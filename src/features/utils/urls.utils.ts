@@ -532,6 +532,20 @@ const Urls = {
     `${baseUrl}/company/employee/daily-plan/remove-item/${id}`,
   getDailyPlanItemHistory: () =>
     `${baseUrl}/company/employee/daily-plan/item-history`,
+
+  // Blueprint Endpoints
+  blueprintCoreValueGetAll: () => `${baseUrl}/blueprint-core-value/get-all`,
+  companyCoreValueGetAll: () => `${baseUrl}/company/core-value/get-all`,
+  companyCoreValueCreate: () => `${baseUrl}/company/core-value/create`,
+  companyCoreValueDelete: (id: string) => `${baseUrl}/company/core-value/delete/${id}`,
+  companyMissionGet: () => `${baseUrl}/company/mission/get`,
+  companyMissionUpsert: () => `${baseUrl}/company/mission/upsert`,
+  companyBlueprintGoalGetAll: () => `${baseUrl}/company/blueprint-goal/get-all`,
+  companyBlueprintGoalCreate: () => `${baseUrl}/company/blueprint-goal/create`,
+  companyBlueprintGoalUpdate: (id: string) => `${baseUrl}/company/blueprint-goal/update/${id}`,
+  companyBlueprintGoalDelete: (id: string) => `${baseUrl}/company/blueprint-goal/delete/${id}`,
+  companyGoalValueSave: () => `${baseUrl}/company/blueprint-goal/value/save`,
+  companyGoalValueDelete: (id: string) => `${baseUrl}/company/blueprint-goal/value/delete/${id}`,
 };
 
 export default Urls;

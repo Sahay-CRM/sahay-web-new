@@ -155,6 +155,7 @@ const DashboardReportView = lazy(
 );
 
 const DailyPlanning = lazy(() => import("../pages/DailyPlanning/DailyPlanning"));
+const Blueprint = lazy(() => import("../pages/MenuBlueprint/MenuBlueprint"));
 
 export default function EmployeeRoutes() {
   return (
@@ -283,6 +284,7 @@ export default function EmployeeRoutes() {
         />
         <Route path="form-builder" Component={FormBuilder} />
         <Route path="handover" Component={HandOverData} />
+        <Route path="blueprint" Component={Blueprint} />
         <Route
           path="form-preview"
           Component={lazy(

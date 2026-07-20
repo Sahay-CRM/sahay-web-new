@@ -2075,3 +2075,29 @@ interface DailyPlanItemHistoryEntry {
   createdByName?: string;
   createdDatetime: string;
 }
+
+
+ interface CoreValueOption {
+  key: string;
+  actionStatement: string;
+}
+
+ interface SubjectiveRow {
+  id?: string;
+  key: string;
+  values: Record<string, string>; // mapping of year -> value
+}
+
+ interface ObjectiveValueRow {
+  objectiveId: string;
+  values: Record<string, string>; // mapping of year -> value
+}
+
+ interface BlueprintState {
+  mission: string;
+  whyChooseUs: string;
+  whyConvenient: string;
+  coreValues: CoreValueOption[];
+  objectives: ObjectiveValueRow[];
+  subjectives: SubjectiveRow[];
+}
