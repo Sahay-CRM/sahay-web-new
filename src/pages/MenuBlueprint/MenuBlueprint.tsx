@@ -640,11 +640,11 @@ export default function MenuBlueprint() {
             {showCoreValuesSelect && (
               <div className="absolute right-0 top-full mt-2 w-[320px] z-50 bg-white p-3 rounded-2xl border border-gray-200 shadow-xl animate-in fade-in zoom-in-95 duration-150 space-y-2">
                 <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-                  <span className="text-xs font-bold text-gray-800">Select Core Values</span>
+                  <span className="text-xs font-semibold text-slate-800">Select Core Values</span>
                   <button 
                     type="button"
                     onClick={() => setShowCoreValuesSelect(false)}
-                    className="text-gray-400 hover:text-gray-600 text-xs font-bold p-1 rounded-full hover:bg-slate-100 transition-colors"
+                    className="text-gray-400 hover:text-gray-600 text-xs font-medium p-1 rounded-full hover:bg-slate-100 transition-colors"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -658,7 +658,7 @@ export default function MenuBlueprint() {
                     placeholder="Search..."
                     value={coreValueSearchTerm}
                     onChange={(e) => setCoreValueSearchTerm(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-slate-50/50 focus:bg-white"
+                    className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-slate-50/50 focus:bg-white text-slate-800 font-medium"
                     autoFocus
                   />
                 </div>
@@ -694,7 +694,7 @@ export default function MenuBlueprint() {
                                 onChange={() => {}} // handled by parent div onClick
                                 className="w-4 h-4 rounded text-primary focus:ring-primary border-gray-300 pointer-events-none"
                               />
-                              <span className="font-semibold text-gray-800 group-hover:text-primary transition-colors">{label}</span>
+                              <span className="text-sm text-slate-700 group-hover:text-primary transition-colors">{label}</span>
                             </div>
                             {isSelected && <Check className="w-4 h-4 text-primary shrink-0" />}
                           </div>
@@ -729,7 +729,7 @@ export default function MenuBlueprint() {
                       key={cv.CodeValueId}
                       className="border-b border-gray-200 hover:bg-slate-50/80 transition-colors"
                     >
-                      <td className="p-3 text-left font-bold text-gray-900 align-top">
+                      <td className="p-3 text-left font-semibold text-slate-800 align-top">
                         {cv.coreValue}
                       </td>
                       <td className="p-3 text-left text-gray-700 leading-relaxed font-normal align-top">
@@ -830,7 +830,7 @@ export default function MenuBlueprint() {
                           key={obj.companyBlueprintGoalId}
                           className="border-b border-gray-200 hover:bg-slate-50/80 transition-colors h-[58px]"
                         >
-                          <td className="p-3 text-left font-bold text-gray-800 truncate w-[300px]">
+                          <td className="p-3 text-left font-semibold text-slate-800 truncate w-[300px]">
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -915,17 +915,33 @@ export default function MenuBlueprint() {
         {/* Subjectives */}
         <div className="space-y-4 pt-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-semibold text-gray-800">Subjectives</h3>
-            <Button 
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddSubjectiveYear}
-              className="flex items-center gap-1.5 text-xs text-primary border-primary/20 hover:bg-indigo-50/50 rounded-xl"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add Year Column
-            </Button>
+            <div className="flex items-center gap-6">
+              <h3 className="text-base font-semibold text-gray-800">Subjectives</h3>
+              <Button 
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddSubjective}
+                className="flex items-center gap-1.5 text-xs text-primary border-primary/20 hover:bg-indigo-50/50 rounded-xl"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add Row
+              </Button>
+            </div>
+            
+            <div className="flex items-center gap-2">
+             
+              <Button 
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddSubjectiveYear}
+                className="flex items-center gap-1.5 text-xs text-primary border-primary/20 hover:bg-indigo-50/50 rounded-xl"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add Year Column
+              </Button>
+            </div>
           </div>
           <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm flex w-full bg-white">
             {/* Left Fixed Panel: Key & Unit */}
@@ -948,27 +964,16 @@ export default function MenuBlueprint() {
                     subjectives.map((row) => (
                       <tr 
                         key={row.id}
-                        className="border-b border-gray-200 hover:bg-slate-50/50 transition-colors h-[58px]"
+                        className="border-b border-gray-200 hover:bg-slate-50/80 transition-colors h-[58px]"
                       >
                         <td className="p-2 text-left w-[300px]">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <input 
-                                  type="text" 
-                                  className="w-full bg-transparent border-0 focus:bg-slate-50 border-b border-transparent focus:border-gray-300 outline-none p-1.5 text-sm text-gray-800 font-bold transition-all rounded-md truncate" 
-                                  placeholder="Enter key name..." 
-                                  value={row.key} 
-                                  onChange={(e) => handleUpdateSubjectiveKey(row.id!, e.target.value)}
-                                />
-                              </TooltipTrigger>
-                              {row.key ? (
-                                <TooltipContent side="top" className="max-w-xs bg-slate-900 text-white text-xs px-3 py-1.5 rounded-md shadow-md z-50">
-                                  {row.key}
-                                </TooltipContent>
-                              ) : null}
-                            </Tooltip>
-                          </TooltipProvider>
+                          <input 
+                            type="text"
+                            className="w-full h-[36px] px-2.5 border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-md text-xs font-semibold text-gray-800 bg-white transition-all shadow-sm block"
+                            placeholder="Enter Key..."
+                            value={row.key}
+                            onChange={(e) => handleUpdateSubjectiveKey(row.id!, e.target.value)}
+                          />
                         </td>
                         <td className="p-2 text-center w-[100px] border-l border-gray-100">
                           <input 
@@ -1013,8 +1018,8 @@ export default function MenuBlueprint() {
                 <tbody>
                   {subjectives.length === 0 ? (
                     <tr className="h-[58px]">
-                      <td colSpan={subjectiveYears.length + 2} className="p-6 text-center text-gray-400 italic">
-                        Click "Add Row" below to define subjectives.
+                      <td colSpan={subjectiveYears.length + 2} className="p-6 text-center text-gray-400 italic text-xs">
+                        Click "+ Add Row" above to define subjectives.
                       </td>
                     </tr>
                   ) : (
@@ -1054,15 +1059,6 @@ export default function MenuBlueprint() {
               </table>
             </div>
           </div>
-
-          <button 
-            type="button"
-            onClick={handleAddSubjective}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary-dark transition-colors px-3 py-1.5 hover:bg-indigo-50/50 rounded-xl"
-          >
-            <Plus className="w-4 h-4" />
-            Add Row
-          </button>
         </div>
       </div>
 
