@@ -593,20 +593,20 @@ export default function MenuBlueprint() {
   }
 
   return (
-    <div className="w-full h-full px-4 sm:px-6 py-6 space-y-6 pb-20 select-none">
+    <div className="w-full min-h-full px-4 sm:px-6 pt-0 pb-20 space-y-4 select-none">
       
-      {/* Header Panel */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-indigo-50 text-primary rounded-xl">
-            <LayoutTemplate className="w-5 h-5" />
+      {/* Header Panel (Sticky Top) */}
+      <div className="sticky top-0 z-30 flex items-center justify-between gap-3 py-4 bg-white/95 backdrop-blur-md border-b border-gray-200 shrink-0 -mx-4 sm:-mx-6 px-4 sm:px-6 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 bg-indigo-50 text-primary rounded-lg">
+            <LayoutTemplate className="w-4 h-4" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-gray-900 leading-tight">Blueprint</h1>
+            <h1 className="text-base font-bold text-gray-900 leading-tight">Blueprint</h1>
           </div>
         </div>
         <Button 
-          className="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 flex items-center gap-2 rounded-xl h-10 shrink-0 font-medium transition-all shadow hover:shadow-md duration-300"
+          className="bg-primary hover:bg-primary-dark text-white px-4 py-2 flex items-center gap-2 rounded-lg h-10 shrink-0 text-xs font-semibold transition-all shadow-xs hover:shadow duration-300"
           onClick={handleSave}
           disabled={saveBlueprintMutation.isPending}
         >
@@ -762,7 +762,7 @@ export default function MenuBlueprint() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Column 1 */}
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700 block">Why Choose Us?</label>
+              <label className="text-sm font-semibold text-gray-700 block">Why we exist ?</label>
               <textarea 
                 rows={4}
                 className="w-full border border-gray-200 rounded-xl p-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none resize-none text-sm text-gray-800 placeholder:text-gray-400 shadow-sm bg-white min-h-[120px]" 
@@ -774,11 +774,11 @@ export default function MenuBlueprint() {
 
             {/* Column 2 */}
             <div className="space-y-1.5 flex flex-col">
-              <label className="text-sm font-semibold text-gray-700 block">Our Differentiators</label>
+              <label className="text-sm font-semibold text-gray-700 block">Our USP</label>
               <textarea 
                 rows={4}
                 className="w-full flex-1 border border-gray-200 rounded-xl p-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none resize-none text-sm text-gray-800 placeholder:text-gray-400 shadow-sm bg-white min-h-[120px]" 
-                placeholder="Explain what differentiates you in the market..." 
+                placeholder="Explain what differentiates us in the market..." 
                 value={whyConvenient} 
                 onChange={(e) => setWhyConvenient(e.target.value)}
               />
@@ -812,9 +812,9 @@ export default function MenuBlueprint() {
               <p className="text-sm text-gray-400">No objectives loaded for this company.</p>
             </div>
           ) : (
-            <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm flex w-full bg-white">
+            <div className="flex w-full gap-2 items-stretch">
               {/* Left Fixed Panel: Key & Unit */}
-              <div className="w-[400px] shrink-0 min-w-[400px] border-r border-gray-200 bg-white">
+              <div className="w-[400px] shrink-0 min-w-[400px] border border-gray-200 rounded-xl overflow-hidden shadow-xs bg-white">
                 <table className="w-full border-collapse text-sm bg-white table-fixed">
                   <thead className="bg-primary">
                     <tr className="h-[45px]">
@@ -846,7 +846,7 @@ export default function MenuBlueprint() {
                             <input 
                               type="text" 
                               className="w-full h-[36px] text-center border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-md text-xs font-semibold text-gray-700 bg-slate-50/50 focus:bg-white transition-all shadow-sm mx-auto block" 
-                              placeholder="$ / %" 
+                              placeholder="₹ / %" 
                               value={objectiveUnits[obj.companyBlueprintGoalId] || ""} 
                               onChange={(e) => handleObjectiveUnitChange(obj.companyBlueprintGoalId, e.target.value)}
                             />
@@ -859,7 +859,7 @@ export default function MenuBlueprint() {
               </div>
 
               {/* Right Scrollable Panel: Year Columns */}
-              <div className="flex-1 min-w-0 overflow-x-auto bg-white pb-1">
+              <div className="flex-1 min-w-0 overflow-x-auto border border-gray-200 rounded-xl shadow-xs bg-white pb-1">
                 <table className="border-collapse text-sm bg-white table-fixed w-full min-w-max">
                   <thead className="bg-primary">
                     <tr className="h-[45px]">
@@ -913,7 +913,7 @@ export default function MenuBlueprint() {
         </div>
 
         {/* Subjectives */}
-        <div className="space-y-4 pt-4">
+        <div className="space-y-4 pt-4 pb-12">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <h3 className="text-base font-semibold text-gray-800">Subjectives</h3>
@@ -930,7 +930,6 @@ export default function MenuBlueprint() {
             </div>
             
             <div className="flex items-center gap-2">
-             
               <Button 
                 type="button"
                 variant="outline"
@@ -943,9 +942,9 @@ export default function MenuBlueprint() {
               </Button>
             </div>
           </div>
-          <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm flex w-full bg-white">
+          <div className="flex w-full gap-2 items-stretch">
             {/* Left Fixed Panel: Key & Unit */}
-            <div className="w-[400px] shrink-0 min-w-[400px] border-r border-gray-200 bg-white">
+            <div className="w-[400px] shrink-0 min-w-[400px] border border-gray-200 rounded-xl overflow-hidden shadow-xs bg-white">
               <table className="w-full border-collapse text-sm bg-white table-fixed">
                 <thead className="bg-primary">
                   <tr className="h-[45px]">
@@ -979,7 +978,7 @@ export default function MenuBlueprint() {
                           <input 
                             type="text" 
                             className="w-full h-[36px] text-center border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-md text-xs font-semibold text-gray-700 bg-slate-50/50 focus:bg-white transition-all shadow-sm mx-auto block" 
-                            placeholder="$ / %" 
+                            placeholder="₹ / %" 
                             value={row.unit || ""} 
                             onChange={(e) => handleUpdateSubjectiveUnit(row.id!, e.target.value)}
                           />
@@ -992,7 +991,7 @@ export default function MenuBlueprint() {
             </div>
 
             {/* Right Scrollable Panel: Year Columns & Action */}
-            <div className="flex-1 min-w-0 overflow-x-auto bg-white pb-1">
+            <div className="flex-1 min-w-0 overflow-x-auto border border-gray-200 rounded-xl shadow-xs bg-white pb-1">
               <table className="border-collapse text-sm bg-white table-fixed w-full min-w-max">
                 <thead className="bg-primary">
                   <tr className="h-[45px]">
