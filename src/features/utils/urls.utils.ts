@@ -546,6 +546,7 @@ const Urls = {
   companyBlueprintGoalDelete: (id: string) => `${baseUrl}/company/blueprint-goal/delete/${id}`,
   companyGoalValueSave: () => `${baseUrl}/company/blueprint-goal/value/save`,
   companyGoalValueDelete: (id: string) => `${baseUrl}/company/blueprint-goal/value/delete/${id}`,
+  companyBlueprintGoalSaveAll: () => `${baseUrl}/company/blueprint-goal/save-all`,
 };
 
 export default Urls;

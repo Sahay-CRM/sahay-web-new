@@ -2101,3 +2101,10 @@ interface DailyPlanItemHistoryEntry {
   objectives: ObjectiveValueRow[];
   subjectives: SubjectiveRow[];
 }
+
+ interface CoreValueMasterItem {
+  CodeValueId: string;
+  coreValue: string;
+  actionStatement: string;
+  isActive: boolean;
+}
