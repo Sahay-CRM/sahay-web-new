@@ -223,6 +223,8 @@ const DashboardLayout = () => {
       const empData = userData.data;
       const updatedEmpData = {
         ...empData,
+        companyStartTime: empData?.company?.companyStartTime || null,
+        companyEndTime: empData?.company?.companyEndTime || null,
         ...(empData?.companyLogo && {
           companyLogo: `${ImageBaseURL}/share/company/logo/${empData.companyLogo}`,
         }),

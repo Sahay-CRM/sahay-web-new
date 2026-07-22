@@ -274,10 +274,28 @@ export const companyNavigationData = [
       },
     ],
   },
-  
- 
-  
- 
+  {
+    id: 14,
+    icon: "CalendarRange",
+    label: "Daily Planning",
+    permission: "View",
+    items: [
+      {
+        id: 1,
+        label: "Check-in",
+        link: "/dashboard/daily-planning/check-in",
+        permission: "View",
+        moduleKey: "ROLES_PERMISSION",
+      },
+      {
+        id: 2,
+        label: "Check-out",
+        link: "/dashboard/daily-planning/check-out",
+        permission: "View",
+        moduleKey: "ROLES_PERMISSION",
+      },
+    ],
+  },
   // {
   //   id: 23,
   //   icon: "GanttChart",

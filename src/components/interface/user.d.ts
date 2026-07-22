@@ -21,6 +21,8 @@ interface User extends Partial<EmployeeDetailsById> {
   isSahayEmployee?: boolean;
   mobile?: string;
   companyLogo?: string;
+  companyStartTime?: string | null;
+  companyEndTime?: string | null;
 }
 
 interface UserDetails {

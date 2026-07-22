@@ -93,6 +93,8 @@ const Urls = {
 
   //employee
   getEmployeeList: () => `${baseUrl}/company/employee/get`,
+  getProfileEmployeeList: (id: string) =>
+    `${baseUrl}/company/employee/profile/${id}`,
   getEmployeeById: (id: string) => `${baseUrl}/company/employee/get/${id}`,
   addEmployee: () => `${baseUrl}/company/employee/create`,
   updateEmployee: (id: string) => `${baseUrl}/company/employee/update/${id}`,
@@ -532,6 +534,8 @@ const Urls = {
     `${baseUrl}/company/employee/daily-plan/remove-item/${id}`,
   getDailyPlanItemHistory: () =>
     `${baseUrl}/company/employee/daily-plan/item-history`,
+  getDailyPlanItems: () =>
+    `${baseUrl}/company/employee/daily-plan/get-items`,
 
   // Blueprint Endpoints
   blueprintCoreValueGetAll: () => `${baseUrl}/blueprint-core-value/get-all`,

@@ -639,6 +639,7 @@ export const OrganizationChartContent = () => {
         isLoading={isAdding}
         positions={positionsList}
         companyId={user?.companyId}
+        editingNodeId={editingNodeId || undefined}
         isRoot={
           !positionsList.find((p) => p.positionId === editingNodeId)
             ?.parentPositionId
@@ -706,7 +707,7 @@ export const OrganizationChartContent = () => {
         ]}
       >
         <p className="text-sm text-gray-600">
-          Are you sure you want to unassign this employee from the seat?
+          Are you sure you want to unassign this employee from the position?
         </p>
       </ModalData>
     </div>

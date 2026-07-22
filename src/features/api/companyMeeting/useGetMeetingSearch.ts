@@ -28,6 +28,6 @@ export default function useGetMeetingSearch(searchTerm: string) {
       });
       return data;
     },
-    enabled: debouncedSearch.trim().length >= 3,
+    
   });
 }

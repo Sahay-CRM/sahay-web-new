@@ -107,7 +107,7 @@ export default function CompanyDesignation() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            )}
+            )} 
             {permission.Add && (
               <Link to="">
                 <Button className="py-2 w-fit" onClick={handleAdd}>

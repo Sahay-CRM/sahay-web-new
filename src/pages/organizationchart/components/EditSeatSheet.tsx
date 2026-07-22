@@ -15,6 +15,7 @@ import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
+import ModalData from "@/components/shared/Modal/ModalData";
 
 export function EditSeatSheet({
   isOpen,
@@ -25,8 +26,14 @@ export function EditSeatSheet({
   companyId,
   initialData,
   isRoot = false,
+  editingNodeId,
 }: EditSeatSheetProps) {
   const [empSearch, setEmpSearch] = useState("");
+  const [pendingEmployee, setPendingEmployee] = useState<{
+    id: string;
+    name: string;
+    onChange: () => void;
+  } | null>(null);
 
   const { data: empRes } = useGetEmployeeDd({
     filter: { companyId: companyId || "", search: empSearch },
@@ -109,7 +116,7 @@ export function EditSeatSheet({
       >
         <SheetHeader className="px-8 py-5 border-b bg-primary flex flex-row items-center justify-between space-y-0 shrink-0">
           <SheetTitle className="text-xl font-bold text-white ">
-            Edit seat
+            Edit position
           </SheetTitle>
         </SheetHeader>
 
@@ -120,9 +127,9 @@ export function EditSeatSheet({
           <div className="flex-1 overflow-y-auto px-8 py-8 space-y-9">
             <FormInputField
               id="seatTitle"
-              {...register("seatTitle", { required: "Seat title is required" })}
+              {...register("seatTitle", { required: "Position title is required" })}
               error={errors.seatTitle}
-              label="Seat title"
+              label="Position title"
               placeholder="Type a title"
               containerClass="mt-0 tb:mt-0"
               className="h-11 bg-white border-slate-200 focus-visible:ring-primary/20 text-sm"
@@ -136,7 +143,7 @@ export function EditSeatSheet({
                 control={control}
                 render={({ field }) => (
                   <SearchDropdown
-                    label="Employee(s) in seat"
+                    label="Employee(s) in position"
                     placeholder="Type or choose assigned employees"
                     options={empOptions}
                     multiSelect
@@ -148,7 +155,30 @@ export function EditSeatSheet({
                           current.filter((v: string) => v !== val.value),
                         );
                       } else {
-                        field.onChange([...current, val.value]);
+                        // Check if employee is already in another seat
+                        const isAlreadyAssigned = positions.some((pos) => {
+                          if (editingNodeId && pos.positionId === editingNodeId) {
+                            return false;
+                          }
+                          if (pos.employees && Array.isArray(pos.employees)) {
+                            return pos.employees.some((e) => e.employeeId === val.value);
+                          }
+                          return pos.employeeId === val.value;
+                        });
+
+                        const doSelect = () => {
+                          field.onChange([...current, val.value]);
+                        };
+
+                        if (isAlreadyAssigned) {
+                          setPendingEmployee({
+                            id: val.value,
+                            name: val.label,
+                            onChange: doSelect,
+                          });
+                        } else {
+                          doSelect();
+                        }
                       }
                     }}
                     onSearchChange={setEmpSearch}
@@ -165,7 +195,7 @@ export function EditSeatSheet({
                   control={control}
                   render={({ field }) => (
                     <SearchDropdown
-                      label="Supervisor of seat"
+                      label="Supervisor of position"
                       placeholder="Type or choose assigned supervisor"
                       options={supervisorOptions}
                       selectedValues={field.value ? [field.value] : []}
@@ -197,7 +227,7 @@ export function EditSeatSheet({
                   htmlFor="isManager"
                   className="text-md  text-slate-700 cursor-pointer  select-none"
                 >
-                  This seat is a manager
+                  This position is a manager
                 </Label>
                 <p className="text-sm text-slate-500  ">
                   Managers have additional permissions to view and manage their
@@ -231,6 +261,36 @@ export function EditSeatSheet({
             </div>
           </SheetFooter>
         </form>
+
+        {/* Warning Modal for Duplicate Employee Assignment */}
+        <ModalData
+          isModalOpen={!!pendingEmployee}
+          modalTitle="Employee Already Assigned"
+          modalClose={() => setPendingEmployee(null)}
+          containerClass="!min-w-0 !max-w-[425px] !min-h-0 w-full"
+          buttons={[
+            {
+              btnText: "Cancel",
+              buttonCss:
+                "py-1.5 px-5 bg-white border border-gray-300 text-black hover:bg-gray-50",
+              btnClick: () => setPendingEmployee(null),
+            },
+            {
+              btnText: "Confirm",
+              buttonCss: "py-1.5 px-5 bg-primary text-white hover:bg-primary/95",
+              btnClick: () => {
+                if (pendingEmployee) {
+                  pendingEmployee.onChange();
+                  setPendingEmployee(null);
+                }
+              },
+            },
+          ]}
+        >
+          <p className="text-sm text-gray-600">
+            Employee <strong>{pendingEmployee?.name}</strong> is already assigned to another position. Do you want to also assign them to this position?
+          </p>
+        </ModalData>
       </SheetContent>
     </Sheet>
   );

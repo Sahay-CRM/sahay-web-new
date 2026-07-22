@@ -108,16 +108,27 @@ export function useTimeSlotSelection() {
       }
       const typeVal = log.type || "TASK";
       const isTask = typeVal === "TASK";
+
+      // Get actual name from refDetails (API response) or fallback chains
+      const actualName = isTask
+        ? (log.refDetails?.taskName ||
+           log.taskDetails?.taskName ||
+           log.note ||
+           "Task Log")
+        : (log.refDetails?.meetingName ||
+           log.meetingDetails?.meetingName ||
+           log.note ||
+           "Meeting Log");
       
       return {
         eventId: log.timeLogId,
-        title: log.note || (isTask ? "Task Log" : "Meeting Log"),
+        title: actualName,
         description: log.note || "",
         start,
         end,
-        bgColor: isTask ? "#2e3195" : "#10b981", // Task is dark blue, Meeting is green
+        bgColor: isTask ? "#2e3195" : "#10b981",
         textColor: "#ffffff",
-        eventType: typeVal.toLowerCase(), // "task" or "meeting"
+        eventType: typeVal.toLowerCase(),
         timeLogId: log.timeLogId,
         refId: log.refId,
       } as EventData;

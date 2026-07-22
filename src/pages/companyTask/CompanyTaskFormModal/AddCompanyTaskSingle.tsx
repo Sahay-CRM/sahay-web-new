@@ -714,9 +714,9 @@ export default function AddCompanyTaskSingle() {
 
                   {/* Meeting Summary Block */}
                   <div className="flex items-start space-x-3">
-                    {/* <div className="p-2 bg-gray-50 text-gray-500 rounded-lg">
+                    <div className="p-2 bg-gray-50 text-gray-500 rounded-lg">
                       <Calendar className="w-4 h-4" />
-                    </div> */}
+                    </div>
                     <div>
                       <p className="text-[11px] text-gray-400 font-semibold tracking-wider uppercase">
                         Meeting

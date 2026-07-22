@@ -311,7 +311,7 @@ export default function MeetingDrawer({
                   <div className="px-3 py-2 text-[12px] text-gray-500 bg-gray-50 border-b border-gray-200 sticky top-0 font-medium">
                     Similar Meetings Found
                   </div>
-                  {meetingSearchData?.data?.map((item) => (
+                  {meetingSearchData?.data?.map((item: { meetingId?: string; meetingName?: string }) => (
                     <div
                       key={item.meetingId}
                       className="px-3 py-2 text-sm text-gray-750 border-b last:border-b-0 cursor-pointer hover:bg-gray-50 font-normal"
@@ -471,9 +471,9 @@ export default function MeetingDrawer({
                       <Button
                         variant="outline"
                         type="button"
-                        className="w-full font-light hover:bg-white justify-between text-left text-black overflow-hidden whitespace-nowrap text-ellipsis relative py-2.5 h-auto text-base border-gray-200"
+                        className="w-full h-10 px-3.5 text-sm justify-between text-left font-normal border-gray-200 hover:bg-slate-50 relative shadow-none"
                       >
-                        <span className={`truncate pr-10 ${selectedJoinersIds.length === 0 ? "text-gray-400" : ""}`}>
+                        <span className={`truncate pr-8 ${selectedJoinersIds.length === 0 ? "text-gray-400" : "text-gray-900 font-normal"}`}>
                           {selectedJoinersIds.length > 0
                             ? employeeOptions
                                 .filter((opt) => selectedJoinersIds.includes(opt.value))
@@ -490,19 +490,21 @@ export default function MeetingDrawer({
 
                     <PopoverContent
                       align="start"
-                      className="p-0 pointer-events-auto w-[var(--radix-popover-trigger-width)] max-w-md bg-white border border-gray-200 rounded-md shadow-lg z-[999]"
+                      side="bottom"
+                      sideOffset={4}
+                      className="p-0 pointer-events-auto w-[var(--radix-popover-trigger-width)] bg-white border border-gray-200 rounded-md shadow-md z-[9999]"
                     >
-                      <div className="p-2">
+                      <div className="p-2 border-b border-gray-100">
                         <Input
                           placeholder="Search joiners..."
                           value={employeeSearch}
                           onChange={(e) => setEmployeeSearch(e.target.value)}
-                          className="h-9 focus-visible:ring-primary border-gray-200 text-sm"
+                          className="h-8 text-xs border-gray-200 focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 font-normal"
                         />
                       </div>
 
                       <div
-                        className="max-h-60 overflow-y-auto divide-y divide-gray-50"
+                        className="max-h-56 overflow-y-auto"
                         onWheel={(e) => e.stopPropagation()}
                       >
                         {filteredEmployees.length > 0 ? (
@@ -513,18 +515,18 @@ export default function MeetingDrawer({
                             return (
                               <div
                                 key={item.value}
-                                className={`px-3 py-2 flex items-center justify-between text-sm transition-colors cursor-pointer ${
-                                  isSelected ? "bg-gray-50/80" : "hover:bg-gray-50"
+                                className={`px-3 py-2 flex items-center justify-between text-xs transition-colors cursor-pointer border-b last:border-b-0 border-gray-50 font-normal ${
+                                  isSelected ? "bg-slate-50" : "hover:bg-slate-50"
                                 }`}
                                 onClick={() => handleSelectAttendee(item.value)}
                               >
                                 <div className="flex items-center space-x-2 truncate">
-                                  <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                                    isSelected ? "bg-primary border-primary text-white" : "border-gray-300"
+                                  <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                                    isSelected ? "bg-primary border-primary text-white" : "border-gray-300 bg-white"
                                   }`}>
                                     {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                                   </div>
-                                  <span className={`truncate ${isSelected ? "font-semibold text-gray-900" : "text-gray-700"}`}>
+                                  <span className="truncate text-slate-700 font-normal">
                                     {item.label}
                                   </span>
                                 </div>
@@ -533,13 +535,13 @@ export default function MeetingDrawer({
                                   <button
                                     type="button"
                                     onClick={(e) => {
-                                      e.stopPropagation(); // prevent toggling selection
+                                      e.stopPropagation();
                                       handleToggleTeamLeader(item.value);
                                     }}
-                                    className={`text-[10px] font-bold px-2 py-0.5 rounded transition-colors border select-none shrink-0 ${
+                                    className={`text-[10px] font-semibold px-2 py-0.5 rounded transition-colors border select-none shrink-0 ${
                                       isLeader
-                                        ? "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200"
-                                        : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                                        ? "bg-amber-100 text-amber-800 border-amber-300"
+                                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-100"
                                     }`}
                                   >
                                     {isLeader ? "Team Leader" : "Set TL"}
@@ -549,7 +551,7 @@ export default function MeetingDrawer({
                             );
                           })
                         ) : (
-                          <div className="px-3 py-2 text-sm text-gray-500">
+                          <div className="px-3 py-2 text-xs text-gray-500">
                             No results found
                           </div>
                         )}

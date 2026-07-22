@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
-
-import useGetEmployeeById from "@/features/api/companyEmployee/useEmployeeById";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import { Card } from "@/components/ui/card";
 import FormImage from "@/components/shared/Form/FormImage/FormImage";
@@ -15,7 +13,7 @@ import SearchInput from "@/components/shared/SearchInput";
 import useGetDesignation from "@/features/api/designation/useGetDesignation";
 import DesignationAddFormModal from "@/pages/companyDesignation/designationFormModal/designationAddFormModal";
 import { Button } from "@/components/ui/button";
-import { getEmployee } from "@/features/api/companyEmployee";
+import { getEmployee, getProfileEmployee } from "@/features/api/companyEmployee";
 import useAddOrUpdateEmployee from "@/features/api/companyEmployee/useAddEmployee";
 import { imageUploadMutation } from "@/features/api/file";
 
@@ -33,7 +31,7 @@ export default function useAddEmployee() {
     photo: "",
   });
 
-  const { data: employeeData } = useGetEmployeeById({
+  const { data: employeeData } = getProfileEmployee({
     filter: {
       employeeId: companyEmployeeId,
       editFlag: true,

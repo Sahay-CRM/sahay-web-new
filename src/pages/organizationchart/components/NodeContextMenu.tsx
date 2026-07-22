@@ -56,7 +56,7 @@ export function NodeContextMenu({
             onClose();
           }}
         >
-          <LayoutTemplate className="w-3.5 h-3.5 text-primary" /> Edit Seat
+          <LayoutTemplate className="w-3.5 h-3.5 text-primary" /> Edit Position
         </Button>
       )}
       <div className="my-1 border-t border-gray-100" />

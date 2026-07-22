@@ -1,20 +1,32 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 import useDebounce from "@/hooks/useDebounce";
 
-export default function useGetCompanyMeetingSearch(searchTerm: string) {
-  const debouncedSearch = useDebounce(searchTerm, 500);
+
+
+export default function useGetCompanyMeetingSearch(
+  searchTerm: string,
+  detailMeetingStatus?: boolean
+) {
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   return useQuery({
-    queryKey: ["get-company-meeting-search", debouncedSearch],
+    queryKey: ["get-company-meeting-search", debouncedSearch, detailMeetingStatus],
     queryFn: async () => {
-      const { data } = await Api.post<{ data: MeetingSearchResponse[] }>({
+      const payload: { search: string; detailMeetingStatus?: boolean } = {
+        search: debouncedSearch || "",
+      };
+      if (detailMeetingStatus !== undefined) {
+        payload.detailMeetingStatus = detailMeetingStatus;
+      }
+
+      const { data } = await Api.post<{ data: any }>({
         url: Urls.getCompanyMeetingSearch(),
-        data: { search: debouncedSearch },
+        data: payload,
       });
       return data;
     },
-    enabled: debouncedSearch.trim().length >= 5,
   });
 }

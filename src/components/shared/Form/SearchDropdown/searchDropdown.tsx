@@ -16,6 +16,7 @@ type Option = {
   label: string;
   color?: string;
   isHeader?: boolean;
+  isFooterNote?: boolean;
 };
 
 interface SearchDropdownProps {
@@ -34,6 +35,7 @@ interface SearchDropdownProps {
   disabled?: boolean;
   multiSelect?: boolean;
   onAddNew?: (query: string) => void;
+  footerText?: string;
 }
 
 const SearchDropdown = ({
@@ -47,11 +49,12 @@ const SearchDropdown = ({
   isMandatory,
   error,
   onSearchChange,
-  dropdownClass,
+  dropdownClass = "",
   isCrossShow = true,
   disabled = false,
   multiSelect = false,
   onAddNew,
+  footerText,
 }: SearchDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -61,7 +64,9 @@ const SearchDropdown = ({
 
   const filteredOptions = options.filter(
     (opt) =>
-      opt.isHeader || opt.label.toLowerCase().includes(query.toLowerCase()),
+      opt.isHeader ||
+      opt.isFooterNote ||
+      opt.label.toLowerCase().includes(query.toLowerCase()),
   );
 
   const hasExactMatch = options.some(
@@ -139,7 +144,7 @@ const SearchDropdown = ({
 
         <PopoverContent
           align="start"
-          className={twMerge(`p-0 pointer-events-auto ${dropdownClass}`)}
+          className={twMerge(`p-0 pointer-events-auto z-[9999] ${dropdownClass}`)}
           style={{ width: "var(--radix-popover-trigger-width)" }}
         >
           <div className="p-2">
@@ -167,6 +172,16 @@ const SearchDropdown = ({
                       <div
                         key={`header-${index}`}
                         className="px-4 py-2 text-[12px] font-semibold text-primary uppercase tracking-wider bg-gray-50/50"
+                      >
+                        {item.label}
+                      </div>
+                    );
+                  }
+                  if (item.isFooterNote) {
+                    return (
+                      <div
+                        key={`footer-${index}`}
+                        className="px-3 py-2 text-xs text-slate-500 italic border-t border-slate-100 bg-slate-50/80 text-center mt-1 select-none"
                       >
                         {item.label}
                       </div>
@@ -200,6 +215,11 @@ const SearchDropdown = ({
                     </div>
                   );
                 })}
+                {footerText && (
+                  <div className="px-3 py-2 text-xs text-slate-500 italic border-t border-slate-100 bg-slate-50/80 text-center mt-1 select-none">
+                    {footerText}
+                  </div>
+                )}
                 {!hasExactMatch && query.trim() && onAddNew && (
                   <div className="px-2 py-1 border-t border-gray-100">
                     <div

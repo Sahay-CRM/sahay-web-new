@@ -159,7 +159,7 @@ export default function FormSelect({
             </SelectTrigger>
           </FormControl>
 
-          <SelectContent className="w-full max-h-60 overflow-auto ">
+          <SelectContent className="w-full max-h-60 overflow-auto z-[9999]">
             {isSearchable && (
               <div className="p-2">
                 <Input
@@ -193,7 +193,7 @@ export default function FormSelect({
             </button>
           </PopoverTrigger>
           <PopoverContent
-            className="p-2 text-sm"
+            className="p-2 text-sm z-[9999]"
             style={{ width: "var(--radix-popover-trigger-width)" }}
           >
             {isSearchable && (
