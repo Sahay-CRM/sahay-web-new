@@ -20,7 +20,6 @@ export default function AddEditCheckInModal({
   const {
     type,
     setType,
-    title,
     setTitle,
     setSearch,
     selectedRefId,
@@ -48,7 +47,8 @@ export default function AddEditCheckInModal({
       buttons={[
         {
           btnText: "Cancel",
-          buttonCss: "py-1.5 px-5 bg-transparent text-slate-700 border hover:bg-slate-50",
+          buttonCss:
+            "py-1.5 px-5 bg-transparent text-slate-700 border hover:bg-slate-50",
           btnClick: handleModalClose,
         },
         {
@@ -89,26 +89,10 @@ export default function AddEditCheckInModal({
             }}
             label={`Select ${type === "TASK" ? "Task" : "Meeting"} (Optional)`}
             placeholder={
-              type === "TASK" ? "Select or search task..." : "Select or search meeting..."
+              type === "TASK"
+                ? "Select or search task..."
+                : "Select or search meeting..."
             }
-          />
-        </div>
-
-        {/* Title Input */}
-        <div>
-          <FormInputField
-            id="title"
-            value={title}
-            onChange={(e) => {
-              setTitle(e.target.value);
-              if (e.target.value.trim()) {
-                setErrors((prev) => ({ ...prev, title: undefined }));
-              }
-            }}
-            label="Title"
-            placeholder="Enter title..."
-            error={errors.title ? { message: errors.title } : undefined}
-            isMandatory
           />
         </div>
 
@@ -142,7 +126,9 @@ export default function AddEditCheckInModal({
               label="Estimated Minutes"
               placeholder="0"
               error={
-                errors.estimatedTime ? { message: errors.estimatedTime } : undefined
+                errors.estimatedTime
+                  ? { message: errors.estimatedTime }
+                  : undefined
               }
             />
           </div>

@@ -44,34 +44,44 @@ export default function useAddEditCheckInModal({
   }>({});
 
   const { mutate: addItem, isPending: isAdding } = useAddDailyPlanItem();
-  const { mutate: updateItem, isPending: isUpdating } = useUpdateDailyPlanItem();
+  const { mutate: updateItem, isPending: isUpdating } =
+    useUpdateDailyPlanItem();
 
   const isPending = isAdding || isUpdating;
 
   // Task Search API call when type is TASK with planingtask: true
   const { data: taskSearchData } = useGetCompanyTaskSearch(
     type === "TASK" ? search : "",
-    true
+    true,
   );
 
   // Meeting Search API call when type is MEETING with detailMeetingStatus: true
   const { data: meetingSearchData } = useGetCompanyMeetingSearch(
     type === "MEETING" ? search : "",
-    true
+    true,
   );
 
   const taskOptions = useMemo<DropdownOptionItem[]>(() => {
     const rawData = taskSearchData?.data;
     if (!rawData) return [];
 
-    const isGrouped = rawData && typeof rawData === "object" && "normal" in rawData;
-    const normal = isGrouped ? (rawData as GroupedTaskSearchResponse).normal : [];
-    const repeat = isGrouped ? (rawData as GroupedTaskSearchResponse).repeat : [];
+    const isGrouped =
+      rawData && typeof rawData === "object" && "normal" in rawData;
+    const normal = isGrouped
+      ? (rawData as GroupedTaskSearchResponse).normal
+      : [];
+    const repeat = isGrouped
+      ? (rawData as GroupedTaskSearchResponse).repeat
+      : [];
 
     const options: DropdownOptionItem[] = [];
 
     if (normal.length > 0) {
-      options.push({ value: "header-task-normal", label: "Normal Tasks", isHeader: true });
+      options.push({
+        value: "header-task-normal",
+        label: "Normal Tasks",
+        isHeader: true,
+      });
       normal.forEach((t: TaskSearchItem) => {
         if (t.taskId) {
           options.push({
@@ -83,7 +93,11 @@ export default function useAddEditCheckInModal({
     }
 
     if (repeat.length > 0) {
-      options.push({ value: "header-task-repeat", label: "Repeat Tasks", isHeader: true });
+      options.push({
+        value: "header-task-repeat",
+        label: "Repeat Tasks",
+        isHeader: true,
+      });
       repeat.forEach((t: TaskSearchItem) => {
         if (t.taskId) {
           options.push({
@@ -116,17 +130,24 @@ export default function useAddEditCheckInModal({
     if (initialItem && initialItem.type === "TASK" && initialItem.taskId) {
       const exists = options.some((o) => o.value === initialItem.taskId);
       if (!exists) {
-        const normalHeaderIndex = options.findIndex((o) => o.value === "header-task-normal");
+        const normalHeaderIndex = options.findIndex(
+          (o) => o.value === "header-task-normal",
+        );
         const newItem = {
           value: initialItem.taskId,
-          label: initialItem.task?.taskName || initialItem.title || "Selected Task",
+          label:
+            initialItem.task?.taskName || initialItem.title || "Selected Task",
         };
         if (normalHeaderIndex !== -1) {
           options.splice(normalHeaderIndex + 1, 0, newItem);
         } else {
           options.unshift(
-            { value: "header-task-normal", label: "Normal Tasks", isHeader: true },
-            newItem
+            {
+              value: "header-task-normal",
+              label: "Normal Tasks",
+              isHeader: true,
+            },
+            newItem,
           );
         }
       }
@@ -139,14 +160,23 @@ export default function useAddEditCheckInModal({
     const rawData = meetingSearchData?.data;
     if (!rawData) return [];
 
-    const isGrouped = rawData && typeof rawData === "object" && "normal" in rawData;
-    const normal = isGrouped ? (rawData as DetailedMeetingSearchGroup).normal : [];
-    const detail = isGrouped ? (rawData as DetailedMeetingSearchGroup).detail : [];
+    const isGrouped =
+      rawData && typeof rawData === "object" && "normal" in rawData;
+    const normal = isGrouped
+      ? (rawData as DetailedMeetingSearchGroup).normal
+      : [];
+    const detail = isGrouped
+      ? (rawData as DetailedMeetingSearchGroup).detail
+      : [];
 
     const options: DropdownOptionItem[] = [];
 
     if (normal.length > 0) {
-      options.push({ value: "header-normal", label: "Normal Meetings", isHeader: true });
+      options.push({
+        value: "header-normal",
+        label: "Normal Meetings",
+        isHeader: true,
+      });
       normal.forEach((m: MeetingSearchItem) => {
         if (m.meetingId) {
           options.push({
@@ -158,7 +188,11 @@ export default function useAddEditCheckInModal({
     }
 
     if (detail.length > 0) {
-      options.push({ value: "header-detail", label: "Detail Meetings", isHeader: true });
+      options.push({
+        value: "header-detail",
+        label: "Detail Meetings",
+        isHeader: true,
+      });
       detail.forEach((m: MeetingSearchItem) => {
         if (m.meetingId) {
           options.push({
@@ -191,7 +225,8 @@ export default function useAddEditCheckInModal({
     return options;
   }, [meetingSearchData]);
 
-  const refOptions: DropdownOptionItem[] = type === "TASK" ? taskOptions : meetingOptions;
+  const refOptions: DropdownOptionItem[] =
+    type === "TASK" ? taskOptions : meetingOptions;
 
   const typeOptions = [
     { label: "Task", value: "TASK" },
@@ -214,13 +249,13 @@ export default function useAddEditCheckInModal({
         "";
       setTitle(currentTitle);
       setSelectedRefId(initialItem.taskId || initialItem.meetingId || "");
-      
+
       const totalMins = initialItem.estimatedTime || 0;
       const hrs = Math.floor(totalMins / 60);
       const mins = totalMins % 60;
       setEstimatedHours(hrs > 0 ? String(hrs) : "");
       setEstimatedMinutes(mins > 0 ? String(mins) : "");
-      
+
       setPriority(initialItem.priority || "Medium");
       setRemarks(initialItem.remarks || "");
     } else {
@@ -245,8 +280,9 @@ export default function useAddEditCheckInModal({
     if (!title.trim() && !selectedRefId) {
       newErrors.title = "Title or selection is required";
     }
-    
-    const totalMinutes = (Number(estimatedHours) || 0) * 60 + (Number(estimatedMinutes) || 0);
+
+    const totalMinutes =
+      (Number(estimatedHours) || 0) * 60 + (Number(estimatedMinutes) || 0);
     if (totalMinutes <= 0) {
       newErrors.estimatedTime = "Estimated time must be greater than 0";
     }
@@ -264,10 +300,13 @@ export default function useAddEditCheckInModal({
 
     const finalTitle =
       title.trim() ||
-      refOptions.find((o) => !o.isHeader && !o.isFooterNote && o.value === selectedRefId)?.label ||
+      refOptions.find(
+        (o) => !o.isHeader && !o.isFooterNote && o.value === selectedRefId,
+      )?.label ||
       "";
 
-    const totalMinutes = (Number(estimatedHours) || 0) * 60 + (Number(estimatedMinutes) || 0);
+    const totalMinutes =
+      (Number(estimatedHours) || 0) * 60 + (Number(estimatedMinutes) || 0);
 
     if (initialItem?.planItemId) {
       updateItem(
@@ -283,7 +322,7 @@ export default function useAddEditCheckInModal({
           onSuccess: () => {
             handleModalClose();
           },
-        }
+        },
       );
     } else {
       addItem(
@@ -296,13 +335,14 @@ export default function useAddEditCheckInModal({
           estimatedTime: totalMinutes,
           remarks: remarks.trim() || undefined,
           taskId: type === "TASK" ? selectedRefId || undefined : undefined,
-          meetingId: type === "MEETING" ? selectedRefId || undefined : undefined,
+          meetingId:
+            type === "MEETING" ? selectedRefId || undefined : undefined,
         },
         {
           onSuccess: () => {
             handleModalClose();
           },
-        }
+        },
       );
     }
   };
@@ -310,7 +350,6 @@ export default function useAddEditCheckInModal({
   return {
     type,
     setType,
-    title,
     setTitle,
     search,
     setSearch,
