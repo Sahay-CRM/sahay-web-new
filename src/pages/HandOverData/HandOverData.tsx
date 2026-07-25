@@ -1,21 +1,22 @@
 import { useEffect, useState, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { FormProvider, useForm, Controller } from "react-hook-form";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { Button } from "@/components/ui/button";
 import useGetEmployeeDd from "@/features/api/companyEmployee/useGetEmployeeDd";
+import useAddOrUpdateEmployee from "@/features/api/companyEmployee/useAddEmployee";
 import {
   useExecuteHandover,
   useExecutePartialHandover,
   useGetHandoverStats,
 } from "@/features/api/HandOver";
-import HandOverStatsModal from "./HandOverStatsModal";
-import { Eye } from "lucide-react";
 import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import PageNotAccess from "../PageNoAccess";
 import { toast } from "sonner";
-import FormSelect from "@/components/shared/Form/FormSelect";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
+import ModalData from "@/components/shared/Modal/ModalData";
 
 const MODULE_OPTIONS = [
   { value: "tasks", label: "Owned Tasks" },
@@ -29,9 +30,13 @@ const MODULE_OPTIONS = [
   { value: "subordinates", label: "Subordinates" },
 ];
 
+const ALL_MODULE_VALUES = ["total", ...MODULE_OPTIONS.map((opt) => opt.value)];
+
 export default function HandOverData() {
   const { setBreadcrumbs } = useBreadcrumbs();
-  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+  const location = useLocation();
+  const preselectedOldUserId =
+    (location.state as { oldUserId?: string } | null)?.oldUserId || "";
   const [isPartialMode, setIsPartialMode] = useState(false);
   const permission = useSelector(getUserPermission).HANDOVER;
 
@@ -41,7 +46,7 @@ export default function HandOverData() {
 
   const methods = useForm({
     defaultValues: {
-      oldUserId: "",
+      oldUserId: preselectedOldUserId,
       newUserId: "",
       selectedModules: [] as string[],
     },
@@ -63,21 +68,6 @@ export default function HandOverData() {
   });
   const stats = statsRes?.data;
 
-  const dynamicModuleOptions = useMemo(() => {
-    if (!stats) return MODULE_OPTIONS;
-    return MODULE_OPTIONS.filter((opt) => {
-      const val = stats[opt.value as keyof typeof stats];
-      return typeof val === "number" ? val > 0 : true;
-    }).map((opt) => {
-      const val = stats[opt.value as keyof typeof stats];
-      const countSuffix = typeof val === "number" ? ` (${val})` : "";
-      return {
-        ...opt,
-        label: `${opt.label}${countSuffix}`,
-      };
-    });
-  }, [stats]);
-
   // Reset selected modules when oldUserId changes
   useEffect(() => {
     setValue("selectedModules", []);
@@ -85,7 +75,7 @@ export default function HandOverData() {
 
   // Fetch employees for dropdowns
   const { data: employeeRes } = useGetEmployeeDd({
-    filter: {},
+    filter: { isBoth: true },
     enable: true,
   });
 
@@ -145,27 +135,22 @@ export default function HandOverData() {
     useExecuteHandover();
   const { mutate: executePartialHandover, isPending: isExecutingPartial } =
     useExecutePartialHandover();
+  const { mutate: updateEmployee, isPending: isDeactivating } =
+    useAddOrUpdateEmployee();
 
-  const isExecuting = isExecutingFull || isExecutingPartial;
+  const isExecuting = isExecutingFull || isExecutingPartial || isDeactivating;
 
-  const handleExecute = () => {
-    if (!oldUserId || !newUserId) return;
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+  const runHandover = (onSuccess: () => void) => {
     if (isPartialMode) {
-      if (selectedModules.length === 0) {
-        toast.error("Please select at least one module for partial handover");
-        return;
-      }
       executePartialHandover(
         {
           oldUserId,
           newUserId,
           moduleKey: selectedModules,
         },
-        {
-          onSuccess: () => {
-            window.location.reload();
-          },
-        },
+        { onSuccess },
       );
     } else {
       executeHandover(
@@ -173,13 +158,45 @@ export default function HandOverData() {
           oldUserId,
           newUserId,
         },
+        { onSuccess },
+      );
+    }
+  };
+
+  const handleConfirmHandoverOnly = () => {
+    runHandover(() => {
+      window.location.reload();
+    });
+  };
+
+  const handleConfirmHandoverWithInactive = () => {
+    runHandover(() => {
+      if (!selectedOldUser) {
+        window.location.reload();
+        return;
+      }
+      updateEmployee(
+        {
+          employeeId: selectedOldUser.employeeId,
+          isDeactivated: true,
+          employeeMobile: selectedOldUser.employeeMobile,
+        } as EmployeeData,
         {
           onSuccess: () => {
             window.location.reload();
           },
         },
       );
+    });
+  };
+
+  const handleExecute = () => {
+    if (!oldUserId || !newUserId) return;
+    if (isPartialMode && selectedModules.length === 0) {
+      toast.error("Please select at least one module for partial handover");
+      return;
     }
+    setIsConfirmModalOpen(true);
   };
 
   if (!permission || permission.View === false) {
@@ -230,18 +247,6 @@ export default function HandOverData() {
                   <label className="text-sm font-semibold text-gray-700">
                     Source User (Leaving)
                   </label>
-                  {oldUserId && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-primary hover:text-primary/80 h-7 px-2 font-medium"
-                      onClick={() => setIsStatsModalOpen(true)}
-                    >
-                      <Eye className="w-4 h-4 mr-1" />
-                      View Impact
-                    </Button>
-                  )}
                 </div>
                 <Controller
                   control={control}
@@ -300,28 +305,104 @@ export default function HandOverData() {
               </div>
             </div>
 
-            {/* Partial Modules Selection */}
-            {isPartialMode && (
+            {/* Impact Stats */}
+            {oldUserId && stats && (
               <div className="space-y-3 pt-2 border-t border-gray-100">
-                <div className="flex items-end h-7 mb-3">
-                  <label className="text-sm font-semibold text-gray-700">
-                    Select Modules to Handover
-                  </label>
+                <label className="text-sm font-semibold text-gray-700">
+                  Handover Impact
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {[
+                    { key: "total", label: "Total", value: stats.total },
+                    { key: "tasks", label: "Owned Tasks", value: stats.tasks },
+                    {
+                      key: "assignedTasks",
+                      label: "Assigned Tasks",
+                      value: stats.assignedTasks,
+                    },
+                    {
+                      key: "projects",
+                      label: "Owned Projects",
+                      value: stats.projects,
+                    },
+                    {
+                      key: "assignedProjects",
+                      label: "Assigned Projects",
+                      value: stats.assignedProjects,
+                    },
+                    {
+                      key: "meetings",
+                      label: "Owned Meetings",
+                      value: stats.meetings,
+                    },
+                    {
+                      key: "assignedMeetings",
+                      label: "Assigned Meetings",
+                      value: stats.assignedMeetings,
+                    },
+                    { key: "todos", label: "To-dos", value: stats.todos },
+                    {
+                      key: "requests",
+                      label: "Change Requests",
+                      value: stats.requests,
+                    },
+                    {
+                      key: "subordinates",
+                      label: "Subordinates",
+                      value: stats.subordinates,
+                    },
+                  ].map((stat) => (
+                    <div
+                      key={stat.key}
+                      className="flex justify-between items-center p-3 rounded-lg bg-gray-50 border border-gray-100"
+                    >
+                      <span className="flex items-center text-sm text-gray-600 font-medium">
+                        {isPartialMode && (
+                          <FormCheckbox
+                            id={`module-${stat.key}`}
+                            checked={selectedModules.includes(stat.key)}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              if (stat.key === "total") {
+                                setValue(
+                                  "selectedModules",
+                                  checked ? ALL_MODULE_VALUES : [],
+                                );
+                                return;
+                              }
+                              const withoutKey = selectedModules.filter(
+                                (m) => m !== stat.key && m !== "total",
+                              );
+                              const next = checked
+                                ? [...withoutKey, stat.key]
+                                : withoutKey;
+                              const allOthersSelected = MODULE_OPTIONS.every(
+                                (opt) => next.includes(opt.value),
+                              );
+                              setValue(
+                                "selectedModules",
+                                allOthersSelected
+                                  ? [...next, "total"]
+                                  : next,
+                              );
+                            }}
+                            containerClass="mt-0 mr-2"
+                          />
+                        )}
+                        {stat.label}
+                      </span>
+                      <span className="text-base font-semibold text-gray-900">
+                        {stat.value ?? 0}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <FormSelect
-                  placeholder="Select modules (e.g., Owned Tasks, Projects)..."
-                  options={dynamicModuleOptions}
-                  value={selectedModules}
-                  isMulti
-                  onChange={(val) => {
-                    setValue("selectedModules", val as string[]);
-                  }}
-                  className="w-full"
-                />
-                <p className="text-xs text-gray-400">
-                  Only the selected modules will be transferred to the target
-                  user.
-                </p>
+                {isPartialMode && (
+                  <p className="text-xs text-gray-400">
+                    Only the checked modules will be transferred to the target
+                    user.
+                  </p>
+                )}
               </div>
             )}
 
@@ -377,13 +458,51 @@ export default function HandOverData() {
           </div>
         </div>
 
-        {/* Stats Modal */}
-        <HandOverStatsModal
-          isOpen={isStatsModalOpen}
-          onClose={() => setIsStatsModalOpen(false)}
-          userId={oldUserId}
-          userName={selectedOldUser?.employeeName || ""}
-        />
+        <ModalData
+          isModalOpen={isConfirmModalOpen}
+          modalClose={() => setIsConfirmModalOpen(false)}
+          modalTitle="Confirm Handover"
+          containerClass="min-w-[400px] max-w-[500px]"
+          buttons={
+            selectedOldUser?.isDeactivated
+              ? [
+                  {
+                    btnText: "Confirm",
+                    isLoading: isExecuting,
+                    btnClick: () => {
+                      handleConfirmHandoverOnly();
+                      setIsConfirmModalOpen(false);
+                    },
+                  },
+                ]
+              : [
+                  {
+                    btnText: "Handover Only",
+                    buttonCss:
+                      "bg-gray-200 text-black border-gray-300 hover:bg-gray-300",
+                    isLoading: isExecuting,
+                    btnClick: () => {
+                      handleConfirmHandoverOnly();
+                      setIsConfirmModalOpen(false);
+                    },
+                  },
+                  {
+                    btnText: "Handover & Mark Inactive",
+                    isLoading: isExecuting,
+                    btnClick: () => {
+                      handleConfirmHandoverWithInactive();
+                      setIsConfirmModalOpen(false);
+                    },
+                  },
+                ]
+          }
+        >
+          <p className="text-sm text-gray-600">
+            {selectedOldUser?.isDeactivated
+              ? `${selectedOldUser?.employeeName} is already inactive. Proceed with the handover?`
+              : `${selectedOldUser?.employeeName} is currently active. Choose whether to also mark them inactive after the handover completes.`}
+          </p>
+        </ModalData>
       </div>
     </FormProvider>
   );

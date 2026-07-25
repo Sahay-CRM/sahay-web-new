@@ -10,4 +10,6 @@ interface PaginationFilter {
   message?: string;
   search?: string;
   isPaging?: boolean;
+  isDeactivated?: boolean;
+  employeeType?: string;
 }

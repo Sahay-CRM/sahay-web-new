@@ -22,6 +22,14 @@ import { getUserDetail } from "@/features/selectors/auth.selector";
 import ConfirmationDeleteModal from "./confirmEmployeDeleteModal";
 import { formatEmployeeType, getInitials } from "@/features/utils/app.utils";
 import { getColorFromName } from "@/features/utils/formatting.utils";
+import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
+import ModalData from "@/components/shared/Modal/ModalData";
+
+const statusOptions = [
+  { value: "all", label: "All" },
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+];
 
 export default function CompanyDesignation() {
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -37,7 +45,8 @@ export default function CompanyDesignation() {
     isLoading,
     closeDeleteModal,
     setPaginationFilter,
-    // currentStatus,
+    currentStatus,
+    onStatusChange,
     onDelete,
     modalData,
     conformDelete,
@@ -50,6 +59,7 @@ export default function CompanyDesignation() {
     handleRowsModalOpen,
     viewModalData,
     handleInactive,
+    handoverPermission,
   } = useCompanyEmployee();
 
   //   const { setBreadcrumbs } = useBreadcrumbs();
@@ -97,6 +107,9 @@ export default function CompanyDesignation() {
   const methods = useForm();
   const navigate = useNavigate();
 
+  const [pendingToggleItem, setPendingToggleItem] =
+    useState<EmployeeDetails | null>(null);
+
   if (permission && permission.View === false) {
     return <PageNotAccess />;
   }
@@ -105,7 +118,7 @@ export default function CompanyDesignation() {
     <FormProvider {...methods}>
       <div className="w-full h-full flex flex-col px-2 sm:px-4 py-6 overflow-hidden">
         <div className="flex justify-between items-center mb-4 shrink-0 gap-4">
-          <div>
+          <div className="flex items-center gap-3">
             <SearchInput
               placeholder="Search..."
               searchValue={paginationFilter?.search || ""}
@@ -115,6 +128,14 @@ export default function CompanyDesignation() {
           </div>
 
           <div className="flex items-center gap-3">
+            <FormSelect
+              value={currentStatus}
+              onChange={(val) => onStatusChange(val as string)}
+              options={statusOptions}
+              placeholder="Status"
+              className="w-40"
+              triggerClassName="py-2"
+            />
             {canToggleColumns && (
               <TooltipProvider>
                 <Tooltip>
@@ -185,8 +206,8 @@ export default function CompanyDesignation() {
             }}
             extraColumns={[
               {
-                label: "Reporting Manager",
-                width: "w-[170px]",
+                label: "Reporting",
+                width: "w-[100px]",
                 render: (row) => {
                   if (!row.reportingManagerName) return "-";
                   return (
@@ -208,8 +229,8 @@ export default function CompanyDesignation() {
                 },
               },
               {
-                label: "Created By",
-                width: "w-[120px]",
+                label: "Added",
+                width: "w-[80px]",
                 render: (row) => {
                   return (
                     <TooltipProvider>
@@ -239,10 +260,27 @@ export default function CompanyDesignation() {
             sortableColumns={["employeeName"]}
             showActiveToggle={true}
             onToggleActive={(item) => {
-              handleInactive(item);
+              setPendingToggleItem(item as EmployeeDetails);
             }}
             activeToggleKey="isDeactivated"
-            actionColumnWidth="w-[160px] overflow-hidden "
+            invertActiveToggle
+            customActions={(row) =>
+              handoverPermission?.View && row.isDeactivated ? (
+                <Button
+                  variant="outline"
+                  size="default"
+                  className="h-8 px-2 text-xs cursor-pointer"
+                  onClick={() =>
+                    navigate("/dashboard/handover", {
+                      state: { oldUserId: row.employeeId },
+                    })
+                  }
+                >
+                  Handover
+                </Button>
+              ) : null
+            }
+            actionColumnWidth="w-[230px] overflow-hidden "
           />
         </div>
 
@@ -263,6 +301,56 @@ export default function CompanyDesignation() {
           modalData={viewModalData}
           modalClose={() => setIsViewModalOpen(false)}
         />
+
+        {/* Active/Inactive Toggle Confirmation */}
+        <ModalData
+          isModalOpen={!!pendingToggleItem}
+          modalClose={() => setPendingToggleItem(null)}
+          modalTitle={
+            pendingToggleItem?.isDeactivated ? "Activate Employee" : "Deactivate Employee"
+          }
+          containerClass="min-w-[400px] max-w-[500px]"
+          buttons={[
+            {
+              btnText: "Cancel",
+              buttonCss:
+                "bg-gray-200 text-black border-gray-300 hover:bg-gray-300",
+              btnClick: () => setPendingToggleItem(null),
+            },
+            ...(handoverPermission?.View && !pendingToggleItem?.isDeactivated
+              ? [
+                  {
+                    btnText: "Handover",
+                    buttonCss:
+                      "bg-gray-200 text-black border-gray-300 hover:bg-gray-300",
+                    btnClick: () => {
+                      if (pendingToggleItem) {
+                        navigate("/dashboard/handover", {
+                          state: { oldUserId: pendingToggleItem.employeeId },
+                        });
+                      }
+                      setPendingToggleItem(null);
+                    },
+                  },
+                ]
+              : []),
+            {
+              btnText: "Confirm",
+              btnClick: () => {
+                if (pendingToggleItem) {
+                  handleInactive(pendingToggleItem);
+                }
+                setPendingToggleItem(null);
+              },
+            },
+          ]}
+        >
+          <p className="text-sm text-gray-600">
+            {pendingToggleItem?.isDeactivated
+              ? `Are you sure you want to mark ${pendingToggleItem?.employeeName} as active?`
+              : `Are you sure you want to mark ${pendingToggleItem?.employeeName} as inactive?`}
+          </p>
+        </ModalData>
       </div>
     </FormProvider>
   );

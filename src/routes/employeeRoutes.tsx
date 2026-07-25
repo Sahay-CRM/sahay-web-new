@@ -19,6 +19,9 @@ const importantDate = lazy(
 const companyEmployee = lazy(
   () => import("../pages/companyEmployee/companyEmployee"),
 );
+const SahayTeammate = lazy(
+  () => import("../pages/sahayTeammate/sahayTeammate"),
+);
 const OrganizationChart = lazy(
   () => import("../pages/organizationchart/OrganizationChart"),
 );
@@ -155,6 +158,8 @@ const DashboardReportView = lazy(
 );
 
 const DailyPlanning = lazy(() => import("../pages/DailyPlanning/DailyPlanning"));
+const CheckIn = lazy(() => import("../pages/DailyPlanning/CheckIn/CheckIn"));
+const CheckOut = lazy(() => import("../pages/DailyPlanning/CheckOut/CheckOut"));
 const Blueprint = lazy(() => import("../pages/MenuBlueprint/MenuBlueprint"));
 
 export default function EmployeeRoutes() {
@@ -175,11 +180,14 @@ export default function EmployeeRoutes() {
         <Route path="settings" Component={Theme} />
         <Route path="company-designation" Component={companydesignation} />
         <Route path="company-employee" Component={companyEmployee} />
+        <Route path="sahay-teammate" Component={SahayTeammate} />
         <Route path="organization-structure" Component={OrganizationChart} />
         <Route path="employees/add" element={<AddCompanyEmployee />} />
         <Route path="employees/edit/:id" element={<AddCompanyEmployee />} />
         <Route path="calendar" Component={CompanyImportantDates} />
         <Route path="daily-planning" element={<DailyPlanning />} />
+        <Route path="daily-planning/check-in" element={<CheckIn />} />
+        <Route path="daily-planning/check-out" element={<CheckOut />} />
 
         <Route path="meeting" Component={CompanyMeeting} />
         <Route path="meeting/add" element={<AddCompanyMeeting />} />

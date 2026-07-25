@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState } from "react";
 import {
   Dialog,
@@ -62,7 +63,7 @@ export default function AddDailyPlanItemDialog({
     const rawTasks = search
       ? taskSearchData?.data || []
       : allTasksData?.data || [];
-    return rawTasks.map((t) => ({
+    return rawTasks.map((t:any) => ({
       value: t.taskId || "",
       label: t.taskName || "",
     }));

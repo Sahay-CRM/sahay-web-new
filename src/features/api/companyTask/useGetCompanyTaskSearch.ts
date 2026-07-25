@@ -1,20 +1,32 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 import useDebounce from "@/hooks/useDebounce";
 
-export default function useGetCompanyTaskSearch(searchTerm: string) {
-  const debouncedSearch = useDebounce(searchTerm, 500);
+
+
+export default function useGetCompanyTaskSearch(
+  searchTerm: string,
+  planingtask?: boolean
+) {
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   return useQuery({
-    queryKey: ["get-company-task-search", debouncedSearch],
+    queryKey: ["get-company-task-search", debouncedSearch, planingtask],
     queryFn: async () => {
-      const { data } = await Api.post<{ data: SearchResponse[] }>({
+      const payload: { search: string; planingtask?: boolean } = {
+        search: debouncedSearch || "",
+      };
+      if (planingtask !== undefined) {
+        payload.planingtask = planingtask;
+      }
+
+      const { data } = await Api.post<{ data: any }>({
         url: Urls.getCompanyTaskSearch(),
-        data: { search: debouncedSearch },
+        data: payload,
       });
       return data;
     },
-    enabled: debouncedSearch.trim().length >= 3,
   });
 }

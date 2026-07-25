@@ -558,6 +558,8 @@ interface EmployeeCompany {
   companyAdminName: string;
   companyId: string;
   companyName: string;
+  companyStartTime?: string | null;
+  companyEndTime?: string | null;
 }
 
 interface EmployeeDetailsById {
@@ -1512,7 +1514,7 @@ interface CompanyNavItem {
   label: string;
   link?: string;
   permission: string;
-  moduleKey?: string;
+  moduleKey?: string | string[];
   items?: CompanyNavItem[];
 }
 
@@ -1808,6 +1810,12 @@ interface CompanyPerformanceReport {
     delayedTasks: number;
     longDurationTop5: TaskItem[];
   };
+  repeatTasks: {
+    totalTasks: number;
+    notUpdatedTasks: number;
+    delayedTasks: number;
+    longDurationTop5: TaskItem[];
+  };
   projects: {
     totalProjects: number;
     activeProjects: number;
@@ -1874,6 +1882,24 @@ interface CompanyPerformanceReport {
       type: string;
       createdAt: string;
       daysUnresolved: number;
+      time?: string;
+    }[];
+    totalTime?: string;
+    lowestTimeTop5?: {
+      id: string;
+      name: string;
+      type: string;
+      createdAt: string;
+      daysUnresolved: number;
+      time: string;
+    }[];
+    highestTimeTop5?: {
+      id: string;
+      name: string;
+      type: string;
+      createdAt: string;
+      daysUnresolved: number;
+      time: string;
     }[];
   };
 }
@@ -1972,6 +1998,12 @@ interface TimeLog {
     meetingName: string;
     meetingDescription?: string;
   };
+  refDetails?: {
+    taskName?: string;
+    taskDescription?: string;
+    meetingName?: string;
+    meetingDescription?: string;
+  };
 }
 
 type DailyPlanItemType = "TASK" | "MEETING";
@@ -2007,6 +2039,8 @@ interface DailyPlanItem {
   planId: string;
   employeeId: string;
   type: DailyPlanItemType;
+  title?: string | null;
+  priority?: string | null;
   taskId?: string | null;
   meetingId?: string | null;
   estimatedTime: number;
@@ -2043,6 +2077,8 @@ interface AddDailyPlanItemPayload {
   employeeId?: string;
   date: string;
   type: DailyPlanItemType;
+  title?: string;
+  priority?: string;
   taskId?: string;
   meetingId?: string;
   estimatedTime: number;
@@ -2051,12 +2087,17 @@ interface AddDailyPlanItemPayload {
 
 interface UpdateDailyPlanItemPayload {
   planItemId: string;
+  planId?: string;
+  title?: string;
+  type?: DailyPlanItemType;
+  priority?: string;
   status?: PlanningStatus;
   estimatedTime?: number;
   actualTime?: number;
   startTime?: string;
   completionTime?: string;
   remarks?: string;
+  isFinalSubmit?: boolean;
 }
 
 interface CarryForwardDailyPlanItemPayload {
@@ -2100,4 +2141,39 @@ interface DailyPlanItemHistoryEntry {
   coreValues: CoreValueOption[];
   objectives: ObjectiveValueRow[];
   subjectives: SubjectiveRow[];
+}
+
+ interface CoreValueMasterItem {
+  CodeValueId: string;
+  coreValue: string;
+  actionStatement: string;
+  isActive: boolean;
+}
+
+interface TaskSearchItem {
+  taskId: string;
+  taskName: string;
+  taskDescription?: string;
+  taskDeadline?: string | null;
+  [key: string]: unknown;
+}
+
+interface GroupedTaskSearchResponse {
+  normal: TaskSearchItem[];
+  repeat: TaskSearchItem[];
+}
+
+
+interface MeetingSearchItem {
+  meetingId: string;
+  meetingName: string;
+  meetingDateTime?: string | null;
+  detailMeetingStatus?: string | null;
+  isDetailMeeting?: boolean | null;
+  [key: string]: unknown;
+}
+
+interface DetailedMeetingSearchGroup {
+  normal: MeetingSearchItem[];
+  detail: MeetingSearchItem[];
 }

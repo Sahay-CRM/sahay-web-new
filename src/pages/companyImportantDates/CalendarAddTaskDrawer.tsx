@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useForm, Controller } from "react-hook-form";
 import { useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -199,7 +200,7 @@ export default function CalendarAddTaskDrawer({
     value: proj.projectId || "",
   }));
 
-  const meetingOptions = (meetingData?.data || []).map((meet: any) => ({
+  const meetingOptions = (meetingData?.data || []).map((meet) => ({
     label: meet.meetingName || "Unnamed",
     value: meet.meetingId || "",
   }));

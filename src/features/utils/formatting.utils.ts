@@ -359,11 +359,11 @@ export function formatMinutesToHours(minutes: number | null | undefined): string
   const mins = minutes % 60;
   
   if (hours > 0 && mins > 0) {
-    return `${hours}hr${mins}min`;
+    return `${hours} hr ${mins} min`;
   } else if (hours > 0) {
-    return `${hours}hr`;
+    return `${hours} hr`;
   } else {
-    return `${mins}min`;
+    return `${mins} min`;
   }
 }
 

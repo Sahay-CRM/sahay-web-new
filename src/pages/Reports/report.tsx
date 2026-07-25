@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import useGetReports from "@/features/api/Reports/useGetReports";
 import {
@@ -8,8 +8,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isColorDark } from "@/features/utils/color.utils";
-import { useSelector } from "react-redux";
-import { getUserDetail } from "@/features/selectors/auth.selector";
+// import { useSelector } from "react-redux";
+// import { getUserPermission } from "@/features/selectors/auth.selector";
 
 const SectionTitle = ({ title }: { title: string }) => (
   <h3 className="text-[14px] font-bold text-slate-400 mb-4">{title}</h3>
@@ -18,52 +18,47 @@ const SectionTitle = ({ title }: { title: string }) => (
 const BusinessFunctionTable = ({
   data,
   type,
-  initiallyShow = 6,
 }: {
   data: (TaskInsight | ProjectInsight)[];
   type: "task" | "project";
-  initiallyShow?: number;
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const displayData = isExpanded ? data : data.slice(0, initiallyShow);
-
   return (
-    <div className="bg-white border border-slate-200 rounded-[10px] overflow-hidden">
+    <div className="bg-white border border-slate-200 rounded-[10px] overflow-hidden max-h-[220px] overflow-y-auto">
       <table className="w-full text-left border-collapse">
         {/* HEADER */}
-        <thead>
-          <tr className="bg-gray-200 text-[12px] text-black">
-            <th className="px-4 py-2 font-medium">Business Functions</th>
-            <th className="px-2 py-2 text-center font-medium">Total</th>
-            <th className="px-2 py-2 text-center font-medium">
+        <thead className="sticky top-0">
+          <tr className="bg-gray-200 text-[11px] text-black">
+            <th className="px-3 py-1.5 font-medium">Business Functions</th>
+            <th className="px-2 py-1.5 text-center font-medium">Total</th>
+            <th className="px-2 py-1.5 text-center font-medium">
               {type === "task" ? "Filling" : "Active"}
             </th>
             {type === "project" && (
-              <th className="px-2 py-2 text-center font-medium">Delayed</th>
+              <th className="px-2 py-1.5 text-center font-medium">Delayed</th>
             )}
           </tr>
         </thead>
 
         {/* BODY */}
         <tbody className="divide-y divide-slate-100">
-          {displayData.map((item, idx) => (
+          {data.map((item, idx) => (
             <tr key={idx} className="hover:bg-slate-50/40">
-              <td className="px-4 py-2 text-[13px] font-medium text-slate-800">
+              <td className="px-3 py-1.5 text-[12px] font-medium text-slate-800">
                 {item.businessFunction}
               </td>
 
-              <td className="px-2 py-2 text-[13px] font-semibold text-center text-slate-900">
+              <td className="px-2 py-1.5 text-[12px] font-semibold text-center text-slate-900">
                 {item.total}
               </td>
 
-              <td className="px-2 py-2 text-[13px] font-semibold text-center text-slate-900">
+              <td className="px-2 py-1.5 text-[12px] font-semibold text-center text-slate-900">
                 {"filling" in item
                   ? item.filling
                   : (item as ProjectInsight).active}
               </td>
 
               {type === "project" && (
-                <td className="px-2 py-2 text-[13px] font-semibold text-center text-slate-900">
+                <td className="px-2 py-1.5 text-[12px] font-semibold text-center text-slate-900">
                   {"delayed" in item ? item.delayed : "-"}
                 </td>
               )}
@@ -71,16 +66,6 @@ const BusinessFunctionTable = ({
           ))}
         </tbody>
       </table>
-
-      {/* BUTTON */}
-      {data.length > initiallyShow && (
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full py-2 text-[11px] font-medium text-slate-500 hover:bg-slate-50 border-t border-slate-100"
-        >
-          {isExpanded ? "View Less" : "View More"}
-        </button>
-      )}
     </div>
   );
 };
@@ -106,7 +91,7 @@ const KPICard = ({
   subtext?: string;
   children?: React.ReactNode;
 }) => (
-  <div className="bg-white border border-slate-200 rounded-[12px] px-4 py-3 min-w-[140px] flex flex-col justify-between h-full">
+  <div className="bg-white border border-slate-200 rounded-[12px] px-4 py-3 min-w-0 flex flex-col justify-between h-full">
     <div>
       <p className="text-[11px] text-slate-500 mb-1 font-medium">{title}</p>
       <p className="text-[30px] font-bold text-slate-900 leading-none">
@@ -124,22 +109,29 @@ const LongTermList = ({ items }: { items: ListItem[] }) => {
   return (
     <div className="bg-white border border-slate-200 rounded-[12px] overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-2 border-b border-slate-200">
-        <p className="text-[12px] font-medium text-slate-500">
+      <div className="px-3 py-1.5 border-b border-slate-200">
+        <p className="text-[11px] font-medium text-slate-500">
           Long Term Tasks
         </p>
       </div>
 
       {/* Rows */}
-      <div>
+      <div className="max-h-[220px] overflow-y-auto divide-y divide-slate-100">
         {items.map((item, idx) => (
           <div
             key={idx}
-            className="grid grid-cols-12 items-center px-4 py-2 text-[12px]"
+            className="grid grid-cols-12 items-center px-3 py-1.5 text-[11px] gap-1"
           >
             {/* Name */}
             <div className="col-span-3 font-medium text-slate-800 truncate">
-              {item.name}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="cursor-default">{item.name}</span>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p className="text-[11px]">{item.name}</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
 
             {/* Duration */}
@@ -148,7 +140,9 @@ const LongTermList = ({ items }: { items: ListItem[] }) => {
             </div>
 
             {/* Date */}
-            <div className="col-span-3 text-slate-500">{item.dueDate}</div>
+            <div className="col-span-3 text-slate-500 truncate">
+              {item.dueDate}
+            </div>
 
             {/* Assignees */}
             <div className="col-span-2 flex -space-x-1.5 overflow-hidden">
@@ -166,7 +160,7 @@ const LongTermList = ({ items }: { items: ListItem[] }) => {
                     return (
                       <Tooltip key={i}>
                         <TooltipTrigger asChild>
-                          <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#E5F7A3] border border-white text-[10px] font-bold text-slate-700 shrink-0 cursor-default">
+                          <div className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#E5F7A3] border border-white text-[9px] font-bold text-slate-700 shrink-0 cursor-default">
                             {initials}
                           </div>
                         </TooltipTrigger>
@@ -179,7 +173,7 @@ const LongTermList = ({ items }: { items: ListItem[] }) => {
                   {item.assignees.length > 3 && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 border border-white text-[10px] font-bold text-slate-500 shrink-0 cursor-default">
+                        <div className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 border border-white text-[9px] font-bold text-slate-500 shrink-0 cursor-default">
                           +{item.assignees.length - 3}
                         </div>
                       </TooltipTrigger>
@@ -209,7 +203,7 @@ const LongTermList = ({ items }: { items: ListItem[] }) => {
                     ? "#FFFFFF"
                     : "#0f172a",
                 }}
-                className="px-2 py-[2px] rounded-md text-[12px] font-normal"
+                className="px-1.5 py-[1px] rounded-md text-[11px] font-normal truncate"
               >
                 {item.status}
               </span>
@@ -225,19 +219,19 @@ const AgendaList = ({ title, items }: { title: string; items: ListItem[] }) => {
   return (
     <div className="bg-white border border-slate-200 rounded-[12px] overflow-hidden">
       {/* Header */}
-      <div className="px-4 bg-gray-200 py-2 border-b border-slate-200">
-        <p className="text-[12px] text-black font-medium">{title}</p>
+      <div className="px-3 bg-gray-200 py-1.5 border-b border-slate-200">
+        <p className="text-[11px] text-black font-medium">{title}</p>
       </div>
 
       {/* List */}
-      <div>
+      <div className="max-h-[220px] overflow-y-auto divide-y divide-slate-100">
         {items.map((item, idx) => {
           const hasDate = !!item.dueDate;
 
           return (
             <div
               key={idx}
-              className={`grid items-center px-4 py-2 text-[12px] ${
+              className={`grid items-center px-3 py-1.5 text-[11px] gap-1 ${
                 hasDate ? "grid-cols-12" : "grid-cols-9"
               }`}
             >
@@ -259,7 +253,7 @@ const AgendaList = ({ title, items }: { title: string; items: ListItem[] }) => {
 
               {/* Duration */}
               <div
-                className={`text-slate-500 pl-4 ${
+                className={`text-slate-500 pl-4 truncate ${
                   hasDate ? "col-span-3 text-left" : "col-span-3 text-right"
                 }`}
               >
@@ -268,7 +262,7 @@ const AgendaList = ({ title, items }: { title: string; items: ListItem[] }) => {
 
               {/* Date */}
               {hasDate && (
-                <div className="col-span-3 text-slate-500 text-right">
+                <div className="col-span-3 text-slate-500 text-right truncate">
                   {item.dueDate}
                 </div>
               )}
@@ -281,31 +275,22 @@ const AgendaList = ({ title, items }: { title: string; items: ListItem[] }) => {
 };
 export default function ReportsPage() {
   const { setBreadcrumbs } = useBreadcrumbs();
-  const userDetail = useSelector(getUserDetail);
   const { data: reportsData, isLoading } = useGetReports();
-
-  const userType = userDetail?.employeeType?.toUpperCase()?.trim();
-  const isAuthorized =
-    userType === "CONSULTANT" ||
-    userType === "SAHAYTEAMMATE" ||
-    userType === "SAHAY TEAMMATE" ||
-    userType === "OWNER" ||
-    userDetail?.isSuperAdmin === true ||
-    String(userDetail?.isSuperAdmin) === "true";
+  // const permission = useSelector(getUserPermission).PERFORMANCE_REPORTS;
 
   useEffect(() => {
     setBreadcrumbs([{ label: "Performance Insights", href: "" }]);
   }, [setBreadcrumbs]);
 
-  if (!isAuthorized) {
-    return (
-      <div className="flex items-center justify-center min-h-[500px] bg-[#F8FAFC]">
-        <div className="text-xl font-semibold text-red-600">
-          You are Not Authorized to view this report
-        </div>
-      </div>
-    );
-  }
+  // if (permission && permission.View) {
+  //   return (
+  //     <div className="flex items-center justify-center min-h-[500px] bg-[#F8FAFC]">
+  //       <div className="text-xl font-semibold text-red-600">
+  //         You are Not Authorized to view this report
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   if (isLoading) {
     return (
@@ -326,13 +311,13 @@ export default function ReportsPage() {
 
   return (
     <TooltipProvider>
-      <div className="bg-[#F3F4F6] min-h-screen p-6">
-        <div className="grid grid-cols-1 bor lg:grid-cols-2 gap-8">
+      <div className="bg-[#F3F4F6] min-h-screen p-3 sm:p-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           {/* LEFT COLUMN */}
           <div className="space-y-8">
-            <section>
+            <section className="bg-white border border-slate-200 rounded-[12px] p-4">
               <SectionTitle title="Task Insights" />
-              <div className="flex gap-2 mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
                 <KPICard
                   title="Not Updated"
                   value={realData?.tasks?.notUpdatedTasks ?? "0"}
@@ -372,8 +357,8 @@ export default function ReportsPage() {
               />
             </section>
 
-            <div className="grid grid-cols-[4fr_6fr] gap-6">
-              <section>
+            <div className="grid grid-cols-1 md:grid-cols-[4fr_6fr] gap-6">
+              <section className="bg-white border border-slate-200 rounded-[12px] p-4">
                 <SectionTitle title="KPI Insights" />
                 <BusinessFunctionTable
                   type="task"
@@ -386,9 +371,9 @@ export default function ReportsPage() {
                   }
                 />
               </section>
-              <section>
+              <section className="bg-white border border-slate-200 rounded-[12px] p-4">
                 <SectionTitle title="Live Meeting Insights" />
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <KPICard
                     title="Total"
                     value={realData?.meetings?.totalDetailed ?? "0"}
@@ -426,9 +411,9 @@ export default function ReportsPage() {
               </section>
             </div>
 
-            <section>
+            <section className="bg-white border border-slate-200 rounded-[12px] p-4">
               <SectionTitle title="Meeting Insights" />
-              <div className="grid grid-cols-5 gap-3 mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
                 {(realData?.meetings?.meetingStatsPerType || []).map(
                   (m, idx) => (
                     <KPICard
@@ -440,7 +425,7 @@ export default function ReportsPage() {
                   ),
                 )}
               </div>
-              <div className="w-[140px]">
+              <div className="w-full sm:w-[140px]">
                 <KPICard
                   title="Creation Rate"
                   value={realData?.meetings?.creationRate ?? "0"}
@@ -470,9 +455,9 @@ export default function ReportsPage() {
 
           {/* RIGHT COLUMN */}
           <div className="space-y-8">
-            <section>
+            <section className="bg-white border border-slate-200 rounded-[12px] p-4">
               <SectionTitle title="Project Insights" />
-              <div className="grid grid-cols-[6fr_4fr] gap-6 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-[6fr_4fr] gap-6 mb-6">
                 <BusinessFunctionTable
                   type="project"
                   data={
@@ -505,7 +490,7 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              <div className="flex gap-2 mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
                 <KPICard
                   title="Zero Task"
                   value={realData?.projects?.zeroTaskProjects ?? "0"}
@@ -523,7 +508,7 @@ export default function ReportsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-[6fr_4fr] gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-[6fr_4fr] gap-4">
                 <AgendaList
                   title="Long Term Projects"
                   items={
@@ -546,9 +531,9 @@ export default function ReportsPage() {
               </div>
             </section>
 
-            <section>
+            <section className="bg-white border border-slate-200 rounded-[12px] p-4">
               <SectionTitle title="Agenda" />
-              <div className="grid grid-cols-[6fr_4fr] gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-[6fr_4fr] gap-6">
                 <AgendaList
                   title="Most Unresolved Agenda"
                   items={
@@ -558,7 +543,7 @@ export default function ReportsPage() {
                     })) ?? []
                   }
                 />
-                <div className="grid grid-cols-2  gap-3">
+                <div className="grid grid-cols-3 md:grid-cols-2 gap-3">
                   <KPICard
                     title="Unresolved"
                     value={realData?.agenda?.unresolved ?? "0"}
@@ -575,6 +560,27 @@ export default function ReportsPage() {
                     subtext="total"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <AgendaList
+                  title="Highest Time Spent Agenda"
+                  items={
+                    realData?.agenda?.highestTimeTop5?.map((a) => ({
+                      name: a.name,
+                      duration: a.time,
+                    })) ?? []
+                  }
+                />
+                <AgendaList
+                  title="Lowest Time Spent Agenda"
+                  items={
+                    realData?.agenda?.lowestTimeTop5?.map((a) => ({
+                      name: a.name,
+                      duration: a.time,
+                    })) ?? []
+                  }
+                />
               </div>
             </section>
           </div>

@@ -66,6 +66,7 @@ interface EditSeatSheetProps {
   companyId?: string;
   initialData: AddSeatFormData | null;
   isRoot?: boolean;
+  editingNodeId?: string;
 }
 
 interface CtxMenuProps {

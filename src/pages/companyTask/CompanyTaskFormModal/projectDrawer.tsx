@@ -479,11 +479,10 @@ export default function ProjectDrawer({
                   label="Project Status"
                   error={errors.projectStatusId}
                   isMandatory
-                  {...field}
                   labelClass=""
                   className=""
                   options={projectStatusOption}
-                  selectedValues={field.value ? [field.value] : []} // Ensure it's an array
+                  selectedValues={field.value ? [field.value] : []}
                   onSelect={(value) => {
                     field.onChange(value.value);
                     setValue("projectStatusId", value.value);

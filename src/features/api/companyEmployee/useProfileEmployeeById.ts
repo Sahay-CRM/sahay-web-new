@@ -1,0 +1,24 @@
+import Api from "@/features/utils/api.utils";
+import Urls from "@/features/utils/urls.utils";
+import { useQuery } from "@tanstack/react-query";
+
+
+export default function useGetProfileEmployeeById({
+  filter,
+  enable,
+}: FilterDataProps) {
+  return useQuery({
+    queryKey: ["get-profile-employee-by-id", filter],
+    queryFn: async () => {
+      if (!filter.employeeId) {
+        throw new Error("Employee ID is required");
+      }
+      const { data } = await Api.post<{ data: EmployeeDetailsById }>({
+        url: Urls.getProfileEmployeeList(filter.employeeId),
+        data: filter,
+      });
+      return data;
+    },
+    enabled: !!enable || !!filter,
+  });
+}
