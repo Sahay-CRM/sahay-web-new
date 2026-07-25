@@ -113,6 +113,7 @@ interface TableProps<T extends Record<string, unknown>> {
   onToggleActive?: (item: T) => void;
   showActiveToggle?: boolean;
   activeToggleKey?: string;
+  invertActiveToggle?: boolean;
   isEditDeleteShow?: boolean;
   showActionsColumn?: boolean;
   actionColumnWidth?: string;
@@ -190,6 +191,7 @@ const TableData = <T extends Record<string, unknown>>({
   onToggleActive,
   showActiveToggle = false,
   activeToggleKey,
+  invertActiveToggle = false,
   isEditDeleteShow = false,
   showActionsColumn = true,
   actionColumnWidth,
@@ -308,7 +310,9 @@ const TableData = <T extends Record<string, unknown>>({
   };
 
   const getActiveState = (item: T) => {
-    return activeToggleKey ? item[activeToggleKey] : undefined;
+    if (!activeToggleKey) return undefined;
+    const value = item[activeToggleKey];
+    return invertActiveToggle ? !value : value;
   };
 
   if (isLoading) {
@@ -814,8 +818,8 @@ const TableData = <T extends Record<string, unknown>>({
                                       }
                                     >
                                       {getActiveState(item)
-                                        ? "Active"
-                                        : "Inactive"}
+                                        ? "Inactive"
+                                        : "Active"}
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>

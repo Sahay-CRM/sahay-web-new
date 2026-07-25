@@ -12,7 +12,13 @@ export const companyNavigationData = [
     icon: "Presentation",
     label: "Organization",
     permission: "View",
-    moduleKey: ["DESIGNATION", "EMPLOYEE", "ORG_STRUCTURE", "BLUEPRINT"],
+    moduleKey: [
+      "DESIGNATION",
+      "EMPLOYEE",
+      "ORG_STRUCTURE",
+      "BLUEPRINT",
+      "SAHAY_EMP",
+    ],
     // link: "/dashboard/meeting",
     items: [
       {
@@ -47,6 +53,14 @@ export const companyNavigationData = [
         permission: "View",
         moduleKey: "BLUEPRINT",
       },
+      {
+        id: 5,
+        icon: "Users",
+        label: "Sahay Teammate",
+        link: "/dashboard/sahay-teammate",
+        permission: "View",
+        moduleKey: "SAHAY_EMP",
+      },
     ],
   },
   {
@@ -70,7 +84,7 @@ export const companyNavigationData = [
     icon: "Presentation",
     label: "Meetings",
     permission: "View",
-    // moduleKey: "MEETING_LIST",
+    moduleKey: ["MEETING_LIST", "LIVE_MEETING", "LIVE_MEETING_TEMPLATES"],
     // link: "/dashboard/meeting",
     items: [
       {
@@ -101,7 +115,7 @@ export const companyNavigationData = [
     icon: "Target",
     label: "Agenda",
     permission: "View",
-    // moduleKey: "OBJECTIVE",
+    moduleKey: ["OBJECTIVE", "ISSUES"],
     items: [
       {
         id: 1,
@@ -124,7 +138,7 @@ export const companyNavigationData = [
     icon: "CheckSquare",
     label: "Tasks",
     permission: "View",
-    moduleKey: "TASK",
+    moduleKey: ["TASK", "ROUTINE_TASK"],
     items: [
       {
         id: 1,
@@ -155,6 +169,7 @@ export const companyNavigationData = [
     icon: "BarChart3",
     label: "KPI List",
     permission: "View",
+    moduleKey: ["DATAPOINT_LIST"],
     items: [
       {
         id: 1,
@@ -185,7 +200,7 @@ export const companyNavigationData = [
     icon: "Heart",
     label: "Business Health",
     permission: "View",
-    // moduleKey: "BUSINESS_HEALTH",
+    moduleKey: ["COMPANY_LEVEL_ASSIGN", "HEALTH_WEIGHTAGE", "HEALTH_SCORE"],
     items: [
       {
         id: 1,
@@ -215,7 +230,7 @@ export const companyNavigationData = [
     icon: "Presentation",
     label: "Other",
     permission: "View",
-    // moduleKey: "MEETING_LIST",
+    moduleKey: ["TASK", "FORM", "REQUESTMASTER", "HANDOVER"],
     // link: "/dashboard/meeting",
     items: [
       {
@@ -257,6 +272,7 @@ export const companyNavigationData = [
     icon: "Shield",
     label: "Role & Permission",
     permission: "View",
+    moduleKey: ["ROLES_PERMISSION", "KPI_PERMISSION"],
     items: [
       {
         id: 1,
@@ -274,28 +290,29 @@ export const companyNavigationData = [
       },
     ],
   },
-  {
-    id: 14,
-    icon: "CalendarRange",
-    label: "Daily Planning",
-    permission: "View",
-    items: [
-      {
-        id: 1,
-        label: "Check-in",
-        link: "/dashboard/daily-planning/check-in",
-        permission: "View",
-        moduleKey: "ROLES_PERMISSION",
-      },
-      {
-        id: 2,
-        label: "Check-out",
-        link: "/dashboard/daily-planning/check-out",
-        permission: "View",
-        moduleKey: "ROLES_PERMISSION",
-      },
-    ],
-  },
+  // {
+  //   id: 14,
+  //   icon: "CalendarRange",
+  //   label: "Daily Planning",
+  //   permission: "View",
+  //   // moduleKey: ["ROLES_PERMISSION", "KPI_PERMISSION"],
+  //   items: [
+  //     {
+  //       id: 1,
+  //       label: "Check-in",
+  //       link: "/dashboard/daily-planning/check-in",
+  //       permission: "View",
+  //       moduleKey: "ROLES_PERMISSION",
+  //     },
+  //     {
+  //       id: 2,
+  //       label: "Check-out",
+  //       link: "/dashboard/daily-planning/check-out",
+  //       permission: "View",
+  //       moduleKey: "ROLES_PERMISSION",
+  //     },
+  //   ],
+  // },
   // {
   //   id: 23,
   //   icon: "GanttChart",

@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
 
 import TableData from "@/components/shared/DataTable/DataTable";
-import useCompanyEmployee from "./useCompanyEmployee";
+import useSahayTeammate from "./useSahayTeammate";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import SearchInput from "@/components/shared/SearchInput";
 import { Button } from "@/components/ui/button";
-import ViewEmployeeModal from "./ViewEmployeeModal";
+import ViewEmployeeModal from "../companyEmployee/ViewEmployeeModal";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import {
   Tooltip,
@@ -19,7 +19,7 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
-import ConfirmationDeleteModal from "./confirmEmployeDeleteModal";
+import ConfirmationDeleteModal from "../companyEmployee/confirmEmployeDeleteModal";
 import { formatEmployeeType, getInitials } from "@/features/utils/app.utils";
 import { getColorFromName } from "@/features/utils/formatting.utils";
 import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
@@ -31,11 +31,11 @@ const statusOptions = [
   { value: "inactive", label: "Inactive" },
 ];
 
-export default function CompanyDesignation() {
+export default function SahayTeammate() {
   const { setBreadcrumbs } = useBreadcrumbs();
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Company Employee", href: "" }]);
+    setBreadcrumbs([{ label: "Sahay Teammate / Consultant", href: "" }]);
   }, [setBreadcrumbs]);
 
   const userData = useSelector(getUserDetail);
@@ -60,18 +60,7 @@ export default function CompanyDesignation() {
     viewModalData,
     handleInactive,
     handoverPermission,
-  } = useCompanyEmployee();
-
-  //   const { setBreadcrumbs } = useBreadcrumbs();
-
-  //   useEffect(() => {
-  //     setBreadcrumbs([
-  //       { label: "Admin Tools", href: "/admin-tools" },
-  //       { label: "User" },
-  //     ]);
-  //   }, [setBreadcrumbs]);
-
-  // Column visibility state
+  } = useSahayTeammate();
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
@@ -85,7 +74,6 @@ export default function CompanyDesignation() {
     { key: "designationName", label: "Designation", visible: true },
   ]);
 
-  // Filter visible columns
   const visibleColumns = columnToggleOptions.reduce(
     (acc, col) => {
       if (col.visible) acc[col.key] = col.label;
@@ -94,7 +82,6 @@ export default function CompanyDesignation() {
     {} as Record<string, string>,
   );
 
-  // Toggle column visibility
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
       prev.map((col) =>
@@ -102,7 +89,6 @@ export default function CompanyDesignation() {
       ),
     );
   };
-  // Check if the number of columns is more than 3
   const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
   const navigate = useNavigate();
@@ -154,11 +140,6 @@ export default function CompanyDesignation() {
                 </Tooltip>
               </TooltipProvider>
             )}
-            {permission.Add && (
-              <Link to="/dashboard/employees/add">
-                <Button className="py-2 w-fit">Add Employee</Button>
-              </Link>
-            )}
           </div>
         </div>
 
@@ -173,22 +154,11 @@ export default function CompanyDesignation() {
                 1,
               createdByEmployeeName: getInitials(item.createdByName || ""),
               designationName:
-                item.employeeType === "OWNER"
-                  ? item.designationName
-                    ? `Owner / ${item.designationName}`
-                    : "Owner"
-                  : item.designationName ||
-                    formatEmployeeType(item.employeeType),
-              reportingManagerName: item?.reportingManager?.employeeName || "",
-              reportingManagerInitials: getInitials(
-                item?.reportingManager?.employeeName || "",
-              ),
+                item.designationName || formatEmployeeType(item.employeeType),
             }))}
             columns={visibleColumns}
             primaryKey="employeeId"
-            isActionButton={(row) =>
-              row?.employeeType == "OWNER" || row?.employeeType == "EMPLOYEE"
-            }
+            isActionButton={() => true}
             onEdit={
               permission.Edit
                 ? (row) => {
@@ -197,37 +167,9 @@ export default function CompanyDesignation() {
                 : undefined
             }
             onRowClick={(row) => {
-              if (
-                row?.employeeType == "OWNER" ||
-                row?.employeeType == "EMPLOYEE"
-              ) {
-                handleRowsModalOpen(row as unknown as EmployeeData);
-              }
+              handleRowsModalOpen(row as unknown as EmployeeData);
             }}
             extraColumns={[
-              {
-                label: "Reporting",
-                width: "w-[100px]",
-                render: (row) => {
-                  if (!row.reportingManagerName) return "-";
-                  return (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={`w-7 h-7 bg-primary text-white flex items-center justify-center aspect-square rounded-full text-[12px] font-medium ${getColorFromName(row.reportingManagerInitials)}`}
-                          >
-                            {row.reportingManagerInitials}
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {row.reportingManagerName}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  );
-                },
-              },
               {
                 label: "Added",
                 width: "w-[80px]",
@@ -256,7 +198,7 @@ export default function CompanyDesignation() {
             setPaginationFilter={setPaginationFilter}
             searchValue={paginationFilter?.search}
             permissionKey="employeeId"
-            moduleKey="EMPLOYEE"
+            moduleKey="SAHAY_EMP"
             sortableColumns={["employeeName"]}
             showActiveToggle={true}
             onToggleActive={(item) => {
@@ -265,7 +207,7 @@ export default function CompanyDesignation() {
             activeToggleKey="isDeactivated"
             invertActiveToggle
             customActions={(row) =>
-              handoverPermission?.View && row.isDeactivated ? (
+              handoverPermission?.View ? (
                 <Button
                   variant="outline"
                   size="default"
@@ -284,10 +226,9 @@ export default function CompanyDesignation() {
           />
         </div>
 
-        {/* Modal Component */}
         {isDeleteModalOpen && (
           <ConfirmationDeleteModal
-            title={"Delete Company Employee"}
+            title={"Delete User"}
             modalData={modalData}
             isModalOpen={isDeleteModalOpen}
             modalClose={closeDeleteModal}
@@ -295,7 +236,6 @@ export default function CompanyDesignation() {
             isChildData={isChildData}
           />
         )}
-        {/* View Meeting Modal */}
         <ViewEmployeeModal
           isModalOpen={isViewModalOpen}
           modalData={viewModalData}
@@ -307,7 +247,9 @@ export default function CompanyDesignation() {
           isModalOpen={!!pendingToggleItem}
           modalClose={() => setPendingToggleItem(null)}
           modalTitle={
-            pendingToggleItem?.isDeactivated ? "Activate Employee" : "Deactivate Employee"
+            pendingToggleItem?.isDeactivated
+              ? "Activate User"
+              : "Deactivate User"
           }
           containerClass="min-w-[400px] max-w-[500px]"
           buttons={[
@@ -317,23 +259,6 @@ export default function CompanyDesignation() {
                 "bg-gray-200 text-black border-gray-300 hover:bg-gray-300",
               btnClick: () => setPendingToggleItem(null),
             },
-            ...(handoverPermission?.View && !pendingToggleItem?.isDeactivated
-              ? [
-                  {
-                    btnText: "Handover",
-                    buttonCss:
-                      "bg-gray-200 text-black border-gray-300 hover:bg-gray-300",
-                    btnClick: () => {
-                      if (pendingToggleItem) {
-                        navigate("/dashboard/handover", {
-                          state: { oldUserId: pendingToggleItem.employeeId },
-                        });
-                      }
-                      setPendingToggleItem(null);
-                    },
-                  },
-                ]
-              : []),
             {
               btnText: "Confirm",
               btnClick: () => {

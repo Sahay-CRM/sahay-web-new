@@ -11,4 +11,5 @@ interface PaginationFilter {
   search?: string;
   isPaging?: boolean;
   isDeactivated?: boolean;
+  employeeType?: string;
 }

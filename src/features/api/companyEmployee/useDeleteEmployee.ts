@@ -21,6 +21,7 @@ export default function useDeleteEmployee() {
       toast.success(response?.message);
       queryClient.resetQueries({ queryKey: ["get-employee-list"] });
       queryClient.resetQueries({ queryKey: ["dd-employee-Data"] });
+      queryClient.resetQueries({ queryKey: ["get-employee-list-dd"] });
     },
   });
 

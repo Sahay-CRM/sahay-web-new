@@ -6,7 +6,7 @@ import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 
-export default function useAdminUser() {
+export default function useSahayTeammate() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [modalData, setModalData] = useState<EmployeeData>({} as EmployeeData);
@@ -15,7 +15,7 @@ export default function useAdminUser() {
   const [isImport, setIsImport] = useState(false);
 
   const [isChildData, setIsChildData] = useState<string | undefined>();
-  const permission = useSelector(getUserPermission).EMPLOYEE;
+  const permission = useSelector(getUserPermission).SAHAY_EMP;
   const handoverPermission = useSelector(getUserPermission).HANDOVER;
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -29,7 +29,7 @@ export default function useAdminUser() {
     pageSize: 25,
     search: "",
     isDeactivated: false,
-    employeeType: "OWNER,EMPLOYEE",
+    employeeType: "SAHAYTEAMMATE,CONSULTANT",
   });
 
   const { data: employeeData, isLoading } = getEmployee({
@@ -55,34 +55,8 @@ export default function useAdminUser() {
     });
   };
 
-  const handleAdd = () => {
-    setModalData({
-      employeeId: "",
-      employeeName: "",
-      employeeEmail: "",
-      employeeMobile: "",
-      companyId: "",
-      employeeType: "",
-      departmentId: null,
-      designationId: null,
-      isSuperAdmin: false,
-      sahayEmId: null,
-      reportingManagerId: null,
-      company: {
-        companyAdminName: "",
-        companyId: "",
-        consultantId: "",
-        companyName: "",
-      },
-      reportingManager: null,
-      departmentName: null,
-      designationName: null,
-    });
-    setIsUserModalOpen(true);
-  };
-
   const openModal = useCallback((data: EmployeeData) => {
-    setModalData(data); // Set the data for the modal
+    setModalData(data);
     setIsUserModalOpen(true);
   }, []);
 
@@ -108,7 +82,7 @@ export default function useAdminUser() {
       reportingManager: null,
       departmentName: null,
       designationName: null,
-    }); // Clear modal data
+    });
     setIsUserModalOpen(false);
     setIsDeleteModalOpen(false);
     setIsChildData("");
@@ -181,7 +155,6 @@ export default function useAdminUser() {
     onDelete,
     modalData,
     conformDelete,
-    handleAdd,
     paginationFilter,
     isUserModalOpen,
     openImportModal,
