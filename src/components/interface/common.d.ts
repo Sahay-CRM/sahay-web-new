@@ -416,6 +416,7 @@ interface CompanyMeetingDataProps {
   deadlineRequest?: string;
   status?: string;
   companyId?: string;
+  color?: string;
 }
 
 interface ProjectParameters {
@@ -2117,24 +2118,23 @@ interface DailyPlanItemHistoryEntry {
   createdDatetime: string;
 }
 
-
- interface CoreValueOption {
+interface CoreValueOption {
   key: string;
   actionStatement: string;
 }
 
- interface SubjectiveRow {
+interface SubjectiveRow {
   id?: string;
   key: string;
   values: Record<string, string>; // mapping of year -> value
 }
 
- interface ObjectiveValueRow {
+interface ObjectiveValueRow {
   objectiveId: string;
   values: Record<string, string>; // mapping of year -> value
 }
 
- interface BlueprintState {
+interface BlueprintState {
   mission: string;
   whyChooseUs: string;
   whyConvenient: string;
@@ -2143,7 +2143,7 @@ interface DailyPlanItemHistoryEntry {
   subjectives: SubjectiveRow[];
 }
 
- interface CoreValueMasterItem {
+interface CoreValueMasterItem {
   CodeValueId: string;
   coreValue: string;
   actionStatement: string;
@@ -2162,7 +2162,6 @@ interface GroupedTaskSearchResponse {
   normal: TaskSearchItem[];
   repeat: TaskSearchItem[];
 }
-
 
 interface MeetingSearchItem {
   meetingId: string;
