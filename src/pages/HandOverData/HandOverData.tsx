@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { FormProvider, useForm, Controller } from "react-hook-form";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,9 @@ const MODULE_OPTIONS = [
 
 export default function HandOverData() {
   const { setBreadcrumbs } = useBreadcrumbs();
+  const location = useLocation();
+  const preselectedOldUserId =
+    (location.state as { oldUserId?: string } | null)?.oldUserId || "";
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [isPartialMode, setIsPartialMode] = useState(false);
   const permission = useSelector(getUserPermission).HANDOVER;
@@ -41,7 +45,7 @@ export default function HandOverData() {
 
   const methods = useForm({
     defaultValues: {
-      oldUserId: "",
+      oldUserId: preselectedOldUserId,
       newUserId: "",
       selectedModules: [] as string[],
     },

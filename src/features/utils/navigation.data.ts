@@ -12,7 +12,7 @@ export const companyNavigationData = [
     icon: "Presentation",
     label: "Organization",
     permission: "View",
-    // moduleKey: "MEETING_LIST",
+    moduleKey: ["DESIGNATION", "EMPLOYEE", "ORG_STRUCTURE", "BLUEPRINT"],
     // link: "/dashboard/meeting",
     items: [
       {
@@ -55,7 +55,7 @@ export const companyNavigationData = [
     label: "Performance Insights",
     link: "/dashboard/reports",
     permission: "View",
-    // moduleKey: "REPORTS",
+    moduleKey: "PERFORMANCE_REPORTS",
   },
   {
     id: 4,
@@ -319,7 +319,6 @@ export const companyNavigationData = [
   //     },
   //   ],
   // },
-  
 ];
 
 export const getRouteByLabel = (label: string): string | null => {

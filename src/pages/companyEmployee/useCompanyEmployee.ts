@@ -16,17 +16,19 @@ export default function useAdminUser() {
 
   const [isChildData, setIsChildData] = useState<string | undefined>();
   const permission = useSelector(getUserPermission).EMPLOYEE;
+  const handoverPermission = useSelector(getUserPermission).HANDOVER;
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewModalData, setViewModalData] = useState<EmployeeData>(
     {} as EmployeeData,
   );
-  const [currentStatus, setCurrentStatus] = useState<boolean>(false);
+  const [currentStatus, setCurrentStatus] = useState<string>("active");
 
   const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
     currentPage: 1,
     pageSize: 25,
     search: "",
+    isDeactivated: false,
   });
 
   const { data: employeeData, isLoading } = getEmployee({
@@ -37,13 +39,19 @@ export default function useAdminUser() {
 
   const { mutate: deleteEmployeeById } = deleteEmployee();
 
-  const onStatusChange = (val: boolean) => {
+  const onStatusChange = (val: string) => {
     setCurrentStatus(val);
-    setPaginationFilter((prev) => ({
-      ...prev,
-      isDeactivated: val,
-      currentPage: 1,
-    }));
+    setPaginationFilter((prev) => {
+      const next = { ...prev, currentPage: 1 };
+      if (val === "active") {
+        next.isDeactivated = false;
+      } else if (val === "inactive") {
+        next.isDeactivated = true;
+      } else {
+        delete next.isDeactivated;
+      }
+      return next;
+    });
   };
 
   const handleAdd = () => {
@@ -190,5 +198,6 @@ export default function useAdminUser() {
     handleInactive,
     onStatusChange,
     currentStatus,
+    handoverPermission,
   };
 }

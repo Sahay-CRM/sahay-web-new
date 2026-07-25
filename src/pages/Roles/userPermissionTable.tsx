@@ -275,8 +275,8 @@ function PermissionTableInner({
   const toggleRow = (moduleName: string) => {
     if (isReadOnly) return; // Prevent changes in read-only mode
 
-    const allChecked = Object.values(permissions[moduleName] || {}).every(
-      (perm) => perm.checked,
+    const allChecked = visiblePermTypes(permissions[moduleName]).every(
+      ([, perm]) => perm.checked,
     );
 
     setPermissions((prev) => {
@@ -286,7 +286,7 @@ function PermissionTableInner({
       };
       let hasValidChange = false;
 
-      Object.keys(updated[moduleName]).forEach((permType) => {
+      visiblePermTypes(updated[moduleName]).forEach(([permType]) => {
         const currentPermission = updated[moduleName][permType];
         const wasOriginallyChecked = currentPermission.originalChecked;
         const newCheckedState = !allChecked;
@@ -338,11 +338,22 @@ function PermissionTableInner({
     });
   };
 
-  const isColumnChecked = (permType: string) =>
-    Object.values(permissions).every((perm) => perm[permType]?.checked);
+  const isDeleteHidden = userData.employeeType !== "CONSULTANT";
+
+  const visiblePermTypes = (modulePermissions: PermissionState[string]) =>
+    Object.entries(modulePermissions || {}).filter(
+      ([permType]) => !(isDeleteHidden && permType === "Delete"),
+    );
+
+  const isColumnChecked = (permType: string) => {
+    if (isDeleteHidden && permType === "Delete") return false;
+    return Object.values(permissions).every((perm) => perm[permType]?.checked);
+  };
 
   const isRowChecked = (moduleName: string) =>
-    Object.values(permissions[moduleName] || {}).every((perm) => perm.checked);
+    visiblePermTypes(permissions[moduleName]).every(
+      ([, perm]) => perm.checked,
+    );
 
   // Check if a checkbox should be disabled
   const isCheckboxDisabled = (moduleName: string, permType: string) => {
@@ -374,7 +385,7 @@ function PermissionTableInner({
 
     const isRowToggleDisabled =
       isReadOnly ||
-      Object.keys(permissions[module.moduleName] || {}).some((permType) =>
+      visiblePermTypes(permissions[module.moduleName]).some(([permType]) =>
         isCheckboxDisabled(module.moduleName, permType),
       );
 

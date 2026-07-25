@@ -1514,7 +1514,7 @@ interface CompanyNavItem {
   label: string;
   link?: string;
   permission: string;
-  moduleKey?: string;
+  moduleKey?: string | string[];
   items?: CompanyNavItem[];
 }
 
@@ -1810,6 +1810,12 @@ interface CompanyPerformanceReport {
     delayedTasks: number;
     longDurationTop5: TaskItem[];
   };
+  repeatTasks: {
+    totalTasks: number;
+    notUpdatedTasks: number;
+    delayedTasks: number;
+    longDurationTop5: TaskItem[];
+  };
   projects: {
     totalProjects: number;
     activeProjects: number;
@@ -1876,6 +1882,24 @@ interface CompanyPerformanceReport {
       type: string;
       createdAt: string;
       daysUnresolved: number;
+      time?: string;
+    }[];
+    totalTime?: string;
+    lowestTimeTop5?: {
+      id: string;
+      name: string;
+      type: string;
+      createdAt: string;
+      daysUnresolved: number;
+      time: string;
+    }[];
+    highestTimeTop5?: {
+      id: string;
+      name: string;
+      type: string;
+      createdAt: string;
+      daysUnresolved: number;
+      time: string;
     }[];
   };
 }
