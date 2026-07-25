@@ -157,7 +157,9 @@ const DashboardReportView = lazy(
   () => import("../pages/DashboardReport/DashboardReportView"),
 );
 
-const DailyPlanning = lazy(() => import("../pages/DailyPlanning/DailyPlanning"));
+const DailyPlanning = lazy(
+  () => import("../pages/DailyPlanning/DailyPlanning"),
+);
 const CheckIn = lazy(() => import("../pages/DailyPlanning/CheckIn/CheckIn"));
 const CheckOut = lazy(() => import("../pages/DailyPlanning/CheckOut/CheckOut"));
 const Blueprint = lazy(() => import("../pages/MenuBlueprint/MenuBlueprint"));
@@ -315,7 +317,7 @@ export default function EmployeeRoutes() {
           )}
         />
         {/* Gantt routes */}
-        <Route
+        {/* <Route
           path="gantt/templates"
           Component={lazy(() => import("../pages/gantt/GanttTemplatePage"))}
         />
@@ -330,13 +332,13 @@ export default function EmployeeRoutes() {
           Component={lazy(
             () => import("../pages/gantt/GanttWorkspaceListPage"),
           )}
-        />
-        <Route
+        /> */}
+        {/* <Route
           path="gantt/workspaces/:id"
           Component={lazy(
             () => import("../pages/gantt/GanttWorkspaceDetailPage"),
           )}
-        />
+        /> */}
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
