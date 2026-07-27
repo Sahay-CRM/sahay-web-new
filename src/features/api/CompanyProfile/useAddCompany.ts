@@ -22,6 +22,7 @@ export default function useAddCompany() {
     },
     onSuccess: (res) => {
       const companyId = res.data.companyId;
+      
       toast.success(res.message || "Operation successful");
       queryClient.resetQueries({ queryKey: ["companyDataGetById", companyId] });
     },

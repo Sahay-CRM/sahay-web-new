@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useForm, Controller } from "react-hook-form";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,11 @@ interface FormValues {
   meeting: string;
   assignUser: string[];
   comment: string;
+}
+
+interface GroupedCompanyMeetings {
+  detailMeetings?: CompanyMeetingDataProps[];
+  normalMeetings?: CompanyMeetingDataProps[];
 }
 
 interface CalendarAddTaskDrawerProps {
@@ -200,10 +205,20 @@ export default function CalendarAddTaskDrawer({
     value: proj.projectId || "",
   }));
 
-  const meetingOptions = (meetingData?.data || []).map((meet) => ({
-    label: meet.meetingName || "Unnamed",
-    value: meet.meetingId || "",
-  }));
+  const meetingOptions = useMemo(() => {
+    if (!meetingData?.data) return [];
+    const rawData = meetingData.data as unknown as GroupedCompanyMeetings;
+    const allMeetings: CompanyMeetingDataProps[] = Array.isArray(rawData)
+      ? (rawData as CompanyMeetingDataProps[])
+      : [
+          ...(rawData.normalMeetings || []),
+          ...(rawData.detailMeetings || []),
+        ];
+    return allMeetings.map((meet) => ({
+      label: meet.meetingName || "Unnamed",
+      value: meet.meetingId || "",
+    }));
+  }, [meetingData]);
 
   const handleSuccess = (newTask: any) => {
     queryClient.invalidateQueries({ queryKey: ["get-all-task-dropdown"] });

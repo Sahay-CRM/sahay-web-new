@@ -151,6 +151,8 @@ export default function useCompany() {
           ? `${ImageBaseURL}/share/company/logo/${companyData.logo}`
           : "",
         kpiSkipDays: skipDaysValue,
+        companyStartTime: companyData.companyStartTime,
+        companyEndTime: companyData.companyEndTime,
       });
     }
   }, [companyData, reset]);
@@ -268,6 +270,8 @@ export default function useCompany() {
       superAdmin: data?.superAdmin,
       kpiSkipDays: data.kpiSkipDays,
       validationKey: data.validationKey,
+      companyStartTime: data.companyStartTime,
+      companyEndTime: data.companyEndTime,
     };
 
     addCompany(payload, {

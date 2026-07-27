@@ -11,6 +11,7 @@ import { formatMinutesToHours } from "@/features/utils/formatting.utils";
 import useCheckIn from "./useCheckIn";
 import AddEditCheckInModal from "./CheckInFormModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import ConfirmSubmitPlanModal from "./ConfirmSubmitPlanModal";
 import {
   Tooltip,
   TooltipContent,
@@ -31,6 +32,7 @@ export default function CheckIn() {
     totalTasks,
     totalMeetings,
     isEditWindowExpired,
+    isSubmitted,
     permission,
     isAddModalOpen,
     setIsAddModalOpen,
@@ -38,10 +40,13 @@ export default function CheckIn() {
     setEditingItem,
     deletingItem,
     setDeletingItem,
+    isSubmitModalOpen,
+    setIsSubmitModalOpen,
 
     handleConfirmDelete,
     isDeleting,
     handleSubmitPlan,
+    handleConfirmSubmitPlan,
     isSubmitting,
   } = useCheckIn();
 
@@ -101,10 +106,17 @@ export default function CheckIn() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-md border border-slate-200 text-xs font-semibold text-slate-700 shadow-2xs">
+            <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-md border border-slate-200 text-sm font-semibold text-slate-700 shadow-2xs">
               <CalendarDays className="h-4 w-4 text-primary" />
               <span>Date: {format(new Date(todayDate), "dd MMM yyyy")}</span>
             </div>
+
+            {isSubmitted && (
+              <div className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-md border border-emerald-200 text-sm font-bold shadow-2xs">
+                <CheckCheck className="h-4 w-4" />
+                <span>Plan Submitted</span>
+              </div>
+            )}
 
             {canToggleColumns && (
               <TooltipProvider>
@@ -119,13 +131,13 @@ export default function CheckIn() {
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs text-white">Toggle Visible Columns</p>
+                    <p className="text-sm text-white">Toggle Visible Columns</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
 
-            {activePermission.Add && !isEditWindowExpired && (
+            {activePermission.Add && !isEditWindowExpired && !isSubmitted && (
               <>
                 <Button
                   onClick={() => setIsAddModalOpen(true)}
@@ -220,7 +232,8 @@ export default function CheckIn() {
             isLoading={isLoading}
             permissionKey="daily-planning"
             moduleKey="DAILY_PLANNING"
-            isEditDeleteShow={activePermission.Edit && !isEditWindowExpired}
+            isEditDeleteShow={activePermission.Edit && !isEditWindowExpired && !isSubmitted}
+            showActionsColumn={!isSubmitted}
             actionColumnWidth="w-[100px] overflow-hidden"
           />
         </div>
@@ -249,6 +262,16 @@ export default function CheckIn() {
             onOpenChange={(open) => !open && setDeletingItem(null)}
             onConfirm={handleConfirmDelete}
             isLoading={isDeleting}
+          />
+        )}
+
+        {/* Submit Confirmation Modal */}
+        {isSubmitModalOpen && (
+          <ConfirmSubmitPlanModal
+            open={isSubmitModalOpen}
+            onOpenChange={setIsSubmitModalOpen}
+            onConfirm={handleConfirmSubmitPlan}
+            isLoading={isSubmitting}
           />
         )}
       </div>

@@ -16,8 +16,10 @@ import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import {
   formatIndianNumber,
   formatUTCDateToLocal,
+  formatTo12HourLower,
+  generateTimeOptions,
 } from "@/features/utils/app.utils";
-import FormFile, {
+import FormFile, { 
   FilePreview,
 } from "@/components/shared/Form/FormFile/FormFile";
 import PageNotAccess from "../PageNoAccess";
@@ -65,6 +67,8 @@ export default function CompanyProfile() {
     // formatOptions,
     handleAdd,
   } = useCompany();
+
+  const timeOptions = generateTimeOptions();
 
   if (!companyData) {
     return (
@@ -511,6 +515,70 @@ export default function CompanyProfile() {
                         </label>
                         <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
                           {companyData.cityName}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="w-full sm:w-1/2">
+                    {isEditing ? (
+                      <Controller
+                        name="companyStartTime"
+                        control={control}
+                        rules={{ required: "Company Start Time is required" }}
+                        render={({ field }) => (
+                          <SearchDropdown
+                            options={timeOptions}
+                            selectedValues={field.value ? [field.value] : []}
+                            onSelect={(val) => {
+                              field.onChange(val.value);
+                            }}
+                            label="Company Start Time"
+                            placeholder="Select Start Time"
+                            error={errors.companyStartTime}
+                            isSearchable={false}
+                          />
+                        )}
+                      />
+                    ) : (
+                      <>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Company Start Time
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                          {formatTo12HourLower(companyData.companyStartTime)}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <div className="w-full sm:w-1/2">
+                    {isEditing ? (
+                      <Controller
+                        name="companyEndTime"
+                        control={control}
+                        rules={{ required: "Company End Time is required" }}
+                        render={({ field }) => (
+                          <SearchDropdown
+                            options={timeOptions}
+                            selectedValues={field.value ? [field.value] : []}
+                            onSelect={(val) => {
+                              field.onChange(val.value);
+                            }}
+                            label="Company End Time"
+                            placeholder="Select End Time"
+                            error={errors.companyEndTime}
+                            isSearchable={false}
+                          />
+                        )}
+                      />
+                    ) : (
+                      <>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Company End Time
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                          {formatTo12HourLower(companyData.companyEndTime)}
                         </p>
                       </>
                     )}

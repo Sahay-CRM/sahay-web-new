@@ -28,6 +28,11 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 
+interface GroupedCompanyMeetings {
+  detailMeetings?: CompanyMeetingDataProps[];
+  normalMeetings?: CompanyMeetingDataProps[];
+}
+
 /* ---------------- Project Step ---------------- */
 const ProjectSelectionStep = () => {
   const {
@@ -164,14 +169,24 @@ const MeetingSelectionStep = () => {
         rules={{ required: "Please select a meeting" }}
         render={({ field }) => (
           <TableData
-            tableData={meetingData?.data?.map((item, index) => ({
-              ...item,
-              isDetailMeeting: item.isDetailMeeting ?? false,
-              srNo:
-                (meetingData.currentPage - 1) * meetingData.pageSize +
-                index +
-                1,
-            }))}
+            tableData={(() => {
+              if (!meetingData?.data) return [];
+              const rawData = meetingData.data as unknown as GroupedCompanyMeetings;
+              const allMeetings: CompanyMeetingDataProps[] = Array.isArray(rawData)
+                ? (rawData as CompanyMeetingDataProps[])
+                : [
+                    ...(rawData.normalMeetings || []),
+                    ...(rawData.detailMeetings || []),
+                  ];
+              return allMeetings.map((item, index) => ({
+                ...item,
+                isDetailMeeting: item.isDetailMeeting ?? false,
+                srNo:
+                  (meetingData.currentPage - 1) * meetingData.pageSize +
+                  index +
+                  1,
+              }));
+            })()}
             isActionButton={() => false}
             columns={{
               srNo: "srNo",
@@ -182,9 +197,19 @@ const MeetingSelectionStep = () => {
             multiSelect={false}
             selectedValue={
               field.value
-                ? (meetingData?.data?.find(
-                    (item) => item.meetingId === field.value,
-                  ) as Record<string, unknown> | undefined)
+                ? (() => {
+                    if (!meetingData?.data) return undefined;
+                    const rawData = meetingData.data as unknown as GroupedCompanyMeetings;
+                    const allMeetings: CompanyMeetingDataProps[] = Array.isArray(rawData)
+                      ? (rawData as CompanyMeetingDataProps[])
+                      : [
+                          ...(rawData.normalMeetings || []),
+                          ...(rawData.detailMeetings || []),
+                        ];
+                    return allMeetings.find(
+                      (item) => item.meetingId === field.value,
+                    ) as Record<string, unknown> | undefined;
+                  })()
                 : undefined
             }
             handleChange={(selected) => {

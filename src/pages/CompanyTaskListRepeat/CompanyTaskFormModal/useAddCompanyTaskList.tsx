@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -124,6 +124,22 @@ export default function useAddEmployee() {
       filter: localPagination,
     });
 
+interface GroupedCompanyMeetings {
+  detailMeetings?: CompanyMeetingDataProps[];
+  normalMeetings?: CompanyMeetingDataProps[];
+}
+
+  const flatMeetings = useMemo((): CompanyMeetingDataProps[] => {
+    if (!meetingData?.data) return [];
+    const rawData = meetingData.data as unknown as GroupedCompanyMeetings;
+    return Array.isArray(rawData)
+      ? (rawData as CompanyMeetingDataProps[])
+      : [
+          ...(rawData.normalMeetings || []),
+          ...(rawData.detailMeetings || []),
+        ];
+  }, [meetingData]);
+
   const { data: employeedata } = getEmployee({
     filter: { ...employeePagination, isDeactivated: false },
   });
@@ -138,10 +154,9 @@ export default function useAddEmployee() {
           ? taskDeadlineDate
           : null;
 
-      const employeeIds = t?.employeeIds ?? [];
-
-      const targetProjectId = queryProjectId || t.projectId;
-      const targetMeetingId = queryMeetingId || t.meetingId;
+      const employeeIds = t.assignUsers?.map((u) => u.employeeId) || [];
+      const targetProjectId = queryProjectId || t.projectId || "";
+      const targetMeetingId = queryMeetingId || t.meetingId || "";
 
       setValue("repetitiveTaskId", t.repetitiveTaskId);
       setValue("repeatTime", convertUtcTimeToLocal(t.repeatTime));
@@ -149,11 +164,10 @@ export default function useAddEmployee() {
         "project",
         projectListdata?.data?.find((p) => p.projectId === targetProjectId) || null,
       );
+      const foundMeeting = flatMeetings.find((m) => m.meetingId === targetMeetingId);
       setValue(
         "meeting",
-        (meetingData &&
-          meetingData?.data?.find((m) => m.meetingId === targetMeetingId)) ||
-          null,
+        foundMeeting || null,
       );
       setValue("taskName", t.taskName || "");
       setValue("taskDescription", t.taskDescription || "");
@@ -184,7 +198,7 @@ export default function useAddEmployee() {
     repetitiveTaskId,
     taskDataById,
     projectListdata?.data,
-    meetingData?.data,
+    flatMeetings,
     employeedata?.data,
     setValue,
     meetingData,
@@ -427,10 +441,10 @@ export default function useAddEmployee() {
           render={({ field }) => (
             <TableData
               {...field}
-              tableData={meetingData?.data?.map((item, index: number) => ({
+              tableData={flatMeetings.map((item, index: number) => ({
                 ...item,
                 srNo:
-                  (meetingData.currentPage - 1) * meetingData.pageSize +
+                 
                   index +
                   1,
               }))}
@@ -443,7 +457,7 @@ export default function useAddEmployee() {
               multiSelect={false}
               selectedValue={
                 field.value?.meetingId &&
-                meetingData?.data?.find(
+                flatMeetings.find(
                   (item) => item.meetingId === field.value.meetingId,
                 )
               }
@@ -457,8 +471,8 @@ export default function useAddEmployee() {
                 }
               }}
               onCheckbox={() => true}
-              paginationDetails={meetingData as PaginationFilter}
-              setPaginationFilter={setLocalPagination}
+              // paginationDetails={meetingData as PaginationFilter}
+              // setPaginationFilter={setLocalPagination}
               showActionsColumn={false}
               isLoading={meetingLoading}
               tableHeightClass="flex-1"
@@ -887,6 +901,7 @@ export default function useAddEmployee() {
     AssignUserStep,
     setValue,
     meetingData,
+    flatMeetings,
     projectListdata,
     handleKeepAll,
     handleDeleteAll,

@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { getUserId, getUserDetail, getUserPermission } from "@/features/selectors/auth.selector";
 import useGetDailyPlan from "@/features/api/dailyPlan/useGetDailyPlan";
 import useRemoveDailyPlanItem from "@/features/api/dailyPlan/useRemoveDailyPlanItem";
-import useUpdateDailyPlanItem from "@/features/api/dailyPlan/useUpdateDailyPlanItem";
+import useFinalSubmitDailyPlan from "@/features/api/dailyPlan/useFinalSubmitDailyPlan";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function useCheckIn() {
@@ -24,11 +24,12 @@ export default function useCheckIn() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DailyPlanItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<DailyPlanItem | null>(null);
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [paginationFilter, setPaginationFilter] = useState({ search: "" });
 
-  const { data, isLoading } = useGetDailyPlan(employeeId, todayDate);
+  const { data, isLoading, refetch } = useGetDailyPlan(employeeId, todayDate);
   const { mutate: removeItem, isPending: isDeleting } = useRemoveDailyPlanItem();
-  const { mutate: updateItem, isPending: isSubmitting } = useUpdateDailyPlanItem();
+  const { mutate: finalSubmit, isPending: isSubmitting } = useFinalSubmitDailyPlan();
 
   const user = useSelector(getUserDetail);
   const startTime = user?.companyStartTime;
@@ -97,16 +98,21 @@ export default function useCheckIn() {
   const handleSubmitPlan = () => {
     const firstItem = items[0];
     if (!firstItem) return;
+    setIsSubmitModalOpen(true);
+  };
 
-    const confirmSubmit = window.confirm("Are you sure you want to submit your plan for today?");
-    if (!confirmSubmit) return;
-
-    updateItem({
-      planItemId: firstItem.planItemId,
-      planId: firstItem.planId,
-      isFinalSubmit: true,
+  const handleConfirmSubmitPlan = () => {
+    finalSubmit(undefined, {
+      onSuccess: () => {
+        setIsSubmitModalOpen(false);
+        refetch();
+      },
     });
   };
+
+  const isSubmitted = useMemo(() => {
+    return items.some((i) => i.isFinalSubmit);
+  }, [items]);
 
   const permission = useSelector(getUserPermission).DAILY_PLANNING;
 
@@ -123,6 +129,7 @@ export default function useCheckIn() {
     totalTasks,
     totalMeetings,
     isEditWindowExpired,
+    isSubmitted,
     permission,
 
     // Modal state
@@ -139,6 +146,9 @@ export default function useCheckIn() {
 
     // Submit handler
     handleSubmitPlan,
+    handleConfirmSubmitPlan,
     isSubmitting,
+    isSubmitModalOpen,
+    setIsSubmitModalOpen,
   };
 }

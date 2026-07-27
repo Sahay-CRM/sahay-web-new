@@ -553,6 +553,7 @@ interface EmployeeDetails {
   } | null;
   isDeactivated?: boolean;
   isTeamLeader?: boolean;
+  isSahayEmployee?: boolean;
 }
 
 interface EmployeeCompany {
@@ -1671,6 +1672,8 @@ interface SimpleCompanyDetails {
   date?: number;
   imageGst?: imageGst;
   imagePancard?: imageGst;
+  companyStartTime?: string;
+  companyEndTime?: string;
 }
 
 interface imageGst {
@@ -2099,6 +2102,8 @@ interface UpdateDailyPlanItemPayload {
   completionTime?: string;
   remarks?: string;
   isFinalSubmit?: boolean;
+  taskId?: string;
+  meetingId?: string;
 }
 
 interface CarryForwardDailyPlanItemPayload {

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { FormLabel } from "@/components/ui/form";
 import {
@@ -36,6 +36,11 @@ interface SearchDropdownProps {
   multiSelect?: boolean;
   onAddNew?: (query: string) => void;
   footerText?: string;
+  isSearchable?: boolean;
+  onActionClick?: (value: string, e: React.MouseEvent) => void;
+  actionText?: string;
+  actionActiveValues?: string[];
+  activeActionText?: string;
 }
 
 const SearchDropdown = ({
@@ -55,6 +60,11 @@ const SearchDropdown = ({
   multiSelect = false,
   onAddNew,
   footerText,
+  isSearchable = true,
+  onActionClick,
+  actionText,
+  actionActiveValues = [],
+  activeActionText,
 }: SearchDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -62,12 +72,24 @@ const SearchDropdown = ({
 
   const selectedOption = options.find((opt) => opt.value === selectedValues[0]);
 
-  const filteredOptions = options.filter(
-    (opt) =>
-      opt.isHeader ||
-      opt.isFooterNote ||
-      opt.label.toLowerCase().includes(query.toLowerCase()),
-  );
+  const filteredOptions = useMemo(() => {
+    const matches = options.map((opt) => {
+      if (opt.isHeader || opt.isFooterNote) return false;
+      return opt.label.toLowerCase().includes(query.toLowerCase());
+    });
+
+    return options.filter((opt, index) => {
+      if (opt.isFooterNote) return true;
+      if (opt.isHeader) {
+        for (let i = index + 1; i < options.length; i++) {
+          if (options[i].isHeader) break;
+          if (matches[i]) return true;
+        }
+        return false;
+      }
+      return opt.label.toLowerCase().includes(query.toLowerCase());
+    });
+  }, [options, query]);
 
   const hasExactMatch = options.some(
     (opt) => opt.label.toLowerCase() === query.trim().toLowerCase(),
@@ -147,18 +169,20 @@ const SearchDropdown = ({
           className={twMerge(`p-0 pointer-events-auto z-[9999] ${dropdownClass}`)}
           style={{ width: "var(--radix-popover-trigger-width)" }}
         >
-          <div className="p-2">
-            <Input
-              ref={inputRef}
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                if (onSearchChange) onSearchChange(e.target.value);
-              }}
-              placeholder="Search..."
-              className="h-9"
-            />
-          </div>
+          {isSearchable && (
+            <div className="p-2">
+              <Input
+                ref={inputRef}
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  if (onSearchChange) onSearchChange(e.target.value);
+                }}
+                placeholder="Search..."
+                className="h-9"
+              />
+            </div>
+          )}
 
           <div
             className="max-h-60 overflow-y-auto"
@@ -171,7 +195,7 @@ const SearchDropdown = ({
                     return (
                       <div
                         key={`header-${index}`}
-                        className="px-4 py-2 text-[12px] font-semibold text-primary uppercase tracking-wider bg-gray-50/50"
+                        className="px-4 py-1 text-[12px] font-semibold items-center  justify-center flex text-primary  tracking-wider bg-gray-100"
                       >
                         {item.label}
                       </div>
@@ -207,9 +231,30 @@ const SearchDropdown = ({
                             : "hover:bg-gray-100 px-2 hover:text-gray-900",
                         )}
                       >
-                        <span className="truncate">{item.label}</span>
+                        <div className="flex items-center gap-2 overflow-hidden flex-1 mr-2">
+                          <span className="truncate">{item.label}</span>
+                          {onActionClick && selectedValues.includes(item.value) && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onActionClick(item.value, e);
+                              }}
+                              className={twMerge(
+                                "ml-auto px-2.5 py-0.5 rounded text-xs font-semibold select-none transition-all duration-200 border",
+                                actionActiveValues?.includes(item.value)
+                                  ? "bg-[#2f328e] hover:bg-[#1e205e] text-white border-[#2f328e] shadow-sm"
+                                  : "bg-white hover:bg-slate-100 text-slate-700 border-gray-200 hover:border-gray-300"
+                              )}
+                            >
+                              {actionActiveValues?.includes(item.value)
+                                ? (activeActionText || "Active")
+                                : (actionText || "Action")}
+                            </button>
+                          )}
+                        </div>
                         {selectedValues.includes(item.value) && (
-                          <Check className="h-4 w-4 text-primary" />
+                          <Check className="h-4 w-4 text-primary shrink-0" />
                         )}
                       </div>
                     </div>

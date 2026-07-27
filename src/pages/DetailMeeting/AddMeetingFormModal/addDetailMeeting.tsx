@@ -26,6 +26,7 @@ import {
   Loader2,
   Briefcase,
   Video,
+  Crown,
 } from "lucide-react";
 
 interface MeetingSearchResponse {
@@ -79,7 +80,7 @@ export default function AddDetailMeeting() {
   // Set breadcrumbs
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Meeting", href: "/dashboard/meeting/detail" },
+      { label: "Live Meetings", href: "/dashboard/meeting/detail" },
       {
         label: companyMeetingId ? "Update Live Meeting" : "Add Live Meeting",
         href: "",
@@ -345,7 +346,7 @@ export default function AddDetailMeeting() {
                         const rawVal = field.value?.meetingTypeId || field.value;
                         return (
                           <SearchDropdown
-                            className="w-full border-gray-200 text-base py-2.5 h-auto font-normal"
+                            className="w-full border-gray-200 text-base h-11 font-normal"
                             options={meetingTypeOptions}
                             selectedValues={rawVal ? [rawVal] : []}
                             onSelect={(value) => {
@@ -373,7 +374,7 @@ export default function AddDetailMeeting() {
                       render={({ field }) => {
                         const localDate = field.value ? new Date(field.value) : null;
                         return (
-                          <div className="[&_input]:text-base [&_input]:py-2.5 [&_input]:px-3.5 [&_input]:border-gray-200 [&_input]:h-auto [&_svg]:hidden">
+                          <div className="[&_input]:text-base [&_input]:h-11 [&_input]:py-0 [&_input]:px-3.5 [&_input]:border-gray-200 [&_svg]:hidden">
                             <FormDateTimePicker
                               label=""
                               value={localDate}
@@ -447,40 +448,51 @@ export default function AddDetailMeeting() {
                           onSearchChange={setEmployeeSearch}
                           error={errors.employeeId}
                           isCrossShow={false}
+                          onActionClick={(empId) => {
+                            const currentVals: EmployeeDetails[] = Array.isArray(field.value) ? field.value : [];
+                            const updated = currentVals.map((item) => ({
+                              ...item,
+                              isTeamLeader: item.employeeId === empId ? !item.isTeamLeader : item.isTeamLeader,
+                            }));
+                            field.onChange(updated);
+                          }}
+                          actionText="Set as Team Leader"
+                          activeActionText="Team Leader"
+                          actionActiveValues={
+                            (field.value || [])
+                              .filter((e: EmployeeDetails) => e.isTeamLeader)
+                              .map((e: EmployeeDetails) => e.employeeId)
+                          }
                         />
                       );
                     }}
                   />
 
-                  {/* Selected Employees Pills with Team Leader Crown selection */}
+                  {/* Selected Employees Pills */}
                   {employeeVal.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2.5 items-center">
+                    <div className="flex flex-wrap gap-2 mt-3 items-center">
                       {employeeVal.slice(0, 8).map((emp) => (
                         <div
                           key={emp.employeeId}
                           className={cn(
-                            "flex items-center space-x-1.5 border hover:bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
+                            "flex items-center space-x-2 border px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
                             emp.isTeamLeader 
-                              ? "bg-primary/10 border-primary/20 text-primary" 
+                              ? "bg-slate-50 border-[#2f328e]/20 text-slate-800" 
                               : "bg-gray-50 border-gray-150 text-gray-700"
                           )}
                         >
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const updated = employeeVal.map((e) =>
-                                e.employeeId === emp.employeeId
-                                  ? { ...e, isTeamLeader: !e.isTeamLeader }
-                                  : e
-                              );
-                              setValue("employeeId", updated, { shouldValidate: true });
-                            }}
-                            className="w-5 h-5 rounded-full bg-white border flex items-center justify-center text-[10px] font-bold shadow-sm cursor-pointer"
-                            title={emp.isTeamLeader ? "Remove Team Leader" : "Set Team Leader"}
-                          >
-                            {emp.isTeamLeader ? "👑" : getInitials(emp.employeeName)}
-                          </button>
-                          <span>{emp.employeeName}</span>
+                          <div className="relative pt-1 select-none">
+                            <div className="w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center text-[10px] font-bold shadow-sm text-slate-700">
+                              {getInitials(emp.employeeName)}
+                            </div>
+                            {emp.isTeamLeader && (
+                              <Crown className="w-3.5 h-3.5 text-[#2f328e] fill-none absolute -top-1.5 left-1/2 -translate-x-1/2 stroke-[2.5]" />
+                            )}
+                          </div>
+                          <span>
+                            {emp.employeeName}
+                          </span>
+                          
                           <button
                             type="button"
                             onClick={() => {
@@ -584,19 +596,26 @@ export default function AddDetailMeeting() {
                       <p className="text-[11px] text-gray-400 font-semibold tracking-wider uppercase">
                         Attendees
                       </p>
-                      <div className="flex -space-x-1.5 overflow-hidden mt-1.5">
+                      <div className="flex -space-x-1.5 mt-1.5">
                         {employeeVal.map((emp) => (
                           <div
                             key={emp.employeeId}
-                            className={cn(
-                              "relative inline-block h-7 w-7 rounded-full ring-2 ring-white bg-primary/10 overflow-hidden shadow-sm flex items-center justify-center",
-                              emp.isTeamLeader && "ring-amber-400 ring-2"
-                            )}
+                            className="relative inline-block pt-1.5"
                             title={emp.isTeamLeader ? `${emp.employeeName} (Team Leader)` : emp.employeeName}
                           >
-                            <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-primary">
-                              {emp.isTeamLeader ? "👑" : getInitials(emp.employeeName)}
+                            <div
+                              className={cn(
+                                "h-7 w-7 rounded-full ring-2 ring-white flex items-center justify-center shadow-sm text-[10px] font-bold",
+                                emp.isTeamLeader
+                                  ? "bg-[#2f328e]/10 text-[#2f328e]"
+                                  : "bg-primary/10 text-primary"
+                              )}
+                            >
+                              {getInitials(emp.employeeName)}
                             </div>
+                            {emp.isTeamLeader && (
+                              <Crown className="w-3.5 h-3.5 text-[#2f328e] fill-none absolute -top-0.5 left-1/2 -translate-x-1/2 stroke-[2.5]" />
+                            )}
                           </div>
                         ))}
                         {employeeVal.length === 0 && (

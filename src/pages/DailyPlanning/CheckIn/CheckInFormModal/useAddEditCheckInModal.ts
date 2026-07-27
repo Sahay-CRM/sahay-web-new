@@ -127,16 +127,21 @@ export default function useAddEditCheckInModal({
       });
     }
 
-    if (initialItem && initialItem.type === "TASK" && initialItem.taskId) {
-      const exists = options.some((o) => o.value === initialItem.taskId);
+    const initialTaskId =
+      initialItem && initialItem.type === "TASK"
+        ? initialItem.taskId || initialItem.task?.taskId
+        : undefined;
+
+    if (initialTaskId) {
+      const exists = options.some((o) => o.value === initialTaskId);
       if (!exists) {
         const normalHeaderIndex = options.findIndex(
           (o) => o.value === "header-task-normal",
         );
         const newItem = {
-          value: initialItem.taskId,
+          value: initialTaskId,
           label:
-            initialItem.task?.taskName || initialItem.title || "Selected Task",
+            initialItem?.task?.taskName || initialItem?.title || "Selected Task",
         };
         if (normalHeaderIndex !== -1) {
           options.splice(normalHeaderIndex + 1, 0, newItem);
@@ -222,8 +227,41 @@ export default function useAddEditCheckInModal({
       });
     }
 
+    const initialMeetingId =
+      initialItem && initialItem.type === "MEETING"
+        ? initialItem.meetingId || initialItem.meeting?.meetingId
+        : undefined;
+
+    if (initialMeetingId) {
+      const exists = options.some((o) => o.value === initialMeetingId);
+      if (!exists) {
+        const normalHeaderIndex = options.findIndex(
+          (o) => o.value === "header-normal",
+        );
+        const newItem = {
+          value: initialMeetingId,
+          label:
+            initialItem?.meeting?.meetingName ||
+            initialItem?.title ||
+            "Selected Meeting",
+        };
+        if (normalHeaderIndex !== -1) {
+          options.splice(normalHeaderIndex + 1, 0, newItem);
+        } else {
+          options.unshift(
+            {
+              value: "header-normal",
+              label: "Normal Meetings",
+              isHeader: true,
+            },
+            newItem,
+          );
+        }
+      }
+    }
+
     return options;
-  }, [meetingSearchData]);
+  }, [meetingSearchData, initialItem]);
 
   const refOptions: DropdownOptionItem[] =
     type === "TASK" ? taskOptions : meetingOptions;
@@ -248,7 +286,13 @@ export default function useAddEditCheckInModal({
         initialItem.meeting?.meetingName ||
         "";
       setTitle(currentTitle);
-      setSelectedRefId(initialItem.taskId || initialItem.meetingId || "");
+      setSelectedRefId(
+        initialItem.taskId ||
+          initialItem.task?.taskId ||
+          initialItem.meetingId ||
+          initialItem.meeting?.meetingId ||
+          "",
+      );
 
       const totalMins = initialItem.estimatedTime || 0;
       const hrs = Math.floor(totalMins / 60);
@@ -317,6 +361,9 @@ export default function useAddEditCheckInModal({
           estimatedTime: totalMinutes,
           priority,
           remarks: remarks.trim() || undefined,
+          taskId: type === "TASK" ? selectedRefId || undefined : undefined,
+          meetingId:
+            type === "MEETING" ? selectedRefId || undefined : undefined,
         },
         {
           onSuccess: () => {

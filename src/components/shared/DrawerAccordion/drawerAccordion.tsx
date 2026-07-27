@@ -86,7 +86,7 @@ export default function DrawerAccordion({
           </div>
           <span
             style={{ fontSize: "var(--fs-sidebar)" }}
-            className="whitespace-nowrap overflow-hidden text-ellipsis hover:underline"
+            className="whitespace-normal hover:underline break-words"
           >
             {item?.label}
           </span>
@@ -119,7 +119,7 @@ export default function DrawerAccordion({
                 <li
                   key={`${item.label}-${index}`}
                   style={{ fontSize: "var(--fs-sidebar)" }}
-                  className="hover:text-primary hover:underline transition-colors cursor-pointer rounded-lg px-2 pb-2 whitespace-nowrap overflow-hidden text-ellipsis"
+                  className="hover:text-primary hover:underline transition-colors cursor-pointer rounded-lg px-2 pb-2 whitespace-normal break-words"
                   onClick={() => {
                     postOnClick();
                     navigate(child.link);

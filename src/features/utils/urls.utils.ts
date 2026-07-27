@@ -410,6 +410,7 @@ const Urls = {
     `${baseUrl}/company/kpi-data/note-delete/${id}`,
 
   getBothMeeting: () => `${baseUrl}/company/meeting/get-both`,
+  getAllBothMeeting: () => `${baseUrl}/company/meeting/get-all-both`,
   kpiNewValidation: () => `${baseUrl}/company/kpi/kpi-new-validation`,
   kpiResetValidation: () => `${baseUrl}/company/kpi/kpi-new-reset`,
   getReports: () => `${baseUrl}/company/reports/get-report`,
@@ -536,6 +537,8 @@ const Urls = {
     `${baseUrl}/company/employee/daily-plan/item-history`,
   getDailyPlanItems: () =>
     `${baseUrl}/company/employee/daily-plan/get-items`,
+  finalSubmitDailyPlan: () =>
+    `${baseUrl}/company/employee/daily-plan/final-submit`,
 
   // Blueprint Endpoints
   blueprintCoreValueGetAll: () => `${baseUrl}/blueprint-core-value/get-all`,

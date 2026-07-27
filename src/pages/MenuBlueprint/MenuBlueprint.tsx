@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Button } from "@/components/ui/button";
 import { 
   LayoutTemplate, 
@@ -14,12 +14,10 @@ import {
   AlertTriangle
 } from "lucide-react";
 
-// DnD Kit imports for Core Values reordering
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-// Pre-existing project components
 import { 
   Tooltip, 
   TooltipContent, 
@@ -174,7 +172,7 @@ export default function MenuBlueprint() {
           ) : (
             <Save className="w-4 h-4" />
           )}
-          Save Blueprint
+          Save 
         </Button>
       </div>
 
@@ -222,19 +220,19 @@ export default function MenuBlueprint() {
 
                 {/* Core Values Option List */}
                 <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
-                  {coreValuesMasterList.filter((cv: any) => {
-                    const title = cv.coreValue || cv.codeValue || "";
+                  {coreValuesMasterList.filter((cv) => {
+                    const title = cv.coreValue  || "";
                     return title.toLowerCase().includes(coreValueSearchTerm.toLowerCase());
                   }).length === 0 ? (
                     <p className="text-xs text-gray-400 italic py-2 text-center">No core values found</p>
                   ) : (
                     coreValuesMasterList
-                      .filter((cv: any) => {
-                        const title = cv.coreValue || cv.codeValue || "";
+                      .filter((cv) => {
+                        const title = cv.coreValue || "";
                         return title.toLowerCase().includes(coreValueSearchTerm.toLowerCase());
                       })
-                      .map((cv: any) => {
-                        const id = String(cv.CodeValueId || cv.blueprintCoreValueId || cv.id || "");
+                      .map((cv) => {
+                        const id = String(cv.CodeValueId || "");
                         const isSelected = selectedCoreValues.some(selected => selected.CodeValueId === id);
                         
                         return (
@@ -251,7 +249,7 @@ export default function MenuBlueprint() {
                               {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-semibold truncate">{cv.coreValue || cv.codeValue}</p>
+                              <p className="font-semibold truncate">{cv.coreValue}</p>
                               {cv.actionStatement && (
                                 <p className="text-[11px] text-gray-500 line-clamp-1 mt-0.5">{cv.actionStatement}</p>
                               )}

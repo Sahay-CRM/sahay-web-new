@@ -4,3 +4,4 @@ export { default as useUpdateDailyPlanItem } from "./useUpdateDailyPlanItem";
 export { default as useCarryForwardDailyPlanItem } from "./useCarryForwardDailyPlanItem";
 export { default as useRemoveDailyPlanItem } from "./useRemoveDailyPlanItem";
 export { default as useGetDailyPlanItemHistory } from "./useGetDailyPlanItemHistory";
+export { default as useFinalSubmitDailyPlan } from "./useFinalSubmitDailyPlan";

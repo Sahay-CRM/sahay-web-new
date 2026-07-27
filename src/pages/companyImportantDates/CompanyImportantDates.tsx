@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { dateFnsLocalizer } from "react-big-calendar";
-import { Calendar as BigCalendar, View } from "react-big-calendar";
+import { Calendar as BigCalendar } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 
 import useCalendar from "./useCompanyImportantDates";
@@ -15,10 +15,6 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import ConfirmationTaskModal from "./confirmationTaskModal";
 import ConfirmationMeetingModal from "./confirmationMeetingModal";
 import { useNavigate } from "react-router-dom";
-import { CalendarClock } from "lucide-react";
-
-import { useTimeSlotSelection } from "./useTimeSlotSelection";
-import TimeSlotDrawer from "./TimeSlotDrawer";
 
 const locales = {
   "en-US": enUS,
@@ -31,52 +27,6 @@ const localizer = dateFnsLocalizer({
   getDay,
   locales,
 });
-
-function CustomEventComponent({ event }: { event: EventData }) {
-  const bgColor = event.bgColor || "#2f328b";
-  const textColor = event.textColor || "#ffffff";
-
-  const startStr = event.start ? format(new Date(event.start), "h:mm a") : "";
-  const endStr = event.end ? format(new Date(event.end), "h:mm a") : "";
-  const timeRange = startStr && endStr ? `${startStr} - ${endStr}` : "";
-
-  return (
-    <div className="custom-event-inner h-full w-full">
-      {/* Day/Week view layout */}
-      <div
-        className="custom-event-day-week flex-col h-full rounded-sm p-1 shadow-xs transition-all hover:brightness-95 select-none overflow-hidden border border-white/10"
-        style={{
-          backgroundColor: bgColor,
-          color: textColor,
-        }}
-      >
-        {timeRange && (
-          <div className="text-[9px] opacity-90 font-semibold mb-0.5">
-            {timeRange}
-          </div>
-        )}
-        <div className="font-bold text-[11px] leading-tight truncate">
-          {event.title}
-        </div>
-        {event.description && (
-          <div className="text-[10px] opacity-85 truncate mt-0.5">
-            {event.description}
-          </div>
-        )}
-      </div>
-
-      {/* Month view layout */}
-      <div
-        className="custom-event-month truncate text-[12px] px-1 font-medium"
-        style={{
-          color: textColor,
-        }}
-      >
-        {event.title}
-      </div>
-    </div>
-  );
-}
 
 function Calendar() {
   const methods = useForm();
@@ -100,21 +50,6 @@ function Calendar() {
     closeModal,
     holidayData,
   } = useCalendar();
-
-  const {
-    isFeatureEnabled,
-    currentView,
-    setCurrentView,
-    selectedSlot,
-    editingEvent,
-    isDrawerOpen,
-    customEvents,
-    handleSelectSlot,
-    handleSelectEvent,
-    saveEvent,
-    deleteEvent,
-    closeDrawer,
-  } = useTimeSlotSelection();
 
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -143,47 +78,6 @@ function Calendar() {
     }
   }, [selectedOption, taskEvents, meetingEvents, importantDateEvents]);
 
-  const placeholderEvent = useMemo(() => {
-    if (selectedSlot && isDrawerOpen && !editingEvent) {
-      return {
-        eventId: "placeholder",
-        title: "(Logging Time...)",
-        description: "",
-        start: selectedSlot.start,
-        end: selectedSlot.end,
-        bgColor: "#2e3195",
-        textColor: "#ffffff",
-        eventType: "placeholder",
-      } as EventData;
-    }
-    return null;
-  }, [selectedSlot, isDrawerOpen, editingEvent]);
-
-  const mergedEvents = useMemo(() => {
-    let list = events;
-    if (isFeatureEnabled) {
-      if (currentView === "day") {
-        // Show ONLY the logged times (customEvents) in Day view
-        if (selectedOption === "task") {
-          list = customEvents.filter((e) => e.eventType === "task");
-        } else if (selectedOption === "meeting") {
-          list = customEvents.filter((e) => e.eventType === "meeting");
-        } else if (selectedOption === "importantDate") {
-          list = [];
-        } else {
-          list = customEvents;
-        }
-      } else {
-        // Show ONLY the normal calendar events in Month, Week views
-        list = events;
-      }
-    }
-    if (placeholderEvent) {
-      return [...list, placeholderEvent];
-    }
-    return list;
-  }, [isFeatureEnabled, currentView, events, customEvents, selectedOption, placeholderEvent]);
-
   // Dynamically build options based on view permissions
   const selectOptions = [];
   if (permission.TASK?.View)
@@ -201,42 +95,7 @@ function Calendar() {
   return (
     <FormProvider {...methods}>
       <div className="px-2 h-[calc(100vh-120px)] min-h-[500px] sm:px-4 py-4">
-        <style>{`
-          .rbc-day-slot .rbc-event {
-            pointer-events: none !important;
-            background-color: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-          }
-          .rbc-day-slot .rbc-event-label {
-            display: none !important;
-          }
-          .rbc-day-slot .rbc-event .custom-event-inner {
-            pointer-events: auto !important;
-            width: calc(100% - 12px) !important;
-            height: 100%;
-          }
-          .rbc-day-slot .rbc-slot-selection {
-            width: calc(100% - 12px) !important;
-            background-color: rgba(46, 49, 149, 0.25) !important;
-            border: 1.5px solid #2e3195 !important;
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
-          }
-          .custom-event-day-week {
-            display: none;
-          }
-          .custom-event-month {
-            display: block;
-          }
-          .rbc-day-slot .custom-event-day-week {
-            display: flex !important;
-          }
-          .rbc-day-slot .custom-event-month {
-            display: none !important;
-          }
-        `}</style>
-        <div className="flex justify-between gap-5 items-center">
+        <div className="flex justify-between gap-5">
           {/* LEFT SIDE BUTTONS */}
           <div className="flex gap-3">
             {permission.IMPORTANT_DATE.Add && (
@@ -249,30 +108,23 @@ function Calendar() {
                 View Important Date
               </Button>
             )}
-            <Button onClick={() => navigate("/dashboard/daily-planning")} className="flex items-center gap-2">
-              <CalendarClock className="size-4" />
-              Daily Planning
-            </Button>
           </div>
 
-          {/* RIGHT SIDE SELECT AND TOGGLE */}
-          <div className="flex items-center gap-4">
-            {currentView !== "day" &&
-              (permission.TASK?.View ||
-                permission.MEETING_LIST?.View ||
-                permission.IMPORTANT_DATE?.View) && (
-                <div>
-                  <FormSelect
-                    value={selectedOption}
-                    onChange={(item) =>
-                      handleOptionChange(item as string | string[])
-                    }
-                    options={selectOptions}
-                    triggerClassName="mb-0 py-4"
-                  />
-                </div>
-              )}
-          </div>
+          {/* RIGHT SIDE SELECT */}
+          {(permission.TASK?.View ||
+            permission.MEETING_LIST?.View ||
+            permission.IMPORTANT_DATE?.View) && (
+            <div>
+              <FormSelect
+                value={selectedOption}
+                onChange={(item) =>
+                  handleOptionChange(item as string | string[])
+                }
+                options={selectOptions}
+                triggerClassName="mb-0 py-4"
+              />
+            </div>
+          )}
         </div>
 
         {addImportantDate && (
@@ -284,25 +136,12 @@ function Calendar() {
         )}
         <BigCalendar
           localizer={localizer}
-          events={mergedEvents}
+          events={events}
           startAccessor="start"
           endAccessor="end"
           className="rounded-lg p-1 shadow-sm"
-          selectable={isFeatureEnabled && !isDrawerOpen && currentView === "day"}
-          onSelectSlot={handleSelectSlot}
-          onSelecting={() => true}
-          longPressThreshold={250}
-          view={currentView as View}
-          onView={(v) => setCurrentView(v)}
-          components={{
-            event: CustomEventComponent,
-          }}
           onSelectEvent={(event: EventData) => {
-            if (event.timeLogId) {
-              handleSelectEvent(event);
-            } else if (event.eventType === "custom") {
-              handleSelectEvent(event);
-            } else if (
+            if (
               event.eventType === "importantDate" &&
               permission.IMPORTANT_DATE &&
               permission.IMPORTANT_DATE.Edit
@@ -337,19 +176,14 @@ function Calendar() {
               handleMeetingModal(event.eventId);
             }
           }}
-          eventPropGetter={(event) => {
-            const isPlaceholder = event.eventId === "placeholder";
-            return {
-              style: {
-                minHeight: 22,
-                backgroundColor: event.bgColor,
-                color: event.textColor,
-                fontSize: "12px",
-                opacity: isPlaceholder ? 0.65 : 1,
-                border: isPlaceholder ? "2px dashed #1a73e8" : "none",
-              },
-            };
-          }}
+          eventPropGetter={(event) => ({
+            style: {
+              minHeight: 22,
+              backgroundColor: event.bgColor,
+              color: event.textColor,
+              fontSize: "12px",
+            },
+          })}
           dayPropGetter={(date) => {
             // Normalize both dates to start of day in local timezone for comparison
             const currentDate = new Date(date);
@@ -400,14 +234,6 @@ function Calendar() {
             modalData={meetingModalData}
           />
         )}
-        <TimeSlotDrawer
-          isOpen={isDrawerOpen}
-          onClose={closeDrawer}
-          selectedSlot={selectedSlot}
-          editingEvent={editingEvent}
-          onSave={saveEvent}
-          onDelete={deleteEvent}
-        />
       </div>
     </FormProvider>
   );

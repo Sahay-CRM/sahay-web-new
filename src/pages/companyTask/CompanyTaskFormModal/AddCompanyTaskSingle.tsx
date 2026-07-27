@@ -1,5 +1,5 @@
 import { Controller, FormProvider } from "react-hook-form";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useQueryClient } from "@tanstack/react-query";
@@ -208,12 +208,51 @@ export default function AddCompanyTaskSingle() {
       }))
     : [];
 
-  const meetingOptions = meetingData?.data
-    ? meetingData.data.map((m) => ({
-        label: m.meetingName || "",
-        value: m.meetingId || "",
-      }))
-    : [];
+interface GroupedCompanyMeetings {
+  detailMeetings?: CompanyMeetingDataProps[];
+  normalMeetings?: CompanyMeetingDataProps[];
+}
+
+  const meetingOptions = useMemo(() => {
+    if (!meetingData?.data) return [];
+    const rawData = meetingData.data as unknown as GroupedCompanyMeetings;
+
+    const normalMeetings = rawData.normalMeetings || [];
+    const detailMeetings = rawData.detailMeetings || [];
+
+    const options: { label: string; value: string; isHeader?: boolean }[] = [];
+
+    if (detailMeetings.length > 0) {
+      options.push({ label: "Detail Meetings", value: "detail-header", isHeader: true });
+      detailMeetings.forEach((m) => {
+        options.push({
+          label: m.meetingName || "",
+          value: m.meetingId || "",
+        });
+      });
+    }
+
+    if (normalMeetings.length > 0) {
+      options.push({ label: "Normal Meetings", value: "normal-header", isHeader: true });
+      normalMeetings.forEach((m) => {
+        options.push({
+          label: m.meetingName || "",
+          value: m.meetingId || "",
+        });
+      });
+    }
+
+    if (options.length === 0 && Array.isArray(meetingData.data)) {
+      (meetingData.data as CompanyMeetingDataProps[]).forEach((m) => {
+        options.push({
+          label: m.meetingName || "",
+          value: m.meetingId || "",
+        });
+      });
+    }
+
+    return options;
+  }, [meetingData]);
 
   const employeeOptions = employeedata?.data
     ? employeedata.data.map((e) => ({
@@ -223,7 +262,18 @@ export default function AddCompanyTaskSingle() {
     : [];
 
   const selectedProject = projectListdata?.data?.find((p) => p.projectId === projectVal);
-  const selectedMeeting = meetingData?.data?.find((m) => m.meetingId === meetingVal);
+  const selectedMeeting = useMemo(() => {
+    if (!meetingData?.data) return null;
+    const rawData = meetingData.data as unknown as GroupedCompanyMeetings;
+    if (Array.isArray(rawData)) {
+      return (rawData as CompanyMeetingDataProps[]).find((m) => m.meetingId === meetingVal);
+    }
+    const allMeetings = [
+      ...(rawData.normalMeetings || []),
+      ...(rawData.detailMeetings || []),
+    ];
+    return allMeetings.find((m) => m.meetingId === meetingVal);
+  }, [meetingData, meetingVal]);
   const selectedStatus = taskStatusOptions.find((s) => s.value === statusVal);
 
   const selectedEmployees = (assignUserVal

@@ -28,7 +28,8 @@ export default function AddRepetitiveTask() {
     MeetingSelectionStep,
     TaskDetailsStep,
     projectListdata,
-    meetingData,
+    // meetingData,
+    flatMeetings,
     AssignUserStep,
     isChildData,
     handleKeepAll,
@@ -76,11 +77,11 @@ export default function AddRepetitiveTask() {
   }, [projectId, projectListdata?.data, setValue]);
 
   useEffect(() => {
-    if (meetingId && meetingData?.data) {
-      const meetObj = meetingData.data.find((m) => m.meetingId === meetingId);
+    if (meetingId && flatMeetings) {
+      const meetObj = flatMeetings.find((m) => m.meetingId === meetingId);
       if (meetObj) setValue("meeting", meetObj, { shouldDirty: true });
     }
-  }, [meetingId, meetingData?.data, setValue]);
+  }, [meetingId, flatMeetings, setValue]);
 
   useEffect(() => {
     if (
@@ -88,12 +89,12 @@ export default function AddRepetitiveTask() {
       projectId &&
       meetingId &&
       projectListdata?.data &&
-      meetingData?.data
+      flatMeetings.length > 0
     ) {
       jumpedRef.current = true;
       setTimeout(() => goTo(2), 50);
     }
-  }, [projectId, meetingId, projectListdata?.data, meetingData?.data, goTo]);
+  }, [projectId, meetingId, projectListdata?.data, flatMeetings, goTo]);
 
   useEffect(() => {
     setBreadcrumbs([

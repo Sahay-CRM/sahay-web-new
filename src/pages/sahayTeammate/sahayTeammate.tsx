@@ -18,6 +18,7 @@ import {
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import PageNotAccess from "../PageNoAccess";
 import { useSelector } from "react-redux";
+import { Trash } from "lucide-react";
 import { getUserDetail } from "@/features/selectors/auth.selector";
 import ConfirmationDeleteModal from "../companyEmployee/confirmEmployeDeleteModal";
 import { formatEmployeeType, getInitials } from "@/features/utils/app.utils";
@@ -158,14 +159,7 @@ export default function SahayTeammate() {
             }))}
             columns={visibleColumns}
             primaryKey="employeeId"
-            isActionButton={() => true}
-            onEdit={
-              permission.Edit
-                ? (row) => {
-                    navigate(`/dashboard/employees/edit/${row.employeeId}`);
-                  }
-                : undefined
-            }
+            isActionButton={() => false}
             onRowClick={(row) => {
               handleRowsModalOpen(row as unknown as EmployeeData);
             }}
@@ -206,22 +200,64 @@ export default function SahayTeammate() {
             }}
             activeToggleKey="isDeactivated"
             invertActiveToggle
-            customActions={(row) =>
-              handoverPermission?.View ? (
-                <Button
-                  variant="outline"
-                  size="default"
-                  className="h-8 px-2 text-xs cursor-pointer"
-                  onClick={() =>
-                    navigate("/dashboard/handover", {
-                      state: { oldUserId: row.employeeId },
-                    })
-                  }
-                >
-                  Handover
-                </Button>
-              ) : null
-            }
+            customActions={(row) => (
+              <div className="flex items-center gap-1 justify-end">
+                {handoverPermission?.View && row.isDeactivated && (
+                  <Button
+                    variant="outline"
+                    size="default"
+                    className="h-8 px-2 text-xs cursor-pointer"
+                    onClick={() =>
+                      navigate("/dashboard/handover", {
+                        state: { oldUserId: row.employeeId },
+                      })
+                    }
+                  >
+                    Handover
+                  </Button>
+                )}
+                {permission?.Delete && !!userData?.isSuperAdmin && (
+                  <>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-red-600 cursor-pointer"
+                            onClick={() => onDelete(row as unknown as EmployeeData)}
+                          >
+                            <Trash className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            className={`h-8 w-auto px-2 cursor-pointer ${
+                              !row.isDeactivated
+                                ? "bg-primary hover:bg-primary text-white"
+                                : "bg-red-700/80 hover:bg-red-700 text-white"
+                            }`}
+                            onClick={() => setPendingToggleItem(row as EmployeeDetails)}
+                          >
+                            {!row.isDeactivated ? "Inactive" : "Active"}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {!row.isDeactivated ? "Set Inactive" : "Set Active"}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </>
+                )}
+              </div>
+            )}
             actionColumnWidth="w-[230px] overflow-hidden "
           />
         </div>

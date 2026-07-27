@@ -73,6 +73,7 @@ export default function AddEditCheckInModal({
             options={typeOptions}
             isMandatory
             placeholder="Select Type"
+            disabled={!!initialItem}
           />
         </div>
 
@@ -93,6 +94,7 @@ export default function AddEditCheckInModal({
                 ? "Select or search task..."
                 : "Select or search meeting..."
             }
+            disabled={!!initialItem}
           />
         </div>
 

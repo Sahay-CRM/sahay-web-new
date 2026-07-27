@@ -29,6 +29,9 @@ export default function ConfirmationMeetingModal({
   };
 
   const renderValue = (key: string, value: unknown) => {
+    if (key === "meetingStatus" && typeof value === "object" && value !== null) {
+      return (value as { meetingStatus?: string }).meetingStatus || null;
+    }
     if (key === "joiners" && Array.isArray(value)) {
       return (value as { employeeName: string }[])
         .map((j) => j.employeeName)
@@ -92,7 +95,11 @@ export default function ConfirmationMeetingModal({
           btnText: "Edit",
           buttonCss: "py-1.5 px-5 bg-[#2f328e] text-white hover:bg-[#1e205e]",
           btnClick: () =>
-            navigate(`/dashboard/meeting/edit/${modalData.meetingId}`),
+            navigate(
+              modalData.isDetailMeeting
+                ? `/dashboard/meeting/detail/update/${modalData.meetingId}`
+                : `/dashboard/meeting/edit/${modalData.meetingId}`
+            ),
         },
       ]}
     >
