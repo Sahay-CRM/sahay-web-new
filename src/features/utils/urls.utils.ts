@@ -539,6 +539,8 @@ const Urls = {
     `${baseUrl}/company/employee/daily-plan/get-items`,
   finalSubmitDailyPlan: () =>
     `${baseUrl}/company/employee/daily-plan/final-submit`,
+  checkTodaySubmitPlan: () =>
+    `${baseUrl}/company/employee/daily-plan/check-today-submit`,
 
   // Blueprint Endpoints
   blueprintCoreValueGetAll: () => `${baseUrl}/blueprint-core-value/get-all`,

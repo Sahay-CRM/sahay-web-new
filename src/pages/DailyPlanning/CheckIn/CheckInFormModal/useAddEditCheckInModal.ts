@@ -12,6 +12,8 @@ interface UseAddEditCheckInModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialItem?: DailyPlanItem | null;
+  items: DailyPlanItem[];
+  companyWorkingMinutes: number;
 }
 
 export interface DropdownOptionItem {
@@ -25,6 +27,8 @@ export default function useAddEditCheckInModal({
   open,
   onOpenChange,
   initialItem,
+  items,
+  companyWorkingMinutes,
 }: UseAddEditCheckInModalProps) {
   const employeeId = useSelector(getUserId);
   const todayDate = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
@@ -43,25 +47,41 @@ export default function useAddEditCheckInModal({
     priority?: string;
   }>({});
 
+  const isInputOvertime = useMemo(() => {
+    const otherItemsMinutes = items
+      .filter((item) => !initialItem || item.planItemId !== initialItem.planItemId)
+      .reduce((acc, item) => acc + (item.estimatedTime || 0), 0);
+    const currentInputMinutes = (Number(estimatedHours) || 0) * 60 + (Number(estimatedMinutes) || 0);
+    return (otherItemsMinutes + currentInputMinutes) > companyWorkingMinutes;
+  }, [items, initialItem, estimatedHours, estimatedMinutes, companyWorkingMinutes]);
+
   const { mutate: addItem, isPending: isAdding } = useAddDailyPlanItem();
   const { mutate: updateItem, isPending: isUpdating } =
     useUpdateDailyPlanItem();
 
   const isPending = isAdding || isUpdating;
 
-  // Task Search API call when type is TASK with planingtask: true
+  const isTaskSearchEnabled = type === "TASK" && search.trim().length > 0;
   const { data: taskSearchData } = useGetCompanyTaskSearch(
-    type === "TASK" ? search : "",
+    isTaskSearchEnabled ? search : "",
     true,
+    isTaskSearchEnabled,
   );
 
-  // Meeting Search API call when type is MEETING with detailMeetingStatus: true
+  const isMeetingSearchEnabled = type === "MEETING" && search.trim().length > 0;
   const { data: meetingSearchData } = useGetCompanyMeetingSearch(
-    type === "MEETING" ? search : "",
+    isMeetingSearchEnabled ? search : "",
     true,
+    isMeetingSearchEnabled,
   );
 
   const taskOptions = useMemo<DropdownOptionItem[]>(() => {
+    if (!search.trim()) {
+      if (selectedRefId && type === "TASK") {
+        return [{ value: selectedRefId, label: title }];
+      }
+      return [];
+    }
     const rawData = taskSearchData?.data;
     if (!rawData) return [];
 
@@ -159,9 +179,15 @@ export default function useAddEditCheckInModal({
     }
 
     return options;
-  }, [taskSearchData, initialItem]);
+  }, [taskSearchData, initialItem, search, selectedRefId, type, title]);
 
   const meetingOptions = useMemo<DropdownOptionItem[]>(() => {
+    if (!search.trim()) {
+      if (selectedRefId && type === "MEETING") {
+        return [{ value: selectedRefId, label: title }];
+      }
+      return [];
+    }
     const rawData = meetingSearchData?.data;
     if (!rawData) return [];
 
@@ -261,7 +287,7 @@ export default function useAddEditCheckInModal({
     }
 
     return options;
-  }, [meetingSearchData, initialItem]);
+  }, [meetingSearchData, initialItem, search, selectedRefId, type, title]);
 
   const refOptions: DropdownOptionItem[] =
     type === "TASK" ? taskOptions : meetingOptions;
@@ -394,6 +420,39 @@ export default function useAddEditCheckInModal({
     }
   };
 
+  const handleDirectSubmitPlanningItem = async (payload: {
+    taskId?: string;
+    meetingId?: string;
+    estimatedTime: number;
+    remarks: string;
+    title: string;
+  }) => {
+    return new Promise<void>((resolve, reject) => {
+      addItem(
+        {
+          employeeId,
+          date: todayDate,
+          type: payload.taskId ? "TASK" : "MEETING",
+          title: payload.title,
+          priority: "Medium",
+          estimatedTime: payload.estimatedTime,
+          remarks: payload.remarks || undefined,
+          taskId: payload.taskId,
+          meetingId: payload.meetingId,
+        },
+        {
+          onSuccess: () => {
+            handleModalClose();
+            resolve();
+          },
+          onError: (err) => {
+            reject(err);
+          },
+        }
+      );
+    });
+  };
+
   return {
     type,
     setType,
@@ -417,6 +476,8 @@ export default function useAddEditCheckInModal({
     priorityOptions,
     handleSubmit,
     handleModalClose,
+    handleDirectSubmitPlanningItem,
     isPending,
+    isInputOvertime,
   };
 }

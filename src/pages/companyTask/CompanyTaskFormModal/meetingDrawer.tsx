@@ -9,6 +9,7 @@ import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateT
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Check, ChevronDown } from "lucide-react";
 
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
@@ -26,18 +27,25 @@ type MeetingFormData = {
   meetingStatusId: string;
   employeeId: string[];
   teamLeaders: string[];
+  estimatedHours?: string;
+  estimatedMinutes?: string;
+  remarks?: string;
 };
 
 interface MeetingDrawerProps {
   open: boolean;
   onClose: () => void;
   onMeetingCreated?: (meeting: CompanyMeetingDataProps) => void;
+  isPlanningMode?: boolean;
+  onPlanningSubmit?: (meeting: { meetingId: string; estimatedTime: number; remarks: string; title: string }) => void;
 }
 
 export default function MeetingDrawer({
   open,
   onClose,
   onMeetingCreated,
+  isPlanningMode = false,
+  onPlanningSubmit,
 }: MeetingDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -110,6 +118,9 @@ export default function MeetingDrawer({
       meetingStatusId: "",
       employeeId: [],
       teamLeaders: [],
+      estimatedHours: "",
+      estimatedMinutes: "",
+      remarks: "",
     },
   });
 
@@ -160,6 +171,9 @@ export default function MeetingDrawer({
         meetingStatusId: meetingStatusOptions?.[0]?.value || "",
         employeeId: [],
         teamLeaders: [],
+        estimatedHours: "",
+        estimatedMinutes: "",
+        remarks: "",
       });
       setShowDropdown(false);
       setIsDropdownOpen(false);
@@ -232,6 +246,16 @@ export default function MeetingDrawer({
   };
 
   const onSubmit = (data: MeetingFormData) => {
+    if (isPlanningMode) {
+      const hours = Number(data.estimatedHours) || 0;
+      const minutes = Number(data.estimatedMinutes) || 0;
+      const mins = hours * 60 + minutes;
+      if (mins <= 0) {
+        toast.error("Estimated time must be greater than 0");
+        return;
+      }
+    }
+
     const payload = {
       meetingName: data.meetingName,
       meetingDescription: data.meetingDescription || data.meetingName,
@@ -253,10 +277,21 @@ export default function MeetingDrawer({
         const meeting = Array.isArray(res?.data)
           ? res?.data[0]
           : res?.data;
-        if (onMeetingCreated && meeting) {
-          onMeetingCreated(meeting);
+        if (isPlanningMode && onPlanningSubmit && meeting?.meetingId) {
+          const mins = (Number(data.estimatedHours) || 0) * 60 + (Number(data.estimatedMinutes) || 0);
+          const remarksVal = data.remarks || "";
+          onPlanningSubmit({
+            meetingId: meeting.meetingId,
+            estimatedTime: mins,
+            remarks: remarksVal,
+            title: meeting.meetingName || data.meetingName,
+          });
+        } else {
+          if (onMeetingCreated && meeting) {
+            onMeetingCreated(meeting);
+          }
+          onClose();
         }
-        onClose();
       },
       onError: (error: Error) => {
         const axiosError = error as AxiosError<{ message?: string }>;
@@ -612,6 +647,42 @@ export default function MeetingDrawer({
                   })}
                 </div>
               </div>
+            )}
+
+            {isPlanningMode && (
+              <>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-1">
+                    <label className="text-sm font-semibold text-gray-700">Estimated Hours</label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="0"
+                      {...register("estimatedHours")}
+                      className="border-gray-200 focus:border-primary"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-semibold text-gray-700">Estimated Minutes</label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={59}
+                      placeholder="0"
+                      {...register("estimatedMinutes")}
+                      className="border-gray-200 focus:border-primary"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1 mt-4">
+                  <label className="text-sm font-semibold text-gray-700">Remarks</label>
+                  <Textarea
+                    placeholder="Add planning remarks..."
+                    {...register("remarks")}
+                    className="border-gray-200 focus:border-primary resize-none min-h-[80px]"
+                  />
+                </div>
+              </>
             )}
           </div>
 

@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { FormProvider, useForm } from "react-hook-form";
-import { Plus, CalendarDays, Clock, ListTodo, Presentation, Layers, CheckCheck } from "lucide-react";
+import { Plus, CalendarDays, Clock, ListTodo, Presentation, Layers, CheckCheck, AlertTriangle, Hourglass } from "lucide-react";
 
 import TableData, { ColumnConfig } from "@/components/shared/DataTable/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
@@ -14,6 +14,11 @@ import useCheckIn from "./useCheckIn";
 import AddEditCheckInModal from "./CheckInFormModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import ConfirmSubmitPlanModal from "./ConfirmSubmitPlanModal";
+import CalendarAddTaskDrawer from "@/pages/companyImportantDates/CalendarAddTaskDrawer";
+import MeetingDrawer from "@/pages/companyTask/CompanyTaskFormModal/meetingDrawer";
+import useAddDailyPlanItem from "@/features/api/dailyPlan/useAddDailyPlanItem";
+import { getUserId } from "@/features/selectors/auth.selector";
+import { useSelector } from "react-redux";
 import {
   Tooltip,
   TooltipContent,
@@ -25,6 +30,7 @@ import PageNotAccess from "@/pages/PageNoAccess";
 export default function CheckIn() {
   const {
     todayDate,
+    items,
     filteredItems,
     isLoading,
     paginationFilter,
@@ -33,9 +39,12 @@ export default function CheckIn() {
     totalEstimatedTime,
     totalTasks,
     totalMeetings,
+    remainingTime,
+    isOvertime,
     isEditWindowExpired,
     isSubmitted,
     permission,
+    companyWorkingMinutes,
     isAddModalOpen,
     setIsAddModalOpen,
     editingItem,
@@ -52,11 +61,47 @@ export default function CheckIn() {
     isSubmitting,
   } = useCheckIn();
 
+  const { mutate: addItem } = useAddDailyPlanItem();
+  const employeeId = useSelector(getUserId);
+  const todayDateStr = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
+
+  const [isOpenTaskDrawer, setIsOpenTaskDrawer] = useState(false);
+  const [isOpenMeetingDrawer, setIsOpenMeetingDrawer] = useState(false);
+
+  const handleDirectSubmitPlanningItem = async (payload: {
+    taskId?: string;
+    meetingId?: string;
+    estimatedTime: number;
+    remarks: string;
+    title: string;
+  }) => {
+    addItem(
+      {
+        employeeId,
+        date: todayDateStr,
+        type: payload.taskId ? "TASK" : "MEETING",
+        title: payload.title,
+        priority: "Medium",
+        estimatedTime: payload.estimatedTime,
+        remarks: payload.remarks || undefined,
+        taskId: payload.taskId,
+        meetingId: payload.meetingId,
+      },
+      {
+        onSuccess: () => {
+          setIsAddModalOpen(false);
+          setEditingItem(null);
+        },
+      }
+    );
+  };
+
   const [columnToggleOptions, setColumnToggleOptions] = useState([
     { key: "srNo", label: "Sr No", visible: true },
     { key: "title", label: "Title", visible: true },
     { key: "type", label: "Type", visible: true },
     { key: "estimatedTimeFormatted", label: "Estimated Time", visible: true },
+    { key: "actualTimeTimeFormatted", label: "Actual Time", visible: true },
     { key: "status", label: "Status", visible: true },
     { key: "remarks", label: "Remarks", visible: true },
   ]);
@@ -229,10 +274,10 @@ export default function CheckIn() {
         </div>
 
         {/* Summary Stat Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mb-4 shrink-0">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5 mb-4 shrink-0">
           <div className="border border-slate-200 bg-white rounded-lg p-3.5 flex items-center justify-between shadow-2xs">
             <div>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">
+              <p className="text-sm font-semibold text-slate-500  tracking-wider mb-0.5">
                 Total Items
               </p>
               <p className="text-lg font-bold text-slate-900">{totalItems}</p>
@@ -244,7 +289,7 @@ export default function CheckIn() {
 
           <div className="border border-slate-200 bg-white rounded-lg p-3.5 flex items-center justify-between shadow-2xs">
             <div>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">
+              <p className="text-sm font-semibold text-slate-500  tracking-wider mb-0.5">
                 Est. Time
               </p>
               <p className="text-lg font-bold text-slate-900">
@@ -258,7 +303,21 @@ export default function CheckIn() {
 
           <div className="border border-slate-200 bg-white rounded-lg p-3.5 flex items-center justify-between shadow-2xs">
             <div>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">
+              <p className="text-sm font-semibold text-slate-500  tracking-wider mb-0.5">
+                Remaining Time
+              </p>
+              <p className="text-lg font-bold text-slate-900">
+                {formatMinutesToHours(remainingTime)}
+              </p>
+            </div>
+            <div className="p-2.5 bg-sky-50 text-sky-600 rounded-lg shrink-0">
+              <Hourglass className="h-5 w-5" />
+            </div>
+          </div>
+
+          <div className="border border-slate-200 bg-white rounded-lg p-3.5 flex items-center justify-between shadow-2xs">
+            <div>
+              <p className="text-sm font-semibold text-slate-500  tracking-wider mb-0.5">
                 Total Tasks
               </p>
               <p className="text-lg font-bold text-slate-900">{totalTasks}</p>
@@ -270,7 +329,7 @@ export default function CheckIn() {
 
           <div className="border border-slate-200 bg-white rounded-lg p-3.5 flex items-center justify-between shadow-2xs">
             <div>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">
+              <p className="text-sm font-semibold text-slate-500  tracking-wider mb-0.5">
                 Total Meetings
               </p>
               <p className="text-lg font-bold text-slate-900">{totalMeetings}</p>
@@ -281,6 +340,15 @@ export default function CheckIn() {
           </div>
         </div>
 
+        {isOvertime && (
+          <div className="mb-4 p-3.5 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 flex items-center gap-2.5 shadow-2xs shrink-0">
+            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+            <span>
+              <strong>Overtime Warning:</strong> Your total planned time exceeds the company's working hours. You are planning overtime.
+            </span>
+          </div>
+        )}
+
         {/* Main Table Data Container */}
         <div className="flex-1 bg-white overflow-hidden flex flex-col tb:pt-4 border border-slate-200 rounded-lg">
           <TableData
@@ -288,6 +356,7 @@ export default function CheckIn() {
             tableData={filteredItems.map((item, index) => ({
               ...item,
               estimatedTimeFormatted: formatMinutesToHours(item.estimatedTime || 0),
+              actualTimeTimeFormatted: formatMinutesToHours(item.actualTime || 0),
               title: item.title || (item.type === "TASK" ? item.task?.taskName : item.meeting?.meetingName) || "-",
               srNo: index + 1,
             }))}
@@ -312,6 +381,16 @@ export default function CheckIn() {
           <AddEditCheckInModal
             open={isAddModalOpen}
             onOpenChange={setIsAddModalOpen}
+            onAddTaskClick={() => {
+              setIsAddModalOpen(false);
+              setIsOpenTaskDrawer(true);
+            }}
+            onAddMeetingClick={() => {
+              setIsAddModalOpen(false);
+              setIsOpenMeetingDrawer(true);
+            }}
+            items={items}
+            companyWorkingMinutes={companyWorkingMinutes}
           />
         )}
 
@@ -321,6 +400,16 @@ export default function CheckIn() {
             open={Boolean(editingItem)}
             onOpenChange={(open) => !open && setEditingItem(null)}
             initialItem={editingItem}
+            onAddTaskClick={() => {
+              setEditingItem(null);
+              setIsOpenTaskDrawer(true);
+            }}
+            onAddMeetingClick={() => {
+              setEditingItem(null);
+              setIsOpenMeetingDrawer(true);
+            }}
+            items={items}
+            companyWorkingMinutes={companyWorkingMinutes}
           />
         )}
 
@@ -341,6 +430,47 @@ export default function CheckIn() {
             onOpenChange={setIsSubmitModalOpen}
             onConfirm={handleConfirmSubmitPlan}
             isLoading={isSubmitting}
+            isOvertime={isOvertime}
+          />
+        )}
+
+        {isOpenTaskDrawer && (
+          <CalendarAddTaskDrawer
+            open={isOpenTaskDrawer}
+            onClose={() => {
+              setIsOpenTaskDrawer(false);
+              setIsAddModalOpen(true);
+            }}
+            isPlanningMode={true}
+            onPlanningSubmit={async (payload) => {
+              setIsOpenTaskDrawer(false);
+              await handleDirectSubmitPlanningItem({
+                taskId: payload.taskId,
+                estimatedTime: payload.estimatedTime,
+                remarks: payload.remarks,
+                title: payload.title,
+              });
+            }}
+          />
+        )}
+
+        {isOpenMeetingDrawer && (
+          <MeetingDrawer
+            open={isOpenMeetingDrawer}
+            onClose={() => {
+              setIsOpenMeetingDrawer(false);
+              setIsAddModalOpen(true);
+            }}
+            isPlanningMode={true}
+            onPlanningSubmit={async (payload) => {
+              setIsOpenMeetingDrawer(false);
+              await handleDirectSubmitPlanningItem({
+                meetingId: payload.meetingId,
+                estimatedTime: payload.estimatedTime,
+                remarks: payload.remarks,
+                title: payload.title,
+              });
+            }}
           />
         )}
       </div>

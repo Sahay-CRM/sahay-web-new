@@ -1,11 +1,12 @@
 import ModalData from "@/components/shared/Modal/ModalData";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, AlertTriangle } from "lucide-react";
 
 interface ConfirmSubmitPlanModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   isLoading?: boolean;
+  isOvertime?: boolean;
 }
 
 export default function ConfirmSubmitPlanModal({
@@ -13,6 +14,7 @@ export default function ConfirmSubmitPlanModal({
   onOpenChange,
   onConfirm,
   isLoading,
+  isOvertime,
 }: ConfirmSubmitPlanModalProps) {
   return (
     <ModalData
@@ -50,6 +52,14 @@ export default function ConfirmSubmitPlanModal({
           This will submit your planned items and finalize your schedule for today.
         </p>
 
+        {isOvertime && (
+          <div className="w-full mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-800 flex items-start gap-2 text-left shadow-2xs">
+            <AlertTriangle className="h-4.5 w-4.5 text-amber-600 shrink-0 mt-0.5" />
+            <span>
+              <strong>Overtime Warning:</strong> You are planning overtime. Today's planned time exceeds the company's working hours.
+            </span>
+          </div>
+        )}
       </div>
     </ModalData>
   );

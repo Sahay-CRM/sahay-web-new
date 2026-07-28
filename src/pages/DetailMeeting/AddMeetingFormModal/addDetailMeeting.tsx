@@ -1,5 +1,5 @@
 import { Controller, FormProvider } from "react-hook-form";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import useAddDetailMeeting from "./useAddDetailMeeting";
@@ -17,6 +17,7 @@ import { getEmployee } from "@/features/api/companyEmployee";
 import { getMeetingType } from "@/features/api/meetingType";
 import { useGetDetailMeetingSearch } from "@/features/api/detailMeeting";
 import { cn } from "@/lib/utils";
+import { ImageBaseURL } from "@/features/utils/urls.utils";
 
 import {
   Calendar,
@@ -27,6 +28,10 @@ import {
   Briefcase,
   Video,
   Crown,
+  Upload,
+  FileText,
+  Download,
+  Trash2,
 } from "lucide-react";
 
 interface MeetingSearchResponse {
@@ -53,6 +58,7 @@ export default function AddDetailMeeting() {
     isPending,
     meetingApiData,
     permission,
+    meetingDocsVal,
   } = hookProps;
 
   const {
@@ -64,10 +70,43 @@ export default function AddDetailMeeting() {
     formState: { errors },
   } = methods;
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const [isModalOpen, setModalOpen] = useState(false);
   const handleClose = () => setModalOpen(false);
   const { setBreadcrumbs } = useBreadcrumbs();
   const navigate = useNavigate();
+
+  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+
+    const currentFiles = watch("meetingDocuments") || [];
+    const newFiles = [...currentFiles, ...files];
+    setValue("meetingDocuments", newFiles);
+
+    if (e.target) e.target.value = ""; // Reset input
+  };
+
+  const handleRemoveFile = (indexToRemove: number) => {
+    const fileToRemove = meetingDocsVal[indexToRemove];
+    const currentRemovedIds = watch("removedFileIdsArray") || [];
+    const updatedRemovedIds = [...currentRemovedIds];
+
+    if (
+      typeof fileToRemove === "object" &&
+      "fileId" in fileToRemove &&
+      !(fileToRemove instanceof File)
+    ) {
+      if (!updatedRemovedIds.includes(fileToRemove.fileId)) {
+        updatedRemovedIds.push(fileToRemove.fileId);
+      }
+    }
+    setValue("removedFileIdsArray", updatedRemovedIds);
+
+    const newFiles = meetingDocsVal.filter((_: unknown, idx: number) => idx !== indexToRemove);
+    setValue("meetingDocuments", newFiles);
+  };
 
   const companiesList = useSelector(getCompaniesList);
   const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
@@ -516,6 +555,101 @@ export default function AddDetailMeeting() {
                     </div>
                   )}
                 </div>
+
+                {/* Upload Documents */}
+                {meetingApiData?.detailMeetingStatus === "ENDED" && (
+                  <div className="flex flex-col gap-3">
+                    <label className="block text-md font-semibold text-gray-900">
+                      Upload Documents (Image, PDF, Doc, Video, etc.)
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="px-4 py-2 border-gray-300 text-gray-700 flex items-center gap-2"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="w-4 h-4" />
+                        Choose Files
+                      </Button>
+                      <input
+                        type="file"
+                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.avi,.mov,.mkv"
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        multiple
+                      />
+                    </div>
+
+                    {meetingDocsVal.length > 0 && (
+                      <div className="mt-2 flex flex-col gap-2">
+                        <p className="text-xs text-gray-500 font-medium">
+                          {meetingDocsVal.length} file(s) selected
+                        </p>
+                        {meetingDocsVal.map((file: File | { fileId: string; fileName: string }, idx: number) => {
+                          const isUploaded = !("name" in file) && "fileName" in file;
+                          const fileName = isUploaded
+                            ? (file as { fileName: string }).fileName
+                            : (file as File).name;
+
+                          return (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between p-2.5 bg-gray-50 border border-gray-100 rounded-lg"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                                <span className="text-sm font-medium text-gray-700 truncate">
+                                  {fileName}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-gray-500 hover:text-primary"
+                                  onClick={() => {
+                                    if (file instanceof File) {
+                                      const fileUrl = URL.createObjectURL(file);
+                                      const link = document.createElement("a");
+                                      link.href = fileUrl;
+                                      link.download = file.name;
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                      URL.revokeObjectURL(fileUrl);
+                                    } else if (isUploaded) {
+                                      window.open(
+                                        `${ImageBaseURL}/share/mDocs/${(file as { fileName: string }).fileName}`,
+                                        "_blank"
+                                      );
+                                    }
+                                  }}
+                                >
+                                  <Download className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-gray-500 hover:text-red-500"
+                                  onClick={() => handleRemoveFile(idx)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {meetingDocsVal.length === 0 && (
+                      <p className="text-sm text-gray-400 italic">No files selected</p>
+                    )}
+                  </div>
+                )}
               </Card>
 
               {/* Action Buttons (Bottom) */}
@@ -639,6 +773,23 @@ export default function AddDetailMeeting() {
                       </p>
                     </div>
                   </div>
+
+                  {/* Documents Summary */}
+                  {meetingApiData?.detailMeetingStatus === "ENDED" && meetingDocsVal.length > 0 && (
+                    <div className="flex items-start space-x-3">
+                      <div className="p-2 bg-gray-50 text-gray-500 rounded-lg">
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-gray-400 font-semibold tracking-wider uppercase">
+                          Documents
+                        </p>
+                        <p className="text-sm font-semibold text-gray-700 mt-0.5">
+                          {meetingDocsVal.length} document(s) uploaded
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Card>
             </div>

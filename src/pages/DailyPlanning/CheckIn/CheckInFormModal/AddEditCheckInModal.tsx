@@ -1,21 +1,32 @@
+import { useEffect } from "react";
+import { AlertTriangle } from "lucide-react";
 import ModalData from "@/components/shared/Modal/ModalData";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import { FormItem, FormLabel } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import useAddEditCheckInModal from "./useAddEditCheckInModal";
 
 interface AddEditCheckInModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialItem?: DailyPlanItem | null;
+  onAddTaskClick?: () => void;
+  onAddMeetingClick?: () => void;
+  items: DailyPlanItem[];
+  companyWorkingMinutes: number;
 }
 
 export default function AddEditCheckInModal({
   open,
   onOpenChange,
   initialItem,
+  onAddTaskClick,
+  onAddMeetingClick,
+  items,
+  companyWorkingMinutes,
 }: AddEditCheckInModalProps) {
   const {
     type,
@@ -28,16 +39,33 @@ export default function AddEditCheckInModal({
     setEstimatedHours,
     estimatedMinutes,
     setEstimatedMinutes,
+    priority,
+    setPriority,
     remarks,
     setRemarks,
     errors,
     setErrors,
     refOptions,
     typeOptions,
+    priorityOptions,
     handleSubmit,
     handleModalClose,
     isPending,
-  } = useAddEditCheckInModal({ open, onOpenChange, initialItem });
+    isInputOvertime,
+  } = useAddEditCheckInModal({
+    open,
+    onOpenChange,
+    initialItem,
+    items,
+    companyWorkingMinutes,
+  });
+
+  useEffect(() => {
+    return () => {
+      document.body.style.pointerEvents = "";
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   return (
     <ModalData
@@ -68,76 +96,128 @@ export default function AddEditCheckInModal({
             onChange={(val) => {
               setType((Array.isArray(val) ? val[0] : val) as DailyPlanItemType);
               setSelectedRefId("");
+              setTitle("");
               setSearch("");
             }}
             options={typeOptions}
             isMandatory
             placeholder="Select Type"
-            disabled={!!initialItem}
           />
         </div>
 
+        {/* Select Task or Meeting Field */}
+        <div className="flex items-end gap-2 w-full">
+          <div className="flex-1">
+            <FormLabel className="text-sm font-semibold text-slate-700 mb-1.5 block">
+              Select {type === "TASK" ? "Task" : "Meeting"} <span className="text-red-500">*</span>
+            </FormLabel>
+            <SearchDropdown
+              options={refOptions}
+              selectedValues={selectedRefId ? [selectedRefId] : []}
+              onSearchChange={setSearch}
+              onSelect={(item) => {
+                setSelectedRefId(item.value);
+                setTitle(item.label);
+                setErrors((prev) => ({ ...prev, title: undefined }));
+              }}
+              placeholder={
+                type === "TASK"
+                  ? "Select or search task..."
+                  : "Select or search meeting..."
+              }
+              disabled={!!initialItem}
+              error={errors.title ? { message: errors.title } : undefined}
+            />
+          </div>
+          {!initialItem && (
+            type === "TASK" ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="mb-1 shrink-0 border-gray-300 text-slate-700"
+                onClick={onAddTaskClick}
+              >
+                + Add Task
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                className="mb-1 shrink-0 border-gray-300 text-slate-700"
+                onClick={onAddMeetingClick}
+              >
+                + Add Meeting
+              </Button>
+            )
+          )}
+        </div>
+        {errors.title && (
+          <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] block mt-1">
+            {errors.title}
+          </span>
+        )}
+
+        {/* Priority */}
         <div>
-          <SearchDropdown
-            options={refOptions}
-            selectedValues={selectedRefId ? [selectedRefId] : []}
-            onSearchChange={setSearch}
-            onSelect={(item) => {
-              setSelectedRefId(item.value);
-              setTitle(item.label);
-              setErrors((prev) => ({ ...prev, title: undefined }));
+          <FormSelect
+            label="Priority"
+            value={priority}
+            onChange={(val) => {
+              setPriority((Array.isArray(val) ? val[0] : val) as string);
+              setErrors((prev) => ({ ...prev, priority: undefined }));
             }}
-            label={`Select ${type === "TASK" ? "Task" : "Meeting"} `}
-            isMandatory
-            placeholder={
-              type === "TASK"
-                ? "Select or search task..."
-                : "Select or search meeting..."
-            }
-            disabled={!!initialItem}
-            error={errors.title ? { message: errors.title } : undefined}
+            options={priorityOptions}
+            placeholder="Select Priority"
           />
         </div>
 
-        {/* Estimated Time (Hours & Minutes) */}
-        <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <FormInputField
-                id="estimatedHours"
-                type="number"
-                min={0}
-                value={estimatedHours}
-                onChange={(e) => {
-                  setEstimatedHours(e.target.value);
-                  setErrors((prev) => ({ ...prev, estimatedTime: undefined }));
-                }}
-                label="Estimated Hours"
-                placeholder="0"
-              />
-            </div>
-            <div>
-              <FormInputField
-                id="estimatedMinutes"
-                type="number"
-                min={0}
-                max={59}
-                value={estimatedMinutes}
-                onChange={(e) => {
-                  setEstimatedMinutes(e.target.value);
-                  setErrors((prev) => ({ ...prev, estimatedTime: undefined }));
-                }}
-                label="Estimated Minutes"
-                placeholder="0"
-              />
-            </div>
+        {/* Estimated Time (Hours & Minutes inline) */}
+        <div className="space-y-1">
+          <label className="text-sm font-semibold text-gray-700">
+            Estimated Time <span className="text-red-500">*</span>
+          </label>
+          <div className="grid grid-cols-2 gap-4 mt-1">
+            <FormInputField
+              id="estimatedHours"
+              type="number"
+              min={0}
+              value={estimatedHours}
+              onChange={(e) => {
+                setEstimatedHours(e.target.value);
+                setErrors((prev) => ({ ...prev, estimatedTime: undefined }));
+              }}
+              label="Estimated Hours"
+              placeholder="0"
+            />
+            <FormInputField
+              id="estimatedMinutes"
+              type="number"
+              min={0}
+              max={59}
+              value={estimatedMinutes}
+              onChange={(e) => {
+                setEstimatedMinutes(e.target.value);
+                setErrors((prev) => ({ ...prev, estimatedTime: undefined }));
+              }}
+              label="Estimated Minutes"
+              placeholder="0"
+            />
           </div>
           {errors.estimatedTime && (
-            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] block mt-1">
+            <span className="text-red-600 text-[calc(1em-1px)] block mt-1">
               {errors.estimatedTime}
             </span>
           )}
         </div>
+
+        {isInputOvertime && (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2.5 shadow-2xs">
+            <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+            <span>
+              <strong>Overtime Warning:</strong> Your total planned time exceeds the company's working hours. You are planning overtime.
+            </span>
+          </div>
+        )}
 
         {/* Remarks */}
         <FormItem>

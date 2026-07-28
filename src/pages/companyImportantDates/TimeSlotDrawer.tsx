@@ -25,6 +25,8 @@ import useGetDailyPlanItems, {
   OtherItem,
 } from "@/features/api/dailyPlan/useGetDailyPlanItems";
 import { getUserDetail } from "@/features/selectors/auth.selector";
+import CalendarAddTaskDrawer from "./CalendarAddTaskDrawer";
+import MeetingDrawer from "@/pages/companyTask/CompanyTaskFormModal/meetingDrawer";
 
 import { EventData } from "./useTimeSlotSelection";
 
@@ -65,6 +67,16 @@ export default function TimeSlotDrawer({
   const [eventType, setEventType] = useState<"TASK" | "MEETING" | "">("TASK");
   const [selectedItemId, setSelectedItemId] = useState("");
   const [itemSearch, setItemSearch] = useState("");
+
+  const [isOpenTaskDrawer, setIsOpenTaskDrawer] = useState(false);
+  const [isOpenMeetingDrawer, setIsOpenMeetingDrawer] = useState(false);
+  const [extraOptions, setExtraOptions] = useState<{ value: string; label: string }[]>([]);
+
+  useEffect(() => {
+    if (isOpenTaskDrawer || isOpenMeetingDrawer) {
+      document.body.style.pointerEvents = "auto";
+    }
+  }, [isOpenTaskDrawer, isOpenMeetingDrawer]);
 
   // Fetch items only when type is selected
   const { data: planItems } = useGetDailyPlanItems(
@@ -132,8 +144,16 @@ export default function TimeSlotDrawer({
       options.push(...otherMapped);
     }
 
+    // Append any extra created items
+    extraOptions.forEach((extra) => {
+      const exists = options.some((opt) => opt.value === extra.value);
+      if (!exists) {
+        options.push(extra);
+      }
+    });
+
     return options;
-  }, [planItems, eventType]);
+  }, [planItems, eventType, extraOptions]);
 
   // Editable time slot states
   const [date, setDate] = useState("");
@@ -299,7 +319,8 @@ export default function TimeSlotDrawer({
   if (!selectedSlot) return null;
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <>
+      <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <style>
         {`
           .custom-time-input::-webkit-calendar-picker-indicator {
@@ -360,6 +381,25 @@ export default function TimeSlotDrawer({
                       ? "Select Meeting"
                       : "Select Item"}
                 </Label>
+                {/* {isEditable && eventType && (
+                  eventType === "TASK" ? (
+                    <button
+                      type="button"
+                      onClick={() => setIsOpenTaskDrawer(true)}
+                      className="text-xs font-semibold text-primary hover:underline focus:outline-none"
+                    >
+                      + Add Task
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setIsOpenMeetingDrawer(true)}
+                      className="text-xs font-semibold text-primary hover:underline focus:outline-none"
+                    >
+                      + Add Meeting
+                    </button>
+                  )
+                )} */}
               </div>
               <SearchDropdown
                 placeholder={
@@ -575,5 +615,33 @@ export default function TimeSlotDrawer({
         </form>
       </SheetContent>
     </Sheet>
+
+      <CalendarAddTaskDrawer
+        open={isOpenTaskDrawer}
+        onClose={() => setIsOpenTaskDrawer(false)}
+        onTaskCreated={(task) => {
+          setExtraOptions((prev) => [
+            ...prev,
+            { value: task.taskId, label: task.taskName },
+          ]);
+          setSelectedItemId(task.taskId);
+          setEventType("TASK");
+          setIsOpenTaskDrawer(false);
+        }}
+      />
+      <MeetingDrawer
+        open={isOpenMeetingDrawer}
+        onClose={() => setIsOpenMeetingDrawer(false)}
+        onMeetingCreated={(meet) => {
+          setExtraOptions((prev) => [
+            ...prev,
+            { value: meet.meetingId || "", label: meet.meetingName || "" },
+          ]);
+          setSelectedItemId(meet.meetingId || "");
+          setEventType("MEETING");
+          setIsOpenMeetingDrawer(false);
+        }}
+      />
+    </>
   );
 }

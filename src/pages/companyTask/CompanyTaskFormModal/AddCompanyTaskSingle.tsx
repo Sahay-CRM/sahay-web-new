@@ -463,6 +463,7 @@ interface GroupedCompanyMeetings {
                                 currentPage: 1,
                               }))
                             }
+                            isMandatory
                             error={errors.project}
                             isCrossShow={true}
                           />
@@ -474,7 +475,7 @@ interface GroupedCompanyMeetings {
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
                       <label className="block text-md font-semibold text-gray-900">
-                        Meeting
+                        Meeting <span className="text-red-500">*</span>
                       </label>
                       <button
                         type="button"
@@ -488,10 +489,11 @@ interface GroupedCompanyMeetings {
                       <Controller
                         name="meeting"
                         control={control}
+                        rules={{ required: "Please select a Meeting" }}
                         render={({ field }) => (
                           <SearchDropdown
                             className="w-full border-gray-200 text-base py-2.5 h-auto font-normal"
-                            placeholder="Search meeting (optional)..."
+                            placeholder="Search Meeting..."
                             options={meetingOptions}
                             selectedValues={field.value ? [field.value] : []}
                             onSelect={(item) => field.onChange(item.value)}
@@ -502,6 +504,7 @@ interface GroupedCompanyMeetings {
                                 currentPage: 1,
                               }))
                             }
+                            isMandatory
                             error={errors.meeting}
                             isCrossShow={true}
                           />

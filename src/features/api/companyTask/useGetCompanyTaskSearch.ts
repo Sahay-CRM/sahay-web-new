@@ -8,7 +8,8 @@ import useDebounce from "@/hooks/useDebounce";
 
 export default function useGetCompanyTaskSearch(
   searchTerm: string,
-  planingtask?: boolean
+  planingtask?: boolean,
+  enabled?: boolean
 ) {
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -28,5 +29,6 @@ export default function useGetCompanyTaskSearch(
       });
       return data;
     },
+    enabled: enabled !== undefined ? enabled : true,
   });
 }

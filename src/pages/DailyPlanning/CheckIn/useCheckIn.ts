@@ -86,6 +86,25 @@ export default function useCheckIn() {
     [items]
   );
 
+  const companyWorkingMinutes = useMemo(() => {
+    if (!user?.companyStartTime || !user?.companyEndTime) return 480;
+    const [startH, startM] = user.companyStartTime.split(":").map(Number);
+    const [endH, endM] = user.companyEndTime.split(":").map(Number);
+    if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) return 480;
+    let diff = (endH * 60 + endM) - (startH * 60 + startM);
+    if (diff < 0) diff += 24 * 60;
+    return diff;
+  }, [user?.companyStartTime, user?.companyEndTime]);
+
+  const remainingTime = useMemo(() => {
+    return Math.max(0, companyWorkingMinutes - totalEstimatedTime);
+  }, [companyWorkingMinutes, totalEstimatedTime]);
+
+  const isOvertime = useMemo(() => {
+    return totalEstimatedTime > companyWorkingMinutes;
+  }, [totalEstimatedTime, companyWorkingMinutes]);
+
+
   const handleConfirmDelete = () => {
     if (!deletingItem) return;
     removeItem(deletingItem.planItemId, {
@@ -128,10 +147,12 @@ export default function useCheckIn() {
     totalEstimatedTime,
     totalTasks,
     totalMeetings,
+    remainingTime,
+    isOvertime,
     isEditWindowExpired,
     isSubmitted,
     permission,
-
+    companyWorkingMinutes,
     // Modal state
     isAddModalOpen,
     setIsAddModalOpen,

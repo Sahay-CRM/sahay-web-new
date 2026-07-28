@@ -47,6 +47,9 @@ interface FormValues {
   meeting: string;
   assignUser: string[];
   comment: string;
+  estimatedHours?: string;
+  estimatedMinutes?: string;
+  remarks?: string;
 }
 
 interface GroupedCompanyMeetings {
@@ -58,12 +61,16 @@ interface CalendarAddTaskDrawerProps {
   open: boolean;
   onClose: () => void;
   onTaskCreated?: (task: { taskId: string; taskName: string; taskDescription: string }) => void;
+  isPlanningMode?: boolean;
+  onPlanningSubmit?: (task: { taskId: string; estimatedTime: number; remarks: string; title: string }) => void;
 }
 
 export default function CalendarAddTaskDrawer({
   open,
   onClose,
   onTaskCreated,
+  isPlanningMode = false,
+  onPlanningSubmit,
 }: CalendarAddTaskDrawerProps) {
   const queryClient = useQueryClient();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -108,6 +115,9 @@ export default function CalendarAddTaskDrawer({
       meeting: "",
       assignUser: [],
       comment: "",
+      estimatedHours: "",
+      estimatedMinutes: "",
+      remarks: "",
     },
     mode: "onChange",
   });
@@ -136,6 +146,9 @@ export default function CalendarAddTaskDrawer({
         meeting: "",
         assignUser: [],
         comment: "",
+        estimatedHours: "",
+        estimatedMinutes: "",
+        remarks: "",
       });
     }
   }, [open, reset]);
@@ -222,10 +235,23 @@ export default function CalendarAddTaskDrawer({
 
   const handleSuccess = (newTask: any) => {
     queryClient.invalidateQueries({ queryKey: ["get-all-task-dropdown"] });
-    if (onTaskCreated) {
-      onTaskCreated(newTask);
+    if (isPlanningMode && onPlanningSubmit && newTask?.taskId) {
+      const hours = Number(watch("estimatedHours")) || 0;
+      const minutes = Number(watch("estimatedMinutes")) || 0;
+      const mins = hours * 60 + minutes;
+      const remarksVal = watch("remarks") || "";
+      onPlanningSubmit({
+        taskId: newTask.taskId,
+        estimatedTime: mins,
+        remarks: remarksVal,
+        title: newTask.taskName || watch("taskName"),
+      });
+    } else {
+      if (onTaskCreated) {
+        onTaskCreated(newTask);
+      }
+      onClose();
     }
-    onClose();
   };
 
   const onConfirmSubmit = () => {
@@ -258,6 +284,16 @@ export default function CalendarAddTaskDrawer({
   };
 
   const onSubmit = (data: FormValues) => {
+    if (isPlanningMode) {
+      const hours = Number(data.estimatedHours) || 0;
+      const minutes = Number(data.estimatedMinutes) || 0;
+      const mins = hours * 60 + minutes;
+      if (mins <= 0) {
+        toast.error("Estimated time must be greater than 0");
+        return;
+      }
+    }
+
     const payload = {
       taskName: data.taskName,
       taskDescription: data.taskDescription,
@@ -309,7 +345,7 @@ export default function CalendarAddTaskDrawer({
         style={{ pointerEvents: open ? "auto" : "none" }}
       >
         <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-lg font-bold text-gray-800">Create New Task</h2>
+          <h2 className="text-lg font-bold text-gray-800">Create New Task d</h2>
           <button
             type="button"
             onClick={onClose}
@@ -383,6 +419,7 @@ export default function CalendarAddTaskDrawer({
                     }
                     isCrossShow={true}
                     error={errors.project}
+                    isMandatory
                   />
                 )}
               />
@@ -392,7 +429,7 @@ export default function CalendarAddTaskDrawer({
             <div className="space-y-1">
               <div className="flex justify-between items-center mb-1">
                 <Label className="text-sm font-semibold text-gray-700">
-                  Meeting
+                  Meeting <span className="text-red-500">*</span>
                 </Label>
                 <button
                   type="button"
@@ -405,9 +442,10 @@ export default function CalendarAddTaskDrawer({
               <Controller
                 name="meeting"
                 control={control}
+                rules={{ required: "Please select a Meeting" }}
                 render={({ field }) => (
                   <SearchDropdown
-                    placeholder="Search meeting (optional)..."
+                    placeholder="Search Meeting..."
                     options={meetingOptions}
                     selectedValues={field.value ? [field.value] : []}
                     onSelect={(item) => field.onChange(item.value)}
@@ -415,6 +453,8 @@ export default function CalendarAddTaskDrawer({
                       setPaginationFilterMeeting((prev) => ({ ...prev, search: val }))
                     }
                     isCrossShow={true}
+                    isMandatory
+                    error={errors.meeting}
                   />
                 )}
               />
@@ -515,6 +555,42 @@ export default function CalendarAddTaskDrawer({
                 className="border-gray-200 focus:border-primary resize-none min-h-[80px]"
               />
             </div>
+
+            {isPlanningMode && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-semibold text-gray-700">Estimated Hours</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="0"
+                      {...register("estimatedHours")}
+                      className="border-gray-200 focus:border-primary"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-semibold text-gray-700">Estimated Minutes</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={59}
+                      placeholder="0"
+                      {...register("estimatedMinutes")}
+                      className="border-gray-200 focus:border-primary"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-sm font-semibold text-gray-700">Remarks</Label>
+                  <Textarea
+                    placeholder="Add planning remarks..."
+                    {...register("remarks")}
+                    className="border-gray-200 focus:border-primary resize-none min-h-[80px]"
+                  />
+                </div>
+              </>
+            )}
 
           </div>
 

@@ -1,15 +1,19 @@
 import { useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { FormProvider, useForm } from "react-hook-form";
 import { dateFnsLocalizer, Calendar as BigCalendar } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { enUS } from "date-fns/locale";
-import { Lock } from "lucide-react";
+import { Lock, ClipboardCheck, ArrowRight } from "lucide-react";
 
 import { useTimeSlotSelection, EventData } from "@/pages/companyImportantDates/useTimeSlotSelection";
 import TimeSlotDrawer from "@/pages/companyImportantDates/TimeSlotDrawer";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { getUserDetail } from "@/features/selectors/auth.selector";
+import { useCheckTodaySubmitPlan } from "@/features/api/dailyPlan";
+import Loader from "@/components/shared/Loader/Loader";
+import { Button } from "@/components/ui/button";
 
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
@@ -59,6 +63,7 @@ function CustomEventComponent({ event }: { event: EventData }) {
 export default function CheckOut() {
   const methods = useForm();
   const { setBreadcrumbs } = useBreadcrumbs();
+  const navigate = useNavigate();
 
   const {
     isFeatureEnabled,
@@ -88,6 +93,16 @@ export default function CheckOut() {
 
   // Company check-in / check-out times from Redux user detail
   const user = useSelector(getUserDetail);
+
+  const { data: planStatusData, isLoading: isPlanStatusLoading } = useCheckTodaySubmitPlan();
+
+  const isPlanSubmitted = useMemo(() => {
+    if (!planStatusData) return false;
+    if (typeof planStatusData.data === "boolean") {
+      return planStatusData.data;
+    }
+    return planStatusData.data?.isSubmitted === true;
+  }, [planStatusData]);
 
   const companyTimesMinutes = useMemo(() => {
     const parse = (timeStr?: string | null) => {
@@ -125,6 +140,40 @@ export default function CheckOut() {
     }
     return list;
   }, [customEvents, placeholderEvent]);
+
+  if (isPlanStatusLoading) {
+    return (
+      <div className="w-full h-full flex justify-center items-center py-20">
+        <Loader />
+      </div>
+    );
+  }
+
+  if (!isPlanSubmitted) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50/50 p-6 min-h-[500px]">
+        <div className="max-w-md w-full bg-white border border-slate-200 rounded-xl p-8 text-center shadow-md flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 mb-5 shadow-inner">
+            <ClipboardCheck className="h-8 w-8" />
+          </div>
+          
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Plan Submission Required</h2>
+          
+          <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+            Please submit your daily plan before checking out. You must finalize today's check-in plan first.
+          </p>
+
+          <Button
+            onClick={() => navigate("/dashboard/daily-planning/check-in")}
+            className="w-full py-2 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer border-none"
+          >
+            <span>Go to Check In</span>
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <FormProvider {...methods}>
