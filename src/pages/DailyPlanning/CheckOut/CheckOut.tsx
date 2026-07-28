@@ -128,15 +128,11 @@ export default function CheckOut() {
 
   return (
     <FormProvider {...methods}>
-      <div className="px-2 h-[calc(100vh-120px)] min-h-[500px] sm:px-4 py-4 flex flex-col overflow-hidden">
+      <div className="w-full h-full px-2 sm:px-4 py-4 flex flex-col overflow-hidden">
         <style>{`
           /* Grid View Layout - Google Calendar Day View style */
           .rbc-time-view {
             border: none !important;
-            border-bottom: 1px solid #dadce0 !important;
-            border-left: 1px solid #dadce0 !important;
-            border-right: 1px solid #dadce0 !important;
-            border-radius: 0 0 8px 8px !important;
             background-color: #ffffff !important;
             font-family: inherit !important;
           }
@@ -147,6 +143,7 @@ export default function CheckOut() {
           .rbc-time-content {
             border-top: 1px solid #dadce0 !important;
             border-bottom: none !important;
+            padding-bottom: 52px !important;
           }
           .rbc-time-content > * + * {
             border-left: 1px solid #dadce0 !important;
@@ -170,6 +167,9 @@ export default function CheckOut() {
             text-transform: uppercase !important;
             display: block !important;
             transform: translateY(-50%) !important;
+          }
+          .rbc-time-gutter .rbc-timeslot-group:first-child .rbc-label {
+            transform: none !important;
           }
           .rbc-day-slot .rbc-event {
             pointer-events: none !important;
@@ -274,10 +274,10 @@ export default function CheckOut() {
 
 
         {/* Google Calendar Day-view Container */}
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 border border-[#dadce0] rounded-lg overflow-hidden flex flex-col bg-white">
           {/* Custom Header Row - replaces library's collapsed header */}
           <div
-            className="flex shrink-0 bg-white border border-b-0 border-[#dadce0] rounded-t-lg overflow-hidden"
+            className="flex shrink-0 bg-white border-b border-[#dadce0] overflow-hidden"
             style={{ height: "52px" }}
           >
             {/* Gutter area - matches rbc-time-gutter width (~65px) */}

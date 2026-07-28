@@ -321,8 +321,8 @@ export default function useAddEditCheckInModal({
       estimatedTime?: string;
     } = {};
 
-    if (!title.trim() && !selectedRefId) {
-      newErrors.title = "Title or selection is required";
+    if (!selectedRefId) {
+      newErrors.title = `Please select a ${type === "TASK" ? "task" : "meeting"}`;
     }
 
     const totalMinutes =

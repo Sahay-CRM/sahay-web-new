@@ -77,7 +77,6 @@ export default function AddEditCheckInModal({
           />
         </div>
 
-        {/* Optional Search Dropdown */}
         <div>
           <SearchDropdown
             options={refOptions}
@@ -88,52 +87,56 @@ export default function AddEditCheckInModal({
               setTitle(item.label);
               setErrors((prev) => ({ ...prev, title: undefined }));
             }}
-            label={`Select ${type === "TASK" ? "Task" : "Meeting"} (Optional)`}
+            label={`Select ${type === "TASK" ? "Task" : "Meeting"} `}
+            isMandatory
             placeholder={
               type === "TASK"
                 ? "Select or search task..."
                 : "Select or search meeting..."
             }
             disabled={!!initialItem}
+            error={errors.title ? { message: errors.title } : undefined}
           />
         </div>
 
         {/* Estimated Time (Hours & Minutes) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <FormInputField
-              id="estimatedHours"
-              type="number"
-              min={0}
-              value={estimatedHours}
-              onChange={(e) => {
-                setEstimatedHours(e.target.value);
-                setErrors((prev) => ({ ...prev, estimatedTime: undefined }));
-              }}
-              label="Estimated Hours"
-              placeholder="0"
-            />
+        <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <FormInputField
+                id="estimatedHours"
+                type="number"
+                min={0}
+                value={estimatedHours}
+                onChange={(e) => {
+                  setEstimatedHours(e.target.value);
+                  setErrors((prev) => ({ ...prev, estimatedTime: undefined }));
+                }}
+                label="Estimated Hours"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <FormInputField
+                id="estimatedMinutes"
+                type="number"
+                min={0}
+                max={59}
+                value={estimatedMinutes}
+                onChange={(e) => {
+                  setEstimatedMinutes(e.target.value);
+                  setErrors((prev) => ({ ...prev, estimatedTime: undefined }));
+                }}
+                label="Estimated Minutes"
+                placeholder="0"
+              />
+            </div>
           </div>
-          <div>
-            <FormInputField
-              id="estimatedMinutes"
-              type="number"
-              min={0}
-              max={59}
-              value={estimatedMinutes}
-              onChange={(e) => {
-                setEstimatedMinutes(e.target.value);
-                setErrors((prev) => ({ ...prev, estimatedTime: undefined }));
-              }}
-              label="Estimated Minutes"
-              placeholder="0"
-              error={
-                errors.estimatedTime
-                  ? { message: errors.estimatedTime }
-                  : undefined
-              }
-            />
-          </div>
+          {errors.estimatedTime && (
+            <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] block mt-1">
+              {errors.estimatedTime}
+            </span>
+          )}
         </div>
 
         {/* Remarks */}

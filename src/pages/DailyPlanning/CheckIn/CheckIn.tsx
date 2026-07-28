@@ -1,13 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { FormProvider, useForm } from "react-hook-form";
 import { Plus, CalendarDays, Clock, ListTodo, Presentation, Layers, CheckCheck } from "lucide-react";
 
-import TableData from "@/components/shared/DataTable/DataTable";
+import TableData, { ColumnConfig } from "@/components/shared/DataTable/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import { Button } from "@/components/ui/button";
 import { formatMinutesToHours } from "@/features/utils/formatting.utils";
+import { isColorDark } from "@/features/utils/color.utils";
 import useCheckIn from "./useCheckIn";
 import AddEditCheckInModal from "./CheckInFormModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
@@ -55,14 +57,59 @@ export default function CheckIn() {
     { key: "title", label: "Title", visible: true },
     { key: "type", label: "Type", visible: true },
     { key: "estimatedTimeFormatted", label: "Estimated Time", visible: true },
+    { key: "status", label: "Status", visible: true },
     { key: "remarks", label: "Remarks", visible: true },
   ]);
 
   const visibleColumns = useMemo(() => {
     return columnToggleOptions.reduce((acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
+      if (col.visible) {
+        if (col.key === "status") {
+          acc[col.key] = {
+            label: col.label,
+            render: (_value, item: any) => {
+              const isInProgress = item.status === "PLANNED" && Boolean(item.startTime);
+              const statusName = isInProgress
+                ? "In Progress"
+                : item.status === "PLANNED"
+                ? "Planned"
+                : item.status === "COMPLETED"
+                ? "Completed"
+                : item.status === "FORWARDED"
+                ? "Forwarded"
+                : "Cancelled";
+
+              const color = isInProgress
+                ? "#0ea5e9"
+                : item.status === "PLANNED"
+                ? "#eee100"
+                : item.status === "COMPLETED"
+                ? "#10b981"
+                : item.status === "FORWARDED"
+                ? "#3b82f6"
+                : "#ef4444";
+
+              const textColor = isColorDark(color) ? "#FFFFFF" : "#000000";
+
+              return (
+                <span
+                  className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm select-none min-w-[100px] h-8 text-center"
+                  style={{
+                    backgroundColor: color,
+                    color: textColor,
+                  }}
+                >
+                  {statusName}
+                </span>
+              );
+            },
+          };
+        } else {
+          acc[col.key] = col.label;
+        }
+      }
       return acc;
-    }, {} as Record<string, string>);
+    }, {} as Record<string, string | ColumnConfig>);
   }, [columnToggleOptions]);
 
   const onToggleColumn = (key: string) => {
