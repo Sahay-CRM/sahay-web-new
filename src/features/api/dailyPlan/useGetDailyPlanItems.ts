@@ -28,6 +28,7 @@ export interface PlanDataItem {
   status: string;
   task?: DailyPlanTask | null;
   meeting?: DailyPlanMeeting | null;
+  isPlanned?: boolean | null;
 }
 
 export interface OtherItem {

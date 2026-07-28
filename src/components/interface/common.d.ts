@@ -2057,6 +2057,8 @@ interface DailyPlanItem {
   meeting?: DailyPlanItemMeetingRef | null;
   historyRecords?: DailyPlanItemHistoryRecord[];
   isForwarded?: boolean;
+  isPlanned?: boolean | null;
+  submittedDate?: string | null;
   createdBy?: string;
   updatedBy?: string | null;
   createdDatetime?: string;

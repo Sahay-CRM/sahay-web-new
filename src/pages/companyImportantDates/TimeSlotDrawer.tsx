@@ -97,8 +97,9 @@ export default function TimeSlotDrawer({
           item.taskId ||
           item.meetingId ||
           item.planItemId;
+        const suffix = item.isPlanned === false ? " (Ad-hoc)" : "";
         const name =
-          item.task?.taskName || item.meeting?.meetingName || "Unnamed";
+          (item.task?.taskName || item.meeting?.meetingName || "Unnamed") + suffix;
         return { label: name, value: id };
       })
       .filter((opt) => opt.value);

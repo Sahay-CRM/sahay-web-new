@@ -104,6 +104,28 @@ export default function CheckIn() {
               );
             },
           };
+        } else if (col.key === "title") {
+          acc[col.key] = {
+            label: col.label,
+            render: (_value, item: any) => {
+              const displayTitle = item.title || (item.type === "TASK" ? item.task?.taskName : item.meeting?.meetingName) || "-";
+              return (
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-slate-800">{displayTitle}</span>
+                  {item.isPlanned === false && (
+                    <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20 shadow-2xs select-none">
+                      Ad-hoc
+                    </span>
+                  )}
+                  {item.isPlanned === true && (
+                    <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800 ring-1 ring-inset ring-emerald-600/20 shadow-2xs select-none">
+                      Planned
+                    </span>
+                  )}
+                </div>
+              );
+            },
+          };
         } else {
           acc[col.key] = col.label;
         }

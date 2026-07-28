@@ -111,7 +111,7 @@ export default function useCheckIn() {
   };
 
   const isSubmitted = useMemo(() => {
-    return items.some((i) => i.isFinalSubmit);
+    return items.some((i) => i.submittedDate !== null && i.submittedDate !== undefined);
   }, [items]);
 
   const permission = useSelector(getUserPermission).DAILY_PLANNING;

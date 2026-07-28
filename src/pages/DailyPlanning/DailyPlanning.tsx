@@ -365,9 +365,23 @@ function ItemsTable({
                       className="hover:bg-muted/5 transition-colors"
                     >
                       <td className="px-4 py-3 font-medium text-slate-800">
-                        {item.task?.taskName ||
-                          item.meeting?.meetingName ||
-                          "Untitled"}
+                        <div className="flex items-center gap-2">
+                          <span>
+                            {item.task?.taskName ||
+                              item.meeting?.meetingName ||
+                              "Untitled"}
+                          </span>
+                          {item.isPlanned === false && (
+                            <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-600/20 shadow-2xs select-none">
+                              Ad-hoc
+                            </span>
+                          )}
+                          {item.isPlanned === true && (
+                            <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800 ring-1 ring-inset ring-emerald-600/20 shadow-2xs select-none">
+                              Planned
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge
