@@ -35,7 +35,8 @@ const MeetingTemplateStep = () => {
     search: "",
   });
 
-  const { data: templatesRes, isLoading } = useGetAdminMeetingTemplatesAll(paginationFilter);
+  const { data: templatesRes, isLoading } =
+    useGetAdminMeetingTemplatesAll(paginationFilter);
   const templates = templatesRes?.data || [];
 
   const mappedTemplates = templates.map((item, index) => ({
@@ -149,7 +150,7 @@ const MeetingInfoStep = () => {
           isMandatory
           placeholder="Enter Meeting Name"
         />
-           <Controller
+        <Controller
           control={control}
           name="meetingTimePlanned"
           rules={{
@@ -179,7 +180,8 @@ const MeetingInfoStep = () => {
             return (
               <div className="flex flex-col mb-2">
                 <FormLabel>
-                  Planned Time <span className="text-red-500 text-[20px]">*</span>
+                  Planned Time{" "}
+                  <span className="text-red-500 text-[20px]">*</span>
                 </FormLabel>
                 <div className="flex items-center gap-2 mt-2">
                   <div className="flex items-center gap-1.5">
@@ -190,7 +192,9 @@ const MeetingInfoStep = () => {
                       className="w-16 text-center text-[20px]"
                       placeholder="0"
                     />
-                    <span className="text-sm font-semibold text-gray-500">h</span>
+                    <span className="text-sm font-semibold text-gray-500">
+                      h
+                    </span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Input
@@ -200,7 +204,9 @@ const MeetingInfoStep = () => {
                       className="w-16 text-center text-[20px]"
                       placeholder="0"
                     />
-                    <span className="text-sm font-semibold text-gray-500">m</span>
+                    <span className="text-sm font-semibold text-gray-500">
+                      m
+                    </span>
                   </div>
                 </div>
                 {errors.meetingTimePlanned && (
@@ -235,13 +241,14 @@ const MeetingInfoStep = () => {
                 onChange={(date) => {
                   field.onChange(date?.toISOString());
                 }}
-                disablePastDates={true}
+                disablePastDays={
+                  Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                }
                 error={errors.meetingDateTime}
               />
             );
           }}
         />
-     
       </Card>
     </div>
   );
