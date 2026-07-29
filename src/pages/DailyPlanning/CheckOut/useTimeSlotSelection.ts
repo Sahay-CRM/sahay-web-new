@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
@@ -9,6 +10,7 @@ import {
   useUpdateTimeLog,
   useDeleteTimeLog,
 } from "@/features/api/timeLog";
+import useGetDailyPlan from "@/features/api/dailyPlan/useGetDailyPlan";
 
 export interface EventData {
   eventId: string;
@@ -72,6 +74,56 @@ export function useTimeSlotSelection() {
 
   const userDetail = useSelector(getUserDetail);
   const employeeId = userDetail?.employeeId;
+
+  const todayDateStr = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
+  const { data: dailyPlanData } = useGetDailyPlan(employeeId || "", todayDateStr);
+
+  const items = useMemo(() => {
+    if (!dailyPlanData) return [];
+    if (Array.isArray(dailyPlanData.data)) {
+      return dailyPlanData.data;
+    }
+    return dailyPlanData.data?.dailyPlanItems || [];
+  }, [dailyPlanData]);
+
+  const overtimeHours = useMemo(() => {
+    if (!userDetail?.companyStartTime || !userDetail?.companyEndTime) return 0;
+    const [startH, startM] = userDetail.companyStartTime.split(":").map(Number);
+    const [endH, endM] = userDetail.companyEndTime.split(":").map(Number);
+    if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) return 0;
+    let companyWorkingMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+    if (companyWorkingMinutes < 0) companyWorkingMinutes += 24 * 60;
+
+    const totalEstimatedTime = items.reduce((acc: number, curr: any) => acc + (curr.estimatedTime || 0), 0);
+    if (totalEstimatedTime > companyWorkingMinutes) {
+      return (totalEstimatedTime - companyWorkingMinutes) / 60;
+    }
+    return 0;
+  }, [items, userDetail]);
+
+  const isCheckoutWindowExpired = useMemo(() => {
+    if (!userDetail?.companyEndTime) return false;
+    const [endHour, endMin] = userDetail.companyEndTime.split(":").map(Number);
+    const checkoutStartDateTime = new Date();
+    checkoutStartDateTime.setHours(endHour, endMin, 0, 0);
+
+    const checkoutWindowHours = Math.max(2, overtimeHours + 2);
+    const cutOffDateTime = new Date(checkoutStartDateTime.getTime() + checkoutWindowHours * 60 * 60 * 1000);
+
+    const now = new Date();
+    return now.getTime() > cutOffDateTime.getTime();
+  }, [userDetail?.companyEndTime, overtimeHours]);
+
+  const checkoutDeadlineStr = useMemo(() => {
+    if (!userDetail?.companyEndTime) return "";
+    const [endHour, endMin] = userDetail.companyEndTime.split(":").map(Number);
+    const checkoutStartDateTime = new Date();
+    checkoutStartDateTime.setHours(endHour, endMin, 0, 0);
+
+    const checkoutWindowHours = Math.max(2, overtimeHours + 2);
+    const cutOffDateTime = new Date(checkoutStartDateTime.getTime() + checkoutWindowHours * 60 * 60 * 1000);
+    return format(cutOffDateTime, "hh:mm a");
+  }, [userDetail?.companyEndTime, overtimeHours]);
 
   // Load time log events from API
   const { data: timeLogs } = useGetAllTimeLogs(
@@ -161,6 +213,13 @@ export function useTimeSlotSelection() {
         return;
       }
 
+      // Check check-out window expiration for today's logs
+      const isTodaySlot = logDate.getTime() === today.getTime();
+      if (isTodaySlot && isCheckoutWindowExpired) {
+        toast.error("Checkout window has expired. You cannot log time for today.");
+        return;
+      }
+
       // Avoid trigger on clicking single date cell in month view if it leaks
       if (slotInfo.action === "select") {
         setSelectedSlot({
@@ -171,7 +230,7 @@ export function useTimeSlotSelection() {
         setIsDrawerOpen(true);
       }
     },
-    [isFeatureEnabled, currentView]
+    [isFeatureEnabled, currentView, isCheckoutWindowExpired]
   );
 
   const handleSelectEvent = useCallback((event: EventData) => {
@@ -205,6 +264,17 @@ export function useTimeSlotSelection() {
       const endHours = finalEnd.toISOString();
       const type = (eventTypeStr?.toUpperCase() || "TASK") as "TASK" | "MEETING";
 
+      // Enforce checkout window constraint for today
+      const eventDate = new Date(finalStart);
+      eventDate.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const isTodayEvent = eventDate.getTime() === today.getTime();
+      if (isTodayEvent && isCheckoutWindowExpired) {
+        toast.error("Checkout window has expired. You cannot modify time logs for today.");
+        return;
+      }
+
       if (editingEvent) {
         // Edit existing time log
         updateTimeLog({
@@ -233,17 +303,29 @@ export function useTimeSlotSelection() {
       setSelectedSlot(null);
       setEditingEvent(null);
     },
-    [selectedSlot, editingEvent, employeeId, addTimeLog, updateTimeLog]
+    [selectedSlot, editingEvent, employeeId, addTimeLog, updateTimeLog, isCheckoutWindowExpired]
   );
 
   const deleteEvent = useCallback(() => {
     if (!editingEvent || !editingEvent.timeLogId) return;
 
+    if (editingEvent.start) {
+      const eventDate = new Date(editingEvent.start);
+      eventDate.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const isTodayEvent = eventDate.getTime() === today.getTime();
+      if (isTodayEvent && isCheckoutWindowExpired) {
+        toast.error("Checkout window has expired. You cannot delete time logs for today.");
+        return;
+      }
+    }
+
     deleteTimeLog(editingEvent.timeLogId);
     setIsDrawerOpen(false);
     setSelectedSlot(null);
     setEditingEvent(null);
-  }, [editingEvent, deleteTimeLog]);
+  }, [editingEvent, deleteTimeLog, isCheckoutWindowExpired]);
 
   const closeDrawer = useCallback(() => {
     setIsDrawerOpen(false);
@@ -265,5 +347,7 @@ export function useTimeSlotSelection() {
     saveEvent,
     deleteEvent,
     closeDrawer,
+    isCheckoutWindowExpired,
+    checkoutDeadlineStr,
   };
 }

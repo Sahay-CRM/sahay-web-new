@@ -7,8 +7,8 @@ import { format, parse, startOfWeek, getDay } from "date-fns";
 import { enUS } from "date-fns/locale";
 import { Lock, ClipboardCheck, ArrowRight } from "lucide-react";
 
-import { useTimeSlotSelection, EventData } from "@/pages/companyImportantDates/useTimeSlotSelection";
-import TimeSlotDrawer from "@/pages/companyImportantDates/TimeSlotDrawer";
+import { useTimeSlotSelection, EventData } from "./useTimeSlotSelection";
+import TimeSlotDrawer from "./TimeSlotDrawer";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { getUserDetail } from "@/features/selectors/auth.selector";
 import { useCheckTodaySubmitPlan } from "@/features/api/dailyPlan";
@@ -78,6 +78,8 @@ export default function CheckOut() {
     saveEvent,
     deleteEvent,
     closeDrawer,
+    isCheckoutWindowExpired,
+    checkoutDeadlineStr,
   } = useTimeSlotSelection();
 
   useEffect(() => {
@@ -353,10 +355,17 @@ export default function CheckOut() {
                 </span>
               </div>
               {/* Hint - flex end */}
-              <div className="ml-auto flex items-center gap-1 text-[10px] text-slate-400 font-medium pr-2">
-                <Lock className="h-3 w-3" />
-                <span>Double click or drag on time slot grid to log time</span>
-              </div>
+              {isCheckoutWindowExpired ? (
+                <div className="ml-auto flex items-center gap-1 text-[10px] font-semibold text-red-500 pr-2">
+                  <Lock className="h-3 w-3 text-red-500 animate-pulse" />
+                  <span>Checkout window expired at {checkoutDeadlineStr}. Time logging is locked.</span>
+                </div>
+              ) : (
+                <div className="ml-auto flex items-center gap-1 text-[10px] text-slate-400 font-medium pr-2">
+                  <Lock className="h-3 w-3" />
+                  <span>Double click or drag on time slot grid to log time (Allowed until {checkoutDeadlineStr})</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -366,7 +375,7 @@ export default function CheckOut() {
             startAccessor="start"
             endAccessor="end"
             className="flex-1"
-            selectable={isFeatureEnabled && !isDrawerOpen && currentView === "day"}
+            selectable={isFeatureEnabled && !isDrawerOpen && currentView === "day" && !isCheckoutWindowExpired}
             onSelectSlot={handleSelectSlot}
             onSelecting={() => true}
             longPressThreshold={250}

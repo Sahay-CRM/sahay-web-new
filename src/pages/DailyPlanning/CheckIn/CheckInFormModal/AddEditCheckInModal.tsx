@@ -6,7 +6,6 @@ import FormSelect from "@/components/shared/Form/FormSelect";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import { FormItem, FormLabel } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import useAddEditCheckInModal from "./useAddEditCheckInModal";
 
 interface AddEditCheckInModalProps {
@@ -106,50 +105,48 @@ export default function AddEditCheckInModal({
         </div>
 
         {/* Select Task or Meeting Field */}
-        <div className="flex items-end gap-2 w-full">
-          <div className="flex-1">
-            <FormLabel className="text-sm font-semibold text-slate-700 mb-1.5 block">
+        <div>
+          <div className="flex justify-between items-center w-full mb-1.5">
+            <FormLabel className="text-sm font-semibold text-slate-700 block">
               Select {type === "TASK" ? "Task" : "Meeting"} <span className="text-red-500">*</span>
             </FormLabel>
-            <SearchDropdown
-              options={refOptions}
-              selectedValues={selectedRefId ? [selectedRefId] : []}
-              onSearchChange={setSearch}
-              onSelect={(item) => {
-                setSelectedRefId(item.value);
-                setTitle(item.label);
-                setErrors((prev) => ({ ...prev, title: undefined }));
-              }}
-              placeholder={
-                type === "TASK"
-                  ? "Select or search task..."
-                  : "Select or search meeting..."
-              }
-              disabled={!!initialItem}
-              error={errors.title ? { message: errors.title } : undefined}
-            />
+            {!initialItem && (
+              type === "TASK" ? (
+                <button
+                  type="button"
+                  onClick={onAddTaskClick}
+                  className="text-xs font-semibold text-primary hover:underline focus:outline-none cursor-pointer"
+                >
+                  + Add Task
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onAddMeetingClick}
+                  className="text-xs font-semibold text-primary hover:underline focus:outline-none cursor-pointer"
+                >
+                  + Add Meeting
+                </button>
+              )
+            )}
           </div>
-          {!initialItem && (
-            type === "TASK" ? (
-              <Button
-                type="button"
-                variant="outline"
-                className="mb-1 shrink-0 border-gray-300 text-slate-700"
-                onClick={onAddTaskClick}
-              >
-                + Add Task
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                className="mb-1 shrink-0 border-gray-300 text-slate-700"
-                onClick={onAddMeetingClick}
-              >
-                + Add Meeting
-              </Button>
-            )
-          )}
+          <SearchDropdown
+            options={refOptions}
+            selectedValues={selectedRefId ? [selectedRefId] : []}
+            onSearchChange={setSearch}
+            onSelect={(item) => {
+              setSelectedRefId(item.value);
+              setTitle(item.label);
+              setErrors((prev) => ({ ...prev, title: undefined }));
+            }}
+            placeholder={
+              type === "TASK"
+                ? "Select or search task..."
+                : "Select or search meeting..."
+            }
+            disabled={!!initialItem}
+            error={errors.title ? { message: errors.title } : undefined}
+          />
         </div>
         {errors.title && (
           <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] block mt-1">

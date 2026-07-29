@@ -25,7 +25,7 @@ import useGetDailyPlanItems, {
   OtherItem,
 } from "@/features/api/dailyPlan/useGetDailyPlanItems";
 import { getUserDetail } from "@/features/selectors/auth.selector";
-import CalendarAddTaskDrawer from "./CalendarAddTaskDrawer";
+import CalendarAddTaskDrawer from "../CalendarAddTaskDrawer";
 import MeetingDrawer from "@/pages/companyTask/CompanyTaskFormModal/meetingDrawer";
 
 import { EventData } from "./useTimeSlotSelection";
@@ -109,7 +109,7 @@ export default function TimeSlotDrawer({
           item.taskId ||
           item.meetingId ||
           item.planItemId;
-        const suffix = item.isPlanned === false ? " (Ad-hoc)" : "";
+        const suffix = item.isPlanned === false ? (item.type === "TASK" ? " (Extra Task)" : " (Extra Meeting)") : "";
         const name =
           (item.task?.taskName || item.meeting?.meetingName || "Unnamed") + suffix;
         return { label: name, value: id };
@@ -320,7 +320,11 @@ export default function TimeSlotDrawer({
 
   return (
     <>
-      <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <Sheet
+        open={isOpen}
+        onOpenChange={(open) => !open && onClose()}
+        modal={!(isOpenTaskDrawer || isOpenMeetingDrawer)}
+      >
       <style>
         {`
           .custom-time-input::-webkit-calendar-picker-indicator {
@@ -329,7 +333,19 @@ export default function TimeSlotDrawer({
           }
         `}
       </style>
-      <SheetContent className="sm:max-w-[420px] p-0 flex flex-col h-full bg-background border-l shadow-2xl">
+      <SheetContent
+        className="sm:max-w-[420px] p-0 flex flex-col h-full bg-background border-l shadow-2xl"
+        onPointerDownOutside={(e) => {
+          if (isOpenTaskDrawer || isOpenMeetingDrawer) {
+            e.preventDefault();
+          }
+        }}
+        onInteractOutside={(e) => {
+          if (isOpenTaskDrawer || isOpenMeetingDrawer) {
+            e.preventDefault();
+          }
+        }}
+      >
         <SheetHeader className="p-6 pb-2 border-b flex flex-row items-center justify-between">
           <SheetTitle className="text-lg font-semibold text-foreground">
             {!isEditable
@@ -381,7 +397,7 @@ export default function TimeSlotDrawer({
                       ? "Select Meeting"
                       : "Select Item"}
                 </Label>
-                {/* {isEditable && eventType && (
+                {isEditable && eventType && (
                   eventType === "TASK" ? (
                     <button
                       type="button"
@@ -399,7 +415,7 @@ export default function TimeSlotDrawer({
                       + Add Meeting
                     </button>
                   )
-                )} */}
+                )}
               </div>
               <SearchDropdown
                 placeholder={
@@ -619,6 +635,8 @@ export default function TimeSlotDrawer({
       <CalendarAddTaskDrawer
         open={isOpenTaskDrawer}
         onClose={() => setIsOpenTaskDrawer(false)}
+        isPlanningMode={false}
+        hideProjectMeetingAdd={true}
         onTaskCreated={(task) => {
           setExtraOptions((prev) => [
             ...prev,

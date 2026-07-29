@@ -126,6 +126,7 @@ interface TableProps<T extends Record<string, unknown>> {
   }[];
   indexColumnWidth?: string;
   tableHeightClass?: string;
+  rowClassName?: (item: T) => string;
 }
 
 const renderTimeFormat = (time: unknown) => {
@@ -202,6 +203,7 @@ const TableData = <T extends Record<string, unknown>>({
   dotsKey,
   dotsAnchorKey,
   tableHeightClass,
+  rowClassName,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   // Only show checkboxes if explicitly enabled with multiSelect OR if both selectedValue and handleChange are provided
@@ -430,13 +432,15 @@ const TableData = <T extends Record<string, unknown>>({
               tableData.map((item, index) => (
                 <TableRow
                   key={item[primaryKey] as React.Key}
-                  className={`${
+                  className={twMerge(
                     (item as { isDisabled?: boolean }).isDisabled
                       ? "bg-gray-200 opacity-60 pointer-events-none select-none"
                       : index % 2 === 0
                         ? "bg-gray-25"
-                        : "bg-white"
-                  } hover:bg-gray-100`}
+                        : "bg-white",
+                    "hover:bg-gray-100",
+                    rowClassName?.(item)
+                  )}
                   onClick={() =>
                     !(item as { isDisabled?: boolean }).isDisabled &&
                     handleRowClickOrCheckbox(item)

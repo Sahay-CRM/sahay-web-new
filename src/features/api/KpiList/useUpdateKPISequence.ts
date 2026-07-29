@@ -23,6 +23,9 @@ export default function useUpdateKPISequence() {
     },
     onSuccess: () => {
       queryClient.resetQueries({ queryKey: ["get-kpi-dashboard-structure"] });
+      queryClient.invalidateQueries({
+        queryKey: ["get-kpi-dashboard-structure"],
+      });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

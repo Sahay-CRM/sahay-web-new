@@ -1,5 +1,5 @@
 import ModalData from "@/components/shared/Modal/ModalData";
-import { CalendarDays, AlertTriangle } from "lucide-react";
+import { CalendarDays, AlertTriangle, Info } from "lucide-react";
 
 interface ConfirmSubmitPlanModalProps {
   open: boolean;
@@ -7,7 +7,18 @@ interface ConfirmSubmitPlanModalProps {
   onConfirm: () => void;
   isLoading?: boolean;
   isOvertime?: boolean;
+  plannedMinutes?: number;
+  remainingMinutes?: number;
 }
+
+const formatMinutes = (minutes: number): string => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours > 0) {
+    return `${hours} hr${hours > 1 ? "s" : ""}${mins > 0 ? ` ${mins} min${mins > 1 ? "s" : ""}` : ""}`;
+  }
+  return `${minutes} min${minutes > 1 ? "s" : ""}`;
+};
 
 export default function ConfirmSubmitPlanModal({
   open,
@@ -15,6 +26,8 @@ export default function ConfirmSubmitPlanModal({
   onConfirm,
   isLoading,
   isOvertime,
+  plannedMinutes = 0,
+  remainingMinutes = 0,
 }: ConfirmSubmitPlanModalProps) {
   return (
     <ModalData
@@ -53,10 +66,19 @@ export default function ConfirmSubmitPlanModal({
         </p>
 
         {isOvertime && (
-          <div className="w-full mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-800 flex items-start gap-2 text-left shadow-2xs">
+          <div className="w-full mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-800 flex items-start gap-2 text-left shadow-2xs">
             <AlertTriangle className="h-4.5 w-4.5 text-amber-600 shrink-0 mt-0.5" />
             <span>
               <strong>Overtime Warning:</strong> You are planning overtime. Today's planned time exceeds the company's working hours.
+            </span>
+          </div>
+        )}
+
+        {remainingMinutes > 0 && (
+          <div className="w-full mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800 flex items-start gap-2 text-left shadow-2xs">
+            <Info className="h-4.5 w-4.5 text-blue-600 shrink-0 mt-0.5" />
+            <span>
+              <strong>Remaining Time:</strong> You have planned only <strong>{formatMinutes(plannedMinutes)}</strong> out of your company working hours, and <strong>{formatMinutes(remainingMinutes)}</strong> are still remaining. Are you sure you don't want to plan this remaining time?
             </span>
           </div>
         )}

@@ -2,11 +2,12 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { FormProvider, useForm } from "react-hook-form";
-import { Plus, CalendarDays, Clock, ListTodo, Presentation, Layers, CheckCheck, AlertTriangle, Hourglass } from "lucide-react";
+import { Plus, Clock, ListTodo, Presentation, Layers, CheckCheck, AlertTriangle, Hourglass, ChevronLeft, ChevronRight } from "lucide-react";
 
 import TableData, { ColumnConfig } from "@/components/shared/DataTable/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
+import SingleCalendarDatePicker from "@/components/shared/FormDateTimePicker/SingleCalendarDatePicker";
 import { Button } from "@/components/ui/button";
 import { formatMinutesToHours } from "@/features/utils/formatting.utils";
 import { isColorDark } from "@/features/utils/color.utils";
@@ -14,7 +15,7 @@ import useCheckIn from "./useCheckIn";
 import AddEditCheckInModal from "./CheckInFormModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import ConfirmSubmitPlanModal from "./ConfirmSubmitPlanModal";
-import CalendarAddTaskDrawer from "@/pages/companyImportantDates/CalendarAddTaskDrawer";
+import CalendarAddTaskDrawer from "@/pages/DailyPlanning/CalendarAddTaskDrawer";
 import MeetingDrawer from "@/pages/companyTask/CompanyTaskFormModal/meetingDrawer";
 import useAddDailyPlanItem from "@/features/api/dailyPlan/useAddDailyPlanItem";
 import { getUserId } from "@/features/selectors/auth.selector";
@@ -30,6 +31,12 @@ import PageNotAccess from "@/pages/PageNoAccess";
 export default function CheckIn() {
   const {
     todayDate,
+    selectedDate,
+    setSelectedDate,
+    minDate,
+    maxDate,
+    goToDate,
+    shiftDay,
     items,
     filteredItems,
     isLoading,
@@ -155,16 +162,13 @@ export default function CheckIn() {
             render: (_value, item: any) => {
               const displayTitle = item.title || (item.type === "TASK" ? item.task?.taskName : item.meeting?.meetingName) || "-";
               return (
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-800">{displayTitle}</span>
+                <div className="flex items-center gap-2 min-w-0 w-full">
+                  <span className="font-semibold text-slate-800 truncate" title={displayTitle}>
+                    {displayTitle}
+                  </span>
                   {item.isPlanned === false && (
-                    <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20 shadow-2xs select-none">
-                      Ad-hoc
-                    </span>
-                  )}
-                  {item.isPlanned === true && (
-                    <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800 ring-1 ring-inset ring-emerald-600/20 shadow-2xs select-none">
-                      Planned
+                    <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20 shadow-2xs select-none shrink-0">
+                      {item.type === "TASK" ? "Extra Task" : "Extra Meeting"}
                     </span>
                   )}
                 </div>
@@ -210,21 +214,62 @@ export default function CheckIn() {
       <div className="w-full h-full flex flex-col px-2 sm:px-4 py-4 overflow-hidden">
         {/* Top Header Bar & Actions */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 shrink-0">
-          <div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <SearchInput
               placeholder="Search planning..."
               searchValue={paginationFilter.search}
               setPaginationFilter={setPaginationFilter}
               className="w-80"
             />
+
+            {/* Date Switcher Box */}
+            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white  shadow-2xs">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9"
+                onClick={() => shiftDay(-1)}
+                disabled={selectedDate <= minDate}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+
+              <SingleCalendarDatePicker
+                value={new Date(selectedDate)}
+                onChange={(date) => {
+                  if (date) {
+                    setSelectedDate(format(date, "yyyy-MM-dd"));
+                  }
+                }}
+                minDate={new Date(minDate)}
+                maxDate={new Date(maxDate)}
+                variant="ghost"
+              />
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9"
+                onClick={() => shiftDay(1)}
+                disabled={selectedDate >= maxDate}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {selectedDate !== todayDate && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-3 text-sm cursor-pointer"
+                onClick={() => goToDate(new Date())}
+              >
+                Today
+              </Button>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-md border border-slate-200 text-sm font-semibold text-slate-700 shadow-2xs">
-              <CalendarDays className="h-4 w-4 text-primary" />
-              <span>Date: {format(new Date(todayDate), "dd MMM yyyy")}</span>
-            </div>
-
             {isSubmitted && (
               <div className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-md border border-emerald-200 text-sm font-bold shadow-2xs">
                 <CheckCheck className="h-4 w-4" />
@@ -303,16 +348,35 @@ export default function CheckIn() {
 
           <div className="border border-slate-200 bg-white rounded-lg p-3.5 flex items-center justify-between shadow-2xs">
             <div>
-              <p className="text-sm font-semibold text-slate-500  tracking-wider mb-0.5">
-                Remaining Time
-              </p>
-              <p className="text-lg font-bold text-slate-900">
-                {formatMinutesToHours(remainingTime)}
-              </p>
+              {isOvertime ? (
+                <>
+                  <p className="text-sm font-semibold text-rose-600 tracking-wider mb-0.5 animate-pulse">
+                    Extra Hours
+                  </p>
+                  <p className="text-lg font-bold text-rose-700">
+                    {formatMinutesToHours(totalEstimatedTime - companyWorkingMinutes)}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-slate-500 tracking-wider mb-0.5">
+                    Remaining Time
+                  </p>
+                  <p className="text-lg font-bold text-slate-900">
+                    {formatMinutesToHours(remainingTime)}
+                  </p>
+                </>
+              )}
             </div>
-            <div className="p-2.5 bg-sky-50 text-sky-600 rounded-lg shrink-0">
-              <Hourglass className="h-5 w-5" />
-            </div>
+            {isOvertime ? (
+              <div className="p-2.5 bg-rose-50 text-rose-600 rounded-lg shrink-0">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+            ) : (
+              <div className="p-2.5 bg-sky-50 text-sky-600 rounded-lg shrink-0">
+                <Hourglass className="h-5 w-5" />
+              </div>
+            )}
           </div>
 
           <div className="border border-slate-200 bg-white rounded-lg p-3.5 flex items-center justify-between shadow-2xs">
@@ -360,6 +424,11 @@ export default function CheckIn() {
               title: item.title || (item.type === "TASK" ? item.task?.taskName : item.meeting?.meetingName) || "-",
               srNo: index + 1,
             }))}
+            rowClassName={(item: any) =>
+              item.isPlanned === false
+                ? "bg-amber-50/40 hover:bg-amber-100/50 transition-colors"
+                : ""
+            }
             columns={visibleColumns}
             primaryKey="planItemId"
             onEdit={(row) => setEditingItem(row as unknown as DailyPlanItem)}
@@ -371,7 +440,7 @@ export default function CheckIn() {
             permissionKey="daily-planning"
             moduleKey="DAILY_PLANNING"
             isEditDeleteShow={activePermission.Edit && !isEditWindowExpired && !isSubmitted}
-            showActionsColumn={!isSubmitted}
+            showActionsColumn={!isSubmitted && !isEditWindowExpired}
             actionColumnWidth="w-[100px] overflow-hidden"
           />
         </div>
@@ -431,6 +500,8 @@ export default function CheckIn() {
             onConfirm={handleConfirmSubmitPlan}
             isLoading={isSubmitting}
             isOvertime={isOvertime}
+            plannedMinutes={totalEstimatedTime}
+            remainingMinutes={remainingTime}
           />
         )}
 
@@ -442,6 +513,7 @@ export default function CheckIn() {
               setIsAddModalOpen(true);
             }}
             isPlanningMode={true}
+            hideProjectMeetingAdd={true}
             onPlanningSubmit={async (payload) => {
               setIsOpenTaskDrawer(false);
               await handleDirectSubmitPlanningItem({

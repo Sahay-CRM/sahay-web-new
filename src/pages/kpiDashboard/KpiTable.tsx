@@ -671,16 +671,16 @@ export default function UpdatedKpiTable() {
     const activeData = String(active.id).split(":");
     if (activeData[0] === "group") {
       const group = groupedKpiRows?.find(
-        (g) => g.coreParameter.coreParameterId === activeData[1],
+        (g) => g.coreParameter.coreParameterId === activeData[2],
       );
       if (group) {
         setActiveItem({ type: "group", data: group });
       }
     } else if (activeData[0] === "kpi") {
       const group = groupedKpiRows?.find(
-        (g) => g.coreParameter.coreParameterId === activeData[2],
+        (g) => g.coreParameter.coreParameterId === activeData[3],
       );
-      const kpi = group?.kpis.find((k) => k.kpi.kpiId === activeData[1]);
+      const kpi = group?.kpis.find((k) => k.kpi.kpiId === activeData[2]);
       if (kpi?.kpi) {
         setActiveItem({ type: "kpi", data: kpi.kpi });
       }
@@ -702,10 +702,10 @@ export default function UpdatedKpiTable() {
 
     if (activeData[0] === "group" && overData[0] === "group") {
       // Handle core parameter group reordering
-      handleGroupReorder(activeData[1], overData[1]);
+      handleGroupReorder(activeData[2], overData[2]);
     } else if (activeData[0] === "kpi" && overData[0] === "kpi") {
       // Handle KPI reordering within groups
-      handleKpiReorder(activeData[1], overData[1], activeData[2], overData[2]);
+      handleKpiReorder(activeData[2], overData[2], activeData[3], overData[3]);
     }
   };
 
@@ -2906,7 +2906,7 @@ export default function UpdatedKpiTable() {
             </div>
 
             <DragOverlay>
-              {userData.isSuperAdmin &&
+              {canDrag &&
                 activeItem?.type === "group" &&
                 activeItem.data && (
                   <div
@@ -2930,7 +2930,7 @@ export default function UpdatedKpiTable() {
                     </table>
                   </div>
                 )}
-              {userData.isSuperAdmin &&
+              {canDrag &&
                 activeItem?.type === "kpi" &&
                 activeItem.data && (
                   <div

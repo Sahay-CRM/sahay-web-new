@@ -313,29 +313,29 @@ export const companyNavigationData = [
       },
     ],
   },
-  // {
-  //   id: 23,
-  //   icon: "GanttChart",
-  //   label: "Gantt",
-  //   permission: "View",
-  //   moduleKey: "GANTT_CHART",
-  //   items: [
-  //     {
-  //       id: 1,
-  //       label: "Workspaces",
-  //       link: "/dashboard/gantt/workspaces",
-  //       permission: "View",
-  //       moduleKey: "GANTT_CHART",
-  //     },
-  //     {
-  //       id: 2,
-  //       label: "Templates",
-  //       link: "/dashboard/gantt/templates",
-  //       permission: "View",
-  //       moduleKey: "GANTT_CHART",
-  //     },
-  //   ],
-  // },
+  {
+    id: 23,
+    icon: "GanttChart",
+    label: "Gantt",
+    permission: "View",
+    moduleKey: "GANTT_CHART",
+    items: [
+      {
+        id: 1,
+        label: "Workspaces",
+        link: "/dashboard/gantt/workspaces",
+        permission: "View",
+        moduleKey: "GANTT_CHART",
+      },
+      {
+        id: 2,
+        label: "Templates",
+        link: "/dashboard/gantt/templates",
+        permission: "View",
+        moduleKey: "GANTT_CHART",
+      },
+    ],
+  },
 ];
 
 export const getRouteByLabel = (label: string): string | null => {

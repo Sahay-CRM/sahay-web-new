@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { format } from "date-fns";
+import { format, subDays, addDays } from "date-fns";
 
 import { getUserId, getUserDetail, getUserPermission } from "@/features/selectors/auth.selector";
 import useGetDailyPlan from "@/features/api/dailyPlan/useGetDailyPlan";
@@ -11,6 +11,29 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 export default function useCheckIn() {
   const employeeId = useSelector(getUserId);
   const todayDate = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
+
+  const minDate = useMemo(() => format(subDays(new Date(), 7), "yyyy-MM-dd"), []);
+  const maxDate = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
+
+  const [selectedDate, setSelectedDate] = useState(todayDate);
+
+  const goToDate = (date: Date) => {
+    const formatted = format(date, "yyyy-MM-dd");
+    if (formatted >= minDate && formatted <= maxDate) {
+      setSelectedDate(formatted);
+    }
+  };
+
+  const shiftDay = (delta: number) => {
+    const target = addDays(new Date(selectedDate), delta);
+    goToDate(target);
+  };
+
+  const handleSetSelectedDate = (dateStr: string) => {
+    if (dateStr >= minDate && dateStr <= maxDate) {
+      setSelectedDate(dateStr);
+    }
+  };
 
   const { setBreadcrumbs } = useBreadcrumbs();
 
@@ -27,7 +50,7 @@ export default function useCheckIn() {
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [paginationFilter, setPaginationFilter] = useState({ search: "" });
 
-  const { data, isLoading, refetch } = useGetDailyPlan(employeeId, todayDate);
+  const { data, isLoading, refetch } = useGetDailyPlan(employeeId, selectedDate);
   const { mutate: removeItem, isPending: isDeleting } = useRemoveDailyPlanItem();
   const { mutate: finalSubmit, isPending: isSubmitting } = useFinalSubmitDailyPlan();
 
@@ -35,6 +58,7 @@ export default function useCheckIn() {
   const startTime = user?.companyStartTime;
 
   const isEditWindowExpired = useMemo(() => {
+    if (selectedDate !== todayDate) return true;
     if (!startTime) return false;
     const [startHour, startMin] = startTime.split(":").map(Number);
     const checkinStartDateTime = new Date();
@@ -45,7 +69,7 @@ export default function useCheckIn() {
 
     const now = new Date();
     return now.getTime() > cutOffDateTime.getTime();
-  }, [startTime]);
+  }, [startTime, selectedDate, todayDate]);
 
   const items = useMemo(() => {
     if (Array.isArray(data?.data)) {
@@ -138,6 +162,12 @@ export default function useCheckIn() {
 
   return {
     todayDate,
+    selectedDate,
+    setSelectedDate: handleSetSelectedDate,
+    minDate,
+    maxDate,
+    goToDate,
+    shiftDay,
     items,
     filteredItems,
     isLoading,

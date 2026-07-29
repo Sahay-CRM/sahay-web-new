@@ -362,23 +362,20 @@ function ItemsTable({
                   return (
                     <tr
                       key={item.planItemId}
-                      className="hover:bg-muted/5 transition-colors"
+                      className={item.isPlanned === false
+                        ? "bg-amber-50/40 hover:bg-amber-100/50 transition-colors"
+                        : "hover:bg-muted/5 transition-colors"}
                     >
                       <td className="px-4 py-3 font-medium text-slate-800">
-                        <div className="flex items-center gap-2">
-                          <span>
+                        <div className="flex items-center gap-2 min-w-0 w-full">
+                          <span className="truncate" title={item.task?.taskName || item.meeting?.meetingName || "Untitled"}>
                             {item.task?.taskName ||
                               item.meeting?.meetingName ||
                               "Untitled"}
                           </span>
                           {item.isPlanned === false && (
-                            <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-600/20 shadow-2xs select-none">
-                              Ad-hoc
-                            </span>
-                          )}
-                          {item.isPlanned === true && (
-                            <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800 ring-1 ring-inset ring-emerald-600/20 shadow-2xs select-none">
-                              Planned
+                            <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-600/20 shadow-2xs select-none shrink-0">
+                              {item.task ? "Extra Task" : "Extra Meeting"}
                             </span>
                           )}
                         </div>

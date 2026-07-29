@@ -63,6 +63,7 @@ interface CalendarAddTaskDrawerProps {
   onTaskCreated?: (task: { taskId: string; taskName: string; taskDescription: string }) => void;
   isPlanningMode?: boolean;
   onPlanningSubmit?: (task: { taskId: string; estimatedTime: number; remarks: string; title: string }) => void;
+  hideProjectMeetingAdd?: boolean;
 }
 
 export default function CalendarAddTaskDrawer({
@@ -71,6 +72,7 @@ export default function CalendarAddTaskDrawer({
   onTaskCreated,
   isPlanningMode = false,
   onPlanningSubmit,
+  hideProjectMeetingAdd = false,
 }: CalendarAddTaskDrawerProps) {
   const queryClient = useQueryClient();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -345,7 +347,7 @@ export default function CalendarAddTaskDrawer({
         style={{ pointerEvents: open ? "auto" : "none" }}
       >
         <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-lg font-bold text-gray-800">Create New Task d</h2>
+          <h2 className="text-lg font-bold text-gray-800">Create New Task</h2>
           <button
             type="button"
             onClick={onClose}
@@ -370,7 +372,7 @@ export default function CalendarAddTaskDrawer({
                 className="border-gray-200 focus:border-primary"
               />
               {errors.taskName && (
-                <span className="text-red-500 text-xs">{errors.taskName.message}</span>
+                <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">{errors.taskName.message}</span>
               )}
             </div>
 
@@ -386,7 +388,7 @@ export default function CalendarAddTaskDrawer({
                 className="border-gray-200 focus:border-primary"
               />
               {errors.taskDescription && (
-                <span className="text-red-500 text-xs">{errors.taskDescription.message}</span>
+                <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">{errors.taskDescription.message}</span>
               )}
             </div>
 
@@ -396,13 +398,15 @@ export default function CalendarAddTaskDrawer({
                 <Label className="text-sm font-semibold text-gray-700">
                   Project <span className="text-red-500">*</span>
                 </Label>
-                <button
-                  type="button"
-                  onClick={() => setIsOpenProjectDrawer(true)}
-                  className="text-xs font-semibold text-primary hover:underline focus:outline-none"
-                >
-                  + Add Project
-                </button>
+                {!hideProjectMeetingAdd && (
+                  <button
+                    type="button"
+                    onClick={() => setIsOpenProjectDrawer(true)}
+                    className="text-xs font-semibold text-primary hover:underline focus:outline-none cursor-pointer"
+                  >
+                    + Add Project
+                  </button>
+                )}
               </div>
               <Controller
                 name="project"
@@ -431,13 +435,15 @@ export default function CalendarAddTaskDrawer({
                 <Label className="text-sm font-semibold text-gray-700">
                   Meeting <span className="text-red-500">*</span>
                 </Label>
-                <button
-                  type="button"
-                  onClick={() => setIsOpenMeetingDrawer(true)}
-                  className="text-xs font-semibold text-primary hover:underline focus:outline-none"
-                >
-                  + Add Meeting
-                </button>
+                {!hideProjectMeetingAdd && (
+                  <button
+                    type="button"
+                    onClick={() => setIsOpenMeetingDrawer(true)}
+                    className="text-xs font-semibold text-primary hover:underline focus:outline-none cursor-pointer"
+                  >
+                    + Add Meeting
+                  </button>
+                )}
               </div>
               <Controller
                 name="meeting"
