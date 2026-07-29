@@ -39,12 +39,10 @@ export default function useAddEditCheckInModal({
   const [selectedRefId, setSelectedRefId] = useState("");
   const [estimatedHours, setEstimatedHours] = useState("");
   const [estimatedMinutes, setEstimatedMinutes] = useState("");
-  const [priority, setPriority] = useState<string>("Medium");
   const [remarks, setRemarks] = useState("");
   const [errors, setErrors] = useState<{
     title?: string;
     estimatedTime?: string;
-    priority?: string;
   }>({});
 
   const isInputOvertime = useMemo(() => {
@@ -297,12 +295,6 @@ export default function useAddEditCheckInModal({
     { label: "Meeting", value: "MEETING" },
   ];
 
-  const priorityOptions = [
-    { label: "High", value: "High" },
-    { label: "Medium", value: "Medium" },
-    { label: "Low", value: "Low" },
-  ];
-
   useEffect(() => {
     if (initialItem) {
       setType(initialItem.type || "TASK");
@@ -326,7 +318,6 @@ export default function useAddEditCheckInModal({
       setEstimatedHours(hrs > 0 ? String(hrs) : "");
       setEstimatedMinutes(mins > 0 ? String(mins) : "");
 
-      setPriority(initialItem.priority || "Medium");
       setRemarks(initialItem.remarks || "");
     } else {
       setType("TASK");
@@ -335,7 +326,6 @@ export default function useAddEditCheckInModal({
       setSelectedRefId("");
       setEstimatedHours("");
       setEstimatedMinutes("");
-      setPriority("Medium");
       setRemarks("");
     }
     setErrors({});
@@ -385,7 +375,7 @@ export default function useAddEditCheckInModal({
           type,
           title: finalTitle,
           estimatedTime: totalMinutes,
-          priority,
+          priority: initialItem?.priority || "Medium",
           remarks: remarks.trim() || undefined,
           taskId: type === "TASK" ? selectedRefId || undefined : undefined,
           meetingId:
@@ -404,7 +394,7 @@ export default function useAddEditCheckInModal({
           date: todayDate,
           type,
           title: finalTitle,
-          priority,
+          priority: "Medium",
           estimatedTime: totalMinutes,
           remarks: remarks.trim() || undefined,
           taskId: type === "TASK" ? selectedRefId || undefined : undefined,
@@ -465,15 +455,12 @@ export default function useAddEditCheckInModal({
     setEstimatedHours,
     estimatedMinutes,
     setEstimatedMinutes,
-    priority,
-    setPriority,
     remarks,
     setRemarks,
     errors,
     setErrors,
     refOptions,
     typeOptions,
-    priorityOptions,
     handleSubmit,
     handleModalClose,
     handleDirectSubmitPlanningItem,

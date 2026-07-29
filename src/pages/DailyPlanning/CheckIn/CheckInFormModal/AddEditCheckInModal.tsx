@@ -38,15 +38,12 @@ export default function AddEditCheckInModal({
     setEstimatedHours,
     estimatedMinutes,
     setEstimatedMinutes,
-    priority,
-    setPriority,
     remarks,
     setRemarks,
     errors,
     setErrors,
     refOptions,
     typeOptions,
-    priorityOptions,
     handleSubmit,
     handleModalClose,
     isPending,
@@ -101,15 +98,17 @@ export default function AddEditCheckInModal({
             options={typeOptions}
             isMandatory
             placeholder="Select Type"
+            disabled={!!initialItem}
           />
         </div>
 
         {/* Select Task or Meeting Field */}
         <div>
           <div className="flex justify-between items-center w-full mb-1.5">
-            <FormLabel className="text-sm font-semibold text-slate-700 block">
+           
+            <FormLabel>
               Select {type === "TASK" ? "Task" : "Meeting"} <span className="text-red-500">*</span>
-            </FormLabel>
+              </FormLabel>
             {!initialItem && (
               type === "TASK" ? (
                 <button
@@ -154,25 +153,11 @@ export default function AddEditCheckInModal({
           </span>
         )}
 
-        {/* Priority */}
-        <div>
-          <FormSelect
-            label="Priority"
-            value={priority}
-            onChange={(val) => {
-              setPriority((Array.isArray(val) ? val[0] : val) as string);
-              setErrors((prev) => ({ ...prev, priority: undefined }));
-            }}
-            options={priorityOptions}
-            placeholder="Select Priority"
-          />
-        </div>
+ 
 
         {/* Estimated Time (Hours & Minutes inline) */}
         <div className="space-y-1">
-          <label className="text-sm font-semibold text-gray-700">
-            Estimated Time <span className="text-red-500">*</span>
-          </label>
+         
           <div className="grid grid-cols-2 gap-4 mt-1">
             <FormInputField
               id="estimatedHours"
