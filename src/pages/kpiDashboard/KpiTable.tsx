@@ -47,6 +47,7 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
+  CollisionDetection,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -210,7 +211,7 @@ function SortableKpiRow({
               )}
             </div>
           )}
-          <Avatar className="h-5 w-5">
+          <Avatar className="h-5 w-5 ml-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -700,12 +701,35 @@ export default function UpdatedKpiTable() {
     const activeData = String(active.id).split(":");
     const overData = String(over.id).split(":");
 
-    if (activeData[0] === "group" && overData[0] === "group") {
-      // Handle core parameter group reordering
-      handleGroupReorder(activeData[2], overData[2]);
-    } else if (activeData[0] === "kpi" && overData[0] === "kpi") {
-      // Handle KPI reordering within groups
-      handleKpiReorder(activeData[2], overData[2], activeData[3], overData[3]);
+    if (activeData[0] === "group") {
+      // Handle core parameter group reordering (over could be group header or a kpi within target group)
+      const overGroupId = overData[0] === "group" ? overData[2] : overData[3];
+      if (overGroupId && activeData[2] !== overGroupId) {
+        handleGroupReorder(activeData[2], overGroupId);
+      }
+    } else if (activeData[0] === "kpi") {
+      if (overData[0] === "kpi") {
+        // Handle KPI reordering within groups
+        handleKpiReorder(
+          activeData[2],
+          overData[2],
+          activeData[3],
+          overData[3],
+        );
+      } else if (overData[0] === "group" && activeData[3] === overData[2]) {
+        // Handle KPI dragged over its own group header: move to top of group
+        const group = groupedKpiRows?.find(
+          (g) => g.coreParameter.coreParameterId === activeData[3],
+        );
+        if (group && group.kpis.length > 0) {
+          handleKpiReorder(
+            activeData[2],
+            group.kpis[0].kpi.kpiId,
+            activeData[3],
+            activeData[3],
+          );
+        }
+      }
     }
   };
 
@@ -722,6 +746,8 @@ export default function UpdatedKpiTable() {
 
     if (activeIndex !== -1 && overIndex !== -1) {
       const newOrder = arrayMove(groupedKpiRows, activeIndex, overIndex);
+      setLocalGroupedKpiRows(newOrder);
+
       const kpiIds = newOrder.flatMap((group) =>
         group.kpis.map((k) => k.kpi.kpiId),
       );
@@ -758,6 +784,7 @@ export default function UpdatedKpiTable() {
       const newKpis = arrayMove(group.kpis, activeKpiIndex, overKpiIndex);
       const newGroups = [...groupedKpiRows];
       newGroups[groupIndex] = { ...group, kpis: newKpis };
+      setLocalGroupedKpiRows(newGroups);
 
       const kpiIds = newGroups.flatMap((g) => g.kpis.map((k) => k.kpi.kpiId));
 
@@ -1035,10 +1062,9 @@ export default function UpdatedKpiTable() {
         const otherGroups = getSectionGroups(false);
         return otherGroups.map((g) => ({ ...g, sectionPrefix: "other" }));
       } else {
-        const allGroups = getSectionGroups(true).concat(
-          getSectionGroups(false),
-        );
-        const mergedGroupsMap = new Map<
+        // Single pass through coreParameterGroups in backend-returned order
+        // (which is already sorted by sequence). This preserves group ordering.
+        const allGroupsMap = new Map<
           string,
           {
             coreParameter: {
@@ -1048,17 +1074,95 @@ export default function UpdatedKpiTable() {
             kpis: { kpi: Kpi }[];
           }
         >();
-        allGroups.forEach((g) => {
-          const id = g.coreParameter.coreParameterId;
-          const existing = mergedGroupsMap.get(id);
-          if (!existing) {
-            mergedGroupsMap.set(id, { ...g, kpis: [...g.kpis] });
-          } else {
-            existing.kpis.push(...g.kpis);
-          }
+
+        coreParameterGroups.forEach((coreParam) => {
+          const groupId = coreParam.coreParameterId ?? "UNGROUPED";
+          const groupName = coreParam.coreParameterName ?? "";
+
+          coreParam.kpis?.forEach((kpi: Kpi) => {
+            const coreName = groupName.toLowerCase();
+            const tag = kpi.tag?.toLowerCase() || "";
+            const name = kpi.kpiName?.toLowerCase() || "";
+            const empTagsList = Array.isArray(kpi.empTags)
+              ? kpi.empTags.map((t) =>
+                  typeof t === "string" ? t.toLowerCase().trim() : String(t),
+                )
+              : typeof kpi.empTags === "string"
+                ? kpi.empTags
+                    .toLowerCase()
+                    .split(",")
+                    .map((t) => t.trim())
+                : [];
+            const isTagSearch = enableEmpTags && lowerSearch.startsWith("@");
+            const tagSearchQuery = isTagSearch
+              ? lowerSearch.slice(1).trim()
+              : "";
+
+            const matchesSearch = isTagSearch
+              ? selectedEmpTags.length > 0 || tagSearchQuery === ""
+                ? true
+                : empTagsList.some((t) => t.includes(tagSearchQuery)) ||
+                  tag.includes(tagSearchQuery)
+              : coreName.includes(lowerSearch) ||
+                tag.includes(lowerSearch) ||
+                name.includes(lowerSearch);
+
+            const matchesEmployee =
+              employees.length === 0 ||
+              (kpi.employeeId && employees.includes(kpi.employeeId));
+
+            const matchesDepartment =
+              departments.length === 0 ||
+              departments.includes(kpi.departmentId || "unknown");
+
+            const matchesEmpTags =
+              empTagsFilter.length === 0 ||
+              empTagsFilter.some((selectedTag) =>
+                empTagsList.some(
+                  (t) => t.toLowerCase() === selectedTag.toLowerCase(),
+                ),
+              );
+
+            if (
+              matchesSearch &&
+              matchesEmployee &&
+              matchesDepartment &&
+              matchesEmpTags
+            ) {
+              if (!allGroupsMap.has(groupId)) {
+                allGroupsMap.set(groupId, {
+                  coreParameter: {
+                    coreParameterId: groupId,
+                    coreParameterName: groupName,
+                  },
+                  kpis: [],
+                });
+              }
+              allGroupsMap.get(groupId)!.kpis.push({ kpi });
+            }
+          });
         });
-        return Array.from(mergedGroupsMap.values()).map((g) => ({
+
+        const allGroupsArray = Array.from(allGroupsMap.values()).filter(
+          (g) => g.kpis.length > 0,
+        );
+
+        // Groups that have at least one focus KPI come first (preserving backend
+        // order within each tier), then non-focus groups.
+        const focusGroups = allGroupsArray.filter((g) =>
+          g.kpis.some(({ kpi }) => kpi.isFocus),
+        );
+        const nonFocusGroups = allGroupsArray.filter(
+          (g) => !g.kpis.some(({ kpi }) => kpi.isFocus),
+        );
+
+        return [...focusGroups, ...nonFocusGroups].map((g) => ({
           ...g,
+          // Focus KPIs always appear first within each group
+          kpis: [
+            ...g.kpis.filter(({ kpi }) => kpi.isFocus),
+            ...g.kpis.filter(({ kpi }) => !kpi.isFocus),
+          ],
           sectionPrefix: "all",
         }));
       }
@@ -1066,7 +1170,7 @@ export default function UpdatedKpiTable() {
     [],
   );
 
-  const groupedKpiRows = useMemo(() => {
+  const computedGroupedKpiRows = useMemo(() => {
     if (!filteredData.length || !filteredData[0].kpis) return [];
 
     return getGroupedKpiRowsForFreq(
@@ -1086,6 +1190,17 @@ export default function UpdatedKpiTable() {
     focusFilter,
     getGroupedKpiRowsForFreq,
   ]);
+
+  type GroupedKpiRowItem = ReturnType<typeof getGroupedKpiRowsForFreq>[number];
+  const [localGroupedKpiRows, setLocalGroupedKpiRows] = useState<
+    GroupedKpiRowItem[] | null
+  >(null);
+
+  useEffect(() => {
+    setLocalGroupedKpiRows(null);
+  }, [computedGroupedKpiRows]);
+
+  const groupedKpiRows = localGroupedKpiRows ?? computedGroupedKpiRows;
 
   useEffect(() => {
     const syncScroll = (e: Event) => {
@@ -1267,6 +1382,14 @@ export default function UpdatedKpiTable() {
     }
   };
 
+  const handleWarningClose = () => {
+    setPendingPeriod(null);
+    setPendingNavigation(null);
+    setPendingDownload(false);
+    setIsDownloadDateModalOpen(false);
+    setShowWarning(false);
+  };
+
   const handleWarningDiscard = () => {
     setTempValues({});
     setShowWarning(false);
@@ -1289,14 +1412,6 @@ export default function UpdatedKpiTable() {
         setPendingNavigation(null);
       }, 0);
     }
-  };
-
-  const handleWarningClose = () => {
-    setPendingPeriod(null);
-    setPendingNavigation(null);
-    setPendingDownload(false);
-    setIsDownloadDateModalOpen(false);
-    setShowWarning(false);
   };
 
   const handleFocus = (
@@ -1573,8 +1688,8 @@ export default function UpdatedKpiTable() {
 
         const filename = `KPI_Dashboard_All_${dateStr}.xlsx`;
         XLSX.writeFile(workbook, filename);
-      } catch (error) {
-        console.error("Export failed", error);
+      } catch {
+        // Export failed silently; isExporting is reset in finally
       } finally {
         setIsExporting(false);
       }
@@ -2035,7 +2150,33 @@ export default function UpdatedKpiTable() {
         groupedKpiRows && (
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCenter}
+            collisionDetection={
+              ((args) => {
+                const activeId = String(args.active.id);
+                if (activeId.startsWith("group:")) {
+                  // When dragging a group, only collide with other group headers
+                  const groupOnly = args.droppableContainers.filter((c) =>
+                    String(c.id).startsWith("group:"),
+                  );
+                  return closestCenter({
+                    ...args,
+                    droppableContainers: groupOnly,
+                  });
+                }
+                // For KPI rows, only collide with KPI rows in the same group
+                const activeGroupId = activeId.split(":")[3];
+                const sameGroup = args.droppableContainers.filter((c) => {
+                  const id = String(c.id);
+                  if (id.startsWith("group:")) return false;
+                  return id.split(":")[3] === activeGroupId;
+                });
+                return closestCenter({
+                  ...args,
+                  droppableContainers:
+                    sameGroup.length > 0 ? sameGroup : args.droppableContainers,
+                });
+              }) as CollisionDetection
+            }
             onDragStart={canDrag ? handleDragStart : undefined}
             onDragEnd={canDrag ? handleDragEnd : undefined}
           >
@@ -2149,8 +2290,8 @@ export default function UpdatedKpiTable() {
                                 id={`kpi:${prefix}:${kpi.kpiId}:${group.coreParameter.coreParameterId}`}
                                 kpi={kpi}
                                 isDragging={isDragging}
-                                disabled={!canDrag}
-                                showDragHandle={!!canDrag}
+                                disabled={!canDrag || kpi.isFocus}
+                                showDragHandle={!!canDrag && !kpi.isFocus}
                                 getFormattedValue={getFormattedValue}
                                 selectedPeriod={selectedPeriod}
                                 // onRowClick={handleRowClick}
@@ -2599,7 +2740,8 @@ export default function UpdatedKpiTable() {
                                                       ),
 
                                                     cell?.data !== "-" &&
-                                                      inputValues[key] === undefined &&
+                                                      inputValues[key] ===
+                                                        undefined &&
                                                       validationKey &&
                                                       validationKey !== null &&
                                                       selectedPeriod !==
@@ -2906,102 +3048,97 @@ export default function UpdatedKpiTable() {
             </div>
 
             <DragOverlay>
-              {canDrag &&
-                activeItem?.type === "group" &&
-                activeItem.data && (
-                  <div
-                    className="bg-blue-50 border border-gray-300 rounded shadow-lg"
-                    style={{ width: "500px" }}
-                  >
-                    <table className="w-full table-fixed border-collapse text-sm bg-white">
-                      <tbody>
-                        <tr className="sticky top-[50px] bg-blue-50 z-10 h-[39px]">
-                          <td
-                            colSpan={4}
-                            className="p-2 text-blue-800 border font-bold"
-                          >
-                            <div className="flex items-center gap-2">
-                              <GripVertical className="w-4 h-4 text-gray-400" />
-                              {activeItem.data.coreParameter.coreParameterName}
-                            </div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              {canDrag &&
-                activeItem?.type === "kpi" &&
-                activeItem.data && (
-                  <div
-                    className="bg-white border border-gray-300 rounded shadow-lg"
-                    style={{ width: "500px" }}
-                  >
-                    <table className="w-full table-fixed border-collapse text-sm bg-white">
-                      <tbody>
-                        <tr className="group/row border-b bg-gray-50">
-                          <td className="p-3  w-[75px] h-[55px]">
-                            <div className="flex items-center gap-2">
-                              <GripVertical className="w-4 h-4 text-gray-400" />
-                              <Avatar className="h-6 w-6">
-                                <AvatarFallback
-                                  className={clsx(
-                                    "font-semibold",
-                                    getColorFromName(
-                                      activeItem.data?.employeeName,
-                                    ),
-                                  )}
-                                >
-                                  {(() => {
-                                    if (!activeItem.data?.employeeName)
-                                      return "";
-                                    const names =
-                                      activeItem.data.employeeName.split(" ");
-                                    const firstInitial = names[0]?.[0] ?? "";
-                                    const lastInitial =
-                                      names.length > 1
-                                        ? names[names.length - 1][0]
-                                        : "";
-                                    return (
-                                      firstInitial + lastInitial
-                                    ).toUpperCase();
-                                  })()}
-                                </AvatarFallback>
-                              </Avatar>
-                            </div>
-                          </td>
-                          <td className="px-3 border w-[180px] text-left h-[59px] align-middle">
-                            <span className="line-clamp-2 break-words cursor-default">
-                              {activeItem.data.kpiName}
-                            </span>
-                          </td>
-                          <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
-                            <span className="line-clamp-2 break-words cursor-default">
-                              {activeItem.data.tag}
-                            </span>
-                          </td>
-                          <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
-                            <span className="line-clamp-2 break-words cursor-default">
-                              {activeItem.data.validationType === "YES_NO" ||
-                              activeItem.data.kpiName
-                                ?.toLowerCase()
-                                .includes("yes_no")
-                                ? Number(activeItem.data.value1) === 1
-                                  ? "Yes"
-                                  : "No"
-                                : getFormattedValue(
-                                    activeItem.data.validationType,
-                                    String(activeItem.data?.value1),
-                                    activeItem.data?.value2,
-                                    activeItem.data?.unit,
-                                  )}
-                            </span>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+              {canDrag && activeItem?.type === "group" && activeItem.data && (
+                <div
+                  className="bg-blue-50 border border-gray-300 rounded shadow-lg"
+                  style={{ width: "500px" }}
+                >
+                  <table className="w-full table-fixed border-collapse text-sm bg-white">
+                    <tbody>
+                      <tr className="sticky top-[50px] bg-blue-50 z-10 h-[39px]">
+                        <td
+                          colSpan={4}
+                          className="p-2 text-blue-800 border font-bold"
+                        >
+                          <div className="flex items-center gap-2">
+                            <GripVertical className="w-4 h-4 text-gray-400" />
+                            {activeItem.data.coreParameter.coreParameterName}
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {canDrag && activeItem?.type === "kpi" && activeItem.data && (
+                <div
+                  className="bg-white border border-gray-300 rounded shadow-lg"
+                  style={{ width: "500px" }}
+                >
+                  <table className="w-full table-fixed border-collapse text-sm bg-white">
+                    <tbody>
+                      <tr className="group/row border-b bg-gray-50">
+                        <td className="p-3  w-[75px] h-[55px]">
+                          <div className="flex items-center gap-2">
+                            <GripVertical className="w-4 h-4 text-gray-400" />
+                            <Avatar className="h-6 w-6">
+                              <AvatarFallback
+                                className={clsx(
+                                  "font-semibold",
+                                  getColorFromName(
+                                    activeItem.data?.employeeName,
+                                  ),
+                                )}
+                              >
+                                {(() => {
+                                  if (!activeItem.data?.employeeName) return "";
+                                  const names =
+                                    activeItem.data.employeeName.split(" ");
+                                  const firstInitial = names[0]?.[0] ?? "";
+                                  const lastInitial =
+                                    names.length > 1
+                                      ? names[names.length - 1][0]
+                                      : "";
+                                  return (
+                                    firstInitial + lastInitial
+                                  ).toUpperCase();
+                                })()}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                        </td>
+                        <td className="px-3 border w-[180px] text-left h-[59px] align-middle">
+                          <span className="line-clamp-2 break-words cursor-default">
+                            {activeItem.data.kpiName}
+                          </span>
+                        </td>
+                        <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
+                          <span className="line-clamp-2 break-words cursor-default">
+                            {activeItem.data.tag}
+                          </span>
+                        </td>
+                        <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
+                          <span className="line-clamp-2 break-words cursor-default">
+                            {activeItem.data.validationType === "YES_NO" ||
+                            activeItem.data.kpiName
+                              ?.toLowerCase()
+                              .includes("yes_no")
+                              ? Number(activeItem.data.value1) === 1
+                                ? "Yes"
+                                : "No"
+                              : getFormattedValue(
+                                  activeItem.data.validationType,
+                                  String(activeItem.data?.value1),
+                                  activeItem.data?.value2,
+                                  activeItem.data?.unit,
+                                )}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </DragOverlay>
           </DndContext>
         )

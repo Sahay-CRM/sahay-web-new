@@ -17,7 +17,6 @@ import { getEmployee } from "@/features/api/companyEmployee";
 import { getMeetingType } from "@/features/api/meetingType";
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import { useGetCompanyMeetingSearch } from "@/features/api/companyMeeting";
-import { cn } from "@/lib/utils";
 
 import {
   Calendar,
@@ -565,34 +564,19 @@ export default function AddMeeting() {
                     }}
                   />
 
-                  {/* Selected Employees Pills with Team Leader Crown selection */}
+                  {/* Selected Employees Pills without Team Leader Crown selection */}
                   {employeeVal.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2.5 items-center">
                       {employeeVal.slice(0, 8).map((emp) => (
                         <div
                           key={emp.employeeId}
-                          className={cn(
-                            "flex items-center space-x-1.5 border hover:bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
-                            emp.isTeamLeader 
-                              ? "bg-primary/10 border-primary/20 text-primary" 
-                              : "bg-gray-50 border-gray-150 text-gray-700"
-                          )}
+                          className="flex items-center space-x-1.5 border hover:bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium transition-colors bg-gray-50 border-gray-150 text-gray-700"
                         >
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const updated = employeeVal.map((e) =>
-                                e.employeeId === emp.employeeId
-                                  ? { ...e, isTeamLeader: !e.isTeamLeader }
-                                  : e
-                              );
-                              setValue("employeeId", updated, { shouldValidate: true });
-                            }}
-                            className="w-5 h-5 rounded-full bg-white border flex items-center justify-center text-[10px] font-bold shadow-sm cursor-pointer"
-                            title={emp.isTeamLeader ? "Remove Team Leader" : "Set Team Leader"}
+                          <div
+                            className="w-5 h-5 rounded-full bg-white border flex items-center justify-center text-[10px] font-bold shadow-sm select-none"
                           >
-                            {emp.isTeamLeader ? "👑" : getInitials(emp.employeeName)}
-                          </button>
+                            {getInitials(emp.employeeName)}
+                          </div>
                           <span>{emp.employeeName}</span>
                           <button
                             type="button"
@@ -820,14 +804,11 @@ export default function AddMeeting() {
                         {employeeVal.map((emp) => (
                           <div
                             key={emp.employeeId}
-                            className={cn(
-                              "relative inline-block h-7 w-7 rounded-full ring-2 ring-white bg-primary/10 overflow-hidden shadow-sm flex items-center justify-center",
-                              emp.isTeamLeader && "ring-amber-400 ring-2"
-                            )}
-                            title={emp.isTeamLeader ? `${emp.employeeName} (Team Leader)` : emp.employeeName}
+                            className="relative inline-block h-7 w-7 rounded-full ring-2 ring-white bg-primary/10 overflow-hidden shadow-sm flex items-center justify-center"
+                            title={emp.employeeName}
                           >
                             <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-primary">
-                              {emp.isTeamLeader ? "👑" : getInitials(emp.employeeName)}
+                              {getInitials(emp.employeeName)}
                             </div>
                           </div>
                         ))}

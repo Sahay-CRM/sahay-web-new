@@ -270,9 +270,12 @@ export default function useCompanyTaskList() {
   }, []);
 
   const handleStatusChange = (data: string, row: TaskGetPaging) => {
+    
     const payload = {
       taskStatusId: data,
       taskId: row?.taskId,
+      projectId: row?.projectId,
+      meetingId: row?.meetingId,
     };
 
     updateCompanyTask(payload);

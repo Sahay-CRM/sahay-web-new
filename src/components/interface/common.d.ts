@@ -715,6 +715,7 @@ interface TaskGetPaging {
   color?: string;
   objectiveTaskId?: string;
   projectId?: string;
+  meetingId?: string;
   issueTaskId?: string;
   repetition?: string;
   meetingNoteId?: string;

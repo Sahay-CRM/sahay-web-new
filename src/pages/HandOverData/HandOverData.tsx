@@ -14,6 +14,7 @@ import { useSelector } from "react-redux";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import PageNotAccess from "../PageNoAccess";
 import { toast } from "sonner";
+import { formatEmployeeType } from "@/features/utils/app.utils";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 import ModalData from "@/components/shared/Modal/ModalData";
@@ -83,7 +84,7 @@ export default function HandOverData() {
     return (
       employeeRes?.data?.map((emp) => ({
         value: emp.employeeId,
-        label: `${emp.employeeName} (${emp.designationName || emp.employeeType})`,
+        label: `${emp.employeeName} (${emp.designationName || formatEmployeeType(emp.employeeType)})`,
       })) || []
     );
   }, [employeeRes?.data]);
@@ -116,7 +117,7 @@ export default function HandOverData() {
         })
         .map((emp) => ({
           value: emp.employeeId,
-          label: `${emp.employeeName} (${emp.designationName || emp.employeeType})`,
+          label: `${emp.employeeName} (${emp.designationName || formatEmployeeType(emp.employeeType)})`,
         })) || []
     );
   }, [employeeRes?.data, oldUserId, selectedOldUser]);

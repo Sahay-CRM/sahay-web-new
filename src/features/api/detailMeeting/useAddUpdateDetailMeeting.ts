@@ -11,17 +11,16 @@ export default function useAddUpdateDetailMeeting() {
   const addUpdateDetailMeetingMutation = useMutation({
     mutationKey: ["add-or-update-detailMeeting-list"],
     mutationFn: async (data: CompanyMeetingDataProps) => {
-      const isUpdate = Boolean(data?.meetingId);
+      const { meetingId, ...rest } = data;
+      const isUpdate = Boolean(meetingId);
       const config = {
         url: isUpdate
-          ? Urls.updateDetailMeetingById(data.meetingId!)
+          ? Urls.updateDetailMeetingById(meetingId!)
           : Urls.detailMeetingAdd(),
-        data: data,
+        data: isUpdate ? rest : data,
       };
 
-      const { data: resData } = isUpdate
-        ? await Api.post<DatePaging>(config)
-        : await Api.post<DatePaging>(config);
+      const { data: resData } = await Api.post<DatePaging>(config);
 
       return resData;
     },

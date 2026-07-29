@@ -4,6 +4,7 @@ import { MoreHorizontal, Minus, Plus, UserMinus } from "lucide-react";
 import { getInitials, avatarColor } from "../utils/orgChartUtils";
 import { NodeContextMenu } from "./NodeContextMenu";
 import { Button } from "@/components/ui/button";
+import { formatEmployeeType } from "@/features/utils/app.utils";
 
 export const OrgNode = ({
   data,
@@ -96,9 +97,9 @@ export const OrgNode = ({
 
                 <p
                   className="text-[10px] text-gray-500 truncate"
-                  title={emp.designationName || emp.employeeType || "Employee"}
+                  title={emp.designationName || formatEmployeeType(emp.employeeType || "") || "Employee"}
                 >
-                  {emp.designationName || emp.employeeType || "Employee"}
+                  {emp.designationName || formatEmployeeType(emp.employeeType || "") || "Employee"}
                 </p>
               </div>
 

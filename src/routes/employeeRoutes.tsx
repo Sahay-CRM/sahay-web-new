@@ -3,7 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import DashboardLayout from "@/features/layouts/DashboardLayout/dashboardLayout";
 import AddCompanyEmployee from "@/pages/companyEmployee/AddEmployeeFromModal";
-import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
+// import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
 import AddCompanyTaskSingle from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskSingle";
 import AddCompanyMeeting from "@/pages/Meeting/AddMeetingFormModal/addMeeting";
 
@@ -157,9 +157,9 @@ const DashboardReportView = lazy(
   () => import("../pages/DashboardReport/DashboardReportView"),
 );
 
-const DailyPlanning = lazy(
-  () => import("../pages/DailyPlanning/DailyPlanning"),
-);
+// const DailyPlanning = lazy(
+//   () => import("../pages/DailyPlanning/DailyPlanning"),
+// );
 const CheckIn = lazy(() => import("../pages/DailyPlanning/CheckIn/CheckIn"));
 const CheckOut = lazy(() => import("../pages/DailyPlanning/CheckOut/CheckOut"));
 const Blueprint = lazy(() => import("../pages/MenuBlueprint/MenuBlueprint"));
@@ -187,7 +187,7 @@ export default function EmployeeRoutes() {
         <Route path="employees/add" element={<AddCompanyEmployee />} />
         <Route path="employees/edit/:id" element={<AddCompanyEmployee />} />
         <Route path="calendar" Component={CompanyImportantDates} />
-        <Route path="daily-planning" element={<DailyPlanning />} />
+        {/* <Route path="daily-planning" element={<DailyPlanning />} /> */}
         <Route path="daily-planning/check-in" element={<CheckIn />} />
         <Route path="daily-planning/check-out" element={<CheckOut />} />
 
@@ -222,12 +222,12 @@ export default function EmployeeRoutes() {
         />
         {/* <Route path="tasks/add" element={<AddCompanyTaskList />} /> */}
         <Route path="tasks/add" element={<AddCompanyTaskSingle />} />
-        <Route path="tasks/add-stepped" element={<AddCompanyTaskList />} />
+        {/* <Route path="tasks/add-stepped" element={<AddCompanyTaskList />} /> */}
         <Route path="tasks/view/:id" element={<CompanyTaskView />} />
 
         {/* <Route path="tasks/edit/:id" element={<AddCompanyTaskList />} /> */}
         <Route path="tasks/edit/:id" element={<AddCompanyTaskSingle />} />
-        <Route path="tasks/edit-stepped/:id" element={<AddCompanyTaskList />} />
+        {/* <Route path="tasks/edit-stepped/:id" element={<AddCompanyTaskList />} /> */}
         <Route path="tasksrepeat/add" element={<AddCompanyTaskListRepeat />} />
         <Route
           path="tasksrepeat/edit/:id"

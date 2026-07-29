@@ -82,8 +82,8 @@ export const useAddCompanyTask = () => {
     if (taskId && taskDataById?.data) {
       reset({
         taskId: taskDataById.data.taskId || "",
-        project: projectId || taskDataById.data?.projectId || "",
-        meeting: meetingId || taskDataById.data?.meetingId || "",
+        project: projectId || taskDataById.data?.projectId ,
+        meeting: meetingId || taskDataById.data?.meetingId ,
         taskName: taskDataById.data.taskName || "",
         taskDescription: taskDataById.data.taskDescription || "",
         taskStartDate: taskDataById.data.taskStartDate

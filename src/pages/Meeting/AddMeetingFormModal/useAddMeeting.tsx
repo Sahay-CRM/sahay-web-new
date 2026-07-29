@@ -108,11 +108,6 @@ export default function useAddMeeting() {
         (ele: { employeeId: string }) => ele?.employeeId,
       ),
       companyMeetingId: companyMeetingId || "",
-      teamLeaders: Array.isArray(data?.employeeId)
-        ? data.employeeId
-            .filter((emp: EmployeeDetails) => emp.isTeamLeader)
-            .map((emp: EmployeeDetails) => emp.employeeId)
-        : [],
     };
 
     addMeeting(payload, {

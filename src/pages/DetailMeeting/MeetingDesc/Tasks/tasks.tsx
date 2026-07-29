@@ -137,6 +137,8 @@ export default function Tasks({
     const payload = {
       taskStatusId: data,
       taskId: row?.taskId,
+      projectId: row?.projectId || row?.projectDetails?.projectId,
+      meetingId: meetingId,
     };
     updateCompanyTask(payload, {
       onSuccess: () => {

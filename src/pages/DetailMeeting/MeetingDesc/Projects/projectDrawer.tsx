@@ -316,11 +316,12 @@ export default function ProjectDrawer({
 
   const onSubmit = (data: ProjectFormData) => {
     if (meetingId) {
-      const { employeeId, projectDeadline, ioType, ioId, ...rest } = data;
+      const { employeeId, projectDeadline, ioType, ioId, subParameterId, ...rest } = data;
       const payload = {
         ...rest,
         projectId: projectData?.projectId,
         otherProjectEmployees: employeeId,
+        subParameterIds: subParameterId,
         meetingId: meetingId,
         projectDeadline: projectDeadline
           ? new Date(projectDeadline).toISOString()
