@@ -20,14 +20,17 @@ export interface PlanDataItem {
   planItemId: string;
   planId: string;
   employeeId: string;
-  type: "TASK" | "MEETING";
+  type: "TASK" | "MEETING" | "GANTT";
+  title?: string | null;
   taskId?: string | null;
   meetingId?: string | null;
+  ganttItemId?: string | null;
   estimatedTime?: number;
   actualTime?: number | null;
   status: string;
   task?: DailyPlanTask | null;
   meeting?: DailyPlanMeeting | null;
+  gantItem?: { ganttItemId: string; itemName: string } | null;
   isPlanned?: boolean | null;
 }
 
@@ -38,6 +41,9 @@ export interface OtherItem {
   meetingId?: string;
   meetingName?: string;
   meetingDescription?: string | null;
+  ganttItemId?: string;
+  itemName?: string;
+  itemDescription?: string | null;
 }
 
 export interface GetDailyPlanItemsResponse {
@@ -46,7 +52,7 @@ export interface GetDailyPlanItemsResponse {
 }
 
 interface GetDailyPlanItemsFilter {
-  type: "TASK" | "MEETING";
+  type: "TASK" | "MEETING" | "GANTT";
   search?: string;
 }
 

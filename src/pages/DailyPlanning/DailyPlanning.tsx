@@ -55,7 +55,7 @@ export default function DailyPlanning() {
 
   const items = useMemo(() => data?.data?.dailyPlanItems || [], [data]);
 
-  const tasks = items.filter((i) => i.type === "TASK");
+  const tasks = items.filter((i) => i.type === "TASK" || i.type === "GANTT");
   const meetings = items.filter((i) => i.type === "MEETING");
 
   const completedCount = items.filter((i) => i.status === "COMPLETED").length;
@@ -368,14 +368,16 @@ function ItemsTable({
                     >
                       <td className="px-4 py-3 font-medium text-slate-800">
                         <div className="flex items-center gap-2 min-w-0 w-full">
-                          <span className="truncate" title={item.task?.taskName || item.meeting?.meetingName || "Untitled"}>
-                            {item.task?.taskName ||
+                          <span className="truncate" title={item.title || item.task?.taskName || item.meeting?.meetingName || item.gantItem?.itemName || "Untitled"}>
+                            {item.title ||
+                              item.task?.taskName ||
                               item.meeting?.meetingName ||
+                              item.gantItem?.itemName ||
                               "Untitled"}
                           </span>
                           {item.isPlanned === false && (
                             <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-600/20 shadow-2xs select-none shrink-0">
-                              {item.task ? "Extra Task" : "Extra Meeting"}
+                              {item.type === "TASK" ? "Extra Task" : item.type === "MEETING" ? "Extra Meeting" : "Extra Gant Task"}
                             </span>
                           )}
                         </div>

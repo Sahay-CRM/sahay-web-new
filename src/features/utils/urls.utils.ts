@@ -483,6 +483,7 @@ const Urls = {
 
   // Workspaces
   ganttWorkspaceList: () => `${baseUrl}/company/gantt/workspace/get`,
+  ganttTodayItems: () => `${baseUrl}/company/gantt/item/today`,
   ganttWorkspaceDetail: (id: string) =>
     `${baseUrl}/company/gantt/workspace/get/${id}`,
   ganttWorkspaceCreate: () => `${baseUrl}/company/gantt/workspace/create`,

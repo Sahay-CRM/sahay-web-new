@@ -24,6 +24,7 @@ export default function ItemHistorySheet({
   const { data, isLoading } = useGetDailyPlanItemHistory({
     taskId: item?.type === "TASK" ? item.taskId || undefined : undefined,
     meetingId: item?.type === "MEETING" ? item.meetingId || undefined : undefined,
+    ganttItemId: item?.type === "GANTT" ? item.ganttItemId || undefined : undefined,
   });
 
   const history = [...(data?.data || [])].sort(
@@ -37,7 +38,7 @@ export default function ItemHistorySheet({
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle>
-            {item?.task?.taskName || item?.meeting?.meetingName || "Item History"}
+            {item?.title || item?.task?.taskName || item?.meeting?.meetingName || item?.gantItem?.itemName || "Item History"}
           </SheetTitle>
         </SheetHeader>
 

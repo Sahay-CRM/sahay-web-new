@@ -86,6 +86,7 @@ export default function useCheckIn() {
         item.title ||
         item.task?.taskName ||
         item.meeting?.meetingName ||
+        item.gantItem?.itemName ||
         "";
       const remarks = item.remarks || "";
       return (
@@ -102,23 +103,29 @@ export default function useCheckIn() {
     [items]
   );
   const totalTasks = useMemo(
-    () => items.filter((i) => i.type === "TASK").length,
+    () => items.filter((i) => i.type === "TASK" || i.type === "GANTT").length,
     [items]
   );
   const totalMeetings = useMemo(
     () => items.filter((i) => i.type === "MEETING").length,
     [items]
   );
+  const totalActualTime = useMemo(
+    () => items.reduce((acc, curr) => acc + (curr.actualTime || 0), 0),
+    [items]
+  );
 
   const companyWorkingMinutes = useMemo(() => {
-    if (!user?.companyStartTime || !user?.companyEndTime) return 480;
+    if (!user?.companyStartTime || !user?.companyEndTime) return 0;
     const [startH, startM] = user.companyStartTime.split(":").map(Number);
     const [endH, endM] = user.companyEndTime.split(":").map(Number);
-    if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) return 480;
+    if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) return 0;
     let diff = (endH * 60 + endM) - (startH * 60 + startM);
     if (diff < 0) diff += 24 * 60;
     return diff;
   }, [user?.companyStartTime, user?.companyEndTime]);
+
+  const isCompanyTimeDefined = Boolean(user?.companyStartTime && user?.companyEndTime);
 
   const remainingTime = useMemo(() => {
     return Math.max(0, companyWorkingMinutes - totalEstimatedTime);
@@ -175,6 +182,7 @@ export default function useCheckIn() {
     setPaginationFilter,
     totalItems,
     totalEstimatedTime,
+    totalActualTime,
     totalTasks,
     totalMeetings,
     remainingTime,
@@ -201,5 +209,6 @@ export default function useCheckIn() {
     isSubmitting,
     isSubmitModalOpen,
     setIsSubmitModalOpen,
+    isCompanyTimeDefined,
   };
 }

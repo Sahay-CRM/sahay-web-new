@@ -46,7 +46,7 @@ interface TimeSlotDrawerProps {
     description: string,
     start: Date,
     end: Date,
-    eventType?: "task" | "meeting",
+    eventType?: "task" | "meeting" | "gantt",
     refId?: string,
   ) => void;
   onDelete: () => void;
@@ -64,7 +64,7 @@ export default function TimeSlotDrawer({
   const [formError, setFormError] = useState("");
 
   // Type stored as uppercase to match API requirement
-  const [eventType, setEventType] = useState<"TASK" | "MEETING" | "">("TASK");
+  const [eventType, setEventType] = useState<"TASK" | "MEETING" | "GANTT" | "">("TASK");
   const [selectedItemId, setSelectedItemId] = useState("");
   const [itemSearch, setItemSearch] = useState("");
 
@@ -80,7 +80,7 @@ export default function TimeSlotDrawer({
 
   // Fetch items only when type is selected
   const { data: planItems } = useGetDailyPlanItems(
-    { type: eventType as "TASK" | "MEETING", search: itemSearch || undefined },
+    { type: eventType as "TASK" | "MEETING" | "GANTT", search: itemSearch || undefined },
     !!eventType,
   );
 
@@ -106,25 +106,44 @@ export default function TimeSlotDrawer({
         const id =
           item.task?.taskId ||
           item.meeting?.meetingId ||
+          item.gantItem?.ganttItemId ||
           item.taskId ||
           item.meetingId ||
+          item.ganttItemId ||
           item.planItemId;
-        const suffix = item.isPlanned === false ? (item.type === "TASK" ? " (Extra Task)" : " (Extra Meeting)") : "";
+        const suffix =
+          item.isPlanned === false
+            ? item.type === "TASK"
+              ? " (Extra Task)"
+              : item.type === "MEETING"
+              ? " (Extra Meeting)"
+              : " (Extra Gant Task)"
+            : "";
         const name =
-          (item.task?.taskName || item.meeting?.meetingName || "Unnamed") + suffix;
+          (item.task?.taskName ||
+            item.meeting?.meetingName ||
+            item.gantItem?.itemName ||
+            item.title ||
+            "Unnamed") +
+          suffix;
         return { label: name, value: id };
       })
       .filter((opt) => opt.value);
 
     const otherMapped = otherList
       .map((item: OtherItem) => {
-        const id = item.taskId || item.meetingId;
-        const name = item.taskName || item.meetingName || "Unnamed";
+        const id = item.taskId || item.meetingId || item.ganttItemId;
+        const name = item.taskName || item.meetingName || item.itemName || "Unnamed";
         return { label: name, value: id || "" };
       })
       .filter((opt) => opt.value);
 
-    const typeLabel = eventType === "TASK" ? "Tasks" : "Meetings";
+    const typeLabel =
+      eventType === "TASK"
+        ? "Tasks"
+        : eventType === "MEETING"
+        ? "Meetings"
+        : "Gant Tasks";
 
     if (plandataMapped.length > 0) {
       options.push({
@@ -302,8 +321,13 @@ export default function TimeSlotDrawer({
 
     const selectedOpt = itemOptions.find((opt) => opt.value === selectedItemId);
     const computedTitle =
-      selectedOpt?.label || (eventType === "TASK" ? "Task Log" : "Meeting Log");
-    const eventTypeLower = eventType.toLowerCase() as "task" | "meeting";
+      selectedOpt?.label ||
+      (eventType === "TASK"
+        ? "Task Log"
+        : eventType === "MEETING"
+        ? "Meeting Log"
+        : "Gant Task Log");
+    const eventTypeLower = eventType.toLowerCase() as "task" | "meeting" | "gantt";
 
     onSave(
       computedTitle,
@@ -370,7 +394,7 @@ export default function TimeSlotDrawer({
                 value={eventType}
                 onValueChange={(val) => {
                   if (isEditable) {
-                    setEventType(val as "TASK" | "MEETING");
+                    setEventType(val as "TASK" | "MEETING" | "GANTT");
                     setSelectedItemId("");
                     setItemSearch("");
                   }
@@ -383,6 +407,7 @@ export default function TimeSlotDrawer({
                 <SelectContent>
                   <SelectItem value="TASK">Task</SelectItem>
                   <SelectItem value="MEETING">Meeting</SelectItem>
+                  <SelectItem value="GANTT">Gant Task</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -395,6 +420,8 @@ export default function TimeSlotDrawer({
                     ? "Select Task"
                     : eventType === "MEETING"
                       ? "Select Meeting"
+                      : eventType === "GANTT"
+                      ? "Select Gant Task"
                       : "Select Item"}
                 </Label>
                 {isEditable && eventType && (
@@ -406,7 +433,7 @@ export default function TimeSlotDrawer({
                     >
                       + Add Task
                     </button>
-                  ) : (
+                  ) : eventType === "MEETING" ? (
                     <button
                       type="button"
                       onClick={() => setIsOpenMeetingDrawer(true)}
@@ -414,14 +441,20 @@ export default function TimeSlotDrawer({
                     >
                       + Add Meeting
                     </button>
-                  )
+                  ) : null
                 )}
               </div>
               <SearchDropdown
                 placeholder={
                   !eventType
                     ? "Select type first..."
-                    : `Search and select ${eventType === "TASK" ? "task" : "meeting"}...`
+                    : `Search and select ${
+                        eventType === "TASK"
+                          ? "task"
+                          : eventType === "MEETING"
+                          ? "meeting"
+                          : "gant task"
+                      }...`
                 }
                 options={itemOptions}
                 selectedValues={selectedItemId ? [selectedItemId] : []}

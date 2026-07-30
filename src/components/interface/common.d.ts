@@ -1985,7 +1985,7 @@ interface ColumnConfig {
 interface TimeLog {
   timeLogId: string;
   employeeId: string;
-  type: "TASK" | "MEETING";
+  type: "TASK" | "MEETING" | "GANTT";
   refId?: string;
   startHours: string | number;
   endHours: string | number;
@@ -2008,12 +2008,20 @@ interface TimeLog {
     taskDescription?: string;
     meetingName?: string;
     meetingDescription?: string;
+    itemName?: string;
+    itemDescription?: string;
   };
 }
 
-type DailyPlanItemType = "TASK" | "MEETING";
+type DailyPlanItemType = "TASK" | "MEETING" | "GANTT";
 
 type PlanningStatus = "PLANNED" | "COMPLETED" | "FORWARDED" | "CANCELLED";
+
+interface DailyPlanItemGantRef {
+  ganttItemId: string;
+  itemName: string;
+  itemDescription?: string;
+}
 
 interface DailyPlanItemTaskRef {
   taskId: string;
@@ -2048,6 +2056,8 @@ interface DailyPlanItem {
   priority?: string | null;
   taskId?: string | null;
   meetingId?: string | null;
+  ganttItemId?: string | null;
+  gantItem?: DailyPlanItemGantRef | null;
   estimatedTime: number;
   actualTime?: number | null;
   status: PlanningStatus;
@@ -2088,6 +2098,7 @@ interface AddDailyPlanItemPayload {
   priority?: string;
   taskId?: string;
   meetingId?: string;
+  ganttItemId?: string;
   estimatedTime: number;
   remarks?: string;
 }
@@ -2107,6 +2118,23 @@ interface UpdateDailyPlanItemPayload {
   isFinalSubmit?: boolean;
   taskId?: string;
   meetingId?: string;
+  ganttItemId?: string;
+}
+
+interface TodayGanttItem {
+  ganttItemId: string;
+  ganttWorkspaceId: string;
+  ganttPhaseId: string | null;
+  parentItemId: string | null;
+  itemName: string;
+  itemStatus: string;
+}
+
+interface GanttTodayItemsResponse {
+  success: boolean;
+  status: number;
+  message: string;
+  data: TodayGanttItem[];
 }
 
 interface CarryForwardDailyPlanItemPayload {

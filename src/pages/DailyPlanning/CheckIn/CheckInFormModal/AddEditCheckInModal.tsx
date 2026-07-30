@@ -16,6 +16,7 @@ interface AddEditCheckInModalProps {
   onAddMeetingClick?: () => void;
   items: DailyPlanItem[];
   companyWorkingMinutes: number;
+  date?: string;
 }
 
 export default function AddEditCheckInModal({
@@ -26,6 +27,7 @@ export default function AddEditCheckInModal({
   onAddMeetingClick,
   items,
   companyWorkingMinutes,
+  date,
 }: AddEditCheckInModalProps) {
   const {
     type,
@@ -54,6 +56,7 @@ export default function AddEditCheckInModal({
     initialItem,
     items,
     companyWorkingMinutes,
+    date,
   });
 
   useEffect(() => {
@@ -107,7 +110,7 @@ export default function AddEditCheckInModal({
           <div className="flex justify-between items-center w-full mb-1.5">
            
             <FormLabel>
-              Select {type === "TASK" ? "Task" : "Meeting"} <span className="text-red-500">*</span>
+              Select {type === "TASK" ? "Task" : type === "MEETING" ? "Meeting" : "Gant Task"} <span className="text-red-500">*</span>
               </FormLabel>
             {!initialItem && (
               type === "TASK" ? (
@@ -118,7 +121,7 @@ export default function AddEditCheckInModal({
                 >
                   + Add Task
                 </button>
-              ) : (
+              ) : type === "MEETING" ? (
                 <button
                   type="button"
                   onClick={onAddMeetingClick}
@@ -126,7 +129,7 @@ export default function AddEditCheckInModal({
                 >
                   + Add Meeting
                 </button>
-              )
+              ) : null
             )}
           </div>
           <SearchDropdown
@@ -141,7 +144,9 @@ export default function AddEditCheckInModal({
             placeholder={
               type === "TASK"
                 ? "Select or search task..."
-                : "Select or search meeting..."
+                : type === "MEETING"
+                ? "Select or search meeting..."
+                : "Select or search gant task..."
             }
             disabled={!!initialItem}
             error={errors.title ? { message: errors.title } : undefined}

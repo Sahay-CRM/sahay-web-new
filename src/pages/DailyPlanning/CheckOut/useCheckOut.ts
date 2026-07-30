@@ -38,6 +38,7 @@ export default function useCheckOut() {
         item.title ||
         item.task?.taskName ||
         item.meeting?.meetingName ||
+        item.gantItem?.itemName ||
         "";
       const remarks = item.remarks || "";
       return (
@@ -54,7 +55,7 @@ export default function useCheckOut() {
     [items]
   );
   const totalTasks = useMemo(
-    () => items.filter((i) => i.type === "TASK").length,
+    () => items.filter((i) => i.type === "TASK" || i.type === "GANTT").length,
     [items]
   );
   const totalMeetings = useMemo(

@@ -65,6 +65,12 @@ export function convertHoursToDate(dateStr?: string, decimalHours?: number): Dat
   return new Date(year, month, day, hour, min, 0, 0);
 }
 
+export const ALLOW_OVERLAPPING_TIME_LOGS = false;
+
+function isOverlapping(start1: Date, end1: Date, start2: Date, end2: Date): boolean {
+  return start1 < end2 && end1 > start2;
+}
+
 export function useTimeSlotSelection() {
   const [isFeatureEnabled, setIsFeatureEnabled] = useState<boolean>(true);
   const [currentView, setCurrentView] = useState<string>("month");
@@ -160,6 +166,7 @@ export function useTimeSlotSelection() {
       }
       const typeVal = log.type || "TASK";
       const isTask = typeVal === "TASK";
+      const isGantt = typeVal === "GANTT";
 
       // Get actual name from refDetails (API response) or fallback chains
       const actualName = isTask
@@ -167,6 +174,10 @@ export function useTimeSlotSelection() {
            log.taskDetails?.taskName ||
            log.note ||
            "Task Log")
+        : isGantt
+        ? (log.refDetails?.itemName ||
+           log.note ||
+           "Gant Task Log")
         : (log.refDetails?.meetingName ||
            log.meetingDetails?.meetingName ||
            log.note ||
@@ -178,7 +189,7 @@ export function useTimeSlotSelection() {
         description: log.note || "",
         start,
         end,
-        bgColor: isTask ? "#2e3195" : "#10b981",
+        bgColor: isTask ? "#2e3195" : isGantt ? "#8b5cf6" : "#10b981",
         textColor: "#ffffff",
         eventType: typeVal.toLowerCase(),
         timeLogId: log.timeLogId,
@@ -222,6 +233,15 @@ export function useTimeSlotSelection() {
 
       // Avoid trigger on clicking single date cell in month view if it leaks
       if (slotInfo.action === "select") {
+        if (!ALLOW_OVERLAPPING_TIME_LOGS) {
+          const hasOverlap = customEvents.some((event) =>
+            isOverlapping(slotInfo.start, slotInfo.end, event.start, event.end)
+          );
+          if (hasOverlap) {
+            return;
+          }
+        }
+
         setSelectedSlot({
           start: slotInfo.start,
           end: slotInfo.end,
@@ -230,7 +250,7 @@ export function useTimeSlotSelection() {
         setIsDrawerOpen(true);
       }
     },
-    [isFeatureEnabled, currentView, isCheckoutWindowExpired]
+    [isFeatureEnabled, currentView, isCheckoutWindowExpired, customEvents]
   );
 
   const handleSelectEvent = useCallback((event: EventData) => {
@@ -252,7 +272,7 @@ export function useTimeSlotSelection() {
       description: string,
       customStart?: Date,
       customEnd?: Date,
-      eventTypeStr?: "task" | "meeting",
+      eventTypeStr?: "task" | "meeting" | "gantt",
       refId?: string
     ) => {
       const finalStart = customStart || selectedSlot?.start;
@@ -262,7 +282,7 @@ export function useTimeSlotSelection() {
       const dateStr = format(finalStart, "yyyy-MM-dd");
       const startHours = finalStart.toISOString();
       const endHours = finalEnd.toISOString();
-      const type = (eventTypeStr?.toUpperCase() || "TASK") as "TASK" | "MEETING";
+      const type = (eventTypeStr?.toUpperCase() || "TASK") as "TASK" | "MEETING" | "GANTT";
 
       // Enforce checkout window constraint for today
       const eventDate = new Date(finalStart);
@@ -273,6 +293,19 @@ export function useTimeSlotSelection() {
       if (isTodayEvent && isCheckoutWindowExpired) {
         toast.error("Checkout window has expired. You cannot modify time logs for today.");
         return;
+      }
+
+      if (!ALLOW_OVERLAPPING_TIME_LOGS) {
+        const hasOverlap = customEvents.some((event) => {
+          if (editingEvent && event.eventId === editingEvent.eventId) {
+            return false;
+          }
+          return isOverlapping(finalStart, finalEnd, event.start, event.end);
+        });
+        if (hasOverlap) {
+          toast.error("The selected time range overlaps with an existing time log.");
+          return;
+        }
       }
 
       if (editingEvent) {
@@ -303,7 +336,7 @@ export function useTimeSlotSelection() {
       setSelectedSlot(null);
       setEditingEvent(null);
     },
-    [selectedSlot, editingEvent, employeeId, addTimeLog, updateTimeLog, isCheckoutWindowExpired]
+    [selectedSlot, editingEvent, employeeId, addTimeLog, updateTimeLog, isCheckoutWindowExpired, customEvents]
   );
 
   const deleteEvent = useCallback(() => {

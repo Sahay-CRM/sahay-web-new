@@ -11,7 +11,7 @@ export interface UpdateTimeLogPayload {
   endHours?: string;
   note?: string;
   date?: string;
-  type?: "TASK" | "MEETING";
+  type?: "TASK" | "MEETING" | "GANTT";
   refId?: string;
 }
 

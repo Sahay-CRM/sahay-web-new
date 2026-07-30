@@ -12,6 +12,7 @@ export {
 } from "./useGanttTemplateMutations";
 
 export { useGanttWorkspaces } from "./useGanttWorkspaces";
+export { default as useGetGanttItems } from "./useGetGanttItems";
 export { useGanttWorkspaceDetail } from "./useGanttWorkspaceDetail";
 export {
   useCreateGanttWorkspace,

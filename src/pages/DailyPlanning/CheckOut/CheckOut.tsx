@@ -7,7 +7,7 @@ import { format, parse, startOfWeek, getDay } from "date-fns";
 import { enUS } from "date-fns/locale";
 import { Lock, ClipboardCheck, ArrowRight } from "lucide-react";
 
-import { useTimeSlotSelection, EventData } from "./useTimeSlotSelection";
+import { useTimeSlotSelection, EventData, ALLOW_OVERLAPPING_TIME_LOGS } from "./useTimeSlotSelection";
 import TimeSlotDrawer from "./TimeSlotDrawer";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { getUserDetail } from "@/features/selectors/auth.selector";
@@ -377,7 +377,16 @@ export default function CheckOut() {
             className="flex-1"
             selectable={isFeatureEnabled && !isDrawerOpen && currentView === "day" && !isCheckoutWindowExpired}
             onSelectSlot={handleSelectSlot}
-            onSelecting={() => true}
+            onSelecting={(range) => {
+              if (ALLOW_OVERLAPPING_TIME_LOGS) return true;
+
+              // Check if the currently dragging range overlaps with any customEvents
+              const hasOverlap = customEvents.some((event) =>
+                event.eventId !== editingEvent?.eventId &&
+                range.start < event.end && range.end > event.start
+              );
+              return !hasOverlap;
+            }}
             longPressThreshold={250}
             view="day"
             views={["day"]}

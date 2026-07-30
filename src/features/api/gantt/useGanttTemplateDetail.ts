@@ -30,10 +30,11 @@ function normalise(raw: unknown): GanttTemplateDetailResponse {
       ...templateFields
     } = r;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const phases: GanttTemplatePhase[] = rawPhases.map(
-      ({ items: _items, ...p }) => p,
-    );
+    const phases: GanttTemplatePhase[] = rawPhases.map((p) => {
+      const rest = { ...p };
+      delete (rest as Record<string, unknown>).items;
+      return rest;
+    });
     const itemsTree: GanttTemplateItem[] = [
       ...rawPhases.flatMap((p) => p.items ?? []),
       ...unphased,

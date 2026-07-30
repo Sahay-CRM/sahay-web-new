@@ -7,6 +7,7 @@ import useAddDailyPlanItem from "@/features/api/dailyPlan/useAddDailyPlanItem";
 import useUpdateDailyPlanItem from "@/features/api/dailyPlan/useUpdateDailyPlanItem";
 import useGetCompanyTaskSearch from "@/features/api/companyTask/useGetCompanyTaskSearch";
 import useGetCompanyMeetingSearch from "@/features/api/companyMeeting/useGetCompanyMeetingSearch";
+import { useGetGanttItems } from "@/features/api/gantt";
 
 interface UseAddEditCheckInModalProps {
   open: boolean;
@@ -14,6 +15,7 @@ interface UseAddEditCheckInModalProps {
   initialItem?: DailyPlanItem | null;
   items: DailyPlanItem[];
   companyWorkingMinutes: number;
+  date?: string;
 }
 
 export interface DropdownOptionItem {
@@ -29,6 +31,7 @@ export default function useAddEditCheckInModal({
   initialItem,
   items,
   companyWorkingMinutes,
+  date,
 }: UseAddEditCheckInModalProps) {
   const employeeId = useSelector(getUserId);
   const todayDate = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
@@ -71,6 +74,12 @@ export default function useAddEditCheckInModal({
     isMeetingSearchEnabled ? search : "",
     true,
     isMeetingSearchEnabled,
+  );
+
+  const isGanttEnabled = type === "GANTT";
+  const { data: ganttItemsData } = useGetGanttItems(
+    { date: date || todayDate, search: search },
+    isGanttEnabled,
   );
 
   const taskOptions = useMemo<DropdownOptionItem[]>(() => {
@@ -287,12 +296,58 @@ export default function useAddEditCheckInModal({
     return options;
   }, [meetingSearchData, initialItem, search, selectedRefId, type, title]);
 
+  const ganttOptions = useMemo<DropdownOptionItem[]>(() => {
+    if (selectedRefId && type === "GANTT" && !ganttItemsData) {
+      return [{ value: selectedRefId, label: title }];
+    }
+    const items = Array.isArray(ganttItemsData?.data)
+      ? ganttItemsData.data
+      : [];
+
+    const options: DropdownOptionItem[] = [];
+    if (items.length > 0) {
+      items.forEach((item: TodayGanttItem) => {
+        if (item.ganttItemId) {
+          options.push({
+            value: item.ganttItemId,
+            label: item.itemName || "",
+          });
+        }
+      });
+    }
+
+    const initialGanttItemId =
+      initialItem && initialItem.type === "GANTT"
+        ? initialItem.ganttItemId || initialItem.gantItem?.ganttItemId
+        : undefined;
+
+    if (initialGanttItemId) {
+      const exists = options.some((o) => o.value === initialGanttItemId);
+      if (!exists) {
+        options.unshift({
+          value: initialGanttItemId,
+          label:
+            initialItem?.gantItem?.itemName ||
+            initialItem?.title ||
+            "Selected Gant Task",
+        });
+      }
+    }
+
+    return options;
+  }, [ganttItemsData, initialItem, selectedRefId, type, title]);
+
   const refOptions: DropdownOptionItem[] =
-    type === "TASK" ? taskOptions : meetingOptions;
+    type === "TASK"
+      ? taskOptions
+      : type === "MEETING"
+      ? meetingOptions
+      : ganttOptions;
 
   const typeOptions = [
     { label: "Task", value: "TASK" },
     { label: "Meeting", value: "MEETING" },
+    { label: "Gant Task", value: "GANTT" },
   ];
 
   useEffect(() => {
@@ -302,6 +357,7 @@ export default function useAddEditCheckInModal({
         initialItem.title ||
         initialItem.task?.taskName ||
         initialItem.meeting?.meetingName ||
+        initialItem.gantItem?.itemName ||
         "";
       setTitle(currentTitle);
       setSelectedRefId(
@@ -309,6 +365,8 @@ export default function useAddEditCheckInModal({
           initialItem.task?.taskId ||
           initialItem.meetingId ||
           initialItem.meeting?.meetingId ||
+          initialItem.ganttItemId ||
+          initialItem.gantItem?.ganttItemId ||
           "",
       );
 
@@ -338,7 +396,9 @@ export default function useAddEditCheckInModal({
     } = {};
 
     if (!selectedRefId) {
-      newErrors.title = `Please select a ${type === "TASK" ? "task" : "meeting"}`;
+      newErrors.title = `Please select a ${
+        type === "TASK" ? "task" : type === "MEETING" ? "meeting" : "gant task"
+      }`;
     }
 
     const totalMinutes =
@@ -380,6 +440,8 @@ export default function useAddEditCheckInModal({
           taskId: type === "TASK" ? selectedRefId || undefined : undefined,
           meetingId:
             type === "MEETING" ? selectedRefId || undefined : undefined,
+          ganttItemId:
+            type === "GANTT" ? selectedRefId || undefined : undefined,
         },
         {
           onSuccess: () => {
@@ -400,6 +462,8 @@ export default function useAddEditCheckInModal({
           taskId: type === "TASK" ? selectedRefId || undefined : undefined,
           meetingId:
             type === "MEETING" ? selectedRefId || undefined : undefined,
+          ganttItemId:
+            type === "GANTT" ? selectedRefId || undefined : undefined,
         },
         {
           onSuccess: () => {
@@ -413,6 +477,7 @@ export default function useAddEditCheckInModal({
   const handleDirectSubmitPlanningItem = async (payload: {
     taskId?: string;
     meetingId?: string;
+    ganttItemId?: string;
     estimatedTime: number;
     remarks: string;
     title: string;
@@ -422,13 +487,14 @@ export default function useAddEditCheckInModal({
         {
           employeeId,
           date: todayDate,
-          type: payload.taskId ? "TASK" : "MEETING",
+          type: payload.taskId ? "TASK" : payload.meetingId ? "MEETING" : "GANTT",
           title: payload.title,
           priority: "Medium",
           estimatedTime: payload.estimatedTime,
           remarks: payload.remarks || undefined,
           taskId: payload.taskId,
           meetingId: payload.meetingId,
+          ganttItemId: payload.ganttItemId,
         },
         {
           onSuccess: () => {

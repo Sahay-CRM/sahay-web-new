@@ -18,8 +18,9 @@ import ConfirmSubmitPlanModal from "./ConfirmSubmitPlanModal";
 import CalendarAddTaskDrawer from "@/pages/DailyPlanning/CalendarAddTaskDrawer";
 import MeetingDrawer from "@/pages/companyTask/CompanyTaskFormModal/meetingDrawer";
 import useAddDailyPlanItem from "@/features/api/dailyPlan/useAddDailyPlanItem";
-import { getUserId } from "@/features/selectors/auth.selector";
+import { getUserId, getUserPermission } from "@/features/selectors/auth.selector";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   Tooltip,
   TooltipContent,
@@ -44,6 +45,7 @@ export default function CheckIn() {
     setPaginationFilter,
     totalItems,
     totalEstimatedTime,
+    totalActualTime,
     totalTasks,
     totalMeetings,
     remainingTime,
@@ -66,7 +68,12 @@ export default function CheckIn() {
     handleSubmitPlan,
     handleConfirmSubmitPlan,
     isSubmitting,
+    isCompanyTimeDefined,
   } = useCheckIn();
+
+  const navigate = useNavigate();
+  const allPermissions = useSelector(getUserPermission);
+  const canEditCompanyProfile = allPermissions?.COMPANY_PROFILE?.Edit;
 
   const { mutate: addItem } = useAddDailyPlanItem();
   const employeeId = useSelector(getUserId);
@@ -78,6 +85,7 @@ export default function CheckIn() {
   const handleDirectSubmitPlanningItem = async (payload: {
     taskId?: string;
     meetingId?: string;
+    ganttItemId?: string;
     estimatedTime: number;
     remarks: string;
     title: string;
@@ -86,13 +94,14 @@ export default function CheckIn() {
       {
         employeeId,
         date: todayDateStr,
-        type: payload.taskId ? "TASK" : "MEETING",
+        type: payload.taskId ? "TASK" : payload.meetingId ? "MEETING" : "GANTT",
         title: payload.title,
         priority: "Medium",
         estimatedTime: payload.estimatedTime,
         remarks: payload.remarks || undefined,
         taskId: payload.taskId,
         meetingId: payload.meetingId,
+        ganttItemId: payload.ganttItemId,
       },
       {
         onSuccess: () => {
@@ -160,7 +169,7 @@ export default function CheckIn() {
           acc[col.key] = {
             label: col.label,
             render: (_value, item: any) => {
-              const displayTitle = item.title || (item.type === "TASK" ? item.task?.taskName : item.meeting?.meetingName) || "-";
+              const displayTitle = item.title || (item.type === "TASK" ? item.task?.taskName : item.type === "MEETING" ? item.meeting?.meetingName : item.gantItem?.itemName) || "-";
               return (
                 <div className="flex items-center gap-2 min-w-0 w-full">
                   <span className="font-semibold text-slate-800 truncate" title={displayTitle}>
@@ -168,11 +177,24 @@ export default function CheckIn() {
                   </span>
                   {item.isPlanned === false && (
                     <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20 shadow-2xs select-none shrink-0">
-                      {item.type === "TASK" ? "Extra Task" : "Extra Meeting"}
+                      {item.type === "TASK" ? "Extra Task" : item.type === "MEETING" ? "Extra Meeting" : "Extra Gant Task"}
                     </span>
                   )}
                 </div>
               );
+            },
+          };
+        } else if (col.key === "type") {
+          acc[col.key] = {
+            label: col.label,
+            render: (_value, item: any) => {
+              return item.type === "TASK"
+                ? "Task"
+                : item.type === "MEETING"
+                ? "Meeting"
+                : item.type === "GANTT"
+                ? "Gant Task"
+                : item.type || "-";
             },
           };
         } else {
@@ -208,6 +230,45 @@ export default function CheckIn() {
   if (activePermission.View === false) {
     return <PageNotAccess />;
   }
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+ if (!isCompanyTimeDefined) {
+  return (
+    <div className="w-full h-full flex items-center justify-center p-4 bg-slate-50/30">
+      <div className="max-w-md w-full text-center space-y-5">
+        <div className="inline-flex p-4 bg-primary/10 rounded-full text-primary">
+          <AlertTriangle className="h-10 w-10" />
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="text-xl font-bold text-slate-800 tracking-tight">
+            Working Hours Undefined
+          </h3>
+
+          <p className="text-slate-500 text-sm leading-relaxed">
+            Company has not defined their start time and end time. Please
+            provide this information first.
+          </p>
+        </div>
+
+        {canEditCompanyProfile && (
+          <Button
+            onClick={() => navigate("/dashboard/company-profile")}
+            >
+            Go to Company Profile
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
 
   return (
     <FormProvider {...methods}>
@@ -296,7 +357,7 @@ export default function CheckIn() {
               </TooltipProvider>
             )}
 
-            {activePermission.Add && !isEditWindowExpired && !isSubmitted && (
+            {activePermission.Add && !isEditWindowExpired && !isSubmitted && isCompanyTimeDefined && (
               <>
                 <Button
                   onClick={() => setIsAddModalOpen(true)}
@@ -317,6 +378,7 @@ export default function CheckIn() {
             )}
           </div>
         </div>
+
 
         {/* Summary Stat Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5 mb-4 shrink-0">
@@ -348,7 +410,16 @@ export default function CheckIn() {
 
           <div className="border border-slate-200 bg-white rounded-lg p-3.5 flex items-center justify-between shadow-2xs">
             <div>
-              {isOvertime ? (
+              {isSubmitted ? (
+                <>
+                  <p className="text-sm font-semibold text-slate-500 tracking-wider mb-0.5">
+                    Actual Time
+                  </p>
+                  <p className="text-lg font-bold text-slate-900">
+                    {formatMinutesToHours(totalActualTime)}
+                  </p>
+                </>
+              ) : isOvertime ? (
                 <>
                   <p className="text-sm font-semibold text-rose-600 tracking-wider mb-0.5 animate-pulse">
                     Extra Hours
@@ -368,7 +439,11 @@ export default function CheckIn() {
                 </>
               )}
             </div>
-            {isOvertime ? (
+            {isSubmitted ? (
+              <div className="p-2.5 bg-sky-50 text-sky-600 rounded-lg shrink-0">
+                <Clock className="h-5 w-5" />
+              </div>
+            ) : isOvertime ? (
               <div className="p-2.5 bg-rose-50 text-rose-600 rounded-lg shrink-0">
                 <AlertTriangle className="h-5 w-5" />
               </div>
@@ -421,7 +496,7 @@ export default function CheckIn() {
               ...item,
               estimatedTimeFormatted: formatMinutesToHours(item.estimatedTime || 0),
               actualTimeTimeFormatted: formatMinutesToHours(item.actualTime || 0),
-              title: item.title || (item.type === "TASK" ? item.task?.taskName : item.meeting?.meetingName) || "-",
+              title: item.title || (item.type === "TASK" ? item.task?.taskName : item.type === "MEETING" ? item.meeting?.meetingName : item.gantItem?.itemName) || "-",
               srNo: index + 1,
             }))}
             rowClassName={(item: any) =>
@@ -439,8 +514,8 @@ export default function CheckIn() {
             isLoading={isLoading}
             permissionKey="daily-planning"
             moduleKey="DAILY_PLANNING"
-            isEditDeleteShow={activePermission.Edit && !isEditWindowExpired && !isSubmitted}
-            showActionsColumn={!isSubmitted && !isEditWindowExpired}
+            isEditDeleteShow={activePermission.Edit && !isEditWindowExpired && !isSubmitted && isCompanyTimeDefined}
+            showActionsColumn={!isSubmitted && !isEditWindowExpired && isCompanyTimeDefined}
             actionColumnWidth="w-[100px] overflow-hidden"
           />
         </div>
@@ -450,6 +525,7 @@ export default function CheckIn() {
           <AddEditCheckInModal
             open={isAddModalOpen}
             onOpenChange={setIsAddModalOpen}
+            date={selectedDate}
             onAddTaskClick={() => {
               setIsAddModalOpen(false);
               setIsOpenTaskDrawer(true);
@@ -469,6 +545,7 @@ export default function CheckIn() {
             open={Boolean(editingItem)}
             onOpenChange={(open) => !open && setEditingItem(null)}
             initialItem={editingItem}
+            date={selectedDate}
             onAddTaskClick={() => {
               setEditingItem(null);
               setIsOpenTaskDrawer(true);
