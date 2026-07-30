@@ -99,7 +99,12 @@ export default function AddMeeting() {
           ]
         : []),
     ]);
-  }, [companyMeetingId, meetingApiData?.data?.meetingName, setBreadcrumbs, isAuthorized]);
+  }, [
+    companyMeetingId,
+    meetingApiData?.data?.meetingName,
+    setBreadcrumbs,
+    isAuthorized,
+  ]);
 
   // Form values watchers
   const meetingNameValue = watch("meetingName") || "";
@@ -108,7 +113,10 @@ export default function AddMeeting() {
 
   // Auto-fill description if empty
   useEffect(() => {
-    if (meetingDescriptionValue === "" || meetingDescriptionValue === prevMeetingNameRef.current) {
+    if (
+      meetingDescriptionValue === "" ||
+      meetingDescriptionValue === prevMeetingNameRef.current
+    ) {
       if (meetingDescriptionValue !== meetingNameValue) {
         setValue("meetingDescription", meetingNameValue);
       }
@@ -121,7 +129,11 @@ export default function AddMeeting() {
   const [nameChanged, setNameChanged] = useState(false);
 
   useEffect(() => {
-    if (companyMeetingId && originalName === null && meetingNameValue.trim().length > 0) {
+    if (
+      companyMeetingId &&
+      originalName === null &&
+      meetingNameValue.trim().length > 0
+    ) {
       setOriginalName(meetingNameValue);
     }
   }, [companyMeetingId, originalName, meetingNameValue]);
@@ -181,11 +193,13 @@ export default function AddMeeting() {
   });
 
   const meetingTypeOptions = useMemo(() => {
-    return meetingTypeData?.data?.map((t) => ({
-      label: t.meetingTypeName || "",
-      value: t.meetingTypeId || "",
-      parentType: t.parentType || "",
-    })) || [];
+    return (
+      meetingTypeData?.data?.map((t) => ({
+        label: t.meetingTypeName || "",
+        value: t.meetingTypeId || "",
+        parentType: t.parentType || "",
+      })) || []
+    );
   }, [meetingTypeData]);
 
   // Meeting Status options
@@ -197,12 +211,14 @@ export default function AddMeeting() {
   });
 
   const meetingStatusOptions = useMemo(() => {
-    return meetingStatusData?.map((status) => ({
-      label: status.meetingStatus || "",
-      value: status.meetingStatusId || "",
-      order: status.meetingStatusOrder,
-      color: status.color || "#556ee6",
-    })) || [];
+    return (
+      meetingStatusData?.map((status) => ({
+        label: status.meetingStatus || "",
+        value: status.meetingStatusId || "",
+        order: status.meetingStatusOrder,
+        color: status.color || "#556ee6",
+      })) || []
+    );
   }, [meetingStatusData]);
 
   const meetingTypeVal = watch("meetingTypeId");
@@ -212,8 +228,12 @@ export default function AddMeeting() {
   const endDateVal = watch("endDate");
   const meetingDocsVal = watch("meetingDocuments") || [];
 
-  const selectedType = meetingTypeOptions.find((t) => t.value === (meetingTypeVal?.meetingTypeId || meetingTypeVal));
-  const selectedStatus = meetingStatusOptions.find((s) => s.value === meetingStatusVal);
+  const selectedType = meetingTypeOptions.find(
+    (t) => t.value === (meetingTypeVal?.meetingTypeId || meetingTypeVal),
+  );
+  const selectedStatus = meetingStatusOptions.find(
+    (s) => s.value === meetingStatusVal,
+  );
 
   const shouldHideStatus =
     !companyMeetingId && selectedType?.parentType === "DETAIL";
@@ -242,11 +262,13 @@ export default function AddMeeting() {
   });
 
   const employeeOptions = useMemo(() => {
-    return employeeData?.data?.map((e) => ({
-      label: e.employeeName || "",
-      value: e.employeeId || "",
-      raw: e,
-    })) || [];
+    return (
+      employeeData?.data?.map((e) => ({
+        label: e.employeeName || "",
+        value: e.employeeId || "",
+        raw: e,
+      })) || []
+    );
   }, [employeeData]);
 
   // File uploading logic
@@ -277,7 +299,9 @@ export default function AddMeeting() {
     }
     setValue("removedFileIdsArray", updatedRemovedIds);
 
-    const newFiles = meetingDocsVal.filter((_: unknown, idx: number) => idx !== indexToRemove);
+    const newFiles = meetingDocsVal.filter(
+      (_: unknown, idx: number) => idx !== indexToRemove,
+    );
     setValue("meetingDocuments", newFiles);
   };
 
@@ -334,7 +358,9 @@ export default function AddMeeting() {
                             : "border-gray-200 focus:border-primary"
                         }`}
                         placeholder="Enter meeting name..."
-                        {...register("meetingName", { required: "Meeting Name is required" })}
+                        {...register("meetingName", {
+                          required: "Meeting Name is required",
+                        })}
                         onFocus={() => {
                           if (
                             shouldSearch &&
@@ -357,14 +383,18 @@ export default function AddMeeting() {
                         <div className="px-3 py-2 text-[12px] text-gray-500 bg-gray-50 border-b border-gray-200 sticky top-0 font-medium">
                           Similar Meetings Found
                         </div>
-                        {meetingSearchData?.data?.map((item: MeetingSearchResponse) => (
-                          <div
-                            key={item.meetingId}
-                            className="px-3 py-2 text-sm text-gray-700 border-b last:border-b-0 cursor-default hover:bg-gray-50 transition-colors"
-                          >
-                            <span className="font-medium">{item.meetingName}</span>
-                          </div>
-                        ))}
+                        {meetingSearchData?.data?.map(
+                          (item: MeetingSearchResponse) => (
+                            <div
+                              key={item.meetingId}
+                              className="px-3 py-2 text-sm text-gray-700 border-b last:border-b-0 cursor-default hover:bg-gray-50 transition-colors"
+                            >
+                              <span className="font-medium">
+                                {item.meetingName}
+                              </span>
+                            </div>
+                          ),
+                        )}
                       </div>
                     )}
                   </div>
@@ -372,7 +402,8 @@ export default function AddMeeting() {
                   {/* Meeting Description */}
                   <div>
                     <label className="block text-md font-semibold text-gray-900 mb-1">
-                      Meeting Description <span className="text-red-500">*</span>
+                      Meeting Description{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -406,14 +437,17 @@ export default function AddMeeting() {
                       name="meetingTypeId"
                       rules={{ required: "Please select Meeting Type" }}
                       render={({ field }) => {
-                        const rawVal = field.value?.meetingTypeId || field.value;
+                        const rawVal =
+                          field.value?.meetingTypeId || field.value;
                         return (
                           <SearchDropdown
                             className="w-full border-gray-200 text-base py-2.5 h-auto font-normal"
                             options={meetingTypeOptions}
                             selectedValues={rawVal ? [rawVal] : []}
                             onSelect={(value) => {
-                              const matched = meetingTypeData?.data?.find((o) => o.meetingTypeId === value.value);
+                              const matched = meetingTypeData?.data?.find(
+                                (o) => o.meetingTypeId === value.value,
+                              );
                               field.onChange(matched || value.value);
                             }}
                             placeholder="Select Meeting Type..."
@@ -468,7 +502,9 @@ export default function AddMeeting() {
                       name="meetingDateTime"
                       rules={{ required: "Meeting Start Date is required" }}
                       render={({ field }) => {
-                        const localDate = field.value ? new Date(field.value) : null;
+                        const localDate = field.value
+                          ? new Date(field.value)
+                          : null;
                         return (
                           <div className="[&_input]:text-base [&_input]:py-2.5 [&_input]:px-3.5 [&_input]:border-gray-200 [&_input]:h-auto [&_svg]:hidden">
                             <FormDateTimePicker
@@ -478,8 +514,14 @@ export default function AddMeeting() {
                                 field.onChange(date?.toISOString());
                               }}
                               error={errors.meetingDateTime}
-                              disablePastDates={true}
-                              disabled={meetingApiData?.data?.deadlineRequest === "PENDING"}
+                              disablePastDays={
+                                Number(import.meta.env.VITE_DISABLEPASTDATES) ||
+                                3
+                              }
+                              disabled={
+                                meetingApiData?.data?.deadlineRequest ===
+                                "PENDING"
+                              }
                             />
                           </div>
                         );
@@ -496,7 +538,9 @@ export default function AddMeeting() {
                       control={control}
                       name="endDate"
                       render={({ field }) => {
-                        const localDate = field.value ? new Date(field.value) : null;
+                        const localDate = field.value
+                          ? new Date(field.value)
+                          : null;
                         return (
                           <div className="[&_input]:text-base [&_input]:py-2.5 [&_input]:px-3.5 [&_input]:border-gray-200 [&_input]:h-auto [&_svg]:hidden">
                             <FormDateTimePicker
@@ -506,8 +550,14 @@ export default function AddMeeting() {
                                 field.onChange(date?.toISOString());
                               }}
                               error={errors.endDate}
-                              disablePastDates={true}
-                              disabled={meetingApiData?.data?.deadlineRequest === "PENDING"}
+                              disablePastDays={
+                                Number(import.meta.env.VITE_DISABLEPASTDATES) ||
+                                3
+                              }
+                              disabled={
+                                meetingApiData?.data?.deadlineRequest ===
+                                "PENDING"
+                              }
                             />
                           </div>
                         );
@@ -524,9 +574,14 @@ export default function AddMeeting() {
                   <Controller
                     control={control}
                     name="employeeId"
-                    rules={{ required: "Please assign this meeting to at least one attendee" }}
+                    rules={{
+                      required:
+                        "Please assign this meeting to at least one attendee",
+                    }}
                     render={({ field }) => {
-                      const selectedIds = (field.value || []).map((v: EmployeeDetails) => v.employeeId);
+                      const selectedIds = (field.value || []).map(
+                        (v: EmployeeDetails) => v.employeeId,
+                      );
                       return (
                         <SearchDropdown
                           className="w-full border-gray-200 text-base py-2.5 h-auto font-normal"
@@ -535,21 +590,32 @@ export default function AddMeeting() {
                           selectedValues={selectedIds}
                           multiSelect={true}
                           onSelect={(item) => {
-                            const currentVals: EmployeeDetails[] = Array.isArray(field.value) ? field.value : [];
-                            const isAlreadySelected = currentVals.some((v) => v.employeeId === item.value);
+                            const currentVals: EmployeeDetails[] =
+                              Array.isArray(field.value) ? field.value : [];
+                            const isAlreadySelected = currentVals.some(
+                              (v) => v.employeeId === item.value,
+                            );
                             if (isAlreadySelected) {
-                              field.onChange(currentVals.filter((v) => v.employeeId !== item.value));
+                              field.onChange(
+                                currentVals.filter(
+                                  (v) => v.employeeId !== item.value,
+                                ),
+                              );
                             } else {
-                              const rawEmp = employeeOptions.find((o) => o.value === item.value)?.raw;
+                              const rawEmp = employeeOptions.find(
+                                (o) => o.value === item.value,
+                              )?.raw;
                               if (rawEmp) {
                                 field.onChange([
                                   ...currentVals,
                                   {
                                     employeeId: rawEmp.employeeId,
                                     employeeName: rawEmp.employeeName,
-                                    employeeMobile: rawEmp.employeeMobile || null,
+                                    employeeMobile:
+                                      rawEmp.employeeMobile || null,
                                     employeeType: rawEmp.employeeType || null,
-                                    designationName: rawEmp.designationName || null,
+                                    designationName:
+                                      rawEmp.designationName || null,
                                     isTeamLeader: false,
                                   },
                                 ]);
@@ -572,9 +638,7 @@ export default function AddMeeting() {
                           key={emp.employeeId}
                           className="flex items-center space-x-1.5 border hover:bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium transition-colors bg-gray-50 border-gray-150 text-gray-700"
                         >
-                          <div
-                            className="w-5 h-5 rounded-full bg-white border flex items-center justify-center text-[10px] font-bold shadow-sm select-none"
-                          >
+                          <div className="w-5 h-5 rounded-full bg-white border flex items-center justify-center text-[10px] font-bold shadow-sm select-none">
                             {getInitials(emp.employeeName)}
                           </div>
                           <span>{emp.employeeName}</span>
@@ -583,8 +647,10 @@ export default function AddMeeting() {
                             onClick={() => {
                               setValue(
                                 "employeeId",
-                                employeeVal.filter((v) => v.employeeId !== emp.employeeId),
-                                { shouldValidate: true }
+                                employeeVal.filter(
+                                  (v) => v.employeeId !== emp.employeeId,
+                                ),
+                                { shouldValidate: true },
                               );
                             }}
                             className="text-gray-400 hover:text-red-500 rounded-full focus:outline-none"
@@ -632,66 +698,74 @@ export default function AddMeeting() {
                       <p className="text-xs text-gray-500 font-medium">
                         {meetingDocsVal.length} file(s) selected
                       </p>
-                      {meetingDocsVal.map((file: File | { fileId: string; fileName: string }, idx: number) => {
-                        const isUploaded = !("name" in file) && "fileName" in file;
-                        const fileName = isUploaded
-                          ? (file as { fileName: string }).fileName
-                          : (file as File).name;
+                      {meetingDocsVal.map(
+                        (
+                          file: File | { fileId: string; fileName: string },
+                          idx: number,
+                        ) => {
+                          const isUploaded =
+                            !("name" in file) && "fileName" in file;
+                          const fileName = isUploaded
+                            ? (file as { fileName: string }).fileName
+                            : (file as File).name;
 
-                        return (
-                          <div
-                            key={idx}
-                            className="flex items-center justify-between p-2.5 bg-gray-50 border border-gray-100 rounded-lg"
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <FileText className="w-4 h-4 text-gray-400 shrink-0" />
-                              <span className="text-sm font-medium text-gray-700 truncate">
-                                {fileName}
-                              </span>
+                          return (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between p-2.5 bg-gray-50 border border-gray-100 rounded-lg"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                                <span className="text-sm font-medium text-gray-700 truncate">
+                                  {fileName}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-gray-500 hover:text-primary"
+                                  onClick={() => {
+                                    if (file instanceof File) {
+                                      const fileUrl = URL.createObjectURL(file);
+                                      const link = document.createElement("a");
+                                      link.href = fileUrl;
+                                      link.download = file.name;
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                      URL.revokeObjectURL(fileUrl);
+                                    } else if (isUploaded) {
+                                      window.open(
+                                        `${ImageBaseURL}/share/mDocs/${(file as { fileName: string }).fileName}`,
+                                        "_blank",
+                                      );
+                                    }
+                                  }}
+                                >
+                                  <Download className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-gray-500 hover:text-red-500"
+                                  onClick={() => handleRemoveFile(idx)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-gray-500 hover:text-primary"
-                                onClick={() => {
-                                  if (file instanceof File) {
-                                    const fileUrl = URL.createObjectURL(file);
-                                    const link = document.createElement("a");
-                                    link.href = fileUrl;
-                                    link.download = file.name;
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
-                                    URL.revokeObjectURL(fileUrl);
-                                  } else if (isUploaded) {
-                                    window.open(
-                                      `${ImageBaseURL}/share/mDocs/${(file as { fileName: string }).fileName}`,
-                                      "_blank"
-                                    );
-                                  }
-                                }}
-                              >
-                                <Download className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-gray-500 hover:text-red-500"
-                                onClick={() => handleRemoveFile(idx)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        },
+                      )}
                     </div>
                   )}
                   {meetingDocsVal.length === 0 && (
-                    <p className="text-sm text-gray-400 italic">No files selected</p>
+                    <p className="text-sm text-gray-400 italic">
+                      No files selected
+                    </p>
                   )}
                 </div>
               </Card>
@@ -720,7 +794,9 @@ export default function AddMeeting() {
                   ) : (
                     <>
                       <Send className="w-3.5 h-3.5" />
-                      <span>{companyMeetingId ? "Update Meeting" : "Create Meeting"}</span>
+                      <span>
+                        {companyMeetingId ? "Update Meeting" : "Create Meeting"}
+                      </span>
                     </>
                   )}
                 </Button>
@@ -785,7 +861,9 @@ export default function AddMeeting() {
                           className="text-sm font-semibold text-gray-700 mt-0.5"
                           style={{ color: selectedStatus?.color }}
                         >
-                          {selectedStatus ? selectedStatus.label : "Draft / Scheduled"}
+                          {selectedStatus
+                            ? selectedStatus.label
+                            : "Draft / Scheduled"}
                         </p>
                       </div>
                     </div>
@@ -813,7 +891,9 @@ export default function AddMeeting() {
                           </div>
                         ))}
                         {employeeVal.length === 0 && (
-                          <span className="text-sm text-gray-400 font-medium">No attendees</span>
+                          <span className="text-sm text-gray-400 font-medium">
+                            No attendees
+                          </span>
                         )}
                       </div>
                     </div>
@@ -829,7 +909,8 @@ export default function AddMeeting() {
                         Start Date & Time
                       </p>
                       <p className="text-sm font-semibold text-gray-700 mt-0.5">
-                        {formatDateTime(meetingDateTimeVal) || "Set start date..."}
+                        {formatDateTime(meetingDateTimeVal) ||
+                          "Set start date..."}
                       </p>
                     </div>
                   </div>
