@@ -358,6 +358,8 @@ interface CompanyProjectDataProps {
   ];
   deadlineRequest?: string;
   companyId?: string;
+  parentProjectId?: string | null;
+  companyProjectMasters?: CompanyProjectDataProps[];
 }
 
 // interface CompanyMeetingDataProps {

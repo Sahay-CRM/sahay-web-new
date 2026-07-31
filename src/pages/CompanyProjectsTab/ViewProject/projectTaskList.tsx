@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Calendar, Edit } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
@@ -29,8 +29,7 @@ import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import { useGetMeetingSearch } from "@/features/api/companyMeeting";
 
-export default function ProjectTaskList() {
-  const { id: projectId } = useParams();
+export default function ProjectTaskList({ activeProjectId, className }: { activeProjectId: string; className?: string }) {
   const navigate = useNavigate();
   const taskPermission = useSelector(getUserPermission).TASK;
   const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
@@ -82,7 +81,7 @@ export default function ProjectTaskList() {
   const { data: tasks } = useGetCompanyTask({
     filter: {
       ...paginationFilter,
-      projectId: projectId,
+      projectId: activeProjectId,
     },
   });
 
@@ -180,7 +179,7 @@ export default function ProjectTaskList() {
       taskDeadline: data.taskDeadline ? new Date(data.taskDeadline) : null,
       taskStatusId: data?.taskStatusId,
       employeeIds: assigneeIds,
-      projectId: projectId,
+      projectId: activeProjectId,
       meetingId: data.meetingId,
       taskTypeId: data.taskTypeId,
     };
@@ -188,7 +187,10 @@ export default function ProjectTaskList() {
     addUpdateTask(payload, {
       onSuccess: () => {
         queryClient.resetQueries({
-          queryKey: ["get-project-by-id", projectId],
+          queryKey: ["get-project-by-id", activeProjectId],
+        });
+        queryClient.resetQueries({
+          queryKey: ["get-company-sub-projects", activeProjectId],
         });
         setIsAddTaskOpen(false);
         setEditingTaskId(null);
@@ -198,7 +200,7 @@ export default function ProjectTaskList() {
   });
 
   return (
-    <div className="bg-white p-1 border h-[calc(100vh-120px)] rounded-2xl shadow-md flex flex-col">
+    <div className={`bg-white p-1 border rounded-2xl shadow-md flex flex-col ${className || "h-[calc(100vh-120px)]"}`}>
       {/* Header */}
       <div className="sticky top-0 bg-white z-20 px-5 pt-2 mb-4">
         <div className="flex justify-between items-center w-full gap-4">

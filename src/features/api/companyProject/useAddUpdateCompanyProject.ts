@@ -35,6 +35,9 @@ export default function useAddUpdateCompanyProject() {
       queryClient.resetQueries({
         queryKey: ["get-project-by-id", res.data.projectId],
       });
+      queryClient.resetQueries({
+        queryKey: ["get-company-sub-projects", res.data.projectId],
+      });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message || "Something went wrong");

@@ -63,6 +63,7 @@ const Urls = {
   deleteCompanyProject: (id: string) =>
     `${baseUrl}/company/project/delete/${id}`,
   getCompanyProjectById: (id: string) => `${baseUrl}/company/project/get/${id}`,
+  getCompanySubProjects: (id: string) => `${baseUrl}/company/project/sub/view/${id}`,
   getAllCompanyProjectByPage: () => `${baseUrl}/company/project/get`,
   getCompanyProjectSearch: () => `${baseUrl}/company/project/search`,
 

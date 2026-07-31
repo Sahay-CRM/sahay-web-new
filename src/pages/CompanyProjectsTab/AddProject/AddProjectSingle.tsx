@@ -82,6 +82,8 @@ export default function AddProjectSingle() {
     reasons,
     setReasons,
     onConfirmSubmit,
+    parentProjectOptions,
+    setParentProjectSearch,
   } = hookProps;
 
   const {
@@ -491,7 +493,7 @@ export default function AddProjectSingle() {
                   </div>
                 </div>
 
-                {/* Business Function and Key Result Area (SubParameter) */}
+                {/* Business Function and Key Result Area (KRA) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Business Function */}
                   <div>
@@ -519,13 +521,13 @@ export default function AddProjectSingle() {
                     />
                   </div>
 
-                  {/* Key Result Area (SubParameter) - Conditional */}
-                  {watchedCoreParameter && (
-                    <div>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <label className="block text-md font-semibold text-gray-900">
-                          Key Result Area (KRA)
-                        </label>
+                  {/* Key Result Area (SubParameter) */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-md font-semibold text-gray-900">
+                        Key Result Area (KRA)
+                      </label>
+                      {watchedCoreParameter && (
                         <button
                           type="button"
                           onClick={() => setIsReqModalOpen(true)}
@@ -533,141 +535,171 @@ export default function AddProjectSingle() {
                         >
                           + Request Business Function
                         </button>
-                      </div>
-                      <Controller
-                        control={control}
-                        name="subParameterId"
-                        render={({ field }) => (
-                          <SearchDropdown
-                            className="w-full border-gray-200 text-base py-2.5 h-auto font-normal"
-                            placeholder="Select Key Result Areas..."
-                            options={subParameterOptions}
-                            selectedValues={Array.isArray(field.value) ? field.value : []}
-                            multiSelect={true}
-                            onSelect={(item) => {
-                              const vals = Array.isArray(field.value) ? field.value : [];
-                              if (vals.includes(item.value)) {
-                                field.onChange(vals.filter((v) => v !== item.value));
-                              } else {
-                                field.onChange([...vals, item.value]);
-                              }
-                            }}
-                            onSearchChange={(val) =>
-                              setPaginationFilterSubPara((prev) => ({
-                                ...prev,
-                                search: val,
-                                currentPage: 1,
-                              }))
-                            }
-                            error={errors.subParameterId}
-                            isCrossShow={false}
-                          />
-                        )}
-                      />
-
-                      {/* Selected KRAs pills */}
-                      {selectedSubParameters.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-2">
-                          {selectedSubParameters.map((kra) => (
-                            <div
-                              key={kra.subParameterId}
-                              className="flex items-center space-x-1 bg-gray-50 border border-gray-150 px-2.5 py-1 rounded-full text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-                            >
-                              <span>{kra.subParameterName}</span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const vals = Array.isArray(subParameterVal) ? subParameterVal : [];
-                                  setValue(
-                                    "subParameterId",
-                                    vals.filter((v) => v !== kra.subParameterId),
-                                    { shouldValidate: true }
-                                  );
-                                }}
-                                className="text-gray-400 hover:text-red-500 rounded-full focus:outline-none"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
                       )}
                     </div>
-                  )}
+                    <Controller
+                      control={control}
+                      name="subParameterId"
+                      render={({ field }) => (
+                        <SearchDropdown
+                          className="w-full border-gray-200 text-base py-2.5 h-auto font-normal"
+                          placeholder="Select Key Result Areas..."
+                          options={subParameterOptions}
+                          selectedValues={Array.isArray(field.value) ? field.value : []}
+                          multiSelect={true}
+                          disabled={!watchedCoreParameter}
+                          onSelect={(item) => {
+                            const vals = Array.isArray(field.value) ? field.value : [];
+                            if (vals.includes(item.value)) {
+                              field.onChange(vals.filter((v) => v !== item.value));
+                            } else {
+                              field.onChange([...vals, item.value]);
+                            }
+                          }}
+                          onSearchChange={(val) =>
+                            setPaginationFilterSubPara((prev) => ({
+                              ...prev,
+                              search: val,
+                              currentPage: 1,
+                            }))
+                          }
+                          error={errors.subParameterId}
+                          isCrossShow={false}
+                        />
+                      )}
+                    />
+
+                    {/* Selected KRAs pills */}
+                    {selectedSubParameters.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {selectedSubParameters.map((kra) => (
+                          <div
+                            key={kra.subParameterId}
+                            className="flex items-center space-x-1 bg-gray-50 border border-gray-150 px-2.5 py-1 rounded-full text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                          >
+                            <span>{kra.subParameterName}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const vals = Array.isArray(subParameterVal) ? subParameterVal : [];
+                                setValue(
+                                  "subParameterId",
+                                  vals.filter((v) => v !== kra.subParameterId),
+                                  { shouldValidate: true }
+                                );
+                              }}
+                              className="text-gray-400 hover:text-red-500 rounded-full focus:outline-none"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Assignees / Employees */}
-                <div>
-                  <label className="block text-md font-semibold text-gray-900 mb-1.5">
-                    Assign To <span className="text-red-500">*</span>
-                  </label>
-                  <Controller
-                    control={control}
-                    name="employeeId"
-                    rules={{ required: "Please assign this project to at least one user" }}
-                    render={({ field }) => (
-                      <SearchDropdown
-                        className="w-full border-gray-200 text-base py-2.5 h-auto font-normal"
-                        placeholder="Search employee..."
-                        options={employeeOptions}
-                        selectedValues={Array.isArray(field.value) ? field.value : []}
-                        multiSelect={true}
-                        onSelect={(item) => {
-                          const vals = Array.isArray(field.value) ? field.value : [];
-                          if (vals.includes(item.value)) {
-                            field.onChange(vals.filter((v) => v !== item.value));
-                          } else {
-                            field.onChange([...vals, item.value]);
+                {/* Assign To (Employees) and Parent Project */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Assign To */}
+                  <div>
+                    <label className="block text-md font-semibold text-gray-900 mb-1.5">
+                      Assign To <span className="text-red-500">*</span>
+                    </label>
+                    <Controller
+                      control={control}
+                      name="employeeId"
+                      rules={{ required: "Please assign this project to at least one user" }}
+                      render={({ field }) => (
+                        <SearchDropdown
+                          className="w-full border-gray-200 text-base py-2.5 h-auto font-normal"
+                          placeholder="Search employee..."
+                          options={employeeOptions}
+                          selectedValues={Array.isArray(field.value) ? field.value : []}
+                          multiSelect={true}
+                          onSelect={(item) => {
+                            const vals = Array.isArray(field.value) ? field.value : [];
+                            if (vals.includes(item.value)) {
+                              field.onChange(vals.filter((v) => v !== item.value));
+                            } else {
+                              field.onChange([...vals, item.value]);
+                            }
+                          }}
+                          onSearchChange={(val) =>
+                            setPaginationFilterEmployee((prev) => ({
+                              ...prev,
+                              search: val,
+                              currentPage: 1,
+                            }))
                           }
-                        }}
-                        onSearchChange={(val) =>
-                          setPaginationFilterEmployee((prev) => ({
-                            ...prev,
-                            search: val,
-                            currentPage: 1,
-                          }))
-                        }
-                        error={errors.employeeId}
-                        isCrossShow={false}
-                      />
-                    )}
-                  />
-
-                  {/* Selected Employees Pills */}
-                  {selectedEmployees.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2.5 items-center">
-                      {selectedEmployees.slice(0, 4).map((emp) => (
-                        <div
-                          key={emp.employeeId}
-                          className="flex items-center space-x-1.5 bg-gray-50 border border-gray-150 hover:bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium text-gray-700 transition-colors"
-                        >
-                          <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] text-primary font-bold">
-                            {getInitials(emp.employeeName)}
-                          </div>
-                          <span>{emp.employeeName}</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const vals = Array.isArray(employeeVal) ? employeeVal : [];
-                              setValue(
-                                "employeeId",
-                                vals.filter((v) => v !== emp.employeeId),
-                                { shouldValidate: true }
-                              );
-                            }}
-                            className="text-gray-400 hover:text-red-500 rounded-full focus:outline-none"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                      {selectedEmployees.length > 4 && (
-                        <div className="px-2.5 py-1 rounded-full text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-colors border border-primary/20">
-                          +{selectedEmployees.length - 4} more
-                        </div>
+                          error={errors.employeeId}
+                          isCrossShow={false}
+                        />
                       )}
-                    </div>
-                  )}
+                    />
+
+                    {/* Selected Employees Pills */}
+                    {selectedEmployees.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2.5 items-center">
+                        {selectedEmployees.slice(0, 4).map((emp) => (
+                          <div
+                            key={emp.employeeId}
+                            className="flex items-center space-x-1.5 bg-gray-50 border border-gray-150 hover:bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium text-gray-700 transition-colors"
+                          >
+                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] text-primary font-bold">
+                              {getInitials(emp.employeeName)}
+                            </div>
+                            <span>{emp.employeeName}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const vals = Array.isArray(employeeVal) ? employeeVal : [];
+                                setValue(
+                                  "employeeId",
+                                  vals.filter((v) => v !== emp.employeeId),
+                                  { shouldValidate: true }
+                                );
+                              }}
+                              className="text-gray-400 hover:text-red-500 rounded-full focus:outline-none"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                        {selectedEmployees.length > 4 && (
+                          <div className="px-2.5 py-1 rounded-full text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-colors border border-primary/20">
+                            +{selectedEmployees.length - 4} more
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Parent Project */}
+                  <div>
+                    <label className="block text-md font-semibold text-gray-900 mb-1.5">
+                      Parent Project
+                    </label>
+                    <Controller
+                      control={control}
+                      name="parentProjectId"
+                      render={({ field }) => (
+                        <SearchDropdown
+                          className="w-full border-gray-200 text-base py-2.5 h-auto font-normal"
+                          options={parentProjectOptions}
+                          selectedValues={field.value ? [field.value] : []}
+                          onSelect={(value) => {
+                            field.onChange(value.value);
+                            setValue("parentProjectId", value.value);
+                          }}
+                          placeholder="Select Parent Project..."
+                          error={errors.parentProjectId}
+                          onSearchChange={setParentProjectSearch}
+                          isCrossShow={true}
+                        />
+                      )}
+                    />
+                  </div>
                 </div>
 
                 {/* Upload Documents */}
