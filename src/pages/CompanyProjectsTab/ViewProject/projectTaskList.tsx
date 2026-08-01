@@ -1,35 +1,34 @@
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { Calendar, Edit } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import SearchInput from "@/components/shared/SearchInput";
-import Pagination from "@/components/shared/Pagination/Pagination";
+import TableData from "@/components/shared/DataTable/DataTable";
 
 import { TaskForm } from "./taskForm";
 
 import {
   addUpdateCompanyTaskMutation,
+  useAllCompanyTask,
   useDdTaskType,
   useGetAllTaskStatus,
-  useGetCompanyTask,
   useGetCompanyTaskById,
 } from "@/features/api/companyTask";
-import { getInitials, formatToLocalDateTime } from "@/features/utils/app.utils";
+import { formatToLocalDateTime } from "@/features/utils/app.utils";
 import { queryClient } from "@/queryClient";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import { useGetMeetingSearch } from "@/features/api/companyMeeting";
 
-export default function ProjectTaskList({ activeProjectId, className }: { activeProjectId: string; className?: string }) {
+export default function ProjectTaskList({
+  activeProjectId,
+  className,
+}: {
+  activeProjectId: string;
+  className?: string;
+}) {
   const navigate = useNavigate();
   const taskPermission = useSelector(getUserPermission).TASK;
   const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
@@ -39,11 +38,7 @@ export default function ProjectTaskList({ activeProjectId, className }: { active
   const [isMeetingSearch, setIsMeetingSearch] = useState("");
   const [isTypeSearch, setIsTypeSearch] = useState("");
   const [isStatusSearch, setIsStatusSearch] = useState("");
-  const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-    currentPage: 1,
-    pageSize: 25,
-    search: "",
-  });
+  const [taskSearch, setTaskSearch] = useState("");
 
   const {
     control,
@@ -60,7 +55,10 @@ export default function ProjectTaskList({ activeProjectId, className }: { active
   const prevTaskNameRef = useRef(taskNameValue);
 
   useEffect(() => {
-    if (taskDescriptionValue === "" || taskDescriptionValue === prevTaskNameRef.current) {
+    if (
+      taskDescriptionValue === "" ||
+      taskDescriptionValue === prevTaskNameRef.current
+    ) {
       if (taskDescriptionValue !== taskNameValue) {
         setValue("taskDescription", taskNameValue);
       }
@@ -78,12 +76,34 @@ export default function ProjectTaskList({ activeProjectId, className }: { active
     assignUsers: [],
   };
 
-  const { data: tasks } = useGetCompanyTask({
+  const { data: tasks } = useAllCompanyTask({
     filter: {
-      ...paginationFilter,
       projectId: activeProjectId,
     },
   });
+
+  const taskTableData = (tasks?.data ?? [])
+    .filter((task) => {
+      if (!taskSearch) return true;
+      const search = taskSearch.toLowerCase();
+      return (
+        task.taskName?.toLowerCase().includes(search) ||
+        task.taskDescription?.toLowerCase().includes(search) ||
+        task.taskStatus?.toLowerCase().includes(search)
+      );
+    })
+    .map((item, index) => ({
+      ...item,
+      srNo: index + 1,
+      taskDeadline: item.taskDeadline
+        ? formatToLocalDateTime(item.taskDeadline)
+        : "",
+      assigneeNames: item.TaskEmployeeJunction
+        ? item.TaskEmployeeJunction.map((j) => j.Employee?.employeeName)
+            .filter(Boolean)
+            .join(", ")
+        : "",
+    }));
 
   const { data: taskTypeData } = useDdTaskType({
     filter: { search: isTypeSearch.length >= 3 ? isTypeSearch : undefined },
@@ -200,176 +220,132 @@ export default function ProjectTaskList({ activeProjectId, className }: { active
   });
 
   return (
-    <div className={`bg-white p-1 border rounded-2xl shadow-md flex flex-col ${className || "h-[calc(100vh-120px)]"}`}>
-      {/* Header */}
-      <div className="sticky top-0 bg-white z-20 px-5 pt-2 mb-4">
-        <div className="flex justify-between items-center w-full gap-4">
-          <SearchInput
-            placeholder="Search..."
-            searchValue={paginationFilter?.search || ""}
-            setPaginationFilter={setPaginationFilter}
-            className="w-80 h-9"
-          />
-          {taskPermission.Add && (
-            <Button
-              className="py-2 w-fit h-9"
-              onClick={() => {
-                setEditingTaskId(null);
-                setIsAddTaskOpen(true);
-                reset(defaultValue);
-              }}
-            >
-              Add Task
-            </Button>
+    <div
+      className={`bg-white border rounded-2xl shadow-md flex flex-col ${className || "h-[calc(100vh-120px)]"}`}
+    >
+      {/* Task List (scroll container includes header so it stays sticky) */}
+      <div className="flex-1 overflow-auto px-5 pb-2">
+        {/* Header */}
+        <div className="sticky top-0 bg-white z-20 -mx-5 px-5 mt-4">
+          <div className="flex justify-between items-center w-full gap-4">
+            <SearchInput
+              placeholder="Search..."
+              searchValue={taskSearch}
+              setPaginationFilter={setTaskSearch}
+              className="w-80 h-9"
+            />
+            {taskPermission.Add && (
+              <Button
+                className="py-2 w-fit h-9"
+                onClick={() => {
+                  setEditingTaskId(null);
+                  setIsAddTaskOpen(true);
+                  reset(defaultValue);
+                }}
+              >
+                Add Task
+              </Button>
+            )}
+          </div>
+
+          {/* Add Task Form */}
+          {isAddTaskOpen && (
+            <TaskForm
+              key="add-task-form"
+              control={control}
+              errors={errors}
+              register={register}
+              setValue={setValue}
+              onSubmitTask={onSubmitTask}
+              reset={reset}
+              defaultValue={defaultValue}
+              setIsAddTaskOpen={setIsAddTaskOpen}
+              setEditingTaskId={setEditingTaskId}
+              editingTaskId={editingTaskId}
+              meetingDataOption={meetingDataOption}
+              taskTypeOptions={taskTypeOptions}
+              taskStatusOptions={taskStatusOptions}
+              employeeOption={employeeOption}
+              handleMeetingSearch={setIsMeetingSearch}
+              handleTypeSearch={setIsTypeSearch}
+              handleStatusSearch={setIsStatusSearch}
+            />
           )}
         </div>
-      </div>
 
-      {/* Add Task Form */}
-      {isAddTaskOpen && (
-        <TaskForm
-          key="add-task-form"
-          control={control}
-          errors={errors}
-          register={register}
-          setValue={setValue}
-          onSubmitTask={onSubmitTask}
-          reset={reset}
-          defaultValue={defaultValue}
-          setIsAddTaskOpen={setIsAddTaskOpen}
-          setEditingTaskId={setEditingTaskId}
-          editingTaskId={editingTaskId}
-          meetingDataOption={meetingDataOption}
-          taskTypeOptions={taskTypeOptions}
-          taskStatusOptions={taskStatusOptions}
-          employeeOption={employeeOption}
-          handleMeetingSearch={setIsMeetingSearch}
-          handleTypeSearch={setIsTypeSearch}
-          handleStatusSearch={setIsStatusSearch}
-        />
-      )}
-
-      {/* Task List */}
-      <div className="flex-1 overflow-auto p-5">
-        <div className="space-y-4">
-          {tasks?.data?.length ? (
-            tasks.data.map((task) => (
-              <div key={task.taskId}>
-                <div
-                  onClick={() =>
-                    taskPermission.View &&
-                    navigate(`/dashboard/tasks/view/${task.taskId}`)
+        <div className="mt-4">
+          <TableData
+            tableData={taskTableData}
+            columns={{
+              taskName: "Task Name",
+              taskDescription: "Task Description",
+              taskDeadline: "Task Deadline",
+              assigneeNames: "Assignees",
+            }}
+            primaryKey="taskId"
+            onEdit={
+              taskPermission.Edit
+                ? (row) => {
+                    setIsAddTaskOpen(false);
+                    setEditingTaskId(row.taskId as string);
                   }
-                  className="p-2 rounded-xl border hover:shadow-md transition cursor-pointer"
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="px-1 text-lg font-semibold">
-                      {task.taskName}
-                    </h3>
-                    <div className="flex flex-row gap-1 items-center">
-                      <span
-                        className="px-2 py-1 rounded-full text-xs font-medium"
-                        style={{
-                          backgroundColor: task.color || "#e5e7eb",
-                        }}
-                      >
-                        {task.taskStatus}
-                      </span>
-                      {taskPermission.Edit && (
-                        <span
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsAddTaskOpen(false);
-                            setEditingTaskId(
-                              editingTaskId === task.taskId
-                                ? null
-                                : task.taskId,
-                            );
-                          }}
-                        >
-                          <Edit className="w-4 h-4 text-primary cursor-pointer" />
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <p className="text-sm px-1 text-muted-foreground mb-1">
-                    {task.taskDescription || "-"}
-                  </p>
-
-                  <div className="flex px-1 flex-wrap gap-x-6 gap-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">Deadline:</span>
-                      <span>
-                        {task.taskDeadline
-                          ? formatToLocalDateTime(task.taskDeadline)
-                          : "-"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Assignees:</span>
-                      <div className="flex gap-1 flex-wrap">
-                        {task.TaskEmployeeJunction &&
-                          task.TaskEmployeeJunction.map((a) => (
-                            <TooltipProvider key={a.employeeId}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="h-7 w-7 rounded-full bg-gray-200 text-xs flex items-center justify-center font-medium cursor-default">
-                                    {getInitials(a.Employee.employeeName)}
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {a.Employee.employeeName}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {editingTaskId === task.taskId && (
-                  <TaskForm
-                    key={`edit-${task.taskId}`}
-                    control={control}
-                    errors={errors}
-                    register={register}
-                    setValue={setValue}
-                    onSubmitTask={onSubmitTask}
-                    reset={reset}
-                    defaultValue={defaultValue}
-                    setIsAddTaskOpen={setIsAddTaskOpen}
-                    setEditingTaskId={setEditingTaskId}
-                    editingTaskId={editingTaskId}
-                    meetingDataOption={meetingDataOption}
-                    taskTypeOptions={taskTypeOptions}
-                    taskStatusOptions={taskStatusOptions}
-                    employeeOption={employeeOption}
-                    handleMeetingSearch={setIsMeetingSearch}
-                    handleTypeSearch={setIsTypeSearch}
-                    handleStatusSearch={setIsStatusSearch}
-                  />
-                )}
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-muted-foreground">No Tasks Found</p>
-          )}
-        </div>
-      </div>
-
-      {/* Pagination */}
-      {tasks && tasks.data?.length > 0 && (
-        <div className="sticky bottom-0 bg-white z-10 py-1">
-          <Pagination
-            paginationDetails={tasks as PaginationFilter}
-            setPaginationFilter={setPaginationFilter}
+                : undefined
+            }
+            onViewButton={(row) => {
+              navigate(`/dashboard/tasks/view/${row.taskId}`);
+            }}
+            viewButton={true}
+            isActionButton={() => true}
+            moduleKey="TASK"
+            onRowClick={(row) => {
+              if (taskPermission.View) {
+                navigate(`/dashboard/tasks/view/${row.taskId}`);
+              }
+            }}
+            sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
+            actionColumnWidth="w-[100px]"
+            extraColumns={[
+              {
+                label: "Status",
+                width: "w-[140px]",
+                render: (row) => (
+                  <span
+                    className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide whitespace-nowrap"
+                    style={{
+                      backgroundColor: (row.color as string) || "#e5e7eb",
+                    }}
+                  >
+                    {row.taskStatus as string}
+                  </span>
+                ),
+              },
+            ]}
           />
         </div>
-      )}
+
+        {editingTaskId && (
+          <TaskForm
+            key={`edit-${editingTaskId}`}
+            control={control}
+            errors={errors}
+            register={register}
+            setValue={setValue}
+            onSubmitTask={onSubmitTask}
+            reset={reset}
+            defaultValue={defaultValue}
+            setIsAddTaskOpen={setIsAddTaskOpen}
+            setEditingTaskId={setEditingTaskId}
+            editingTaskId={editingTaskId}
+            meetingDataOption={meetingDataOption}
+            taskTypeOptions={taskTypeOptions}
+            taskStatusOptions={taskStatusOptions}
+            employeeOption={employeeOption}
+            handleMeetingSearch={setIsMeetingSearch}
+            handleTypeSearch={setIsTypeSearch}
+            handleStatusSearch={setIsStatusSearch}
+          />
+        )}
+      </div>
     </div>
   );
 }

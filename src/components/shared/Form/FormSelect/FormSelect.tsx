@@ -233,7 +233,9 @@ export default function FormSelect({
       )}
 
       {error?.message && (
-        <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">{error.message}</span>
+        <span className="text-red-600 text-[calc(1em-3px)] tb:text-[calc(1em-2px)] before:content-['*']">
+          {error.message}
+        </span>
       )}
     </div>
   );

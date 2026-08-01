@@ -2,15 +2,15 @@ import React, { Suspense, useEffect, useState } from "react";
 
 import {
   ArrowUp,
-  BarChart2,
+  // BarChart2,
   Bell,
   Calendar,
-  CheckSquare,
+  // CheckSquare,
   Clock,
   CornerDownLeft,
   Crown,
   FileText,
-  List,
+  // List,
   Plus,
   Target,
   User,
@@ -245,8 +245,8 @@ export default function Agenda({
     handleTimeUpdate,
     handleConclusionMeeting,
     handleDesc,
-    activeTab,
-    handleTabChange,
+    // activeTab,
+    // handleTabChange,
     handleListClick,
     detailAgendaData,
     kpisFireBase,
@@ -937,12 +937,12 @@ export default function Agenda({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex justify-between">
+            {/* Tab navigation (KPIs/Projects/Tasks) commented out - all sections now render stacked. Uncomment to restore tab switching.
             {meetingStatus === "DISCUSSION" && (
               <div className="w-full">
                 <div className="flex gap-4">
                   <nav className="z-20 flex">
                     <div className="mr-5 flex gap-3 items-center rounded-2xl ">
-                      {/* KPIs */}
                       <Button
                         className={`w-32 mx-auto border border-b-0 rounded-b-none hover:bg-white cursor-pointer flex items-center ${
                           activeTab === "kpis"
@@ -962,7 +962,6 @@ export default function Agenda({
                         <span>KPIs ({detailAgendaData?.noOfKPIs})</span>
                       </Button>
 
-                      {/* Projects */}
                       <Button
                         className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white cursor-pointer flex items-center ${
                           activeTab === "projects"
@@ -983,7 +982,6 @@ export default function Agenda({
                         <span>Projects ({detailAgendaData?.noOfProjects})</span>
                       </Button>
 
-                      {/* Tasks */}
                       <Button
                         className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white cursor-pointer flex items-center ${
                           activeTab === "tasks"
@@ -1008,6 +1006,8 @@ export default function Agenda({
                 </div>
               </div>
             )}
+            */}
+            {meetingStatus === "DISCUSSION" && <div />}
             {(meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") && (
               <div className="mb-2">
                 <div className="flex gap-4 items-center break-all mb-2 flex-wrap">
@@ -1104,7 +1104,7 @@ export default function Agenda({
                 </div>
               </div>
             )}
-            <div className="flex flex-wrap md:flex-nowrap items-center gap-3 md:w-auto">
+            <div className="flex flex-wrap md:flex-nowrap mb-2 items-center gap-3 md:w-auto">
               {(isTeamLeader || isSuperAdmin) && (
                 <>
                   {meetingStatus === "DISCUSSION" && (
@@ -1309,72 +1309,86 @@ export default function Agenda({
                 </div>
               </div>
             ) : meetingStatus === "DISCUSSION" ? (
-              detailAgendaData && (
-                <div className="h-[calc(var(--vh,100vh)-200px)] flex flex-col overflow-hidden mt-5 px-2 w-full">
-                  <Suspense fallback={<div>Loading...</div>}>
-                    {activeTab === "tasks" && (
-                      <Tasks
-                        tasksFireBase={tasksFireBase}
-                        issueId={
-                          ioType === "ISSUE"
-                            ? agendaList?.find(
-                                (Item) =>
-                                  Item.issueObjectiveId === isSelectedAgenda,
-                              )?.issueId
-                            : agendaList?.find(
-                                (obj) =>
-                                  obj.issueObjectiveId === isSelectedAgenda,
-                              )?.objectiveId
-                        }
-                        ioType={ioType}
-                        selectedIssueId={isSelectedAgenda}
-                        isTeamLeader={isTeamLeader || isSuperAdmin}
-                      />
-                    )}
-                    {activeTab === "projects" && (
-                      <Projects
-                        projectsFireBase={projectsFireBase}
-                        issueId={
-                          ioType === "ISSUE"
-                            ? agendaList?.find(
-                                (Item) =>
-                                  Item.issueObjectiveId === isSelectedAgenda,
-                              )?.issueId
-                            : agendaList?.find(
-                                (obj) =>
-                                  obj.issueObjectiveId === isSelectedAgenda,
-                              )?.objectiveId
-                        }
-                        ioType={ioType}
-                        selectedIssueId={isSelectedAgenda}
-                        isTeamLeader={isTeamLeader || isSuperAdmin}
-                      />
-                    )}
-                    {activeTab === "kpis" && (
-                      <KPITable
-                        meetingId={meetingId}
-                        kpisFireBase={kpisFireBase}
-                        ioId={
-                          ioType === "ISSUE"
-                            ? agendaList?.find(
-                                (Item) =>
-                                  Item.issueObjectiveId === isSelectedAgenda,
-                              )?.issueId
-                            : agendaList?.find(
-                                (obj) =>
-                                  obj.issueObjectiveId === isSelectedAgenda,
-                              )?.objectiveId
-                        }
-                        ioType={ioType}
-                        selectedIssueId={isSelectedAgenda}
-                        isTeamLeader={isTeamLeader || isSuperAdmin}
-                        follow={follow}
-                        meetingRes={meetingResponse!}
-                      />
-                    )}
-                  </Suspense>
-                </div>
-              )
+              detailAgendaData &&
+              (() => {
+                const selectedIoId =
+                  ioType === "ISSUE"
+                    ? agendaList?.find(
+                        (Item) => Item.issueObjectiveId === isSelectedAgenda,
+                      )?.issueId
+                    : agendaList?.find(
+                        (obj) => obj.issueObjectiveId === isSelectedAgenda,
+                      )?.objectiveId;
+
+                const agendaSectionLabels: Record<string, string> = {
+                  tasks: "Tasks",
+                  kpis: "KPIs",
+                  projects: "Projects",
+                };
+
+                const agendaSections: Record<string, React.ReactNode> = {
+                  tasks: (
+                    <Tasks
+                      key="tasks"
+                      tasksFireBase={tasksFireBase}
+                      issueId={selectedIoId}
+                      ioType={ioType}
+                      selectedIssueId={isSelectedAgenda}
+                      isTeamLeader={isTeamLeader || isSuperAdmin}
+                    />
+                  ),
+                  kpis: (
+                    <KPITable
+                      key="kpis"
+                      meetingId={meetingId}
+                      kpisFireBase={kpisFireBase}
+                      ioId={selectedIoId}
+                      ioType={ioType}
+                      selectedIssueId={isSelectedAgenda}
+                      isTeamLeader={isTeamLeader || isSuperAdmin}
+                      follow={follow}
+                      meetingRes={meetingResponse!}
+                    />
+                  ),
+                  projects: (
+                    <Projects
+                      key="projects"
+                      projectsFireBase={projectsFireBase}
+                      issueId={selectedIoId}
+                      ioType={ioType}
+                      selectedIssueId={isSelectedAgenda}
+                      isTeamLeader={isTeamLeader || isSuperAdmin}
+                    />
+                  ),
+                };
+
+                const defaultOrder = ["tasks", "kpis", "projects"];
+                const configuredOrder = (
+                  import.meta.env.VITE_AGENDA_SECTION_ORDER || ""
+                )
+                  .split(",")
+                  .map((key: string) => key.trim().toLowerCase())
+                  .filter((key: string) => key in agendaSections);
+                const sectionOrder = configuredOrder.length
+                  ? configuredOrder
+                  : defaultOrder;
+
+                return (
+                  <div className="h-[calc(var(--vh,100vh)-200px)] flex flex-col overflow-y-auto overflow-x-hidden mt-5 px-2 w-full gap-8">
+                    {/* Tab switching (activeTab === "kpis"/"projects"/"tasks") commented out - see the tab nav block above, also commented. All three sections render stacked below instead, ordered via VITE_AGENDA_SECTION_ORDER. */}
+                    <Suspense fallback={<div>Loading...</div>}>
+                      {sectionOrder.map((key: string) => (
+                        <div key={key}>
+                          <h3 className="text-lg font-semibold text-slate-800 mb-3">
+                            {agendaSectionLabels[key]}
+                          </h3>
+                          {agendaSections[key]}
+                        </div>
+                      ))}
+                    </Suspense>
+                  </div>
+                );
+              })()
             ) : conclusionLoading ? (
               <div className="flex justify-center items-center h-20">
                 <div className="animate-spin">

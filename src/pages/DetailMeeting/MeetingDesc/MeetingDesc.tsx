@@ -260,7 +260,7 @@ export default function MeetingDesc() {
         )}
       >
         {/* <audio ref={audioRef} src="/public/BackToWork.mp3" preload="auto" /> */}
-        <div className="w-full mt-4 overflow-hidden">
+        <div className="w-full overflow-hidden">
           <Agenda
             meetingName={meetingTiming?.meetingName ?? ""}
             meetingId={meetingId ?? ""}

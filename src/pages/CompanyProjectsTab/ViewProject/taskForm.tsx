@@ -80,6 +80,7 @@ export function TaskForm({
                   disablePastDays={
                     Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
                   }
+                  isMandatory
                 />
               )}
             />

@@ -203,7 +203,7 @@ export default function Projects({
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="flex flex-col">
       <div className="flex gap-5 justify-between mb-5 shrink-0">
         <div className="flex gap-5 items-center">
           {isTeamLeader && (

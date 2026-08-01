@@ -77,9 +77,6 @@ export default function Tasks({
       };
       addMeetingTask(payload, {
         onSuccess: () => {
-          queryClient.resetQueries({
-            queryKey: ["get-detailMeetingAgendaIssue"],
-          });
           tasksFireBase();
         },
       });
@@ -166,9 +163,6 @@ export default function Tasks({
         };
         deleteTaskById(payload, {
           onSuccess: () => {
-            queryClient.resetQueries({
-              queryKey: ["get-detailMeetingAgendaIssue"],
-            });
             tasksFireBase();
           },
           onError: (error: Error) => {
@@ -197,7 +191,7 @@ export default function Tasks({
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="flex flex-col">
       <div className="flex gap-5 justify-between mb-5 shrink-0">
         <div className="flex gap-5 items-center">
           {isTeamLeader && (

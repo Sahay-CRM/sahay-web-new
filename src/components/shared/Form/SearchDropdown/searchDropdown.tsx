@@ -166,7 +166,9 @@ const SearchDropdown = ({
 
         <PopoverContent
           align="start"
-          className={twMerge(`p-0 pointer-events-auto z-[9999] ${dropdownClass}`)}
+          className={twMerge(
+            `p-0 pointer-events-auto z-[9999] ${dropdownClass}`,
+          )}
           style={{ width: "var(--radix-popover-trigger-width)" }}
         >
           {isSearchable && (
@@ -233,25 +235,26 @@ const SearchDropdown = ({
                       >
                         <div className="flex items-center gap-2 overflow-hidden flex-1 mr-2">
                           <span className="truncate">{item.label}</span>
-                          {onActionClick && selectedValues.includes(item.value) && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onActionClick(item.value, e);
-                              }}
-                              className={twMerge(
-                                "ml-auto px-2.5 py-0.5 rounded text-xs font-semibold select-none transition-all duration-200 border",
-                                actionActiveValues?.includes(item.value)
-                                  ? "bg-[#2f328e] hover:bg-[#1e205e] text-white border-[#2f328e] shadow-sm"
-                                  : "bg-white hover:bg-slate-100 text-slate-700 border-gray-200 hover:border-gray-300"
-                              )}
-                            >
-                              {actionActiveValues?.includes(item.value)
-                                ? (activeActionText || "Active")
-                                : (actionText || "Action")}
-                            </button>
-                          )}
+                          {onActionClick &&
+                            selectedValues.includes(item.value) && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onActionClick(item.value, e);
+                                }}
+                                className={twMerge(
+                                  "ml-auto px-2.5 py-0.5 rounded text-xs font-semibold select-none transition-all duration-200 border",
+                                  actionActiveValues?.includes(item.value)
+                                    ? "bg-[#2f328e] hover:bg-[#1e205e] text-white border-[#2f328e] shadow-sm"
+                                    : "bg-white hover:bg-slate-100 text-slate-700 border-gray-200 hover:border-gray-300",
+                                )}
+                              >
+                                {actionActiveValues?.includes(item.value)
+                                  ? activeActionText || "Active"
+                                  : actionText || "Action"}
+                              </button>
+                            )}
                         </div>
                         {selectedValues.includes(item.value) && (
                           <Check className="h-4 w-4 text-primary shrink-0" />
@@ -305,7 +308,7 @@ const SearchDropdown = ({
       </Popover>
 
       {error?.message && (
-        <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+        <span className="text-red-600 text-[calc(1em-3px)] tb:text-[calc(1em-2px)] before:content-['*']">
           {error.message}
         </span>
       )}
