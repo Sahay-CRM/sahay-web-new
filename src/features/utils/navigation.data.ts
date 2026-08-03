@@ -154,6 +154,13 @@ export const companyNavigationData = [
         permission: "View",
         moduleKey: "ROUTINE_TASK",
       },
+      {
+        id: 3,
+        label: "Reports Library",
+        link: "/dashboard/company-reports",
+        permission: "View",
+        moduleKey: "TASK",
+      },
     ],
   },
   {

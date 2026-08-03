@@ -558,6 +558,14 @@ const Urls = {
   companyGoalValueSave: () => `${baseUrl}/company/blueprint-goal/value/save`,
   companyGoalValueDelete: (id: string) => `${baseUrl}/company/blueprint-goal/value/delete/${id}`,
   companyBlueprintGoalSaveAll: () => `${baseUrl}/company/blueprint-goal/save-all`,
+
+  // Company Report Endpoints
+  companyReportTemplateGet: () => `${baseUrl}/company/report/template/get`,
+  companyReportLibraryGet: () => `${baseUrl}/company/report/library/get`,
+  companyReportLibraryCreateFromTemplate: () => `${baseUrl}/company/report/library/create-from-template`,
+  companyReportLibraryUpdate: (id: string) => `${baseUrl}/company/report/library/update/${id}`,
+  companyReportRun: (id: string) => `${baseUrl}/company/report/run/${id}`,
+  companyReportLibraryDelete: (id: string) => `${baseUrl}/company/report/library/delete/${id}`,
 };
 
 export default Urls;

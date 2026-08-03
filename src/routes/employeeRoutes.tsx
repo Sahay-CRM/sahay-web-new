@@ -150,6 +150,8 @@ const FormSubmissionDetail = lazy(
 
 const HandOverData = lazy(() => import("../pages/HandOverData"));
 const Reports = lazy(() => import("../pages/Reports/report"));
+const CompanyReportsList = lazy(() => import("../pages/CompanyReports/CompanyReportsList"));
+const CompanyReportRunView = lazy(() => import("../pages/CompanyReports/CompanyReportRunView"));
 const DashboardReport = lazy(
   () => import("../pages/DashboardReport/DashboardReport"),
 );
@@ -302,6 +304,8 @@ export default function EmployeeRoutes() {
           )}
         />
         <Route path="reports" Component={Reports} />
+        <Route path="company-reports" element={<CompanyReportsList />} />
+        <Route path="company-reports/run/:id" element={<CompanyReportRunView />} />
         <Route path="report-builder" Component={DashboardReport} />
         <Route path="report-builder/view" Component={DashboardReportView} />
         <Route
