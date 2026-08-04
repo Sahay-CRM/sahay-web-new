@@ -431,9 +431,9 @@ export function formatTo12HourLower(timeStr?: string): string {
   const hour = parseInt(parts[0], 10);
   const minute = parts[1];
   if (isNaN(hour)) return timeStr;
-  const ampm = hour >= 12 ? "pm" : "am";
+  const ampm = hour >= 12 ? "PM" : "AM";
   const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-  return `${displayHour}:${minute}${ampm}`;
+  return `${displayHour}:${minute} ${ampm}`;
 }
 
 export function generateTimeOptions(): { label: string; value: string }[] {
@@ -444,9 +444,9 @@ export function generateTimeOptions(): { label: string; value: string }[] {
       const mm = String(minute).padStart(2, "0");
       const value = `${hh}:${mm}`; // e.g., "19:30"
       
-      const ampm = hour >= 12 ? "pm" : "am";
+      const ampm = hour >= 12 ? "PM" : "AM";
       const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-      const label = `${displayHour}:${mm}${ampm}`; // e.g., "7:30pm" or "10:00am"
+      const label = `${displayHour}:${mm} ${ampm}`; // e.g., "7:30 PM" or "10:00 AM"
       
       options.push({ label, value });
     }

@@ -15,6 +15,24 @@ export interface RunCompanyReportResponse {
     reportDescription?: string;
     columns?: string[];
     rows?: Record<string, unknown>[];
+    viewType?: string;
+    chartConfig?: {
+      type: string;
+      title?: string;
+      xAxis?: string;
+      yAxis?: string;
+      metric?: string;
+      dimension?: string;
+    }[];
+    summary?: {
+      groupByField?: string;
+      totalCount?: number;
+      groups?: {
+        label: string;
+        count: number;
+        percentage: number;
+      }[];
+    };
     reportConfig?: {
       module?: string;
       sort?: unknown;

@@ -48,7 +48,8 @@ export interface OtherItem {
 
 export interface GetDailyPlanItemsResponse {
   plandata: PlanDataItem[];
-  other: OtherItem[];
+  other?: OtherItem[];
+  today?: OtherItem[];
 }
 
 interface GetDailyPlanItemsFilter {
@@ -67,7 +68,7 @@ export default function useGetDailyPlanItems(
         url: Urls.getDailyPlanItems(),
         data: filter,
       });
-      return resData?.data || { plandata: [], other: [] };
+      return resData?.data || { plandata: [], other: [], today: [] };
     },
     enabled: enabled && !!filter.type,
   });

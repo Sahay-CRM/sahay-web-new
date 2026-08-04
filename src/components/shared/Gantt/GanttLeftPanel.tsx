@@ -30,6 +30,7 @@ interface Props {
   onTogglePhase: (phaseId: string) => void;
   onToggleItem: (itemId: string) => void;
   onItemClick: (item: CompanyGanttItem) => void;
+  onPhaseClick?: (phaseId: string) => void;
   hoveredRowId: string | null;
   onHoverRow: (id: string | null) => void;
 }
@@ -40,6 +41,7 @@ export const GanttLeftPanel = memo(function GanttLeftPanel({
   onTogglePhase,
   onToggleItem,
   onItemClick,
+  onPhaseClick,
   hoveredRowId,
   onHoverRow,
 }: Props) {
@@ -71,6 +73,7 @@ export const GanttLeftPanel = memo(function GanttLeftPanel({
               height={ROW_HEIGHT}
               isHovered={isHovered}
               onToggle={() => row.phaseId && onTogglePhase(row.phaseId)}
+              onPhaseClick={() => row.phaseId && onPhaseClick && onPhaseClick(row.phaseId)}
               onMouseEnter={() => onHoverRow(row.id)}
               onMouseLeave={() => onHoverRow(null)}
             />
@@ -103,6 +106,7 @@ function PhaseRow({
   height,
   isHovered,
   onToggle,
+  onPhaseClick,
   onMouseEnter,
   onMouseLeave,
 }: {
@@ -110,6 +114,7 @@ function PhaseRow({
   height: number;
   isHovered: boolean;
   onToggle: () => void;
+  onPhaseClick?: () => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }) {
@@ -121,19 +126,33 @@ function PhaseRow({
         background: color + "0d",
         borderLeft: `3px solid ${color}`,
       }}
-      className={`flex items-center gap-1.5 px-3 border-b border-border cursor-pointer transition-colors ${
+      className={`flex items-center gap-1.5 px-3 border-b border-border transition-colors ${
         isHovered ? "bg-muted/70" : "hover:bg-muted/40"
       }`}
-      onClick={onToggle}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      {row.isCollapsed ? (
-        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-      ) : (
-        <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-      )}
-      <span className="text-sm font-bold truncate" style={{ color }}>
+      <div
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        className="p-1 hover:bg-slate-200/50 rounded cursor-pointer flex items-center justify-center shrink-0"
+      >
+        {row.isCollapsed ? (
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        )}
+      </div>
+      <span
+        onClick={(e) => {
+          e.stopPropagation();
+          if (onPhaseClick) onPhaseClick();
+        }}
+        className="text-sm font-bold truncate flex-1 hover:underline cursor-pointer"
+        style={{ color }}
+      >
         {row.phaseName}
       </span>
     </div>
@@ -242,20 +261,35 @@ function ItemRow({
         </Tooltip>
 
         {/* Assignee avatar */}
-        {item.assignedEmployee?.employeeName ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="h-5.5 w-5.5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[9px] font-bold shrink-0">
-                {getInitials(item.assignedEmployee.employeeName)}
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              {item.assignedEmployee.employeeName}
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          <Users className="h-4 w-4 text-muted-foreground/40 shrink-0" />
-        )}
+        {(() => {
+          const assignedList = Array.isArray(item.assignedEmployee)
+            ? item.assignedEmployee
+            : item.assignedEmployee?.employeeName
+              ? [item.assignedEmployee]
+              : [];
+
+          if (assignedList.length > 0) {
+            const firstEmp = assignedList[0];
+            const hasMultiple = assignedList.length > 1;
+            const text = getInitials(firstEmp.employeeName || "Unknown") + (hasMultiple ? "+" : "");
+            const tooltipLabel = assignedList.map((emp) => emp.employeeName || "Unknown").join(", ");
+
+            return (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="h-5.5 w-5.5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[9px] font-bold shrink-0">
+                    {text}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {tooltipLabel}
+                </TooltipContent>
+              </Tooltip>
+            );
+          }
+
+          return <Users className="h-4 w-4 text-muted-foreground/40 shrink-0" />;
+        })()}
 
         {/* Progress bar — thin strip at bottom */}
         {progress > 0 && (

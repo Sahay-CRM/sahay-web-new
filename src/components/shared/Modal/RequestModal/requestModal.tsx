@@ -49,7 +49,8 @@ export default function RequestModal({
 
   const onSubmit = (data: RequestFormValues) => {
     const payload = {
-      requestType: type.toLowerCase(),
+      changeRequestId: defaultData?.changeRequestId || undefined,
+      requestType: type,
       requesterNote: data.notes,
       requestTitle: data.requestName,
     };

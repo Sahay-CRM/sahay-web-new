@@ -34,3 +34,10 @@ export {
   useCreateGanttDependency,
   useDeleteGanttDependency,
 } from "./useGanttDependencyMutations";
+
+export {
+  useCreateGanttPhase,
+  useUpdateGanttPhase,
+  useDeleteGanttPhase,
+  useReorderGanttPhases,
+} from "./useGanttPhaseMutations";

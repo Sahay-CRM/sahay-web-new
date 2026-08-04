@@ -103,6 +103,7 @@ export default function useCompany() {
     formState: { errors },
     watch,
     reset,
+    trigger,
   } = useForm<SimpleCompanyDetails>();
 
   useEffect(() => {
@@ -417,6 +418,7 @@ export default function useCompany() {
     handleClose,
     middlePercent,
     setMiddlePercent,
+    trigger,
     // formatOptions,
   };
 }

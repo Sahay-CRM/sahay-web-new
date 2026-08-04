@@ -24,7 +24,7 @@ import {
   useGetAllTaskStatus,
 } from "@/features/api/companyTask";
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
-import { useGetMeetingSearch } from "@/features/api/companyMeeting";
+import { useGetBothCompanyMeeting } from "@/features/api/companyMeeting";
 
 type TaskFormData = {
   meetingId?: string;
@@ -35,6 +35,11 @@ type TaskFormData = {
   assignUsers: string[];
   taskDeadline: string | Date | null;
 };
+
+interface GroupedCompanyMeetings {
+  detailMeetings?: CompanyMeetingDataProps[];
+  normalMeetings?: CompanyMeetingDataProps[];
+}
 
 interface ProjectTaskDrawerProps {
   open: boolean;
@@ -75,7 +80,12 @@ export default function ProjectTaskDrawer({
     filter: { isDeactivated: false },
   });
 
-  const { data: searchMeetingData } = useGetMeetingSearch(isMeetingSearch, taskData?.meetingId);
+  const { data: meetingData } = useGetBothCompanyMeeting({
+    filter: {
+      search: isMeetingSearch,
+      meetingId: taskData?.meetingId || undefined,
+    },
+  });
 
   const taskTypeOption = taskTypeData
     ? taskTypeData.data.map((status) => ({
@@ -99,18 +109,20 @@ export default function ProjectTaskDrawer({
       }))
     : [];
 
+  const rawMeetingData = meetingData?.data as unknown as GroupedCompanyMeetings;
+
   const meetingDataOption = [
-    ...(searchMeetingData?.data?.normal?.length
+    ...(rawMeetingData?.normalMeetings?.length
       ? [{ label: "NORMAL meetings", value: "header-normal", isHeader: true }]
       : []),
-    ...(searchMeetingData?.data?.normal ?? []).map((item) => ({
+    ...(rawMeetingData?.normalMeetings ?? []).map((item) => ({
       label: item.meetingName ?? "",
       value: item.meetingId ?? "",
     })),
-    ...(searchMeetingData?.data?.detail?.length
+    ...(rawMeetingData?.detailMeetings?.length
       ? [{ label: "DETAIL meetings", value: "header-detail", isHeader: true }]
       : []),
-    ...(searchMeetingData?.data?.detail ?? []).map((item) => ({
+    ...(rawMeetingData?.detailMeetings ?? []).map((item) => ({
       label: item.meetingName ?? "",
       value: item.meetingId ?? "",
     })),

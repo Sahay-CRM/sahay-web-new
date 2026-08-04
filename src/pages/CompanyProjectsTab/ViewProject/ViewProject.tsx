@@ -7,6 +7,7 @@ import {
   ChevronRight,
   ChevronDown,
   Folder,
+  Plus,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -567,24 +568,26 @@ const ProjectView = () => {
                   <h2 className="text-xl font-semibold text-slate-800">
                     Project Structure (Sub Projects)
                   </h2>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      onClick={handleExpandAll}
-                      disabled={isAllExpanded}
-                      className="font-normal text-white text-sm border py-1 focus:ring-0 hover:ring-0 px-2 rounded-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Expand All
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleCollapseAll}
-                      disabled={isAllCollapsed}
-                      className="font-normal text-white text-sm border py-1 px-2 focus:ring-0 hover:ring-0 rounded-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Collapse All
-                    </Button>
-                  </div>
+                  {subProjectsList.length > 0 && (
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        onClick={handleExpandAll}
+                        disabled={isAllExpanded}
+                        className="font-normal text-white text-sm border py-1 focus:ring-0 hover:ring-0 px-2 rounded-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Expand All
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleCollapseAll}
+                        disabled={isAllCollapsed}
+                        className="font-normal text-white text-sm border py-1 px-2 focus:ring-0 hover:ring-0 rounded-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Collapse All
+                      </Button>
+                    </div>
+                  )}
                   {/* <Button
                   variant="outline"
                   size="sm"
@@ -650,6 +653,20 @@ const ProjectView = () => {
                       <p className="text-xs text-slate-400 mt-1 max-w-[240px]">
                         Create sub-projects to build a nested hierarchy of work.
                       </p>
+                      {permission?.Add && (
+                        <Button
+                          size="sm"
+                          className="mt-4 flex items-center gap-1.5"
+                          onClick={() =>
+                            navigate(
+                              `/dashboard/projects/add?parentProjectId=${project.projectId}`,
+                            )
+                          }
+                        >
+                          <Plus className="w-4 h-4" />
+                          Add Sub Project
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>

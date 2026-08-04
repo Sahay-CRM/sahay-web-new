@@ -28,6 +28,15 @@ import { ImageBaseURL } from "@/features/utils/urls.utils";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import AddHolidaysForm from "../CompanyHoliday/AddHolidayFormModal";
 
+const toMinutes = (timeStr?: string | null): number | null => {
+  if (!timeStr) return null;
+  const parts = timeStr.split(":");
+  const h = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  if (isNaN(h) || isNaN(m)) return null;
+  return h * 60 + m;
+};
+
 export default function CompanyProfile() {
   const {
     companyData,
@@ -66,9 +75,13 @@ export default function CompanyProfile() {
     handleDelete,
     // formatOptions,
     handleAdd,
+    trigger,
   } = useCompany();
 
   const timeOptions = generateTimeOptions();
+
+  const watchedStartTime = watch("companyStartTime");
+  const watchedEndTime = watch("companyEndTime");
 
   if (!companyData) {
     return (
@@ -526,13 +539,32 @@ export default function CompanyProfile() {
                       <Controller
                         name="companyStartTime"
                         control={control}
-                        rules={{ required: "Company Start Time is required" }}
+                        rules={{
+                          required: "Company Start Time is required",
+                          validate: (val) => {
+                            if (!val) return true;
+                            const startMin = toMinutes(val);
+                            const endMin = toMinutes(watchedEndTime);
+                            if (startMin !== null && endMin !== null) {
+                              if (startMin === endMin) {
+                                return "Start time cannot be equal to End time";
+                              }
+                              if (startMin > endMin) {
+                                return "Start time must be before End time";
+                              }
+                            }
+                            return true;
+                          },
+                        }}
                         render={({ field }) => (
                           <SearchDropdown
                             options={timeOptions}
                             selectedValues={field.value ? [field.value] : []}
                             onSelect={(val) => {
                               field.onChange(val.value);
+                              setTimeout(() => {
+                                trigger(["companyStartTime", "companyEndTime"]);
+                              }, 0);
                             }}
                             label="Company Start Time"
                             placeholder="Select Start Time"
@@ -557,13 +589,32 @@ export default function CompanyProfile() {
                       <Controller
                         name="companyEndTime"
                         control={control}
-                        rules={{ required: "Company End Time is required" }}
+                        rules={{
+                          required: "Company End Time is required",
+                          validate: (val) => {
+                            if (!val) return true;
+                            const startMin = toMinutes(watchedStartTime);
+                            const endMin = toMinutes(val);
+                            if (startMin !== null && endMin !== null) {
+                              if (startMin === endMin) {
+                                return "End time cannot be equal to Start time";
+                              }
+                              if (startMin > endMin) {
+                                return "End time must be after Start time";
+                              }
+                            }
+                            return true;
+                          },
+                        }}
                         render={({ field }) => (
                           <SearchDropdown
                             options={timeOptions}
                             selectedValues={field.value ? [field.value] : []}
                             onSelect={(val) => {
                               field.onChange(val.value);
+                              setTimeout(() => {
+                                trigger(["companyStartTime", "companyEndTime"]);
+                              }, 0);
                             }}
                             label="Company End Time"
                             placeholder="Select End Time"

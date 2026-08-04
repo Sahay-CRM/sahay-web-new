@@ -12,6 +12,30 @@ import {
   AlertCircle
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  BarChart,
+  Bar,
+  XAxis as ChartXAxis,
+  YAxis as ChartYAxis,
+  CartesianGrid,
+  Tooltip as ChartTooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+
+const CHART_COLORS = [
+  "#6366F1", // Indigo
+  "#10B981", // Emerald
+  "#F59E0B", // Amber
+  "#EF4444", // Red
+  "#3B82F6", // Blue
+  "#8B5CF6", // Purple
+  "#EC4899", // Pink
+  "#14B8A6", // Teal
+];
 
 const COLUMN_LABEL_MAP: Record<string, string> = {
   taskName: "Task Name",
@@ -71,30 +95,50 @@ export default function CompanyReportRunView() {
   const moduleName = reportConfig?.module || "TASK";
   const sortObj = reportConfig?.sort;
   const filtersObj = reportConfig?.filters || [];
+  const viewType = runData?.viewType || runData?.report?.viewType || "GRID";
+  const summary = runData?.summary;
+  const groups = summary?.groups || [];
+  const totalCount = summary?.totalCount || 0;
+  const chartConfigs = runData?.chartConfig || [];
 
   const handleExportCSV = () => {
-    if (results.length === 0) return;
+    const isSummary = viewType === "SUMMARY";
+    const dataToExport = isSummary ? groups : results;
+    if (dataToExport.length === 0) return;
 
-    // Build headers
-    const headers = columns.map(col => COLUMN_LABEL_MAP[col] || col);
-    
-    // Build rows
-    const rows = results.map(row => 
-      columns.map(col => {
-        const val = row[col];
-        if (val === undefined || val === null) return "";
-        if (typeof val === "object") {
-          const obj = val as Record<string, unknown>;
-          return String(obj.adminUserName || obj.name || obj.userName || JSON.stringify(val));
-        }
-        return String(val).replace(/"/g, '""'); // escape quotes
-      })
-    );
+    let csvContent = "";
 
-    const csvContent = [
-      headers.join(","),
-      ...rows.map(r => r.map(val => `"${val}"`).join(","))
-    ].join("\n");
+    if (isSummary) {
+      const headers = ["Group", "Record Count", "Percentage"];
+      const rows = groups.map((g: any) => [
+        g.label || "",
+        String(g.count || 0),
+        `${g.percentage || 0}%`
+      ]);
+      csvContent = [
+        headers.join(","),
+        ...rows.map(r => r.map(val => `"${val.replace(/"/g, '""')}"`).join(","))
+      ].join("\n");
+    } else {
+      // Build headers for grid view
+      const headers = columns.map(col => COLUMN_LABEL_MAP[col] || col);
+      // Build rows
+      const rows = results.map(row => 
+        columns.map(col => {
+          const val = row[col];
+          if (val === undefined || val === null) return "";
+          if (typeof val === "object") {
+            const obj = val as Record<string, unknown>;
+            return String(obj.adminUserName || obj.name || obj.userName || JSON.stringify(val));
+          }
+          return String(val).replace(/"/g, '""'); // escape quotes
+        })
+      );
+      csvContent = [
+        headers.join(","),
+        ...rows.map(r => r.map(val => `"${val}"`).join(","))
+      ].join("\n");
+    }
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -198,6 +242,8 @@ export default function CompanyReportRunView() {
     );
   }
 
+  const hasData = (viewType === "SUMMARY" ? groups.length : results.length) > 0;
+
   return (
     <div className="p-6 bg-[#F8FAFC] min-h-screen space-y-6">
       {/* Top action bar */}
@@ -209,7 +255,7 @@ export default function CompanyReportRunView() {
           <ArrowLeft className="w-4 h-4" /> Back to Reports
         </button>
 
-        {results.length > 0 && (
+        {hasData && (
           <button
             onClick={handleExportCSV}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold inline-flex items-center gap-2 shadow-xs transition-all"
@@ -219,81 +265,214 @@ export default function CompanyReportRunView() {
         )}
       </div>
 
-      {/* Main card */}
-      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-2xs overflow-hidden">
-        {/* Report metadata panel */}
-        <div className="p-6 bg-slate-50 border-b border-gray-150 space-y-4">
-          <div className="flex justify-between items-start gap-4">
-            <div>
-              <span className="bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                {moduleName} Report
-              </span>
-              <h1 className="text-xl font-bold text-gray-900 mt-2">{reportName}</h1>
-              <p className="text-sm text-gray-500 mt-1">{reportDescription}</p>
-            </div>
+      {viewType === "SUMMARY" ? (
+        /* Summary Report Layout */
+        <div className="bg-white rounded-2xl border border-gray-200/80 shadow-2xs overflow-hidden">
+          {/* Report metadata panel */}
+          <div className="p-6 bg-slate-50 border-b border-gray-150 space-y-4">
+            <div className="flex justify-between items-start gap-4">
+              <div>
+                <span className="bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                  {moduleName} Report (Summary)
+                </span>
+                <h1 className="text-xl font-bold text-gray-900 mt-2">{reportName}</h1>
+                <p className="text-sm text-gray-500 mt-1">{reportDescription}</p>
+              </div>
 
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white border border-gray-250 p-2.5 rounded-xl shadow-2xs">
-              <PlayCircle className="w-5 h-5 text-emerald-500" />
-              <span>{results.length} records found</span>
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white border border-gray-250 p-2.5 rounded-xl shadow-2xs">
+                <PlayCircle className="w-5 h-5 text-indigo-500" />
+                <span>{totalCount} total items</span>
+              </div>
             </div>
           </div>
 
-          {/* Details/Rules summary */}
-          <div className="flex flex-wrap gap-4 text-xs">
-            {(() => {
-              const s = getSortDetails(sortObj);
-              if (!s.field) return null;
-              return (
-                <div className="flex items-center gap-1.5 bg-white border border-gray-150 px-3 py-1.5 rounded-lg text-gray-600">
-                  <SortAsc className="w-3.5 h-3.5 text-gray-400" />
-                  <span>Sorted by: <strong className="text-gray-900">{COLUMN_LABEL_MAP[s.field] || s.field}</strong> ({s.order.toUpperCase()})</span>
-                </div>
-              );
-            })()}
+          {/* Charts & Visualization Panel */}
+          {groups.length > 0 && chartConfigs.length > 0 && (
+            <div className="p-6 border-b border-gray-200/80 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white">
+              {chartConfigs.map((cfg: any, idx: number) => {
+                if (cfg.type === "bar") {
+                  return (
+                    <div key={idx} className="border border-gray-150 rounded-2xl p-4 shadow-3xs flex flex-col h-[320px]">
+                      <h3 className="text-sm font-bold text-gray-800 mb-4">{cfg.title || "Bar Chart"}</h3>
+                      <div className="flex-1 w-full min-h-0">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={groups.map((g: any) => ({
+                              name: g.label,
+                              count: g.count,
+                            }))}
+                            margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                            <ChartXAxis dataKey="name" tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickLine={false} />
+                            <ChartYAxis tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickLine={false} />
+                            <ChartTooltip contentStyle={{ borderRadius: "8px", border: "1px solid #E2E8F0", fontSize: "12px" }} />
+                            <Bar dataKey="count" fill="#6366F1" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  );
+                }
+                if (cfg.type === "pie") {
+                  return (
+                    <div key={idx} className="border border-gray-150 rounded-2xl p-4 shadow-3xs flex flex-col h-[320px]">
+                      <h3 className="text-sm font-bold text-gray-800 mb-4">{cfg.title || "Pie Chart"}</h3>
+                      <div className="flex-1 w-full min-h-0 flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={groups.map((g: any) => ({
+                                name: g.label,
+                                value: g.count,
+                              }))}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={4}
+                              dataKey="value"
+                            >
+                              {groups.map((_: any, index: number) => (
+                                <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <ChartTooltip contentStyle={{ borderRadius: "8px", border: "1px solid #E2E8F0", fontSize: "12px" }} />
+                            <Legend iconType="circle" wrapperStyle={{ fontSize: "11px", color: "#64748B" }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })}
+            </div>
+          )}
 
-            {(filtersObj || []).length > 0 && (
-              <div className="flex items-center gap-1.5 bg-white border border-gray-150 px-3 py-1.5 rounded-lg text-gray-600">
-                <Filter className="w-3.5 h-3.5 text-gray-400" />
-                <span>Active Rules: <strong className="text-gray-900">{(filtersObj || []).map(f => COLUMN_LABEL_MAP[f.field] || f.field).join(", ")}</strong></span>
+          {/* Groups breakdown table */}
+          <div className="overflow-x-auto">
+            {groups.length === 0 ? (
+              <div className="p-16 text-center text-gray-400 flex flex-col items-center justify-center gap-2">
+                <FileSpreadsheet className="w-10 h-10 text-gray-300" />
+                <p className="text-sm font-semibold">No summary data available.</p>
               </div>
+            ) : (
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-100 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-gray-200">
+                    <th className="px-6 py-3 font-semibold">Group (by {summary?.groupByField || "Field"})</th>
+                    <th className="px-6 py-3 font-semibold">Record Count</th>
+                    <th className="px-6 py-3 font-semibold">Percentage Breakdown</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-150">
+                  {groups.map((g: any, idx: number) => (
+                    <tr key={idx} className="hover:bg-slate-50/50 text-sm transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-900">
+                        {g.label}
+                      </td>
+                      <td className="px-6 py-4 font-medium text-gray-700">
+                        {g.count}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-40 bg-gray-100 rounded-full h-2 overflow-hidden shrink-0">
+                            <div 
+                              className="h-full rounded-full transition-all duration-500" 
+                              style={{ 
+                                width: `${g.percentage}%`,
+                                backgroundColor: CHART_COLORS[idx % CHART_COLORS.length]
+                              }}
+                            />
+                          </div>
+                          <span className="text-xs font-bold text-gray-600 w-12 shrink-0">{g.percentage}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
         </div>
+      ) : (
+        /* Tabular Grid Report Layout */
+        <div className="bg-white rounded-2xl border border-gray-200/80 shadow-2xs overflow-hidden">
+          {/* Report metadata panel */}
+          <div className="p-6 bg-slate-50 border-b border-gray-150 space-y-4">
+            <div className="flex justify-between items-start gap-4">
+              <div>
+                <span className="bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                  {moduleName} Report
+                </span>
+                <h1 className="text-xl font-bold text-gray-900 mt-2">{reportName}</h1>
+                <p className="text-sm text-gray-500 mt-1">{reportDescription}</p>
+              </div>
 
-        {/* Results table */}
-        <div className="overflow-x-auto">
-          {results.length === 0 ? (
-            <div className="p-16 text-center text-gray-400 flex flex-col items-center justify-center gap-2">
-              <FileSpreadsheet className="w-10 h-10 text-gray-300" />
-              <p className="text-sm font-semibold">No data matches the report rules.</p>
-              <p className="text-xs text-gray-400">Modify filters in the admin panel if you need to fetch more data.</p>
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white border border-gray-250 p-2.5 rounded-xl shadow-2xs">
+                <PlayCircle className="w-5 h-5 text-emerald-500" />
+                <span>{results.length} records found</span>
+              </div>
             </div>
-          ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-100 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-gray-200">
-                  {columns.map(col => (
-                    <th key={col} className="px-5 py-3 font-semibold">
-                      {COLUMN_LABEL_MAP[col] || col}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-150">
-                {results.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/50 text-sm transition-colors">
+
+            {/* Details/Rules summary */}
+            <div className="flex flex-wrap gap-4 text-xs">
+              {(() => {
+                const s = getSortDetails(sortObj);
+                if (!s.field) return null;
+                return (
+                  <div className="flex items-center gap-1.5 bg-white border border-gray-150 px-3 py-1.5 rounded-lg text-gray-600">
+                    <SortAsc className="w-3.5 h-3.5 text-gray-400" />
+                    <span>Sorted by: <strong className="text-gray-900">{COLUMN_LABEL_MAP[s.field] || s.field}</strong> ({s.order.toUpperCase()})</span>
+                  </div>
+                );
+              })()}
+
+              {(filtersObj || []).length > 0 && (
+                <div className="flex items-center gap-1.5 bg-white border border-gray-150 px-3 py-1.5 rounded-lg text-gray-600">
+                  <Filter className="w-3.5 h-3.5 text-gray-400" />
+                  <span>Active Rules: <strong className="text-gray-900">{(filtersObj || []).map(f => COLUMN_LABEL_MAP[f.field] || f.field).join(", ")}</strong></span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Results table */}
+          <div className="overflow-x-auto">
+            {results.length === 0 ? (
+              <div className="p-16 text-center text-gray-400 flex flex-col items-center justify-center gap-2">
+                <FileSpreadsheet className="w-10 h-10 text-gray-300" />
+                <p className="text-sm font-semibold">No data matches the report rules.</p>
+                <p className="text-xs text-gray-400">Modify filters in the admin panel if you need to fetch more data.</p>
+              </div>
+            ) : (
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-100 text-xs font-semibold text-slate-700 uppercase tracking-wider border-b border-gray-200">
                     {columns.map(col => (
-                      <td key={col} className="px-5 py-3.5 font-normal">
-                        {renderCell(row, col)}
-                      </td>
+                      <th key={col} className="px-5 py-3 font-semibold">
+                        {COLUMN_LABEL_MAP[col] || col}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody className="divide-y divide-gray-150">
+                  {results.map((row, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50/50 text-sm transition-colors">
+                      {columns.map(col => (
+                        <td key={col} className="px-5 py-3.5 font-normal">
+                          {renderCell(row, col)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

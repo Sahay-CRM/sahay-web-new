@@ -94,8 +94,10 @@ export default function TimeSlotDrawer({
       if (Array.isArray(planItems.plandata)) {
         plandataList = planItems.plandata;
       }
-      if (Array.isArray(planItems.other)) {
-        otherList = planItems.other;
+      const otherKey = eventType === "GANTT" ? "today" : "other";
+      const otherData = planItems[otherKey];
+      if (Array.isArray(otherData)) {
+        otherList = otherData;
       }
     }
 
@@ -154,10 +156,11 @@ export default function TimeSlotDrawer({
       options.push(...plandataMapped);
     }
 
+    const otherHeaderLabel = eventType === "GANTT" ? "Today" : "Other";
     if (otherMapped.length > 0) {
       options.push({
         value: `header-other-${eventType}`,
-        label: `Other ${typeLabel}`,
+        label: `${otherHeaderLabel} ${typeLabel}`,
         isHeader: true,
       });
       options.push(...otherMapped);

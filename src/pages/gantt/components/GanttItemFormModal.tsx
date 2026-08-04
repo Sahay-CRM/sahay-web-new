@@ -2,6 +2,9 @@ import { Controller, useForm } from "react-hook-form";
 import ModalData from "@/components/shared/Modal/ModalData";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
+import { useQuery } from "@tanstack/react-query";
+import Api from "@/features/utils/api.utils";
+import Urls from "@/features/utils/urls.utils";
 import {
   useCreateGanttItem,
   useUpdateGanttItem,
@@ -14,6 +17,33 @@ import type {
 } from "@/types/gantt";
 import { PRIORITY_OPTIONS } from "@/pages/gantt/utils/gantt.utils";
 import { format } from "date-fns";
+
+const parseAssignees = (val?: unknown): string[] => {
+  if (!val) return [];
+  if (Array.isArray(val)) {
+    return (val as unknown[]).map(String);
+  }
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed.map(String);
+        }
+      } catch {
+        // fallback
+      }
+    }
+    return trimmed.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
+};
+
+interface Employee {
+  employeeId: string;
+  employeeName: string;
+}
 
 interface Props {
   open: boolean;
@@ -33,6 +63,8 @@ interface FormValues {
   plannedStartDate: string;
   plannedEndDate: string;
   priority: string;
+  color: string;
+  assignedToEmployeeId: string[];
 }
 
 export default function GanttItemFormModal({
@@ -77,7 +109,23 @@ export default function GanttItemFormModal({
           )
         : format(new Date(), "yyyy-MM-dd"),
       priority: editItem?.priority ?? "MEDIUM",
+      color: editItem?.color ?? "#1e9ebe",
+      assignedToEmployeeId: editItem?.assignedToEmployeeId
+        ? parseAssignees(editItem.assignedToEmployeeId)
+        : [],
     },
+  });
+
+  const { data: employees, isLoading: employeesLoading } = useQuery({
+    queryKey: ["employee-dd-all"],
+    queryFn: async () => {
+      const { data } = await Api.post<{ data: Employee[] }>({
+        url: Urls.getAllEmployeeDd(),
+      });
+      return data.data;
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: open,
   });
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
@@ -103,6 +151,8 @@ export default function GanttItemFormModal({
           itemType: values.itemType as GanttItemType,
           priority: values.priority as CompanyGanttItem["priority"],
           ganttPhaseId: values.ganttPhaseId || null,
+          color: values.color,
+          assignedToEmployeeId: values.assignedToEmployeeId.length > 0 ? values.assignedToEmployeeId : null,
         }),
         updateDatesMutation.mutateAsync({
           itemId: editItem.ganttItemId,
@@ -123,6 +173,8 @@ export default function GanttItemFormModal({
         plannedStartDate: new Date(values.plannedStartDate).toISOString(),
         plannedEndDate: new Date(values.plannedEndDate).toISOString(),
         priority: values.priority as CompanyGanttItem["priority"],
+        color: values.color,
+        assignedToEmployeeId: values.assignedToEmployeeId.length > 0 ? values.assignedToEmployeeId : null,
       });
     }
     reset();
@@ -240,6 +292,24 @@ export default function GanttItemFormModal({
           />
         )}
 
+        <Controller
+          name="assignedToEmployeeId"
+          control={control}
+          render={({ field }) => (
+            <FormSelect
+              label="Assignees"
+              value={field.value}
+              onChange={field.onChange}
+              options={(employees ?? []).map((emp) => ({
+                value: emp.employeeId,
+                label: emp.employeeName,
+              }))}
+              isMulti={true}
+              placeholder={employeesLoading ? "Loading employees..." : "Select employees (optional)"}
+            />
+          )}
+        />
+
         <div className="grid grid-cols-2 gap-4">
           <Controller
             name="plannedStartDate"
@@ -273,6 +343,29 @@ export default function GanttItemFormModal({
             )}
           />
         </div>
+
+        <Controller
+          name="color"
+          control={control}
+          render={({ field }) => (
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider block">
+                Item Color
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  className="w-10 h-10 p-0 border border-slate-300 rounded-lg cursor-pointer overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-none"
+                />
+                <span className="text-sm font-mono uppercase text-slate-600">
+                  {field.value}
+                </span>
+              </div>
+            </div>
+          )}
+        />
       </div>
     </ModalData>
   );

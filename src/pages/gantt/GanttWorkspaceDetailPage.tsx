@@ -8,19 +8,20 @@ import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import GanttChart from "@/components/shared/Gantt/GanttChart";
 import GanttItemFormModal from "./components/GanttItemFormModal";
 import GanttItemDetailModal from "./components/GanttItemDetailModal";
+import GanttPhaseManageModal from "./components/GanttPhaseManageModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SpinnerIcon } from "@/components/shared/Icons";
 import { ChevronLeft, Plus, Calendar, AlertCircle } from "lucide-react";
 import { fmtDate, WORKSPACE_STATUS_BG } from "./utils/gantt.utils";
-import type { CompanyGanttItem } from "@/types/gantt";
+import type { CompanyGanttItem, CompanyGanttPhase } from "@/types/gantt";
 import { differenceInCalendarDays, startOfDay } from "date-fns";
 
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
+  DialogTitle, 
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
@@ -33,6 +34,8 @@ export default function GanttWorkspaceDetailPage() {
   const { data, isLoading, isError } = useGanttWorkspaceDetail(id);
 
   const [addItemOpen, setAddItemOpen] = useState(false);
+  const [phaseFormOpen, setPhaseFormOpen] = useState(false);
+  const [selectedPhaseForEdit, setSelectedPhaseForEdit] = useState<CompanyGanttPhase | null>(null);
   const [selectedItem, setSelectedItem] = useState<CompanyGanttItem | null>(
     null,
   );
@@ -202,6 +205,17 @@ export default function GanttWorkspaceDetailPage() {
           {/* Actions */}
           <div className="flex items-center gap-2">
             <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedPhaseForEdit(null);
+                setPhaseFormOpen(true);
+              }}
+              className="h-9 px-4 text-sm font-semibold flex items-center gap-1.5"
+            >
+              <Plus className="h-4 w-4" /> Add Phase
+            </Button>
+            <Button
               size="sm"
               onClick={() => setAddItemOpen(true)}
               className="h-9 px-4 text-sm font-semibold"
@@ -233,6 +247,13 @@ export default function GanttWorkspaceDetailPage() {
             dependencies={dependencies}
             selectedItem={selectedItem}
             onItemClick={setSelectedItem}
+            onPhaseClick={(phaseId) => {
+              const phase = phases.find((p) => p.ganttPhaseId === phaseId);
+              if (phase) {
+                setSelectedPhaseForEdit(phase);
+                setPhaseFormOpen(true);
+              }
+            }}
           />
         </div>
       )}
@@ -244,6 +265,17 @@ export default function GanttWorkspaceDetailPage() {
           onOpenChange={setAddItemOpen}
           workspaceId={workspace.ganttWorkspaceId}
           phases={phases}
+        />
+      )}
+
+      {/* Manage Phases modal */}
+      {phaseFormOpen && (
+        <GanttPhaseManageModal
+          open={phaseFormOpen}
+          onOpenChange={setPhaseFormOpen}
+          workspaceId={workspace.ganttWorkspaceId}
+          phases={phases}
+          editPhase={selectedPhaseForEdit}
         />
       )}
 

@@ -136,7 +136,7 @@ export interface CompanyGanttItem {
   itemOrder: number;
   color?: string | null;
   assignedToEmployeeId?: string | null;
-  assignedEmployee?: { employeeName?: string; employeeId?: string } | null;
+  assignedEmployee?: Array<{ employeeName?: string; employeeId?: string; employeeEmail?: string }> | { employeeName?: string; employeeId?: string } | null;
   sourceTemplateItemId?: string | null;
   createdBy: string;
   isDelete: boolean;
@@ -249,7 +249,7 @@ export interface CreateGanttItemRequest {
   priority?: GanttItemPriority;
   itemOrder?: number;
   color?: string;
-  assignedToEmployeeId?: string | null;
+  assignedToEmployeeId?: string[] | string | null;
 }
 
 export interface UpdateGanttItemRequest {
@@ -259,6 +259,9 @@ export interface UpdateGanttItemRequest {
   priority?: GanttItemPriority;
   color?: string;
   ganttPhaseId?: string | null;
+  assignedToEmployeeId?: string[] | string | null;
+  actualStartDate?: string | null;
+  actualEndDate?: string | null;
 }
 
 export interface UpdateGanttProgressRequest {
@@ -276,7 +279,7 @@ export interface UpdateGanttDatesRequest {
 }
 
 export interface AssignGanttItemRequest {
-  assignedToEmployeeId: string | null;
+  assignedToEmployeeId: string[] | string | null;
 }
 
 export interface CreateGanttDependencyRequest {
@@ -300,4 +303,26 @@ export interface GanttFlatRow {
   isCollapsed?: boolean;
   hasChildren?: boolean;
   isVisible?: boolean;
+}
+
+export interface CreateGanttPhaseRequest {
+  ganttWorkspaceId: string;
+  phaseName: string;
+  phaseDescription?: string;
+  phaseOrder?: number;
+  color?: string;
+}
+
+export interface UpdateGanttPhaseRequest {
+  phaseName?: string;
+  phaseDescription?: string;
+  phaseOrder?: number;
+  color?: string;
+}
+
+export interface ReorderGanttPhasesRequest {
+  phases: Array<{
+    ganttPhaseId: string;
+    phaseOrder: number;
+  }>;
 }

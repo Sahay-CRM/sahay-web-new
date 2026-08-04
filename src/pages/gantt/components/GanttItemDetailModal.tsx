@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import ModalData from "@/components/shared/Modal/ModalData";
+import { useSelector } from "react-redux";
+import { getUserDetail } from "@/features/selectors/auth.selector";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
@@ -17,6 +20,7 @@ import type {
   GanttDependencyType,
   GanttItemStatus,
   GanttItemPriority,
+  UpdateGanttItemRequest,
 } from "@/types/gantt";
 import {
   fmtDate,
@@ -34,6 +38,23 @@ import {
   useUpdateGanttDates,
 } from "@/features/api/gantt";
 //
+
+const parseAssignees = (val?: any): string[] => {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      try {
+        return JSON.parse(trimmed);
+      } catch {
+        // fallback
+      }
+    }
+    return trimmed.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
+};
 
 interface Props {
   open: boolean;
@@ -81,9 +102,16 @@ export default function GanttItemDetailModal({
   onOpenChange,
   item,
   workspaceId,
+  phases = [],
   itemsTree = [],
   dependencies = [],
 }: Props) {
+  const userData = useSelector(getUserDetail);
+  const isEmployee = userData?.employeeType === "EMPLOYEE";
+  const assignedIds = parseAssignees(item.assignedToEmployeeId);
+  const isAssignedToMe = assignedIds.includes(userData?.employeeId ?? "");
+  const canEdit = !isEmployee || isAssignedToMe;
+
   const [activeTab, setActiveTab] = useState<
     "general" | "progress" | "dependency" | "assign"
   >("general");
@@ -93,8 +121,8 @@ export default function GanttItemDetailModal({
   // Inline forms state
   const [progressVal, setProgressVal] = useState(item.progressPercentage);
   const [statusVal, setStatusVal] = useState(item.itemStatus);
-  const [selectedAssigneeId, setSelectedAssigneeId] = useState(
-    item.assignedToEmployeeId ?? "",
+  const [selectedAssigneeIds, setSelectedAssigneeIds] = useState<string[]>(() =>
+    parseAssignees(item.assignedToEmployeeId)
   );
 
   // General tab edit state
@@ -109,12 +137,14 @@ export default function GanttItemDetailModal({
     return currentEnd ? format(new Date(currentEnd), "yyyy-MM-dd") : "";
   });
   const [priorityVal, setPriorityVal] = useState(item.priority);
+  const [colorVal, setColorVal] = useState(item.color ?? "#1e9ebe");
+  const [phaseIdVal, setPhaseIdVal] = useState(item.ganttPhaseId ?? "");
 
   // Sync state when item or open state changes
   useEffect(() => {
     setProgressVal(item.progressPercentage);
     setStatusVal(item.itemStatus);
-    setSelectedAssigneeId(item.assignedToEmployeeId ?? "");
+    setSelectedAssigneeIds(parseAssignees(item.assignedToEmployeeId));
     setNameVal(item.itemName);
     setDescVal(item.itemDescription ?? "");
 
@@ -127,7 +157,9 @@ export default function GanttItemDetailModal({
     setEndDateVal(currentEnd ? format(new Date(currentEnd), "yyyy-MM-dd") : "");
 
     setPriorityVal(item.priority);
-  }, [item.ganttItemId, open]);
+    setColorVal(item.color ?? "#1e9ebe");
+    setPhaseIdVal(item.ganttPhaseId ?? "");
+  }, [item.actualEndDate, item.actualStartDate, item.assignedToEmployeeId, item.color, item.ganttItemId, item.ganttPhaseId, item.itemDescription, item.itemName, item.itemStatus, item.plannedEndDate, item.plannedStartDate, item.priority, item.progressPercentage, open]);
 
   // Dependency states – multi-row pending
   interface PendingDep {
@@ -151,22 +183,28 @@ export default function GanttItemDetailModal({
   const handleGeneralSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await Promise.all([
-        updateMutation.mutateAsync({
-          itemName: nameVal,
-          itemDescription: descVal || undefined,
-          priority: priorityVal,
-        }),
-        updateDatesMutation.mutateAsync({
-          itemId: item.ganttItemId,
-          payload: {
-            // plannedStartDate: item.plannedStartDate,
-            // plannedEndDate: item.plannedEndDate,
-            actualStartDate: new Date(startDateVal).toISOString(),
-            actualEndDate: new Date(endDateVal).toISOString(),
-          },
-        }),
-      ]);
+      const initialStart = item.actualStartDate || item.plannedStartDate;
+      const initialStartStr = initialStart ? format(new Date(initialStart), "yyyy-MM-dd") : "";
+
+      const initialEnd = item.actualEndDate || item.plannedEndDate;
+      const initialEndStr = initialEnd ? format(new Date(initialEnd), "yyyy-MM-dd") : "";
+
+      const payload: UpdateGanttItemRequest = {
+        itemName: nameVal,
+        itemDescription: descVal || undefined,
+        priority: priorityVal,
+        color: colorVal,
+        ganttPhaseId: phaseIdVal || null,
+      };
+
+      if (startDateVal !== initialStartStr) {
+        payload.actualStartDate = new Date(startDateVal).toISOString();
+      }
+      if (endDateVal !== initialEndStr) {
+        payload.actualEndDate = new Date(endDateVal).toISOString();
+      }
+
+      await updateMutation.mutateAsync(payload);
       onOpenChange(false);
     } catch {
       // Handled by mutation hook toasts
@@ -183,6 +221,29 @@ export default function GanttItemDetailModal({
     },
     staleTime: 5 * 60 * 1000,
     enabled: open,
+  });
+
+  const selectedAssignees = selectedAssigneeIds.map((id) => {
+    const foundInDd = (employees ?? []).find((e) => e.employeeId === id);
+    if (foundInDd) return foundInDd;
+
+    const assignedArray = Array.isArray(item.assignedEmployee)
+      ? item.assignedEmployee
+      : item.assignedEmployee
+        ? [item.assignedEmployee]
+        : [];
+    const foundInItem = assignedArray.find((e) => e?.employeeId === id);
+    if (foundInItem) {
+      return {
+        employeeId: foundInItem.employeeId,
+        employeeName: foundInItem.employeeName ?? "Unknown",
+      };
+    }
+
+    return {
+      employeeId: id,
+      employeeName: "Loading...",
+    };
   });
 
   const handleDelete = async () => {
@@ -225,11 +286,11 @@ export default function GanttItemDetailModal({
     }
   };
 
-  const handleAssign = async (employeeId: string | null) => {
+  const handleAssign = async (employeeIds: string[] | null) => {
     try {
       await assignMutation.mutateAsync({
         itemId: item.ganttItemId,
-        payload: { assignedToEmployeeId: employeeId },
+        payload: { assignedToEmployeeId: employeeIds },
       });
       onOpenChange(false);
     } catch {
@@ -395,9 +456,10 @@ export default function GanttItemDetailModal({
                     placeholder="Task Name"
                     className="h-10 text-md border border-slate-200 rounded-lg focus-visible:ring-primary focus-visible:border-primary w-full"
                     required
+                    disabled={!canEdit}
                   />
                 </div>
-
+ 
                 {/* Description */}
                 <div className="space-y-1">
                   <Label className="text-md font-semibold text-slate-800 mb-1.5 block">
@@ -408,9 +470,10 @@ export default function GanttItemDetailModal({
                     onChange={(e) => setDescVal(e.target.value)}
                     placeholder="Optional Description"
                     className="h-10 text-md border border-slate-200 rounded-lg focus-visible:ring-primary focus-visible:border-primary w-full"
+                    disabled={!canEdit}
                   />
                 </div>
-
+ 
                 {/* Start & End Date */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
@@ -424,6 +487,7 @@ export default function GanttItemDetailModal({
                       className="h-10 text-md border border-slate-200 rounded-lg focus-visible:ring-primary focus-visible:border-primary w-full"
                       required
                       min={minStartDate}
+                      disabled={!canEdit}
                     />
                   </div>
                   <div className="space-y-1">
@@ -437,10 +501,34 @@ export default function GanttItemDetailModal({
                       className="h-10 text-md border border-slate-200 rounded-lg focus-visible:ring-primary focus-visible:border-primary w-full"
                       required
                       min={startDateVal || minStartDate}
+                      disabled={!canEdit}
                     />
                   </div>
                 </div>
-
+ 
+                {/* Phase Selection */}
+                {phases.length > 0 && (
+                  <div className="space-y-1">
+                    <FormSelect
+                      label="Phase"
+                      value={phaseIdVal}
+                      onChange={(val) =>
+                        setPhaseIdVal(
+                          (Array.isArray(val) ? val[0] : val) ?? ""
+                        )
+                      }
+                      options={phases.map((p) => ({
+                        value: p.ganttPhaseId,
+                        label: p.phaseName,
+                      }))}
+                      placeholder="Select phase (optional)"
+                      labelClass="text-md font-semibold text-slate-800 mb-1.5 block"
+                      triggerClassName="h-10 rounded-lg border-slate-200 text-md"
+                      disabled={!canEdit}
+                    />
+                  </div>
+                )}
+ 
                 {/* Priority */}
                 <div className="space-y-1">
                   <FormSelect
@@ -456,7 +544,27 @@ export default function GanttItemDetailModal({
                     options={PRIORITY_OPTIONS}
                     labelClass="text-md font-semibold text-slate-800 mb-1.5 block"
                     triggerClassName="h-10 rounded-lg border-slate-200 text-md"
+                    disabled={!canEdit}
                   />
+                </div>
+ 
+                {/* Color Picker */}
+                <div className="space-y-1">
+                  <Label className="text-md font-semibold text-slate-800 mb-1.5 block">
+                    Color
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={colorVal}
+                      onChange={(e) => setColorVal(e.target.value)}
+                      className="w-10 h-10 p-0 border border-slate-300 rounded-lg cursor-pointer overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-none"
+                      disabled={!canEdit}
+                    />
+                    <span className="text-sm font-mono uppercase text-slate-600">
+                      {colorVal}
+                    </span>
+                  </div>
                 </div>
               </form>
             )}
@@ -490,6 +598,7 @@ export default function GanttItemDetailModal({
                           handleProgressChange(Number(e.target.value))
                         }
                         className="w-full h-1.5 accent-primary cursor-pointer rounded-lg appearance-none bg-slate-200"
+                        disabled={!canEdit}
                       />
                       <div className="flex justify-between text-md text-primary font-semibold font-mono mt-1">
                         <span>0%</span>
@@ -519,6 +628,7 @@ export default function GanttItemDetailModal({
                     options={STATUS_OPTIONS}
                     labelClass="text-md font-semibold text-slate-800 mb-1.5 block"
                     triggerClassName="!py-0 h-10 rounded-lg border-slate-200 text-md"
+                    disabled={!canEdit}
                   />
                 </div>
               </form>
@@ -558,18 +668,20 @@ export default function GanttItemDetailModal({
                             <span className="text-sm font-bold text-primary uppercase">
                               {dep.dependencyType}
                             </span>
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 text-slate-400 hover:text-red-650 hover:bg-red-50/50 rounded-lg transition-colors"
-                              onClick={() =>
-                                handleDeleteDependency(dep.ganttDependencyId)
-                              }
-                              disabled={deleteDepMutation.isPending}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
+                            {canEdit && (
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 text-slate-400 hover:text-red-650 hover:bg-red-50/50 rounded-lg transition-colors"
+                                onClick={() =>
+                                  handleDeleteDependency(dep.ganttDependencyId)
+                                }
+                                disabled={deleteDepMutation.isPending}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       );
@@ -603,18 +715,20 @@ export default function GanttItemDetailModal({
                             <span className="text-[10px] font-bold text-slate-400 uppercase">
                               {dep.dependencyType} (Succ)
                             </span>
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 text-slate-400 hover:text-red-650 hover:bg-red-50/50 rounded-lg transition-colors"
-                              onClick={() =>
-                                handleDeleteDependency(dep.ganttDependencyId)
-                              }
-                              disabled={deleteDepMutation.isPending}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
+                            {canEdit && (
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 text-slate-400 hover:text-red-650 hover:bg-red-50/50 rounded-lg transition-colors"
+                                onClick={() =>
+                                  handleDeleteDependency(dep.ganttDependencyId)
+                                }
+                                disabled={deleteDepMutation.isPending}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       );
@@ -626,8 +740,7 @@ export default function GanttItemDetailModal({
                   </p>
                 )}
 
-                {/* Add dependency rows */}
-                {candidates.length > 0 ? (
+                               {canEdit && candidates.length > 0 ? (
                   <div className="space-y-3 pt-4 border-t border-dashed border-slate-200">
                     <Label className="text-md font-bold text-slate-800 block">
                       Add New Relation Links
@@ -638,7 +751,7 @@ export default function GanttItemDetailModal({
                       <span className="col-span-5 text-sm font-semibold text-slate-500 uppercase tracking-wide">
                         Depends On
                       </span>
-                      <span className="col-span-4 text-sm font-semibold text-slate-500 uppercase tracking-wide">
+                      <span className="col-span-4 text-sm font-semibold text-slate-550 uppercase tracking-wide">
                         Relation Type
                       </span>
                       <span className="col-span-2 text-sm font-semibold text-slate-500 uppercase tracking-wide text-center">
@@ -733,9 +846,11 @@ export default function GanttItemDetailModal({
                     </button>
                   </div>
                 ) : (
-                  <p className="text-[10px] text-slate-400 text-center py-2">
-                    No other tasks available for linking relationship.
-                  </p>
+                  !canEdit && candidates.length > 0 ? null : (
+                    <p className="text-[10px] text-slate-400 text-center py-2">
+                      No other tasks available for linking relationship.
+                    </p>
+                  )
                 )}
               </div>
             )}
@@ -743,69 +858,98 @@ export default function GanttItemDetailModal({
             {/* ── ASSIGN EMPLOYEE TAB ── */}
             {activeTab === "assign" && (
               <div className="space-y-4">
-                {item.assignedEmployee?.employeeName ? (
+                {selectedAssignees.length > 0 ? (
                   <div className="flex items-center justify-between py-2 border-b border-slate-100">
                     <div className="min-w-0">
                       <Label className="text-md font-semibold text-slate-800 mb-1.5 block">
-                        Current Assignee
+                        Current Assignees ({selectedAssignees.length})
                       </Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[9px] font-bold">
-                          {getInitials(item.assignedEmployee.employeeName)}
-                        </div>
-                        <span className="text-xs font-bold text-slate-850">
-                          {item.assignedEmployee.employeeName}
-                        </span>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {selectedAssignees.map((emp) => (
+                          <div
+                            key={emp.employeeId}
+                            className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1 text-xs"
+                          >
+                            <div className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[9px] font-bold">
+                              {getInitials(emp.employeeName)}
+                            </div>
+                            <span className="font-bold text-slate-800">
+                              {emp.employeeName}
+                            </span>
+                            {canEdit && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedAssigneeIds((prev) =>
+                                    prev.filter((id) => id !== emp.employeeId)
+                                  );
+                                }}
+                                className="text-slate-400 hover:text-red-500 ml-1 transition-colors"
+                              >
+                                &times;
+                              </button>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 text-xs text-slate-500 hover:text-red-650 hover:bg-red-50/50 border border-slate-200 rounded-lg shadow-sm"
-                      onClick={() => handleAssign(null)}
-                      disabled={assignMutation.isPending}
-                    >
-                      {assignMutation.isPending ? (
-                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                      ) : null}
-                      Unassign
-                    </Button>
+                    {canEdit && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 text-xs text-slate-500 hover:text-red-650 hover:bg-red-50/50 border border-slate-200 rounded-lg shadow-sm align-top shrink-0"
+                        onClick={() => {
+                          setSelectedAssigneeIds([]);
+                          handleAssign(null);
+                        }}
+                        disabled={assignMutation.isPending}
+                      >
+                        {assignMutation.isPending ? (
+                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        ) : null}
+                        Unassign All
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="py-2.5">
                     <p className="text-sm text-slate-400 italic">
-                      Currently unassigned. Select an employee below to assign
+                      Currently unassigned. Select employees below to assign
                       this task.
                     </p>
                   </div>
                 )}
 
-                {employeesLoading ? (
-                  <div className="flex justify-center py-8 text-primary">
-                    <SpinnerIcon />
-                  </div>
-                ) : (
-                  <FormSelect
-                    label="Select Assignee"
-                    value={selectedAssigneeId}
-                    onChange={(val) =>
-                      setSelectedAssigneeId(Array.isArray(val) ? val[0] : val)
-                    }
-                    options={(employees ?? []).map((emp) => ({
-                      value: emp.employeeId,
-                      label: emp.employeeName,
-                    }))}
-                    placeholder="Select employee..."
-                    labelClass="text-md font-semibold text-slate-800 mb-1.5 block"
-                    triggerClassName="h-10 rounded-lg border-slate-200 text-md"
-                  />
+                {canEdit && (
+                  employeesLoading ? (
+                    <div className="flex justify-center py-8 text-primary">
+                      <SpinnerIcon />
+                    </div>
+                  ) : (
+                    <FormSelect
+                      label="Select Assignees"
+                      value={selectedAssigneeIds}
+                      onChange={(val) => {
+                        const ids = Array.isArray(val) ? val : [val];
+                        setSelectedAssigneeIds(ids);
+                      }}
+                      options={(employees ?? []).map((emp) => ({
+                        value: emp.employeeId,
+                        label: emp.employeeName,
+                      }))}
+                      isMulti={true}
+                      placeholder="Select employees..."
+                      labelClass="text-md font-semibold text-slate-800 mb-1.5 block"
+                      triggerClassName="h-10 rounded-lg border-slate-200 text-md"
+                    />
+                  )
                 )}
               </div>
             )}
           </div>
 
           {/* ── Unified Footer ── */}
-          {(activeTab === "general" ||
+          {canEdit && (activeTab === "general" ||
             activeTab === "progress" ||
             activeTab === "dependency" ||
             activeTab === "assign") && (
@@ -842,8 +986,8 @@ export default function GanttItemDetailModal({
               ) : activeTab === "assign" ? (
                 <Button
                   type="button"
-                  onClick={() => handleAssign(selectedAssigneeId)}
-                  disabled={assignMutation.isPending || !selectedAssigneeId}
+                  onClick={() => handleAssign(selectedAssigneeIds.length > 0 ? selectedAssigneeIds : null)}
+                  disabled={assignMutation.isPending}
                   className=" ml-auto"
                 >
                   {assignMutation.isPending ? (
@@ -852,7 +996,7 @@ export default function GanttItemDetailModal({
                       Saving...
                     </>
                   ) : (
-                    "Save Assignee"
+                    "Save Assignees"
                   )}
                 </Button>
               ) : (

@@ -6,6 +6,7 @@ export interface CompanyReport {
   reportId: string;
   reportName: string;
   reportDescription?: string;
+  viewType?: string;
   reportConfig: {
     module: string;
     title: string;

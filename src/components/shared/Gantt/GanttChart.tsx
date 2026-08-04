@@ -50,6 +50,7 @@ interface Props {
   dependencies: CompanyGanttDependency[];
   selectedItem?: CompanyGanttItem | null;
   onItemClick?: (item: CompanyGanttItem) => void;
+  onPhaseClick?: (phaseId: string) => void;
 }
 
 export default function GanttChart({
@@ -60,6 +61,7 @@ export default function GanttChart({
   dependencies,
   selectedItem,
   onItemClick,
+  onPhaseClick,
 }: Props) {
   const [viewMode, setViewMode] = useState<GanttViewMode>("Week");
   const [customDayWidth, setCustomDayWidth] = useState<number | null>(null);
@@ -346,6 +348,7 @@ export default function GanttChart({
               onTogglePhase={togglePhase}
               onToggleItem={toggleItem}
               onItemClick={handleItemClick}
+              onPhaseClick={onPhaseClick}
               hoveredRowId={hoveredRowId}
               onHoverRow={setHoveredRowId}
             />

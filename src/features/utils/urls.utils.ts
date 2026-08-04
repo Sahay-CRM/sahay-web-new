@@ -496,6 +496,11 @@ const Urls = {
     `${baseUrl}/company/gantt/workspace/delete/${id}`,
   ganttWorkspaceImport: (id: string) =>
     `${baseUrl}/company/gantt/workspace/import/${id}`,
+  // Phases
+  ganttPhaseCreate: () => `${baseUrl}/company/gantt/phase/create`,
+  ganttPhaseUpdate: (id: string) => `${baseUrl}/company/gantt/phase/update/${id}`,
+  ganttPhaseDelete: (id: string) => `${baseUrl}/company/gantt/phase/delete/${id}`,
+  ganttPhaseReorder: () => `${baseUrl}/company/gantt/phase/reorder`,
 
   // Items
   ganttItemCreate: () => `${baseUrl}/company/gantt/item/create`,
